@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
@@ -37,7 +36,7 @@ const Sidebar = () => {
             <span className="text-purple-600 font-bold text-lg">NF</span>
           </div>
           <div>
-            <h1 className="text-xl font-bold">NECTFORMA</h1>
+            <h1 className="text-xl font-bold">NECTFORIA</h1>
           </div>
         </div>
       </div>
