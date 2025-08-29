@@ -6,6 +6,7 @@ import Recordings from '../components/elearning/Recordings';
 import Materials from '../components/elearning/Materials';
 import SettingsTab from '../components/elearning/Settings';
 import VideoCall from '../components/elearning/VideoCall';
+import CreateClassModal from '../components/elearning/modals/CreateClassModal';
 
 interface VirtualClass {
   id: number;
@@ -26,6 +27,7 @@ const ELearning = () => {
   const [activeTab, setActiveTab] = useState('classes');
   const [selectedClass, setSelectedClass] = useState<VirtualClass | null>(null);
   const [isInCall, setIsInCall] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const handleJoinClass = (classItem: VirtualClass) => {
     setSelectedClass(classItem);
@@ -35,6 +37,11 @@ const ELearning = () => {
   const handleLeaveCall = () => {
     setIsInCall(false);
     setSelectedClass(null);
+  };
+
+  const handleCreateClass = (classData: any) => {
+    console.log('Nouvelle classe créée:', classData);
+    // Ici, vous pourriez ajouter la logique pour sauvegarder la classe
   };
 
   // If user is in a video call, show the video call interface
@@ -55,7 +62,10 @@ const ELearning = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">E-Learning</h1>
           <p className="text-gray-600">Gérez vos cours en ligne et vidéoconférences</p>
         </div>
-        <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center font-medium">
+        <button 
+          onClick={() => setIsCreateModalOpen(true)}
+          className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center font-medium"
+        >
           <Plus className="h-5 w-5 mr-2" />
           Nouvelle classe virtuelle
         </button>
@@ -107,6 +117,13 @@ const ELearning = () => {
           <SettingsTab />
         )}
       </div>
+
+      {/* Create Class Modal */}
+      <CreateClassModal 
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateClass}
+      />
     </div>
   );
 };
