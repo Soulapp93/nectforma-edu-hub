@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Administration from "./pages/Administration";
 import Formations from "./pages/Formations";
+import ELearning from "./pages/ELearning";
 import Messagerie from "./pages/Messagerie";
 import EmploiTemps from "./pages/EmploiTemps";
 import Emargement from "./pages/Emargement";
@@ -40,6 +41,7 @@ const App = () => (
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/administration" element={<Administration />} />
                   <Route path="/formations" element={<Formations />} />
+                  <Route path="/e-learning" element={<ELearning />} />
                   <Route path="/messagerie" element={<Messagerie />} />
                   <Route path="/emploi-temps" element={<EmploiTemps />} />
                   <Route path="/emargement" element={<Emargement />} />

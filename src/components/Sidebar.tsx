@@ -10,7 +10,8 @@ import {
   FileText, 
   Calendar1, 
   Settings,
-  LogOut
+  LogOut,
+  Monitor
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -18,6 +19,7 @@ const Sidebar = () => {
     { name: 'Tableau de bord', href: '/', icon: LayoutDashboard },
     { name: 'Administration', href: '/administration', icon: Users },
     { name: 'Formation', href: '/formations', icon: BookOpen },
+    { name: 'E-Learning', href: '/e-learning', icon: Monitor },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
     { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
     { name: 'Émargement', href: '/emargement', icon: FileText },
