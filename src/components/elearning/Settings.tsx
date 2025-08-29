@@ -2,8 +2,35 @@
 import React, { useState } from 'react';
 import { Save, Volume2, Mic, Video, Monitor, Globe, Shield, Database } from 'lucide-react';
 
+interface NotificationSettings {
+  email: boolean;
+  push: boolean;
+  sms: boolean;
+}
+
+interface PrivacySettings {
+  recordingConsent: boolean;
+  dataRetention: number;
+  shareAnalytics: boolean;
+}
+
+interface SettingsState {
+  videoQuality: string;
+  audioQuality: string;
+  autoRecord: boolean;
+  allowScreenShare: boolean;
+  chatEnabled: boolean;
+  waitingRoom: boolean;
+  muteOnEntry: boolean;
+  maxParticipants: number;
+  sessionTimeout: number;
+  storageLocation: string;
+  notifications: NotificationSettings;
+  privacy: PrivacySettings;
+}
+
 const Settings: React.FC = () => {
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<SettingsState>({
     videoQuality: '1080p',
     audioQuality: 'high',
     autoRecord: true,
@@ -26,18 +53,18 @@ const Settings: React.FC = () => {
     }
   });
 
-  const handleSettingChange = (key: string, value: any) => {
+  const handleSettingChange = (key: keyof SettingsState, value: any) => {
     setSettings(prev => ({
       ...prev,
       [key]: value
     }));
   };
 
-  const handleNestedSettingChange = (parent: string, key: string, value: any) => {
+  const handleNestedSettingChange = (parent: 'notifications' | 'privacy', key: string, value: any) => {
     setSettings(prev => ({
       ...prev,
       [parent]: {
-        ...prev[parent as keyof typeof prev],
+        ...prev[parent],
         [key]: value
       }
     }));
