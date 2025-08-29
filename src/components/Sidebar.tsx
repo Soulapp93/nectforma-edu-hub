@@ -29,7 +29,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="h-full w-64 nect-gradient text-white shadow-2xl">
+    <div className="h-full w-64 bg-gradient-to-b from-purple-600 to-purple-800 text-white shadow-2xl">
       {/* Logo */}
       <div className="p-6">
         <div className="flex items-center space-x-3">
@@ -63,6 +63,7 @@ const Sidebar = () => {
             <NavLink
               key={item.name}
               to={item.href}
+              end={item.href === '/'}
               className={({ isActive }) =>
                 `flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                   isActive
