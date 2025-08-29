@@ -1,6 +1,8 @@
-
 import React, { useState } from 'react';
-import { FileText, Folder, Upload, Download, Trash2, Eye, Share, Lock, Plus, Search, Filter } from 'lucide-react';
+import { FileText, Folder, Upload, Download, Trash2, Eye, Share, Plus } from 'lucide-react';
+import StorageInfo from '../components/coffrefort/StorageInfo';
+import FileFilters from '../components/coffrefort/FileFilters';
+import FoldersGrid from '../components/coffrefort/FoldersGrid';
 
 const CoffreFort = () => {
   const [currentFolder, setCurrentFolder] = useState('root');
@@ -70,7 +72,6 @@ const CoffreFort = () => {
 
   const storageUsed = 512; // MB
   const storageTotal = 3000; // MB (3 GB for Basic plan)
-  const storagePercentage = (storageUsed / storageTotal) * 100;
 
   const handleSelectFile = (fileId: number) => {
     setSelectedFiles(prev => 
@@ -120,124 +121,21 @@ const CoffreFort = () => {
           </div>
         </div>
 
-        {/* Storage Info */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Espace de stockage</h2>
-            <span className="text-sm text-gray-500">Plan Basic - 3 Go</span>
-          </div>
-          <div className="flex items-center space-x-4">
-            <div className="flex-1">
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div 
-                  className="bg-purple-600 h-3 rounded-full transition-all duration-300" 
-                  style={{ width: `${storagePercentage}%` }}
-                ></div>
-              </div>
-            </div>
-            <div className="text-sm text-gray-600">
-              {storageUsed} MB / {storageTotal} MB ({storagePercentage.toFixed(1)}%)
-            </div>
-          </div>
-        </div>
+        <StorageInfo storageUsed={storageUsed} storageTotal={storageTotal} />
       </div>
 
-      {/* Search and Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-4 flex-1">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Rechercher dans vos fichiers..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              />
-            </div>
-            <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-              <Filter className="h-4 w-4 mr-2" />
-              Filtres
-            </button>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-purple-100 text-purple-600' : 'text-gray-400 hover:bg-gray-100'}`}
-            >
-              <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
-                <div className="bg-current rounded-sm"></div>
-                <div className="bg-current rounded-sm"></div>
-                <div className="bg-current rounded-sm"></div>
-                <div className="bg-current rounded-sm"></div>
-              </div>
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-purple-100 text-purple-600' : 'text-gray-400 hover:bg-gray-100'}`}
-            >
-              <div className="w-4 h-4 flex flex-col space-y-1">
-                <div className="bg-current h-0.5 rounded"></div>
-                <div className="bg-current h-0.5 rounded"></div>
-                <div className="bg-current h-0.5 rounded"></div>
-              </div>
-            </button>
-          </div>
-        </div>
+      <FileFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        selectedFiles={selectedFiles}
+        onSelectAll={handleSelectAll}
+        filesCount={files.length}
+      />
 
-        {/* Bulk Actions */}
-        {selectedFiles.length > 0 && (
-          <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-            <span className="text-sm text-purple-700 font-medium">
-              {selectedFiles.length} fichier(s) sélectionné(s)
-            </span>
-            <div className="flex items-center space-x-2">
-              <button className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg">
-                <Download className="h-4 w-4" />
-              </button>
-              <button className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg">
-                <Share className="h-4 w-4" />
-              </button>
-              <button className="p-2 text-red-600 hover:bg-red-100 rounded-lg">
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      <FoldersGrid folders={folders} />
 
-      {/* Folders */}
-      <div className="mb-8">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Dossiers</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {folders.map((folder) => {
-            const Icon = folder.icon;
-            return (
-              <div key={folder.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow cursor-pointer">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Icon className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <button className="p-1 text-gray-400 hover:text-gray-600">
-                      <Eye className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-                <h3 className="font-medium text-gray-900 mb-2">{folder.name}</h3>
-                <div className="text-sm text-gray-500">
-                  <div>{folder.files} fichiers</div>
-                  <div>{folder.size}</div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Files */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">Fichiers récents</h2>
@@ -363,32 +261,31 @@ const CoffreFort = () => {
             </table>
           </div>
         )}
-      </div>
 
-      {/* Empty State */}
-      {filteredFiles.length === 0 && (
-        <div className="bg-gray-50 rounded-xl p-8 text-center">
-          <div className="max-w-md mx-auto">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FileText className="h-8 w-8 text-purple-600" />
+        {filteredFiles.length === 0 && (
+          <div className="bg-gray-50 rounded-xl p-8 text-center">
+            <div className="max-w-md mx-auto">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FileText className="h-8 w-8 text-purple-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {searchTerm ? 'Aucun fichier trouvé' : 'Aucun fichier'}
+              </h3>
+              <p className="text-gray-600 mb-4">
+                {searchTerm 
+                  ? 'Essayez de modifier votre recherche.' 
+                  : 'Commencez par importer vos premiers documents.'
+                }
+              </p>
+              {!searchTerm && (
+                <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium">
+                  Importer des fichiers
+                </button>
+              )}
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              {searchTerm ? 'Aucun fichier trouvé' : 'Aucun fichier'}
-            </h3>
-            <p className="text-gray-600 mb-4">
-              {searchTerm 
-                ? 'Essayez de modifier votre recherche.' 
-                : 'Commencez par importer vos premiers documents.'
-              }
-            </p>
-            {!searchTerm && (
-              <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium">
-                Importer des fichiers
-              </button>
-            )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
