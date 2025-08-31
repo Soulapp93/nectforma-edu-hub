@@ -1,0 +1,312 @@
+
+import React, { useState } from 'react';
+import { Plus, Search, Filter, Upload, Download, MoreVertical, Edit, Trash2, Mail } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useUsers } from '@/hooks/useUsers';
+import { User } from '@/services/userService';
+import EnhancedUserModal from './EnhancedUserModal';
+import ExcelImport from './ExcelImport';
+
+const EnhancedUsersList: React.FC = () => {
+  const { users, loading, error, createUser, updateUser, deleteUser, bulkCreateUsers } = useUsers();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedRole, setSelectedRole] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [isExcelImportOpen, setIsExcelImportOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = 
+      user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesRole = selectedRole === '' || user.role === selectedRole;
+    const matchesStatus = selectedStatus === '' || user.status === selectedStatus;
+    
+    return matchesSearch && matchesRole && matchesStatus;
+  });
+
+  const handleCreateUser = () => {
+    setSelectedUser(null);
+    setModalMode('create');
+    setIsUserModalOpen(true);
+  };
+
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setModalMode('edit');
+    setIsUserModalOpen(true);
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
+      await deleteUser(userId);
+    }
+  };
+
+  const handleSaveUser = async (userData: Omit<User, 'id' | 'created_at' | 'updated_at'>) => {
+    if (modalMode === 'create') {
+      await createUser(userData);
+    } else if (selectedUser) {
+      await updateUser(selectedUser.id!, userData);
+    }
+  };
+
+  const handleExcelImport = async (usersData: Omit<User, 'id' | 'created_at' | 'updated_at'>[]) => {
+    await bulkCreateUsers(usersData);
+  };
+
+  const exportUsers = () => {
+    // Simulation d'export Excel
+    console.log('Export des utilisateurs vers Excel...');
+  };
+
+  const sendInvitation = (email: string) => {
+    console.log(`Renvoyer l'invitation à ${email}`);
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusClasses = {
+      'Actif': 'bg-green-100 text-green-800 border-green-200',
+      'Inactif': 'bg-red-100 text-red-800 border-red-200',
+      'En attente': 'bg-yellow-100 text-yellow-800 border-yellow-200'
+    };
+
+    return (
+      <span className={`px-2 py-1 text-xs font-medium rounded-full border ${statusClasses[status as keyof typeof statusClasses] || 'bg-gray-100 text-gray-800 border-gray-200'}`}>
+        {status}
+      </span>
+    );
+  };
+
+  const getRoleBadge = (role: string) => {
+    const roleClasses = {
+      'Admin': 'bg-purple-100 text-purple-800 border-purple-200',
+      'Formateur': 'bg-blue-100 text-blue-800 border-blue-200',
+      'Étudiant': 'bg-gray-100 text-gray-800 border-gray-200'
+    };
+
+    return (
+      <span className={`px-2 py-1 text-xs font-medium rounded-full border ${roleClasses[role as keyof typeof roleClasses] || 'bg-gray-100 text-gray-800 border-gray-200'}`}>
+        {role}
+      </span>
+    );
+  };
+
+  if (loading && users.length === 0) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded mb-4"></div>
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-12 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+        <div className="text-center">
+          <div className="text-red-600 mb-2">Erreur</div>
+          <p className="text-gray-600">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+      {/* En-tête */}
+      <div className="p-6 border-b border-gray-200">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Gestion des utilisateurs
+            </h2>
+            <p className="text-gray-600 mt-1">
+              {filteredUsers.length} utilisateur{filteredUsers.length > 1 ? 's' : ''} trouvé{filteredUsers.length > 1 ? 's' : ''}
+            </p>
+          </div>
+          
+          <div className="flex flex-wrap gap-3">
+            <Button
+              onClick={() => setIsExcelImportOpen(true)}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Import Excel
+            </Button>
+            <Button
+              onClick={exportUsers}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Exporter
+            </Button>
+            <Button
+              onClick={handleCreateUser}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Ajouter un utilisateur
+            </Button>
+          </div>
+        </div>
+
+        {/* Filtres */}
+        <div className="flex flex-col lg:flex-row gap-4 mt-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Rechercher par nom ou email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          
+          <div className="flex gap-3">
+            <select
+              value={selectedRole}
+              onChange={(e) => setSelectedRole(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <option value="">Tous les rôles</option>
+              <option value="Admin">Administrateur</option>
+              <option value="Formateur">Formateur</option>
+              <option value="Étudiant">Étudiant</option>
+            </select>
+            
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <option value="">Tous les statuts</option>
+              <option value="Actif">Actif</option>
+              <option value="Inactif">Inactif</option>
+              <option value="En attente">En attente</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Tableau */}
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Utilisateur</TableHead>
+              <TableHead>Contact</TableHead>
+              <TableHead>Rôle</TableHead>
+              <TableHead>Statut</TableHead>
+              <TableHead>Date de création</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredUsers.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-medium text-purple-600">
+                        {user.first_name[0]}{user.last_name[0]}
+                      </span>
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-900">
+                        {user.first_name} {user.last_name}
+                      </div>
+                      <div className="text-sm text-gray-500">{user.email}</div>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm text-gray-900">{user.phone || 'Non renseigné'}</div>
+                </TableCell>
+                <TableCell>
+                  {getRoleBadge(user.role)}
+                </TableCell>
+                <TableCell>
+                  {getStatusBadge(user.status)}
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm text-gray-900">
+                    {user.created_at ? new Date(user.created_at).toLocaleDateString('fr-FR') : 'N/A'}
+                  </div>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    {user.status === 'En attente' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => sendInvitation(user.email)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Mail className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEditUser(user)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDeleteUser(user.id!)}
+                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        
+        {filteredUsers.length === 0 && (
+          <div className="text-center py-8">
+            <div className="text-gray-500">Aucun utilisateur trouvé</div>
+          </div>
+        )}
+      </div>
+
+      {/* Modals */}
+      <EnhancedUserModal
+        isOpen={isUserModalOpen}
+        onClose={() => setIsUserModalOpen(false)}
+        onSave={handleSaveUser}
+        user={selectedUser}
+        mode={modalMode}
+      />
+
+      {isExcelImportOpen && (
+        <ExcelImport
+          onImport={handleExcelImport}
+          onClose={() => setIsExcelImportOpen(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+export default EnhancedUsersList;
