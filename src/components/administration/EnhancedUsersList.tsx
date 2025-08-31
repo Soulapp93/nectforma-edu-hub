@@ -1,9 +1,11 @@
+
 import React, { useState } from 'react';
 import { Plus, Search, Filter, Upload, Download, MoreVertical, Edit, Trash2, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useUsers } from '@/hooks/useUsers';
+import { useUserFormations } from '@/hooks/useUserFormations';
 import { User } from '@/services/userService';
 import SimplifiedUserModal from './SimplifiedUserModal';
 import ExcelImport from './ExcelImport';
@@ -11,6 +13,7 @@ import * as XLSX from 'xlsx';
 
 const EnhancedUsersList: React.FC = () => {
   const { users, loading, error, createUser, updateUser, deleteUser, bulkCreateUsers } = useUsers();
+  const { getUserFormations } = useUserFormations();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
@@ -63,15 +66,22 @@ const EnhancedUsersList: React.FC = () => {
   };
 
   const exportUsers = () => {
-    const exportData = filteredUsers.map(user => ({
-      'Prénom': user.first_name,
-      'Nom': user.last_name,
-      'Email': user.email,
-      'Téléphone': user.phone || '',
-      'Rôle': user.role,
-      'Statut': user.status,
-      'Date de création': user.created_at ? new Date(user.created_at).toLocaleDateString('fr-FR') : ''
-    }));
+    const exportData = filteredUsers.map(user => {
+      const userFormations = getUserFormations(user.id!);
+      const formationsText = userFormations.map(assignment => 
+        `${assignment.formation.title} (${assignment.formation.level})`
+      ).join(', ');
+
+      return {
+        'Prénom': user.first_name,
+        'Nom': user.last_name,
+        'Email': user.email,
+        'Rôle': user.role,
+        'Formations': formationsText,
+        'Statut': user.status,
+        'Date de création': user.created_at ? new Date(user.created_at).toLocaleDateString('fr-FR') : ''
+      };
+    });
 
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
@@ -223,78 +233,95 @@ const EnhancedUsersList: React.FC = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Utilisateur</TableHead>
-              <TableHead>Contact</TableHead>
+              <TableHead>Nom & Prénom</TableHead>
+              <TableHead>Email</TableHead>
               <TableHead>Rôle</TableHead>
+              <TableHead>Formations</TableHead>
               <TableHead>Statut</TableHead>
-              <TableHead>Date de création</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredUsers.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-purple-600">
-                        {user.first_name[0]}{user.last_name[0]}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        {user.first_name} {user.last_name}
+            {filteredUsers.map((user) => {
+              const userFormations = getUserFormations(user.id!);
+              return (
+                <TableRow key={user.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-medium text-purple-600">
+                          {user.first_name[0]}{user.last_name[0]}
+                        </span>
                       </div>
-                      <div className="text-sm text-gray-500">{user.email}</div>
+                      <div>
+                        <div className="font-medium text-gray-900">
+                          {user.first_name} {user.last_name}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="text-sm text-gray-900">{user.phone || 'Non renseigné'}</div>
-                </TableCell>
-                <TableCell>
-                  {getRoleBadge(user.role)}
-                </TableCell>
-                <TableCell>
-                  {getStatusBadge(user.status)}
-                </TableCell>
-                <TableCell>
-                  <div className="text-sm text-gray-900">
-                    {user.created_at ? new Date(user.created_at).toLocaleDateString('fr-FR') : 'N/A'}
-                  </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    {user.status === 'En attente' && (
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm text-gray-900">{user.email}</div>
+                  </TableCell>
+                  <TableCell>
+                    {getRoleBadge(user.role)}
+                  </TableCell>
+                  <TableCell>
+                    <div className="max-w-xs">
+                      {userFormations.length > 0 ? (
+                        <div className="space-y-1">
+                          {userFormations.slice(0, 2).map((assignment) => (
+                            <div key={assignment.id} className="text-xs bg-blue-50 text-blue-800 px-2 py-1 rounded-full inline-block mr-1">
+                              {assignment.formation.title}
+                            </div>
+                          ))}
+                          {userFormations.length > 2 && (
+                            <div className="text-xs text-gray-500">
+                              +{userFormations.length - 2} autre{userFormations.length - 2 > 1 ? 's' : ''}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-500">Aucune formation</span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {getStatusBadge(user.status)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      {user.status === 'En attente' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => sendInvitation(user.email)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Mail className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => sendInvitation(user.email)}
+                        onClick={() => handleEditUser(user)}
                         className="h-8 w-8 p-0"
                       >
-                        <Mail className="h-4 w-4" />
+                        <Edit className="h-4 w-4" />
                       </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleEditUser(user)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDeleteUser(user.id!)}
-                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteUser(user.id!)}
+                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
         
