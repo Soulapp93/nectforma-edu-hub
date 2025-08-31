@@ -20,10 +20,10 @@ export const useUsers = () => {
     }
   };
 
-  const createUser = async (userData: Omit<User, 'id' | 'created_at' | 'updated_at'>) => {
+  const createUser = async (userData: Omit<User, 'id' | 'created_at' | 'updated_at'>, formationIds: string[] = []) => {
     try {
       setLoading(true);
-      const newUser = await userService.createUser(userData);
+      const newUser = await userService.createUser(userData, formationIds);
       setUsers(prev => [newUser, ...prev]);
       return newUser;
     } catch (err) {

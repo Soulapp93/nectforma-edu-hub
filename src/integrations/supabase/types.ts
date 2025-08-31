@@ -155,6 +155,77 @@ export type Database = {
           },
         ]
       }
+      user_activation_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          token: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_activation_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_formation_assignments: {
+        Row: {
+          assigned_at: string
+          formation_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          formation_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          formation_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_formation_assignments_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_formation_assignments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           created_at: string
@@ -163,10 +234,12 @@ export type Database = {
           first_name: string
           id: string
           invitation_sent_at: string | null
+          is_activated: boolean | null
           last_name: string
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
           status: Database["public"]["Enums"]["user_status"]
+          temp_password_hash: string | null
           updated_at: string
         }
         Insert: {
@@ -176,10 +249,12 @@ export type Database = {
           first_name: string
           id?: string
           invitation_sent_at?: string | null
+          is_activated?: boolean | null
           last_name: string
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           status?: Database["public"]["Enums"]["user_status"]
+          temp_password_hash?: string | null
           updated_at?: string
         }
         Update: {
@@ -189,10 +264,12 @@ export type Database = {
           first_name?: string
           id?: string
           invitation_sent_at?: string | null
+          is_activated?: boolean | null
           last_name?: string
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           status?: Database["public"]["Enums"]["user_status"]
+          temp_password_hash?: string | null
           updated_at?: string
         }
         Relationships: [

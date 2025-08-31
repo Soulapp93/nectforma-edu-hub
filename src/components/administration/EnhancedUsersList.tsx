@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useUsers } from '@/hooks/useUsers';
 import { User } from '@/services/userService';
-import EnhancedUserModal from './EnhancedUserModal';
+import SimplifiedUserModal from './SimplifiedUserModal';
 import ExcelImport from './ExcelImport';
 import * as XLSX from 'xlsx';
 
@@ -49,12 +49,13 @@ const EnhancedUsersList: React.FC = () => {
     }
   };
 
-  const handleSaveUser = async (userData: Omit<User, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleSaveUser = async (userData: Omit<User, 'id' | 'created_at' | 'updated_at'>, formationIds: string[]) => {
     if (modalMode === 'create') {
-      await createUser(userData);
+      return await createUser(userData, formationIds);
     } else if (selectedUser) {
-      await updateUser(selectedUser.id!, userData);
+      return await updateUser(selectedUser.id!, userData);
     }
+    throw new Error('Mode invalide');
   };
 
   const handleExcelImport = async (usersData: Omit<User, 'id' | 'created_at' | 'updated_at'>[]) => {
@@ -305,7 +306,7 @@ const EnhancedUsersList: React.FC = () => {
       </div>
 
       {/* Modals */}
-      <EnhancedUserModal
+      <SimplifiedUserModal
         isOpen={isUserModalOpen}
         onClose={() => setIsUserModalOpen(false)}
         onSave={handleSaveUser}

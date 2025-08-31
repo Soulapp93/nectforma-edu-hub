@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { formationService } from './formationService';
 
 export interface User {
   id?: string;
@@ -13,6 +14,7 @@ export interface User {
   invitation_sent_at?: string;
   created_at?: string;
   updated_at?: string;
+  is_activated?: boolean;
 }
 
 export const userService = {
@@ -26,7 +28,7 @@ export const userService = {
     return data;
   },
 
-  async createUser(userData: Omit<User, 'id' | 'created_at' | 'updated_at'>) {
+  async createUser(userData: Omit<User, 'id' | 'created_at' | 'updated_at'>, formationIds: string[] = []) {
     // Pour l'instant, on utilise le premier établissement trouvé
     const { data: establishment } = await supabase
       .from('establishments')
@@ -38,15 +40,23 @@ export const userService = {
       .from('users')
       .insert([{
         ...userData,
-        establishment_id: establishment?.id
+        establishment_id: establishment?.id,
+        is_activated: false
       }])
       .select()
       .single();
 
     if (error) throw error;
 
-    // Ici on simule l'envoi d'email d'invitation
-    console.log(`Email d'invitation envoyé à ${userData.email}`);
+    // Assigner l'utilisateur aux formations sélectionnées
+    if (formationIds.length > 0) {
+      try {
+        await formationService.assignUserToFormations(data.id, formationIds);
+      } catch (assignError) {
+        console.error('Erreur lors de l\'assignation aux formations:', assignError);
+        // On continue même si l'assignation échoue
+      }
+    }
     
     return data;
   },
@@ -82,7 +92,8 @@ export const userService = {
 
     const usersWithEstablishment = users.map(user => ({
       ...user,
-      establishment_id: establishment?.id
+      establishment_id: establishment?.id,
+      is_activated: false
     }));
 
     const { data, error } = await supabase
@@ -91,11 +102,6 @@ export const userService = {
       .select();
 
     if (error) throw error;
-
-    // Simulation de l'envoi d'emails en masse
-    users.forEach(user => {
-      console.log(`Email d'invitation envoyé à ${user.email}`);
-    });
 
     return data;
   }
