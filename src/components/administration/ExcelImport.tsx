@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
-import { Upload, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import { Upload, FileText, AlertCircle, CheckCircle, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { User } from '@/services/userService';
+import * as XLSX from 'xlsx';
 
 interface ExcelImportProps {
   onImport: (users: Omit<User, 'id' | 'created_at' | 'updated_at'>[]) => Promise<void>;
@@ -15,33 +16,42 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose }) => {
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
       setError(null);
       
-      // Simulation de lecture du fichier Excel
-      // En production, vous utiliseriez une bibliothèque comme xlsx
-      const mockData = [
-        {
-          first_name: 'Jean',
-          last_name: 'Dupont',
-          email: 'jean.dupont@email.com',
-          phone: '01 23 45 67 89',
-          role: 'Étudiant',
-          status: 'Actif'
-        },
-        {
-          first_name: 'Marie',
-          last_name: 'Martin',
-          email: 'marie.martin@email.com',
-          phone: '01 98 76 54 32',
-          role: 'Formateur',
-          status: 'Actif'
+      try {
+        const data = await selectedFile.arrayBuffer();
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        
+        // Mapper les données Excel vers notre format
+        const mappedData = jsonData.map((row: any) => ({
+          first_name: row['Prénom'] || row['First Name'] || row['first_name'] || '',
+          last_name: row['Nom'] || row['Last Name'] || row['last_name'] || '',
+          email: row['Email'] || row['email'] || '',
+          phone: row['Téléphone'] || row['Phone'] || row['phone'] || '',
+          role: row['Rôle'] || row['Role'] || row['role'] || 'Étudiant',
+          status: row['Statut'] || row['Status'] || row['status'] || 'En attente'
+        }));
+
+        // Valider les données
+        const validData = mappedData.filter(user => 
+          user.first_name && user.last_name && user.email
+        );
+
+        if (validData.length === 0) {
+          setError('Aucune donnée valide trouvée dans le fichier. Vérifiez que les colonnes sont correctement nommées.');
+        } else {
+          setPreviewData(validData);
         }
-      ];
-      setPreviewData(mockData);
+      } catch (err) {
+        setError('Erreur lors de la lecture du fichier Excel. Veuillez vérifier le format du fichier.');
+      }
     }
   };
 
@@ -60,8 +70,32 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose }) => {
   };
 
   const downloadTemplate = () => {
-    // Simulation de téléchargement du modèle Excel
-    console.log('Téléchargement du modèle Excel...');
+    // Créer un template Excel
+    const template = [
+      {
+        'Prénom': 'Jean',
+        'Nom': 'Dupont',
+        'Email': 'jean.dupont@exemple.com',
+        'Téléphone': '01 23 45 67 89',
+        'Rôle': 'Étudiant',
+        'Statut': 'En attente'
+      },
+      {
+        'Prénom': 'Marie',
+        'Nom': 'Martin',
+        'Email': 'marie.martin@exemple.com',
+        'Téléphone': '01 98 76 54 32',
+        'Rôle': 'Formateur',
+        'Statut': 'Actif'
+      }
+    ];
+
+    const ws = XLSX.utils.json_to_sheet(template);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Utilisateurs');
+    
+    // Télécharger le fichier
+    XLSX.writeFile(wb, 'modele_utilisateurs.xlsx');
   };
 
   return (
@@ -89,7 +123,7 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose }) => {
                     variant="outline"
                     className="flex items-center gap-2"
                   >
-                    <Upload className="h-4 w-4" />
+                    <Download className="h-4 w-4" />
                     Télécharger le modèle
                   </Button>
                   <label className="cursor-pointer">
@@ -106,6 +140,18 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose }) => {
                   </label>
                 </div>
               </div>
+
+              {/* Instructions d'utilisation */}
+              <div className="mt-6 text-left bg-blue-50 p-4 rounded-lg">
+                <h4 className="font-medium text-blue-900 mb-2">Instructions :</h4>
+                <ul className="text-sm text-blue-800 space-y-1">
+                  <li>• Les colonnes requises sont : Prénom, Nom, Email</li>
+                  <li>• Les colonnes optionnelles : Téléphone, Rôle, Statut</li>
+                  <li>• Rôles acceptés : Admin, Formateur, Étudiant</li>
+                  <li>• Statuts acceptés : Actif, Inactif, En attente</li>
+                  <li>• Téléchargez le modèle Excel pour voir un exemple</li>
+                </ul>
+              </div>
             </div>
           ) : (
             <div>
@@ -113,6 +159,18 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose }) => {
                 <div className="flex items-center gap-2">
                   <FileText className="h-5 w-5 text-blue-600" />
                   <span className="font-medium text-blue-900">{file.name}</span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setFile(null);
+                      setPreviewData([]);
+                      setError(null);
+                    }}
+                    className="ml-auto"
+                  >
+                    Changer de fichier
+                  </Button>
                 </div>
               </div>
 
@@ -141,23 +199,27 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose }) => {
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                             Rôle
                           </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Statut
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {previewData.slice(0, 5).map((user, index) => (
+                        {previewData.slice(0, 10).map((user, index) => (
                           <tr key={index}>
                             <td className="px-4 py-3 text-sm text-gray-900">{user.first_name}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{user.last_name}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{user.email}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{user.phone}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{user.phone || '-'}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{user.role}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{user.status}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
-                    {previewData.length > 5 && (
+                    {previewData.length > 10 && (
                       <p className="text-sm text-gray-500 mt-2 text-center">
-                        ... et {previewData.length - 5} utilisateurs de plus
+                        ... et {previewData.length - 10} utilisateurs de plus
                       </p>
                     )}
                   </div>

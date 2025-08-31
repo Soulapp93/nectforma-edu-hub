@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, Search, Filter, Upload, Download, MoreVertical, Edit, Trash2, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,7 @@ import { useUsers } from '@/hooks/useUsers';
 import { User } from '@/services/userService';
 import EnhancedUserModal from './EnhancedUserModal';
 import ExcelImport from './ExcelImport';
+import * as XLSX from 'xlsx';
 
 const EnhancedUsersList: React.FC = () => {
   const { users, loading, error, createUser, updateUser, deleteUser, bulkCreateUsers } = useUsers();
@@ -62,8 +62,22 @@ const EnhancedUsersList: React.FC = () => {
   };
 
   const exportUsers = () => {
-    // Simulation d'export Excel
-    console.log('Export des utilisateurs vers Excel...');
+    const exportData = filteredUsers.map(user => ({
+      'Prénom': user.first_name,
+      'Nom': user.last_name,
+      'Email': user.email,
+      'Téléphone': user.phone || '',
+      'Rôle': user.role,
+      'Statut': user.status,
+      'Date de création': user.created_at ? new Date(user.created_at).toLocaleDateString('fr-FR') : ''
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Utilisateurs');
+    
+    const filename = `utilisateurs_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, filename);
   };
 
   const sendInvitation = (email: string) => {
