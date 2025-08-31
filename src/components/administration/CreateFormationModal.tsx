@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, BookOpen, Calendar, Users, DollarSign, Plus } from 'lucide-react';
+import { X, BookOpen, Calendar, Plus } from 'lucide-react';
 import ModuleForm, { ModuleFormData } from './ModuleForm';
 import { formationService } from '@/services/formationService';
 import { moduleService } from '@/services/moduleService';
@@ -17,8 +17,6 @@ interface FormationFormData {
   level: string;
   start_date: string;
   end_date: string;
-  max_students: number;
-  price: number;
   status: string;
 }
 
@@ -33,8 +31,6 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
     level: 'BAC+1',
     start_date: '',
     end_date: '',
-    max_students: 25,
-    price: 0,
     status: 'Actif'
   });
 
@@ -45,7 +41,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: ['max_students', 'price'].includes(name) ? parseInt(value) || 0 : value
+      [name]: value
     }));
   };
 
@@ -84,6 +80,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
       const formation = await formationService.createFormation({
         ...formData,
         duration: totalDuration,
+        max_students: 25, // Valeur par défaut
+        price: 0, // Valeur par défaut
         establishment_id: '00000000-0000-0000-0000-000000000000' // À remplacer par l'établissement de l'utilisateur
       });
 
@@ -109,8 +107,6 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         level: 'BAC+1',
         start_date: '',
         end_date: '',
-        max_students: 25,
-        price: 0,
         status: 'Actif'
       });
       setModules([]);
@@ -205,7 +201,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   <Calendar className="h-4 w-4 inline mr-1" />
-                  Date de début *
+                  Date de début
                 </label>
                 <input
                   type="date"
@@ -213,51 +209,19 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                   value={formData.start_date}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  required
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   <Calendar className="h-4 w-4 inline mr-1" />
-                  Date de fin *
+                  Date de fin
                 </label>
                 <input
                   type="date"
                   name="end_date"
                   value={formData.end_date}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  <Users className="h-4 w-4 inline mr-1" />
-                  Nombre max d'étudiants
-                </label>
-                <input
-                  type="number"
-                  name="max_students"
-                  value={formData.max_students}
-                  onChange={handleChange}
-                  min="1"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  <DollarSign className="h-4 w-4 inline mr-1" />
-                  Prix (€)
-                </label>
-                <input
-                  type="number"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleChange}
-                  min="0"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
