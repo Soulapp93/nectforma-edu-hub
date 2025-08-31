@@ -53,6 +53,47 @@ export type Database = {
         }
         Relationships: []
       }
+      formation_modules: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_hours: number
+          formation_id: string
+          id: string
+          order_index: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_hours?: number
+          formation_id: string
+          id?: string
+          order_index?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_hours?: number
+          formation_id?: string
+          id?: string
+          order_index?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formation_modules_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       formations: {
         Row: {
           created_at: string
@@ -61,7 +102,6 @@ export type Database = {
           end_date: string
           establishment_id: string
           id: string
-          instructor_id: string | null
           level: string
           max_students: number
           price: number | null
@@ -77,7 +117,6 @@ export type Database = {
           end_date: string
           establishment_id: string
           id?: string
-          instructor_id?: string | null
           level: string
           max_students?: number
           price?: number | null
@@ -93,7 +132,6 @@ export type Database = {
           end_date?: string
           establishment_id?: string
           id?: string
-          instructor_id?: string | null
           level?: string
           max_students?: number
           price?: number | null
@@ -110,11 +148,40 @@ export type Database = {
             referencedRelation: "establishments"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      module_instructors: {
+        Row: {
+          assigned_at: string
+          id: string
+          instructor_id: string
+          module_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          id?: string
+          instructor_id: string
+          module_id: string
+        }
+        Update: {
+          assigned_at?: string
+          id?: string
+          instructor_id?: string
+          module_id?: string
+        }
+        Relationships: [
           {
-            foreignKeyName: "formations_instructor_id_fkey"
+            foreignKeyName: "module_instructors_instructor_id_fkey"
             columns: ["instructor_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_instructors_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "formation_modules"
             referencedColumns: ["id"]
           },
         ]

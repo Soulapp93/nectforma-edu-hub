@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import AdministrationTabs from '../components/administration/AdministrationTabs';
 import EnhancedUsersList from '../components/administration/EnhancedUsersList';
@@ -18,14 +17,7 @@ const Administration = () => {
 
       {activeTab === 'users' && <EnhancedUsersList />}
 
-      {activeTab === 'formations' && (
-        <FormationsList
-          formations={[]}
-          onCreateFormation={() => {}}
-          onEditFormation={() => {}}
-          onDeleteFormation={() => {}}
-        />
-      )}
+      {activeTab === 'formations' && <FormationsList />}
 
       {activeTab !== 'users' && activeTab !== 'formations' && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">

@@ -1,138 +1,172 @@
 
-import React from 'react';
-import { Search, Plus, Edit, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, Filter } from 'lucide-react';
+import CreateFormationModal from './CreateFormationModal';
+import FormationCard from './FormationCard';
+import { formationService } from '@/services/formationService';
 
-interface Formation {
-  id: number;
-  title: string;
-  level: string;
-  instructor: string;
-  duration: string;
-  maxStudents: string;
-  enrolledStudents: number;
-  status: string;
-  startDate: string;
-  endDate: string;
-  price: string;
-}
+const FormationsList: React.FC = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formations, setFormations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
 
-interface FormationsListProps {
-  formations: Formation[];
-  onCreateFormation: () => void;
-  onEditFormation: (formation: Formation) => void;
-  onDeleteFormation: (formationId: number) => void;
-}
+  const fetchFormations = async () => {
+    try {
+      setLoading(true);
+      const data = await formationService.getAllFormations();
+      setFormations(data || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des formations:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-const FormationsList: React.FC<FormationsListProps> = ({ 
-  formations, 
-  onCreateFormation, 
-  onEditFormation, 
-  onDeleteFormation 
-}) => {
+  useEffect(() => {
+    fetchFormations();
+  }, []);
+
+  const handleCreateFormation = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleSuccess = () => {
+    fetchFormations();
+  };
+
+  const handleDeleteFormation = async (formationId: string) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette formation ?')) {
+      // TODO: Implémenter la suppression
+      console.log('Supprimer la formation:', formationId);
+    }
+  };
+
+  const filteredFormations = formations.filter(formation => {
+    const matchesSearch = formation.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         formation.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesLevel = selectedLevel === 'all' || formation.level === selectedLevel;
+    const matchesStatus = selectedStatus === 'all' || formation.status === selectedStatus;
+    return matchesSearch && matchesLevel && matchesStatus;
+  });
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+        <p className="text-gray-600 mt-2">Chargement des formations...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-      <div className="p-6 border-b border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Gestion des formations</h2>
-          <button 
-            onClick={onCreateFormation}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Nouvelle formation
-          </button>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Rechercher une formation..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              />
-            </div>
+    <div className="space-y-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">Gestion des formations</h2>
+            <button 
+              onClick={handleCreateFormation}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Nouvelle formation
+            </button>
           </div>
-          <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-            <option>Tous les niveaux</option>
-            <option>BAC+1</option>
-            <option>BAC+2</option>
-            <option>BAC+3</option>
-            <option>BAC+4</option>
-            <option>BAC+5</option>
-          </select>
-          <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-            <option>Tous les statuts</option>
-            <option>Actif</option>
-            <option>Inactif</option>
-            <option>Brouillon</option>
-          </select>
+
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Rechercher une formation..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+            <select 
+              value={selectedLevel}
+              onChange={(e) => setSelectedLevel(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            >
+              <option value="all">Tous les niveaux</option>
+              <option value="BAC+1">BAC+1</option>
+              <option value="BAC+2">BAC+2</option>
+              <option value="BAC+3">BAC+3</option>
+              <option value="BAC+4">BAC+4</option>
+              <option value="BAC+5">BAC+5</option>
+            </select>
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            >
+              <option value="all">Tous les statuts</option>
+              <option value="Actif">Actif</option>
+              <option value="Inactif">Inactif</option>
+              <option value="Brouillon">Brouillon</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Formation</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Niveau</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Formateur</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Étudiants</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durée</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {formations.map((formation) => (
-              <tr key={formation.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">{formation.title}</div>
-                  <div className="text-sm text-gray-500">{formation.price}€</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
-                    {formation.level}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {formation.instructor}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {formation.enrolledStudents}/{formation.maxStudents}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {formation.duration}h
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                    {formation.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div className="flex space-x-2">
-                    <button 
-                      onClick={() => onEditFormation(formation)}
-                      className="text-blue-600 hover:text-blue-900 p-1"
-                      title="Modifier"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </button>
-                    <button 
-                      onClick={() => onDeleteFormation(formation.id)}
-                      className="text-red-600 hover:text-red-900 p-1"
-                      title="Supprimer"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* Cartes des formations */}
+      {filteredFormations.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+          <div className="max-w-md mx-auto">
+            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Plus className="h-8 w-8 text-purple-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              {searchTerm || selectedLevel !== 'all' || selectedStatus !== 'all' 
+                ? 'Aucune formation trouvée' 
+                : 'Aucune formation'
+              }
+            </h3>
+            <p className="text-gray-600 mb-4">
+              {searchTerm || selectedLevel !== 'all' || selectedStatus !== 'all'
+                ? 'Essayez de modifier vos critères de recherche.'
+                : 'Créez votre première formation pour enrichir votre catalogue.'
+              }
+            </p>
+            {(!searchTerm && selectedLevel === 'all' && selectedStatus === 'all') && (
+              <button 
+                onClick={handleCreateFormation}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium"
+              >
+                Créer une formation
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredFormations.map((formation) => (
+            <FormationCard
+              key={formation.id}
+              {...formation}
+              modules={formation.formation_modules || []}
+              onEdit={() => {
+                // TODO: Implémenter l'édition
+                console.log('Éditer la formation:', formation.id);
+              }}
+              onDelete={() => handleDeleteFormation(formation.id)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Modal de création */}
+      <CreateFormationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={handleSuccess}
+      />
     </div>
   );
 };
