@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
-import { X, Maximize2, Minimize2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from './button';
-import PDFViewer from './viewers/PDFViewer';
+import EnhancedPDFViewer from './viewers/EnhancedPDFViewer';
 import ImageViewer from './viewers/ImageViewer';
-import OfficeViewer from './viewers/OfficeViewer';
+import EnhancedOfficeViewer from './viewers/EnhancedOfficeViewer';
 import TextViewer from './viewers/TextViewer';
 import UnsupportedViewer from './viewers/UnsupportedViewer';
 
@@ -22,7 +22,6 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   onClose
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [currentSlide, setCurrentSlide] = useState(1);
 
   if (!isOpen) return null;
 
@@ -35,33 +34,42 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   const renderDocumentContent = () => {
     console.log('Visualisation du fichier:', fileName, 'URL:', fileUrl, 'Extension:', fileExtension);
 
-    // PDF - Utilisation du visualiseur PDF avec fallbacks
+    // PDF - Utilisation du nouveau visualiseur PDF.js
     if (fileExtension === 'pdf') {
-      return <PDFViewer fileUrl={fileUrl} fileName={fileName} />;
-    }
-
-    // Images - Support amélioré avec zoom et fallbacks
-    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(fileExtension)) {
-      return <ImageViewer fileUrl={fileUrl} fileName={fileName} />;
-    }
-
-    // Fichiers Office - Utilisation de visualiseurs externes avec fallbacks
-    if (['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension)) {
       return (
-        <OfficeViewer 
+        <EnhancedPDFViewer 
           fileUrl={fileUrl} 
-          fileName={fileName} 
-          fileExtension={fileExtension}
+          fileName={fileName}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
         />
       );
     }
 
-    // Fichiers texte - Chargement direct du contenu
+    // Images
+    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(fileExtension)) {
+      return <ImageViewer fileUrl={fileUrl} fileName={fileName} />;
+    }
+
+    // Fichiers Office - Utilisation du nouveau visualiseur amélioré
+    if (['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension)) {
+      return (
+        <EnhancedOfficeViewer 
+          fileUrl={fileUrl} 
+          fileName={fileName} 
+          fileExtension={fileExtension}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
+        />
+      );
+    }
+
+    // Fichiers texte
     if (['txt', 'md', 'json', 'xml', 'csv', 'log'].includes(fileExtension)) {
       return <TextViewer fileUrl={fileUrl} fileName={fileName} />;
     }
 
-    // Type de fichier non supporté - Options de téléchargement
+    // Type de fichier non supporté
     return (
       <UnsupportedViewer 
         fileUrl={fileUrl} 
@@ -75,8 +83,6 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     setIsFullscreen(!isFullscreen);
   };
 
-  const isPowerPoint = ['ppt', 'pptx'].includes(fileExtension);
-
   return (
     <div className={`fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 ${
       isFullscreen ? 'p-0' : 'p-4'
@@ -84,61 +90,54 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
       <div className={`bg-white rounded-lg flex flex-col ${
         isFullscreen 
           ? 'w-full h-full rounded-none' 
-          : 'w-full h-full max-w-6xl max-h-[90vh]'
+          : 'w-full h-full max-w-7xl max-h-[95vh]'
       }`}>
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white rounded-t-lg flex-shrink-0">
-          <div className="flex items-center space-x-2">
-            <h2 className="text-lg font-semibold text-gray-900 truncate">
-              {fileName}
-            </h2>
-            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-              {fileExtension.toUpperCase()}
-            </span>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            {/* Contrôles pour PowerPoint */}
-            {isPowerPoint && (
-              <div className="flex items-center space-x-1 border-r pr-2 mr-2">
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={() => setCurrentSlide(Math.max(1, currentSlide - 1))}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="text-sm text-gray-500 min-w-[60px] text-center">
-                  Slide {currentSlide}
-                </span>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={() => setCurrentSlide(currentSlide + 1)}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
+        {/* Header - uniquement visible si pas en plein écran ou si c'est pas PDF/Office avec leurs propres contrôles */}
+        {(!isFullscreen || (!['pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension))) && (
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white rounded-t-lg flex-shrink-0">
+            <div className="flex items-center space-x-2">
+              <h2 className="text-lg font-semibold text-gray-900 truncate">
+                {fileName}
+              </h2>
+              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                {fileExtension.toUpperCase()}
+              </span>
+            </div>
             
-            <Button size="sm" variant="ghost" onClick={toggleFullscreen}>
-              {isFullscreen ? (
-                <Minimize2 className="h-4 w-4" />
-              ) : (
-                <Maximize2 className="h-4 w-4" />
+            <div className="flex items-center space-x-2">
+              {!['pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension) && (
+                <Button size="sm" variant="ghost" onClick={toggleFullscreen}>
+                  {isFullscreen ? (
+                    <Minimize2 className="h-4 w-4" />
+                  ) : (
+                    <Maximize2 className="h-4 w-4" />
+                  )}
+                </Button>
               )}
-            </Button>
-            
-            <Button size="sm" variant="ghost" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
+              
+              <Button size="sm" variant="ghost" onClick={onClose}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Contenu du document */}
         <div className="flex-1 overflow-hidden">
           {renderDocumentContent()}
         </div>
+
+        {/* Bouton de fermeture en plein écran pour PDF et Office */}
+        {isFullscreen && ['pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension) && (
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            onClick={onClose}
+            className="absolute top-4 right-4 bg-black/50 text-white hover:bg-black/70 z-10"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </div>
     </div>
   );
