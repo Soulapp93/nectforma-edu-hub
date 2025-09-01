@@ -78,6 +78,14 @@ const Formations = () => {
 
   const levels = ['BAC+1', 'BAC+2', 'BAC+3', 'BAC+4', 'BAC+5'];
 
+  // Helper function to ensure status is one of the allowed values
+  const normalizeStatus = (status: string): 'Actif' | 'Inactif' | 'Brouillon' => {
+    if (status === 'Actif' || status === 'Inactif' || status === 'Brouillon') {
+      return status;
+    }
+    return 'Brouillon'; // Default fallback
+  };
+
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center">
@@ -217,13 +225,13 @@ const Formations = () => {
               {levelFormations.map((formation) => (
                 <div key={formation.id} className="relative group">
                   <FormationCard 
-                    id={formation.id}
+                    id={parseInt(formation.id) || 0}
                     title={formation.title}
                     level={formation.level}
                     students={0} // À adapter selon les inscriptions réelles
                     modules={formation.formation_modules?.length || 0}
                     instructor="Formateur" // À adapter selon les données réelles
-                    status={formation.status}
+                    status={normalizeStatus(formation.status)}
                     color={formation.color || '#8B5CF6'}
                     description={formation.description}
                     duration={formation.duration?.toString()}
