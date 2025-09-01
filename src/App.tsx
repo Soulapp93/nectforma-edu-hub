@@ -7,6 +7,7 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Administration from './pages/Administration';
 import Formations from './pages/Formations';
+import FormationDetail from './pages/FormationDetail';
 import ELearning from './pages/ELearning';
 import EmploiTemps from './pages/EmploiTemps';
 import Messagerie from './pages/Messagerie';
@@ -36,6 +37,7 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/administration" element={<Administration />} />
               <Route path="/formations" element={<Formations />} />
+              <Route path="/formations/:formationId" element={<FormationDetail />} />
               <Route path="/e-learning" element={<ELearning />} />
               <Route path="/emploi-temps" element={<EmploiTemps />} />
               <Route path="/messagerie" element={<Messagerie />} />
