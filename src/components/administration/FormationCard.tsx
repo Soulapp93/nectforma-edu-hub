@@ -8,7 +8,7 @@ interface FormationCardProps extends Formation {
     id: string;
     title: string;
     duration_hours: number;
-    module_instructors: Array<{
+    module_instructors?: Array<{
       instructor: {
         id: string;
         first_name: string;
@@ -61,7 +61,7 @@ const FormationCard: React.FC<FormationCardProps> = ({
   };
 
   const uniqueInstructors = modules.flatMap(module => 
-    module.module_instructors.map(mi => mi.instructor)
+    (module.module_instructors || []).map(mi => mi.instructor)
   ).reduce((acc, instructor) => {
     if (!acc.find(i => i.id === instructor.id)) {
       acc.push(instructor);
