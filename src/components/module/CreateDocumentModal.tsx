@@ -22,32 +22,42 @@ const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    document_type: 'support' as 'article' | 'support' | 'reference' | 'autre'
+    document_type: 'support' as 'support' | 'article' | 'reference' | 'autre'
   });
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (selectedFiles.length === 0) {
-      alert('Veuillez sélectionner un fichier');
-      return;
-    }
-
     setLoading(true);
+    setError(null);
 
     try {
-      const fileUrl = await fileUploadService.uploadFile(selectedFiles[0]);
-      
-      await moduleDocumentService.createDocument({
+      console.log('Creating document with:', { formData, files: selectedFiles });
+
+      if (selectedFiles.length === 0) {
+        throw new Error('Veuillez sélectionner un fichier');
+      }
+
+      const file = selectedFiles[0];
+      console.log('Uploading file:', file);
+
+      const fileUrl = await fileUploadService.uploadFile(file);
+      console.log('File uploaded, URL:', fileUrl);
+
+      const documentData = {
         ...formData,
         module_id: moduleId,
         file_url: fileUrl,
-        file_name: selectedFiles[0].name,
-        file_size: selectedFiles[0].size,
+        file_name: file.name,
+        file_size: file.size,
         created_by: 'current-user-id' // TODO: Récupérer l'ID utilisateur actuel
-      });
+      };
+
+      console.log('Creating document in database:', documentData);
+      await moduleDocumentService.createDocument(documentData);
+      console.log('Document created successfully');
 
       onSuccess();
       onClose();
@@ -57,9 +67,9 @@ const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
         document_type: 'support'
       });
       setSelectedFiles([]);
-    } catch (error) {
-      console.error('Erreur lors de la création:', error);
-      alert('Erreur lors de l\'ajout du document');
+    } catch (error: any) {
+      console.error('Error creating document:', error);
+      setError(error.message || 'Erreur lors de la création du document');
     } finally {
       setLoading(false);
     }
@@ -78,6 +88,12 @@ const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Titre *
@@ -100,7 +116,7 @@ const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
               onChange={(e) => setFormData({ ...formData, document_type: e.target.value as any })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="support">Support</option>
+              <option value="support">Support de cours</option>
               <option value="article">Article</option>
               <option value="reference">Référence</option>
               <option value="autre">Autre</option>
@@ -125,17 +141,17 @@ const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
             </label>
             <FileUpload
               onFileSelect={setSelectedFiles}
-              accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.ppt,.pptx"
-              maxSize={25}
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.txt"
+              maxSize={50}
             />
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
               Annuler
             </Button>
             <Button type="submit" disabled={loading || selectedFiles.length === 0}>
-              {loading ? 'Ajout...' : 'Ajouter'}
+              {loading ? 'Création...' : 'Créer'}
             </Button>
           </div>
         </form>

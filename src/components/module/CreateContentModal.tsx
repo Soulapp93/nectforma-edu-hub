@@ -26,27 +26,37 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
   });
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
+      console.log('Creating content with:', { formData, files: selectedFiles });
+
       let fileUrl = null;
       let fileName = null;
 
       if (selectedFiles.length > 0) {
+        console.log('Uploading file:', selectedFiles[0]);
         fileUrl = await fileUploadService.uploadFile(selectedFiles[0]);
         fileName = selectedFiles[0].name;
+        console.log('File uploaded, URL:', fileUrl);
       }
 
-      await moduleContentService.createContent({
+      const contentData = {
         ...formData,
         module_id: moduleId,
         file_url: fileUrl,
         file_name: fileName,
         created_by: 'current-user-id' // TODO: Récupérer l'ID utilisateur actuel
-      });
+      };
+
+      console.log('Creating content in database:', contentData);
+      await moduleContentService.createContent(contentData);
+      console.log('Content created successfully');
 
       onSuccess();
       onClose();
@@ -56,9 +66,9 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
         content_type: 'cours'
       });
       setSelectedFiles([]);
-    } catch (error) {
-      console.error('Erreur lors de la création:', error);
-      alert('Erreur lors de la création du contenu');
+    } catch (error: any) {
+      console.error('Error creating content:', error);
+      setError(error.message || 'Erreur lors de la création du contenu');
     } finally {
       setLoading(false);
     }
@@ -77,6 +87,12 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Titre *
@@ -130,7 +146,7 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
               Annuler
             </Button>
             <Button type="submit" disabled={loading}>
