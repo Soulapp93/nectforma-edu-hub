@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, BookOpen, Calendar, Plus } from 'lucide-react';
 import ModuleForm, { ModuleFormData } from './ModuleForm';
+import ColorPalette from './ColorPalette';
 import { formationService } from '@/services/formationService';
 import { moduleService } from '@/services/moduleService';
 import { establishmentService } from '@/services/establishmentService';
@@ -18,6 +19,7 @@ interface FormationFormData {
   start_date: string;
   end_date: string;
   status: string;
+  color: string;
 }
 
 const CreateFormationModal: React.FC<CreateFormationModalProps> = ({ 
@@ -31,7 +33,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
     level: 'BAC+1',
     start_date: '',
     end_date: '',
-    status: 'Actif'
+    status: 'Actif',
+    color: '#8B5CF6' // Couleur par défaut (purple)
   });
 
   const [modules, setModules] = useState<ModuleFormData[]>([]);
@@ -45,6 +48,15 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
       [name]: value
     }));
     // Clear error when user starts typing
+    if (error) setError(null);
+  };
+
+  const handleColorChange = (color: string) => {
+    setFormData(prev => ({
+      ...prev,
+      color: color
+    }));
+    // Clear error when user changes color
     if (error) setError(null);
   };
 
@@ -130,7 +142,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         level: 'BAC+1',
         start_date: '',
         end_date: '',
-        status: 'Actif'
+        status: 'Actif',
+        color: '#8B5CF6'
       });
       setModules([]);
       
@@ -256,6 +269,13 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
                 <p className="text-xs text-gray-500 mt-1">Si vide, une date dans un an sera utilisée</p>
+              </div>
+
+              <div className="md:col-span-2">
+                <ColorPalette 
+                  selectedColor={formData.color}
+                  onColorChange={handleColorChange}
+                />
               </div>
             </div>
           </div>

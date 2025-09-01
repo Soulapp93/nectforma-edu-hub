@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Formation {
@@ -13,6 +12,7 @@ export interface Formation {
   establishment_id: string;
   duration: number;
   price?: number;
+  color?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -28,6 +28,7 @@ export interface CreateFormationData {
   establishment_id: string;
   duration: number;
   price?: number;
+  color?: string;
 }
 
 export const formationService = {
