@@ -64,16 +64,11 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (modules.length === 0) {
-      alert('Veuillez ajouter au moins un module à la formation');
-      return;
-    }
 
     try {
       setLoading(true);
 
-      // Calculer la durée totale
+      // Calculer la durée totale des modules
       const totalDuration = modules.reduce((sum, module) => sum + module.duration_hours, 0);
 
       // Créer la formation
@@ -85,7 +80,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         establishment_id: '00000000-0000-0000-0000-000000000000' // À remplacer par l'établissement de l'utilisateur
       });
 
-      // Créer les modules
+      // Créer les modules si il y en a
       for (let i = 0; i < modules.length; i++) {
         const module = modules[i];
         await moduleService.createModule({
@@ -248,7 +243,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
                 <BookOpen className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                 <p className="text-gray-500">Aucun module ajouté</p>
-                <p className="text-sm text-gray-400">Cliquez sur "Ajouter un module" pour commencer</p>
+                <p className="text-sm text-gray-400">Les modules peuvent être ajoutés maintenant ou plus tard</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -275,7 +270,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={loading || modules.length === 0}
+              disabled={loading}
               className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {loading ? 'Création...' : 'Créer la formation'}

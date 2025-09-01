@@ -104,11 +104,11 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex })
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             <User className="h-4 w-4 inline mr-1" />
-            Formateurs
+            Formateurs (optionnel)
           </label>
           <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-2 bg-white">
             {instructors.length === 0 ? (
-              <p className="text-gray-500 text-sm">Aucun formateur disponible</p>
+              <p className="text-gray-500 text-sm">Aucun formateur disponible - Les formateurs peuvent être assignés plus tard</p>
             ) : (
               instructors.map(instructor => (
                 <label key={instructor.id} className="flex items-center p-2 hover:bg-gray-50 rounded">
@@ -125,6 +125,9 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex })
               ))
             )}
           </div>
+          {formData.instructorIds.length === 0 && instructors.length > 0 && (
+            <p className="text-xs text-gray-500 mt-1">Aucun formateur sélectionné - peut être assigné plus tard</p>
+          )}
         </div>
       </div>
     </div>
