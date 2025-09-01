@@ -348,7 +348,7 @@ export type Database = {
         Row: {
           content_type: string
           created_at: string
-          created_by: string
+          created_by: string | null
           description: string | null
           file_name: string | null
           file_url: string | null
@@ -360,7 +360,7 @@ export type Database = {
         Insert: {
           content_type: string
           created_at?: string
-          created_by: string
+          created_by?: string | null
           description?: string | null
           file_name?: string | null
           file_url?: string | null
@@ -372,7 +372,7 @@ export type Database = {
         Update: {
           content_type?: string
           created_at?: string
-          created_by?: string
+          created_by?: string | null
           description?: string | null
           file_name?: string | null
           file_url?: string | null
@@ -382,13 +382,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "module_contents_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "module_contents_module_id_fkey"
             columns: ["module_id"]
@@ -401,7 +394,7 @@ export type Database = {
       module_documents: {
         Row: {
           created_at: string
-          created_by: string
+          created_by: string | null
           description: string | null
           document_type: string
           file_name: string
@@ -414,7 +407,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          created_by: string
+          created_by?: string | null
           description?: string | null
           document_type: string
           file_name: string
@@ -427,7 +420,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          created_by?: string
+          created_by?: string | null
           description?: string | null
           document_type?: string
           file_name?: string
@@ -439,13 +432,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "module_documents_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "module_documents_module_id_fkey"
             columns: ["module_id"]
