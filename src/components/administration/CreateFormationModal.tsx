@@ -67,14 +67,19 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
     try {
       setLoading(true);
 
-      // Créer la formation
-      const formation = await formationService.createFormation({
+      // Préparer les données de formation avec des dates correctes
+      const formationData = {
         ...formData,
+        start_date: formData.start_date || null,
+        end_date: formData.end_date || null,
         duration: 0, // Durée par défaut
         max_students: 25, // Valeur par défaut
         price: 0, // Valeur par défaut
         establishment_id: '00000000-0000-0000-0000-000000000000' // À remplacer par l'établissement de l'utilisateur
-      });
+      };
+
+      // Créer la formation
+      const formation = await formationService.createFormation(formationData);
 
       // Créer les modules si il y en a
       for (let i = 0; i < modules.length; i++) {
