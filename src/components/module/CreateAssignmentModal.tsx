@@ -1,8 +1,10 @@
 
 import React, { useState } from 'react';
-import { X, Upload, Plus } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { assignmentService } from '@/services/assignmentService';
+import { fileUploadService } from '@/services/fileUploadService';
+import FileUpload from '@/components/ui/file-upload';
 
 interface CreateAssignmentModalProps {
   isOpen: boolean;
@@ -24,6 +26,7 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
     due_date: '',
     max_points: 100
   });
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,13 +34,27 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
     setLoading(true);
 
     try {
-      await assignmentService.createAssignment({
+      // Créer le devoir d'abord
+      const assignment = await assignmentService.createAssignment({
         ...formData,
         module_id: moduleId,
         created_by: 'current-user-id', // TODO: Récupérer l'ID utilisateur actuel
-        is_published: false,
+        is_published: true,
         due_date: formData.due_date || undefined
       });
+
+      // Uploader les fichiers si il y en a
+      if (selectedFiles.length > 0) {
+        for (const file of selectedFiles) {
+          const fileUrl = await fileUploadService.uploadFile(file);
+          await assignmentService.addAssignmentFile({
+            assignment_id: assignment.id,
+            file_url: fileUrl,
+            file_name: file.name,
+            file_size: file.size
+          });
+        }
+      }
 
       onSuccess();
       onClose();
@@ -48,8 +65,10 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         due_date: '',
         max_points: 100
       });
+      setSelectedFiles([]);
     } catch (error) {
       console.error('Erreur lors de la création:', error);
+      alert('Erreur lors de la création du devoir');
     } finally {
       setLoading(false);
     }
@@ -137,11 +156,12 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Fichiers joints
             </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-              <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-600">Glissez-déposez des fichiers ou cliquez pour parcourir</p>
-              <p className="text-xs text-gray-500 mt-1">PDF, DOC, images acceptés</p>
-            </div>
+            <FileUpload
+              onFileSelect={setSelectedFiles}
+              multiple
+              accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+              maxSize={10}
+            />
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">

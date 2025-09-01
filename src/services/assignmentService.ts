@@ -36,6 +36,28 @@ export const assignmentService = {
     return data;
   },
 
+  async addAssignmentFile(file: Database['public']['Tables']['assignment_files']['Insert']) {
+    const { data, error } = await supabase
+      .from('assignment_files')
+      .insert(file)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async getAssignmentFiles(assignmentId: string) {
+    const { data, error } = await supabase
+      .from('assignment_files')
+      .select('*')
+      .eq('assignment_id', assignmentId)
+      .order('created_at');
+    
+    if (error) throw error;
+    return data;
+  },
+
   async getAssignmentSubmissions(assignmentId: string) {
     const { data, error } = await supabase
       .from('assignment_submissions')
@@ -62,6 +84,28 @@ export const assignmentService = {
       .select()
       .single();
 
+    if (error) throw error;
+    return data;
+  },
+
+  async addSubmissionFile(file: Database['public']['Tables']['submission_files']['Insert']) {
+    const { data, error } = await supabase
+      .from('submission_files')
+      .insert(file)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async getSubmissionFiles(submissionId: string) {
+    const { data, error } = await supabase
+      .from('submission_files')
+      .select('*')
+      .eq('submission_id', submissionId)
+      .order('uploaded_at');
+    
     if (error) throw error;
     return data;
   },

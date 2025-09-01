@@ -1,8 +1,10 @@
 
 import React, { useState } from 'react';
-import { X, Upload } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { moduleContentService } from '@/services/moduleContentService';
+import { fileUploadService } from '@/services/fileUploadService';
+import FileUpload from '@/components/ui/file-upload';
 
 interface CreateContentModalProps {
   isOpen: boolean;
@@ -22,6 +24,7 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
     description: '',
     content_type: 'cours' as 'cours' | 'support' | 'video' | 'document'
   });
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,9 +32,19 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
     setLoading(true);
 
     try {
+      let fileUrl = null;
+      let fileName = null;
+
+      if (selectedFiles.length > 0) {
+        fileUrl = await fileUploadService.uploadFile(selectedFiles[0]);
+        fileName = selectedFiles[0].name;
+      }
+
       await moduleContentService.createContent({
         ...formData,
         module_id: moduleId,
+        file_url: fileUrl,
+        file_name: fileName,
         created_by: 'current-user-id' // TODO: Récupérer l'ID utilisateur actuel
       });
 
@@ -42,8 +55,10 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
         description: '',
         content_type: 'cours'
       });
+      setSelectedFiles([]);
     } catch (error) {
       console.error('Erreur lors de la création:', error);
+      alert('Erreur lors de la création du contenu');
     } finally {
       setLoading(false);
     }
@@ -53,7 +68,7 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-md mx-4">
+      <div className="bg-white rounded-lg w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-lg font-semibold">Ajouter du contenu</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
@@ -107,10 +122,11 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Fichier (optionnel)
             </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-              <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-600">Glissez-déposez un fichier ou cliquez pour parcourir</p>
-            </div>
+            <FileUpload
+              onFileSelect={setSelectedFiles}
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.mp4,.avi,.mov,.jpg,.jpeg,.png"
+              maxSize={50}
+            />
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">
