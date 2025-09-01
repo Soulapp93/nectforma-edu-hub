@@ -2,11 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Filter } from 'lucide-react';
 import CreateFormationModal from './CreateFormationModal';
+import EditFormationModal from './EditFormationModal';
 import FormationCard from './FormationCard';
 import { formationService } from '@/services/formationService';
+import { toast } from 'sonner';
 
 const FormationsList: React.FC = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingFormationId, setEditingFormationId] = useState<string | null>(null);
   const [formations, setFormations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -20,6 +24,7 @@ const FormationsList: React.FC = () => {
       setFormations(data || []);
     } catch (error) {
       console.error('Erreur lors du chargement des formations:', error);
+      toast.error('Erreur lors du chargement des formations');
     } finally {
       setLoading(false);
     }
@@ -30,17 +35,34 @@ const FormationsList: React.FC = () => {
   }, []);
 
   const handleCreateFormation = () => {
-    setIsModalOpen(true);
+    setIsCreateModalOpen(true);
+  };
+
+  const handleEditFormation = (formationId: string) => {
+    setEditingFormationId(formationId);
+    setIsEditModalOpen(true);
   };
 
   const handleSuccess = () => {
     fetchFormations();
+    toast.success('Formation mise à jour avec succès');
+  };
+
+  const handleCreateSuccess = () => {
+    fetchFormations();
+    toast.success('Formation créée avec succès');
   };
 
   const handleDeleteFormation = async (formationId: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette formation ?')) {
-      // TODO: Implémenter la suppression
-      console.log('Supprimer la formation:', formationId);
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette formation ? Cette action supprimera également tous les modules associés et ne peut pas être annulée.')) {
+      try {
+        await formationService.deleteFormation(formationId);
+        toast.success('Formation supprimée avec succès');
+        fetchFormations();
+      } catch (error) {
+        console.error('Erreur lors de la suppression:', error);
+        toast.error('Erreur lors de la suppression de la formation');
+      }
     }
   };
 
@@ -151,21 +173,28 @@ const FormationsList: React.FC = () => {
               key={formation.id}
               {...formation}
               modules={formation.formation_modules || []}
-              onEdit={() => {
-                // TODO: Implémenter l'édition
-                console.log('Éditer la formation:', formation.id);
-              }}
+              onEdit={() => handleEditFormation(formation.id)}
               onDelete={() => handleDeleteFormation(formation.id)}
             />
           ))}
         </div>
       )}
 
-      {/* Modal de création */}
+      {/* Modals */}
       <CreateFormationModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={handleCreateSuccess}
+      />
+
+      <EditFormationModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingFormationId(null);
+        }}
         onSuccess={handleSuccess}
+        formationId={editingFormationId}
       />
     </div>
   );

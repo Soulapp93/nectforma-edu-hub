@@ -96,6 +96,7 @@ export type Database = {
       }
       formations: {
         Row: {
+          color: string | null
           created_at: string
           description: string | null
           duration: number
@@ -111,6 +112,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          color?: string | null
           created_at?: string
           description?: string | null
           duration: number
@@ -126,6 +128,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          color?: string | null
           created_at?: string
           description?: string | null
           duration?: number

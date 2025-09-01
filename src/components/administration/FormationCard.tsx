@@ -31,6 +31,7 @@ const FormationCard: React.FC<FormationCardProps> = ({
   max_students,
   duration,
   price,
+  color = '#8B5CF6',
   modules = [],
   onEdit,
   onDelete
@@ -70,6 +71,12 @@ const FormationCard: React.FC<FormationCardProps> = ({
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 group">
+      {/* Barre de couleur en haut */}
+      <div 
+        className="h-2 rounded-t-xl" 
+        style={{ backgroundColor: color }}
+      />
+      
       <div className="p-6">
         {/* Header avec actions */}
         <div className="flex items-start justify-between mb-4">
