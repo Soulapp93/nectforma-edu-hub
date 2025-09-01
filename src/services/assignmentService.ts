@@ -1,46 +1,17 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { Database } from '@/integrations/supabase/types';
 
-export interface Assignment {
-  id: string;
-  module_id: string;
-  title: string;
-  description?: string;
-  assignment_type: 'devoir' | 'evaluation';
-  due_date?: string;
-  max_points: number;
-  created_by: string;
-  is_published: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface AssignmentSubmission {
-  id: string;
-  assignment_id: string;
-  student_id: string;
-  submission_text?: string;
-  submitted_at: string;
-  updated_at: string;
+export type Assignment = Database['public']['Tables']['module_assignments']['Row'];
+export type AssignmentSubmission = Database['public']['Tables']['assignment_submissions']['Row'] & {
   student?: {
     first_name: string;
     last_name: string;
     email: string;
   };
   correction?: AssignmentCorrection;
-}
-
-export interface AssignmentCorrection {
-  id: string;
-  submission_id: string;
-  corrected_by: string;
-  score?: number;
-  max_score: number;
-  comments?: string;
-  is_corrected: boolean;
-  corrected_at?: string;
-  published_at?: string;
-}
+};
+export type AssignmentCorrection = Database['public']['Tables']['assignment_corrections']['Row'];
 
 export const assignmentService = {
   async getModuleAssignments(moduleId: string) {
@@ -54,7 +25,7 @@ export const assignmentService = {
     return data;
   },
 
-  async createAssignment(assignment: Omit<Assignment, 'id' | 'created_at' | 'updated_at'>) {
+  async createAssignment(assignment: Database['public']['Tables']['module_assignments']['Insert']) {
     const { data, error } = await supabase
       .from('module_assignments')
       .insert(assignment)
@@ -84,7 +55,7 @@ export const assignmentService = {
     return data;
   },
 
-  async submitAssignment(submission: Omit<AssignmentSubmission, 'id' | 'submitted_at' | 'updated_at'>) {
+  async submitAssignment(submission: Database['public']['Tables']['assignment_submissions']['Insert']) {
     const { data, error } = await supabase
       .from('assignment_submissions')
       .insert(submission)
@@ -95,7 +66,7 @@ export const assignmentService = {
     return data;
   },
 
-  async correctSubmission(submissionId: string, correction: Omit<AssignmentCorrection, 'id' | 'submission_id' | 'created_at' | 'updated_at'>) {
+  async correctSubmission(submissionId: string, correction: Omit<Database['public']['Tables']['assignment_corrections']['Insert'], 'submission_id'>) {
     const { data, error } = await supabase
       .from('assignment_corrections')
       .upsert({

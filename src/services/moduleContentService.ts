@@ -1,18 +1,8 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { Database } from '@/integrations/supabase/types';
 
-export interface ModuleContent {
-  id: string;
-  module_id: string;
-  title: string;
-  description?: string;
-  content_type: 'cours' | 'support' | 'video' | 'document';
-  file_url?: string;
-  file_name?: string;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-}
+export type ModuleContent = Database['public']['Tables']['module_contents']['Row'];
 
 export const moduleContentService = {
   async getModuleContents(moduleId: string) {
@@ -26,7 +16,7 @@ export const moduleContentService = {
     return data;
   },
 
-  async createContent(content: Omit<ModuleContent, 'id' | 'created_at' | 'updated_at'>) {
+  async createContent(content: Database['public']['Tables']['module_contents']['Insert']) {
     const { data, error } = await supabase
       .from('module_contents')
       .insert(content)
@@ -37,7 +27,7 @@ export const moduleContentService = {
     return data;
   },
 
-  async updateContent(id: string, updates: Partial<ModuleContent>) {
+  async updateContent(id: string, updates: Database['public']['Tables']['module_contents']['Update']) {
     const { data, error } = await supabase
       .from('module_contents')
       .update(updates)
