@@ -2,6 +2,11 @@
 import React, { useState } from 'react';
 import { X, Maximize2, Minimize2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from './button';
+import PDFViewer from './viewers/PDFViewer';
+import ImageViewer from './viewers/ImageViewer';
+import OfficeViewer from './viewers/OfficeViewer';
+import TextViewer from './viewers/TextViewer';
+import UnsupportedViewer from './viewers/UnsupportedViewer';
 
 interface DocumentViewerProps {
   fileUrl: string;
@@ -28,77 +33,49 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   const fileExtension = getFileExtension(fileName);
 
   const renderDocumentContent = () => {
-    // PDF - Utilisation de l'iframe avec le visualiseur PDF du navigateur
+    console.log('Tentative de visualisation du fichier:', fileName, 'URL:', fileUrl);
+
+    // PDF - Utilisation du visualiseur PDF natif
     if (fileExtension === 'pdf') {
+      return <PDFViewer fileUrl={fileUrl} fileName={fileName} />;
+    }
+
+    // Images
+    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(fileExtension)) {
+      return <ImageViewer fileUrl={fileUrl} fileName={fileName} />;
+    }
+
+    // Fichiers Office - PowerPoint, Word, Excel
+    if (['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension)) {
       return (
-        <iframe
-          src={`${fileUrl}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH`}
-          className="w-full h-full border-0"
-          title={fileName}
+        <OfficeViewer 
+          fileUrl={fileUrl} 
+          fileName={fileName} 
+          fileExtension={fileExtension}
         />
       );
     }
 
-    // Images
-    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'].includes(fileExtension)) {
-      return (
-        <div className="flex items-center justify-center h-full bg-gray-100">
-          <img
-            src={fileUrl}
-            alt={fileName}
-            className="max-w-full max-h-full object-contain"
-          />
-        </div>
-      );
-    }
-
-    // PowerPoint, Word, Excel - Utilisation de Microsoft Office Online Viewer
-    if (['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension)) {
-      const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`;
-      
-      return (
-        <div className="w-full h-full">
-          <iframe
-            src={officeViewerUrl}
-            className="w-full h-full border-0"
-            title={fileName}
-            allow="fullscreen"
-          />
-        </div>
-      );
-    }
-
     // Fichiers texte
-    if (['txt', 'md', 'json', 'xml', 'csv'].includes(fileExtension)) {
-      return (
-        <div className="p-4 h-full overflow-auto">
-          <iframe
-            src={fileUrl}
-            className="w-full h-full border-0 bg-white"
-            title={fileName}
-          />
-        </div>
-      );
+    if (['txt', 'md', 'json', 'xml', 'csv', 'log'].includes(fileExtension)) {
+      return <TextViewer fileUrl={fileUrl} fileName={fileName} />;
     }
 
-    // Type de fichier non supporté pour la visualisation
+    // Type de fichier non supporté
     return (
-      <div className="flex flex-col items-center justify-center h-full text-gray-500">
-        <div className="text-6xl mb-4">📄</div>
-        <h3 className="text-lg font-medium mb-2">Aperçu non disponible</h3>
-        <p className="text-sm text-center mb-4">
-          Ce type de fichier ({fileExtension.toUpperCase()}) ne peut pas être visualisé directement.
-        </p>
-        <Button onClick={() => window.open(fileUrl, '_blank')}>
-          Télécharger le fichier
-        </Button>
-      </div>
+      <UnsupportedViewer 
+        fileUrl={fileUrl} 
+        fileName={fileName} 
+        fileExtension={fileExtension}
+      />
     );
   };
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
   };
+
+  const isPowerPoint = ['ppt', 'pptx'].includes(fileExtension);
 
   return (
     <div className={`fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 ${
@@ -110,7 +87,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
           : 'w-full h-full max-w-6xl max-h-[90vh]'
       }`}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white rounded-t-lg">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white rounded-t-lg flex-shrink-0">
           <div className="flex items-center space-x-2">
             <h2 className="text-lg font-semibold text-gray-900 truncate">
               {fileName}
@@ -122,15 +99,23 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
           
           <div className="flex items-center space-x-2">
             {/* Contrôles pour PowerPoint */}
-            {['ppt', 'pptx'].includes(fileExtension) && (
+            {isPowerPoint && (
               <div className="flex items-center space-x-1 border-r pr-2 mr-2">
-                <Button size="sm" variant="ghost" onClick={() => setCurrentSlide(Math.max(1, currentSlide - 1))}>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={() => setCurrentSlide(Math.max(1, currentSlide - 1))}
+                >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <span className="text-sm text-gray-500 min-w-[60px] text-center">
                   Slide {currentSlide}
                 </span>
-                <Button size="sm" variant="ghost" onClick={() => setCurrentSlide(currentSlide + 1)}>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={() => setCurrentSlide(currentSlide + 1)}
+                >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
