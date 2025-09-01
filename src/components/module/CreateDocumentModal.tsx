@@ -52,7 +52,7 @@ const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
         file_url: fileUrl,
         file_name: file.name,
         file_size: file.size,
-        created_by: 'current-user-id' // TODO: Récupérer l'ID utilisateur actuel
+        created_by: 'temp-user-id'
       };
 
       console.log('Creating document in database:', documentData);

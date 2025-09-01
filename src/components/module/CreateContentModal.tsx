@@ -51,7 +51,7 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
         module_id: moduleId,
         file_url: fileUrl,
         file_name: fileName,
-        created_by: 'current-user-id' // TODO: Récupérer l'ID utilisateur actuel
+        created_by: 'temp-user-id'
       };
 
       console.log('Creating content in database:', contentData);
