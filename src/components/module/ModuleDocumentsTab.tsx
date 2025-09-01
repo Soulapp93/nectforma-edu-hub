@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus, FileText, Eye, Trash2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { moduleDocumentService, ModuleDocument } from '@/services/moduleDocumentService';
 import CreateDocumentModal from './CreateDocumentModal';
+import DocumentViewer from '@/components/ui/document-viewer';
 
 interface ModuleDocumentsTabProps {
   moduleId: string;
@@ -13,6 +13,7 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
   const [documents, setDocuments] = useState<ModuleDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [viewerDocument, setViewerDocument] = useState<ModuleDocument | null>(null);
 
   const fetchDocuments = async () => {
     try {
@@ -46,8 +47,8 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
     }
   };
 
-  const handleViewDocument = (fileUrl: string) => {
-    window.open(fileUrl, '_blank');
+  const handleViewDocument = (document: ModuleDocument) => {
+    setViewerDocument(document);
   };
 
   const handleDownloadDocument = (fileUrl: string, fileName: string) => {
@@ -76,6 +77,30 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
     return (size / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
+  const getFileIcon = (fileName: string) => {
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    switch (extension) {
+      case 'pdf':
+        return '📄';
+      case 'doc':
+      case 'docx':
+        return '📝';
+      case 'ppt':
+      case 'pptx':
+        return '📊';
+      case 'xls':
+      case 'xlsx':
+        return '📈';
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+        return '🖼️';
+      default:
+        return '📎';
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-8">Chargement...</div>;
   }
@@ -93,19 +118,24 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
       {documents.length > 0 ? (
         <div className="space-y-4">
           {documents.map((document) => (
-            <div key={document.id} className="bg-white border border-gray-200 rounded-lg p-4">
+            <div key={document.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <h3 className="font-medium text-gray-900">{document.title}</h3>
-                    <span className={`text-xs px-2 py-1 rounded-full ${getDocumentTypeColor(document.document_type)}`}>
-                      {document.document_type}
-                    </span>
+                  <div className="flex items-center space-x-3 mb-2">
+                    <span className="text-2xl">{getFileIcon(document.file_name)}</span>
+                    <div>
+                      <h3 className="font-medium text-gray-900">{document.title}</h3>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className={`text-xs px-2 py-1 rounded-full ${getDocumentTypeColor(document.document_type)}`}>
+                          {document.document_type}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                   {document.description && (
-                    <p className="text-gray-600 text-sm mb-3">{document.description}</p>
+                    <p className="text-gray-600 text-sm mb-3 ml-11">{document.description}</p>
                   )}
-                  <div className="flex items-center text-sm text-gray-500 space-x-4">
+                  <div className="flex items-center text-sm text-gray-500 space-x-4 ml-11">
                     <div className="flex items-center">
                       <FileText className="h-4 w-4 mr-1" />
                       <span>{document.file_name}</span>
@@ -120,7 +150,7 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
                   <Button 
                     size="sm" 
                     variant="outline"
-                    onClick={() => handleViewDocument(document.file_url)}
+                    onClick={() => handleViewDocument(document)}
                   >
                     <Eye className="h-4 w-4 mr-1" />
                     Visualiser
@@ -162,6 +192,15 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
           onClose={() => setShowCreateModal(false)}
           moduleId={moduleId}
           onSuccess={handleCreateSuccess}
+        />
+      )}
+
+      {viewerDocument && (
+        <DocumentViewer
+          fileUrl={viewerDocument.file_url}
+          fileName={viewerDocument.file_name}
+          isOpen={!!viewerDocument}
+          onClose={() => setViewerDocument(null)}
         />
       )}
     </div>
