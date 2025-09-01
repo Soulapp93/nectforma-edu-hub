@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { X, BookOpen, Calendar, Plus } from 'lucide-react';
 import ModuleForm, { ModuleFormData } from './ModuleForm';
 import ColorPalette from './ColorPalette';
@@ -34,7 +35,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
     start_date: '',
     end_date: '',
     status: 'Actif',
-    color: '#8B5CF6' // Couleur par défaut (purple)
+    color: '#8B5CF6'
   });
 
   const [modules, setModules] = useState<ModuleFormData[]>([]);
@@ -47,7 +48,6 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
       ...prev,
       [name]: value
     }));
-    // Clear error when user starts typing
     if (error) setError(null);
   };
 
@@ -56,7 +56,6 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
       ...prev,
       color: color
     }));
-    // Clear error when user changes color
     if (error) setError(null);
   };
 
@@ -83,40 +82,35 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
     try {
       setLoading(true);
 
-      // Validation des champs requis
       if (!formData.title.trim()) {
         setError('Le titre de la formation est requis');
         return;
       }
 
-      // Récupérer ou créer un établissement par défaut
       console.log('Récupération de l\'établissement...');
       const establishment = await establishmentService.getOrCreateDefaultEstablishment();
       console.log('Établissement récupéré:', establishment);
 
-      // Générer des dates par défaut si elles ne sont pas fournies
       const today = new Date();
       const defaultStartDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       const defaultEndDate = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
 
-      // Préparer les données de formation avec des dates valides
       const formationData = {
         ...formData,
         start_date: formData.start_date || defaultStartDate.toISOString().split('T')[0],
         end_date: formData.end_date || defaultEndDate.toISOString().split('T')[0],
-        duration: 0, // Durée par défaut
-        max_students: 25, // Valeur par défaut
-        price: 0, // Valeur par défaut
-        establishment_id: establishment.id // Utiliser l'ID de l'établissement récupéré
+        duration: 0,
+        max_students: 25,
+        price: 0,
+        establishment_id: establishment.id
       };
 
       console.log('Données de formation à envoyer:', formationData);
 
-      // Créer la formation
       const formation = await formationService.createFormation(formationData);
       console.log('Formation créée avec succès:', formation);
 
-      // Créer les modules si il y en a
+      // Créer les modules
       for (let i = 0; i < modules.length; i++) {
         const module = modules[i];
         if (module.title.trim()) {
@@ -124,13 +118,12 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
             formation_id: formation.id,
             title: module.title,
             description: module.description,
-            duration_hours: 0, // Durée par défaut
+            duration_hours: 0,
             order_index: i
           }, module.instructorIds);
         }
       }
 
-      // Succès
       console.log('Formation et modules créés avec succès');
       onSuccess();
       onClose();
@@ -180,7 +173,6 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         )}
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Informations générales */}
           <div className="bg-gray-50 rounded-lg p-4">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Informations générales</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -313,7 +305,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                   />
                 ))}
               </div>
-            )}
+            )}  
           </div>
 
           <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { X, BookOpen, Calendar, Save } from 'lucide-react';
 import ColorPalette from './ColorPalette';
