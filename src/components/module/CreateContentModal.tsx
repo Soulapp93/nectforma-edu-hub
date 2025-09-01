@@ -51,7 +51,7 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
         module_id: moduleId,
         file_url: fileUrl,
         file_name: fileName,
-        created_by: 'temp-user-id'
+        created_by: '00000000-0000-0000-0000-000000000000' // UUID temporaire valide
       };
 
       console.log('Creating content in database:', contentData);
