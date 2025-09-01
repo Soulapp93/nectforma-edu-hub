@@ -1,9 +1,9 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, BookOpen, Calendar, Plus } from 'lucide-react';
 import ModuleForm, { ModuleFormData } from './ModuleForm';
 import { formationService } from '@/services/formationService';
 import { moduleService } from '@/services/moduleService';
+import { establishmentService } from '@/services/establishmentService';
 
 interface CreateFormationModalProps {
   isOpen: boolean;
@@ -77,6 +77,11 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         return;
       }
 
+      // Récupérer ou créer un établissement par défaut
+      console.log('Récupération de l\'établissement...');
+      const establishment = await establishmentService.getOrCreateDefaultEstablishment();
+      console.log('Établissement récupéré:', establishment);
+
       // Générer des dates par défaut si elles ne sont pas fournies
       const today = new Date();
       const defaultStartDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -90,7 +95,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         duration: 0, // Durée par défaut
         max_students: 25, // Valeur par défaut
         price: 0, // Valeur par défaut
-        establishment_id: '00000000-0000-0000-0000-000000000000' // Établissement par défaut
+        establishment_id: establishment.id // Utiliser l'ID de l'établissement récupéré
       };
 
       console.log('Données de formation à envoyer:', formationData);
