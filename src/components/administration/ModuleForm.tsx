@@ -6,7 +6,6 @@ import { useInstructors } from '@/hooks/useInstructors';
 export interface ModuleFormData {
   title: string;
   description: string;
-  duration_hours: number;
   instructorIds: string[];
 }
 
@@ -21,7 +20,6 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex })
   const [formData, setFormData] = useState<ModuleFormData>({
     title: '',
     description: '',
-    duration_hours: 0,
     instructorIds: []
   });
 
@@ -29,7 +27,7 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex })
     const { name, value } = e.target;
     const newData = {
       ...formData,
-      [name]: name === 'duration_hours' ? parseInt(value) || 0 : value
+      [name]: value
     };
     setFormData(newData);
     onAdd(newData);
@@ -83,21 +81,6 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex })
             onChange={handleChange}
             rows={2}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Durée (heures) *
-          </label>
-          <input
-            type="number"
-            name="duration_hours"
-            value={formData.duration_hours}
-            onChange={handleChange}
-            min="0"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            required
           />
         </div>
 

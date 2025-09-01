@@ -49,7 +49,6 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
     setModules(prev => [...prev, {
       title: '',
       description: '',
-      duration_hours: 0,
       instructorIds: []
     }]);
   };
@@ -68,13 +67,10 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
     try {
       setLoading(true);
 
-      // Calculer la durée totale des modules
-      const totalDuration = modules.reduce((sum, module) => sum + module.duration_hours, 0);
-
       // Créer la formation
       const formation = await formationService.createFormation({
         ...formData,
-        duration: totalDuration,
+        duration: 0, // Durée par défaut
         max_students: 25, // Valeur par défaut
         price: 0, // Valeur par défaut
         establishment_id: '00000000-0000-0000-0000-000000000000' // À remplacer par l'établissement de l'utilisateur
@@ -87,7 +83,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
           formation_id: formation.id,
           title: module.title,
           description: module.description,
-          duration_hours: module.duration_hours,
+          duration_hours: 0, // Durée par défaut
           order_index: i
         }, module.instructorIds);
       }
@@ -196,7 +192,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   <Calendar className="h-4 w-4 inline mr-1" />
-                  Date de début
+                  Date de début (optionnel)
                 </label>
                 <input
                   type="date"
@@ -210,7 +206,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   <Calendar className="h-4 w-4 inline mr-1" />
-                  Date de fin
+                  Date de fin (optionnel)
                 </label>
                 <input
                   type="date"
