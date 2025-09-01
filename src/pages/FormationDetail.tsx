@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Clock, Users, FileText, Eye, Download, Edit, Plus } from 'lucide-react';
@@ -6,6 +5,7 @@ import { formationService, Formation } from '@/services/formationService';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import ModuleDetail from '@/components/module/ModuleDetail';
 
 const FormationDetail = () => {
   const { formationId } = useParams<{ formationId: string }>();
@@ -13,6 +13,7 @@ const FormationDetail = () => {
   const [formation, setFormation] = useState<Formation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedModule, setSelectedModule] = useState<any>(null);
 
   useEffect(() => {
     const fetchFormation = async () => {
@@ -32,6 +33,14 @@ const FormationDetail = () => {
     fetchFormation();
   }, [formationId]);
 
+  const handleModuleClick = (module: any) => {
+    setSelectedModule(module);
+  };
+
+  const handleBackToModules = () => {
+    setSelectedModule(null);
+  };
+
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center">
@@ -48,6 +57,17 @@ const FormationDetail = () => {
           Retour aux formations
         </Button>
       </div>
+    );
+  }
+
+  // Si un module est sélectionné, afficher les détails du module
+  if (selectedModule) {
+    return (
+      <ModuleDetail
+        module={selectedModule}
+        formationColor={formation.color || '#8B5CF6'}
+        onBack={handleBackToModules}
+      />
     );
   }
 
@@ -144,7 +164,7 @@ const FormationDetail = () => {
                   <h2 className="text-xl font-semibold text-gray-900">Modules de la formation</h2>
                   <Button>
                     <Plus className="h-4 w-4 mr-2" />
-                    Ajouter un contenu
+                    Ajouter un module
                   </Button>
                 </div>
               </div>
@@ -152,9 +172,9 @@ const FormationDetail = () => {
               <div className="p-6 space-y-4">
                 {formation.formation_modules && formation.formation_modules.length > 0 ? (
                   formation.formation_modules.map((module, index) => (
-                    <div key={module.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                    <div key={module.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-4" onClick={() => handleModuleClick(module)}>
                           <div 
                             className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-semibold"
                             style={{ backgroundColor: formationColor }}
@@ -170,13 +190,13 @@ const FormationDetail = () => {
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleModuleClick(module)}
+                          >
                             <Eye className="h-4 w-4 mr-2" />
-                            Visualiser
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Download className="h-4 w-4 mr-2" />
-                            Télécharger
+                            Accéder au module
                           </Button>
                           <Button variant="ghost" size="sm">
                             <Edit className="h-4 w-4" />
