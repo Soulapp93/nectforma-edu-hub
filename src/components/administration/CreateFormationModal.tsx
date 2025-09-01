@@ -67,16 +67,23 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
     try {
       setLoading(true);
 
-      // Préparer les données de formation avec des dates correctes
+      // Générer des dates par défaut si elles ne sont pas fournies
+      const today = new Date();
+      const defaultStartDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const defaultEndDate = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
+
+      // Préparer les données de formation avec des dates valides
       const formationData = {
         ...formData,
-        start_date: formData.start_date || null,
-        end_date: formData.end_date || null,
+        start_date: formData.start_date || defaultStartDate.toISOString().split('T')[0],
+        end_date: formData.end_date || defaultEndDate.toISOString().split('T')[0],
         duration: 0, // Durée par défaut
         max_students: 25, // Valeur par défaut
         price: 0, // Valeur par défaut
         establishment_id: '00000000-0000-0000-0000-000000000000' // À remplacer par l'établissement de l'utilisateur
       };
+
+      console.log('Données de formation à envoyer:', formationData);
 
       // Créer la formation
       const formation = await formationService.createFormation(formationData);
@@ -206,6 +213,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
+                <p className="text-xs text-gray-500 mt-1">Si vide, la date d'aujourd'hui sera utilisée</p>
               </div>
 
               <div>
@@ -220,6 +228,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
+                <p className="text-xs text-gray-500 mt-1">Si vide, une date dans un an sera utilisée</p>
               </div>
             </div>
           </div>
