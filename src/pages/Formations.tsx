@@ -1,8 +1,11 @@
 
 import React, { useState } from 'react';
-import { Plus, Search, Filter, BookOpen, Users, Clock, Star, Calendar, Edit, Trash2 } from 'lucide-react';
+import { Plus, Search, Filter, BookOpen, Users, Clock, Star, Edit, Trash2 } from 'lucide-react';
 import FormationCard from '../components/FormationCard';
 import FormationModal from '../components/FormationModal';
+import { useFormations } from '@/hooks/useFormations';
+import { formationService } from '@/services/formationService';
+import { toast } from 'sonner';
 
 const Formations = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -10,57 +13,8 @@ const Formations = () => {
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('all');
-
-  const [formations, setFormations] = useState([
-    {
-      id: 1,
-      title: 'Introduction au Marketing Digital',
-      level: 'BAC+1',
-      students: 2,
-      modules: 2,
-      instructor: 'Formateur Prof',
-      status: 'Actif' as const,
-      color: '#8B5CF6',
-      description: 'Formation complète aux fondamentaux du marketing digital moderne.',
-      duration: '40',
-      price: '1200',
-      startDate: '2024-01-15',
-      endDate: '2024-06-15',
-      maxStudents: '25'
-    },
-    {
-      id: 2,
-      title: 'Cours de Photoshop Avancé',
-      level: 'BAC+3',
-      students: 1,
-      modules: 0,
-      instructor: 'Non assigné',
-      status: 'Actif' as const,
-      color: '#3B82F6',
-      description: 'Maîtrisez les techniques avancées de retouche photo et de création graphique.',
-      duration: '60',
-      price: '1800',
-      startDate: '2024-02-01',
-      endDate: '2024-07-01',
-      maxStudents: '15'
-    },
-    {
-      id: 3,
-      title: 'Communication digitale',
-      level: 'BAC+2',
-      students: 5,
-      modules: 4,
-      instructor: 'Formateur Communication',
-      status: 'Actif' as const,
-      color: '#10B981',
-      description: 'Apprenez à créer des stratégies de communication digitale efficaces.',
-      duration: '35',
-      price: '1000',
-      startDate: '2024-03-01',
-      endDate: '2024-08-01',
-      maxStudents: '20'
-    }
-  ]);
+  
+  const { formations, loading, error, refetch } = useFormations();
 
   const handleCreateFormation = () => {
     setSelectedFormation(null);
@@ -74,33 +28,42 @@ const Formations = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeleteFormation = (formationId: number) => {
+  const handleDeleteFormation = async (formationId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette formation ?')) {
-      setFormations(formations.filter(f => f.id !== formationId));
+      try {
+        await formationService.deleteFormation(formationId);
+        toast.success('Formation supprimée avec succès');
+        refetch();
+      } catch (error) {
+        console.error('Erreur lors de la suppression:', error);
+        toast.error('Erreur lors de la suppression de la formation');
+      }
     }
   };
 
-  const handleSaveFormation = (formationData: any) => {
-    if (modalMode === 'create') {
-      const colors = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
-      const newFormation = {
-        ...formationData,
-        id: Math.max(...formations.map(f => f.id)) + 1,
-        students: 0,
-        modules: 0,
-        color: colors[Math.floor(Math.random() * colors.length)]
-      };
-      setFormations([...formations, newFormation]);
-    } else {
-      setFormations(formations.map(formation => 
-        formation.id === selectedFormation?.id ? { ...formation, ...formationData } : formation
-      ));
+  const handleSaveFormation = async (formationData: any) => {
+    try {
+      if (modalMode === 'create') {
+        await formationService.createFormation({
+          ...formationData,
+          establishment_id: 'default-establishment-id' // À adapter selon votre logique
+        });
+        toast.success('Formation créée avec succès');
+      } else {
+        await formationService.updateFormation(selectedFormation?.id, formationData);
+        toast.success('Formation mise à jour avec succès');
+      }
+      refetch();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      toast.error('Erreur lors de la sauvegarde de la formation');
     }
   };
 
   const filteredFormations = formations.filter(formation => {
     const matchesSearch = formation.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         formation.instructor.toLowerCase().includes(searchTerm.toLowerCase());
+                         formation.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesLevel = selectedLevel === 'all' || formation.level === selectedLevel;
     return matchesSearch && matchesLevel;
   });
@@ -114,6 +77,25 @@ const Formations = () => {
   }, {} as Record<string, typeof formations>);
 
   const levels = ['BAC+1', 'BAC+2', 'BAC+3', 'BAC+4', 'BAC+5'];
+
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8">
+        <div className="text-red-600">Erreur: {error}</div>
+        <button onClick={refetch} className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg">
+          Réessayer
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
@@ -182,7 +164,9 @@ const Formations = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Étudiants inscrits</p>
-                <p className="text-2xl font-bold text-gray-900">{formations.reduce((sum, f) => sum + f.students, 0)}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {formations.reduce((sum, f) => sum + (f.max_students || 0), 0)}
+                </p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Users className="h-6 w-6 text-blue-600" />
@@ -194,7 +178,9 @@ const Formations = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Heures de cours</p>
-                <p className="text-2xl font-bold text-gray-900">{formations.reduce((sum, f) => sum + parseInt(f.duration || '0'), 0)}h</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {formations.reduce((sum, f) => sum + (f.duration || 0), 0)}h
+                </p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <Clock className="h-6 w-6 text-green-600" />
@@ -230,7 +216,19 @@ const Formations = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {levelFormations.map((formation) => (
                 <div key={formation.id} className="relative group">
-                  <FormationCard {...formation} />
+                  <FormationCard 
+                    id={formation.id}
+                    title={formation.title}
+                    level={formation.level}
+                    students={0} // À adapter selon les inscriptions réelles
+                    modules={formation.formation_modules?.length || 0}
+                    instructor="Formateur" // À adapter selon les données réelles
+                    status={formation.status}
+                    color={formation.color || '#8B5CF6'}
+                    description={formation.description}
+                    duration={formation.duration?.toString()}
+                    maxStudents={formation.max_students?.toString()}
+                  />
                   <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                     <div className="flex space-x-2">
                       <button

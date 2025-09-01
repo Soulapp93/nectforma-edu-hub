@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { BookOpen, Users, Clock, Calendar, User, Edit, Trash2, Eye } from 'lucide-react';
 import { Formation } from '@/services/formationService';
@@ -237,6 +236,31 @@ const FormationCard: React.FC<FormationCardProps> = ({
       />
     </>
   );
+};
+
+// Helper functions
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'Actif':
+      return 'bg-green-100 text-green-800';
+    case 'Inactif':
+      return 'bg-red-100 text-red-800';
+    case 'Brouillon':
+      return 'bg-yellow-100 text-yellow-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
+const getLevelColor = (level: string) => {
+  const colors = {
+    'BAC+1': 'bg-purple-100 text-purple-800',
+    'BAC+2': 'bg-blue-100 text-blue-800',
+    'BAC+3': 'bg-green-100 text-green-800',
+    'BAC+4': 'bg-orange-100 text-orange-800',
+    'BAC+5': 'bg-red-100 text-red-800'
+  };
+  return colors[level as keyof typeof colors] || 'bg-gray-100 text-gray-800';
 };
 
 export default FormationCard;
