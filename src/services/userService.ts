@@ -1,67 +1,84 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { formationService } from './formationService';
 
 export interface User {
-  id?: string;
-  establishment_id?: string;
+  id: string;
   first_name: string;
   last_name: string;
   email: string;
-  phone?: string;
   role: 'Admin' | 'Formateur' | 'Étudiant';
   status: 'Actif' | 'Inactif' | 'En attente';
-  invitation_sent_at?: string;
-  created_at?: string;
-  updated_at?: string;
+  phone?: string;
+  created_at: string;
+  updated_at: string;
+  establishment_id: string;
   is_activated?: boolean;
 }
 
 export const userService = {
-  async getUsers() {
+  async getUsers(): Promise<User[]> {
     const { data, error } = await supabase
       .from('users')
       .select('*')
       .order('created_at', { ascending: false });
-    
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getUserById(id: string): Promise<User> {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single();
+
     if (error) throw error;
     return data;
   },
 
-  async createUser(userData: Omit<User, 'id' | 'created_at' | 'updated_at'>, formationIds: string[] = []) {
-    // Pour l'instant, on utilise le premier établissement trouvé
+  async createUser(userData: Omit<User, 'id' | 'created_at' | 'updated_at'>, formationIds: string[] = []): Promise<User> {
     const { data: establishment } = await supabase
       .from('establishments')
       .select('id')
       .limit(1)
       .single();
 
+    if (!establishment) {
+      throw new Error('Aucun établissement trouvé');
+    }
+
     const { data, error } = await supabase
       .from('users')
       .insert([{
         ...userData,
-        establishment_id: establishment?.id,
-        is_activated: false
+        establishment_id: establishment.id
       }])
       .select()
       .single();
 
     if (error) throw error;
 
-    // Assigner l'utilisateur aux formations sélectionnées
+    // Assigner l'utilisateur aux formations
     if (formationIds.length > 0) {
-      try {
-        await formationService.assignUserToFormations(data.id, formationIds);
-      } catch (assignError) {
-        console.error('Erreur lors de l\'assignation aux formations:', assignError);
-        // On continue même si l'assignation échoue
+      const assignments = formationIds.map(formationId => ({
+        user_id: data.id,
+        formation_id: formationId
+      }));
+
+      const { error: assignmentError } = await supabase
+        .from('user_formation_assignments')
+        .insert(assignments);
+
+      if (assignmentError) {
+        console.error('Erreur lors de l\'assignation aux formations:', assignmentError);
       }
     }
-    
+
     return data;
   },
 
-  async updateUser(id: string, userData: Partial<User>) {
+  async updateUser(id: string, userData: Partial<User>): Promise<User> {
     const { data, error } = await supabase
       .from('users')
       .update(userData)
@@ -73,7 +90,7 @@ export const userService = {
     return data;
   },
 
-  async deleteUser(id: string) {
+  async deleteUser(id: string): Promise<void> {
     const { error } = await supabase
       .from('users')
       .delete()
@@ -82,18 +99,20 @@ export const userService = {
     if (error) throw error;
   },
 
-  async bulkCreateUsers(users: Omit<User, 'id' | 'created_at' | 'updated_at'>[]) {
-    // Pour l'instant, on utilise le premier établissement trouvé
+  async bulkCreateUsers(usersData: Omit<User, 'id' | 'created_at' | 'updated_at'>[]): Promise<User[]> {
     const { data: establishment } = await supabase
       .from('establishments')
       .select('id')
       .limit(1)
       .single();
 
-    const usersWithEstablishment = users.map(user => ({
+    if (!establishment) {
+      throw new Error('Aucun établissement trouvé');
+    }
+
+    const usersWithEstablishment = usersData.map(user => ({
       ...user,
-      establishment_id: establishment?.id,
-      is_activated: false
+      establishment_id: establishment.id
     }));
 
     const { data, error } = await supabase
@@ -102,7 +121,6 @@ export const userService = {
       .select();
 
     if (error) throw error;
-
-    return data;
+    return data || [];
   }
 };
