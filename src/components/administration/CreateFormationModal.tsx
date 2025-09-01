@@ -36,6 +36,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
 
   const [modules, setModules] = useState<ModuleFormData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -43,6 +44,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
       ...prev,
       [name]: value
     }));
+    // Clear error when user starts typing
+    if (error) setError(null);
   };
 
   const addModule = () => {
@@ -63,9 +66,16 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
 
     try {
       setLoading(true);
+
+      // Validation des champs requis
+      if (!formData.title.trim()) {
+        setError('Le titre de la formation est requis');
+        return;
+      }
 
       // Générer des dates par défaut si elles ne sont pas fournies
       const today = new Date();
@@ -80,26 +90,31 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         duration: 0, // Durée par défaut
         max_students: 25, // Valeur par défaut
         price: 0, // Valeur par défaut
-        establishment_id: '00000000-0000-0000-0000-000000000000' // À remplacer par l'établissement de l'utilisateur
+        establishment_id: '00000000-0000-0000-0000-000000000000' // Établissement par défaut
       };
 
       console.log('Données de formation à envoyer:', formationData);
 
       // Créer la formation
       const formation = await formationService.createFormation(formationData);
+      console.log('Formation créée avec succès:', formation);
 
       // Créer les modules si il y en a
       for (let i = 0; i < modules.length; i++) {
         const module = modules[i];
-        await moduleService.createModule({
-          formation_id: formation.id,
-          title: module.title,
-          description: module.description,
-          duration_hours: 0, // Durée par défaut
-          order_index: i
-        }, module.instructorIds);
+        if (module.title.trim()) {
+          await moduleService.createModule({
+            formation_id: formation.id,
+            title: module.title,
+            description: module.description,
+            duration_hours: 0, // Durée par défaut
+            order_index: i
+          }, module.instructorIds);
+        }
       }
 
+      // Succès
+      console.log('Formation et modules créés avec succès');
       onSuccess();
       onClose();
       
@@ -113,9 +128,10 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         status: 'Actif'
       });
       setModules([]);
+      
     } catch (error) {
       console.error('Erreur lors de la création de la formation:', error);
-      alert('Erreur lors de la création de la formation');
+      setError(error instanceof Error ? error.message : 'Erreur lors de la création de la formation');
     } finally {
       setLoading(false);
     }
@@ -138,6 +154,12 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
             <X className="h-5 w-5" />
           </button>
         </div>
+
+        {error && (
+          <div className="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-800 text-sm">{error}</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Informations générales */}
@@ -280,7 +302,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !formData.title.trim()}
               className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {loading ? 'Création...' : 'Créer la formation'}
