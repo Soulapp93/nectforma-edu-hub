@@ -33,19 +33,19 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   const fileExtension = getFileExtension(fileName);
 
   const renderDocumentContent = () => {
-    console.log('Tentative de visualisation du fichier:', fileName, 'URL:', fileUrl);
+    console.log('Visualisation du fichier:', fileName, 'URL:', fileUrl, 'Extension:', fileExtension);
 
-    // PDF - Utilisation du visualiseur PDF natif
+    // PDF - Utilisation du visualiseur PDF avec fallbacks
     if (fileExtension === 'pdf') {
       return <PDFViewer fileUrl={fileUrl} fileName={fileName} />;
     }
 
-    // Images
+    // Images - Support amélioré avec zoom et fallbacks
     if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(fileExtension)) {
       return <ImageViewer fileUrl={fileUrl} fileName={fileName} />;
     }
 
-    // Fichiers Office - PowerPoint, Word, Excel
+    // Fichiers Office - Utilisation de visualiseurs externes avec fallbacks
     if (['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension)) {
       return (
         <OfficeViewer 
@@ -56,12 +56,12 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
       );
     }
 
-    // Fichiers texte
+    // Fichiers texte - Chargement direct du contenu
     if (['txt', 'md', 'json', 'xml', 'csv', 'log'].includes(fileExtension)) {
       return <TextViewer fileUrl={fileUrl} fileName={fileName} />;
     }
 
-    // Type de fichier non supporté
+    // Type de fichier non supporté - Options de téléchargement
     return (
       <UnsupportedViewer 
         fileUrl={fileUrl} 
