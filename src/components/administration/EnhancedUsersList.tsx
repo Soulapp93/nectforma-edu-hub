@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, Search, Filter, Upload, Download, MoreVertical, Edit, Trash2, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useUsers } from '@/hooks/useUsers';
 import { useUserFormations } from '@/hooks/useUserFormations';
-import { User } from '@/services/userService';
+import { User, CreateUserData } from '@/services/userService';
 import SimplifiedUserModal from './SimplifiedUserModal';
 import ExcelImport from './ExcelImport';
 import * as XLSX from 'xlsx';
@@ -52,7 +51,7 @@ const EnhancedUsersList: React.FC = () => {
     }
   };
 
-  const handleSaveUser = async (userData: Omit<User, 'id' | 'created_at' | 'updated_at'>, formationIds: string[]) => {
+  const handleSaveUser = async (userData: CreateUserData, formationIds: string[]) => {
     if (modalMode === 'create') {
       return await createUser(userData, formationIds);
     } else if (selectedUser) {
@@ -61,7 +60,7 @@ const EnhancedUsersList: React.FC = () => {
     throw new Error('Mode invalide');
   };
 
-  const handleExcelImport = async (usersData: Omit<User, 'id' | 'created_at' | 'updated_at'>[]) => {
+  const handleExcelImport = async (usersData: CreateUserData[]) => {
     await bulkCreateUsers(usersData);
   };
 

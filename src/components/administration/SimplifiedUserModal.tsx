@@ -1,18 +1,17 @@
-
 import React, { useState, useEffect } from 'react';
 import { X, User, Mail, Building, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { User as UserType } from '@/services/userService';
+import { User as UserType, CreateUserData } from '@/services/userService';
 import { Formation, formationService } from '@/services/formationService';
 import { activationService } from '@/services/activationService';
 
 interface SimplifiedUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (userData: Omit<UserType, 'id' | 'created_at' | 'updated_at'>, formationIds: string[]) => Promise<UserType>;
+  onSave: (userData: CreateUserData, formationIds: string[]) => Promise<UserType>;
   user?: UserType | null;
   mode: 'create' | 'edit';
 }

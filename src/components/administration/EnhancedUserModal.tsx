@@ -1,15 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { X, Mail, Phone, User, MapPin, Calendar, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User as UserType } from '@/services/userService';
+import { User as UserType, CreateUserData } from '@/services/userService';
 
 interface EnhancedUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (userData: Omit<UserType, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  onSave: (userData: CreateUserData) => Promise<void>;
   user?: UserType | null;
   mode: 'create' | 'edit';
 }

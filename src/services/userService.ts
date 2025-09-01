@@ -15,6 +15,15 @@ export interface User {
   is_activated?: boolean;
 }
 
+export interface CreateUserData {
+  first_name: string;
+  last_name: string;
+  email: string;
+  role: 'Admin' | 'Formateur' | 'Étudiant';
+  status: 'Actif' | 'Inactif' | 'En attente';
+  phone?: string;
+}
+
 export const userService = {
   async getUsers(): Promise<User[]> {
     const { data, error } = await supabase
@@ -37,7 +46,7 @@ export const userService = {
     return data;
   },
 
-  async createUser(userData: Omit<User, 'id' | 'created_at' | 'updated_at'>, formationIds: string[] = []): Promise<User> {
+  async createUser(userData: CreateUserData, formationIds: string[] = []): Promise<User> {
     const { data: establishment } = await supabase
       .from('establishments')
       .select('id')
@@ -78,7 +87,7 @@ export const userService = {
     return data;
   },
 
-  async updateUser(id: string, userData: Partial<User>): Promise<User> {
+  async updateUser(id: string, userData: Partial<CreateUserData>): Promise<User> {
     const { data, error } = await supabase
       .from('users')
       .update(userData)
@@ -99,7 +108,7 @@ export const userService = {
     if (error) throw error;
   },
 
-  async bulkCreateUsers(usersData: Omit<User, 'id' | 'created_at' | 'updated_at'>[]): Promise<User[]> {
+  async bulkCreateUsers(usersData: CreateUserData[]): Promise<User[]> {
     const { data: establishment } = await supabase
       .from('establishments')
       .select('id')

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { userService, User } from '@/services/userService';
+import { userService, User, CreateUserData } from '@/services/userService';
 
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -20,7 +20,7 @@ export const useUsers = () => {
     }
   };
 
-  const createUser = async (userData: Omit<User, 'id' | 'created_at' | 'updated_at'>, formationIds: string[] = []) => {
+  const createUser = async (userData: CreateUserData, formationIds: string[] = []) => {
     try {
       setLoading(true);
       const newUser = await userService.createUser(userData, formationIds);
@@ -34,7 +34,7 @@ export const useUsers = () => {
     }
   };
 
-  const updateUser = async (id: string, userData: Partial<User>) => {
+  const updateUser = async (id: string, userData: Partial<CreateUserData>) => {
     try {
       setLoading(true);
       const updatedUser = await userService.updateUser(id, userData);
@@ -61,7 +61,7 @@ export const useUsers = () => {
     }
   };
 
-  const bulkCreateUsers = async (usersData: Omit<User, 'id' | 'created_at' | 'updated_at'>[]) => {
+  const bulkCreateUsers = async (usersData: CreateUserData[]) => {
     try {
       setLoading(true);
       const newUsers = await userService.bulkCreateUsers(usersData);
