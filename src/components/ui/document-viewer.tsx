@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { X, Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from './button';
-import EnhancedPDFViewer from './viewers/EnhancedPDFViewer';
+import SimplePDFViewer from './viewers/SimplePDFViewer';
 import ImageViewer from './viewers/ImageViewer';
 import EnhancedOfficeViewer from './viewers/EnhancedOfficeViewer';
 import TextViewer from './viewers/TextViewer';
@@ -34,10 +34,10 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   const renderDocumentContent = () => {
     console.log('Visualisation du fichier:', fileName, 'URL:', fileUrl, 'Extension:', fileExtension);
 
-    // PDF - Utilisation du visualiseur PDF.js amélioré
+    // PDF - Utilisation du visualiseur PDF simple
     if (fileExtension === 'pdf') {
       return (
-        <EnhancedPDFViewer 
+        <SimplePDFViewer 
           fileUrl={fileUrl} 
           fileName={fileName}
           isFullscreen={isFullscreen}
@@ -51,7 +51,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
       return <ImageViewer fileUrl={fileUrl} fileName={fileName} />;
     }
 
-    // Fichiers Office - Utilisation du visualiseur amélioré
+    // Fichiers Office
     if (['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension)) {
       return (
         <EnhancedOfficeViewer 
