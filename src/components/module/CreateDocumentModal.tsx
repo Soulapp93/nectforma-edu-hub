@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { moduleDocumentService } from '@/services/moduleDocumentService';
+import { moduleDocumentService, ModuleDocument } from '@/services/moduleDocumentService';
 import { fileUploadService } from '@/services/fileUploadService';
 import FileUpload from '@/components/ui/file-upload';
 
@@ -11,13 +11,15 @@ interface CreateDocumentModalProps {
   onClose: () => void;
   moduleId: string;
   onSuccess: () => void;
+  editDocument?: ModuleDocument;
 }
 
 const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
   isOpen,
   onClose,
   moduleId,
-  onSuccess
+  onSuccess,
+  editDocument
 }) => {
   const [formData, setFormData] = useState({
     title: '',
@@ -28,35 +30,73 @@ const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (editDocument) {
+      setFormData({
+        title: editDocument.title,
+        description: editDocument.description || '',
+        document_type: editDocument.document_type as 'support' | 'article' | 'reference' | 'autre'
+      });
+    }
+  }, [editDocument]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      console.log('Creating document with:', { formData, files: selectedFiles });
+      console.log('Saving document with:', { formData, files: selectedFiles, editMode: !!editDocument });
 
-      if (selectedFiles.length === 0) {
-        throw new Error('Veuillez sélectionner un fichier');
+      if (editDocument) {
+        // Mode édition
+        let fileUrl = editDocument.file_url;
+        let fileName = editDocument.file_name;
+        let fileSize = editDocument.file_size;
+
+        if (selectedFiles.length > 0) {
+          const file = selectedFiles[0];
+          console.log('Uploading new file:', file);
+          fileUrl = await fileUploadService.uploadFile(file);
+          fileName = file.name;
+          fileSize = file.size;
+          console.log('New file uploaded, URL:', fileUrl);
+        }
+
+        const documentData = {
+          ...formData,
+          file_url: fileUrl,
+          file_name: fileName,
+          file_size: fileSize
+        };
+
+        console.log('Updating document in database:', documentData);
+        await moduleDocumentService.updateDocument(editDocument.id, documentData);
+        console.log('Document updated successfully');
+      } else {
+        // Mode création
+        if (selectedFiles.length === 0) {
+          throw new Error('Veuillez sélectionner un fichier');
+        }
+
+        const file = selectedFiles[0];
+        console.log('Uploading file:', file);
+
+        const fileUrl = await fileUploadService.uploadFile(file);
+        console.log('File uploaded, URL:', fileUrl);
+
+        const documentData = {
+          ...formData,
+          module_id: moduleId,
+          file_url: fileUrl,
+          file_name: file.name,
+          file_size: file.size
+        };
+
+        console.log('Creating document in database:', documentData);
+        await moduleDocumentService.createDocument(documentData);
+        console.log('Document created successfully');
       }
-
-      const file = selectedFiles[0];
-      console.log('Uploading file:', file);
-
-      const fileUrl = await fileUploadService.uploadFile(file);
-      console.log('File uploaded, URL:', fileUrl);
-
-      const documentData = {
-        ...formData,
-        module_id: moduleId,
-        file_url: fileUrl,
-        file_name: file.name,
-        file_size: file.size
-      };
-
-      console.log('Creating document in database:', documentData);
-      await moduleDocumentService.createDocument(documentData);
-      console.log('Document created successfully');
 
       onSuccess();
       onClose();
@@ -67,8 +107,8 @@ const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
       });
       setSelectedFiles([]);
     } catch (error: any) {
-      console.error('Error creating document:', error);
-      setError(error.message || 'Erreur lors de la création du document');
+      console.error('Error saving document:', error);
+      setError(error.message || (editDocument ? 'Erreur lors de la modification du document' : 'Erreur lors de la création du document'));
     } finally {
       setLoading(false);
     }
@@ -80,7 +120,9 @@ const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-lg font-semibold">Ajouter un document</h2>
+          <h2 className="text-lg font-semibold">
+            {editDocument ? 'Modifier le document' : 'Ajouter un document'}
+          </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="h-5 w-5" />
           </button>
@@ -136,21 +178,26 @@ const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Fichier *
+              {editDocument ? 'Nouveau fichier (laisser vide pour conserver l\'actuel)' : 'Fichier *'}
             </label>
             <FileUpload
               onFileSelect={setSelectedFiles}
               accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.txt"
               maxSize={50}
             />
+            {editDocument?.file_name && selectedFiles.length === 0 && (
+              <p className="text-sm text-gray-500 mt-1">
+                Fichier actuel: {editDocument.file_name}
+              </p>
+            )}
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
               Annuler
             </Button>
-            <Button type="submit" disabled={loading || selectedFiles.length === 0}>
-              {loading ? 'Création...' : 'Créer'}
+            <Button type="submit" disabled={loading || (!editDocument && selectedFiles.length === 0)}>
+              {loading ? (editDocument ? 'Modification...' : 'Création...') : (editDocument ? 'Modifier' : 'Créer')}
             </Button>
           </div>
         </form>

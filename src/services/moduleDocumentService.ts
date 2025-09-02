@@ -27,6 +27,18 @@ export const moduleDocumentService = {
     return data;
   },
 
+  async updateDocument(id: string, updates: Database['public']['Tables']['module_documents']['Update']) {
+    const { data, error } = await supabase
+      .from('module_documents')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
   async deleteDocument(id: string) {
     const { error } = await supabase
       .from('module_documents')
