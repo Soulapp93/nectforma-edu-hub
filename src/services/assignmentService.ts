@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 
@@ -114,7 +113,7 @@ export const assignmentService = {
     return data;
   },
 
-  async correctSubmission(submissionId: string, correction: Database['public']['Tables']['assignment_corrections']['Insert']) {
+  async correctSubmission(submissionId: string, correction: Omit<Database['public']['Tables']['assignment_corrections']['Insert'], 'submission_id'>) {
     const { data, error } = await supabase
       .from('assignment_corrections')
       .upsert({
