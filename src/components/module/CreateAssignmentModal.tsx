@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { assignmentService, Assignment } from '@/services/assignmentService';
 import { fileUploadService } from '@/services/fileUploadService';
 import FileUpload from '@/components/ui/file-upload';
+import { toast } from 'sonner';
 
 interface CreateAssignmentModalProps {
   isOpen: boolean;
@@ -38,48 +39,10 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         description: editAssignment.description || '',
         assignment_type: editAssignment.assignment_type as 'devoir' | 'evaluation',
         due_date: editAssignment.due_date ? new Date(editAssignment.due_date).toISOString().slice(0, 16) : '',
-        max_points: editAssignment.max_points
+        max_points: editAssignment.max_points || 100
       });
-    }
-  }, [editAssignment]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      if (editAssignment) {
-        // Mode édition
-        await assignmentService.updateAssignment(editAssignment.id, {
-          ...formData,
-          due_date: formData.due_date || undefined
-        });
-      } else {
-        // Mode création
-        const assignment = await assignmentService.createAssignment({
-          ...formData,
-          module_id: moduleId,
-          created_by: 'current-user-id',
-          is_published: true,
-          due_date: formData.due_date || undefined
-        });
-
-        // Uploader les fichiers si il y en a
-        if (selectedFiles.length > 0) {
-          for (const file of selectedFiles) {
-            const fileUrl = await fileUploadService.uploadFile(file);
-            await assignmentService.addAssignmentFile({
-              assignment_id: assignment.id,
-              file_url: fileUrl,
-              file_name: file.name,
-              file_size: file.size
-            });
-          }
-        }
-      }
-
-      onSuccess();
-      onClose();
+    } else {
+      // Reset form when not editing
       setFormData({
         title: '',
         description: '',
@@ -88,12 +51,95 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         max_points: 100
       });
       setSelectedFiles([]);
+    }
+  }, [editAssignment, isOpen]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.title.trim()) {
+      toast.error('Le titre est obligatoire');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      if (editAssignment) {
+        // Mode édition
+        console.log('Modification du devoir:', editAssignment.id);
+        await assignmentService.updateAssignment(editAssignment.id, {
+          title: formData.title,
+          description: formData.description || null,
+          assignment_type: formData.assignment_type,
+          due_date: formData.due_date || null,
+          max_points: formData.max_points
+        });
+        
+        toast.success('Devoir modifié avec succès');
+      } else {
+        // Mode création
+        console.log('Création du devoir pour le module:', moduleId);
+        
+        const assignmentData = {
+          title: formData.title,
+          description: formData.description || null,
+          assignment_type: formData.assignment_type,
+          due_date: formData.due_date || null,
+          max_points: formData.max_points,
+          module_id: moduleId,
+          created_by: 'current-user-id', // TODO: Récupérer l'ID utilisateur actuel
+          is_published: true
+        };
+
+        console.log('Données du devoir à créer:', assignmentData);
+        
+        const assignment = await assignmentService.createAssignment(assignmentData);
+        console.log('Devoir créé:', assignment);
+
+        // Uploader les fichiers si il y en a
+        if (selectedFiles.length > 0) {
+          console.log('Upload des fichiers:', selectedFiles.length);
+          for (const file of selectedFiles) {
+            try {
+              const fileUrl = await fileUploadService.uploadFile(file);
+              await assignmentService.addAssignmentFile({
+                assignment_id: assignment.id,
+                file_url: fileUrl,
+                file_name: file.name,
+                file_size: file.size
+              });
+              console.log('Fichier uploadé:', file.name);
+            } catch (fileError) {
+              console.error('Erreur upload fichier:', fileError);
+              toast.error(`Erreur lors de l'upload du fichier ${file.name}`);
+            }
+          }
+        }
+        
+        toast.success('Devoir créé avec succès');
+      }
+
+      onSuccess();
+      handleClose();
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
-      alert(editAssignment ? 'Erreur lors de la modification du devoir' : 'Erreur lors de la création du devoir');
+      console.error('Erreur lors de la sauvegarde du devoir:', error);
+      toast.error(editAssignment ? 'Erreur lors de la modification du devoir' : 'Erreur lors de la création du devoir');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClose = () => {
+    setFormData({
+      title: '',
+      description: '',
+      assignment_type: 'devoir',
+      due_date: '',
+      max_points: 100
+    });
+    setSelectedFiles([]);
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -105,7 +151,7 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           <h2 className="text-lg font-semibold">
             {editAssignment ? 'Modifier le devoir' : 'Créer un devoir'}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -169,7 +215,7 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
               <input
                 type="number"
                 value={formData.max_points}
-                onChange={(e) => setFormData({ ...formData, max_points: parseInt(e.target.value) })}
+                onChange={(e) => setFormData({ ...formData, max_points: parseInt(e.target.value) || 100 })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 min="1"
               />
@@ -191,7 +237,7 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           )}
 
           <div className="flex justify-end space-x-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={handleClose}>
               Annuler
             </Button>
             <Button type="submit" disabled={loading}>
