@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, FileText, Eye, Trash2, Download } from 'lucide-react';
+import { Plus, FileText, Eye, Trash2, Download, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { moduleDocumentService, ModuleDocument } from '@/services/moduleDocumentService';
 import CreateDocumentModal from './CreateDocumentModal';
 import DocumentViewer from '@/components/ui/document-viewer';
+import { toast } from 'sonner';
 
 interface ModuleDocumentsTabProps {
   moduleId: string;
@@ -13,6 +14,7 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
   const [documents, setDocuments] = useState<ModuleDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState<ModuleDocument | null>(null);
   const [viewerDocument, setViewerDocument] = useState<ModuleDocument | null>(null);
 
   const fetchDocuments = async () => {
@@ -21,6 +23,7 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
       setDocuments(data || []);
     } catch (error) {
       console.error('Erreur lors du chargement des documents:', error);
+      toast.error('Erreur lors du chargement des documents');
     } finally {
       setLoading(false);
     }
@@ -33,6 +36,13 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
   const handleCreateSuccess = () => {
     fetchDocuments();
     setShowCreateModal(false);
+    toast.success('Document ajouté avec succès');
+  };
+
+  const handleEditSuccess = () => {
+    fetchDocuments();
+    setShowEditModal(null);
+    toast.success('Document modifié avec succès');
   };
 
   const handleDelete = async (id: string) => {
@@ -40,9 +50,10 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
       try {
         await moduleDocumentService.deleteDocument(id);
         fetchDocuments();
+        toast.success('Document supprimé avec succès');
       } catch (error) {
         console.error('Erreur lors de la suppression:', error);
-        alert('Erreur lors de la suppression');
+        toast.error('Erreur lors de la suppression');
       }
     }
   };
@@ -51,14 +62,25 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
     setViewerDocument(document);
   };
 
-  const handleDownloadDocument = (fileUrl: string, fileName: string) => {
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = fileName;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownloadDocument = async (fileUrl: string, fileName: string) => {
+    try {
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = fileName;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('Téléchargement démarré');
+    } catch (error) {
+      console.error('Erreur lors du téléchargement:', error);
+      toast.error('Erreur lors du téléchargement');
+    }
+  };
+
+  const handleEdit = (document: ModuleDocument) => {
+    setShowEditModal(document);
   };
 
   const getDocumentTypeColor = (type: string) => {
@@ -164,6 +186,14 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
                     <Download className="h-4 w-4 mr-1" />
                     Télécharger
                   </Button>
+
+                  <Button 
+                    size="sm" 
+                    variant="ghost"
+                    onClick={() => handleEdit(document)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
                   
                   <Button 
                     size="sm" 
@@ -192,6 +222,16 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
           onClose={() => setShowCreateModal(false)}
           moduleId={moduleId}
           onSuccess={handleCreateSuccess}
+        />
+      )}
+
+      {showEditModal && (
+        <CreateDocumentModal
+          isOpen={!!showEditModal}
+          onClose={() => setShowEditModal(null)}
+          moduleId={moduleId}
+          onSuccess={handleEditSuccess}
+          editDocument={showEditModal}
         />
       )}
 

@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus, FileText, Eye, Edit, Trash2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { moduleContentService, ModuleContent } from '@/services/moduleContentService';
 import CreateContentModal from './CreateContentModal';
 import DocumentViewer from '@/components/ui/document-viewer';
+import { toast } from 'sonner';
 
 interface ModuleContentTabProps {
   moduleId: string;
@@ -14,6 +14,7 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
   const [contents, setContents] = useState<ModuleContent[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState<ModuleContent | null>(null);
   const [viewerDocument, setViewerDocument] = useState<ModuleContent | null>(null);
 
   const fetchContents = async () => {
@@ -22,6 +23,7 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
       setContents(data || []);
     } catch (error) {
       console.error('Erreur lors du chargement du contenu:', error);
+      toast.error('Erreur lors du chargement du contenu');
     } finally {
       setLoading(false);
     }
@@ -34,6 +36,13 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
   const handleCreateSuccess = () => {
     fetchContents();
     setShowCreateModal(false);
+    toast.success('Contenu ajouté avec succès');
+  };
+
+  const handleEditSuccess = () => {
+    fetchContents();
+    setShowEditModal(null);
+    toast.success('Contenu modifié avec succès');
   };
 
   const handleDelete = async (id: string) => {
@@ -41,9 +50,10 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
       try {
         await moduleContentService.deleteContent(id);
         fetchContents();
+        toast.success('Contenu supprimé avec succès');
       } catch (error) {
         console.error('Erreur lors de la suppression:', error);
-        alert('Erreur lors de la suppression');
+        toast.error('Erreur lors de la suppression');
       }
     }
   };
@@ -53,15 +63,29 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
     setViewerDocument(content);
   };
 
-  const handleDownloadFile = (fileUrl: string, fileName: string) => {
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = fileName;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownloadFile = async (fileUrl: string, fileName: string) => {
+    try {
+      // Créer un lien de téléchargement
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = fileName;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      
+      // Déclencher le téléchargement
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success('Téléchargement démarré');
+    } catch (error) {
+      console.error('Erreur lors du téléchargement:', error);
+      toast.error('Erreur lors du téléchargement');
+    }
+  };
+
+  const handleEdit = (content: ModuleContent) => {
+    setShowEditModal(content);
   };
 
   const getContentTypeColor = (type: string) => {
@@ -164,7 +188,11 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
                     </>
                   )}
                   
-                  <Button size="sm" variant="ghost">
+                  <Button 
+                    size="sm" 
+                    variant="ghost"
+                    onClick={() => handleEdit(content)}
+                  >
                     <Edit className="h-4 w-4" />
                   </Button>
                   
@@ -195,6 +223,16 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
           onClose={() => setShowCreateModal(false)}
           moduleId={moduleId}
           onSuccess={handleCreateSuccess}
+        />
+      )}
+
+      {showEditModal && (
+        <CreateContentModal
+          isOpen={!!showEditModal}
+          onClose={() => setShowEditModal(null)}
+          moduleId={moduleId}
+          onSuccess={handleEditSuccess}
+          editContent={showEditModal}
         />
       )}
 
