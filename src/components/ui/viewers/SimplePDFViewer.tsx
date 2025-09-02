@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '../button';
-import { Download, ExternalLink, AlertCircle } from 'lucide-react';
+import { Download, ExternalLink, AlertCircle, Eye } from 'lucide-react';
 
 interface SimplePDFViewerProps {
   fileUrl: string;
@@ -17,6 +17,7 @@ const SimplePDFViewer: React.FC<SimplePDFViewerProps> = ({
   onToggleFullscreen 
 }) => {
   const [loadError, setLoadError] = useState(false);
+  const [viewerMethod, setViewerMethod] = useState<'direct' | 'google' | 'mozilla'>('direct');
 
   const handleDownload = () => {
     const link = document.createElement('a');
@@ -30,12 +31,31 @@ const SimplePDFViewer: React.FC<SimplePDFViewerProps> = ({
   };
 
   const openInNewTab = () => {
-    window.open(fileUrl, '_blank', 'noopener,noreferrer');
+    // Utiliser Google Docs Viewer pour éviter les blocages
+    const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=false`;
+    window.open(googleViewerUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleIframeError = () => {
-    console.log('Erreur de chargement de l\'iframe PDF');
-    setLoadError(true);
+    console.log('Erreur de chargement de l\'iframe PDF avec méthode:', viewerMethod);
+    if (viewerMethod === 'direct') {
+      setViewerMethod('google');
+    } else if (viewerMethod === 'google') {
+      setViewerMethod('mozilla');
+    } else {
+      setLoadError(true);
+    }
+  };
+
+  const tryDifferentViewer = () => {
+    if (viewerMethod === 'direct') {
+      setViewerMethod('google');
+    } else if (viewerMethod === 'google') {
+      setViewerMethod('mozilla');
+    } else {
+      setViewerMethod('direct');
+    }
+    setLoadError(false);
   };
 
   if (loadError) {
@@ -46,12 +66,17 @@ const SimplePDFViewer: React.FC<SimplePDFViewerProps> = ({
           <h3 className="text-lg font-medium text-gray-900 mb-2">Erreur de chargement</h3>
           <p className="text-gray-600 mb-4">Impossible de charger le document PDF</p>
           <p className="text-sm text-gray-500 mb-6">
-            Le fichier ne peut pas être affiché directement. Vous pouvez le télécharger pour l'ouvrir.
+            Le fichier est bloqué par les restrictions de sécurité du navigateur. 
+            Utilisez les options ci-dessous pour visualiser le document.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button onClick={openInNewTab} variant="default">
+            <Button onClick={tryDifferentViewer} variant="default">
+              <Eye className="h-4 w-4 mr-2" />
+              Essayer un autre visualiseur
+            </Button>
+            <Button onClick={openInNewTab} variant="outline">
               <ExternalLink className="h-4 w-4 mr-2" />
-              Ouvrir dans un nouvel onglet
+              Ouvrir avec Google Docs
             </Button>
             <Button onClick={handleDownload} variant="outline">
               <Download className="h-4 w-4 mr-2" />
@@ -63,20 +88,52 @@ const SimplePDFViewer: React.FC<SimplePDFViewerProps> = ({
     );
   }
 
+  const getViewerUrl = () => {
+    switch (viewerMethod) {
+      case 'google':
+        return `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+      case 'mozilla':
+        return `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(fileUrl)}`;
+      default:
+        return `${fileUrl}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH`;
+    }
+  };
+
+  const getViewerName = () => {
+    switch (viewerMethod) {
+      case 'google':
+        return 'Google Docs Viewer';
+      case 'mozilla':
+        return 'Mozilla PDF.js';
+      default:
+        return 'Visualiseur natif';
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-gray-100">
-      {/* Barre d'outils simple */}
+      {/* Barre d'outils améliorée */}
       <div className="flex items-center justify-between p-3 bg-white border-b border-gray-200 flex-shrink-0">
         <div className="flex items-center space-x-4">
           <span className="text-sm text-gray-600 font-medium">
-            Visualisation PDF
+            Visualisation PDF - {getViewerName()}
           </span>
+          {viewerMethod !== 'direct' && (
+            <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
+              Mode compatible
+            </span>
+          )}
         </div>
 
         <div className="flex items-center space-x-2">
+          <Button size="sm" variant="ghost" onClick={tryDifferentViewer}>
+            <Eye className="h-4 w-4 mr-1" />
+            Changer de visualiseur
+          </Button>
+          
           <Button size="sm" variant="outline" onClick={openInNewTab}>
             <ExternalLink className="h-4 w-4 mr-1" />
-            Nouvel onglet
+            Google Docs
           </Button>
           
           <Button size="sm" variant="outline" onClick={handleDownload}>
@@ -89,12 +146,13 @@ const SimplePDFViewer: React.FC<SimplePDFViewerProps> = ({
       {/* Zone d'affichage PDF */}
       <div className="flex-1 relative bg-white">
         <iframe
-          src={`${fileUrl}#toolbar=1&navpanes=1&scrollbar=1&page=1&view=FitH`}
+          src={getViewerUrl()}
           className="w-full h-full border-0"
           title={fileName}
           onError={handleIframeError}
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"
           allow="fullscreen"
+          referrerPolicy="no-referrer-when-downgrade"
         />
       </div>
     </div>
