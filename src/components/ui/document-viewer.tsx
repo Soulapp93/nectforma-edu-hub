@@ -34,7 +34,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   const renderDocumentContent = () => {
     console.log('Visualisation du fichier:', fileName, 'URL:', fileUrl, 'Extension:', fileExtension);
 
-    // PDF - Utilisation du nouveau visualiseur PDF.js
+    // PDF - Utilisation du visualiseur PDF.js amélioré
     if (fileExtension === 'pdf') {
       return (
         <EnhancedPDFViewer 
@@ -51,7 +51,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
       return <ImageViewer fileUrl={fileUrl} fileName={fileName} />;
     }
 
-    // Fichiers Office - Utilisation du nouveau visualiseur amélioré
+    // Fichiers Office - Utilisation du visualiseur amélioré
     if (['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension)) {
       return (
         <EnhancedOfficeViewer 
@@ -83,8 +83,10 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     setIsFullscreen(!isFullscreen);
   };
 
+  const showHeader = !isFullscreen || !['pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension);
+
   return (
-    <div className={`fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 ${
+    <div className={`fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50 ${
       isFullscreen ? 'p-0' : 'p-4'
     }`}>
       <div className={`bg-white rounded-lg flex flex-col ${
@@ -92,10 +94,10 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
           ? 'w-full h-full rounded-none' 
           : 'w-full h-full max-w-7xl max-h-[95vh]'
       }`}>
-        {/* Header - uniquement visible si pas en plein écran ou si c'est pas PDF/Office avec leurs propres contrôles */}
-        {(!isFullscreen || (!['pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension))) && (
+        {/* Header */}
+        {showHeader && (
           <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white rounded-t-lg flex-shrink-0">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <h2 className="text-lg font-semibold text-gray-900 truncate">
                 {fileName}
               </h2>
