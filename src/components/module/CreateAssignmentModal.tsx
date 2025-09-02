@@ -64,7 +64,7 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           description: formData.description,
           assignment_type: formData.assignment_type,
           module_id: moduleId,
-          created_by: '00000000-0000-0000-0000-000000000001', // ID temporaire pour les tests
+          created_by: null, // Sera défini quand l'authentification sera implémentée
           is_published: true,
           due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null,
           max_points: formData.max_points
@@ -177,7 +177,7 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
               <input
                 type="number"
                 value={formData.max_points}
-                onChange={(e) => setFormData({ ...formData, max_points: parseInt(e.target.value) })}
+                onChange={(e) => setFormData({ ...formData, max_points: parseInt(e.target.value) || 0 })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 min="1"
               />
