@@ -56,13 +56,21 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         });
       } else {
         // Mode création
+        console.log('Données du formulaire:', formData);
+        console.log('Module ID:', moduleId);
+        
         const assignment = await assignmentService.createAssignment({
-          ...formData,
+          title: formData.title,
+          description: formData.description,
+          assignment_type: formData.assignment_type,
           module_id: moduleId,
-          created_by: 'current-user-id',
+          created_by: '00000000-0000-0000-0000-000000000001', // ID temporaire pour les tests
           is_published: true,
-          due_date: formData.due_date || undefined
+          due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null,
+          max_points: formData.max_points
         });
+        
+        console.log('Devoir créé:', assignment);
 
         // Uploader les fichiers si il y en a
         if (selectedFiles.length > 0) {

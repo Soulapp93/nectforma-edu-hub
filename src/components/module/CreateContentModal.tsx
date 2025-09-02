@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { moduleContentService, ModuleContent } from '@/services/moduleContentService';
+import { assignmentService } from '@/services/assignmentService';
 import { fileUploadService } from '@/services/fileUploadService';
 import FileUpload from '@/components/ui/file-upload';
 
@@ -24,7 +25,9 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    content_type: 'cours' as 'cours' | 'support' | 'video' | 'document'
+    content_type: 'cours' as 'cours' | 'support' | 'video' | 'document' | 'devoir' | 'evaluation',
+    due_date: '',
+    max_points: 100
   });
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
@@ -35,7 +38,9 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
       setFormData({
         title: editContent.title,
         description: editContent.description || '',
-        content_type: editContent.content_type as 'cours' | 'support' | 'video' | 'document'
+        content_type: editContent.content_type as 'cours' | 'support' | 'video' | 'document' | 'devoir' | 'evaluation',
+        due_date: '',
+        max_points: 100
       });
     }
   }, [editContent]);
@@ -48,49 +53,81 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
     try {
       console.log('Saving content with:', { formData, files: selectedFiles, editMode: !!editContent });
 
-      if (editContent) {
-        // Mode édition
-        let fileUrl = editContent.file_url;
-        let fileName = editContent.file_name;
+      // Si c'est un devoir ou évaluation, créer via assignmentService
+      if (formData.content_type === 'devoir' || formData.content_type === 'evaluation') {
+        if (!editContent) {
+          console.log('Creating assignment:', formData);
+          const assignment = await assignmentService.createAssignment({
+            title: formData.title,
+            description: formData.description,
+            assignment_type: formData.content_type,
+            module_id: moduleId,
+            created_by: '00000000-0000-0000-0000-000000000001',
+            is_published: true,
+            due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null,
+            max_points: formData.max_points
+          });
 
-        if (selectedFiles.length > 0) {
-          console.log('Uploading new file:', selectedFiles[0]);
-          fileUrl = await fileUploadService.uploadFile(selectedFiles[0]);
-          fileName = selectedFiles[0].name;
-          console.log('New file uploaded, URL:', fileUrl);
+          // Uploader les fichiers si il y en a
+          if (selectedFiles.length > 0) {
+            for (const file of selectedFiles) {
+              const fileUrl = await fileUploadService.uploadFile(file);
+              await assignmentService.addAssignmentFile({
+                assignment_id: assignment.id,
+                file_url: fileUrl,
+                file_name: file.name,
+                file_size: file.size
+              });
+            }
+          }
+          console.log('Assignment created successfully:', assignment);
         }
-
-        const contentData = {
-          ...formData,
-          file_url: fileUrl,
-          file_name: fileName
-        };
-
-        console.log('Updating content in database:', contentData);
-        await moduleContentService.updateContent(editContent.id, contentData);
-        console.log('Content updated successfully');
       } else {
-        // Mode création
-        let fileUrl = null;
-        let fileName = null;
+        // Traitement normal pour les autres types de contenu
+        if (editContent) {
+          // Mode édition
+          let fileUrl = editContent.file_url;
+          let fileName = editContent.file_name;
 
-        if (selectedFiles.length > 0) {
-          console.log('Uploading file:', selectedFiles[0]);
-          fileUrl = await fileUploadService.uploadFile(selectedFiles[0]);
-          fileName = selectedFiles[0].name;
-          console.log('File uploaded, URL:', fileUrl);
+          if (selectedFiles.length > 0) {
+            console.log('Uploading new file:', selectedFiles[0]);
+            fileUrl = await fileUploadService.uploadFile(selectedFiles[0]);
+            fileName = selectedFiles[0].name;
+            console.log('New file uploaded, URL:', fileUrl);
+          }
+
+          const contentData = {
+            ...formData,
+            file_url: fileUrl,
+            file_name: fileName
+          };
+
+          console.log('Updating content in database:', contentData);
+          await moduleContentService.updateContent(editContent.id, contentData);
+          console.log('Content updated successfully');
+        } else {
+          // Mode création
+          let fileUrl = null;
+          let fileName = null;
+
+          if (selectedFiles.length > 0) {
+            console.log('Uploading file:', selectedFiles[0]);
+            fileUrl = await fileUploadService.uploadFile(selectedFiles[0]);
+            fileName = selectedFiles[0].name;
+            console.log('File uploaded, URL:', fileUrl);
+          }
+
+          const contentData = {
+            ...formData,
+            module_id: moduleId,
+            file_url: fileUrl,
+            file_name: fileName
+          };
+
+          console.log('Creating content in database:', contentData);
+          await moduleContentService.createContent(contentData);
+          console.log('Content created successfully');
         }
-
-        const contentData = {
-          ...formData,
-          module_id: moduleId,
-          file_url: fileUrl,
-          file_name: fileName
-        };
-
-        console.log('Creating content in database:', contentData);
-        await moduleContentService.createContent(contentData);
-        console.log('Content created successfully');
       }
 
       onSuccess();
@@ -98,7 +135,9 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
       setFormData({
         title: '',
         description: '',
-        content_type: 'cours'
+        content_type: 'cours',
+        due_date: '',
+        max_points: 100
       });
       setSelectedFiles([]);
     } catch (error: any) {
@@ -116,7 +155,7 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
       <div className="bg-white rounded-lg w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-lg font-semibold">
-            {editContent ? 'Modifier le contenu' : 'Ajouter du contenu'}
+            {editContent ? 'Modifier l\'élément' : 'Ajouter un élément'}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="h-5 w-5" />
@@ -156,6 +195,8 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
               <option value="support">Support</option>
               <option value="video">Vidéo</option>
               <option value="document">Document</option>
+              <option value="devoir">Devoir</option>
+              <option value="evaluation">Évaluation</option>
             </select>
           </div>
 
@@ -171,6 +212,35 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
             />
           </div>
 
+          {/* Champs spécifiques aux devoirs et évaluations */}
+          {(formData.content_type === 'devoir' || formData.content_type === 'evaluation') && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date d'échéance
+                </label>
+                <input
+                  type="datetime-local"
+                  value={formData.due_date}
+                  onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Points maximum
+                </label>
+                <input
+                  type="number"
+                  value={formData.max_points}
+                  onChange={(e) => setFormData({ ...formData, max_points: parseInt(e.target.value) })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  min="1"
+                />
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {editContent ? 'Nouveau fichier (optionnel)' : 'Fichier (optionnel)'}
@@ -179,6 +249,7 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
               onFileSelect={setSelectedFiles}
               accept=".pdf,.doc,.docx,.ppt,.pptx,.mp4,.avi,.mov,.jpg,.jpeg,.png"
               maxSize={50}
+              multiple={formData.content_type === 'devoir' || formData.content_type === 'evaluation'}
             />
             {editContent?.file_name && selectedFiles.length === 0 && (
               <p className="text-sm text-gray-500 mt-1">

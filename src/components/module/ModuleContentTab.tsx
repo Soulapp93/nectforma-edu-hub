@@ -94,6 +94,8 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
       case 'support': return 'bg-green-100 text-green-800';
       case 'video': return 'bg-purple-100 text-purple-800';
       case 'document': return 'bg-orange-100 text-orange-800';
+      case 'devoir': return 'bg-red-100 text-red-800';
+      case 'evaluation': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -132,7 +134,7 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
         <h2 className="text-xl font-semibold">Contenu du Module</h2>
         <Button onClick={() => setShowCreateModal(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Ajouter du contenu
+          Ajouter un élément
         </Button>
       </div>
 
