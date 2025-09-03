@@ -19,10 +19,17 @@ const SubmitAssignmentModal: React.FC<SubmitAssignmentModalProps> = ({
 }) => {
   const [submissionText, setSubmissionText] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!firstName.trim() || !lastName.trim()) {
+      alert('Veuillez renseigner votre nom et prénom');
+      return;
+    }
     
     if (!submissionText.trim() && selectedFiles.length === 0) {
       alert('Veuillez ajouter du texte ou des fichiers pour votre soumission');
@@ -35,7 +42,7 @@ const SubmitAssignmentModal: React.FC<SubmitAssignmentModalProps> = ({
       // Créer la soumission
       const submission = await assignmentService.submitAssignment({
         assignment_id: assignment.id,
-        student_id: 'current-user-id', // TODO: Récupérer l'ID utilisateur actuel
+        student_id: null, // Sera défini quand l'authentification sera implémentée
         submission_text: submissionText.trim() || null
       });
 
@@ -86,6 +93,33 @@ const SubmitAssignmentModal: React.FC<SubmitAssignmentModalProps> = ({
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Prénom *
+                </label>
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nom *
+                </label>
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Votre réponse
