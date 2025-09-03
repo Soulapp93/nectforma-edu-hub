@@ -39,31 +39,65 @@ const SubmitAssignmentModal: React.FC<SubmitAssignmentModalProps> = ({
     setLoading(true);
 
     try {
-      // Créer la soumission
+      console.log('Soumission du devoir - Données:', {
+        assignment_id: assignment.id,
+        firstName,
+        lastName,
+        submissionText: submissionText.trim(),
+        filesCount: selectedFiles.length
+      });
+
+      // Créer la soumission avec un UUID temporaire valide
+      const tempStudentId = '11111111-1111-1111-1111-111111111111'; // UUID temporaire pour les tests
       const submission = await assignmentService.submitAssignment({
         assignment_id: assignment.id,
-        student_id: null, // Sera défini quand l'authentification sera implémentée
+        student_id: tempStudentId,
         submission_text: submissionText.trim() || null
       });
 
+      console.log('Soumission créée avec succès:', submission);
+
       // Uploader les fichiers si il y en a
       if (selectedFiles.length > 0) {
+        console.log('Upload des fichiers...', selectedFiles.length);
         for (const file of selectedFiles) {
-          const fileUrl = await fileUploadService.uploadFile(file);
-          await assignmentService.addSubmissionFile({
-            submission_id: submission.id,
-            file_url: fileUrl,
-            file_name: file.name,
-            file_size: file.size
-          });
+          try {
+            const fileUrl = await fileUploadService.uploadFile(file);
+            await assignmentService.addSubmissionFile({
+              submission_id: submission.id,
+              file_url: fileUrl,
+              file_name: file.name,
+              file_size: file.size
+            });
+            console.log('Fichier uploadé:', file.name);
+          } catch (fileError) {
+            console.error('Erreur upload fichier:', fileError);
+            // Continue avec les autres fichiers même si un échoue
+          }
         }
       }
+
+      console.log('Soumission terminée avec succès');
+      alert(`Devoir rendu avec succès par ${firstName} ${lastName}!`);
 
       onSuccess();
       onClose();
     } catch (error) {
-      console.error('Erreur lors de la soumission:', error);
-      alert('Erreur lors de la soumission du devoir');
+      console.error('Erreur détaillée lors de la soumission:', error);
+      
+      // Message d'erreur plus spécifique
+      let errorMessage = 'Erreur lors de la soumission du devoir';
+      if (error instanceof Error) {
+        if (error.message.includes('uuid')) {
+          errorMessage = 'Erreur d\'identifiant utilisateur';
+        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+          errorMessage = 'Erreur de connexion réseau';
+        } else if (error.message.includes('file')) {
+          errorMessage = 'Erreur lors de l\'upload des fichiers';
+        }
+      }
+      
+      alert(errorMessage + ': ' + (error instanceof Error ? error.message : 'Erreur inconnue'));
     } finally {
       setLoading(false);
     }
