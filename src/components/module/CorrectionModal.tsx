@@ -1,8 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Download, File } from 'lucide-react';
+import { X, Download, File, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { assignmentService, AssignmentSubmission } from '@/services/assignmentService';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import DocumentViewer from '@/components/ui/document-viewer';
+import { toast } from 'sonner';
 
 interface CorrectionModalProps {
   submission: AssignmentSubmission;
@@ -22,6 +25,8 @@ const CorrectionModal: React.FC<CorrectionModalProps> = ({
   });
   const [loading, setLoading] = useState(false);
   const [submissionFiles, setSubmissionFiles] = useState<any[]>([]);
+  const [viewerFile, setViewerFile] = useState<{ url: string; name: string } | null>(null);
+  const { userId } = useCurrentUser();
 
   useEffect(() => {
     // Charger les fichiers de la soumission
@@ -48,6 +53,12 @@ const CorrectionModal: React.FC<CorrectionModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!userId) {
+      toast.error('Utilisateur non authentifié');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -55,27 +66,46 @@ const CorrectionModal: React.FC<CorrectionModalProps> = ({
         score: correction.score,
         max_score: correction.max_score,
         comments: correction.comments,
-        corrected_by: 'current-user-id' // TODO: Récupérer l'ID utilisateur actuel
+        corrected_by: userId
       });
 
+      toast.success('Correction sauvegardée avec succès');
       onSuccess();
       onClose();
     } catch (error) {
       console.error('Erreur lors de la correction:', error);
-      alert('Erreur lors de la sauvegarde de la correction');
+      toast.error('Erreur lors de la sauvegarde de la correction');
     } finally {
       setLoading(false);
     }
   };
 
-  const downloadFile = (fileUrl: string, fileName: string) => {
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = fileName;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const downloadFile = async (fileUrl: string, fileName: string) => {
+    try {
+      // Créer un élément a pour le téléchargement
+      const response = await fetch(fileUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Nettoyer
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Fichier téléchargé avec succès');
+    } catch (error) {
+      console.error('Erreur lors du téléchargement:', error);
+      toast.error('Erreur lors du téléchargement du fichier');
+    }
+  };
+
+  const viewFile = (fileUrl: string, fileName: string) => {
+    setViewerFile({ url: fileUrl, name: fileName });
   };
 
   return (
@@ -110,16 +140,29 @@ const CorrectionModal: React.FC<CorrectionModalProps> = ({
                     <div key={index} className="flex items-center justify-between bg-gray-50 p-3 rounded">
                       <div className="flex items-center space-x-2">
                         <File className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm">{file.file_name}</span>
+                        <span className="text-sm font-medium">{file.file_name}</span>
+                        <span className="text-xs text-gray-500">
+                          ({(file.file_size / 1024).toFixed(1)} KB)
+                        </span>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => downloadFile(file.file_url, file.file_name)}
-                      >
-                        <Download className="h-4 w-4 mr-1" />
-                        Télécharger
-                      </Button>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => viewFile(file.file_url, file.file_name)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Voir
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => downloadFile(file.file_url, file.file_name)}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Télécharger
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -198,6 +241,16 @@ const CorrectionModal: React.FC<CorrectionModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Document Viewer */}
+      {viewerFile && (
+        <DocumentViewer
+          fileUrl={viewerFile.url}
+          fileName={viewerFile.name}
+          isOpen={true}
+          onClose={() => setViewerFile(null)}
+        />
+      )}
     </div>
   );
 };
