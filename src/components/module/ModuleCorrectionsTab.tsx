@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Edit, CheckCircle, Clock, FileText, Eye, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { assignmentService, AssignmentSubmission } from '@/services/assignmentService';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import CorrectionModal from './CorrectionModal';
 import { toast } from 'sonner';
 
@@ -14,6 +15,7 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
   const [submissions, setSubmissions] = useState<AssignmentSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCorrectionModal, setShowCorrectionModal] = useState<AssignmentSubmission | null>(null);
+  const { userId, userRole, loading: userLoading } = useCurrentUser();
 
   const fetchSubmissions = async () => {
     try {
@@ -27,7 +29,20 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
         allSubmissions.push(...assignmentSubmissions);
       }
       
-      setSubmissions(allSubmissions);
+      // Filtrer pour ne montrer que les corrections publiées
+      const publishedCorrections = allSubmissions.filter(submission => 
+        submission.correction?.published_at !== null
+      );
+      
+      // Si l'utilisateur est un étudiant, ne montrer que ses propres corrections
+      let filteredSubmissions = publishedCorrections;
+      if (userRole === 'Étudiant' && userId) {
+        filteredSubmissions = publishedCorrections.filter(submission => 
+          submission.student_id === userId
+        );
+      }
+      
+      setSubmissions(filteredSubmissions);
     } catch (error) {
       console.error('Erreur lors du chargement des corrections:', error);
       toast.error('Erreur lors du chargement des corrections');
@@ -37,8 +52,10 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
   };
 
   useEffect(() => {
-    fetchSubmissions();
-  }, [moduleId]);
+    if (!userLoading && userId && userRole) {
+      fetchSubmissions();
+    }
+  }, [moduleId, userId, userRole, userLoading]);
 
   const handleCorrect = (submission: AssignmentSubmission) => {
     setShowCorrectionModal(submission);
@@ -62,7 +79,7 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
     }
   };
 
-  if (loading) {
+  if (loading || userLoading) {
     return <div className="text-center py-8">Chargement...</div>;
   }
 
@@ -112,31 +129,21 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
                   </div>
                   
                   <div className="flex items-center space-x-2">
-                    {submission.correction?.is_corrected ? (
-                      <>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleCorrect(submission)}
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          Voir correction
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                        >
-                          <Download className="h-4 w-4 mr-1" />
-                          Exporter
-                        </Button>
-                      </>
-                    ) : (
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleCorrect(submission)}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      Voir correction
+                    </Button>
+                    {userRole === 'Formateur' && (
                       <Button 
                         size="sm" 
-                        onClick={() => handleCorrect(submission)}
+                        variant="outline"
                       >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Corriger
+                        <Download className="h-4 w-4 mr-1" />
+                        Exporter
                       </Button>
                     )}
                   </div>
