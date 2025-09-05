@@ -4,7 +4,12 @@ import { ArrowLeft, BookOpen, Clock, Users, Eye, Edit, Plus } from 'lucide-react
 import { formationService, Formation } from '@/services/formationService';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import ModuleDetail from '@/components/module/ModuleDetail';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ModuleContentTab from '@/components/module/ModuleContentTab';
+import ModuleAssignmentsTab from '@/components/module/ModuleAssignmentsTab';
+import ModuleCorrectionsTab from '@/components/module/ModuleCorrectionsTab';
+import ModuleDocumentsTab from '@/components/module/ModuleDocumentsTab';
 
 const FormationDetail = () => {
   const { formationId } = useParams<{ formationId: string }>();
@@ -12,7 +17,6 @@ const FormationDetail = () => {
   const [formation, setFormation] = useState<Formation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedModule, setSelectedModule] = useState<any>(null);
 
   useEffect(() => {
     const fetchFormation = async () => {
@@ -31,44 +35,6 @@ const FormationDetail = () => {
 
     fetchFormation();
   }, [formationId]);
-
-  const handleModuleClick = (module: any) => {
-    setSelectedModule(module);
-  };
-
-  const handleBackToModules = () => {
-    setSelectedModule(null);
-  };
-
-  if (loading) {
-    return (
-      <div className="p-8 flex items-center justify-center">
-        <div className="text-lg">Chargement...</div>
-      </div>
-    );
-  }
-
-  if (error || !formation) {
-    return (
-      <div className="p-8">
-        <div className="text-red-600">Erreur: {error || 'Formation non trouvée'}</div>
-        <Button onClick={() => navigate('/formations')} className="mt-4">
-          Retour aux formations
-        </Button>
-      </div>
-    );
-  }
-
-  // Si un module est sélectionné, afficher les détails du module
-  if (selectedModule) {
-    return (
-      <ModuleDetail
-        module={selectedModule}
-        formationColor={formation.color || '#8B5CF6'}
-        onBack={handleBackToModules}
-      />
-    );
-  }
 
   const formationColor = formation.color || '#8B5CF6';
 
@@ -147,45 +113,74 @@ const FormationDetail = () => {
             </div>
           </div>
           
-          <div className="p-6 space-y-4">
+          <div className="p-6">
             {formation.formation_modules && formation.formation_modules.length > 0 ? (
-              formation.formation_modules.map((module, index) => (
-                <div key={module.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors cursor-pointer">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4" onClick={() => handleModuleClick(module)}>
-                      <div 
-                        className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-semibold"
-                        style={{ backgroundColor: formationColor }}
-                      >
-                        <BookOpen className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">{module.title}</h3>
-                        <div className="flex items-center text-sm text-gray-600 mt-1">
-                          <Clock className="h-4 w-4 mr-1" />
-                          <span>{module.duration_hours}h</span>
+              <Accordion type="multiple" className="space-y-2">
+                {formation.formation_modules.map((module, index) => (
+                  <AccordionItem key={module.id} value={`module-${module.id}`} className="border border-gray-200 rounded-lg">
+                    <AccordionTrigger className="px-4 py-4 hover:bg-gray-50 rounded-lg [&[data-state=open]]:rounded-b-none">
+                      <div className="flex items-center space-x-4 w-full">
+                        <div 
+                          className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-semibold"
+                          style={{ backgroundColor: formationColor }}
+                        >
+                          <BookOpen className="h-6 w-6" />
+                        </div>
+                        <div className="text-left flex-1">
+                          <h3 className="font-semibold text-gray-900">{module.title}</h3>
+                          <div className="flex items-center text-sm text-gray-600 mt-1">
+                            <span>Formateur: Marie Dubois</span>
+                            <Clock className="h-4 w-4 ml-4 mr-1" />
+                            <span>{module.duration_hours}h</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleModuleClick(module)}
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        Accéder au module
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  {module.description && (
-                    <p className="text-gray-600 text-sm mt-2 ml-16">{module.description}</p>
-                  )}
-                </div>
-              ))
+                    </AccordionTrigger>
+                    <AccordionContent className="px-0 pb-0">
+                      <div className="border-t border-gray-200">
+                        <Tabs defaultValue="content" className="w-full">
+                          <TabsList className="grid w-full grid-cols-4 bg-gray-50 p-1 rounded-none">
+                            <TabsTrigger value="content" className="data-[state=active]:bg-white">
+                              <BookOpen className="h-4 w-4 mr-2" />
+                              Contenu du Module
+                            </TabsTrigger>
+                            <TabsTrigger value="assignments" className="data-[state=active]:bg-white">
+                              <Edit className="h-4 w-4 mr-2" />
+                              Devoirs & Évaluations
+                            </TabsTrigger>
+                            <TabsTrigger value="corrections" className="data-[state=active]:bg-white">
+                              <Users className="h-4 w-4 mr-2" />
+                              Corrections
+                            </TabsTrigger>
+                            <TabsTrigger value="documents" className="data-[state=active]:bg-white">
+                              <BookOpen className="h-4 w-4 mr-2" />
+                              Documents
+                            </TabsTrigger>
+                          </TabsList>
+                          
+                          <div className="p-4">
+                            <TabsContent value="content" className="mt-0">
+                              <ModuleContentTab moduleId={module.id} />
+                            </TabsContent>
+                            
+                            <TabsContent value="assignments" className="mt-0">
+                              <ModuleAssignmentsTab moduleId={module.id} />
+                            </TabsContent>
+                            
+                            <TabsContent value="corrections" className="mt-0">
+                              <ModuleCorrectionsTab moduleId={module.id} />
+                            </TabsContent>
+                            
+                            <TabsContent value="documents" className="mt-0">
+                              <ModuleDocumentsTab moduleId={module.id} />
+                            </TabsContent>
+                          </div>
+                        </Tabs>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             ) : (
               <div className="text-center py-8">
                 <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
