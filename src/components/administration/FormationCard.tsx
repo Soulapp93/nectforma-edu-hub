@@ -90,7 +90,7 @@ const FormationCard: React.FC<FormationCardProps> = ({
           style={{ backgroundColor: color }}
         />
         
-        <div className="p-6">
+        <div className="p-4">
           {/* Header avec actions */}
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
@@ -129,7 +129,7 @@ const FormationCard: React.FC<FormationCardProps> = ({
           </div>
 
           {/* Informations principales */}
-          <div className="space-y-3 mb-4">
+          <div className="space-y-2 mb-3">
             <div className="flex items-center text-sm text-gray-600">
               <Calendar className="h-4 w-4 mr-2 text-gray-400" />
               <span>Du {new Date(start_date).toLocaleDateString()} au {new Date(end_date).toLocaleDateString()}</span>
@@ -154,35 +154,16 @@ const FormationCard: React.FC<FormationCardProps> = ({
           </div>
 
           {/* Modules */}
-          <div className="border-t border-gray-100 pt-4 mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">
-                <BookOpen className="h-4 w-4 inline mr-1" />
-                Modules ({modules.length})
-              </span>
+          <div className="border-t border-gray-100 pt-3 mb-3">
+            <div className="flex items-center text-sm text-gray-600">
+              <BookOpen className="h-4 w-4 mr-2 text-gray-400" />
+              <span>{modules.length} module{modules.length > 1 ? 's' : ''}</span>
             </div>
-            
-            {modules.length > 0 ? (
-              <div className="space-y-1 max-h-24 overflow-y-auto">
-                {modules.slice(0, 3).map((module, index) => (
-                  <div key={module.id} className="text-xs text-gray-600">
-                    {index + 1}. {module.title} ({module.duration_hours}h)
-                  </div>
-                ))}
-                {modules.length > 3 && (
-                  <div className="text-xs text-gray-500">
-                    +{modules.length - 3} module(s) de plus...
-                  </div>
-                )}
-              </div>
-            ) : (
-              <p className="text-xs text-gray-500">Aucun module</p>
-            )}
           </div>
 
           {/* Formateurs */}
           {uniqueInstructors.length > 0 && (
-            <div className="border-t border-gray-100 pt-3 mb-4">
+            <div className="border-t border-gray-100 pt-3 mb-3">
               <span className="text-sm font-medium text-gray-700">
                 <User className="h-4 w-4 inline mr-1" />
                 Formateurs:
