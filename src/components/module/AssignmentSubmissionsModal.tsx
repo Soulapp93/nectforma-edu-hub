@@ -141,11 +141,6 @@ const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProps> = ({
                       </div>
                     </div>
 
-                    {submission.submission_text && (
-                      <div className="bg-gray-50 rounded p-3 mb-3">
-                        <p className="text-sm text-gray-700">{submission.submission_text}</p>
-                      </div>
-                    )}
 
                     {submission.correction?.comments && (
                       <div className="bg-blue-50 rounded p-3">

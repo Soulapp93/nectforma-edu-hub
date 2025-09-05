@@ -92,9 +92,6 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
                       </div>
                     </div>
                     
-                    {submission.submission_text && (
-                      <p className="text-gray-600 text-sm mb-3 ml-8">{submission.submission_text}</p>
-                    )}
                     
                     <div className="flex items-center space-x-4 text-sm text-gray-500 ml-8">
                       <span className="flex items-center">
