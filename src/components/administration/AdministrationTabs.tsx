@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Users, BookOpen, Shield, Clock } from 'lucide-react';
+import { Users, BookOpen, Shield, Clock, FileText } from 'lucide-react';
 
 interface Tab {
   id: string;
@@ -17,6 +17,7 @@ const AdministrationTabs: React.FC<AdministrationTabsProps> = ({ activeTab, onTa
   const tabs: Tab[] = [
     { id: 'users', name: 'Gestion des utilisateurs', icon: Users },
     { id: 'formations', name: 'Gestion des formations', icon: BookOpen },
+    { id: 'textbooks', name: 'Gestion des Cahiers de Texte', icon: FileText },
     { id: 'roles', name: 'Gestion des rôles', icon: Shield },
     { id: 'time', name: 'Gestion Emploi du Temps', icon: Clock },
   ];

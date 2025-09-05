@@ -114,6 +114,14 @@ const FormationDetail = () => {
                 <Users className="h-4 w-4 mr-2" />
                 Voir participants
               </Button>
+              <Button 
+                variant="secondary" 
+                onClick={() => navigate(`/cahier-texte/formation/${formation.id}`)}
+                className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+              >
+                <BookOpen className="h-4 w-4 mr-2" />
+                Accéder au Cahier de Texte
+              </Button>
             </div>
           </div>
         </div>

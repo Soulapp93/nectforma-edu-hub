@@ -8,6 +8,8 @@ import Dashboard from './pages/Dashboard';
 import Administration from './pages/Administration';
 import Formations from './pages/Formations';
 import FormationDetail from './pages/FormationDetail';
+import TextBookDetail from './pages/TextBookDetail';
+import TextBookByFormation from './pages/TextBookByFormation';
 import ELearning from './pages/ELearning';
 import EmploiTemps from './pages/EmploiTemps';
 import Messagerie from './pages/Messagerie';
@@ -38,6 +40,8 @@ function App() {
               <Route path="/administration" element={<Administration />} />
               <Route path="/formations" element={<Formations />} />
               <Route path="/formations/:formationId" element={<FormationDetail />} />
+              <Route path="/cahier-texte/:textBookId" element={<TextBookDetail />} />
+              <Route path="/cahier-texte/formation/:formationId" element={<TextBookByFormation />} />
               <Route path="/e-learning" element={<ELearning />} />
               <Route path="/emploi-temps" element={<EmploiTemps />} />
               <Route path="/messagerie" element={<Messagerie />} />

@@ -548,6 +548,91 @@ export type Database = {
           },
         ]
       }
+      text_book_entries: {
+        Row: {
+          content: string | null
+          created_at: string
+          date: string
+          end_time: string
+          homework: string | null
+          id: string
+          instructor_id: string | null
+          start_time: string
+          subject_matter: string
+          text_book_id: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          date: string
+          end_time: string
+          homework?: string | null
+          id?: string
+          instructor_id?: string | null
+          start_time: string
+          subject_matter: string
+          text_book_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          date?: string
+          end_time?: string
+          homework?: string | null
+          id?: string
+          instructor_id?: string | null
+          start_time?: string
+          subject_matter?: string
+          text_book_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "text_book_entries_text_book_id_fkey"
+            columns: ["text_book_id"]
+            isOneToOne: false
+            referencedRelation: "text_books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      text_books: {
+        Row: {
+          academic_year: string
+          created_at: string
+          created_by: string | null
+          formation_id: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year: string
+          created_at?: string
+          created_by?: string | null
+          formation_id: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string
+          created_at?: string
+          created_by?: string | null
+          formation_id?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "text_books_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_activation_tokens: {
         Row: {
           created_at: string

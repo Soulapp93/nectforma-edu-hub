@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import AdministrationTabs from '../components/administration/AdministrationTabs';
 import EnhancedUsersList from '../components/administration/EnhancedUsersList';
 import FormationsList from '../components/administration/FormationsList';
+import TextBooksList from '../components/administration/TextBooksList';
 
 const Administration = () => {
   const [activeTab, setActiveTab] = useState('users');
@@ -19,7 +20,9 @@ const Administration = () => {
 
       {activeTab === 'formations' && <FormationsList />}
 
-      {activeTab !== 'users' && activeTab !== 'formations' && (
+      {activeTab === 'textbooks' && <TextBooksList />}
+
+      {activeTab !== 'users' && activeTab !== 'formations' && activeTab !== 'textbooks' && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
           <div className="max-w-md mx-auto">
             <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
