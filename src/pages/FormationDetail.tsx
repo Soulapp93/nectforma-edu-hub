@@ -36,6 +36,25 @@ const FormationDetail = () => {
     fetchFormation();
   }, [formationId]);
 
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center">
+        <div className="text-lg">Chargement...</div>
+      </div>
+    );
+  }
+
+  if (error || !formation) {
+    return (
+      <div className="p-8">
+        <div className="text-red-600">Erreur: {error || 'Formation non trouvée'}</div>
+        <Button onClick={() => navigate('/formations')} className="mt-4">
+          Retour aux formations
+        </Button>
+      </div>
+    );
+  }
+
   const formationColor = formation.color || '#8B5CF6';
 
   return (
