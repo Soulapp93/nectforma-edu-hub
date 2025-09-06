@@ -66,6 +66,11 @@ const ScheduleEditor = () => {
     return date.toISOString().split('T')[0];
   };
 
+  const formatTime = (time: string) => {
+    // Convert HH:MM:SS to HH:MM
+    return time.slice(0, 5);
+  };
+
   const getSlotsForDate = (date: Date) => {
     const dateStr = formatDate(date);
     return slots.filter(slot => slot.date === dateStr).sort((a, b) => a.start_time.localeCompare(b.start_time));
@@ -92,17 +97,36 @@ const ScheduleEditor = () => {
     toast.success('Créneau ajouté avec succès');
   };
 
-  const navigateWeek = (direction: 'prev' | 'next') => {
+  const navigateDate = (direction: 'prev' | 'next') => {
     const newDate = new Date(selectedDate);
-    newDate.setDate(selectedDate.getDate() + (direction === 'next' ? 7 : -7));
+    
+    if (currentView === 'day') {
+      newDate.setDate(selectedDate.getDate() + (direction === 'next' ? 1 : -1));
+    } else if (currentView === 'week') {
+      newDate.setDate(selectedDate.getDate() + (direction === 'next' ? 7 : -7));
+    } else if (currentView === 'month') {
+      newDate.setMonth(selectedDate.getMonth() + (direction === 'next' ? 1 : -1));
+    }
+    
     setSelectedDate(newDate);
   };
 
-  const getWeekLabel = () => {
-    const weekDates = getWeekDates();
-    const start = weekDates[0];
-    const end = weekDates[6];
-    return `Semaine Du ${start.getDate()} Au ${end.getDate()} ${start.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`;
+  const getCurrentPeriodLabel = () => {
+    if (currentView === 'day') {
+      return selectedDate.toLocaleDateString('fr-FR', { 
+        weekday: 'long', 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+      });
+    } else if (currentView === 'week') {
+      const weekDates = getWeekDates();
+      const start = weekDates[0];
+      const end = weekDates[6];
+      return `Semaine Du ${start.getDate()} Au ${end.getDate()} ${start.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`;
+    } else {
+      return selectedDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    }
   };
 
   if (loading) {
@@ -203,11 +227,11 @@ const ScheduleEditor = () => {
               </div>
 
               <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm" onClick={() => navigateWeek('prev')}>
+                <Button variant="ghost" size="sm" onClick={() => navigateDate('prev')}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm font-medium">{getWeekLabel()}</span>
-                <Button variant="ghost" size="sm" onClick={() => navigateWeek('next')}>
+                <span className="text-sm font-medium min-w-60 text-center">{getCurrentPeriodLabel()}</span>
+                <Button variant="ghost" size="sm" onClick={() => navigateDate('next')}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -231,51 +255,65 @@ const ScheduleEditor = () => {
         {/* Weekly Schedule */}
         {currentView === 'week' && (
           <div className="p-6">
-            <div className="grid grid-cols-7 gap-4">
+            <div className="grid grid-cols-7 gap-3">
               {getWeekDates().map((date, index) => (
-                <div key={index} className="min-h-96">
-                  <div className="text-center mb-4 p-3 bg-muted rounded-lg">
-                    <div className="font-medium text-sm">{weekDays[index]}</div>
-                    <div className="text-2xl font-bold mt-1">
+                <div key={index} className="min-h-[500px]">
+                  <div className="text-center mb-4 p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border border-primary/10">
+                    <div className="font-semibold text-base text-primary">{weekDays[index]}</div>
+                    <div className="text-3xl font-bold mt-2 text-foreground">
                       {date.getDate()}
                     </div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-sm text-muted-foreground mt-1">
                       {date.toLocaleDateString('fr-FR', { month: 'short' })}
                     </div>
                   </div>
                   
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {getSlotsForDate(date).map((slot) => (
                       <div
                         key={slot.id}
-                        className="text-white p-3 rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                        className="p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-lg transition-all duration-200 border border-white/20"
                         style={{
                           backgroundColor: slot.color || schedule.formations?.color || '#8B5CF6',
+                          color: 'white'
                         }}
                       >
-                        <div className="font-medium text-sm mb-1">
+                        <div className="font-semibold text-sm mb-2 leading-tight">
                           {slot.formation_modules?.title || 'Module non défini'}
                         </div>
-                        <div className="text-xs opacity-90 mb-1">
-                          {slot.start_time} - {slot.end_time}
+                        
+                        <div className="flex items-center text-xs opacity-95 mb-2">
+                          <Clock className="h-3 w-3 mr-2" />
+                          {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
                         </div>
-                        <div className="text-xs opacity-90 mb-1">
-                          {slot.users ? 
-                            `${slot.users.first_name} ${slot.users.last_name}` : 
-                            'Formateur non défini'
-                          }
-                        </div>
-                        <div className="text-xs opacity-75">
+                        
+                        <div className="flex items-center text-xs opacity-95 mb-2">
+                          <Calendar className="h-3 w-3 mr-2" />
                           {slot.room || 'Salle non définie'}
+                        </div>
+                        
+                        <div className="flex items-center text-xs opacity-90">
+                          <div className="w-4 h-4 mr-2 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
+                            {slot.users ? 
+                              `${slot.users.first_name[0]}${slot.users.last_name[0]}` : 
+                              'F'
+                            }
+                          </div>
+                          <span className="truncate">
+                            {slot.users ? 
+                              `${slot.users.first_name} ${slot.users.last_name}` : 
+                              'Formateur'
+                            }
+                          </span>
                         </div>
                       </div>
                     ))}
                     
                     <div 
-                      className="h-16 hover:bg-muted/50 rounded-lg transition-colors cursor-pointer flex items-center justify-center group border-2 border-dashed border-muted-foreground/20"
+                      className="h-20 hover:bg-muted/50 rounded-xl transition-colors cursor-pointer flex items-center justify-center group border-2 border-dashed border-muted-foreground/30 hover:border-primary/50"
                       onClick={() => handleAddSlot(date, '09:00')}
                     >
-                      <Plus className="h-4 w-4 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <Plus className="h-6 w-6 text-muted-foreground/50 group-hover:text-primary/70 transition-colors" />
                     </div>
                   </div>
                 </div>
@@ -287,9 +325,9 @@ const ScheduleEditor = () => {
         {/* Day View */}
         {currentView === 'day' && (
           <div className="p-6">
-            <div className="max-w-2xl mx-auto">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold">
+            <div className="w-full">
+              <div className="text-center mb-6 p-4 bg-muted/30 rounded-lg">
+                <h2 className="text-xl font-bold text-primary">
                   {selectedDate.toLocaleDateString('fr-FR', { 
                     weekday: 'long', 
                     day: 'numeric', 
@@ -299,46 +337,83 @@ const ScheduleEditor = () => {
                 </h2>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {getSlotsForDate(selectedDate).length > 0 ? (
                   getSlotsForDate(selectedDate).map((slot) => (
                     <div
                       key={slot.id}
-                      className="bg-card border rounded-lg p-4 hover:shadow-md transition-shadow"
+                      className="w-full p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-all duration-200 cursor-pointer"
                       style={{
+                        backgroundColor: `${slot.color || schedule.formations?.color || '#8B5CF6'}15`,
                         borderLeftColor: slot.color || schedule.formations?.color || '#8B5CF6',
-                        borderLeftWidth: '4px'
                       }}
                     >
-                      <div className="font-semibold text-lg mb-2">
-                        {slot.formation_modules?.title || 'Module non défini'}
-                      </div>
-                      <div className="flex items-center text-sm text-muted-foreground mb-2">
-                        <Clock className="h-4 w-4 mr-2" />
-                        {slot.start_time} - {slot.end_time}
-                      </div>
-                      <div className="flex items-center text-sm text-muted-foreground mb-2">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        {slot.room || 'Salle non définie'}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {slot.users ? 
-                          `${slot.users.first_name} ${slot.users.last_name}` : 
-                          'Formateur non défini'
-                        }
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="font-bold text-xl mb-2 text-foreground">
+                            {slot.formation_modules?.title || 'Module non défini'}
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="flex items-center text-base text-muted-foreground">
+                              <Clock className="h-5 w-5 mr-3" 
+                                    style={{ color: slot.color || schedule.formations?.color || '#8B5CF6' }} />
+                              <span className="font-medium">
+                                {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                              </span>
+                            </div>
+                            
+                            <div className="flex items-center text-base text-muted-foreground">
+                              <Calendar className="h-5 w-5 mr-3" 
+                                      style={{ color: slot.color || schedule.formations?.color || '#8B5CF6' }} />
+                              <span>{slot.room || 'Salle non définie'}</span>
+                            </div>
+                            
+                            <div className="flex items-center text-base text-muted-foreground">
+                              <div className="w-5 h-5 mr-3 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                                   style={{ backgroundColor: slot.color || schedule.formations?.color || '#8B5CF6' }}>
+                                {slot.users ? 
+                                  `${slot.users.first_name[0]}${slot.users.last_name[0]}` : 
+                                  'F'
+                                }
+                              </div>
+                              <span>
+                                {slot.users ? 
+                                  `${slot.users.first_name} ${slot.users.last_name}` : 
+                                  'Formateur non défini'
+                                }
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="ml-4">
+                          <Badge 
+                            variant="secondary" 
+                            className="text-white px-4 py-2"
+                            style={{ 
+                              backgroundColor: slot.color || schedule.formations?.color || '#8B5CF6' 
+                            }}
+                          >
+                            {Math.round(getSlotDuration(slot) * 60)} min
+                          </Badge>
+                        </div>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Calendar className="h-12 w-12 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">Aucun créneau</h3>
-                    <p>Aucun cours prévu pour cette journée</p>
+                  <div className="text-center py-16 text-muted-foreground">
+                    <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
+                      <Calendar className="h-12 w-12 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-xl font-semibold mb-3">Aucun créneau</h3>
+                    <p className="text-base mb-6">Aucun cours prévu pour cette journée</p>
                     <Button 
-                      className="mt-4" 
+                      size="lg"
                       onClick={() => handleAddSlot(selectedDate, '09:00')}
+                      className="bg-primary hover:bg-primary/90"
                     >
-                      <Plus className="h-4 w-4 mr-2" />
+                      <Plus className="h-5 w-5 mr-2" />
                       Ajouter un créneau
                     </Button>
                   </div>
@@ -394,31 +469,31 @@ const ScheduleEditor = () => {
                       {currentDay.getDate()}
                     </div>
                     <div className="space-y-1">
-                      {daySlots.slice(0, 2).map((slot) => (
-                        <div
-                          key={slot.id}
-                          className="text-xs p-1 rounded text-white truncate"
-                          style={{
-                            backgroundColor: slot.color || schedule.formations?.color || '#8B5CF6',
-                          }}
-                          title={`${slot.start_time} ${slot.formation_modules?.title || 'Module'}`}
-                        >
-                          {slot.start_time} {slot.formation_modules?.title || 'Module'}
-                        </div>
-                      ))}
-                      {daySlots.length > 2 && (
-                        <div className="text-xs text-muted-foreground">
-                          +{daySlots.length - 2} autres
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
+                       {daySlots.slice(0, 2).map((slot) => (
+                         <div
+                           key={slot.id}
+                           className="text-xs p-1 rounded text-white truncate"
+                           style={{
+                             backgroundColor: slot.color || schedule.formations?.color || '#8B5CF6',
+                           }}
+                           title={`${formatTime(slot.start_time)} ${slot.formation_modules?.title || 'Module'}`}
+                         >
+                           {formatTime(slot.start_time)} {slot.formation_modules?.title || 'Module'}
+                         </div>
+                       ))}
+                       {daySlots.length > 2 && (
+                         <div className="text-xs text-muted-foreground">
+                           +{daySlots.length - 2} autres
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                 );
+               })}
+             </div>
+           </div>
+         )}
+       </div>
 
       <AddSlotModal
         isOpen={isAddSlotModalOpen}
