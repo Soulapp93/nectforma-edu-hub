@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Plus, Clock, Calendar, User, BookOpen, Upload, X, FileText } from 'lucide-react';
+import { ArrowLeft, Plus, Clock, Calendar, User, BookOpen, Upload, X, FileText, Edit2, Trash2, AlertCircle } from 'lucide-react';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { textBookService, TextBook, TextBookEntry } from '@/services/textBookService';
 import { moduleService, FormationModule } from '@/services/moduleService';
@@ -29,12 +29,24 @@ const TextBookDetail: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isAddEntryModalOpen, setIsAddEntryModalOpen] = useState(false);
+  const [isEditEntryModalOpen, setIsEditEntryModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<TextBookEntry | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { userId } = useCurrentUser();
 
   // Form state for new entry
   const [newEntry, setNewEntry] = useState({
+    date: '',
+    start_time: '',
+    end_time: '',
+    module_id: '',
+    content: ''
+  });
+
+  // Form state for editing entry
+  const [editEntry, setEditEntry] = useState({
     date: '',
     start_time: '',
     end_time: '',
@@ -163,6 +175,109 @@ const TextBookDetail: React.FC = () => {
     }
   };
 
+  const handleEditEntry = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedEntry || !editEntry.date || !editEntry.start_time || !editEntry.end_time || !editEntry.module_id) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs obligatoires.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const selectedModule = modules.find(m => m.id === editEntry.module_id);
+    if (!selectedModule) {
+      toast({
+        title: "Erreur",
+        description: "Module sélectionné non valide.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      await textBookService.updateTextBookEntry(selectedEntry.id, {
+        date: editEntry.date,
+        start_time: editEntry.start_time,
+        end_time: editEntry.end_time,
+        subject_matter: selectedModule.title,
+        content: editEntry.content || undefined,
+      });
+
+      toast({
+        title: "Succès",
+        description: "L'entrée a été modifiée avec succès.",
+      });
+
+      setIsEditEntryModalOpen(false);
+      setSelectedEntry(null);
+      
+      // Refresh entries
+      fetchTextBookData();
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la modification de l'entrée.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteEntry = async () => {
+    if (!selectedEntry) return;
+
+    try {
+      await textBookService.deleteTextBookEntry(selectedEntry.id);
+
+      toast({
+        title: "Succès",
+        description: "L'entrée a été supprimée avec succès.",
+      });
+
+      setIsDeleteConfirmOpen(false);
+      setSelectedEntry(null);
+      
+      // Refresh entries
+      fetchTextBookData();
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la suppression de l'entrée.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openEditModal = (entry: TextBookEntry) => {
+    const entryModule = modules.find(m => m.title === entry.subject_matter);
+    setSelectedEntry(entry);
+    setEditEntry({
+      date: entry.date,
+      start_time: entry.start_time,
+      end_time: entry.end_time,
+      module_id: entryModule?.id || '',
+      content: entry.content || ''
+    });
+    setIsEditEntryModalOpen(true);
+  };
+
+  const openDeleteModal = (entry: TextBookEntry) => {
+    setSelectedEntry(entry);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const formatTime = (time: string) => {
+    return time.substring(0, 5); // Remove seconds, keep only HH:MM
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -267,7 +382,7 @@ const TextBookDetail: React.FC = () => {
                     {format(new Date(entry.date), 'dd/MM/yyyy', { locale: fr })}
                   </div>
                   <div className="p-3 border-r border-gray-200">
-                    {entry.start_time} - {entry.end_time}
+                    {formatTime(entry.start_time)} - {formatTime(entry.end_time)}
                   </div>
                   <div className="p-3 border-r border-gray-200 font-medium">
                     {entry.subject_matter}
@@ -282,11 +397,41 @@ const TextBookDetail: React.FC = () => {
                   <div className="bg-purple-50 border-t border-gray-200">
                     <div className="p-4">
                       <div className="bg-white rounded p-3 shadow-sm">
-                        <h4 className="text-purple-600 font-medium mb-2 text-sm uppercase tracking-wide">CONTENU</h4>
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-purple-600 font-medium text-sm uppercase tracking-wide">CONTENU</h4>
+                          <div className="flex space-x-2">
+                            <Button
+                              onClick={() => openEditModal(entry)}
+                              size="sm"
+                              variant="outline"
+                              className="h-8 px-2"
+                            >
+                              <Edit2 className="h-3 w-3 mr-1" />
+                              Modifier
+                            </Button>
+                            <Button
+                              onClick={() => openDeleteModal(entry)}
+                              size="sm"
+                              variant="outline"
+                              className="h-8 px-2 text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              Supprimer
+                            </Button>
+                          </div>
+                        </div>
                         <div 
                           className="prose prose-sm max-w-none text-gray-700"
                           dangerouslySetInnerHTML={{ __html: entry.content }}
                         />
+                        
+                        {/* Files section - placeholder for future implementation */}
+                        <div className="mt-3 pt-3 border-t border-gray-200">
+                          <p className="text-xs text-gray-500">
+                            <FileText className="h-3 w-3 inline mr-1" />
+                            Fichier joint 1, Fichier joint 2
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -466,6 +611,137 @@ const TextBookDetail: React.FC = () => {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Entry Modal */}
+      <Dialog open={isEditEntryModalOpen} onOpenChange={setIsEditEntryModalOpen}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Modifier l'entrée</DialogTitle>
+          </DialogHeader>
+          
+          <form onSubmit={handleEditEntry} className="space-y-6">
+            {/* Date and Time Row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-date">Date</Label>
+                <Input
+                  id="edit-date"
+                  type="date"
+                  value={editEntry.date}
+                  onChange={(e) => setEditEntry(prev => ({ ...prev, date: e.target.value }))}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-start-time">Heure début</Label>
+                <Input
+                  id="edit-start-time"
+                  type="time"
+                  value={editEntry.start_time}
+                  onChange={(e) => setEditEntry(prev => ({ ...prev, start_time: e.target.value }))}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-end-time">Heure fin</Label>
+                <Input
+                  id="edit-end-time"
+                  type="time"
+                  value={editEntry.end_time}
+                  onChange={(e) => setEditEntry(prev => ({ ...prev, end_time: e.target.value }))}
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Module Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="edit-module">Matière / Module</Label>
+              <Select value={editEntry.module_id} onValueChange={(value) => setEditEntry(prev => ({ ...prev, module_id: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un module" />
+                </SelectTrigger>
+                <SelectContent>
+                  {modules.map((module) => (
+                    <SelectItem key={module.id} value={module.id}>
+                      {module.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Content with rich text editor */}
+            <div className="space-y-2">
+              <Label htmlFor="edit-content">Contenu de la séance</Label>
+              <RichTextEditor
+                value={editEntry.content}
+                onChange={(value) => setEditEntry(prev => ({ ...prev, content: value }))}
+                placeholder="Décrivez le contenu de la séance..."
+                rows={8}
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsEditEntryModalOpen(false)}
+              >
+                Annuler
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Modification...' : 'Modifier'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+              Confirmer la suppression
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <p className="text-gray-600">
+              Êtes-vous sûr de vouloir supprimer cette entrée ? Cette action est irréversible.
+            </p>
+            {selectedEntry && (
+              <div className="mt-3 p-3 bg-gray-50 rounded">
+                <p className="text-sm font-medium">
+                  {format(new Date(selectedEntry.date), 'dd/MM/yyyy', { locale: fr })} - {selectedEntry.subject_matter}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end space-x-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setIsDeleteConfirmOpen(false)}
+            >
+              Annuler
+            </Button>
+            <Button 
+              type="button" 
+              variant="destructive"
+              onClick={handleDeleteEntry}
+            >
+              Supprimer
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

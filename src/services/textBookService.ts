@@ -136,6 +136,41 @@ export const textBookService = {
     return entry;
   },
 
+  async updateTextBookEntry(entryId: string, data: Partial<Omit<TextBookEntry, 'id' | 'created_at' | 'updated_at'>>) {
+    console.log('Modification d\'entrée de cahier de texte:', entryId, data);
+    
+    const { data: entry, error } = await supabase
+      .from('text_book_entries')
+      .update(data)
+      .eq('id', entryId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Erreur lors de la modification de l\'entrée:', error);
+      throw new Error(`Erreur lors de la modification de l'entrée: ${error.message}`);
+    }
+
+    console.log('Entrée modifiée:', entry);
+    return entry;
+  },
+
+  async deleteTextBookEntry(entryId: string) {
+    console.log('Suppression d\'entrée de cahier de texte:', entryId);
+    
+    const { error } = await supabase
+      .from('text_book_entries')
+      .delete()
+      .eq('id', entryId);
+
+    if (error) {
+      console.error('Erreur lors de la suppression de l\'entrée:', error);
+      throw new Error(`Erreur lors de la suppression de l'entrée: ${error.message}`);
+    }
+
+    console.log('Entrée supprimée avec succès');
+  },
+
   async archiveTextBook(textBookId: string) {
     console.log('Archivage du cahier de texte:', textBookId);
     
