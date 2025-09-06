@@ -12,6 +12,7 @@ import TextBookDetail from './pages/TextBookDetail';
 import TextBookByFormation from './pages/TextBookByFormation';
 import ELearning from './pages/ELearning';
 import EmploiTemps from './pages/EmploiTemps';
+import ScheduleEditor from './pages/ScheduleEditor';
 import Messagerie from './pages/Messagerie';
 import Emargement from './pages/Emargement';
 import Evenements from './pages/Evenements';
@@ -44,6 +45,8 @@ function App() {
               <Route path="/cahier-texte/formation/:formationId" element={<TextBookByFormation />} />
               <Route path="/e-learning" element={<ELearning />} />
               <Route path="/emploi-temps" element={<EmploiTemps />} />
+              <Route path="/emploi-temps/edit/:scheduleId" element={<ScheduleEditor />} />
+              <Route path="/emploi-temps/view/:scheduleId" element={<ScheduleEditor />} />
               <Route path="/messagerie" element={<Messagerie />} />
               <Route path="/emargement" element={<Emargement />} />
               <Route path="/evenements" element={<Evenements />} />

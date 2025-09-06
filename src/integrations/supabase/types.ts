@@ -477,6 +477,84 @@ export type Database = {
           },
         ]
       }
+      schedule_slots: {
+        Row: {
+          color: string | null
+          created_at: string
+          date: string
+          end_time: string
+          id: string
+          instructor_id: string | null
+          module_id: string | null
+          notes: string | null
+          room: string | null
+          schedule_id: string
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          date: string
+          end_time: string
+          id?: string
+          instructor_id?: string | null
+          module_id?: string | null
+          notes?: string | null
+          room?: string | null
+          schedule_id: string
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          date?: string
+          end_time?: string
+          id?: string
+          instructor_id?: string | null
+          module_id?: string | null
+          notes?: string | null
+          room?: string | null
+          schedule_id?: string
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      schedules: {
+        Row: {
+          academic_year: string
+          created_at: string
+          created_by: string | null
+          formation_id: string
+          id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year?: string
+          created_at?: string
+          created_by?: string | null
+          formation_id: string
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string
+          created_at?: string
+          created_by?: string | null
+          formation_id?: string
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       student_formations: {
         Row: {
           enrolled_at: string
