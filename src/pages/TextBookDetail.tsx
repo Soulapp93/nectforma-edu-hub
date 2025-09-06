@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Plus, Clock, Calendar, User, BookOpen, Upload, X, Bold, Italic, Underline, AlignLeft, AlignCenter, List, FileText } from 'lucide-react';
+import { ArrowLeft, Plus, Clock, Calendar, User, BookOpen, Upload, X, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, List, ListOrdered, Link, Code, Strikethrough, Quote, FileText, Type } from 'lucide-react';
 import { textBookService, TextBook, TextBookEntry } from '@/services/textBookService';
 import { moduleService, FormationModule } from '@/services/moduleService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -43,6 +43,32 @@ const TextBookDetail: React.FC = () => {
 
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
+
+  // Helper function to insert text at cursor position
+  const insertTextAtCursor = (textToInsert: string, wrapSelection = false) => {
+    const textarea = document.getElementById('content') as HTMLTextAreaElement;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = textarea.value.substring(start, end);
+      
+      let newText;
+      if (wrapSelection && selectedText) {
+        newText = textarea.value.substring(0, start) + textToInsert.replace('{}', selectedText) + textarea.value.substring(end);
+      } else {
+        newText = textarea.value.substring(0, start) + textToInsert + textarea.value.substring(end);
+      }
+      
+      setNewEntry(prev => ({ ...prev, content: newText }));
+      
+      // Set cursor position after insertion
+      setTimeout(() => {
+        const newPosition = start + textToInsert.length;
+        textarea.focus();
+        textarea.setSelectionRange(newPosition, newPosition);
+      }, 0);
+    }
+  };
 
   const fetchTextBookData = async () => {
     if (!textBookId) return;
@@ -359,22 +385,30 @@ const TextBookDetail: React.FC = () => {
             <div className="space-y-2">
               <Label htmlFor="content">Contenu de la séance</Label>
               <div className="border rounded-md">
-                {/* Formatting toolbar */}
-                <div className="flex items-center gap-1 p-2 border-b bg-muted/50">
+                {/* Enhanced Formatting toolbar */}
+                <div className="flex items-center gap-1 p-2 border-b bg-muted/50 flex-wrap">
+                  {/* Style dropdown */}
+                  <Select defaultValue="normal">
+                    <SelectTrigger className="w-24 h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="h1" onClick={() => insertTextAtCursor('# ')}>Titre 1</SelectItem>
+                      <SelectItem value="h2" onClick={() => insertTextAtCursor('## ')}>Titre 2</SelectItem>
+                      <SelectItem value="h3" onClick={() => insertTextAtCursor('### ')}>Titre 3</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <div className="w-px h-4 bg-border mx-1" />
+
+                  {/* Text formatting */}
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => {
-                      const textarea = document.getElementById('content') as HTMLTextAreaElement;
-                      if (textarea) {
-                        const start = textarea.selectionStart;
-                        const end = textarea.selectionEnd;
-                        const selectedText = textarea.value.substring(start, end);
-                        const newText = textarea.value.substring(0, start) + `**${selectedText}**` + textarea.value.substring(end);
-                        setNewEntry(prev => ({ ...prev, content: newText }));
-                      }
-                    }}
+                    onClick={() => insertTextAtCursor('**{}**', true)}
+                    title="Gras"
                   >
                     <Bold className="h-4 w-4" />
                   </Button>
@@ -382,16 +416,8 @@ const TextBookDetail: React.FC = () => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => {
-                      const textarea = document.getElementById('content') as HTMLTextAreaElement;
-                      if (textarea) {
-                        const start = textarea.selectionStart;
-                        const end = textarea.selectionEnd;
-                        const selectedText = textarea.value.substring(start, end);
-                        const newText = textarea.value.substring(0, start) + `*${selectedText}*` + textarea.value.substring(end);
-                        setNewEntry(prev => ({ ...prev, content: newText }));
-                      }
-                    }}
+                    onClick={() => insertTextAtCursor('*{}*', true)}
+                    title="Italique"
                   >
                     <Italic className="h-4 w-4" />
                   </Button>
@@ -399,35 +425,109 @@ const TextBookDetail: React.FC = () => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => {
-                      const textarea = document.getElementById('content') as HTMLTextAreaElement;
-                      if (textarea) {
-                        const start = textarea.selectionStart;
-                        const end = textarea.selectionEnd;
-                        const selectedText = textarea.value.substring(start, end);
-                        const newText = textarea.value.substring(0, start) + `__${selectedText}__` + textarea.value.substring(end);
-                        setNewEntry(prev => ({ ...prev, content: newText }));
-                      }
-                    }}
+                    onClick={() => insertTextAtCursor('<u>{}</u>', true)}
+                    title="Souligné"
                   >
                     <Underline className="h-4 w-4" />
                   </Button>
-                  <div className="w-px h-4 bg-border mx-1" />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => {
-                      setNewEntry(prev => ({ ...prev, content: prev.content + '\n- ' }));
-                    }}
+                    onClick={() => insertTextAtCursor('~~{}~~', true)}
+                    title="Barré"
+                  >
+                    <Strikethrough className="h-4 w-4" />
+                  </Button>
+
+                  <div className="w-px h-4 bg-border mx-1" />
+
+                  {/* Lists */}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => insertTextAtCursor('\n- ')}
+                    title="Liste à puces"
                   >
                     <List className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => insertTextAtCursor('\n1. ')}
+                    title="Liste numérotée"
+                  >
+                    <ListOrdered className="h-4 w-4" />
+                  </Button>
+
+                  <div className="w-px h-4 bg-border mx-1" />
+
+                  {/* Alignment */}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => insertTextAtCursor('\n<div style="text-align: left">{}</div>\n', true)}
+                    title="Aligner à gauche"
+                  >
+                    <AlignLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => insertTextAtCursor('\n<div style="text-align: center">{}</div>\n', true)}
+                    title="Centrer"
+                  >
+                    <AlignCenter className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => insertTextAtCursor('\n<div style="text-align: right">{}</div>\n', true)}
+                    title="Aligner à droite"
+                  >
+                    <AlignRight className="h-4 w-4" />
+                  </Button>
+
+                  <div className="w-px h-4 bg-border mx-1" />
+
+                  {/* Special formatting */}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => insertTextAtCursor('[Texte du lien](https://exemple.com)')}
+                    title="Insérer un lien"
+                  >
+                    <Link className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => insertTextAtCursor('`{}`', true)}
+                    title="Code"
+                  >
+                    <Code className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => insertTextAtCursor('\n> ')}
+                    title="Citation"
+                  >
+                    <Quote className="h-4 w-4" />
                   </Button>
                 </div>
                 <Textarea
                   id="content"
                   placeholder="Décrivez le contenu de la séance..."
-                  rows={6}
+                  rows={8}
                   value={newEntry.content}
                   onChange={(e) => setNewEntry(prev => ({ ...prev, content: e.target.value }))}
                   className="resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
