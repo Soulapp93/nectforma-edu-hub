@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Plus, Clock, Calendar, User, BookOpen, Upload, X, FileText, Edit2, Trash2, AlertCircle } from 'lucide-react';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import DocumentViewer from '@/components/ui/document-viewer';
 import { textBookService, TextBook, TextBookEntry } from '@/services/textBookService';
 import { moduleService, FormationModule } from '@/services/moduleService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -56,6 +57,8 @@ const TextBookDetail: React.FC = () => {
 
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<{ url: string; name: string } | null>(null);
+  const [isFileViewerOpen, setIsFileViewerOpen] = useState(false);
 
 
   const fetchTextBookData = async () => {
@@ -92,7 +95,7 @@ const TextBookDetail: React.FC = () => {
       
       // Fetch entries
       const entriesData = await textBookService.getTextBookEntries(textBookId);
-      setEntries(entriesData || []);
+      setEntries((entriesData as any) || []);
       
     } catch (error) {
       console.error('Erreur lors du chargement:', error);
@@ -135,7 +138,8 @@ const TextBookDetail: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      await textBookService.createTextBookEntry({
+      // Create entry first
+      const newEntryData = await textBookService.createTextBookEntry({
         text_book_id: textBookId,
         date: newEntry.date,
         start_time: newEntry.start_time,
@@ -144,6 +148,11 @@ const TextBookDetail: React.FC = () => {
         content: newEntry.content || undefined,
         instructor_id: userId || undefined,
       });
+
+      // Upload files if any
+      if (uploadedFiles.length > 0) {
+        await textBookService.uploadEntryFiles(newEntryData.id, uploadedFiles);
+      }
 
       toast({
         title: "Succès",
@@ -276,6 +285,16 @@ const TextBookDetail: React.FC = () => {
 
   const formatTime = (time: string) => {
     return time.substring(0, 5); // Remove seconds, keep only HH:MM
+  };
+
+  const openFileViewer = (fileUrl: string, fileName: string) => {
+    setSelectedFile({ url: fileUrl, name: fileName });
+    setIsFileViewerOpen(true);
+  };
+
+  const closeFileViewer = () => {
+    setIsFileViewerOpen(false);
+    setSelectedFile(null);
   };
 
   if (loading) {
@@ -425,13 +444,23 @@ const TextBookDetail: React.FC = () => {
                           dangerouslySetInnerHTML={{ __html: entry.content }}
                         />
                         
-                        {/* Files section - placeholder for future implementation */}
-                        <div className="mt-3 pt-3 border-t border-gray-200">
-                          <p className="text-xs text-gray-500">
-                            <FileText className="h-3 w-3 inline mr-1" />
-                            Fichier joint 1, Fichier joint 2
-                          </p>
-                        </div>
+                        {/* Files section */}
+                        {entry.files && entry.files.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <div className="flex flex-wrap gap-2">
+                              {entry.files.map((file, fileIndex) => (
+                                <button
+                                  key={file.id}
+                                  onClick={() => openFileViewer(file.file_url, file.file_name)}
+                                  className="inline-flex items-center px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors"
+                                >
+                                  <FileText className="h-3 w-3 mr-1" />
+                                  Fichier joint {fileIndex + 1}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -744,6 +773,16 @@ const TextBookDetail: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Document Viewer */}
+      {selectedFile && (
+        <DocumentViewer
+          fileUrl={selectedFile.url}
+          fileName={selectedFile.name}
+          isOpen={isFileViewerOpen}
+          onClose={closeFileViewer}
+        />
+      )}
     </div>
   );
 };

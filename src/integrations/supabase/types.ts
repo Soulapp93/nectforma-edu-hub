@@ -598,6 +598,42 @@ export type Database = {
           },
         ]
       }
+      text_book_entry_files: {
+        Row: {
+          content_type: string | null
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_url: string
+          id: string
+          text_book_entry_id: string
+          updated_at: string
+          uploaded_at: string
+        }
+        Insert: {
+          content_type?: string | null
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_url: string
+          id?: string
+          text_book_entry_id: string
+          updated_at?: string
+          uploaded_at?: string
+        }
+        Update: {
+          content_type?: string | null
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          text_book_entry_id?: string
+          updated_at?: string
+          uploaded_at?: string
+        }
+        Relationships: []
+      }
       text_books: {
         Row: {
           academic_year: string
