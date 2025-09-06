@@ -44,30 +44,76 @@ const TextBookDetail: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
 
-  // Helper function to insert text at cursor position
-  const insertTextAtCursor = (before: string, after: string = '') => {
+  // Helper function to apply formatting to selected text
+  const applyFormatting = (format: string) => {
     const textarea = document.getElementById('content') as HTMLTextAreaElement;
     if (textarea) {
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
       const selectedText = textarea.value.substring(start, end);
+      const beforeText = textarea.value.substring(0, start);
+      const afterText = textarea.value.substring(end);
       
       let newText;
-      if (selectedText) {
-        // Wrap selected text
-        newText = textarea.value.substring(0, start) + before + selectedText + after + textarea.value.substring(end);
-      } else {
-        // Just insert at cursor
-        newText = textarea.value.substring(0, start) + before + after + textarea.value.substring(end);
+      let newCursorPos;
+      
+      switch (format) {
+        case 'bold':
+          if (selectedText) {
+            newText = beforeText + '**' + selectedText + '**' + afterText;
+            newCursorPos = end + 4;
+          } else {
+            newText = beforeText + '**texte en gras**' + afterText;
+            newCursorPos = start + 2;
+          }
+          break;
+        case 'italic':
+          if (selectedText) {
+            newText = beforeText + '*' + selectedText + '*' + afterText;
+            newCursorPos = end + 2;
+          } else {
+            newText = beforeText + '*texte en italique*' + afterText;
+            newCursorPos = start + 1;
+          }
+          break;
+        case 'underline':
+          if (selectedText) {
+            newText = beforeText + '__' + selectedText + '__' + afterText;
+            newCursorPos = end + 4;
+          } else {
+            newText = beforeText + '__texte souligné__' + afterText;
+            newCursorPos = start + 2;
+          }
+          break;
+        case 'bullet':
+          newText = beforeText + '\n• Point de liste' + afterText;
+          newCursorPos = start + 15;
+          break;
+        case 'number':
+          newText = beforeText + '\n1. Élément numéroté' + afterText;
+          newCursorPos = start + 19;
+          break;
+        case 'h1':
+          newText = beforeText + '\n# Titre principal\n' + afterText;
+          newCursorPos = start + 18;
+          break;
+        case 'h2':
+          newText = beforeText + '\n## Sous-titre\n' + afterText;
+          newCursorPos = start + 15;
+          break;
+        case 'h3':
+          newText = beforeText + '\n### Titre de section\n' + afterText;
+          newCursorPos = start + 22;
+          break;
+        default:
+          return;
       }
       
       setNewEntry(prev => ({ ...prev, content: newText }));
       
-      // Set cursor position after insertion
       setTimeout(() => {
-        const newPosition = selectedText ? start + before.length + selectedText.length + after.length : start + before.length;
         textarea.focus();
-        textarea.setSelectionRange(newPosition, newPosition);
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
       }, 0);
     }
   };
@@ -393,9 +439,7 @@ const TextBookDetail: React.FC = () => {
                   <Select 
                     defaultValue="normal" 
                     onValueChange={(value) => {
-                      if (value === 'h1') insertTextAtCursor('\n# TITRE 1\n');
-                      else if (value === 'h2') insertTextAtCursor('\n## Titre 2\n');
-                      else if (value === 'h3') insertTextAtCursor('\n### Titre 3\n');
+                      if (value !== 'normal') applyFormatting(value);
                     }}
                   >
                     <SelectTrigger className="w-24 h-8">
@@ -416,7 +460,7 @@ const TextBookDetail: React.FC = () => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => insertTextAtCursor('**', '**')}
+                    onClick={() => applyFormatting('bold')}
                     title="Gras"
                   >
                     <Bold className="h-4 w-4" />
@@ -425,7 +469,7 @@ const TextBookDetail: React.FC = () => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => insertTextAtCursor('_', '_')}
+                    onClick={() => applyFormatting('italic')}
                     title="Italique"
                   >
                     <Italic className="h-4 w-4" />
@@ -434,19 +478,10 @@ const TextBookDetail: React.FC = () => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => insertTextAtCursor('[SOULIGNÉ: ', ']')}
+                    onClick={() => applyFormatting('underline')}
                     title="Souligné"
                   >
                     <Underline className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => insertTextAtCursor('[BARRÉ: ', ']')}
-                    title="Barré"
-                  >
-                    <Strikethrough className="h-4 w-4" />
                   </Button>
 
                   <div className="w-px h-4 bg-border mx-1" />
@@ -456,7 +491,7 @@ const TextBookDetail: React.FC = () => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => insertTextAtCursor('\n• ', '')}
+                    onClick={() => applyFormatting('bullet')}
                     title="Liste à puces"
                   >
                     <List className="h-4 w-4" />
@@ -465,72 +500,10 @@ const TextBookDetail: React.FC = () => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => insertTextAtCursor('\n1. ', '')}
+                    onClick={() => applyFormatting('number')}
                     title="Liste numérotée"
                   >
                     <ListOrdered className="h-4 w-4" />
-                  </Button>
-
-                  <div className="w-px h-4 bg-border mx-1" />
-
-                  {/* Alignment - simple text markers */}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => insertTextAtCursor('\n[ALIGNÉ À GAUCHE]\n', '')}
-                    title="Aligner à gauche"
-                  >
-                    <AlignLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => insertTextAtCursor('\n[CENTRÉ]\n', '')}
-                    title="Centrer"
-                  >
-                    <AlignCenter className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => insertTextAtCursor('\n[ALIGNÉ À DROITE]\n', '')}
-                    title="Aligner à droite"
-                  >
-                    <AlignRight className="h-4 w-4" />
-                  </Button>
-
-                  <div className="w-px h-4 bg-border mx-1" />
-
-                  {/* Special formatting */}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => insertTextAtCursor('\n[LIEN: Texte du lien - https://exemple.com]\n', '')}
-                    title="Insérer un lien"
-                  >
-                    <Link className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => insertTextAtCursor('[CODE: ', ']')}
-                    title="Code"
-                  >
-                    <Code className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => insertTextAtCursor('\n"', '"\n')}
-                    title="Citation"
-                  >
-                    <Quote className="h-4 w-4" />
                   </Button>
                 </div>
                 <Textarea
