@@ -23,7 +23,7 @@ const ScheduleEditor = () => {
     '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'
   ];
 
-  const weekDays = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
+  const weekDays = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
 
   useEffect(() => {
     if (scheduleId) {
@@ -66,13 +66,9 @@ const ScheduleEditor = () => {
     return date.toISOString().split('T')[0];
   };
 
-  const getSlotForDateTime = (date: Date, time: string) => {
+  const getSlotsForDate = (date: Date) => {
     const dateStr = formatDate(date);
-    return slots.find(slot => 
-      slot.date === dateStr && 
-      slot.start_time <= time && 
-      slot.end_time > time
-    );
+    return slots.filter(slot => slot.date === dateStr).sort((a, b) => a.start_time.localeCompare(b.start_time));
   };
 
   const getSlotDuration = (slot: ScheduleSlot) => {
@@ -105,7 +101,7 @@ const ScheduleEditor = () => {
   const getWeekLabel = () => {
     const weekDates = getWeekDates();
     const start = weekDates[0];
-    const end = weekDates[4];
+    const end = weekDates[6];
     return `Semaine Du ${start.getDate()} Au ${end.getDate()} ${start.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`;
   };
 
@@ -235,85 +231,190 @@ const ScheduleEditor = () => {
         {/* Weekly Schedule */}
         {currentView === 'week' && (
           <div className="p-6">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr>
-                    <th className="w-20 p-3 text-left text-sm font-medium text-gray-500">Heure</th>
-                    {getWeekDates().map((date, index) => (
-                      <th key={index} className="p-3 text-center text-sm font-medium text-gray-500 min-w-48">
-                        <div>
-                          <div>{weekDays[index]}</div>
-                          <div className="text-xs text-gray-400 mt-1">
-                            {date.getDate()} {date.toLocaleDateString('fr-FR', { month: 'short' })}
-                          </div>
+            <div className="grid grid-cols-7 gap-4">
+              {getWeekDates().map((date, index) => (
+                <div key={index} className="min-h-96">
+                  <div className="text-center mb-4 p-3 bg-muted rounded-lg">
+                    <div className="font-medium text-sm">{weekDays[index]}</div>
+                    <div className="text-2xl font-bold mt-1">
+                      {date.getDate()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {date.toLocaleDateString('fr-FR', { month: 'short' })}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {getSlotsForDate(date).map((slot) => (
+                      <div
+                        key={slot.id}
+                        className="text-white p-3 rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                        style={{
+                          backgroundColor: slot.color || schedule.formations?.color || '#8B5CF6',
+                        }}
+                      >
+                        <div className="font-medium text-sm mb-1">
+                          {slot.formation_modules?.title || 'Module non défini'}
                         </div>
-                      </th>
+                        <div className="text-xs opacity-90 mb-1">
+                          {slot.start_time} - {slot.end_time}
+                        </div>
+                        <div className="text-xs opacity-90 mb-1">
+                          {slot.users ? 
+                            `${slot.users.first_name} ${slot.users.last_name}` : 
+                            'Formateur non défini'
+                          }
+                        </div>
+                        <div className="text-xs opacity-75">
+                          {slot.room || 'Salle non définie'}
+                        </div>
+                      </div>
                     ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {timeSlots.map((time) => (
-                    <tr key={time} className="border-t border-gray-100">
-                      <td className="p-3 text-sm text-gray-600 bg-gray-50">{time}</td>
-                      {getWeekDates().map((date, dayIndex) => {
-                        const slot = getSlotForDateTime(date, time);
-                        const isFirstSlot = slot && slot.start_time === time;
-                        const duration = slot ? getSlotDuration(slot) : 1;
-                        
-                        if (slot && !isFirstSlot) {
-                          return null; // Skip rendering for continuation slots
-                        }
-                        
-                        return (
-                          <td key={`${dayIndex}-${time}`} className="p-1 border-l border-gray-100 relative">
-                            {slot && isFirstSlot ? (
-                              <div 
-                                className="text-white p-3 rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                                style={{ 
-                                  backgroundColor: slot.color || schedule.formations?.color || '#8B5CF6',
-                                  minHeight: `${duration * 60}px`,
-                                  position: 'relative',
-                                  zIndex: 1
-                                }}
-                              >
-                                 <div className="font-medium text-sm mb-1">
-                                   {slot.formation_modules?.title || 'Module non défini'}
-                                 </div>
-                                 <div className="text-xs opacity-90 mb-1">
-                                   {slot.users ? 
-                                     `${slot.users.first_name} ${slot.users.last_name}` : 
-                                     'Formateur non défini'
-                                   }
-                                 </div>
-                                <div className="text-xs opacity-75">{slot.room || 'Salle non définie'}</div>
-                              </div>
-                            ) : (
-                              <div 
-                                className="h-16 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer flex items-center justify-center group"
-                                onClick={() => handleAddSlot(date, time)}
-                              >
-                                <Plus className="h-4 w-4 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
-                              </div>
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                    
+                    <div 
+                      className="h-16 hover:bg-muted/50 rounded-lg transition-colors cursor-pointer flex items-center justify-center group border-2 border-dashed border-muted-foreground/20"
+                      onClick={() => handleAddSlot(date, '09:00')}
+                    >
+                      <Plus className="h-4 w-4 text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
-        {/* Other views placeholder */}
-        {currentView !== 'week' && (
+        {/* Day View */}
+        {currentView === 'day' && (
           <div className="p-6">
-            <div className="text-center py-12 text-gray-500">
-              <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-lg font-medium mb-2">Vue {currentView}</h3>
-              <p>Cette vue sera développée prochainement</p>
+            <div className="max-w-2xl mx-auto">
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-bold">
+                  {selectedDate.toLocaleDateString('fr-FR', { 
+                    weekday: 'long', 
+                    day: 'numeric', 
+                    month: 'long', 
+                    year: 'numeric' 
+                  })}
+                </h2>
+              </div>
+              
+              <div className="space-y-4">
+                {getSlotsForDate(selectedDate).length > 0 ? (
+                  getSlotsForDate(selectedDate).map((slot) => (
+                    <div
+                      key={slot.id}
+                      className="bg-card border rounded-lg p-4 hover:shadow-md transition-shadow"
+                      style={{
+                        borderLeftColor: slot.color || schedule.formations?.color || '#8B5CF6',
+                        borderLeftWidth: '4px'
+                      }}
+                    >
+                      <div className="font-semibold text-lg mb-2">
+                        {slot.formation_modules?.title || 'Module non défini'}
+                      </div>
+                      <div className="flex items-center text-sm text-muted-foreground mb-2">
+                        <Clock className="h-4 w-4 mr-2" />
+                        {slot.start_time} - {slot.end_time}
+                      </div>
+                      <div className="flex items-center text-sm text-muted-foreground mb-2">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        {slot.room || 'Salle non définie'}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {slot.users ? 
+                          `${slot.users.first_name} ${slot.users.last_name}` : 
+                          'Formateur non défini'
+                        }
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Calendar className="h-12 w-12 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium mb-2">Aucun créneau</h3>
+                    <p>Aucun cours prévu pour cette journée</p>
+                    <Button 
+                      className="mt-4" 
+                      onClick={() => handleAddSlot(selectedDate, '09:00')}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Ajouter un créneau
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Month View */}
+        {currentView === 'month' && (
+          <div className="p-6">
+            <div className="mb-6 text-center">
+              <h2 className="text-2xl font-bold">
+                {selectedDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+              </h2>
+            </div>
+            
+            <div className="grid grid-cols-7 gap-1">
+              {/* Header */}
+              {weekDays.map((day) => (
+                <div key={day} className="p-3 text-center text-sm font-medium text-muted-foreground bg-muted">
+                  {day.substring(0, 3)}
+                </div>
+              ))}
+              
+              {/* Calendar Days */}
+              {Array.from({ length: 42 }, (_, i) => {
+                const firstDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+                const startDate = new Date(firstDay);
+                startDate.setDate(startDate.getDate() - ((firstDay.getDay() + 6) % 7));
+                
+                const currentDay = new Date(startDate);
+                currentDay.setDate(startDate.getDate() + i);
+                
+                const isCurrentMonth = currentDay.getMonth() === selectedDate.getMonth();
+                const daySlots = getSlotsForDate(currentDay);
+                
+                return (
+                  <div
+                    key={i}
+                    className={`min-h-24 p-2 border border-border ${
+                      isCurrentMonth ? 'bg-background' : 'bg-muted/30'
+                    } hover:bg-accent/50 cursor-pointer transition-colors`}
+                    onClick={() => {
+                      setSelectedDate(currentDay);
+                      setCurrentView('day');
+                    }}
+                  >
+                    <div className={`text-sm font-medium mb-1 ${
+                      isCurrentMonth ? 'text-foreground' : 'text-muted-foreground'
+                    }`}>
+                      {currentDay.getDate()}
+                    </div>
+                    <div className="space-y-1">
+                      {daySlots.slice(0, 2).map((slot) => (
+                        <div
+                          key={slot.id}
+                          className="text-xs p-1 rounded text-white truncate"
+                          style={{
+                            backgroundColor: slot.color || schedule.formations?.color || '#8B5CF6',
+                          }}
+                          title={`${slot.start_time} ${slot.formation_modules?.title || 'Module'}`}
+                        >
+                          {slot.start_time} {slot.formation_modules?.title || 'Module'}
+                        </div>
+                      ))}
+                      {daySlots.length > 2 && (
+                        <div className="text-xs text-muted-foreground">
+                          +{daySlots.length - 2} autres
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
