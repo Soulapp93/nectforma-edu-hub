@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Search, BookOpen, Grid, List, Download, Archive } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
 import CreateTextBookModal from './CreateTextBookModal';
 import TextBookCard from './TextBookCard';
@@ -71,6 +71,40 @@ const TextBooksList: React.FC = () => {
 
   const handleCreateSuccess = () => {
     fetchData();
+  };
+
+  const handleExportPDF = async (textBook: TextBook) => {
+    try {
+      const { pdfExportService } = await import('@/services/pdfExportService');
+      await pdfExportService.exportTextBookToPDF(textBook);
+      toast({
+        title: "Export réussi",
+        description: "Le cahier de texte a été exporté en PDF.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'exporter le cahier de texte.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleArchive = async (textBookId: string) => {
+    try {
+      await textBookService.archiveTextBook(textBookId);
+      toast({
+        title: "Archivage réussi",
+        description: "Le cahier de texte a été archivé.",
+      });
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'archiver le cahier de texte.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -204,7 +238,7 @@ const TextBooksList: React.FC = () => {
       ) : (
         <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
           <div className="divide-y divide-gray-100">
-            {filteredTextBooks.map((textBook, index) => (
+            {filteredTextBooks.map((textBook) => (
               <div key={textBook.id} className="p-4 hover:bg-gray-50 transition-colors">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
@@ -232,44 +266,14 @@ const TextBooksList: React.FC = () => {
                       Ouvrir
                     </Button>
                     <Button 
-                      onClick={async () => {
-                        try {
-                          const { pdfExportService } = await import('@/services/pdfExportService');
-                          await pdfExportService.exportTextBookToPDF(textBook);
-                          toast({
-                            title: "Export réussi",
-                            description: "Le cahier de texte a été exporté en PDF.",
-                          });
-                        } catch (error) {
-                          toast({
-                            title: "Erreur",
-                            description: "Impossible d'exporter le cahier de texte.",
-                            variant: "destructive",
-                          });
-                        }
-                      }}
+                      onClick={() => handleExportPDF(textBook)}
                       variant="outline" 
                       size="sm"
                     >
                       <Download className="h-4 w-4" />
                     </Button>
                     <Button 
-                      onClick={async () => {
-                        try {
-                          await textBookService.archiveTextBook(textBook.id);
-                          toast({
-                            title: "Archivage réussi",
-                            description: "Le cahier de texte a été archivé.",
-                          });
-                          fetchData();
-                        } catch (error) {
-                          toast({
-                            title: "Erreur",
-                            description: "Impossible d'archiver le cahier de texte.",
-                            variant: "destructive",
-                          });
-                        }
-                      }}
+                      onClick={() => handleArchive(textBook.id)}
                       variant="outline" 
                       size="sm"
                     >
