@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Clock, Users, Eye, Edit, Plus } from 'lucide-react';
+import { ArrowLeft, BookOpen, Clock, Users, Eye, Edit } from 'lucide-react';
 import { formationService, Formation } from '@/services/formationService';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -133,10 +133,6 @@ const FormationDetail = () => {
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-gray-900">Modules de la formation</h2>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter un module
-              </Button>
             </div>
           </div>
           
