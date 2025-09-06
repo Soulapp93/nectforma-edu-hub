@@ -266,7 +266,10 @@ const TextBookDetail: React.FC = () => {
                 {entry.content && (
                   <div>
                     <h4 className="font-semibold mb-2">Contenu du cours</h4>
-                    <p className="text-muted-foreground whitespace-pre-wrap">{entry.content}</p>
+                    <div 
+                      className="text-muted-foreground prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: entry.content }}
+                    />
                   </div>
                 )}
               </CardContent>
