@@ -38,9 +38,23 @@ export const pdfExportService = {
       const formationColor = textBook.formations?.color || '#8B5CF6';
       
       tempContainer.innerHTML = `
-        <div style="padding: 20px; min-height: 297mm;">
+        <style>
+          @media print {
+            .entry-block {
+              page-break-inside: avoid;
+              break-inside: avoid;
+            }
+            .header-section {
+              page-break-after: avoid;
+            }
+            .content-section {
+              page-break-inside: avoid;
+            }
+          }
+        </style>
+        <div style="padding: 20px; min-height: 297mm; font-family: Arial, sans-serif;">
           <!-- Header -->
-          <div style="background: linear-gradient(135deg, ${formationColor}, ${formationColor}cc); border-radius: 8px; padding: 24px; color: white; margin-bottom: 32px;">
+          <div class="header-section" style="background: linear-gradient(135deg, ${formationColor}, ${formationColor}cc); border-radius: 8px; padding: 24px; color: white; margin-bottom: 32px; page-break-after: avoid;">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
@@ -54,49 +68,107 @@ export const pdfExportService = {
           </div>
 
           <!-- Entries -->
-          <div style="space-y: 16px;">
-            ${entries && entries.length > 0 ? entries.map(entry => `
-              <div style="background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 16px;">
-                <!-- Entry Header -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; background: linear-gradient(135deg, ${formationColor}, ${formationColor}cc); color: white; font-size: 14px; font-weight: 500;">
-                  <div style="padding: 12px; border-right: 1px solid rgba(255,255,255,0.2);">DATE</div>
-                  <div style="padding: 12px; border-right: 1px solid rgba(255,255,255,0.2);">HEURE</div>
-                  <div style="padding: 12px; border-right: 1px solid rgba(255,255,255,0.2);">MATIÈRE/MODULE</div>
-                  <div style="padding: 12px;">FORMATEUR</div>
-                </div>
-                
-                <!-- Entry Data -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; font-size: 14px;">
-                  <div style="padding: 12px; border-right: 1px solid #e5e7eb; font-weight: 500;">
-                    ${format(new Date(entry.date), 'dd/MM/yyyy', { locale: fr })}
-                  </div>
-                  <div style="padding: 12px; border-right: 1px solid #e5e7eb;">
-                    ${entry.start_time} - ${entry.end_time}
-                  </div>
-                  <div style="padding: 12px; border-right: 1px solid #e5e7eb; font-weight: 500;">
-                    ${entry.subject_matter}
-                  </div>
-                  <div style="padding: 12px;">
-                    ${currentUser ? `${currentUser.first_name} ${currentUser.last_name}` : 'N/A'}
-                  </div>
-                </div>
-                
-                ${entry.content ? `
-                  <!-- Content Section -->
-                  <div style="background: #faf5ff; border-top: 1px solid #e5e7eb;">
-                    <div style="padding: 16px;">
-                      <div style="background: white; border-radius: 4px; padding: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                        <h4 style="color: ${formationColor}; font-weight: 500; margin-bottom: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">CONTENU</h4>
-                        <div style="color: #374151; line-height: 1.6;">
-                          ${entry.content}
-                        </div>
+          <div style="margin-bottom: 20px;">
+            ${entries && entries.length > 0 ? entries.map((entry, index) => {
+              const contentHtml = entry.content ? `
+                <div class="content-section" style="background: #faf5ff; page-break-inside: avoid;">
+                  <div style="padding: 20px;">
+                    <div style="background: white; border-radius: 6px; padding: 16px; border-left: 4px solid ${formationColor}; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                      <h4 style="color: ${formationColor}; font-weight: 600; margin-bottom: 12px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">CONTENU DE LA SÉANCE</h4>
+                      <div style="color: #374151; line-height: 1.7; font-size: 14px;">
+                        ${entry.content.replace(/<[^>]*>/g, '')}
                       </div>
                     </div>
                   </div>
-                ` : ''}
-              </div>
-            `).join('') : `
-              <div style="text-align: center; padding: 64px;">
+                </div>
+              ` : '';
+
+              const homeworkHtml = entry.homework ? `
+                <div style="background: #fff7ed; border-top: 1px solid #fed7aa; page-break-inside: avoid;">
+                  <div style="padding: 16px 20px;">
+                    <div style="background: white; border-radius: 6px; padding: 16px; border-left: 4px solid #f97316; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                      <h4 style="color: #f97316; font-weight: 600; margin-bottom: 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">TRAVAIL À FAIRE</h4>
+                      <div style="color: #374151; line-height: 1.6; font-size: 14px;">
+                        ${entry.homework}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ` : '';
+
+              const filesHtml = entry.files && entry.files.length > 0 ? `
+                <div style="background: #f0f9ff; border-top: 1px solid #bae6fd; padding: 16px 20px;">
+                  <h4 style="color: #0284c7; font-weight: 600; margin-bottom: 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">PIÈCES JOINTES</h4>
+                  <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    ${entry.files.map((file, fileIndex) => `
+                      <span style="
+                        background: white; 
+                        border: 1px solid #bae6fd; 
+                        border-radius: 4px; 
+                        padding: 6px 12px; 
+                        font-size: 12px; 
+                        color: #0284c7;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 6px;
+                      ">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                          <polyline points="14,2 14,8 20,8"/>
+                          <line x1="16" y1="13" x2="8" y2="13"/>
+                          <line x1="16" y1="17" x2="8" y2="17"/>
+                          <polyline points="10,9 9,9 8,9"/>
+                        </svg>
+                        Fichier joint ${fileIndex + 1}
+                      </span>
+                    `).join('')}
+                  </div>
+                </div>
+              ` : '';
+
+              return `
+                <div class="entry-block" style="
+                  background: white; 
+                  border-radius: 8px; 
+                  box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+                  border: 1px solid #e5e7eb; 
+                  overflow: hidden; 
+                  margin-bottom: 24px;
+                  page-break-inside: avoid;
+                  break-inside: avoid;
+                  ${index === 0 ? 'margin-top: 0;' : ''}
+                ">
+                  <!-- Entry Header with Data -->
+                  <div style="background: linear-gradient(135deg, ${formationColor}, ${formationColor}cc); color: white;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+                      <div style="padding: 8px 12px; border-right: 1px solid rgba(255,255,255,0.2);">DATE</div>
+                      <div style="padding: 8px 12px; border-right: 1px solid rgba(255,255,255,0.2);">HEURE</div>
+                      <div style="padding: 8px 12px; border-right: 1px solid rgba(255,255,255,0.2);">MATIÈRE/MODULE</div>
+                      <div style="padding: 8px 12px;">FORMATEUR</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; font-size: 14px; font-weight: 500; background: rgba(255,255,255,0.1);">
+                      <div style="padding: 12px; border-right: 1px solid rgba(255,255,255,0.2);">
+                        ${format(new Date(entry.date), 'dd/MM/yyyy', { locale: fr })}
+                      </div>
+                      <div style="padding: 12px; border-right: 1px solid rgba(255,255,255,0.2);">
+                        ${entry.start_time.substring(0, 5)} - ${entry.end_time.substring(0, 5)}
+                      </div>
+                      <div style="padding: 12px; border-right: 1px solid rgba(255,255,255,0.2);">
+                        ${entry.subject_matter}
+                      </div>
+                      <div style="padding: 12px;">
+                        ${currentUser ? `${currentUser.first_name} ${currentUser.last_name}` : 'N/A'}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  ${contentHtml}
+                  ${homeworkHtml}
+                  ${filesHtml}
+                </div>
+              `;
+            }).join('') : `
+              <div style="text-align: center; padding: 64px; page-break-inside: avoid;">
                 <div style="width: 64px; height: 64px; background: #f3e8ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
                   <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2">
                     <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
