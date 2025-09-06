@@ -247,10 +247,15 @@ const TextBookDetail: React.FC = () => {
         ) : (
           <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
             {/* Table Header */}
-            <div className="grid grid-cols-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-sm font-medium">
-              <div className="p-3 border-r border-purple-400">DATE</div>
-              <div className="p-3 border-r border-purple-400">HEURE</div>
-              <div className="p-3 border-r border-purple-400">MATIÈRE/MODULE</div>
+            <div 
+              className="grid grid-cols-4 text-white text-sm font-medium"
+              style={{ 
+                background: `linear-gradient(135deg, ${textBook.formations?.color || '#8B5CF6'}, ${textBook.formations?.color || '#8B5CF6'}cc)`
+              }}
+            >
+              <div className="p-3 border-r border-white/20">DATE</div>
+              <div className="p-3 border-r border-white/20">HEURE</div>
+              <div className="p-3 border-r border-white/20">MATIÈRE/MODULE</div>
               <div className="p-3">FORMATEUR</div>
             </div>
             
