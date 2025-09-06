@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Plus, Clock, Calendar, User, BookOpen, Upload, X, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, List, ListOrdered, Link, Code, Strikethrough, Quote, FileText, Type } from 'lucide-react';
+import { ArrowLeft, Plus, Clock, Calendar, User, BookOpen, Upload, X, FileText } from 'lucide-react';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { textBookService, TextBook, TextBookEntry } from '@/services/textBookService';
 import { moduleService, FormationModule } from '@/services/moduleService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -44,96 +45,6 @@ const TextBookDetail: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
 
-  // Helper function to apply formatting to selected text
-  const applyFormatting = (format: string) => {
-    const textarea = document.getElementById('content') as HTMLTextAreaElement;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = textarea.value.substring(start, end);
-    const beforeText = textarea.value.substring(0, start);
-    const afterText = textarea.value.substring(end);
-    
-    let newText;
-    let newCursorStart;
-    let newCursorEnd;
-    
-    switch (format) {
-      case 'bold':
-        if (selectedText) {
-          newText = beforeText + '**' + selectedText + '**' + afterText;
-          newCursorStart = start;
-          newCursorEnd = end + 4;
-        } else {
-          newText = beforeText + '****' + afterText;
-          newCursorStart = start + 2;
-          newCursorEnd = start + 2;
-        }
-        break;
-      case 'italic':
-        if (selectedText) {
-          newText = beforeText + '*' + selectedText + '*' + afterText;
-          newCursorStart = start;
-          newCursorEnd = end + 2;
-        } else {
-          newText = beforeText + '**' + afterText;
-          newCursorStart = start + 1;
-          newCursorEnd = start + 1;
-        }
-        break;
-      case 'underline':
-        if (selectedText) {
-          newText = beforeText + '__' + selectedText + '__' + afterText;
-          newCursorStart = start;
-          newCursorEnd = end + 4;
-        } else {
-          newText = beforeText + '____' + afterText;
-          newCursorStart = start + 2;
-          newCursorEnd = start + 2;
-        }
-        break;
-      case 'bullet':
-        const bulletText = selectedText || '';
-        newText = beforeText + '\n• ' + bulletText + afterText;
-        newCursorStart = start + 3;
-        newCursorEnd = start + 3 + bulletText.length;
-        break;
-      case 'number':
-        const numberText = selectedText || '';
-        newText = beforeText + '\n1. ' + numberText + afterText;
-        newCursorStart = start + 4;
-        newCursorEnd = start + 4 + numberText.length;
-        break;
-      case 'h1':
-        const h1Text = selectedText || '';
-        newText = beforeText + '\n# ' + h1Text + '\n' + afterText;
-        newCursorStart = start + 3;
-        newCursorEnd = start + 3 + h1Text.length;
-        break;
-      case 'h2':
-        const h2Text = selectedText || '';
-        newText = beforeText + '\n## ' + h2Text + '\n' + afterText;
-        newCursorStart = start + 4;
-        newCursorEnd = start + 4 + h2Text.length;
-        break;
-      case 'h3':
-        const h3Text = selectedText || '';
-        newText = beforeText + '\n### ' + h3Text + '\n' + afterText;
-        newCursorStart = start + 5;
-        newCursorEnd = start + 5 + h3Text.length;
-        break;
-      default:
-        return;
-    }
-    
-    setNewEntry(prev => ({ ...prev, content: newText }));
-    
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(newCursorStart, newCursorEnd);
-    }, 0);
-  };
 
   const fetchTextBookData = async () => {
     if (!textBookId) return;
@@ -446,92 +357,15 @@ const TextBookDetail: React.FC = () => {
               </Select>
             </div>
 
-            {/* Content with formatting tools */}
+            {/* Content with rich text editor */}
             <div className="space-y-2">
               <Label htmlFor="content">Contenu de la séance</Label>
-              <div className="border rounded-md">
-                {/* Enhanced Formatting toolbar */}
-                <div className="flex items-center gap-1 p-2 border-b bg-muted/50 flex-wrap">
-                  {/* Style dropdown */}
-                  <Select 
-                    defaultValue="normal" 
-                    onValueChange={(value) => {
-                      if (value !== 'normal') applyFormatting(value);
-                    }}
-                  >
-                    <SelectTrigger className="w-24 h-8">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="normal">Normal</SelectItem>
-                      <SelectItem value="h1">Titre 1</SelectItem>
-                      <SelectItem value="h2">Titre 2</SelectItem>
-                      <SelectItem value="h3">Titre 3</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <div className="w-px h-4 bg-border mx-1" />
-
-                  {/* Text formatting */}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => applyFormatting('bold')}
-                    title="Gras"
-                  >
-                    <Bold className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => applyFormatting('italic')}
-                    title="Italique"
-                  >
-                    <Italic className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => applyFormatting('underline')}
-                    title="Souligné"
-                  >
-                    <Underline className="h-4 w-4" />
-                  </Button>
-
-                  <div className="w-px h-4 bg-border mx-1" />
-
-                  {/* Lists */}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => applyFormatting('bullet')}
-                    title="Liste à puces"
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => applyFormatting('number')}
-                    title="Liste numérotée"
-                  >
-                    <ListOrdered className="h-4 w-4" />
-                  </Button>
-                </div>
-                <Textarea
-                  id="content"
-                  placeholder="Décrivez le contenu de la séance..."
-                  rows={8}
-                  value={newEntry.content}
-                  onChange={(e) => setNewEntry(prev => ({ ...prev, content: e.target.value }))}
-                  className="resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                />
-              </div>
+              <RichTextEditor
+                value={newEntry.content}
+                onChange={(value) => setNewEntry(prev => ({ ...prev, content: value }))}
+                placeholder="Décrivez le contenu de la séance..."
+                rows={8}
+              />
             </div>
 
 
