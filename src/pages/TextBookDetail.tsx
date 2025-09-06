@@ -47,75 +47,92 @@ const TextBookDetail: React.FC = () => {
   // Helper function to apply formatting to selected text
   const applyFormatting = (format: string) => {
     const textarea = document.getElementById('content') as HTMLTextAreaElement;
-    if (textarea) {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const selectedText = textarea.value.substring(start, end);
-      const beforeText = textarea.value.substring(0, start);
-      const afterText = textarea.value.substring(end);
-      
-      let newText;
-      let newCursorPos;
-      
-      switch (format) {
-        case 'bold':
-          if (selectedText) {
-            newText = beforeText + '**' + selectedText + '**' + afterText;
-            newCursorPos = end + 4;
-          } else {
-            newText = beforeText + '**texte en gras**' + afterText;
-            newCursorPos = start + 2;
-          }
-          break;
-        case 'italic':
-          if (selectedText) {
-            newText = beforeText + '*' + selectedText + '*' + afterText;
-            newCursorPos = end + 2;
-          } else {
-            newText = beforeText + '*texte en italique*' + afterText;
-            newCursorPos = start + 1;
-          }
-          break;
-        case 'underline':
-          if (selectedText) {
-            newText = beforeText + '__' + selectedText + '__' + afterText;
-            newCursorPos = end + 4;
-          } else {
-            newText = beforeText + '__texte souligné__' + afterText;
-            newCursorPos = start + 2;
-          }
-          break;
-        case 'bullet':
-          newText = beforeText + '\n• Point de liste' + afterText;
-          newCursorPos = start + 15;
-          break;
-        case 'number':
-          newText = beforeText + '\n1. Élément numéroté' + afterText;
-          newCursorPos = start + 19;
-          break;
-        case 'h1':
-          newText = beforeText + '\n# Titre principal\n' + afterText;
-          newCursorPos = start + 18;
-          break;
-        case 'h2':
-          newText = beforeText + '\n## Sous-titre\n' + afterText;
-          newCursorPos = start + 15;
-          break;
-        case 'h3':
-          newText = beforeText + '\n### Titre de section\n' + afterText;
-          newCursorPos = start + 22;
-          break;
-        default:
-          return;
-      }
-      
-      setNewEntry(prev => ({ ...prev, content: newText }));
-      
-      setTimeout(() => {
-        textarea.focus();
-        textarea.setSelectionRange(newCursorPos, newCursorPos);
-      }, 0);
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+    const beforeText = textarea.value.substring(0, start);
+    const afterText = textarea.value.substring(end);
+    
+    let newText;
+    let newCursorStart;
+    let newCursorEnd;
+    
+    switch (format) {
+      case 'bold':
+        if (selectedText) {
+          newText = beforeText + '**' + selectedText + '**' + afterText;
+          newCursorStart = start;
+          newCursorEnd = end + 4;
+        } else {
+          newText = beforeText + '****' + afterText;
+          newCursorStart = start + 2;
+          newCursorEnd = start + 2;
+        }
+        break;
+      case 'italic':
+        if (selectedText) {
+          newText = beforeText + '*' + selectedText + '*' + afterText;
+          newCursorStart = start;
+          newCursorEnd = end + 2;
+        } else {
+          newText = beforeText + '**' + afterText;
+          newCursorStart = start + 1;
+          newCursorEnd = start + 1;
+        }
+        break;
+      case 'underline':
+        if (selectedText) {
+          newText = beforeText + '__' + selectedText + '__' + afterText;
+          newCursorStart = start;
+          newCursorEnd = end + 4;
+        } else {
+          newText = beforeText + '____' + afterText;
+          newCursorStart = start + 2;
+          newCursorEnd = start + 2;
+        }
+        break;
+      case 'bullet':
+        const bulletText = selectedText || '';
+        newText = beforeText + '\n• ' + bulletText + afterText;
+        newCursorStart = start + 3;
+        newCursorEnd = start + 3 + bulletText.length;
+        break;
+      case 'number':
+        const numberText = selectedText || '';
+        newText = beforeText + '\n1. ' + numberText + afterText;
+        newCursorStart = start + 4;
+        newCursorEnd = start + 4 + numberText.length;
+        break;
+      case 'h1':
+        const h1Text = selectedText || '';
+        newText = beforeText + '\n# ' + h1Text + '\n' + afterText;
+        newCursorStart = start + 3;
+        newCursorEnd = start + 3 + h1Text.length;
+        break;
+      case 'h2':
+        const h2Text = selectedText || '';
+        newText = beforeText + '\n## ' + h2Text + '\n' + afterText;
+        newCursorStart = start + 4;
+        newCursorEnd = start + 4 + h2Text.length;
+        break;
+      case 'h3':
+        const h3Text = selectedText || '';
+        newText = beforeText + '\n### ' + h3Text + '\n' + afterText;
+        newCursorStart = start + 5;
+        newCursorEnd = start + 5 + h3Text.length;
+        break;
+      default:
+        return;
     }
+    
+    setNewEntry(prev => ({ ...prev, content: newText }));
+    
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(newCursorStart, newCursorEnd);
+    }, 0);
   };
 
   const fetchTextBookData = async () => {
