@@ -222,7 +222,7 @@ const TextBookDetail: React.FC = () => {
         </div>
       </div>
 
-      {/* Entries List */}
+      {/* Entries Table */}
       <div className="space-y-4">
         {entries.length === 0 ? (
           <Card>
@@ -245,36 +245,51 @@ const TextBookDetail: React.FC = () => {
             </CardContent>
           </Card>
         ) : (
-          entries.map((entry) => (
-            <Card key={entry.id}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{entry.subject_matter}</CardTitle>
-                  <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                    <div className="flex items-center space-x-1">
-                      <Calendar className="h-4 w-4" />
-                      <span>{format(new Date(entry.date), 'dd MMMM yyyy', { locale: fr })}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Clock className="h-4 w-4" />
-                      <span>{entry.start_time} - {entry.end_time}</span>
-                    </div>
+          <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+            {/* Table Header */}
+            <div className="grid grid-cols-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-sm font-medium">
+              <div className="p-3 border-r border-purple-400">DATE</div>
+              <div className="p-3 border-r border-purple-400">HEURE</div>
+              <div className="p-3 border-r border-purple-400">MATIÈRE/MODULE</div>
+              <div className="p-3">FORMATEUR</div>
+            </div>
+            
+            {/* Table Body */}
+            {entries.map((entry, index) => (
+              <div key={entry.id}>
+                {/* Entry Row */}
+                <div className="grid grid-cols-4 border-b border-gray-200 text-sm">
+                  <div className="p-3 border-r border-gray-200 font-medium">
+                    {format(new Date(entry.date), 'dd/MM/yyyy', { locale: fr })}
+                  </div>
+                  <div className="p-3 border-r border-gray-200">
+                    {entry.start_time} - {entry.end_time}
+                  </div>
+                  <div className="p-3 border-r border-gray-200 font-medium">
+                    {entry.subject_matter}
+                  </div>
+                  <div className="p-3">
+                    {currentUser ? `${currentUser.first_name} ${currentUser.last_name}` : 'N/A'}
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
+                
+                {/* Content Row */}
                 {entry.content && (
-                  <div>
-                    <h4 className="font-semibold mb-2">Contenu du cours</h4>
-                    <div 
-                      className="text-muted-foreground prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: entry.content }}
-                    />
+                  <div className="bg-purple-50 border-b border-gray-200">
+                    <div className="p-4">
+                      <div className="bg-white rounded p-3 shadow-sm">
+                        <h4 className="text-purple-600 font-medium mb-2 text-sm uppercase tracking-wide">CONTENU</h4>
+                        <div 
+                          className="prose prose-sm max-w-none text-gray-700"
+                          dangerouslySetInnerHTML={{ __html: entry.content }}
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          ))
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
