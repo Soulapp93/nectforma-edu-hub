@@ -134,5 +134,23 @@ export const textBookService = {
 
     console.log('Entrée créée:', entry);
     return entry;
+  },
+
+  async archiveTextBook(textBookId: string) {
+    console.log('Archivage du cahier de texte:', textBookId);
+    
+    // Pour l'instant, nous simulons l'archivage
+    // En production, vous devriez ajouter un champ status ou archived dans la table
+    const { error } = await supabase
+      .from('text_books')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', textBookId);
+
+    if (error) {
+      console.error('Erreur lors de l\'archivage:', error);
+      throw new Error(`Erreur lors de l'archivage: ${error.message}`);
+    }
+
+    console.log('Cahier de texte archivé avec succès');
   }
 };
