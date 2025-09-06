@@ -632,7 +632,15 @@ export type Database = {
           updated_at?: string
           uploaded_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_text_book_entry_files_text_book_entry_id"
+            columns: ["text_book_entry_id"]
+            isOneToOne: false
+            referencedRelation: "text_book_entries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       text_books: {
         Row: {
