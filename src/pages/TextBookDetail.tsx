@@ -7,8 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Plus, Clock, Calendar, User, BookOpen } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft, Plus, Clock, Calendar, User, BookOpen, Upload, X } from 'lucide-react';
 import { textBookService, TextBook, TextBookEntry } from '@/services/textBookService';
+import { moduleService, FormationModule } from '@/services/moduleService';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -20,16 +24,20 @@ const TextBookDetail: React.FC = () => {
 
   const [textBook, setTextBook] = useState<TextBook | null>(null);
   const [entries, setEntries] = useState<TextBookEntry[]>([]);
+  const [modules, setModules] = useState<FormationModule[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isAddEntryModalOpen, setIsAddEntryModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { userId } = useCurrentUser();
 
   // Form state for new entry
   const [newEntry, setNewEntry] = useState({
     date: '',
     start_time: '',
     end_time: '',
-    subject_matter: '',
+    module_id: '',
     content: '',
     homework: ''
   });
@@ -49,6 +57,22 @@ const TextBookDetail: React.FC = () => {
       }
       
       setTextBook(currentTextBook);
+      
+      // Fetch modules for this formation
+      if (currentTextBook.formation_id) {
+        const modulesData = await moduleService.getFormationModules(currentTextBook.formation_id);
+        setModules(modulesData || []);
+      }
+      
+      // Fetch current user details
+      if (userId) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('id, first_name, last_name, email')
+          .eq('id', userId)
+          .single();
+        setCurrentUser(userData);
+      }
       
       // Fetch entries
       const entriesData = await textBookService.getTextBookEntries(textBookId);
@@ -73,10 +97,20 @@ const TextBookDetail: React.FC = () => {
   const handleAddEntry = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!textBookId || !newEntry.date || !newEntry.start_time || !newEntry.end_time || !newEntry.subject_matter) {
+    if (!textBookId || !newEntry.date || !newEntry.start_time || !newEntry.end_time || !newEntry.module_id) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs obligatoires.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const selectedModule = modules.find(m => m.id === newEntry.module_id);
+    if (!selectedModule) {
+      toast({
+        title: "Erreur",
+        description: "Module sélectionné non valide.",
         variant: "destructive",
       });
       return;
@@ -90,9 +124,10 @@ const TextBookDetail: React.FC = () => {
         date: newEntry.date,
         start_time: newEntry.start_time,
         end_time: newEntry.end_time,
-        subject_matter: newEntry.subject_matter,
+        subject_matter: selectedModule.title,
         content: newEntry.content || undefined,
         homework: newEntry.homework || undefined,
+        instructor_id: userId || undefined,
       });
 
       toast({
@@ -105,7 +140,7 @@ const TextBookDetail: React.FC = () => {
         date: '',
         start_time: '',
         end_time: '',
-        subject_matter: '',
+        module_id: '',
         content: '',
         homework: ''
       });
@@ -245,15 +280,16 @@ const TextBookDetail: React.FC = () => {
 
       {/* Add Entry Modal */}
       <Dialog open={isAddEntryModalOpen} onOpenChange={setIsAddEntryModalOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Ajouter une entrée</DialogTitle>
+            <DialogTitle>Nouvelle entrée</DialogTitle>
           </DialogHeader>
           
-          <form onSubmit={handleAddEntry} className="space-y-4">
+          <form onSubmit={handleAddEntry} className="space-y-6">
+            {/* Date and Time Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="date">Date *</Label>
+                <Label htmlFor="date">Date</Label>
                 <Input
                   id="date"
                   type="date"
@@ -264,7 +300,7 @@ const TextBookDetail: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="start_time">Heure de début *</Label>
+                <Label htmlFor="start_time">Heure début</Label>
                 <Input
                   id="start_time"
                   type="time"
@@ -275,7 +311,7 @@ const TextBookDetail: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="end_time">Heure de fin *</Label>
+                <Label htmlFor="end_time">Heure fin</Label>
                 <Input
                   id="end_time"
                   type="time"
@@ -286,29 +322,58 @@ const TextBookDetail: React.FC = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="subject_matter">Matière/Sujet *</Label>
-              <Input
-                id="subject_matter"
-                type="text"
-                placeholder="ex: JavaScript ES6+"
-                value={newEntry.subject_matter}
-                onChange={(e) => setNewEntry(prev => ({ ...prev, subject_matter: e.target.value }))}
-                required
-              />
+            {/* Instructor Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Formateur</Label>
+                <Input
+                  value={currentUser ? `${currentUser.first_name} ${currentUser.last_name}` : 'Chargement...'}
+                  disabled
+                  className="bg-muted"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Email du formateur</Label>
+                <Input
+                  value={currentUser?.email || 'Chargement...'}
+                  disabled
+                  className="bg-muted"
+                />
+              </div>
             </div>
 
+            {/* Module Selection */}
             <div className="space-y-2">
-              <Label htmlFor="content">Contenu du cours</Label>
+              <Label htmlFor="module">Matière / Module</Label>
+              <Select value={newEntry.module_id} onValueChange={(value) => setNewEntry(prev => ({ ...prev, module_id: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un module" />
+                </SelectTrigger>
+                <SelectContent>
+                  {modules.map((module) => (
+                    <SelectItem key={module.id} value={module.id}>
+                      {module.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Content */}
+            <div className="space-y-2">
+              <Label htmlFor="content">Contenu de la séance</Label>
               <Textarea
                 id="content"
-                placeholder="Décrivez le contenu du cours..."
-                rows={4}
+                placeholder="Décrivez le contenu de la séance..."
+                rows={6}
                 value={newEntry.content}
                 onChange={(e) => setNewEntry(prev => ({ ...prev, content: e.target.value }))}
+                className="resize-none"
               />
             </div>
 
+            {/* Homework */}
             <div className="space-y-2">
               <Label htmlFor="homework">Devoirs</Label>
               <Textarea
@@ -317,9 +382,29 @@ const TextBookDetail: React.FC = () => {
                 rows={3}
                 value={newEntry.homework}
                 onChange={(e) => setNewEntry(prev => ({ ...prev, homework: e.target.value }))}
+                className="resize-none"
               />
             </div>
 
+            {/* File Upload Section */}
+            <div className="space-y-2">
+              <Label>Fichiers joints</Label>
+              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4">
+                <div className="flex items-center justify-center">
+                  <div className="text-center">
+                    <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">
+                      Sélect. fichiers Aucun fichier choisi
+                    </p>
+                    <Button type="button" variant="outline" size="sm" className="mt-2">
+                      Téléverser
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
             <div className="flex justify-end space-x-2 pt-4">
               <Button 
                 type="button" 
@@ -329,7 +414,7 @@ const TextBookDetail: React.FC = () => {
                 Annuler
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Ajout...' : 'Ajouter'}
+                {isSubmitting ? 'Enregistrement...' : 'Enregistrer'}
               </Button>
             </div>
           </form>
