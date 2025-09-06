@@ -39,27 +39,57 @@ export const pdfExportService = {
       
       tempContainer.innerHTML = `
         <style>
+          @page {
+            margin: 20mm;
+            size: A4;
+          }
           @media print {
             .entry-block {
-              page-break-inside: avoid;
-              break-inside: avoid;
-              margin-bottom: 40px !important;
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+              margin-bottom: 50px !important;
             }
             .header-section {
-              page-break-after: avoid;
+              page-break-after: avoid !important;
             }
             .content-section {
-              page-break-inside: avoid;
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
             }
-            .page-break {
-              page-break-before: always;
+            .homework-section {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+            .files-section {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+            .entry-header {
+              page-break-after: avoid !important;
             }
           }
           .entry-block {
-            margin-bottom: 40px !important;
+            margin-bottom: 50px !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          .entry-header {
+            page-break-after: avoid !important;
+          }
+          .content-section {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          .homework-section {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          .files-section {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
           }
         </style>
-        <div style="padding: 30px; padding-bottom: 60px; min-height: 297mm; font-family: Arial, sans-serif;">
+        <div style="padding: 40px; padding-bottom: 80px; min-height: 297mm; font-family: Arial, sans-serif;">
           <!-- Header -->
           <div class="header-section" style="background: linear-gradient(135deg, ${formationColor}, ${formationColor}cc); border-radius: 8px; padding: 24px; color: white; margin-bottom: 32px; page-break-after: avoid;">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
@@ -91,7 +121,7 @@ export const pdfExportService = {
               ` : '';
 
               const homeworkHtml = entry.homework ? `
-                <div style="background: #fff7ed; border-top: 1px solid #fed7aa; page-break-inside: avoid;">
+                <div class="homework-section" style="background: #fff7ed; border-top: 1px solid #fed7aa;">
                   <div style="padding: 16px 20px;">
                     <div style="background: white; border-radius: 6px; padding: 16px; border-left: 4px solid #f97316; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
                       <h4 style="color: #f97316; font-weight: 600; margin-bottom: 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">TRAVAIL À FAIRE</h4>
@@ -104,7 +134,7 @@ export const pdfExportService = {
               ` : '';
 
               const filesHtml = entry.files && entry.files.length > 0 ? `
-                <div style="background: #f0f9ff; border-top: 1px solid #bae6fd; padding: 16px 20px;">
+                <div class="files-section" style="background: #f0f9ff; border-top: 1px solid #bae6fd; padding: 16px 20px;">
                   <h4 style="color: #0284c7; font-weight: 600; margin-bottom: 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">PIÈCES JOINTES</h4>
                   <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                     ${entry.files.map((file, fileIndex) => `
@@ -140,13 +170,13 @@ export const pdfExportService = {
                   box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
                   border: 1px solid #e5e7eb; 
                   overflow: hidden; 
-                  margin-bottom: 48px;
+                  margin-bottom: 60px;
                   page-break-inside: avoid;
                   break-inside: avoid;
                   ${index === 0 ? 'margin-top: 0;' : ''}
                 ">
                   <!-- Entry Header with Data -->
-                  <div style="background: linear-gradient(135deg, ${formationColor}, ${formationColor}cc); color: white;">
+                  <div class="entry-header" style="background: linear-gradient(135deg, ${formationColor}, ${formationColor}cc); color: white;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
                       <div style="padding: 8px 12px; border-right: 1px solid rgba(255,255,255,0.2);">DATE</div>
                       <div style="padding: 8px 12px; border-right: 1px solid rgba(255,255,255,0.2);">HEURE</div>
@@ -194,38 +224,55 @@ export const pdfExportService = {
         </div>
       `;
 
-      // Convert to canvas and generate PDF
+      // Create PDF with better page handling
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      // Calculate optimal scale for better quality
+      const scale = Math.min(2, window.devicePixelRatio || 1);
+      
+      // Convert to canvas with better settings
       const canvas = await html2canvas(tempContainer, {
-        scale: 2,
+        scale: scale,
         useCORS: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        height: tempContainer.scrollHeight,
+        windowWidth: 1200,
+        windowHeight: tempContainer.scrollHeight,
+        scrollX: 0,
+        scrollY: 0,
+        allowTaint: false,
+        removeContainer: true
       });
 
       // Clean up
       document.body.removeChild(tempContainer);
 
-      // Create PDF
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgData = canvas.toDataURL('image/png');
-      
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgData = canvas.toDataURL('image/png', 0.95);
       const imgWidth = pdfWidth;
       const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-
+      
+      // Add margins for safer page breaks
+      const marginTop = 10;
+      const marginBottom = 15;
+      const usableHeight = pdfHeight - marginTop - marginBottom;
+      
       let heightLeft = imgHeight;
       let position = 0;
+      let pageCount = 0;
 
       // Add first page
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
+      pdf.addImage(imgData, 'PNG', 0, marginTop, imgWidth, imgHeight);
+      heightLeft -= usableHeight;
 
-      // Add additional pages if needed
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
+      // Add additional pages with proper margins
+      while (heightLeft > 0) {
+        pageCount++;
+        position = -(usableHeight * pageCount);
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
+        pdf.addImage(imgData, 'PNG', 0, position + marginTop, imgWidth, imgHeight);
+        heightLeft -= usableHeight;
       }
 
       // Download the PDF
