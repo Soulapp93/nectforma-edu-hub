@@ -22,14 +22,22 @@ const ExcelImportModal = ({ isOpen, onClose, onSuccess, scheduleId }: ExcelImpor
   const downloadTemplate = () => {
     const template = [
       {
-        'Date (AAAA-MM-JJ)': '2025-01-20',
-        'Heure Début (HH:MM)': '09:00',
-        'Heure Fin (HH:MM)': '10:30',
-        'Module': 'Mathématiques',
-        'Formateur Email': 'formateur@example.com',
-        'Salle': 'Salle 101',
-        'Couleur (Hex)': '#8B5CF6',
-        'Notes': 'Cours d\'introduction'
+        'Date': '2024-09-05',
+        'FORMATION 09h30-12h30': 'GS1.1 Théorie de la modernisation RH - Nathalie Jeltout (Accord Service)',
+        'SALLE 09h30-12h30': 'Salle A',
+        'COULEUR 09h30-12h30': '#4CAF50',
+        'FORMATION 13h30-17h30': 'Communication RH - Jean IVANE',
+        'SALLE 13h30-17h30': 'Salle B',
+        'COULEUR 13h30-17h30': '#2196F3'
+      },
+      {
+        'Date': '2024-09-06',
+        'FORMATION 09h30-12h30': 'Gestion budgétaire des RH - Philippe Verneuil',
+        'SALLE 09h30-12h30': 'Salle C',
+        'COULEUR 09h30-12h30': '#FF9800',
+        'FORMATION 13h30-17h30': 'Gestion budgétaire des RH - Philippe Verneuil',
+        'SALLE 13h30-17h30': 'Salle C',
+        'COULEUR 13h30-17h30': '#FF9800'
       }
     ];
 
@@ -62,22 +70,51 @@ const ExcelImportModal = ({ isOpen, onClose, onSuccess, scheduleId }: ExcelImpor
       let errorCount = 0;
 
       for (const row of jsonData as any[]) {
-        try {
-          const slotData = {
-            schedule_id: scheduleId,
-            date: row['Date (AAAA-MM-JJ)'],
-            start_time: row['Heure Début (HH:MM)'],
-            end_time: row['Heure Fin (HH:MM)'],
-            room: row['Salle'] || '',
-            color: row['Couleur (Hex)'] || '#8B5CF6',
-            notes: row['Notes'] || ''
-          };
+        const date = row['Date'];
+        if (!date) continue;
 
-          await scheduleService.createScheduleSlot(slotData);
-          successCount++;
-        } catch (error) {
-          console.error('Erreur lors de l\'import de la ligne:', row, error);
-          errorCount++;
+        // Créneaux du matin (09h30-12h30)
+        const morningFormation = row['FORMATION 09h30-12h30'];
+        if (morningFormation && morningFormation.trim()) {
+          try {
+            const morningSlot = {
+              schedule_id: scheduleId,
+              date: date,
+              start_time: '09:30',
+              end_time: '12:30',
+              room: row['SALLE 09h30-12h30'] || '',
+              color: row['COULEUR 09h30-12h30'] || '#4CAF50',
+              notes: morningFormation
+            };
+
+            await scheduleService.createScheduleSlot(morningSlot);
+            successCount++;
+          } catch (error) {
+            console.error('Erreur lors de l\'import du créneau matin:', row, error);
+            errorCount++;
+          }
+        }
+
+        // Créneaux de l'après-midi (13h30-17h30)
+        const afternoonFormation = row['FORMATION 13h30-17h30'];
+        if (afternoonFormation && afternoonFormation.trim()) {
+          try {
+            const afternoonSlot = {
+              schedule_id: scheduleId,
+              date: date,
+              start_time: '13:30',
+              end_time: '17:30',
+              room: row['SALLE 13h30-17h30'] || '',
+              color: row['COULEUR 13h30-17h30'] || '#2196F3',
+              notes: afternoonFormation
+            };
+
+            await scheduleService.createScheduleSlot(afternoonSlot);
+            successCount++;
+          } catch (error) {
+            console.error('Erreur lors de l\'import du créneau après-midi:', row, error);
+            errorCount++;
+          }
         }
       }
 
@@ -112,7 +149,8 @@ const ExcelImportModal = ({ isOpen, onClose, onSuccess, scheduleId }: ExcelImpor
             </h4>
             <ul className="text-sm text-muted-foreground space-y-1">
               <li>• Téléchargez d'abord le modèle Excel</li>
-              <li>• Remplissez les données selon le format</li>
+              <li>• Format: Date | FORMATION 09h30-12h30 | SALLE 09h30-12h30 | COULEUR 09h30-12h30 | FORMATION 13h30-17h30 | SALLE 13h30-17h30 | COULEUR 13h30-17h30</li>
+              <li>• Chaque ligne = 1 jour avec créneaux matin et après-midi</li>
               <li>• Importez le fichier complété</li>
             </ul>
           </div>
