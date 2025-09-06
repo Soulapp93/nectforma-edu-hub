@@ -43,6 +43,7 @@ export const pdfExportService = {
             .entry-block {
               page-break-inside: avoid;
               break-inside: avoid;
+              margin-bottom: 40px !important;
             }
             .header-section {
               page-break-after: avoid;
@@ -50,9 +51,15 @@ export const pdfExportService = {
             .content-section {
               page-break-inside: avoid;
             }
+            .page-break {
+              page-break-before: always;
+            }
+          }
+          .entry-block {
+            margin-bottom: 40px !important;
           }
         </style>
-        <div style="padding: 20px; min-height: 297mm; font-family: Arial, sans-serif;">
+        <div style="padding: 30px; padding-bottom: 60px; min-height: 297mm; font-family: Arial, sans-serif;">
           <!-- Header -->
           <div class="header-section" style="background: linear-gradient(135deg, ${formationColor}, ${formationColor}cc); border-radius: 8px; padding: 24px; color: white; margin-bottom: 32px; page-break-after: avoid;">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
@@ -133,7 +140,7 @@ export const pdfExportService = {
                   box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
                   border: 1px solid #e5e7eb; 
                   overflow: hidden; 
-                  margin-bottom: 24px;
+                  margin-bottom: 48px;
                   page-break-inside: avoid;
                   break-inside: avoid;
                   ${index === 0 ? 'margin-top: 0;' : ''}
