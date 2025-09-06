@@ -393,9 +393,9 @@ const TextBookDetail: React.FC = () => {
                   <Select 
                     defaultValue="normal" 
                     onValueChange={(value) => {
-                      if (value === 'h1') insertTextAtCursor('# ', '\n');
-                      else if (value === 'h2') insertTextAtCursor('## ', '\n');
-                      else if (value === 'h3') insertTextAtCursor('### ', '\n');
+                      if (value === 'h1') insertTextAtCursor('\n# TITRE 1\n');
+                      else if (value === 'h2') insertTextAtCursor('\n## Titre 2\n');
+                      else if (value === 'h3') insertTextAtCursor('\n### Titre 3\n');
                     }}
                   >
                     <SelectTrigger className="w-24 h-8">
@@ -425,7 +425,7 @@ const TextBookDetail: React.FC = () => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => insertTextAtCursor('*', '*')}
+                    onClick={() => insertTextAtCursor('_', '_')}
                     title="Italique"
                   >
                     <Italic className="h-4 w-4" />
@@ -434,7 +434,7 @@ const TextBookDetail: React.FC = () => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => insertTextAtCursor('__', '__')}
+                    onClick={() => insertTextAtCursor('[SOULIGNÉ: ', ']')}
                     title="Souligné"
                   >
                     <Underline className="h-4 w-4" />
@@ -443,7 +443,7 @@ const TextBookDetail: React.FC = () => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => insertTextAtCursor('~~', '~~')}
+                    onClick={() => insertTextAtCursor('[BARRÉ: ', ']')}
                     title="Barré"
                   >
                     <Strikethrough className="h-4 w-4" />
@@ -456,7 +456,7 @@ const TextBookDetail: React.FC = () => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => insertTextAtCursor('\n• ')}
+                    onClick={() => insertTextAtCursor('\n• ', '')}
                     title="Liste à puces"
                   >
                     <List className="h-4 w-4" />
@@ -465,7 +465,7 @@ const TextBookDetail: React.FC = () => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => insertTextAtCursor('\n1. ')}
+                    onClick={() => insertTextAtCursor('\n1. ', '')}
                     title="Liste numérotée"
                   >
                     <ListOrdered className="h-4 w-4" />
@@ -473,12 +473,12 @@ const TextBookDetail: React.FC = () => {
 
                   <div className="w-px h-4 bg-border mx-1" />
 
-                  {/* Alignment - simplified */}
+                  {/* Alignment - simple text markers */}
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => insertTextAtCursor('\n[Aligné à gauche]\n')}
+                    onClick={() => insertTextAtCursor('\n[ALIGNÉ À GAUCHE]\n', '')}
                     title="Aligner à gauche"
                   >
                     <AlignLeft className="h-4 w-4" />
@@ -487,7 +487,7 @@ const TextBookDetail: React.FC = () => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => insertTextAtCursor('\n[Centré]\n')}
+                    onClick={() => insertTextAtCursor('\n[CENTRÉ]\n', '')}
                     title="Centrer"
                   >
                     <AlignCenter className="h-4 w-4" />
@@ -496,7 +496,7 @@ const TextBookDetail: React.FC = () => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => insertTextAtCursor('\n[Aligné à droite]\n')}
+                    onClick={() => insertTextAtCursor('\n[ALIGNÉ À DROITE]\n', '')}
                     title="Aligner à droite"
                   >
                     <AlignRight className="h-4 w-4" />
@@ -509,7 +509,7 @@ const TextBookDetail: React.FC = () => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => insertTextAtCursor('[Texte du lien](https://exemple.com)')}
+                    onClick={() => insertTextAtCursor('\n[LIEN: Texte du lien - https://exemple.com]\n', '')}
                     title="Insérer un lien"
                   >
                     <Link className="h-4 w-4" />
@@ -518,7 +518,7 @@ const TextBookDetail: React.FC = () => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => insertTextAtCursor('`', '`')}
+                    onClick={() => insertTextAtCursor('[CODE: ', ']')}
                     title="Code"
                   >
                     <Code className="h-4 w-4" />
@@ -527,7 +527,7 @@ const TextBookDetail: React.FC = () => {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => insertTextAtCursor('\n> ')}
+                    onClick={() => insertTextAtCursor('\n"', '"\n')}
                     title="Citation"
                   >
                     <Quote className="h-4 w-4" />
