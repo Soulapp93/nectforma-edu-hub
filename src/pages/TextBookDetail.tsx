@@ -115,8 +115,13 @@ const TextBookDetail: React.FC = () => {
 
   const handleAddEntry = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('DEBUG: handleAddEntry appelé');
+    console.log('DEBUG: Form data:', newEntry);
+    console.log('DEBUG: textBookId:', textBookId);
+    console.log('DEBUG: userId:', userId);
     
     if (!textBookId || !newEntry.date || !newEntry.start_time || !newEntry.end_time || !newEntry.module_id) {
+      console.log('DEBUG: Validation échouée - champs manquants');
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs obligatoires.",
@@ -126,7 +131,9 @@ const TextBookDetail: React.FC = () => {
     }
 
     const selectedModule = modules.find(m => m.id === newEntry.module_id);
+    console.log('DEBUG: Module sélectionné:', selectedModule);
     if (!selectedModule) {
+      console.log('DEBUG: Module non trouvé');
       toast({
         title: "Erreur",
         description: "Module sélectionné non valide.",
@@ -136,9 +143,20 @@ const TextBookDetail: React.FC = () => {
     }
 
     setIsSubmitting(true);
+    console.log('DEBUG: Début de la soumission');
     
     try {
       // Create entry first
+      console.log('DEBUG: Données à envoyer:', {
+        text_book_id: textBookId,
+        date: newEntry.date,
+        start_time: newEntry.start_time,
+        end_time: newEntry.end_time,
+        subject_matter: selectedModule.title,
+        content: newEntry.content || undefined,
+        instructor_id: userId || undefined,
+      });
+      
       const newEntryData = await textBookService.createTextBookEntry({
         text_book_id: textBookId,
         date: newEntry.date,
@@ -149,17 +167,22 @@ const TextBookDetail: React.FC = () => {
         instructor_id: userId || undefined,
       });
 
+      console.log('DEBUG: Entrée créée:', newEntryData);
+
       // Upload files if any
       if (uploadedFiles.length > 0) {
+        console.log('DEBUG: Upload de', uploadedFiles.length, 'fichiers');
         await textBookService.uploadEntryFiles(newEntryData.id, uploadedFiles);
       }
 
+      console.log('DEBUG: Succès - affichage du toast');
       toast({
         title: "Succès",
         description: "L'entrée a été ajoutée avec succès.",
       });
 
       // Reset form and close modal
+      console.log('DEBUG: Réinitialisation du formulaire');
       setNewEntry({
         date: '',
         start_time: '',
@@ -171,9 +194,10 @@ const TextBookDetail: React.FC = () => {
       setIsAddEntryModalOpen(false);
       
       // Refresh entries
+      console.log('DEBUG: Actualisation des données');
       fetchTextBookData();
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error('DEBUG: Erreur lors de l\'ajout:', error);
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de l'ajout de l'entrée.",
@@ -181,6 +205,7 @@ const TextBookDetail: React.FC = () => {
       });
     } finally {
       setIsSubmitting(false);
+      console.log('DEBUG: Fin de la soumission');
     }
   };
 
