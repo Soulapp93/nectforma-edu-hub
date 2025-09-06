@@ -102,7 +102,7 @@ const ScheduleManagement = () => {
                 <div className="flex items-center justify-between">
                   <div 
                     className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: schedule.formation?.color || '#8B5CF6' }}
+                    style={{ backgroundColor: schedule.formations?.color || '#8B5CF6' }}
                   />
                   <Badge variant="secondary" className={getStatusColor(schedule.status)}>
                     {schedule.status}
@@ -110,7 +110,7 @@ const ScheduleManagement = () => {
                 </div>
                 <CardTitle className="text-lg">{schedule.title}</CardTitle>
                 <div className="text-sm text-gray-600">
-                  <p>Formation: {schedule.formation?.title}</p>
+                  <p>Formation: {schedule.formations?.title}</p>
                   <p>Année: {schedule.academic_year}</p>
                 </div>
               </CardHeader>

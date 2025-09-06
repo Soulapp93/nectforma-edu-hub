@@ -9,7 +9,7 @@ export interface Schedule {
   created_by?: string;
   created_at: string;
   updated_at: string;
-  formation?: {
+  formations?: {
     title: string;
     color: string;
   };
@@ -28,10 +28,10 @@ export interface ScheduleSlot {
   notes?: string;
   created_at: string;
   updated_at: string;
-  module?: {
+  formation_modules?: {
     title: string;
   };
-  instructor?: {
+  users?: {
     first_name: string;
     last_name: string;
   };
@@ -44,7 +44,7 @@ export const scheduleService = {
       .from('schedules')
       .select(`
         *,
-        formation:formations(title, color)
+        formations(title, color)
       `)
       .order('created_at', { ascending: false });
 
@@ -58,7 +58,7 @@ export const scheduleService = {
       .from('schedules')
       .select(`
         *,
-        formation:formations(title, color)
+        formations(title, color)
       `)
       .eq('id', id)
       .single();
@@ -77,7 +77,7 @@ export const scheduleService = {
       .insert([schedule])
       .select(`
         *,
-        formation:formations(title, color)
+        formations(title, color)
       `)
       .single();
 
@@ -93,7 +93,7 @@ export const scheduleService = {
       .eq('id', id)
       .select(`
         *,
-        formation:formations(title, color)
+        formations(title, color)
       `)
       .single();
 
@@ -117,8 +117,8 @@ export const scheduleService = {
       .from('schedule_slots')
       .select(`
         *,
-        module:formation_modules(title),
-        instructor:users(first_name, last_name)
+        formation_modules(title),
+        users(first_name, last_name)
       `)
       .eq('schedule_id', scheduleId)
       .order('date', { ascending: true })
@@ -135,8 +135,8 @@ export const scheduleService = {
       .insert([slot])
       .select(`
         *,
-        module:formation_modules(title),
-        instructor:users(first_name, last_name)
+        formation_modules(title),
+        users(first_name, last_name)
       `)
       .single();
 
@@ -152,8 +152,8 @@ export const scheduleService = {
       .eq('id', id)
       .select(`
         *,
-        module:formation_modules(title),
-        instructor:users(first_name, last_name)
+        formation_modules(title),
+        users(first_name, last_name)
       `)
       .single();
 

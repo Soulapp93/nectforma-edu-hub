@@ -145,7 +145,7 @@ const ScheduleEditor = () => {
               <h1 className="text-3xl font-bold text-gray-900">{schedule.title}</h1>
               <div className="flex items-center space-x-2 mt-1">
                 <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  {schedule.formation?.title}
+                  {schedule.formations?.title}
                 </Badge>
                 <Badge variant="secondary">
                   {schedule.academic_year}
@@ -271,21 +271,21 @@ const ScheduleEditor = () => {
                               <div 
                                 className="text-white p-3 rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow"
                                 style={{ 
-                                  backgroundColor: slot.color || schedule.formation?.color || '#8B5CF6',
+                                  backgroundColor: slot.color || schedule.formations?.color || '#8B5CF6',
                                   minHeight: `${duration * 60}px`,
                                   position: 'relative',
                                   zIndex: 1
                                 }}
                               >
-                                <div className="font-medium text-sm mb-1">
-                                  {slot.module?.title || 'Module non défini'}
-                                </div>
-                                <div className="text-xs opacity-90 mb-1">
-                                  {slot.instructor ? 
-                                    `${slot.instructor.first_name} ${slot.instructor.last_name}` : 
-                                    'Formateur non défini'
-                                  }
-                                </div>
+                                 <div className="font-medium text-sm mb-1">
+                                   {slot.formation_modules?.title || 'Module non défini'}
+                                 </div>
+                                 <div className="text-xs opacity-90 mb-1">
+                                   {slot.users ? 
+                                     `${slot.users.first_name} ${slot.users.last_name}` : 
+                                     'Formateur non défini'
+                                   }
+                                 </div>
                                 <div className="text-xs opacity-75">{slot.room || 'Salle non définie'}</div>
                               </div>
                             ) : (
