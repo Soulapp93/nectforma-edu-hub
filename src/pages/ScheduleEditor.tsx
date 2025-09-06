@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Calendar, Clock, Plus, ArrowLeft, Save, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, Plus, ArrowLeft, Save, Eye, ChevronLeft, ChevronRight, Upload, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { scheduleService, Schedule, ScheduleSlot } from '@/services/scheduleService';
 import AddSlotModal from '@/components/administration/AddSlotModal';
+import EditSlotModal from '@/components/administration/EditSlotModal';
+import SlotActionMenu from '@/components/administration/SlotActionMenu';
+import ExcelImportModal from '@/components/administration/ExcelImportModal';
 import { toast } from 'sonner';
 
 const ScheduleEditor = () => {
@@ -17,6 +20,10 @@ const ScheduleEditor = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isAddSlotModalOpen, setIsAddSlotModalOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string } | null>(null);
+  const [isEditSlotModalOpen, setIsEditSlotModalOpen] = useState(false);
+  const [slotToEdit, setSlotToEdit] = useState<ScheduleSlot | null>(null);
+  const [isExcelImportModalOpen, setIsExcelImportModalOpen] = useState(false);
+  const [draggedSlot, setDraggedSlot] = useState<ScheduleSlot | null>(null);
 
   const timeSlots = [
     '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', 
@@ -95,6 +102,88 @@ const ScheduleEditor = () => {
     setIsAddSlotModalOpen(false);
     setSelectedSlot(null);
     toast.success('Créneau ajouté avec succès');
+  };
+
+  const handleEditSlot = (slot: ScheduleSlot) => {
+    setSlotToEdit(slot);
+    setIsEditSlotModalOpen(true);
+  };
+
+  const handleSlotEdited = () => {
+    fetchScheduleData();
+    setIsEditSlotModalOpen(false);
+    setSlotToEdit(null);
+    toast.success('Créneau modifié avec succès');
+  };
+
+  const handleDuplicateSlot = async (slot: ScheduleSlot) => {
+    try {
+      const duplicatedSlot = {
+        schedule_id: slot.schedule_id,
+        module_id: slot.module_id,
+        instructor_id: slot.instructor_id,
+        date: slot.date,
+        start_time: slot.start_time,
+        end_time: slot.end_time,
+        room: slot.room ? `${slot.room} (copie)` : 'Salle (copie)',
+        color: slot.color,
+        notes: slot.notes
+      };
+      
+      await scheduleService.createScheduleSlot(duplicatedSlot);
+      fetchScheduleData();
+      toast.success('Créneau dupliqué avec succès');
+    } catch (error) {
+      toast.error('Erreur lors de la duplication du créneau');
+    }
+  };
+
+  const handleDeleteSlot = async (slot: ScheduleSlot) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce créneau ?')) {
+      try {
+        await scheduleService.deleteScheduleSlot(slot.id);
+        fetchScheduleData();
+        toast.success('Créneau supprimé avec succès');
+      } catch (error) {
+        toast.error('Erreur lors de la suppression du créneau');
+      }
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, slot: ScheduleSlot) => {
+    setDraggedSlot(slot);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetDate: Date) => {
+    e.preventDefault();
+    
+    if (!draggedSlot) return;
+    
+    try {
+      const newDate = formatDate(targetDate);
+      if (newDate !== draggedSlot.date) {
+        await scheduleService.updateScheduleSlot(draggedSlot.id, {
+          date: newDate
+        });
+        fetchScheduleData();
+        toast.success('Créneau déplacé avec succès');
+      }
+    } catch (error) {
+      toast.error('Erreur lors du déplacement du créneau');
+    } finally {
+      setDraggedSlot(null);
+    }
+  };
+
+  const handleExcelImportSuccess = () => {
+    fetchScheduleData();
+    setIsExcelImportModalOpen(false);
   };
 
   const navigateDate = (direction: 'prev' | 'next') => {
@@ -245,10 +334,19 @@ const ScheduleEditor = () => {
               </Button>
             </div>
 
-            <Button className="bg-primary hover:bg-primary/90">
-              <Plus className="h-4 w-4 mr-2" />
-              Ajouter un créneau
-            </Button>
+            <div className="flex space-x-2">
+              <Button 
+                variant="outline"
+                onClick={() => setIsExcelImportModalOpen(true)}
+              >
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Import Excel
+              </Button>
+              <Button className="bg-primary hover:bg-primary/90">
+                <Plus className="h-4 w-4 mr-2" />
+                Ajouter un créneau
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -257,7 +355,12 @@ const ScheduleEditor = () => {
           <div className="p-6">
             <div className="grid grid-cols-7 gap-3">
               {getWeekDates().map((date, index) => (
-                <div key={index} className="min-h-[500px]">
+                <div 
+                  key={index} 
+                  className="min-h-[500px]"
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, date)}
+                >
                   <div className="text-center mb-4 p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border border-primary/10">
                     <div className="font-semibold text-base text-primary">{weekDays[index]}</div>
                     <div className="text-3xl font-bold mt-2 text-foreground">
@@ -272,14 +375,24 @@ const ScheduleEditor = () => {
                     {getSlotsForDate(date).map((slot) => (
                       <div
                         key={slot.id}
-                        className="p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-lg transition-all duration-200 border border-white/20"
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, slot)}
+                        className="p-4 rounded-xl shadow-sm cursor-move hover:shadow-lg transition-all duration-200 border border-white/20 group"
                         style={{
                           backgroundColor: slot.color || schedule.formations?.color || '#8B5CF6',
                           color: 'white'
                         }}
                       >
-                        <div className="font-semibold text-sm mb-2 leading-tight">
-                          {slot.formation_modules?.title || 'Module non défini'}
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="font-semibold text-sm leading-tight flex-1">
+                            {slot.formation_modules?.title || 'Module non défini'}
+                          </div>
+                          <SlotActionMenu
+                            slot={slot}
+                            onEdit={handleEditSlot}
+                            onDuplicate={handleDuplicateSlot}
+                            onDelete={handleDeleteSlot}
+                          />
                         </div>
                         
                         <div className="flex items-center text-xs opacity-95 mb-2">
@@ -342,7 +455,7 @@ const ScheduleEditor = () => {
                   getSlotsForDate(selectedDate).map((slot) => (
                     <div
                       key={slot.id}
-                      className="w-full p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-all duration-200 cursor-pointer"
+                      className="w-full p-6 rounded-xl shadow-sm border-l-4 hover:shadow-md transition-all duration-200 cursor-pointer group"
                       style={{
                         backgroundColor: `${slot.color || schedule.formations?.color || '#8B5CF6'}15`,
                         borderLeftColor: slot.color || schedule.formations?.color || '#8B5CF6',
@@ -350,8 +463,16 @@ const ScheduleEditor = () => {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <div className="font-bold text-xl mb-2 text-foreground">
-                            {slot.formation_modules?.title || 'Module non défini'}
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="font-bold text-xl text-foreground">
+                              {slot.formation_modules?.title || 'Module non défini'}
+                            </div>
+                            <SlotActionMenu
+                              slot={slot}
+                              onEdit={handleEditSlot}
+                              onDuplicate={handleDuplicateSlot}
+                              onDelete={handleDeleteSlot}
+                            />
                           </div>
                           
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -468,22 +589,37 @@ const ScheduleEditor = () => {
                     }`}>
                       {currentDay.getDate()}
                     </div>
-                    <div className="space-y-1">
-                       {daySlots.slice(0, 2).map((slot) => (
+                      <div className="space-y-1">
+                       {daySlots.slice(0, 3).map((slot) => (
                          <div
                            key={slot.id}
-                           className="text-xs p-1 rounded text-white truncate"
+                           className="text-xs p-2 rounded-md text-white shadow-sm group relative"
                            style={{
                              backgroundColor: slot.color || schedule.formations?.color || '#8B5CF6',
                            }}
-                           title={`${formatTime(slot.start_time)} ${slot.formation_modules?.title || 'Module'}`}
+                           title={`${formatTime(slot.start_time)}-${formatTime(slot.end_time)} | ${slot.formation_modules?.title || 'Module'} | ${slot.room || 'Salle'} | ${slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Formateur'}`}
                          >
-                           {formatTime(slot.start_time)} {slot.formation_modules?.title || 'Module'}
+                           <div className="font-medium truncate">
+                             {slot.formation_modules?.title || 'Module'}
+                           </div>
+                           <div className="flex items-center justify-between mt-1 opacity-90">
+                             <span className="text-xs">{formatTime(slot.start_time)}-{formatTime(slot.end_time)}</span>
+                             <span className="text-xs">{slot.room || 'Salle'}</span>
+                           </div>
+                           <div className="text-xs mt-1 opacity-80 truncate">
+                             {slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Formateur'}
+                           </div>
+                           <SlotActionMenu
+                             slot={slot}
+                             onEdit={handleEditSlot}
+                             onDuplicate={handleDuplicateSlot}
+                             onDelete={handleDeleteSlot}
+                           />
                          </div>
                        ))}
-                       {daySlots.length > 2 && (
-                         <div className="text-xs text-muted-foreground">
-                           +{daySlots.length - 2} autres
+                       {daySlots.length > 3 && (
+                         <div className="text-xs text-muted-foreground p-1 text-center">
+                           +{daySlots.length - 3} autres
                          </div>
                        )}
                      </div>
@@ -505,6 +641,24 @@ const ScheduleEditor = () => {
         scheduleId={scheduleId!}
         formationId={schedule.formation_id}
         selectedSlot={selectedSlot}
+      />
+
+      <EditSlotModal
+        isOpen={isEditSlotModalOpen}
+        onClose={() => {
+          setIsEditSlotModalOpen(false);
+          setSlotToEdit(null);
+        }}
+        onSuccess={handleSlotEdited}
+        slot={slotToEdit}
+        formationId={schedule.formation_id}
+      />
+
+      <ExcelImportModal
+        isOpen={isExcelImportModalOpen}
+        onClose={() => setIsExcelImportModalOpen(false)}
+        onSuccess={handleExcelImportSuccess}
+        scheduleId={scheduleId!}
       />
     </div>
   );
