@@ -22,10 +22,20 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [currentColor, setCurrentColor] = useState('#000000');
 
   const execCommand = (command: string, value?: string) => {
-    document.execCommand(command, false, value);
+    // Focus the editor first
     if (editorRef.current) {
+      editorRef.current.focus();
+    }
+    
+    // Execute the command
+    const success = document.execCommand(command, false, value);
+    
+    // Update the content
+    if (editorRef.current && success) {
       onChange(editorRef.current.innerHTML);
     }
+    
+    return success;
   };
 
   const handleInput = () => {
@@ -35,93 +45,166 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   };
 
   const formatText = (format: string) => {
+    // Ensure editor is focused before executing commands
+    if (editorRef.current) {
+      editorRef.current.focus();
+    }
+
+    let success = false;
+    
     switch (format) {
       case 'bold':
-        execCommand('bold');
+        success = execCommand('bold');
         break;
       case 'italic':
-        execCommand('italic');
+        success = execCommand('italic');
         break;
       case 'underline':
-        execCommand('underline');
+        success = execCommand('underline');
         break;
       case 'strikethrough':
-        execCommand('strikeThrough');
+        success = execCommand('strikeThrough');
         break;
       case 'subscript':
-        execCommand('subscript');
+        // Remove superscript first, then apply subscript
+        execCommand('superscript');
+        success = execCommand('subscript');
         break;
       case 'superscript':
-        execCommand('superscript');
+        // Remove subscript first, then apply superscript
+        execCommand('subscript');
+        success = execCommand('superscript');
         break;
       case 'bullet':
-        execCommand('insertUnorderedList');
+        success = execCommand('insertUnorderedList');
         break;
       case 'number':
-        execCommand('insertOrderedList');
+        success = execCommand('insertOrderedList');
         break;
       case 'indent':
-        execCommand('indent');
+        success = execCommand('indent');
         break;
       case 'outdent':
-        execCommand('outdent');
+        success = execCommand('outdent');
         break;
       case 'alignLeft':
-        execCommand('justifyLeft');
+        success = execCommand('justifyLeft');
         break;
       case 'alignCenter':
-        execCommand('justifyCenter');
+        success = execCommand('justifyCenter');
         break;
       case 'alignRight':
-        execCommand('justifyRight');
+        success = execCommand('justifyRight');
         break;
       case 'justifyFull':
-        execCommand('justifyFull');
+        success = execCommand('justifyFull');
         break;
       case 'blockquote':
-        execCommand('formatBlock', 'blockquote');
+        // For blockquote, we'll wrap selected content manually
+        if (editorRef.current) {
+          const selection = window.getSelection();
+          if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const selectedContent = range.extractContents();
+            const blockquote = document.createElement('blockquote');
+            blockquote.style.borderLeft = '4px solid #ccc';
+            blockquote.style.paddingLeft = '16px';
+            blockquote.style.margin = '16px 0';
+            blockquote.style.fontStyle = 'italic';
+            blockquote.appendChild(selectedContent);
+            range.insertNode(blockquote);
+            success = true;
+          }
+        }
         break;
       case 'code':
-        execCommand('formatBlock', 'pre');
+        // For code blocks, we'll wrap selected content manually
+        if (editorRef.current) {
+          const selection = window.getSelection();
+          if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const selectedContent = range.extractContents();
+            const pre = document.createElement('pre');
+            const code = document.createElement('code');
+            pre.style.backgroundColor = '#f4f4f4';
+            pre.style.padding = '12px';
+            pre.style.borderRadius = '4px';
+            pre.style.fontFamily = 'monospace';
+            pre.style.fontSize = '14px';
+            pre.style.overflow = 'auto';
+            code.appendChild(selectedContent);
+            pre.appendChild(code);
+            range.insertNode(pre);
+            success = true;
+          }
+        }
         break;
       case 'h1':
-        execCommand('formatBlock', 'h1');
+        success = execCommand('formatBlock', '<h1>');
         break;
       case 'h2':
-        execCommand('formatBlock', 'h2');
+        success = execCommand('formatBlock', '<h2>');
         break;
       case 'h3':
-        execCommand('formatBlock', 'h3');
+        success = execCommand('formatBlock', '<h3>');
         break;
       case 'h4':
-        execCommand('formatBlock', 'h4');
+        success = execCommand('formatBlock', '<h4>');
         break;
       case 'normal':
-        execCommand('formatBlock', 'div');
+        success = execCommand('formatBlock', '<div>');
         break;
       case 'undo':
-        execCommand('undo');
+        success = execCommand('undo');
         break;
       case 'redo':
-        execCommand('redo');
+        success = execCommand('redo');
         break;
+      default:
+        console.warn(`Format "${format}" not supported`);
+    }
+
+    // Force update if command was successful
+    if (success && editorRef.current) {
+      onChange(editorRef.current.innerHTML);
     }
   };
 
   const insertLink = () => {
     const url = prompt('Entrez l\'URL du lien:');
-    if (url) {
-      execCommand('createLink', url);
+    if (url && editorRef.current) {
+      editorRef.current.focus();
+      const success = execCommand('createLink', url);
+      if (!success) {
+        // Fallback method for creating links
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          const selectedText = range.toString() || url;
+          const link = document.createElement('a');
+          link.href = url;
+          link.textContent = selectedText;
+          link.target = '_blank';
+          range.deleteContents();
+          range.insertNode(link);
+        }
+      }
     }
   };
 
   const changeTextColor = (color: string) => {
-    execCommand('foreColor', color);
-    setCurrentColor(color);
+    if (editorRef.current) {
+      editorRef.current.focus();
+      execCommand('foreColor', color);
+      setCurrentColor(color);
+    }
   };
 
   const changeBackgroundColor = (color: string) => {
-    execCommand('backColor', color);
+    if (editorRef.current) {
+      editorRef.current.focus();
+      execCommand('backColor', color);
+    }
   };
 
   const insertImage = () => {
@@ -367,39 +450,56 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           dangerouslySetInnerHTML={{ __html: value }}
         />
       ) : (
-        <div
-          ref={editorRef}
-          contentEditable
-          onInput={handleInput}
-          className="p-3 min-h-[200px] outline-none prose prose-sm max-w-none"
-          style={{ minHeight: `${rows * 1.5}rem` }}
-          dangerouslySetInnerHTML={{ __html: value }}
-          suppressContentEditableWarning={true}
-          onKeyDown={(e) => {
-            // Handle keyboard shortcuts
-            if (e.ctrlKey || e.metaKey) {
-              switch (e.key) {
-                case 'b':
-                  e.preventDefault();
-                  formatText('bold');
-                  break;
-                case 'i':
-                  e.preventDefault();
-                  formatText('italic');
-                  break;
-                case 'u':
-                  e.preventDefault();
-                  formatText('underline');
-                  break;
+        <div className="relative">
+          <div
+            ref={editorRef}
+            contentEditable
+            onInput={handleInput}
+            onFocus={() => {
+              // Enable design mode for better compatibility
+              document.designMode = 'on';
+              setTimeout(() => {
+                document.designMode = 'off';
+              }, 0);
+            }}
+            className="p-3 min-h-[200px] outline-none prose prose-sm max-w-none focus:bg-muted/10"
+            style={{ minHeight: `${rows * 1.5}rem` }}
+            dangerouslySetInnerHTML={{ __html: value }}
+            suppressContentEditableWarning={true}
+            onKeyDown={(e) => {
+              // Handle keyboard shortcuts
+              if (e.ctrlKey || e.metaKey) {
+                switch (e.key.toLowerCase()) {
+                  case 'b':
+                    e.preventDefault();
+                    formatText('bold');
+                    break;
+                  case 'i':
+                    e.preventDefault();
+                    formatText('italic');
+                    break;
+                  case 'u':
+                    e.preventDefault();
+                    formatText('underline');
+                    break;
+                  case 'z':
+                    e.preventDefault();
+                    formatText('undo');
+                    break;
+                  case 'y':
+                    e.preventDefault();
+                    formatText('redo');
+                    break;
+                }
               }
-            }
-          }}
-        />
-      )}
-      
-      {!value && !isPreview && (
-        <div className="absolute top-[60px] left-3 text-muted-foreground pointer-events-none">
-          {placeholder}
+            }}
+          />
+          
+          {!value && (
+            <div className="absolute top-3 left-3 text-muted-foreground pointer-events-none">
+              {placeholder}
+            </div>
+          )}
         </div>
       )}
     </div>
