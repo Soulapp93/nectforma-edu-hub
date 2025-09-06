@@ -245,25 +245,24 @@ const TextBookDetail: React.FC = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-            {/* Table Header */}
-            <div 
-              className="grid grid-cols-4 text-white text-sm font-medium"
-              style={{ 
-                background: `linear-gradient(135deg, ${textBook.formations?.color || '#8B5CF6'}, ${textBook.formations?.color || '#8B5CF6'}cc)`
-              }}
-            >
-              <div className="p-3 border-r border-white/20">DATE</div>
-              <div className="p-3 border-r border-white/20">HEURE</div>
-              <div className="p-3 border-r border-white/20">MATIÈRE/MODULE</div>
-              <div className="p-3">FORMATEUR</div>
-            </div>
-            
-            {/* Table Body */}
+          <div className="space-y-4">
             {entries.map((entry, index) => (
-              <div key={entry.id}>
-                {/* Entry Row */}
-                <div className="grid grid-cols-4 border-b border-gray-200 text-sm">
+              <div key={entry.id} className="bg-white rounded-lg shadow-sm border overflow-hidden">
+                {/* Entry Header */}
+                <div 
+                  className="grid grid-cols-4 text-white text-sm font-medium"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${textBook.formations?.color || '#8B5CF6'}, ${textBook.formations?.color || '#8B5CF6'}cc)`
+                  }}
+                >
+                  <div className="p-3 border-r border-white/20">DATE</div>
+                  <div className="p-3 border-r border-white/20">HEURE</div>
+                  <div className="p-3 border-r border-white/20">MATIÈRE/MODULE</div>
+                  <div className="p-3">FORMATEUR</div>
+                </div>
+                
+                {/* Entry Data */}
+                <div className="grid grid-cols-4 text-sm">
                   <div className="p-3 border-r border-gray-200 font-medium">
                     {format(new Date(entry.date), 'dd/MM/yyyy', { locale: fr })}
                   </div>
@@ -278,9 +277,9 @@ const TextBookDetail: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Content Row */}
+                {/* Content Section */}
                 {entry.content && (
-                  <div className="bg-purple-50 border-b border-gray-200">
+                  <div className="bg-purple-50 border-t border-gray-200">
                     <div className="p-4">
                       <div className="bg-white rounded p-3 shadow-sm">
                         <h4 className="text-purple-600 font-medium mb-2 text-sm uppercase tracking-wide">CONTENU</h4>
