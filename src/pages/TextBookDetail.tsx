@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Plus, Clock, Calendar, User, BookOpen, Upload, X } from 'lucide-react';
+import { ArrowLeft, Plus, Clock, Calendar, User, BookOpen, Upload, X, Bold, Italic, Underline, AlignLeft, AlignCenter, List, FileText } from 'lucide-react';
 import { textBookService, TextBook, TextBookEntry } from '@/services/textBookService';
 import { moduleService, FormationModule } from '@/services/moduleService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -38,9 +38,11 @@ const TextBookDetail: React.FC = () => {
     start_time: '',
     end_time: '',
     module_id: '',
-    content: '',
-    homework: ''
+    content: ''
   });
+
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   const fetchTextBookData = async () => {
     if (!textBookId) return;
@@ -126,7 +128,6 @@ const TextBookDetail: React.FC = () => {
         end_time: newEntry.end_time,
         subject_matter: selectedModule.title,
         content: newEntry.content || undefined,
-        homework: newEntry.homework || undefined,
         instructor_id: userId || undefined,
       });
 
@@ -141,9 +142,9 @@ const TextBookDetail: React.FC = () => {
         start_time: '',
         end_time: '',
         module_id: '',
-        content: '',
-        homework: ''
+        content: ''
       });
+      setUploadedFiles([]);
       setIsAddEntryModalOpen(false);
       
       // Refresh entries
@@ -266,12 +267,6 @@ const TextBookDetail: React.FC = () => {
                     <p className="text-muted-foreground whitespace-pre-wrap">{entry.content}</p>
                   </div>
                 )}
-                {entry.homework && (
-                  <div>
-                    <h4 className="font-semibold mb-2">Devoirs</h4>
-                    <p className="text-muted-foreground whitespace-pre-wrap">{entry.homework}</p>
-                  </div>
-                )}
               </CardContent>
             </Card>
           ))
@@ -360,47 +355,145 @@ const TextBookDetail: React.FC = () => {
               </Select>
             </div>
 
-            {/* Content */}
+            {/* Content with formatting tools */}
             <div className="space-y-2">
               <Label htmlFor="content">Contenu de la séance</Label>
-              <Textarea
-                id="content"
-                placeholder="Décrivez le contenu de la séance..."
-                rows={6}
-                value={newEntry.content}
-                onChange={(e) => setNewEntry(prev => ({ ...prev, content: e.target.value }))}
-                className="resize-none"
-              />
+              <div className="border rounded-md">
+                {/* Formatting toolbar */}
+                <div className="flex items-center gap-1 p-2 border-b bg-muted/50">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const textarea = document.getElementById('content') as HTMLTextAreaElement;
+                      if (textarea) {
+                        const start = textarea.selectionStart;
+                        const end = textarea.selectionEnd;
+                        const selectedText = textarea.value.substring(start, end);
+                        const newText = textarea.value.substring(0, start) + `**${selectedText}**` + textarea.value.substring(end);
+                        setNewEntry(prev => ({ ...prev, content: newText }));
+                      }
+                    }}
+                  >
+                    <Bold className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const textarea = document.getElementById('content') as HTMLTextAreaElement;
+                      if (textarea) {
+                        const start = textarea.selectionStart;
+                        const end = textarea.selectionEnd;
+                        const selectedText = textarea.value.substring(start, end);
+                        const newText = textarea.value.substring(0, start) + `*${selectedText}*` + textarea.value.substring(end);
+                        setNewEntry(prev => ({ ...prev, content: newText }));
+                      }
+                    }}
+                  >
+                    <Italic className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const textarea = document.getElementById('content') as HTMLTextAreaElement;
+                      if (textarea) {
+                        const start = textarea.selectionStart;
+                        const end = textarea.selectionEnd;
+                        const selectedText = textarea.value.substring(start, end);
+                        const newText = textarea.value.substring(0, start) + `__${selectedText}__` + textarea.value.substring(end);
+                        setNewEntry(prev => ({ ...prev, content: newText }));
+                      }
+                    }}
+                  >
+                    <Underline className="h-4 w-4" />
+                  </Button>
+                  <div className="w-px h-4 bg-border mx-1" />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setNewEntry(prev => ({ ...prev, content: prev.content + '\n- ' }));
+                    }}
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Textarea
+                  id="content"
+                  placeholder="Décrivez le contenu de la séance..."
+                  rows={6}
+                  value={newEntry.content}
+                  onChange={(e) => setNewEntry(prev => ({ ...prev, content: e.target.value }))}
+                  className="resize-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
+              </div>
             </div>
 
-            {/* Homework */}
-            <div className="space-y-2">
-              <Label htmlFor="homework">Devoirs</Label>
-              <Textarea
-                id="homework"
-                placeholder="Décrivez les devoirs à faire..."
-                rows={3}
-                value={newEntry.homework}
-                onChange={(e) => setNewEntry(prev => ({ ...prev, homework: e.target.value }))}
-                className="resize-none"
-              />
-            </div>
 
             {/* File Upload Section */}
             <div className="space-y-2">
               <Label>Fichiers joints</Label>
               <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4">
+                <input
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif"
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      setUploadedFiles(Array.from(e.target.files));
+                    }
+                  }}
+                  className="hidden"
+                  id="file-upload"
+                />
                 <div className="flex items-center justify-center">
                   <div className="text-center">
                     <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground">
-                      Sélect. fichiers Aucun fichier choisi
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {uploadedFiles.length > 0 
+                        ? `${uploadedFiles.length} fichier(s) sélectionné(s)` 
+                        : 'Sélectionnez des fichiers à joindre'}
                     </p>
-                    <Button type="button" variant="outline" size="sm" className="mt-2">
-                      Téléverser
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => document.getElementById('file-upload')?.click()}
+                      disabled={uploading}
+                    >
+                      {uploading ? 'Téléchargement...' : 'Sélectionner des fichiers'}
                     </Button>
                   </div>
                 </div>
+                {uploadedFiles.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium mb-2">Fichiers sélectionnés :</h4>
+                    <div className="space-y-1">
+                      {uploadedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between text-sm p-2 bg-muted rounded">
+                          <span className="flex items-center">
+                            <FileText className="h-4 w-4 mr-2" />
+                            {file.name}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setUploadedFiles(files => files.filter((_, i) => i !== index))}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
