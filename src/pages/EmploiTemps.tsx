@@ -8,10 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScheduleSlot } from '@/services/scheduleService';
 import { exportScheduleToPDF } from '@/services/pdfScheduleService';
 import { useToast } from '@/hooks/use-toast';
+import { ExportFilterModal } from '@/components/ui/export-filter-modal';
 
 const EmploiTemps = () => {
   const [currentView, setCurrentView] = useState<'day' | 'week' | 'month'>('week');
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [exportModalOpen, setExportModalOpen] = useState(false);
   
   const { schedules, loading, error } = useUserSchedules();
   const { userId, userRole, loading: userLoading } = useCurrentUser();
@@ -96,22 +98,48 @@ const EmploiTemps = () => {
   };
 
   const handleExportPDF = () => {
-    if (schedules.length === 0) {
+    setExportModalOpen(true);
+  };
+
+  const handleExportWithFilters = (startDate: Date, endDate: Date, periodLabel: string) => {
+    try {
+      // Filter schedules by date range
+      const filteredSchedules = schedules.filter(schedule => {
+        const scheduleDate = new Date(schedule.date);
+        return scheduleDate >= startDate && scheduleDate <= endDate;
+      });
+
+      if (filteredSchedules.length === 0) {
+        toast({
+          title: "Aucun cours trouvé",
+          description: "Aucun cours trouvé pour cette période.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const title = `Emploi du Temps - ${periodLabel}`;
+      exportScheduleToPDF(
+        filteredSchedules,
+        title,
+        userRole,
+        `${userId}`,
+        startDate,
+        endDate
+      );
+
       toast({
-        title: "Aucune donnée à exporter",
-        description: "Votre emploi du temps est vide.",
+        title: "Export réussi",
+        description: `Emploi du temps exporté pour ${periodLabel}`,
+      });
+    } catch (error) {
+      console.error('Erreur lors de l\'exportation:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'exportation du PDF",
         variant: "destructive",
       });
-      return;
     }
-
-    const title = userRole === 'Étudiant' ? 'Mon Emploi du Temps' : 'Mes Créneaux de Formation';
-    exportScheduleToPDF(schedules, title, userRole, `${userId}`);
-    
-    toast({
-      title: "Export réussi",
-      description: "Votre emploi du temps a été exporté en PDF.",
-    });
   };
 
   if (userLoading || loading) {
@@ -392,7 +420,7 @@ const EmploiTemps = () => {
                     
                     // Empty cells for days before the first day of the month
                     for (let i = 0; i < startingDayOfWeek; i++) {
-                      days.push(<div key={`empty-${i}`} className="h-40 border border-gray-200 bg-gray-50 rounded-xl"></div>);
+                      days.push(<div key={`empty-${i}`} className="min-h-[200px] border border-gray-200 bg-gray-50 rounded-xl"></div>);
                     }
                     
                     // Days of the month
@@ -401,33 +429,46 @@ const EmploiTemps = () => {
                       const daySlots = getSlotsForDate(date);
                       
                       days.push(
-                        <div key={day} className="h-40 border border-gray-200 p-3 bg-white hover:bg-gray-50 transition-colors rounded-xl">
+                        <div key={day} className="min-h-[200px] border border-gray-200 p-3 bg-white hover:bg-gray-50 transition-colors rounded-xl flex flex-col">
                           <div className="font-bold text-lg mb-2 text-gray-900">{day}</div>
-                          <div className="space-y-2">
-                            {daySlots.map(slot => (
-                              <div
-                                key={slot.id}
-                                className="text-xs p-2 rounded-lg text-white shadow-sm"
-                                style={{ backgroundColor: slot.color || '#8B5CF6' }}
-                                title={`${slot.formation_modules?.title || 'Module'} - ${formatTime(slot.start_time)}-${formatTime(slot.end_time)} - ${slot.room || 'Salle'} - ${slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Formateur'}`}
-                              >
-                                <div className="font-semibold truncate mb-1">
-                                  {slot.formation_modules?.title || 'Module'}
+                          <div className="space-y-1 flex-1 overflow-y-auto">
+                            {daySlots.length > 0 ? (
+                              daySlots.map((slot, index) => (
+                                <div
+                                  key={slot.id}
+                                  className="text-xs p-2 rounded-lg text-white shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
+                                  style={{ backgroundColor: slot.color || '#8B5CF6' }}
+                                  title={`${slot.formation_modules?.title || 'Module'} - ${formatTime(slot.start_time)}-${formatTime(slot.end_time)} - ${slot.room || 'Salle'} - ${slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Formateur'}`}
+                                >
+                                  <div className="font-semibold text-[10px] leading-tight mb-1">
+                                    {slot.formation_modules?.title || 'Module'}
+                                  </div>
+                                  <div className="text-[9px] opacity-95 flex items-center">
+                                    <Clock className="h-2 w-2 mr-1 flex-shrink-0" />
+                                    <span className="truncate">{formatTime(slot.start_time)}-{formatTime(slot.end_time)}</span>
+                                  </div>
+                                  {slot.room && (
+                                    <div className="text-[9px] opacity-90 flex items-center mt-0.5">
+                                      <MapPin className="h-2 w-2 mr-1 flex-shrink-0" />
+                                      <span className="truncate">{slot.room}</span>
+                                    </div>
+                                  )}
+                                  <div className="text-[9px] opacity-85 flex items-center mt-0.5">
+                                    <User className="h-2 w-2 mr-1 flex-shrink-0" />
+                                    <span className="truncate">
+                                      {slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Formateur'}
+                                    </span>
+                                  </div>
                                 </div>
-                                <div className="flex items-center opacity-90 mb-1">
-                                  <Clock className="h-2 w-2 mr-1" />
-                                  {formatTime(slot.start_time)}-{formatTime(slot.end_time)}
-                                </div>
-                                <div className="flex items-center opacity-90 mb-1">
-                                  <Calendar className="h-2 w-2 mr-1" />
-                                  {slot.room || 'Salle'}
-                                </div>
-                                <div className="flex items-center opacity-90">
-                                  <User className="h-2 w-2 mr-1" />
-                                  {slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Formateur'}
-                                </div>
+                              ))
+                            ) : (
+                              <div className="text-xs text-gray-400 italic">Aucun cours</div>
+                            )}
+                            {daySlots.length > 3 && (
+                              <div className="text-xs text-gray-500 text-center py-1">
+                                +{daySlots.length - 3} cours supplémentaires
                               </div>
-                            ))}
+                            )}
                           </div>
                         </div>
                       );
@@ -441,6 +482,13 @@ const EmploiTemps = () => {
           </>
         )}
       </div>
+
+      <ExportFilterModal
+        open={exportModalOpen}
+        onOpenChange={setExportModalOpen}
+        currentDate={selectedDate}
+        onExport={handleExportWithFilters}
+      />
     </div>
   );
 };
