@@ -1099,12 +1099,43 @@ const ScheduleManagement = () => {
         </Button>
       </div>
 
-      {/* Week Navigation */}
-      <WeekNavigation
-        selectedDate={selectedDate}
-        onDateChange={setSelectedDate}
-        className="mb-6"
-      />
+      {/* Filter for Created and Published Schedules */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center">
+            <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
+            Emplois du Temps Créés et Publiés
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <div className="text-blue-600 text-2xl font-bold">
+                {schedules.length}
+              </div>
+              <div className="text-blue-600 text-sm">Total des emplois</div>
+            </div>
+            <div className="bg-green-50 p-4 rounded-lg">
+              <div className="text-green-600 text-2xl font-bold">
+                {schedules.filter(s => s.status === 'Publié').length}
+              </div>
+              <div className="text-green-600 text-sm">Emplois publiés</div>
+            </div>
+            <div className="bg-yellow-50 p-4 rounded-lg">
+              <div className="text-yellow-600 text-2xl font-bold">
+                {schedules.filter(s => s.status === 'Brouillon').length}
+              </div>
+              <div className="text-yellow-600 text-sm">Brouillons</div>
+            </div>
+            <div className="bg-purple-50 p-4 rounded-lg">
+              <div className="text-purple-600 text-2xl font-bold">
+                {new Set(schedules.map(s => s.formation_id)).size}
+              </div>
+              <div className="text-purple-600 text-sm">Formations</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {schedules.length === 0 ? (
         <Card>
@@ -1123,61 +1154,105 @@ const ScheduleManagement = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {schedules.map((schedule) => (
-            <Card key={schedule.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div 
-                    className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: schedule.formations?.color || '#8B5CF6' }}
-                  />
-                  <Badge variant="secondary" className={getStatusColor(schedule.status)}>
-                    {schedule.status}
-                  </Badge>
-                </div>
-                <CardTitle className="text-lg">{schedule.title}</CardTitle>
-                <div className="text-sm text-gray-600">
-                  <p>Formation: {schedule.formations?.title}</p>
-                  <p>Année: {schedule.academic_year}</p>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center text-sm text-gray-500">
-                    <Clock className="h-4 w-4 mr-1" />
-                    Modifié le {new Date(schedule.updated_at).toLocaleDateString('fr-FR')}
+        <div className="space-y-4">
+          {/* Enhanced List View */}
+          <div className="bg-white rounded-lg border">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Liste Détaillée des Emplois du Temps
+              </h3>
+            </div>
+            <div className="divide-y divide-gray-200">
+              {schedules.map((schedule) => (
+                <div key={schedule.id} className="p-6 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center mb-2">
+                        <div 
+                          className="w-3 h-3 rounded-full mr-3"
+                          style={{ backgroundColor: schedule.formations?.color || '#8B5CF6' }}
+                        />
+                        <h4 className="text-lg font-semibold text-gray-900">
+                          {schedule.title}
+                        </h4>
+                        <Badge 
+                          variant="secondary" 
+                          className={`ml-3 ${getStatusColor(schedule.status)}`}
+                        >
+                          {schedule.status}
+                        </Badge>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-gray-600">
+                        <div>
+                          <span className="font-medium">Formation:</span>
+                          <div className="mt-1">{schedule.formations?.title}</div>
+                        </div>
+                        <div>
+                          <span className="font-medium">Année académique:</span>
+                          <div className="mt-1">{schedule.academic_year}</div>
+                        </div>
+                        <div>
+                          <span className="font-medium">Dernière modification:</span>
+                          <div className="mt-1 flex items-center">
+                            <Clock className="h-4 w-4 mr-1" />
+                            {new Date(schedule.updated_at).toLocaleDateString('fr-FR', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4 flex items-center text-sm text-gray-500">
+                        <div className="flex items-center mr-6">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          Créé le {new Date(schedule.created_at).toLocaleDateString('fr-FR')}
+                        </div>
+                        {schedule.status === 'Publié' && (
+                          <div className="flex items-center text-green-600">
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Visible par les étudiants
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex space-x-2 ml-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewSchedule(schedule)}
+                        className="flex items-center"
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        Voir
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditSchedule(schedule.id)}
+                        className="flex items-center"
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Modifier
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteSchedule(schedule.id, schedule.title)}
+                        className="flex items-center text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Supprimer
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex space-x-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleViewSchedule(schedule)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEditSchedule(schedule.id)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteSchedule(schedule.id, schedule.title)}
-                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
