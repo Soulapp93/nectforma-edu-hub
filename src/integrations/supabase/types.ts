@@ -194,7 +194,29 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_attendance_sheets_formation"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_attendance_sheets_instructor"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_attendance_sheets_schedule_slot"
+            columns: ["schedule_slot_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_slots"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       attendance_signatures: {
         Row: {
@@ -230,7 +252,22 @@ export type Database = {
           user_id?: string
           user_type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_attendance_signatures_sheet"
+            columns: ["attendance_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "attendance_sheets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_attendance_signatures_user"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       establishments: {
         Row: {
