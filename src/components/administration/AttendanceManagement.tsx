@@ -16,8 +16,8 @@ const AttendanceManagement = () => {
   const [attendanceSheets, setAttendanceSheets] = useState<AttendanceSheet[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedFormation, setSelectedFormation] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedFormation, setSelectedFormation] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedSheet, setSelectedSheet] = useState<AttendanceSheet | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
@@ -57,8 +57,8 @@ const AttendanceManagement = () => {
   const filteredSheets = attendanceSheets.filter(sheet => {
     const matchesSearch = sheet.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          sheet.formations?.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFormation = !selectedFormation || sheet.formation_id === selectedFormation;
-    const matchesStatus = !selectedStatus || sheet.status === selectedStatus;
+    const matchesFormation = selectedFormation === 'all' || sheet.formation_id === selectedFormation;
+    const matchesStatus = selectedStatus === 'all' || sheet.status === selectedStatus;
     
     return matchesSearch && matchesFormation && matchesStatus;
   });
@@ -129,7 +129,7 @@ const AttendanceManagement = () => {
                 <SelectValue placeholder="Toutes les formations" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Toutes les formations</SelectItem>
+                <SelectItem value="all">Toutes les formations</SelectItem>
                 {formations.map((formation) => (
                   <SelectItem key={formation.id} value={formation.id}>
                     {formation.title}
@@ -143,7 +143,7 @@ const AttendanceManagement = () => {
                 <SelectValue placeholder="Tous les statuts" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous les statuts</SelectItem>
+                <SelectItem value="all">Tous les statuts</SelectItem>
                 <SelectItem value="En attente">En attente</SelectItem>
                 <SelectItem value="En cours">En cours</SelectItem>
                 <SelectItem value="Terminé">Terminé</SelectItem>
@@ -155,8 +155,8 @@ const AttendanceManagement = () => {
               variant="outline" 
               onClick={() => {
                 setSearchTerm('');
-                setSelectedFormation('');
-                setSelectedStatus('');
+                setSelectedFormation('all');
+                setSelectedStatus('all');
               }}
             >
               Réinitialiser
