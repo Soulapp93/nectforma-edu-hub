@@ -24,7 +24,13 @@ export const useUserSchedules = () => {
         // Get formations assigned to the student
         const studentFormations = userFormations.filter(uf => uf.user_id === userId);
         const formationIds = studentFormations.map(uf => uf.formation_id);
-        data = await scheduleService.getStudentSchedules(formationIds);
+        
+        // Si l'étudiant n'a pas de formations assignées, on affiche tous les emplois du temps publiés pour test
+        if (formationIds.length === 0) {
+          data = await scheduleService.getAllPublishedSchedules();
+        } else {
+          data = await scheduleService.getStudentSchedules(formationIds);
+        }
       } else if (userRole === 'Formateur') {
         // Get all slots where the user is the instructor
         data = await scheduleService.getInstructorSchedules(userId);

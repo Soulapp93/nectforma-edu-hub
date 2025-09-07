@@ -223,5 +223,30 @@ export const scheduleService = {
 
     if (error) throw error;
     return data || [];
+  },
+
+  // Get all published schedules (for testing when user has no formations)
+  async getAllPublishedSchedules(): Promise<ScheduleSlot[]> {
+    const { data, error } = await supabase
+      .from('schedule_slots')
+      .select(`
+        *,
+        formation_modules(title),
+        users(first_name, last_name),
+        schedules!inner(
+          id,
+          formation_id,
+          title,
+          academic_year,
+          status,
+          formations(title, color)
+        )
+      `)
+      .eq('schedules.status', 'Publié')
+      .order('date', { ascending: true })
+      .order('start_time', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
   }
 };
