@@ -9,6 +9,7 @@ import { ScheduleSlot } from '@/services/scheduleService';
 import { exportScheduleToPDF } from '@/services/pdfScheduleService';
 import { useToast } from '@/hooks/use-toast';
 import { ExportFilterModal } from '@/components/ui/export-filter-modal';
+import WeekNavigation from '@/components/ui/week-navigation';
 
 const EmploiTemps = () => {
   const [currentView, setCurrentView] = useState<'day' | 'week' | 'month'>('week');
@@ -29,39 +30,6 @@ const EmploiTemps = () => {
     'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
   ];
-
-  // Get current week number
-  const getWeekNumber = (date: Date): number => {
-    const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-    const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000;
-    return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
-  };
-
-  // Get all weeks for the current academic year
-  const getAcademicWeeks = () => {
-    const currentYear = new Date().getFullYear();
-    const weeks = [];
-    
-    // Academic year starts in September
-    const startDate = new Date(currentYear, 8, 1); // September 1st
-    const endDate = new Date(currentYear + 1, 6, 31); // July 31st next year
-    
-    let currentWeek = new Date(startDate);
-    let weekNumber = 1;
-    
-    while (currentWeek <= endDate) {
-      weeks.push({
-        number: weekNumber,
-        startDate: new Date(currentWeek),
-        label: `S${weekNumber}`
-      });
-      
-      currentWeek.setDate(currentWeek.getDate() + 7);
-      weekNumber++;
-    }
-    
-    return weeks;
-  };
 
   // Navigate to specific week
   const navigateToWeek = (weekStartDate: Date) => {
@@ -222,29 +190,12 @@ const EmploiTemps = () => {
       </div>
 
       {/* Week Navigation Bar */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">Navigation par semaines</h2>
-          <div className="flex overflow-x-auto scrollbar-hide space-x-2">
-            {getAcademicWeeks().map((week) => {
-              const isCurrentWeek = getWeekNumber(selectedDate) === week.number;
-              return (
-                <button
-                  key={week.number}
-                  onClick={() => navigateToWeek(week.startDate)}
-                  className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 min-w-[60px] ${
-                    isCurrentWeek
-                      ? 'bg-primary text-white shadow-md transform scale-105'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800'
-                  }`}
-                >
-                  {week.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      <WeekNavigation
+        selectedDate={selectedDate}
+        onDateChange={setSelectedDate}
+        onWeekSelect={navigateToWeek}
+        className="mb-6"
+      />
 
       {/* Schedule Viewer */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">

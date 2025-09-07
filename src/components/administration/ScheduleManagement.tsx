@@ -3,6 +3,7 @@ import { Plus, Calendar, Clock, Edit, Trash2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import WeekNavigation from '@/components/ui/week-navigation';
 import { useSchedules } from '@/hooks/useSchedules';
 import { scheduleService } from '@/services/scheduleService';
 import CreateScheduleModal from './CreateScheduleModal';
@@ -12,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 const ScheduleManagement = () => {
   const { schedules, loading, refetch } = useSchedules();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const navigate = useNavigate();
 
   const handleCreateSchedule = () => {
@@ -77,6 +79,13 @@ const ScheduleManagement = () => {
           Créer un Emploi du Temps
         </Button>
       </div>
+
+      {/* Week Navigation */}
+      <WeekNavigation
+        selectedDate={selectedDate}
+        onDateChange={setSelectedDate}
+        className="mb-6"
+      />
 
       {schedules.length === 0 ? (
         <Card>
