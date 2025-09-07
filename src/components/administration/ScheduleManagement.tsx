@@ -724,77 +724,96 @@ const ScheduleManagement = () => {
           {/* Month View */}
           {currentView === 'month' && (
             <div className="p-6">
-              <div className="max-w-6xl mx-auto">
-                {/* Monthly Calendar Grid */}
-                <div className="bg-white rounded-xl border border-gray-200">
-                  {/* Calendar Header */}
-                  <div className="grid grid-cols-7 gap-px bg-gray-200">
-                    {weekDays.map((day) => (
-                      <div key={day} className="bg-gray-50 px-4 py-3 text-center">
-                        <span className="text-sm font-medium text-gray-700">{day.slice(0, 3)}</span>
-                      </div>
-                    ))}
-                  </div>
+              {slotsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-7 gap-3">
+                  {/* Days header */}
+                  {weekDays.map(day => (
+                    <div key={day} className="p-3 text-center font-semibold text-primary text-sm bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg">
+                      {day}
+                    </div>
+                  ))}
                   
-                  {/* Calendar Days */}
-                  <div className="grid grid-cols-7 gap-px bg-gray-200">
-                    {(() => {
-                      const year = selectedDate.getFullYear();
-                      const month = selectedDate.getMonth();
-                      const firstDay = new Date(year, month, 1);
-                      const lastDay = new Date(year, month + 1, 0);
-                      const startDate = new Date(firstDay);
-                      startDate.setDate(startDate.getDate() - ((firstDay.getDay() + 6) % 7));
+                  {/* Calendar days */}
+                  {(() => {
+                    const year = selectedDate.getFullYear();
+                    const month = selectedDate.getMonth();
+                    const firstDay = new Date(year, month, 1);
+                    const lastDay = new Date(year, month + 1, 0);
+                    const daysInMonth = lastDay.getDate();
+                    const startingDayOfWeek = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+                    
+                    const days = [];
+                    
+                    // Empty cells for days before the first day of the month
+                    for (let i = 0; i < startingDayOfWeek; i++) {
+                      days.push(<div key={`empty-${i}`} className="min-h-[200px] border border-gray-200 bg-gray-50 rounded-xl"></div>);
+                    }
+                    
+                    // Days of the month
+                    for (let day = 1; day <= daysInMonth; day++) {
+                      const date = new Date(year, month, day);
+                      const daySlots = getSlotsForDate(date);
                       
-                      const days = [];
-                      const currentDate = new Date(startDate);
-                      
-                      for (let i = 0; i < 42; i++) {
-                        const daySlots = getSlotsForDate(currentDate);
-                        const isCurrentMonth = currentDate.getMonth() === month;
-                        const isToday = currentDate.toDateString() === new Date().toDateString();
-                        
-                        days.push(
-                          <div
-                            key={currentDate.toISOString()}
-                            className={`bg-white min-h-[120px] p-2 ${
-                              !isCurrentMonth ? 'text-gray-400 bg-gray-50' : ''
-                            } ${isToday ? 'bg-primary/5' : ''}`}
-                          >
-                            <div className={`text-sm font-medium mb-2 ${isToday ? 'text-primary' : ''}`}>
-                              {currentDate.getDate()}
-                            </div>
-                            
-                            <div className="space-y-1">
-                              {daySlots.slice(0, 3).map((slot) => (
+                      days.push(
+                        <div key={day} className="min-h-[200px] border border-gray-200 p-3 bg-white hover:bg-gray-50 transition-colors rounded-xl flex flex-col">
+                          <div className="font-bold text-lg mb-2 text-gray-900">{day}</div>
+                          <div className="space-y-1 flex-1 overflow-y-auto">
+                            {daySlots.length > 0 ? (
+                              daySlots.map((slot, index) => (
                                 <div
                                   key={slot.id}
-                                  className="text-xs p-1 rounded text-white truncate cursor-pointer hover:opacity-80"
+                                  className="text-xs p-2 rounded-lg text-white shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
                                   style={{ backgroundColor: slot.color || selectedSchedule.formations?.color || '#8B5CF6' }}
                                   onClick={() => handleEditSlot(slot)}
-                                  title={`${slot.formation_modules?.title || 'Module'} - ${formatTime(slot.start_time)}`}
+                                  title={`${slot.formation_modules?.title || 'Module'} - ${formatTime(slot.start_time)}-${formatTime(slot.end_time)} - ${slot.room || 'Salle'} - ${slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Formateur'}`}
                                 >
-                                  {formatTime(slot.start_time)} {slot.formation_modules?.title || 'Module'}
+                                  <div className="font-semibold text-[10px] leading-tight mb-1">
+                                    {slot.formation_modules?.title || 'Module'}
+                                  </div>
+                                  <div className="text-[9px] opacity-95 flex items-center">
+                                    <Clock className="h-2 w-2 mr-1 flex-shrink-0" />
+                                    <span className="truncate">{formatTime(slot.start_time)}-{formatTime(slot.end_time)}</span>
+                                  </div>
+                                  {slot.room && (
+                                    <div className="text-[9px] opacity-90 flex items-center mt-0.5">
+                                      <Calendar className="h-2 w-2 mr-1 flex-shrink-0" />
+                                      <span className="truncate">{slot.room}</span>
+                                    </div>
+                                  )}
+                                  <div className="text-[9px] opacity-85 flex items-center mt-0.5">
+                                    <div className="w-2 h-2 mr-1 rounded-full bg-white/20 flex items-center justify-center text-[8px] font-bold">
+                                      {slot.users ? 
+                                        `${slot.users.first_name[0]}${slot.users.last_name[0]}` : 
+                                        'F'
+                                      }
+                                    </div>
+                                    <span className="truncate">
+                                      {slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Formateur'}
+                                    </span>
+                                  </div>
                                 </div>
-                              ))}
-                              
-                              {daySlots.length > 3 && (
-                                <div className="text-xs text-gray-500">
-                                  +{daySlots.length - 3} autres
-                                </div>
-                              )}
-                            </div>
+                              ))
+                            ) : (
+                              <div className="text-xs text-gray-400 italic">Aucun cours</div>
+                            )}
+                            {daySlots.length > 3 && (
+                              <div className="text-xs text-gray-500 text-center py-1">
+                                +{daySlots.length - 3} cours supplémentaires
+                              </div>
+                            )}
                           </div>
-                        );
-                        
-                        currentDate.setDate(currentDate.getDate() + 1);
-                      }
-                      
-                      return days;
-                    })()}
-                  </div>
+                        </div>
+                      );
+                    }
+                    
+                    return days;
+                  })()}
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>
