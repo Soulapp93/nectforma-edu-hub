@@ -147,16 +147,17 @@ const EmploiTemps = () => {
         </p>
       </div>
 
-      {/* Controls */}
-      <Card className="mb-6">
-        <CardHeader className="pb-4">
+          {/* Controls */}
+      <div className="mb-6 bg-background rounded-lg border border-border/50 shadow-sm">
+        <div className="p-6 border-b border-border/50">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center space-x-4">
-              <div className="flex bg-muted rounded-lg p-1">
+              <div className="flex bg-muted/50 rounded-lg p-1 border border-border/30">
                 <Button
                   variant={currentView === 'day' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setCurrentView('day')}
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                 >
                   Jour
                 </Button>
@@ -164,6 +165,7 @@ const EmploiTemps = () => {
                   variant={currentView === 'week' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setCurrentView('week')}
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                 >
                   Semaine
                 </Button>
@@ -171,6 +173,7 @@ const EmploiTemps = () => {
                   variant={currentView === 'month' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setCurrentView('month')}
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                 >
                   Mois
                 </Button>
@@ -181,16 +184,18 @@ const EmploiTemps = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => navigateDate('prev')}
+                  className="border-border/50 hover:bg-muted/50"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm font-medium min-w-[200px] text-center">
+                <span className="text-sm font-semibold min-w-[200px] text-center px-4 py-2 bg-muted/30 rounded-md border border-border/30">
                   {getCurrentPeriodLabel()}
                 </span>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => navigateDate('next')}
+                  className="border-border/50 hover:bg-muted/50"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -202,15 +207,16 @@ const EmploiTemps = () => {
                 variant="outline"
                 onClick={handleExportPDF}
                 disabled={schedules.length === 0}
+                className="border-border/50 hover:bg-muted/50"
               >
                 <Download className="h-4 w-4 mr-2" />
                 Exporter PDF
               </Button>
             </div>
           </div>
-        </CardHeader>
+        </div>
 
-        <CardContent>
+        <div className="p-6">
           {schedules.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Calendar className="h-12 w-12 mx-auto mb-4" />
@@ -228,59 +234,64 @@ const EmploiTemps = () => {
               {currentView === 'day' && (
                 <div className="space-y-4">
                   {getSlotsForDate(selectedDate).map((slot) => (
-                    <Card key={slot.id} className="p-4">
+                    <div 
+                      key={slot.id} 
+                      className="p-4 rounded-lg border border-border/50 shadow-sm bg-background hover:shadow-md transition-shadow"
+                    >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <div className="flex items-center gap-4 mb-2">
-                            <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-4 mb-3">
+                            <div className="flex items-center gap-2 px-3 py-1 bg-muted/50 rounded-md">
                               <Clock className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium">
+                              <span className="font-semibold text-sm">
                                 {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
                               </span>
                             </div>
                             {slot.room && (
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 px-3 py-1 bg-muted/30 rounded-md">
                                 <MapPin className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-sm">{slot.room}</span>
+                                <span className="text-sm font-medium">{slot.room}</span>
                               </div>
                             )}
                           </div>
                           
-                          <div className="space-y-1">
+                          <div className="space-y-2">
                             {slot.formation_modules?.title && (
-                              <h3 className="font-semibold">{slot.formation_modules.title}</h3>
+                              <h3 className="font-semibold text-lg">{slot.formation_modules.title}</h3>
                             )}
                             {slot.notes && (
-                              <p className="text-muted-foreground">{slot.notes}</p>
+                              <p className="text-muted-foreground text-sm bg-muted/20 p-2 rounded-md">{slot.notes}</p>
                             )}
-                            {slot.users && (
+                            {slot.users && userRole === 'Étudiant' && (
                               <div className="flex items-center gap-2 text-sm">
                                 <User className="h-4 w-4 text-muted-foreground" />
-                                <span>{slot.users.first_name} {slot.users.last_name}</span>
+                                <span className="font-medium">{slot.users.first_name} {slot.users.last_name}</span>
                               </div>
                             )}
                           </div>
                         </div>
                         
                         <div 
-                          className="w-4 h-16 rounded-md"
+                          className="w-6 h-20 rounded-lg shadow-sm border-2 border-white/20"
                           style={{ backgroundColor: slot.color || '#8B5CF6' }}
                         />
                       </div>
-                    </Card>
+                    </div>
                   ))}
                 </div>
               )}
 
               {/* Week View */}
               {currentView === 'week' && (
-                <div className="overflow-x-auto">
-                  <div className="grid grid-cols-6 gap-4 min-w-[800px]">
+                <div className="overflow-x-auto bg-background border border-border/50 rounded-lg">
+                  <div className="grid grid-cols-6 gap-0 min-w-[800px]">
                     {/* Time column */}
-                    <div className="space-y-2">
-                      <div className="h-12 font-medium text-center">Horaires</div>
+                    <div className="border-r border-border/50">
+                      <div className="h-12 font-semibold text-center p-3 bg-muted/30 border-b border-border/50">
+                        Horaires
+                      </div>
                       {timeSlots.map(time => (
-                        <div key={time} className="h-16 flex items-center justify-center text-sm text-muted-foreground bg-muted/30 rounded">
+                        <div key={time} className="h-16 flex items-center justify-center text-sm text-muted-foreground bg-muted/10 border-b border-border/30">
                           {time}
                         </div>
                       ))}
@@ -290,42 +301,58 @@ const EmploiTemps = () => {
                     {getWeekDates().map((date, dayIndex) => {
                       const daySlots = getSlotsForDate(date);
                       return (
-                        <div key={dayIndex} className="space-y-2">
-                          <div className="h-12 font-medium text-center p-2 bg-muted/50 rounded">
+                        <div key={dayIndex} className="border-r border-border/50 last:border-r-0">
+                          <div className="h-12 font-semibold text-center p-2 bg-muted/30 border-b border-border/50">
                             <div className="text-sm">{weekDays[dayIndex]}</div>
                             <div className="text-xs text-muted-foreground">
                               {date.getDate()}/{date.getMonth() + 1}
                             </div>
                           </div>
                           
-                          <div className="space-y-2">
-                            {daySlots.map((slot) => (
-                              <div
-                                key={slot.id}
-                                className="p-2 rounded text-white text-xs"
-                                style={{ 
-                                  backgroundColor: slot.color || '#8B5CF6',
-                                  minHeight: `${getSlotDuration(slot) * 32}px`
-                                }}
-                              >
-                                <div className="font-medium mb-1">
-                                  {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
-                                </div>
-                                {slot.formation_modules?.title && (
-                                  <div className="mb-1">{slot.formation_modules.title}</div>
-                                )}
-                                {slot.notes && (
-                                  <div className="opacity-90 mb-1">{slot.notes}</div>
-                                )}
-                                {slot.room && (
-                                  <div className="opacity-75">{slot.room}</div>
-                                )}
-                                {slot.users && userRole === 'Étudiant' && (
-                                  <div className="opacity-75">
-                                    {slot.users.first_name} {slot.users.last_name}
+                          <div className="relative min-h-[400px] p-1">
+                            {daySlots.map((slot, index) => {
+                              const startHour = parseInt(slot.start_time.split(':')[0]);
+                              const topPosition = (startHour - 8) * 64; // 64px per hour slot
+                              const duration = getSlotDuration(slot);
+                              
+                              return (
+                                <div
+                                  key={slot.id}
+                                  className="absolute left-1 right-1 p-2 rounded-md text-white text-xs shadow-sm border border-white/20"
+                                  style={{ 
+                                    backgroundColor: slot.color || '#8B5CF6',
+                                    top: `${topPosition}px`,
+                                    height: `${duration * 64 - 4}px`,
+                                    zIndex: 10 + index
+                                  }}
+                                >
+                                  <div className="font-medium mb-1">
+                                    {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
                                   </div>
-                                )}
-                              </div>
+                                  {slot.formation_modules?.title && (
+                                    <div className="mb-1 text-xs">{slot.formation_modules.title}</div>
+                                  )}
+                                  {slot.notes && (
+                                    <div className="opacity-90 mb-1 text-xs">{slot.notes}</div>
+                                  )}
+                                  {slot.room && (
+                                    <div className="opacity-75 text-xs">{slot.room}</div>
+                                  )}
+                                  {slot.users && userRole === 'Étudiant' && (
+                                    <div className="opacity-75 text-xs">
+                                      {slot.users.first_name} {slot.users.last_name}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                            {/* Grid lines for hours */}
+                            {timeSlots.map((_, index) => (
+                              <div
+                                key={index}
+                                className="absolute left-0 right-0 border-b border-border/20"
+                                style={{ top: `${index * 64}px` }}
+                              />
                             ))}
                           </div>
                         </div>
@@ -342,7 +369,7 @@ const EmploiTemps = () => {
                   <div className="grid grid-cols-7 gap-2">
                     {/* Days of week header */}
                     {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(day => (
-                      <div key={day} className="p-2 text-center font-medium text-muted-foreground">
+                      <div key={day} className="p-3 text-center font-medium text-muted-foreground border-b">
                         {day}
                       </div>
                     ))}
@@ -359,32 +386,43 @@ const EmploiTemps = () => {
                       return (
                         <div
                           key={i}
-                          className={`p-2 min-h-[100px] border rounded ${
+                          className={`p-2 min-h-[120px] border border-border/50 ${
                             isCurrentMonth ? 'bg-background' : 'bg-muted/30'
                           }`}
                         >
-                          <div className={`text-sm font-medium mb-1 ${
+                          <div className={`text-sm font-medium mb-2 ${
                             isCurrentMonth ? 'text-foreground' : 'text-muted-foreground'
                           }`}>
                             {startDate.getDate()}
                           </div>
                           
                           <div className="space-y-1">
-                            {daySlots.slice(0, 3).map((slot) => (
+                            {daySlots.map((slot) => (
                               <div
                                 key={slot.id}
-                                className="text-xs p-1 rounded text-white truncate"
+                                className="text-xs p-2 rounded-md text-white"
                                 style={{ backgroundColor: slot.color || '#8B5CF6' }}
-                                title={`${formatTime(slot.start_time)} - ${formatTime(slot.end_time)} | ${slot.formation_modules?.title || slot.notes}`}
+                                title={`${formatTime(slot.start_time)} - ${formatTime(slot.end_time)} | ${slot.formation_modules?.title || slot.notes} | ${slot.room || ''}`}
                               >
-                                {formatTime(slot.start_time)} {slot.formation_modules?.title || slot.notes}
+                                <div className="font-medium mb-1">
+                                  {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                                </div>
+                                {slot.formation_modules?.title && (
+                                  <div className="truncate mb-1">{slot.formation_modules.title}</div>
+                                )}
+                                {slot.notes && (
+                                  <div className="truncate opacity-90 mb-1">{slot.notes}</div>
+                                )}
+                                {slot.room && (
+                                  <div className="truncate opacity-75">{slot.room}</div>
+                                )}
+                                {slot.users && userRole === 'Étudiant' && (
+                                  <div className="truncate opacity-75">
+                                    {slot.users.first_name} {slot.users.last_name}
+                                  </div>
+                                )}
                               </div>
                             ))}
-                            {daySlots.length > 3 && (
-                              <div className="text-xs text-muted-foreground">
-                                +{daySlots.length - 3} autres
-                              </div>
-                            )}
                           </div>
                         </div>
                       );
@@ -394,8 +432,8 @@ const EmploiTemps = () => {
               )}
             </>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Statistics */}
       {schedules.length > 0 && (
