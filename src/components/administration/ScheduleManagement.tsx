@@ -384,7 +384,7 @@ const ScheduleManagement = () => {
                   </button>
                 </div>
 
-                {currentView === 'week' && (
+                {(currentView === 'week' || currentView === 'day' || currentView === 'month') && (
                   <div className="flex bg-gray-100 rounded-lg p-1">
                     <button
                       onClick={() => setDisplayMode('planning')}
@@ -627,8 +627,8 @@ const ScheduleManagement = () => {
             </div>
           )}
 
-          {/* Day View */}
-          {currentView === 'day' && (
+          {/* Day View - Planning */}
+          {currentView === 'day' && displayMode === 'planning' && (
             <div className="p-6">
               <div className="max-w-4xl mx-auto">
                 <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl p-6 mb-6 border border-primary/10">
@@ -721,8 +721,102 @@ const ScheduleManagement = () => {
             </div>
           )}
 
-          {/* Month View */}
-          {currentView === 'month' && (
+          {/* Day View - List */}
+          {currentView === 'day' && displayMode === 'list' && (
+            <div className="p-6">
+              <div className="max-w-4xl mx-auto">
+                <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl p-6 mb-6 border border-primary/10">
+                  <h3 className="text-xl font-semibold text-primary mb-2">
+                    {selectedDate.toLocaleDateString('fr-FR', { 
+                      weekday: 'long', 
+                      day: 'numeric', 
+                      month: 'long', 
+                      year: 'numeric' 
+                    })}
+                  </h3>
+                  <p className="text-muted-foreground">
+                    {getSlotsForDate(selectedDate).length} cours programmés
+                  </p>
+                </div>
+
+                {slotsLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                ) : getSlotsForDate(selectedDate).length === 0 ? (
+                  <div className="text-center py-12">
+                    <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      Aucun cours programmé
+                    </h3>
+                    <p className="text-gray-600 mb-4">
+                      Aucun cours n'est programmé pour cette journée
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {getSlotsForDate(selectedDate).map((slot) => (
+                      <div
+                        key={slot.id}
+                        className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow border border-gray-100"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-2">
+                              <div 
+                                className="w-3 h-3 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: slot.color || selectedSchedule.formations?.color || '#8B5CF6' }}
+                              />
+                              <h4 className="font-semibold text-foreground">
+                                {slot.formation_modules?.title || 'Module non défini'}
+                              </h4>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
+                              <div className="flex items-center">
+                                <Clock className="h-4 w-4 mr-2" />
+                                <span>{formatTime(slot.start_time)} - {formatTime(slot.end_time)}</span>
+                              </div>
+                              
+                              <div className="flex items-center">
+                                <Calendar className="h-4 w-4 mr-2" />
+                                <span>{slot.room || 'Salle non définie'}</span>
+                              </div>
+                              
+                              <div className="flex items-center">
+                                <div className="w-4 h-4 mr-2 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
+                                  {slot.users ? 
+                                    `${slot.users.first_name[0]}${slot.users.last_name[0]}` : 
+                                    'F'
+                                  }
+                                </div>
+                                <span>
+                                  {slot.users ? 
+                                    `${slot.users.first_name} ${slot.users.last_name}` : 
+                                    'Formateur'
+                                  }
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <SlotActionMenu
+                            slot={slot}
+                            onEdit={handleEditSlot}
+                            onDuplicate={handleDuplicateSlot}
+                            onDelete={handleDeleteSlot}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Month View - Planning */}
+          {currentView === 'month' && displayMode === 'planning' && (
             <div className="p-6">
               {slotsLoading ? (
                 <div className="flex items-center justify-center py-12">
@@ -811,6 +905,127 @@ const ScheduleManagement = () => {
                     }
                     
                     return days;
+                  })()}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Month View - List */}
+          {currentView === 'month' && displayMode === 'list' && (
+            <div className="p-6">
+              {slotsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {(() => {
+                    const year = selectedDate.getFullYear();
+                    const month = selectedDate.getMonth();
+                    const firstDay = new Date(year, month, 1);
+                    const lastDay = new Date(year, month + 1, 0);
+                    const daysInMonth = lastDay.getDate();
+                    
+                    const daysWithSlots = [];
+                    
+                    // Get all days in the month that have slots
+                    for (let day = 1; day <= daysInMonth; day++) {
+                      const date = new Date(year, month, day);
+                      const daySlots = getSlotsForDate(date);
+                      
+                      if (daySlots.length > 0) {
+                        daysWithSlots.push({ date, slots: daySlots });
+                      }
+                    }
+                    
+                    if (daysWithSlots.length === 0) {
+                      return (
+                        <div className="text-center py-12">
+                          <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">
+                            Aucun cours programmé ce mois
+                          </h3>
+                          <p className="text-gray-600">
+                            Aucun cours n'est programmé pour le mois de {selectedDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                          </p>
+                        </div>
+                      );
+                    }
+                    
+                    return daysWithSlots.map(({ date, slots }) => (
+                      <div key={date.toISOString()} className="bg-muted/30 rounded-xl p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-semibold text-foreground">
+                            {date.toLocaleDateString('fr-FR', { 
+                              weekday: 'long', 
+                              day: 'numeric', 
+                              month: 'long' 
+                            })}
+                          </h3>
+                          <Badge variant="secondary" className="bg-primary/10 text-primary">
+                            {slots.length} cours
+                          </Badge>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          {slots.map((slot) => (
+                            <div
+                              key={slot.id}
+                              className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow border border-gray-100"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center space-x-3 mb-2">
+                                    <div 
+                                      className="w-3 h-3 rounded-full flex-shrink-0"
+                                      style={{ backgroundColor: slot.color || selectedSchedule.formations?.color || '#8B5CF6' }}
+                                    />
+                                    <h4 className="font-semibold text-foreground">
+                                      {slot.formation_modules?.title || 'Module non défini'}
+                                    </h4>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
+                                    <div className="flex items-center">
+                                      <Clock className="h-4 w-4 mr-2" />
+                                      <span>{formatTime(slot.start_time)} - {formatTime(slot.end_time)}</span>
+                                    </div>
+                                    
+                                    <div className="flex items-center">
+                                      <Calendar className="h-4 w-4 mr-2" />
+                                      <span>{slot.room || 'Salle non définie'}</span>
+                                    </div>
+                                    
+                                    <div className="flex items-center">
+                                      <div className="w-4 h-4 mr-2 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
+                                        {slot.users ? 
+                                          `${slot.users.first_name[0]}${slot.users.last_name[0]}` : 
+                                          'F'
+                                        }
+                                      </div>
+                                      <span>
+                                        {slot.users ? 
+                                          `${slot.users.first_name} ${slot.users.last_name}` : 
+                                          'Formateur'
+                                        }
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <SlotActionMenu
+                                  slot={slot}
+                                  onEdit={handleEditSlot}
+                                  onDuplicate={handleDuplicateSlot}
+                                  onDelete={handleDeleteSlot}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ));
                   })()}
                 </div>
               )}
