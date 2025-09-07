@@ -29,6 +29,7 @@ const ScheduleManagement = () => {
   const [slotToEdit, setSlotToEdit] = useState<ScheduleSlot | null>(null);
   const [isExcelImportModalOpen, setIsExcelImportModalOpen] = useState(false);
   const [draggedSlot, setDraggedSlot] = useState<ScheduleSlot | null>(null);
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const navigate = useNavigate();
 
   const timeSlots = [
@@ -1084,7 +1085,6 @@ const ScheduleManagement = () => {
   }
 
   // List view (default)  
-  const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
 
   return (
     <div className="space-y-6">
