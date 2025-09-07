@@ -921,6 +921,9 @@ const ScheduleManagement = () => {
               ) : (
                 <div className="space-y-6">
                   {(() => {
+                    console.log('Month List View - Rendering for:', selectedDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }));
+                    console.log('Total slots available:', slots.length);
+                    
                     const year = selectedDate.getFullYear();
                     const month = selectedDate.getMonth();
                     const firstDay = new Date(year, month, 1);
@@ -935,9 +938,12 @@ const ScheduleManagement = () => {
                       const daySlots = getSlotsForDate(date);
                       
                       if (daySlots.length > 0) {
+                        console.log(`Day ${day}: ${daySlots.length} slots found`);
                         daysWithSlots.push({ date, slots: daySlots });
                       }
                     }
+                    
+                    console.log('Days with slots:', daysWithSlots.length);
                     
                     if (daysWithSlots.length === 0) {
                       return (
@@ -946,9 +952,15 @@ const ScheduleManagement = () => {
                           <h3 className="text-lg font-medium text-gray-900 mb-2">
                             Aucun cours programmé ce mois
                           </h3>
-                          <p className="text-gray-600">
+                          <p className="text-gray-600 mb-4">
                             Aucun cours n'est programmé pour le mois de {selectedDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
                           </p>
+                          <div className="text-sm text-gray-500 bg-gray-50 rounded-lg p-4 mt-4">
+                            <p><strong>Informations de débogage :</strong></p>
+                            <p>• Emploi du temps sélectionné : {selectedSchedule?.title || 'Aucun'}</p>
+                            <p>• Total des créneaux : {slots.length}</p>
+                            <p>• Mois actuel : {selectedDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</p>
+                          </div>
                         </div>
                       );
                     }
