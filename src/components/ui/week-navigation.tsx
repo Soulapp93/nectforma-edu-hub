@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
 interface WeekNavigationProps {
@@ -125,7 +124,6 @@ const WeekNavigation: React.FC<WeekNavigationProps> = ({
                   selected={selectedDate}
                   onSelect={handleCalendarSelect}
                   initialFocus
-                  locale={fr}
                   className={cn("p-3 pointer-events-auto")}
                 />
               </PopoverContent>
@@ -146,7 +144,7 @@ const WeekNavigation: React.FC<WeekNavigationProps> = ({
                     ? 'bg-primary text-white shadow-md transform scale-105'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800'
                 }`}
-                title={`Semaine du ${format(week.startDate, 'dd MMM yyyy', { locale: fr })}`}
+                title={`Semaine du ${format(week.startDate, 'dd MMM yyyy')}`}
               >
                 {week.label}
               </button>
