@@ -21,38 +21,32 @@ const WeekNavigation: React.FC<WeekNavigationProps> = ({
 }) => {
   const [selectedYear, setSelectedYear] = useState(selectedDate.getFullYear());
 
-  // Get current week number in the year (1-52)
+  // Get current week number using ISO 8601 standard (1-53)
   const getWeekNumber = (date: Date): number => {
-    const startOfYear = new Date(date.getFullYear(), 0, 1);
-    // Trouve le premier lundi de l'année
-    const firstMonday = new Date(startOfYear);
-    const dayOfWeek = startOfYear.getDay();
-    const daysToMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
-    firstMonday.setDate(startOfYear.getDate() + daysToMonday);
-    
-    // Si la date est avant le premier lundi, c'est la semaine 52 de l'année précédente
-    if (date < firstMonday) {
-      return 52;
-    }
-    
-    const diffTime = date.getTime() - firstMonday.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    return Math.floor(diffDays / 7) + 1;
+    const tempDate = new Date(date.getTime());
+    tempDate.setHours(0, 0, 0, 0);
+    // Thursday in current week decides the year
+    tempDate.setDate(tempDate.getDate() + 3 - (tempDate.getDay() + 6) % 7);
+    // January 4 is always in week 1
+    const week1 = new Date(tempDate.getFullYear(), 0, 4);
+    // Adjust to Thursday in week 1 and count weeks from there
+    return 1 + Math.round(((tempDate.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
   };
 
-  // Get start date (Monday) of a specific week in a year
+  // Get start date (Monday) of a specific week in a year using ISO 8601
   const getWeekStartDate = (year: number, weekNumber: number): Date => {
-    const startOfYear = new Date(year, 0, 1);
-    // Trouve le premier lundi de l'année
-    const firstMonday = new Date(startOfYear);
-    const dayOfWeek = startOfYear.getDay();
-    const daysToMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
-    firstMonday.setDate(startOfYear.getDate() + daysToMonday);
-    
-    // Ajoute (weekNumber - 1) * 7 jours au premier lundi
-    const weekStart = new Date(firstMonday);
-    weekStart.setDate(firstMonday.getDate() + (weekNumber - 1) * 7);
-    return weekStart;
+    // January 4 is always in week 1
+    const jan4 = new Date(year, 0, 4);
+    // Find Thursday of week 1 (January 4 is always in week 1)
+    const week1Thursday = new Date(jan4);
+    week1Thursday.setDate(jan4.getDate() - (jan4.getDay() + 6) % 7 + 3);
+    // Find Monday of week 1
+    const week1Monday = new Date(week1Thursday);
+    week1Monday.setDate(week1Thursday.getDate() - 3);
+    // Calculate the Monday of the specified week
+    const targetMonday = new Date(week1Monday);
+    targetMonday.setDate(week1Monday.getDate() + (weekNumber - 1) * 7);
+    return targetMonday;
   };
 
   // Get end date (Sunday) of a specific week
@@ -62,17 +56,25 @@ const WeekNavigation: React.FC<WeekNavigationProps> = ({
     return weekEnd;
   };
 
-  // Get all 52 weeks for the selected year
+  // Get all weeks for the selected year (ISO 8601 can have 52 or 53 weeks)
   const getYearWeeks = () => {
     const weeks = [];
     
-    for (let weekNumber = 1; weekNumber <= 52; weekNumber++) {
+    // Calculate how many weeks are in this year
+    const lastWeekOfYear = getWeekNumber(new Date(selectedYear, 11, 31));
+    const maxWeeks = lastWeekOfYear >= 52 ? lastWeekOfYear : 52;
+    
+    for (let weekNumber = 1; weekNumber <= maxWeeks; weekNumber++) {
       const weekStartDate = getWeekStartDate(selectedYear, weekNumber);
-      weeks.push({
-        number: weekNumber,
-        startDate: weekStartDate,
-        label: `S${weekNumber}`
-      });
+      // Ensure the week belongs to the selected year
+      if (weekStartDate.getFullYear() === selectedYear || 
+          (weekNumber === 1 && weekStartDate.getFullYear() === selectedYear - 1)) {
+        weeks.push({
+          number: weekNumber,
+          startDate: weekStartDate,
+          label: `S${weekNumber}`
+        });
+      }
     }
     
     return weeks;

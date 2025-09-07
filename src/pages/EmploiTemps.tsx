@@ -13,6 +13,7 @@ import WeekNavigation from '@/components/ui/week-navigation';
 
 const EmploiTemps = () => {
   const [currentView, setCurrentView] = useState<'day' | 'week' | 'month'>('week');
+  const [displayMode, setDisplayMode] = useState<'planning' | 'liste'>('planning');
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [exportModalOpen, setExportModalOpen] = useState(false);
   
@@ -230,6 +231,28 @@ const EmploiTemps = () => {
                 </button>
               </div>
 
+              {/* Display Mode Toggle for Week View */}
+              {currentView === 'week' && (
+                <div className="flex bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setDisplayMode('planning')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      displayMode === 'planning' ? 'bg-white text-primary shadow-sm' : 'text-gray-600'
+                    }`}
+                  >
+                    Planning
+                  </button>
+                  <button
+                    onClick={() => setDisplayMode('liste')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      displayMode === 'liste' ? 'bg-white text-primary shadow-sm' : 'text-gray-600'
+                    }`}
+                  >
+                    Liste
+                  </button>
+                </div>
+              )}
+
               <div className="flex items-center space-x-2">
                 <Button variant="ghost" size="sm" onClick={() => navigateDate('prev')}>
                   <ChevronLeft className="h-4 w-4" />
@@ -276,7 +299,7 @@ const EmploiTemps = () => {
         ) : (
           <>
             {/* Weekly Schedule */}
-            {currentView === 'week' && (
+            {currentView === 'week' && displayMode === 'planning' && (
               <div className="p-6">
                 <div className="grid grid-cols-7 gap-3">
                   {getWeekDates().map((date, index) => (
@@ -334,6 +357,85 @@ const EmploiTemps = () => {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Weekly Schedule - List View */}
+            {currentView === 'week' && displayMode === 'liste' && (
+              <div className="p-6">
+                <div className="space-y-6">
+                  {getWeekDates().map((date, index) => {
+                    const daySlots = getSlotsForDate(date);
+                    if (daySlots.length === 0) return null;
+                    
+                    return (
+                      <div key={index} className="border border-gray-200 rounded-xl overflow-hidden">
+                        <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-4 border-b border-gray-200">
+                          <h3 className="text-lg font-semibold text-primary flex items-center">
+                            <Calendar className="h-5 w-5 mr-2" />
+                            {weekDays[index]} {date.getDate()} {date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                          </h3>
+                        </div>
+                        
+                        <div className="divide-y divide-gray-100">
+                          {daySlots.map((slot) => (
+                            <div key={slot.id} className="p-4 hover:bg-gray-50 transition-colors">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center mb-2">
+                                    <div 
+                                      className="w-4 h-4 rounded-full mr-3"
+                                      style={{ backgroundColor: slot.color || '#8B5CF6' }}
+                                    ></div>
+                                    <h4 className="font-semibold text-gray-900">
+                                      {slot.formation_modules?.title || 'Module non défini'}
+                                    </h4>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                                    <div className="flex items-center">
+                                      <Clock className="h-4 w-4 mr-2 text-gray-400" />
+                                      {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                                    </div>
+                                    
+                                    <div className="flex items-center">
+                                      <MapPin className="h-4 w-4 mr-2 text-gray-400" />
+                                      {slot.room || 'Salle non définie'}
+                                    </div>
+                                    
+                                    <div className="flex items-center">
+                                      <User className="h-4 w-4 mr-2 text-gray-400" />
+                                      {slot.users ? 
+                                        `${slot.users.first_name} ${slot.users.last_name}` : 
+                                        'Formateur'
+                                      }
+                                    </div>
+                                  </div>
+                                  
+                                  {slot.notes && (
+                                    <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                                      <div className="flex items-start">
+                                        <FileText className="h-4 w-4 mr-2 text-gray-400 mt-0.5" />
+                                        <span className="text-sm text-gray-600">{slot.notes}</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  
+                  {getWeekDates().every(date => getSlotsForDate(date).length === 0) && (
+                    <div className="text-center py-12">
+                      <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500">Aucun cours prévu pour cette semaine</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
