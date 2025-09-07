@@ -148,6 +148,90 @@ export type Database = {
           },
         ]
       }
+      attendance_sheets: {
+        Row: {
+          created_at: string
+          date: string
+          end_time: string
+          formation_id: string
+          generated_at: string
+          id: string
+          instructor_id: string | null
+          room: string | null
+          schedule_slot_id: string
+          start_time: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          end_time: string
+          formation_id: string
+          generated_at?: string
+          id?: string
+          instructor_id?: string | null
+          room?: string | null
+          schedule_slot_id: string
+          start_time: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          end_time?: string
+          formation_id?: string
+          generated_at?: string
+          id?: string
+          instructor_id?: string | null
+          room?: string | null
+          schedule_slot_id?: string
+          start_time?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      attendance_signatures: {
+        Row: {
+          attendance_sheet_id: string
+          created_at: string
+          id: string
+          present: boolean
+          signature_data: string | null
+          signed_at: string
+          updated_at: string
+          user_id: string
+          user_type: string
+        }
+        Insert: {
+          attendance_sheet_id: string
+          created_at?: string
+          id?: string
+          present?: boolean
+          signature_data?: string | null
+          signed_at?: string
+          updated_at?: string
+          user_id: string
+          user_type: string
+        }
+        Update: {
+          attendance_sheet_id?: string
+          created_at?: string
+          id?: string
+          present?: boolean
+          signature_data?: string | null
+          signed_at?: string
+          updated_at?: string
+          user_id?: string
+          user_type?: string
+        }
+        Relationships: []
+      }
       establishments: {
         Row: {
           address: string | null
