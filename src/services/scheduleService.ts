@@ -169,5 +169,59 @@ export const scheduleService = {
       .eq('id', id);
 
     if (error) throw error;
+  },
+
+  // Get published schedules for student by formation IDs
+  async getStudentSchedules(formationIds: string[]): Promise<ScheduleSlot[]> {
+    if (!formationIds || formationIds.length === 0) return [];
+
+    const { data, error } = await supabase
+      .from('schedule_slots')
+      .select(`
+        *,
+        formation_modules(title),
+        users(first_name, last_name),
+        schedules!inner(
+          id,
+          formation_id,
+          title,
+          academic_year,
+          status,
+          formations(title, color)
+        )
+      `)
+      .in('schedules.formation_id', formationIds)
+      .eq('schedules.status', 'Publié')
+      .order('date', { ascending: true })
+      .order('start_time', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  // Get published schedules for instructor
+  async getInstructorSchedules(instructorId: string): Promise<ScheduleSlot[]> {
+    const { data, error } = await supabase
+      .from('schedule_slots')
+      .select(`
+        *,
+        formation_modules(title),
+        users(first_name, last_name),
+        schedules!inner(
+          id,
+          formation_id,
+          title,
+          academic_year,
+          status,
+          formations(title, color)
+        )
+      `)
+      .eq('instructor_id', instructorId)
+      .eq('schedules.status', 'Publié')
+      .order('date', { ascending: true })
+      .order('start_time', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
   }
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Calendar, Clock, Plus, ArrowLeft, Save, Eye, ChevronLeft, ChevronRight, Upload, FileSpreadsheet } from 'lucide-react';
+import { Calendar, Clock, Plus, ArrowLeft, Save, Eye, ChevronLeft, ChevronRight, Upload, FileSpreadsheet, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { scheduleService, Schedule, ScheduleSlot } from '@/services/scheduleService';
@@ -186,6 +186,16 @@ const ScheduleEditor = () => {
     setIsExcelImportModalOpen(false);
   };
 
+  const handlePublishSchedule = async () => {
+    try {
+      await scheduleService.updateSchedule(scheduleId!, { status: 'Publié' });
+      toast.success("Emploi du temps publié avec succès");
+      fetchScheduleData();
+    } catch (error) {
+      toast.error("Erreur lors de la publication");
+    }
+  };
+
   const navigateDate = (direction: 'prev' | 'next') => {
     const newDate = new Date(selectedDate);
     
@@ -269,15 +279,32 @@ const ScheduleEditor = () => {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-500">4 créneaux • Modifications en cours</span>
-            <Button variant="outline">
+            <span className="text-sm text-gray-500">{slots.length} créneaux</span>
+            <Button 
+              variant="outline"
+              onClick={() => navigate('/administration')}
+            >
               <Eye className="h-4 w-4 mr-2" />
               Retour à la liste
             </Button>
-            <Button className="bg-primary hover:bg-primary/90">
-              <Save className="h-4 w-4 mr-2" />
-              Republier les modifications
-            </Button>
+            
+            {schedule.status === 'Brouillon' && (
+              <Button 
+                onClick={handlePublishSchedule}
+                disabled={slots.length === 0}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Publier l'emploi du temps
+              </Button>
+            )}
+            
+            {schedule.status === 'Publié' && (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle className="h-4 w-4" />
+                <span className="text-sm font-medium">Publié</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
