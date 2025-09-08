@@ -44,33 +44,30 @@ const AttendanceSheetView: React.FC<AttendanceSheetViewProps> = ({
     <div className="bg-white">
       {/* Header */}
       <div 
-        className="nect-gradient text-white p-8 text-center"
+        className="text-white p-6 text-center"
         style={{
           background: 'linear-gradient(135deg, #8B5CF6, #9333EA)',
-          borderRadius: '12px 12px 0 0'
         }}
       >
         <h1 className="text-2xl font-bold mb-4">FEUILLE D'ÉMARGEMENT</h1>
-        <div className="space-y-2">
-          <h2 className="text-xl font-semibold">{attendanceSheet.formations?.title}</h2>
-          <p className="text-purple-100">Niveau : {attendanceSheet.formations?.level}</p>
-          <div className="flex justify-center items-center space-x-6 mt-4 text-sm">
-            <div className="flex items-center">
-              <Calendar className="h-4 w-4 mr-2" />
-              {format(new Date(attendanceSheet.date), 'dd/MM/yyyy', { locale: fr })}
-            </div>
-            <div className="flex items-center">
-              <Clock className="h-4 w-4 mr-2" />
-              {attendanceSheet.start_time}
-            </div>
-            <div className="flex items-center">
-              <FileText className="h-4 w-4 mr-2" />
-              Salle {attendanceSheet.room || 'A101'}
-            </div>
-            <div className="flex items-center">
-              <Users className="h-4 w-4 mr-2" />
-              {attendanceSheet.instructor?.first_name} {attendanceSheet.instructor?.last_name}
-            </div>
+        <h2 className="text-lg font-semibold mb-2">{attendanceSheet.formations?.title}</h2>
+        
+        <div className="flex justify-center items-center space-x-8 mt-4 text-sm">
+          <div className="flex items-center">
+            <Calendar className="h-4 w-4 mr-1" />
+            <span>{format(new Date(attendanceSheet.date), 'dd/MM/yyyy', { locale: fr })}</span>
+          </div>
+          <div className="flex items-center">
+            <Clock className="h-4 w-4 mr-1" />
+            <span>{attendanceSheet.start_time}</span>
+          </div>
+          <div className="flex items-center">
+            <FileText className="h-4 w-4 mr-1" />
+            <span>{attendanceSheet.room || 'A101'}</span>
+          </div>
+          <div className="flex items-center">
+            <Users className="h-4 w-4 mr-1" />
+            <span>{attendanceSheet.instructor?.first_name} {attendanceSheet.instructor?.last_name}</span>
           </div>
         </div>
       </div>
@@ -94,23 +91,23 @@ const AttendanceSheetView: React.FC<AttendanceSheetViewProps> = ({
       {/* Participants List */}
       <div className="p-6">
         <h3 className="text-lg font-semibold mb-4 text-gray-900">
-          Liste des participants ({signedUsers.length})
+          Liste des participants ({signedUsers.length + 3})
         </h3>
         
         <div className="overflow-hidden rounded-lg border">
           <table className="w-full">
-            <thead className="bg-purple-100">
+            <thead className="bg-purple-600 text-white">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-purple-900">
+                <th className="px-4 py-3 text-left text-sm font-semibold">
                   Nom et Prénom
                 </th>
-                <th className="px-6 py-3 text-center text-sm font-semibold text-purple-900">
+                <th className="px-4 py-3 text-center text-sm font-semibold">
                   Statut
                 </th>
-                <th className="px-6 py-3 text-center text-sm font-semibold text-purple-900">
-                  Email
+                <th className="px-4 py-3 text-center text-sm font-semibold">
+                  Motif
                 </th>
-                <th className="px-6 py-3 text-center text-sm font-semibold text-purple-900 w-32">
+                <th className="px-4 py-3 text-center text-sm font-semibold">
                   Signature
                 </th>
               </tr>
@@ -119,27 +116,28 @@ const AttendanceSheetView: React.FC<AttendanceSheetViewProps> = ({
               {/* Present Users */}
               {signedUsers.map((signature, index) => (
                 <tr key={signature.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3">
                     <div className="flex items-center">
-                      <div className="w-2 h-2 rounded-full bg-green-500 mr-3"></div>
-                      <span className="font-medium text-gray-900">
-                        {signature.user?.first_name} {signature.user?.last_name}
-                      </span>
-                      <br />
-                      <span className="text-sm text-gray-500">
-                        Licence Informatique L1
-                      </span>
+                      <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                      <div>
+                        <div className="font-medium text-gray-900">
+                          {signature.user?.first_name} {signature.user?.last_name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Licence Informatique L1
+                        </div>
+                      </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-center">
-                    <Badge className="bg-green-100 text-green-800 border-green-200">
-                      Présent
-                    </Badge>
+                  <td className="px-4 py-3 text-center">
+                    <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                      Présent.e
+                    </span>
                   </td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-600">
-                    {signature.user?.email}
+                  <td className="px-4 py-3 text-center text-sm text-gray-600">
+                    -
                   </td>
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-4 py-3 text-center">
                     {signature.signature_data ? (
                       <img
                         src={signature.signature_data}
@@ -153,69 +151,73 @@ const AttendanceSheetView: React.FC<AttendanceSheetViewProps> = ({
                 </tr>
               ))}
               
-              {/* Add some demo absent users */}
+              {/* Demo delayed user */}
               <tr className="bg-white">
-                <td className="px-6 py-4">
+                <td className="px-4 py-3">
                   <div className="flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-yellow-500 mr-3"></div>
-                    <span className="font-medium text-gray-900">Dan</span>
-                    <br />
-                    <span className="text-sm text-gray-500">Licence Informatique L1</span>
+                    <div className="w-2 h-2 rounded-full bg-yellow-500 mr-2"></div>
+                    <div>
+                      <div className="font-medium text-gray-900">Dan</div>
+                      <div className="text-sm text-gray-500">Licence Informatique L1</div>
+                    </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-center">
-                  <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                <td className="px-4 py-3 text-center">
+                  <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
                     Retard
-                  </Badge>
+                  </span>
                 </td>
-                <td className="px-6 py-4 text-center text-sm text-gray-600">
-                  dan@example.com
+                <td className="px-4 py-3 text-center text-sm text-gray-600">
+                  Transport
                 </td>
-                <td className="px-6 py-4 text-center">
+                <td className="px-4 py-3 text-center">
                   <div className="text-xs text-gray-400">Non signé</div>
                 </td>
               </tr>
 
+              {/* Demo absent users */}
               <tr className="bg-gray-50">
-                <td className="px-6 py-4">
+                <td className="px-4 py-3">
                   <div className="flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-red-500 mr-3"></div>
-                    <span className="font-medium text-gray-900">Eva</span>
-                    <br />
-                    <span className="text-sm text-gray-500">Licence Informatique L1</span>
+                    <div className="w-2 h-2 rounded-full bg-red-500 mr-2"></div>
+                    <div>
+                      <div className="font-medium text-gray-900">Eva</div>
+                      <div className="text-sm text-gray-500">Licence Informatique L1</div>
+                    </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-center">
-                  <Badge className="bg-red-100 text-red-800 border-red-200">
-                    Absent
-                  </Badge>
+                <td className="px-4 py-3 text-center">
+                  <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                    Absent.e
+                  </span>
                 </td>
-                <td className="px-6 py-4 text-center text-sm text-gray-600">
-                  eva@example.com
+                <td className="px-4 py-3 text-center text-sm text-gray-600">
+                  Maladie
                 </td>
-                <td className="px-6 py-4 text-center">
+                <td className="px-4 py-3 text-center">
                   <div className="text-xs text-gray-400">Absent</div>
                 </td>
               </tr>
 
               <tr className="bg-white">
-                <td className="px-6 py-4">
+                <td className="px-4 py-3">
                   <div className="flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-red-500 mr-3"></div>
-                    <span className="font-medium text-gray-900">Frank</span>
-                    <br />
-                    <span className="text-sm text-gray-500">Licence Informatique L1</span>
+                    <div className="w-2 h-2 rounded-full bg-red-500 mr-2"></div>
+                    <div>
+                      <div className="font-medium text-gray-900">Frank</div>
+                      <div className="text-sm text-gray-500">Licence Informatique L1</div>
+                    </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-center">
-                  <Badge className="bg-red-100 text-red-800 border-red-200">
-                    Absent
-                  </Badge>
+                <td className="px-4 py-3 text-center">
+                  <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                    Absent.e
+                  </span>
                 </td>
-                <td className="px-6 py-4 text-center text-sm text-gray-600">
-                  frank@example.com
+                <td className="px-4 py-3 text-center text-sm text-gray-600">
+                  Autre
                 </td>
-                <td className="px-6 py-4 text-center">
+                <td className="px-4 py-3 text-center">
                   <div className="text-xs text-gray-400">Absent</div>
                 </td>
               </tr>
@@ -228,8 +230,8 @@ const AttendanceSheetView: React.FC<AttendanceSheetViewProps> = ({
       <div className="p-6 border-t bg-gray-50">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="text-center">
-            <h4 className="font-semibold mb-4 text-gray-900">Signature du Formateur</h4>
-            <div className="h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-white">
+            <h4 className="font-semibold mb-2 text-gray-900">Signature du Formateur</h4>
+            <div className="h-20 border-2 border-gray-300 rounded-lg flex items-center justify-center bg-white">
               {attendanceSheet.signatures?.find(sig => sig.user_type === 'instructor')?.signature_data ? (
                 <img
                   src={attendanceSheet.signatures.find(sig => sig.user_type === 'instructor')?.signature_data}
@@ -237,15 +239,19 @@ const AttendanceSheetView: React.FC<AttendanceSheetViewProps> = ({
                   className="h-16 max-w-32 object-contain"
                 />
               ) : (
-                <span className="text-gray-500 text-sm">Signature en attente...</span>
+                <div className="w-32 h-12 bg-black/10 rounded flex items-center justify-center">
+                  <span className="text-gray-500 text-xs">Signature requise</span>
+                </div>
               )}
             </div>
           </div>
           
           <div className="text-center">
-            <h4 className="font-semibold mb-4 text-gray-900">Signature de l'Administration</h4>
-            <div className="h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-white">
-              <span className="text-gray-500 text-sm">Signature en attente...</span>
+            <h4 className="font-semibold mb-2 text-gray-900">Signature de l'Administration</h4>
+            <div className="h-20 border-2 border-gray-300 rounded-lg flex items-center justify-center bg-white">
+              <div className="w-32 h-12 bg-black/10 rounded flex items-center justify-center">
+                <span className="text-gray-500 text-xs">Signature requise</span>
+              </div>
             </div>
           </div>
         </div>
