@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, Users, CheckCircle2, AlertCircle, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,12 +10,14 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import AttendanceSigningModal from '../components/emargement/AttendanceSigningModal';
+import AttendanceSheetModal from '../components/administration/AttendanceSheetModal';
 
 const Emargement = () => {
   const [attendanceSheets, setAttendanceSheets] = useState<AttendanceSheet[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedSheet, setSelectedSheet] = useState<AttendanceSheet | null>(null);
   const [isSigningModalOpen, setIsSigningModalOpen] = useState(false);
+  const [showAttendanceSheet, setShowAttendanceSheet] = useState(false);
   const { userId, userRole } = useCurrentUser();
 
   const fetchTodaysAttendance = async () => {
@@ -62,34 +64,67 @@ const Emargement = () => {
   };
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Émargement</h1>
-        <p className="text-gray-600">Pointez votre présence pour les cours d'aujourd'hui</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+      {/* Header Section */}
+      <div className="nect-gradient text-white py-8 px-8">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl font-bold mb-2">Gestion des Émargements</h1>
+          <p className="text-purple-100">Suivez, signez et analysez les présences.</p>
+        </div>
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-        </div>
-      ) : attendanceSheets.length > 0 ? (
+      <div className="max-w-7xl mx-auto p-8">{userRole === 'Formateur' ? (
+        /* Vue Formateur */
         <div className="space-y-6">
-          <h2 className="text-xl font-semibold text-gray-900">Cours d'aujourd'hui</h2>
-          
-          <div className="grid gap-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold text-gray-900">Mon Pointage</h2>
+              <p className="text-gray-600">{format(new Date(), 'EEEE d MMMM yyyy', { locale: fr })}</p>
+            </div>
+            <Button 
+              variant="outline" 
+              className="bg-purple-600 text-white hover:bg-purple-700 border-purple-600"
+            >
+              <Calendar className="h-4 w-4 mr-2" />
+              Aujourd'hui
+            </Button>
+          </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+          </div>
+        ) : attendanceSheets.length > 0 ? (
+          <div className="space-y-6">
             {attendanceSheets.map((sheet) => {
               const isSigned = checkIfSigned(sheet);
+              const signaturesCount = sheet.signatures?.filter(sig => sig.present).length || 0;
               
               return (
-                <Card key={sheet.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <CardTitle className="text-lg">
-                          {sheet.formations?.title}
-                        </CardTitle>
-                        <p className="text-sm text-gray-600">{sheet.formations?.level}</p>
+                <Card key={sheet.id} className="overflow-hidden border-l-4 border-l-purple-500 hover:shadow-lg transition-all">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">[DEMO] {sheet.formations?.title}</h3>
+                        <p className="text-sm text-gray-600 flex items-center mt-1">
+                          <FileText className="h-4 w-4 mr-1" />
+                          {sheet.formations?.level}
+                        </p>
+                        <p className="text-sm text-gray-600 flex items-center mt-1">
+                          <Users className="h-4 w-4 mr-1" />
+                          Formateur: {sheet.instructor?.first_name} {sheet.instructor?.last_name}
+                        </p>
                       </div>
+                      <div className="text-right text-sm text-gray-500">
+                        <div className="flex items-center justify-end mb-1">
+                          <Clock className="h-4 w-4 mr-1" />
+                          {sheet.start_time} - {sheet.end_time}
+                        </div>
+                        <div>{signaturesCount} présents</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
                       <div className="flex gap-2">
                         <Badge className={getStatusColor(sheet.status)}>
                           {sheet.status}
@@ -101,67 +136,140 @@ const Emargement = () => {
                           </Badge>
                         )}
                       </div>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div className="flex items-center text-gray-600">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        {format(new Date(sheet.date), 'EEEE d MMMM', { locale: fr })}
+                      
+                      <div className="flex gap-2">
+                        {userRole === 'Formateur' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedSheet(sheet);
+                              setShowAttendanceSheet(true);
+                            }}
+                          >
+                            Historique
+                          </Button>
+                        )}
+                        {!isSigned ? (
+                          <Button
+                            onClick={() => handleSignAttendance(sheet)}
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            <CheckCircle2 className="h-4 w-4 mr-2" />
+                            Signer ma présence
+                          </Button>
+                        ) : (
+                          <Button variant="outline" disabled className="bg-green-50">
+                            <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" />
+                            Présence confirmée
+                          </Button>
+                        )}
                       </div>
-                      <div className="flex items-center text-gray-600">
-                        <Clock className="h-4 w-4 mr-2" />
-                        {sheet.start_time} - {sheet.end_time}
-                      </div>
-                      {sheet.room && (
-                        <div className="flex items-center text-gray-600">
-                          <Users className="h-4 w-4 mr-2" />
-                          Salle {sheet.room}
-                        </div>
-                      )}
-                      <div className="flex items-center text-gray-600">
-                        <AlertCircle className="h-4 w-4 mr-2" />
-                        {sheet.signatures?.filter(sig => sig.present).length || 0} présents
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end">
-                      {isSigned ? (
-                        <Button variant="outline" disabled className="bg-green-50">
-                          <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" />
-                          Présence confirmée
-                        </Button>
-                      ) : (
-                        <Button
-                          onClick={() => handleSignAttendance(sheet)}
-                          className="bg-purple-600 hover:bg-purple-700 text-white"
-                        >
-                          Pointer ma présence
-                        </Button>
-                      )}
                     </div>
                   </CardContent>
                 </Card>
               );
             })}
           </div>
+        ) : (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-12">
+                <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Aucun cours aujourd'hui
+                </h3>
+                <p className="text-gray-600">
+                  Il n'y a pas de cours programmé pour aujourd'hui.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         </div>
       ) : (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center py-12">
-              <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Aucun cours aujourd'hui
-              </h3>
-              <p className="text-gray-600">
-                Il n'y a pas de cours programmé pour aujourd'hui.
-              </p>
+        /* Vue Étudiant */
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-2">Mon Pointage</h2>
+            <p className="text-gray-600">{format(new Date(), 'EEEE d MMMM yyyy', { locale: fr })}</p>
+          </div>
+
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
             </div>
-          </CardContent>
-        </Card>
+          ) : attendanceSheets.length > 0 ? (
+            <div className="space-y-4">
+              {attendanceSheets.map((sheet) => {
+                const isSigned = checkIfSigned(sheet);
+                
+                return (
+                  <Card key={sheet.id} className="overflow-hidden hover:shadow-lg transition-all">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">[DEMO] {sheet.formations?.title}</h3>
+                          <p className="text-sm text-gray-600 flex items-center mt-1">
+                            <FileText className="h-4 w-4 mr-1" />
+                            {sheet.formations?.level}
+                          </p>
+                          <p className="text-sm text-gray-600 flex items-center mt-1">
+                            <Users className="h-4 w-4 mr-1" />
+                            Formateur: {sheet.instructor?.first_name} {sheet.instructor?.last_name}
+                          </p>
+                        </div>
+                        <div className="text-right text-sm text-gray-500">
+                          <div className="flex items-center justify-end mb-1">
+                            <Clock className="h-4 w-4 mr-1" />
+                            {sheet.start_time} - {sheet.end_time}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4 flex justify-between items-center">
+                        <Badge className={getStatusColor(sheet.status)}>
+                          {sheet.status}
+                        </Badge>
+                        
+                        {!isSigned ? (
+                          <Button
+                            onClick={() => handleSignAttendance(sheet)}
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            <CheckCircle2 className="h-4 w-4 mr-2" />
+                            Signer ma présence
+                          </Button>
+                        ) : (
+                          <Button variant="outline" disabled className="bg-green-50">
+                            <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" />
+                            Présence confirmée
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center py-12">
+                  <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Aucun cours aujourd'hui
+                  </h3>
+                  <p className="text-gray-600">
+                    Il n'y a pas de cours programmé pour aujourd'hui.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
+      </div>
 
       {/* Modal de signature */}
       {selectedSheet && userId && (
@@ -175,6 +283,19 @@ const Emargement = () => {
           userId={userId}
           userRole={userRole || 'Étudiant'}
           onSigned={fetchTodaysAttendance}
+        />
+      )}
+
+      {/* Modal feuille d'émargement */}
+      {selectedSheet && showAttendanceSheet && (
+        <AttendanceSheetModal
+          isOpen={showAttendanceSheet}
+          onClose={() => {
+            setShowAttendanceSheet(false);
+            setSelectedSheet(null);
+          }}
+          attendanceSheet={selectedSheet}
+          onUpdate={fetchTodaysAttendance}
         />
       )}
     </div>
