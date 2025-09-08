@@ -10,6 +10,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import AttendanceSigningModal from '../components/emargement/AttendanceSigningModal';
 import EnhancedAttendanceSheetModal from '../components/administration/EnhancedAttendanceSheetModal';
+import AttendanceHistory from '../components/emargement/AttendanceHistory';
 
 const Emargement = () => {
   const [attendanceSheets, setAttendanceSheets] = useState<AttendanceSheet[]>([]);
@@ -17,6 +18,7 @@ const Emargement = () => {
   const [selectedSheet, setSelectedSheet] = useState<AttendanceSheet | null>(null);
   const [isSigningModalOpen, setIsSigningModalOpen] = useState(false);
   const [showAttendanceSheet, setShowAttendanceSheet] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const { userId, userRole } = useCurrentUser();
 
   // Données fictives pour la demo - Multiple cours
@@ -262,6 +264,39 @@ const Emargement = () => {
     setIsSigningModalOpen(true);
   };
 
+  const handleSignatureComplete = async () => {
+    // Mettre à jour les données locales pour simuler l'ajout temps réel
+    if (selectedSheet && userId) {
+      const newSignature = {
+        id: `sig-${Date.now()}`,
+        attendance_sheet_id: selectedSheet.id,
+        user_id: userId,
+        user_type: 'student' as const,
+        signature_data: 'data:image/png;base64,mock-signature',
+        present: true,
+        signed_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      // Mettre à jour la liste des feuilles d'émargement
+      setAttendanceSheets(prev => prev.map(sheet => {
+        if (sheet.id === selectedSheet.id) {
+          return {
+            ...sheet,
+            signatures: [...(sheet.signatures || []), newSignature]
+          };
+        }
+        return sheet;
+      }));
+
+      toast.success('Présence enregistrée avec succès ! ✅');
+    }
+    
+    // Recharger les données (en production cela viendrait de la DB)
+    await fetchTodaysAttendance();
+  };
+
   const checkIfSigned = (sheet: AttendanceSheet) => {
     return sheet.signatures?.some(sig => sig.user_id === userId) || false;
   };
@@ -319,6 +354,7 @@ const Emargement = () => {
               <Button 
                 variant="outline"
                 className="border-gray-300"
+                onClick={() => setShowHistory(true)}
               >
                 🕒 Historique
               </Button>
@@ -412,7 +448,7 @@ const Emargement = () => {
           attendanceSheet={selectedSheet}
           userId={userId}
           userRole={userRole || 'Étudiant'}
-          onSigned={fetchTodaysAttendance}
+          onSigned={handleSignatureComplete}
         />
       )}
 
@@ -428,6 +464,12 @@ const Emargement = () => {
           onUpdate={fetchTodaysAttendance}
         />
       )}
+
+      {/* Modal historique */}
+      <AttendanceHistory
+        isOpen={showHistory}
+        onClose={() => setShowHistory(false)}
+      />
     </div>
   );
 };
