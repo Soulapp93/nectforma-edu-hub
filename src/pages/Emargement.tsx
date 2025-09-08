@@ -26,7 +26,7 @@ const Emargement = () => {
       schedule_slot_id: 'slot-1',
       formation_id: 'formation-1',
       title: 'Cours HTML5 & CSS3',
-      date: '2025-07-23',
+      date: new Date().toISOString().split('T')[0],
       start_time: '08:00',
       end_time: '10:00',
       room: 'Salle 101',
@@ -55,7 +55,7 @@ const Emargement = () => {
       schedule_slot_id: 'slot-2',
       formation_id: 'formation-2',
       title: 'Cours JavaScript Avancé',
-      date: '2025-07-23',
+      date: new Date().toISOString().split('T')[0],
       start_time: '10:15',
       end_time: '12:15',
       room: 'Salle 102',
@@ -84,7 +84,7 @@ const Emargement = () => {
       schedule_slot_id: 'slot-3',
       formation_id: 'formation-3',
       title: 'Cours React.js',
-      date: '2025-07-23',
+      date: new Date().toISOString().split('T')[0],
       start_time: '13:30',
       end_time: '16:30',
       room: 'Salle 103',
@@ -112,12 +112,70 @@ const Emargement = () => {
       id: 'demo-4',
       schedule_slot_id: 'slot-4',
       formation_id: 'formation-4',
-      title: 'Cours Base de Données',
-      date: '2025-07-23',
-      start_time: '16:45',
-      end_time: '18:45',
-      room: 'Salle 104',
+      title: 'Cours Node.js & Express',
+      date: new Date().toISOString().split('T')[0],
+      start_time: '14:00',
+      end_time: '17:00',
+      room: 'Salle 105',
       instructor_id: 'instructor-4',
+      status: 'En cours',
+      is_open_for_signing: true,
+      generated_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      opened_at: new Date().toISOString(),
+      closed_at: null,
+      validated_at: null,
+      validated_by: null,
+      formations: {
+        title: 'Node.js & Express',
+        level: 'Développement Backend'
+      },
+      instructor: {
+        first_name: 'Antoine',
+        last_name: 'Moreau'
+      },
+      signatures: []
+    },
+    {
+      id: 'demo-5',
+      schedule_slot_id: 'slot-5',
+      formation_id: 'formation-5',
+      title: 'Cours MongoDB & NoSQL',
+      date: new Date().toISOString().split('T')[0],
+      start_time: '09:00',
+      end_time: '11:00',
+      room: 'Salle 106',
+      instructor_id: 'instructor-5',
+      status: 'En attente',
+      is_open_for_signing: false,
+      generated_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      opened_at: null,
+      closed_at: null,
+      validated_at: null,
+      validated_by: null,
+      formations: {
+        title: 'MongoDB & NoSQL',
+        level: 'Bases de Données'
+      },
+      instructor: {
+        first_name: 'Camille',
+        last_name: 'Rousseau'
+      },
+      signatures: []
+    },
+    {
+      id: 'demo-6',
+      schedule_slot_id: 'slot-6',
+      formation_id: 'formation-6',
+      title: 'Cours UX/UI Design',
+      date: new Date().toISOString().split('T')[0],
+      start_time: '15:30',
+      end_time: '18:30',
+      room: 'Salle 107',
+      instructor_id: 'instructor-6',
       status: 'Terminé',
       is_open_for_signing: false,
       generated_at: new Date().toISOString(),
@@ -128,17 +186,17 @@ const Emargement = () => {
       validated_at: null,
       validated_by: null,
       formations: {
-        title: 'Base de Données MySQL',
-        level: 'Développement Web Full-Stack'
+        title: 'UX/UI Design',
+        level: 'Design Graphique'
       },
       instructor: {
-        first_name: 'Sophie',
-        last_name: 'Bernard'
+        first_name: 'Julie',
+        last_name: 'Petit'
       },
       signatures: [
         {
           id: 'sig-1',
-          attendance_sheet_id: 'demo-4',
+          attendance_sheet_id: 'demo-6',
           user_id: userId || 'user-demo',
           user_type: 'student',
           signature_data: 'data:image/png;base64,mock-signature',
@@ -148,6 +206,35 @@ const Emargement = () => {
           updated_at: new Date().toISOString()
         }
       ]
+    },
+    {
+      id: 'demo-7',
+      schedule_slot_id: 'slot-7',
+      formation_id: 'formation-7',
+      title: 'Cours Python & Django',
+      date: new Date().toISOString().split('T')[0],
+      start_time: '11:15',
+      end_time: '12:45',
+      room: 'Salle 108',
+      instructor_id: 'instructor-7',
+      status: 'En cours',
+      is_open_for_signing: true,
+      generated_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      opened_at: new Date().toISOString(),
+      closed_at: null,
+      validated_at: null,
+      validated_by: null,
+      formations: {
+        title: 'Python & Django',
+        level: 'Développement Backend'
+      },
+      instructor: {
+        first_name: 'Lucas',
+        last_name: 'Garcia'
+      },
+      signatures: []
     }
   ];
 
