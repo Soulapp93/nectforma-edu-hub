@@ -260,8 +260,10 @@ const Emargement = () => {
   }, []);
 
   const handleSignAttendance = (sheet: AttendanceSheet) => {
+    console.log('handleSignAttendance called with sheet:', sheet);
     setSelectedSheet(sheet);
     setIsSigningModalOpen(true);
+    console.log('Modal should be opening now');
   };
 
   const handleSignatureComplete = async () => {
@@ -438,15 +440,16 @@ const Emargement = () => {
       </div>
 
       {/* Modal de signature */}
-      {selectedSheet && userId && (
+      {selectedSheet && (
         <AttendanceSigningModal
           isOpen={isSigningModalOpen}
           onClose={() => {
+            console.log('Closing signing modal');
             setIsSigningModalOpen(false);
             setSelectedSheet(null);
           }}
           attendanceSheet={selectedSheet}
-          userId={userId}
+          userId={userId || 'demo-user'}
           userRole={userRole || 'Étudiant'}
           onSigned={handleSignatureComplete}
         />
