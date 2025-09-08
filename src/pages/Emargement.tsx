@@ -19,36 +19,137 @@ const Emargement = () => {
   const [showAttendanceSheet, setShowAttendanceSheet] = useState(false);
   const { userId, userRole } = useCurrentUser();
 
-  // Données fictives pour la demo
-  const mockAttendanceSheet: AttendanceSheet = {
-    id: 'demo-1',
-    schedule_slot_id: 'slot-1',
-    formation_id: 'formation-1',
-    title: 'Cours HTML5 & CSS3',
-    date: '2025-07-23',
-    start_time: '12:27',
-    end_time: '15:27',
-    room: 'Salle 101',
-    instructor_id: 'instructor-1',
-    status: 'En cours',
-    is_open_for_signing: true,
-    generated_at: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    opened_at: new Date().toISOString(),
-    closed_at: null,
-    validated_at: null,
-    validated_by: null,
-    formations: {
-      title: 'HTML5 & CSS3',
-      level: 'Développement Web Full-Stack'
+  // Données fictives pour la demo - Multiple cours
+  const mockAttendanceSheets: AttendanceSheet[] = [
+    {
+      id: 'demo-1',
+      schedule_slot_id: 'slot-1',
+      formation_id: 'formation-1',
+      title: 'Cours HTML5 & CSS3',
+      date: '2025-07-23',
+      start_time: '08:00',
+      end_time: '10:00',
+      room: 'Salle 101',
+      instructor_id: 'instructor-1',
+      status: 'En cours',
+      is_open_for_signing: true,
+      generated_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      opened_at: new Date().toISOString(),
+      closed_at: null,
+      validated_at: null,
+      validated_by: null,
+      formations: {
+        title: 'HTML5 & CSS3',
+        level: 'Développement Web Full-Stack'
+      },
+      instructor: {
+        first_name: 'Pierre',
+        last_name: 'Dubois'
+      },
+      signatures: []
     },
-    instructor: {
-      first_name: 'Pierre',
-      last_name: 'Dubois'
+    {
+      id: 'demo-2',
+      schedule_slot_id: 'slot-2',
+      formation_id: 'formation-2',
+      title: 'Cours JavaScript Avancé',
+      date: '2025-07-23',
+      start_time: '10:15',
+      end_time: '12:15',
+      room: 'Salle 102',
+      instructor_id: 'instructor-2',
+      status: 'En cours',
+      is_open_for_signing: true,
+      generated_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      opened_at: new Date().toISOString(),
+      closed_at: null,
+      validated_at: null,
+      validated_by: null,
+      formations: {
+        title: 'JavaScript Avancé',
+        level: 'Développement Web Full-Stack'
+      },
+      instructor: {
+        first_name: 'Marie',
+        last_name: 'Martin'
+      },
+      signatures: []
     },
-    signatures: []
-  };
+    {
+      id: 'demo-3',
+      schedule_slot_id: 'slot-3',
+      formation_id: 'formation-3',
+      title: 'Cours React.js',
+      date: '2025-07-23',
+      start_time: '13:30',
+      end_time: '16:30',
+      room: 'Salle 103',
+      instructor_id: 'instructor-3',
+      status: 'En cours',
+      is_open_for_signing: true,
+      generated_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      opened_at: new Date().toISOString(),
+      closed_at: null,
+      validated_at: null,
+      validated_by: null,
+      formations: {
+        title: 'React.js',
+        level: 'Développement Web Full-Stack'
+      },
+      instructor: {
+        first_name: 'Thomas',
+        last_name: 'Leroy'
+      },
+      signatures: []
+    },
+    {
+      id: 'demo-4',
+      schedule_slot_id: 'slot-4',
+      formation_id: 'formation-4',
+      title: 'Cours Base de Données',
+      date: '2025-07-23',
+      start_time: '16:45',
+      end_time: '18:45',
+      room: 'Salle 104',
+      instructor_id: 'instructor-4',
+      status: 'Terminé',
+      is_open_for_signing: false,
+      generated_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      opened_at: new Date().toISOString(),
+      closed_at: new Date().toISOString(),
+      validated_at: null,
+      validated_by: null,
+      formations: {
+        title: 'Base de Données MySQL',
+        level: 'Développement Web Full-Stack'
+      },
+      instructor: {
+        first_name: 'Sophie',
+        last_name: 'Bernard'
+      },
+      signatures: [
+        {
+          id: 'sig-1',
+          attendance_sheet_id: 'demo-4',
+          user_id: userId || 'user-demo',
+          user_type: 'student',
+          signature_data: 'data:image/png;base64,mock-signature',
+          present: true,
+          signed_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      ]
+    }
+  ];
 
   const fetchTodaysAttendance = async () => {
     if (!userId || !userRole) return;
@@ -57,7 +158,7 @@ const Emargement = () => {
       setLoading(true);
       // Pour la demo, on utilise des données fictives
       // En production, on utiliserait: attendanceService.getTodaysAttendanceForUser(userId, userRole);
-      setAttendanceSheets([mockAttendanceSheet]);
+      setAttendanceSheets(mockAttendanceSheets);
     } catch (error) {
       console.error('Error fetching attendance:', error);
       toast.error('Erreur lors du chargement des émargements');
