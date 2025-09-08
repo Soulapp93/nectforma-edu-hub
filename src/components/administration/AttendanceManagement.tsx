@@ -9,7 +9,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
-import AttendanceSheetModal from './AttendanceSheetModal';
+import EnhancedAttendanceSheetModal from './EnhancedAttendanceSheetModal';
 import AbsenceReasonModal from './AbsenceReasonModal';
 import AdminValidationModal from './AdminValidationModal';
 
@@ -246,7 +246,7 @@ const AttendanceManagement = () => {
 
       {/* Modals */}
       {selectedSheet && showSheetModal && (
-        <AttendanceSheetModal
+        <EnhancedAttendanceSheetModal
           isOpen={showSheetModal}
           onClose={() => {
             setShowSheetModal(false);

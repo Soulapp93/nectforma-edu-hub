@@ -10,7 +10,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import AttendanceSigningModal from '../components/emargement/AttendanceSigningModal';
-import AttendanceSheetModal from '../components/administration/AttendanceSheetModal';
+import EnhancedAttendanceSheetModal from '../components/administration/EnhancedAttendanceSheetModal';
 
 const Emargement = () => {
   const [attendanceSheets, setAttendanceSheets] = useState<AttendanceSheet[]>([]);
@@ -302,7 +302,7 @@ const Emargement = () => {
 
       {/* Modal feuille d'émargement */}
       {selectedSheet && showAttendanceSheet && (
-        <AttendanceSheetModal
+        <EnhancedAttendanceSheetModal
           isOpen={showAttendanceSheet}
           onClose={() => {
             setShowAttendanceSheet(false);
