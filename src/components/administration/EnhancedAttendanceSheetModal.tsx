@@ -195,9 +195,6 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
           {/* Action Buttons */}
           <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
             <div className="flex gap-3">
-              <Button variant="outline" className="bg-purple-600 text-white hover:bg-purple-700">
-                📋 Imprimer les motifs
-              </Button>
               <Button variant="outline" onClick={handleExportPDF}>
                 <Download className="h-4 w-4 mr-2" />
                 📄 Télécharger en PDF  
