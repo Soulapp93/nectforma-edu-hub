@@ -150,6 +150,7 @@ export type Database = {
       }
       attendance_sheets: {
         Row: {
+          closed_at: string | null
           created_at: string
           date: string
           end_time: string
@@ -157,14 +158,19 @@ export type Database = {
           generated_at: string
           id: string
           instructor_id: string | null
+          is_open_for_signing: boolean | null
+          opened_at: string | null
           room: string | null
           schedule_slot_id: string
           start_time: string
           status: string
           title: string
           updated_at: string
+          validated_at: string | null
+          validated_by: string | null
         }
         Insert: {
+          closed_at?: string | null
           created_at?: string
           date: string
           end_time: string
@@ -172,14 +178,19 @@ export type Database = {
           generated_at?: string
           id?: string
           instructor_id?: string | null
+          is_open_for_signing?: boolean | null
+          opened_at?: string | null
           room?: string | null
           schedule_slot_id: string
           start_time: string
           status?: string
           title: string
           updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
         }
         Update: {
+          closed_at?: string | null
           created_at?: string
           date?: string
           end_time?: string
@@ -187,12 +198,16 @@ export type Database = {
           generated_at?: string
           id?: string
           instructor_id?: string | null
+          is_open_for_signing?: boolean | null
+          opened_at?: string | null
           room?: string | null
           schedule_slot_id?: string
           start_time?: string
           status?: string
           title?: string
           updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
         }
         Relationships: [
           {
@@ -220,6 +235,8 @@ export type Database = {
       }
       attendance_signatures: {
         Row: {
+          absence_reason: string | null
+          absence_reason_type: string | null
           attendance_sheet_id: string
           created_at: string
           id: string
@@ -231,6 +248,8 @@ export type Database = {
           user_type: string
         }
         Insert: {
+          absence_reason?: string | null
+          absence_reason_type?: string | null
           attendance_sheet_id: string
           created_at?: string
           id?: string
@@ -242,6 +261,8 @@ export type Database = {
           user_type: string
         }
         Update: {
+          absence_reason?: string | null
+          absence_reason_type?: string | null
           attendance_sheet_id?: string
           created_at?: string
           id?: string
@@ -1045,6 +1066,10 @@ export type Database = {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      is_attendance_open: {
+        Args: { sheet_date: string; start_time: string }
+        Returns: boolean
       }
     }
     Enums: {
