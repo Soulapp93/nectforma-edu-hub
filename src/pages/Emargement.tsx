@@ -239,12 +239,10 @@ const Emargement = () => {
   ];
 
   const fetchTodaysAttendance = async () => {
-    if (!userId || !userRole) return;
-    
     try {
       setLoading(true);
-      // Pour la demo, on utilise des données fictives
-      // En production, on utiliserait: attendanceService.getTodaysAttendanceForUser(userId, userRole);
+      // Pour la demo, on utilise des données fictives avec ou sans userId
+      console.log('Loading mock data...', mockAttendanceSheets.length, 'sheets');
       setAttendanceSheets(mockAttendanceSheets);
     } catch (error) {
       console.error('Error fetching attendance:', error);
@@ -255,8 +253,9 @@ const Emargement = () => {
   };
 
   useEffect(() => {
+    // Charger les données dès le montage du composant
     fetchTodaysAttendance();
-  }, [userId, userRole]);
+  }, []);
 
   const handleSignAttendance = (sheet: AttendanceSheet) => {
     setSelectedSheet(sheet);
