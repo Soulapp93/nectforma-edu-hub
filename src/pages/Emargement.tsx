@@ -48,6 +48,10 @@ const Emargement = () => {
     return sheet.signatures?.some(sig => sig.user_id === userId) || false;
   };
 
+  const isAttendanceOpen = (sheet: AttendanceSheet) => {
+    return sheet.is_open_for_signing || false;
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'En attente':
@@ -150,7 +154,7 @@ const Emargement = () => {
                             Historique
                           </Button>
                         )}
-                        {!isSigned ? (
+                        {!isSigned && isAttendanceOpen(sheet) ? (
                           <Button
                             onClick={() => handleSignAttendance(sheet)}
                             className="bg-green-600 hover:bg-green-700 text-white"
@@ -158,12 +162,17 @@ const Emargement = () => {
                             <CheckCircle2 className="h-4 w-4 mr-2" />
                             Signer ma présence
                           </Button>
-                        ) : (
+                        ) : isSigned ? (
                           <Button variant="outline" disabled className="bg-green-50">
                             <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" />
                             Présence confirmée
                           </Button>
-                        )}
+                        ) : !isAttendanceOpen(sheet) ? (
+                          <Button variant="outline" disabled>
+                            <Clock className="h-4 w-4 mr-2" />
+                            Émargement fermé
+                          </Button>
+                        ) : null}
                       </div>
                     </div>
                   </CardContent>
@@ -232,7 +241,7 @@ const Emargement = () => {
                           {sheet.status}
                         </Badge>
                         
-                        {!isSigned ? (
+                        {!isSigned && isAttendanceOpen(sheet) ? (
                           <Button
                             onClick={() => handleSignAttendance(sheet)}
                             className="bg-green-600 hover:bg-green-700 text-white"
@@ -240,12 +249,17 @@ const Emargement = () => {
                             <CheckCircle2 className="h-4 w-4 mr-2" />
                             Signer ma présence
                           </Button>
-                        ) : (
+                        ) : isSigned ? (
                           <Button variant="outline" disabled className="bg-green-50">
                             <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" />
                             Présence confirmée
                           </Button>
-                        )}
+                        ) : !isAttendanceOpen(sheet) ? (
+                          <Button variant="outline" disabled>
+                            <Clock className="h-4 w-4 mr-2" />
+                            Émargement fermé
+                          </Button>
+                        ) : null}
                       </div>
                     </CardContent>
                   </Card>

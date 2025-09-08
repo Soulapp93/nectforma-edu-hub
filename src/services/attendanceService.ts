@@ -11,6 +11,11 @@ export interface AttendanceSheet {
   instructor_id?: string;
   room?: string;
   status: string;
+  is_open_for_signing?: boolean;
+  opened_at?: string;
+  closed_at?: string;
+  validated_at?: string;
+  validated_by?: string;
   generated_at: string;
   created_at: string;
   updated_at: string;
@@ -33,6 +38,8 @@ export interface AttendanceSignature {
   signature_data?: string;
   signed_at: string;
   present: boolean;
+  absence_reason?: string;
+  absence_reason_type?: 'congé' | 'arret_travail' | 'autre' | 'injustifié' | 'mission_professionnelle' | 'entreprise';
   created_at: string;
   updated_at: string;
   user?: {
@@ -280,6 +287,129 @@ export const attendanceService = {
       return data;
     } catch (error) {
       console.error('Error updating attendance sheet status:', error);
+      throw error;
+    }
+  },
+
+  // Vérifier si l'émargement est ouvert pour signature
+  async checkIfAttendanceOpen(attendanceSheetId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('attendance_sheets')
+        .select('is_open_for_signing, date, start_time, end_time')
+        .eq('id', attendanceSheetId)
+        .single();
+
+      if (error) throw error;
+      return data?.is_open_for_signing || false;
+    } catch (error) {
+      console.error('Error checking attendance open status:', error);
+      return false;
+    }
+  },
+
+  // Marquer un étudiant comme absent avec motif
+  async markStudentAbsent(attendanceSheetId: string, userId: string, reason?: string, reasonType?: string) {
+    try {
+      const { data, error } = await supabase
+        .from('attendance_signatures')
+        .insert({
+          attendance_sheet_id: attendanceSheetId,
+          user_id: userId,
+          user_type: 'student',
+          present: false,
+          absence_reason: reason,
+          absence_reason_type: reasonType
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error marking student absent:', error);
+      throw error;
+    }
+  },
+
+  // Mettre à jour le motif d'absence
+  async updateAbsenceReason(signatureId: string, reason?: string, reasonType?: string) {
+    try {
+      const { data, error } = await supabase
+        .from('attendance_signatures')
+        .update({
+          absence_reason: reason,
+          absence_reason_type: reasonType
+        })
+        .eq('id', signatureId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error updating absence reason:', error);
+      throw error;
+    }
+  },
+
+  // Valider et signer une feuille d'émargement par l'administration
+  async validateAttendanceSheet(attendanceSheetId: string, adminUserId: string, signatureData?: string) {
+    try {
+      const { data, error } = await supabase
+        .from('attendance_sheets')
+        .update({
+          status: 'Validé',
+          validated_at: new Date().toISOString(),
+          validated_by: adminUserId
+        })
+        .eq('id', attendanceSheetId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Ajouter la signature administrative si fournie
+      if (signatureData) {
+        await supabase
+          .from('attendance_signatures')
+          .insert({
+            attendance_sheet_id: attendanceSheetId,
+            user_id: adminUserId,
+            user_type: 'instructor', // Utilise instructor pour l'admin
+            signature_data: signatureData,
+            present: true
+          });
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error validating attendance sheet:', error);
+      throw error;
+    }
+  },
+
+  // Récupérer les feuilles en attente de validation
+  async getPendingValidationSheets() {
+    try {
+      const { data, error } = await supabase
+        .from('attendance_sheets')
+        .select(`
+          *,
+          formations!formation_id(title, level),
+          users:instructor_id(first_name, last_name),
+          attendance_signatures(
+            *,
+            users(first_name, last_name, email)
+          )
+        `)
+        .eq('status', 'En attente de validation')
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+      return (data as any) || [];
+    } catch (error) {
+      console.error('Error fetching pending validation sheets:', error);
       throw error;
     }
   }
