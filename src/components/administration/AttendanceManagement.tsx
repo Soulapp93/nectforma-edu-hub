@@ -257,7 +257,6 @@ const AttendanceManagement = () => {
                       <TableHead>Horaires</TableHead>
                       <TableHead>Salle</TableHead>
                       <TableHead>Statut</TableHead>
-                      <TableHead>Présents</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -277,9 +276,6 @@ const AttendanceManagement = () => {
                           <Badge className={getStatusColor(sheet.status)}>
                             {sheet.status}
                           </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {sheet.signatures?.filter(s => s.present).length || 0}
                         </TableCell>
                         <TableCell>
                           <Button

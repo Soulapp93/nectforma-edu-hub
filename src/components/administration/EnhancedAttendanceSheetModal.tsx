@@ -226,9 +226,33 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
 
           {/* Participants List */}
           <div className="p-6">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900">
-              Liste des participants ({students.length})
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Liste des participants
+              </h3>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2 bg-green-50 px-3 py-1 rounded-full border border-green-200">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-sm font-medium text-green-700">
+                    {students.filter(s => s.status === 'Présent').length} Présents
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2 bg-red-50 px-3 py-1 rounded-full border border-red-200">
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <span className="text-sm font-medium text-red-700">
+                    {students.filter(s => s.status === 'Absent').length} Absents
+                  </span>
+                </div>
+                {students.filter(s => s.status === 'Retard').length > 0 && (
+                  <div className="flex items-center space-x-2 bg-yellow-50 px-3 py-1 rounded-full border border-yellow-200">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                    <span className="text-sm font-medium text-yellow-700">
+                      {students.filter(s => s.status === 'Retard').length} En retard
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
             
             <div className="overflow-hidden rounded-lg border">
               <table className="w-full">
