@@ -140,7 +140,23 @@ const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ isOpen, onClose }
   const fetchAttendanceHistory = async () => {
     try {
       setLoading(true);
-      // Pour la demo, utiliser les données fictives
+      
+      if (userId && userRole) {
+        // Essayer de charger les vraies données historiques
+        try {
+          const realHistory = await attendanceService.getAttendanceHistoryForUser(userId, userRole);
+          console.log('Real attendance history loaded:', realHistory.length, 'sheets');
+          
+          if (realHistory.length > 0) {
+            setAttendanceSheets(realHistory);
+            return;
+          }
+        } catch (error) {
+          console.log('Falling back to mock history due to:', error);
+        }
+      }
+      
+      // Fallback sur les données de démo
       setAttendanceSheets(mockHistoryData);
     } catch (error) {
       console.error('Error fetching attendance history:', error);

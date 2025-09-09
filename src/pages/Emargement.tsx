@@ -243,8 +243,24 @@ const Emargement = () => {
   const fetchTodaysAttendance = async () => {
     try {
       setLoading(true);
-      // Pour la demo, on utilise des données fictives avec ou sans userId
-      console.log('Loading mock data...', mockAttendanceSheets.length, 'sheets');
+      
+      if (userId && userRole) {
+        // Essayer de charger les vraies données depuis l'API
+        try {
+          const realData = await attendanceService.getTodaysAttendanceForUser(userId, userRole);
+          console.log('Real attendance data loaded:', realData.length, 'sheets');
+          
+          if (realData.length > 0) {
+            setAttendanceSheets(realData);
+            return;
+          }
+        } catch (error) {
+          console.log('Falling back to mock data due to:', error);
+        }
+      }
+      
+      // Fallback sur les données de démo
+      console.log('Using mock data...', mockAttendanceSheets.length, 'sheets');
       setAttendanceSheets(mockAttendanceSheets);
     } catch (error) {
       console.error('Error fetching attendance:', error);

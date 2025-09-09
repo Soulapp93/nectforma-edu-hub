@@ -173,14 +173,17 @@ export const attendanceService = {
         .from('attendance_sheets')
         .select(`
           *,
-          formations!formation_id(title, level),
+          formations!formation_id(title, level, color),
           users:instructor_id(first_name, last_name),
-          attendance_signatures!left(
+          attendance_signatures(
             id,
             user_id,
+            user_type,
             signature_data,
             signed_at,
-            present
+            present,
+            absence_reason,
+            users(first_name, last_name, email)
           )
         `)
         .eq('date', today);
@@ -198,6 +201,9 @@ export const attendanceService = {
         if (userFormations && userFormations.length > 0) {
           const formationIds = userFormations.map(uf => uf.formation_id);
           query = query.in('formation_id', formationIds);
+        } else {
+          // Pour les tests, si pas de formations assignées, retourner toutes les feuilles
+          console.log('No formations assigned to user, returning all sheets for testing');
         }
       }
 
@@ -207,6 +213,58 @@ export const attendanceService = {
       return (data as any) || [];
     } catch (error) {
       console.error('Error fetching today attendance for user:', error);
+      throw error;
+    }
+  },
+
+  // Récupérer l'historique d'émargement pour un utilisateur
+  async getAttendanceHistoryForUser(userId: string, userRole: string) {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      let query = supabase
+        .from('attendance_sheets')
+        .select(`
+          *,
+          formations!formation_id(title, level, color),
+          users:instructor_id(first_name, last_name),
+          attendance_signatures(
+            id,
+            user_id,
+            user_type,
+            signature_data,
+            signed_at,
+            present,
+            absence_reason,
+            users(first_name, last_name, email)
+          )
+        `)
+        .lt('date', today); // Seulement les dates passées
+
+      // Si c'est un formateur, filtrer par instructor_id
+      if (userRole === 'Formateur') {
+        query = query.eq('instructor_id', userId);
+      } else {
+        // Si c'est un étudiant, filtrer par les formations auxquelles il est inscrit
+        const { data: userFormations } = await supabase
+          .from('user_formation_assignments')
+          .select('formation_id')
+          .eq('user_id', userId);
+
+        if (userFormations && userFormations.length > 0) {
+          const formationIds = userFormations.map(uf => uf.formation_id);
+          query = query.in('formation_id', formationIds);
+        }
+      }
+
+      const { data, error } = await query
+        .order('date', { ascending: false })
+        .order('start_time', { ascending: false });
+
+      if (error) throw error;
+      return (data as any) || [];
+    } catch (error) {
+      console.error('Error fetching attendance history for user:', error);
       throw error;
     }
   },
