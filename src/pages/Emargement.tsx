@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, CheckCircle2, AlertCircle, FileText } from 'lucide-react';
+import { Calendar, Clock, Users, CheckCircle2, AlertCircle, FileText, PenTool } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import AttendanceSigningModal from '../components/emargement/AttendanceSigningModal';
+import InstructorSigningModal from '../components/emargement/InstructorSigningModal';
 import EnhancedAttendanceSheetModal from '../components/administration/EnhancedAttendanceSheetModal';
 import AttendanceHistory from '../components/emargement/AttendanceHistory';
 
@@ -17,6 +18,7 @@ const Emargement = () => {
   const [loading, setLoading] = useState(false);
   const [selectedSheet, setSelectedSheet] = useState<AttendanceSheet | null>(null);
   const [isSigningModalOpen, setIsSigningModalOpen] = useState(false);
+  const [isInstructorSigningModalOpen, setIsInstructorSigningModalOpen] = useState(false);
   const [showAttendanceSheet, setShowAttendanceSheet] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const { userId, userRole } = useCurrentUser();
@@ -278,8 +280,20 @@ const Emargement = () => {
   const handleSignAttendance = (sheet: AttendanceSheet) => {
     console.log('handleSignAttendance called with sheet:', sheet);
     setSelectedSheet(sheet);
-    setIsSigningModalOpen(true);
+    
+    // Différencier selon le rôle utilisateur
+    if (userRole === 'Formateur') {
+      setIsInstructorSigningModalOpen(true);
+    } else {
+      setIsSigningModalOpen(true);
+    }
     console.log('Modal should be opening now');
+  };
+
+  const handleInstructorSignAttendance = (sheet: AttendanceSheet) => {
+    console.log('handleInstructorSignAttendance called');
+    setSelectedSheet(sheet);
+    setIsInstructorSigningModalOpen(true);
   };
 
   const handleSignatureComplete = async () => {
@@ -316,7 +330,10 @@ const Emargement = () => {
   };
 
   const checkIfSigned = (sheet: AttendanceSheet) => {
-    return sheet.signatures?.some(sig => sig.user_id === userId) || false;
+    return sheet.signatures?.some(sig => 
+      sig.user_id === userId && 
+      (userRole === 'Formateur' ? sig.user_type === 'instructor' : sig.user_type === 'student')
+    ) || false;
   };
 
   const isAttendanceOpen = (sheet: AttendanceSheet) => {
@@ -418,12 +435,12 @@ const Emargement = () => {
                             className="bg-green-600 hover:bg-green-700 text-white w-full"
                           >
                             <CheckCircle2 className="h-4 w-4 mr-2" />
-                            Signer ma présence
+                            {userRole === 'Formateur' ? 'Signer en tant que formateur' : 'Signer ma présence'}
                           </Button>
                         ) : isSigned ? (
                           <Button variant="outline" disabled className="bg-green-50 w-full">
                             <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" />
-                            Présence confirmée
+                            {userRole === 'Formateur' ? 'Cours validé' : 'Présence confirmée'}
                           </Button>
                         ) : !isAttendanceOpen(sheet) ? (
                           <Button variant="outline" disabled className="w-full">
@@ -455,7 +472,7 @@ const Emargement = () => {
         </div>
       </div>
 
-      {/* Modal de signature */}
+      {/* Modal de signature étudiant */}
       {selectedSheet && (
         <AttendanceSigningModal
           isOpen={isSigningModalOpen}
@@ -467,6 +484,21 @@ const Emargement = () => {
           attendanceSheet={selectedSheet}
           userId={userId || 'demo-user'}
           userRole={userRole || 'Étudiant'}
+          onSigned={handleSignatureComplete}
+        />
+      )}
+
+      {/* Modal de signature formateur */}
+      {selectedSheet && (
+        <InstructorSigningModal
+          isOpen={isInstructorSigningModalOpen}
+          onClose={() => {
+            console.log('Closing instructor signing modal');
+            setIsInstructorSigningModalOpen(false);
+            setSelectedSheet(null);
+          }}
+          attendanceSheet={selectedSheet}
+          instructorId={userId || 'demo-instructor'}
           onSigned={handleSignatureComplete}
         />
       )}

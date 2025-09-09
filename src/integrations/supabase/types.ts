@@ -1059,6 +1059,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_attendance_stats: {
+        Args: { sheet_id: string }
+        Returns: {
+          attendance_rate: number
+          total_absent: number
+          total_expected: number
+          total_present: number
+          total_signed: number
+        }[]
+      }
+      get_attendance_status: {
+        Args: { current_status: string; sheet_date: string; start_time: string }
+        Returns: string
+      }
       get_current_user_establishment: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1068,6 +1082,10 @@ export type Database = {
         Returns: string
       }
       is_attendance_open: {
+        Args: { sheet_date: string; start_time: string }
+        Returns: boolean
+      }
+      is_attendance_open_for_time: {
         Args: { sheet_date: string; start_time: string }
         Returns: boolean
       }
