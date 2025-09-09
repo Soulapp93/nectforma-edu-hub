@@ -248,10 +248,10 @@ const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ isOpen, onClose }
                                 variant="outline"
                               >
                                 {getStatusIcon(isSigned)}
-                                <span className="ml-1">{isSigned ? 'Signé' : 'Non signé'}</span>
+                                <span className="ml-1">{isSigned ? 'Présent.e' : 'Absent.e'}</span>
                               </Badge>
-                              <Badge variant="outline" className="text-xs">
-                                {sheet.status}
+                              <Badge variant="outline" className="text-xs bg-gray-100 text-gray-700">
+                                Terminé
                               </Badge>
                             </div>
                             
