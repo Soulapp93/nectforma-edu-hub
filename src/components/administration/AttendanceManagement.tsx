@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, CheckCircle2, XCircle, Edit3, FileText, Eye } from 'lucide-react';
+import { Calendar, Clock, Users, CheckCircle2, XCircle, Edit3, FileText, Eye, ArrowLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { attendanceService, AttendanceSheet } from '@/services/attendanceService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useFormations } from '@/hooks/useFormations';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -16,13 +17,17 @@ import AdminValidationModal from './AdminValidationModal';
 const AttendanceManagement = () => {
   const [pendingSheets, setPendingSheets] = useState<AttendanceSheet[]>([]);
   const [allSheets, setAllSheets] = useState<AttendanceSheet[]>([]);
+  const [formationSheets, setFormationSheets] = useState<AttendanceSheet[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedSheet, setSelectedSheet] = useState<AttendanceSheet | null>(null);
+  const [selectedFormationId, setSelectedFormationId] = useState<string | null>(null);
   const [showSheetModal, setShowSheetModal] = useState(false);
   const [showReasonModal, setShowReasonModal] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [selectedSignature, setSelectedSignature] = useState<any>(null);
+  const [view, setView] = useState<'formations' | 'sheets'>('formations');
   const { userId } = useCurrentUser();
+  const { formations, loading: formationsLoading } = useFormations();
 
   useEffect(() => {
     fetchData();
@@ -31,17 +36,43 @@ const AttendanceManagement = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [pending, all] = await Promise.all([
-        attendanceService.getPendingValidationSheets(),
-        attendanceService.getAttendanceSheets()
-      ]);
+      const pending = await attendanceService.getPendingValidationSheets();
       setPendingSheets(pending);
-      setAllSheets(all);
     } catch (error) {
       toast.error('Erreur lors du chargement des données');
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchFormationSheets = async (formationId: string) => {
+    try {
+      setLoading(true);
+      const sheets = await attendanceService.getAttendanceSheetsByFormation(formationId);
+      // Trier les feuilles du plus ancien au plus récent
+      sheets.sort((a, b) => {
+        const dateA = new Date(`${a.date} ${a.start_time}`);
+        const dateB = new Date(`${b.date} ${b.start_time}`);
+        return dateA.getTime() - dateB.getTime();
+      });
+      setFormationSheets(sheets);
+    } catch (error) {
+      toast.error('Erreur lors du chargement des feuilles d\'émargement');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFormationClick = async (formationId: string) => {
+    setSelectedFormationId(formationId);
+    setView('sheets');
+    await fetchFormationSheets(formationId);
+  };
+
+  const handleBackToFormations = () => {
+    setView('formations');
+    setSelectedFormationId(null);
+    setFormationSheets([]);
   };
 
   const handleEditReason = (sheet: AttendanceSheet, signature: any) => {
@@ -100,7 +131,7 @@ const AttendanceManagement = () => {
     }
   };
 
-  if (loading) {
+  if (loading || formationsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
@@ -108,22 +139,20 @@ const AttendanceManagement = () => {
     );
   }
 
+  const selectedFormation = formations.find(f => f.id === selectedFormationId);
+
   return (
     <div className="space-y-6">
       {/* Feuilles en attente de validation */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <FileText className="h-5 w-5 mr-2" />
-            Feuilles en attente de validation ({pendingSheets.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {pendingSheets.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              Aucune feuille en attente de validation
-            </div>
-          ) : (
+      {pendingSheets.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <FileText className="h-5 w-5 mr-2" />
+              Feuilles en attente de validation ({pendingSheets.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
             <div className="space-y-4">
               {pendingSheets.map((sheet) => (
                 <Card key={sheet.id} className="border-l-4 border-l-orange-500">
@@ -177,70 +206,133 @@ const AttendanceManagement = () => {
                 </Card>
               ))}
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Toutes les feuilles d'émargement */}
+      {/* Navigation et contenu principal */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <FileText className="h-5 w-5 mr-2" />
-            Toutes les feuilles d'émargement
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center">
+              {view === 'formations' ? (
+                <>
+                  <FileText className="h-5 w-5 mr-2" />
+                  Gestion des émargements par formation
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleBackToFormations}
+                    className="mr-2 p-1"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                  <FileText className="h-5 w-5 mr-2" />
+                  Feuilles d'émargement - {selectedFormation?.title}
+                </>
+              )}
+            </CardTitle>
+          </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Formation</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Horaires</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Présents</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allSheets.map((sheet) => (
-                <TableRow key={sheet.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{sheet.formations?.title}</div>
-                      <div className="text-sm text-gray-500">{sheet.formations?.level}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {format(new Date(sheet.date), 'dd/MM/yyyy', { locale: fr })}
-                  </TableCell>
-                  <TableCell>
-                    {sheet.start_time} - {sheet.end_time}
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(sheet.status)}>
-                      {sheet.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {sheet.signatures?.filter(s => s.present).length || 0}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedSheet(sheet);
-                        setShowSheetModal(true);
-                      }}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      Détails
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          {view === 'formations' ? (
+            // Vue des formations
+            <div className="space-y-4">
+              {formations.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  Aucune formation disponible
+                </div>
+              ) : (
+                formations.map((formation) => (
+                  <Card
+                    key={formation.id}
+                    className="cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => handleFormationClick(formation.id)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-semibold text-gray-900">
+                            {formation.title}
+                          </h3>
+                          <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
+                            <span>{formation.level}</span>
+                            <span>
+                              {format(new Date(formation.start_date), 'dd/MM/yyyy', { locale: fr })} - {' '}
+                              {format(new Date(formation.end_date), 'dd/MM/yyyy', { locale: fr })}
+                            </span>
+                            <Badge variant="secondary">{formation.status}</Badge>
+                          </div>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-gray-400" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          ) : (
+            // Vue des feuilles d'émargement pour une formation
+            <div>
+              {formationSheets.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  Aucune feuille d'émargement pour cette formation
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Horaires</TableHead>
+                      <TableHead>Salle</TableHead>
+                      <TableHead>Statut</TableHead>
+                      <TableHead>Présents</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {formationSheets.map((sheet) => (
+                      <TableRow key={sheet.id}>
+                        <TableCell>
+                          {format(new Date(sheet.date), 'dd/MM/yyyy', { locale: fr })}
+                        </TableCell>
+                        <TableCell>
+                          {sheet.start_time} - {sheet.end_time}
+                        </TableCell>
+                        <TableCell>
+                          {sheet.room || '-'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(sheet.status)}>
+                            {sheet.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {sheet.signatures?.filter(s => s.present).length || 0}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedSheet(sheet);
+                              setShowSheetModal(true);
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Détails
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
