@@ -45,7 +45,7 @@ const Sidebar = () => {
 
   return (
     <SidebarWrapper 
-      className={`${collapsed ? 'w-16' : 'w-64'} nect-gradient text-white shadow-2xl transition-all duration-300`}
+      className={`${collapsed ? 'w-16' : 'w-64'} bg-gradient-to-b from-purple-600 to-purple-800 text-white shadow-2xl transition-all duration-300`}
       collapsible="icon"
     >
       <SidebarHeader className="p-6">
