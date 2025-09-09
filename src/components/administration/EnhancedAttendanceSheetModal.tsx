@@ -243,14 +243,6 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
                     {students.filter(s => s.status === 'Absent').length} Absents
                   </span>
                 </div>
-                {students.filter(s => s.status === 'Retard').length > 0 && (
-                  <div className="flex items-center space-x-2 bg-yellow-50 px-3 py-1 rounded-full border border-yellow-200">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                    <span className="text-sm font-medium text-yellow-700">
-                      {students.filter(s => s.status === 'Retard').length} En retard
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
             
