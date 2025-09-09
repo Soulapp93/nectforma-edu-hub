@@ -12,8 +12,24 @@ import {
   LogOut,
   Monitor
 } from 'lucide-react';
+import {
+  Sidebar as SidebarWrapper,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarHeader,
+  SidebarFooter,
+  useSidebar,
+} from '@/components/ui/sidebar';
 
 const Sidebar = () => {
+  const { state } = useSidebar();
+  const collapsed = state === 'collapsed';
+  
   const navigation = [
     { name: 'Tableau de bord', href: '/', icon: LayoutDashboard },
     { name: 'Administration', href: '/administration', icon: Users },
@@ -28,64 +44,84 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="h-full w-64 bg-gradient-to-b from-purple-600 to-purple-800 text-white shadow-2xl">
-      {/* Logo */}
-      <div className="p-6">
+    <SidebarWrapper 
+      className={`${collapsed ? 'w-16' : 'w-64'} nect-gradient text-white shadow-2xl transition-all duration-300`}
+      collapsible="icon"
+    >
+      <SidebarHeader className="p-6">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
             <span className="text-purple-600 font-bold text-lg">NF</span>
           </div>
-          <div>
-            <h1 className="text-xl font-bold">NECTFORIA</h1>
+          {!collapsed && (
+            <div>
+              <h1 className="text-xl font-bold">NECTFORIA</h1>
+            </div>
+          )}
+        </div>
+      </SidebarHeader>
+
+      <SidebarContent>
+        {/* User Profile */}
+        <div className="px-6 py-4 border-b border-white/20">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-sm font-medium">AN</span>
+            </div>
+            {!collapsed && (
+              <div>
+                <p className="text-sm font-medium">Admin Nect</p>
+                <p className="text-xs text-white/70">Admin</p>
+              </div>
+            )}
           </div>
         </div>
-      </div>
 
-      {/* User Profile */}
-      <div className="px-6 py-4 border-b border-white/20">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-            <span className="text-sm font-medium">AN</span>
-          </div>
-          <div>
-            <p className="text-sm font-medium">Admin Nect</p>
-            <p className="text-xs text-white/70">Admin</p>
-          </div>
-        </div>
-      </div>
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-white/70 px-4 py-2">
+            {!collapsed ? 'Navigation' : ''}
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu className="px-4 space-y-1">
+              {navigation.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <SidebarMenuItem key={item.name}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={item.href}
+                        end={item.href === '/'}
+                        className={({ isActive }) =>
+                          `flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                            isActive
+                              ? 'bg-white/20 text-white'
+                              : 'text-white/80 hover:bg-white/10 hover:text-white'
+                          }`
+                        }
+                        title={collapsed ? item.name : undefined}
+                      >
+                        <Icon className={`${collapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0`} />
+                        {!collapsed && <span>{item.name}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-1">
-        {navigation.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.name}
-              to={item.href}
-              end={item.href === '/'}
-              className={({ isActive }) =>
-                `flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  isActive
-                    ? 'bg-white/20 text-white'
-                    : 'text-white/80 hover:bg-white/10 hover:text-white'
-                }`
-              }
-            >
-              <Icon className="mr-3 h-5 w-5" />
-              {item.name}
-            </NavLink>
-          );
-        })}
-      </nav>
-
-      {/* Logout */}
-      <div className="p-4 border-t border-white/20">
-        <button className="flex items-center px-3 py-2 text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white rounded-lg transition-colors w-full">
-          <LogOut className="mr-3 h-5 w-5" />
-          Déconnexion
+      <SidebarFooter className="p-4 border-t border-white/20">
+        <button 
+          className="flex items-center px-3 py-2 text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white rounded-lg transition-colors w-full"
+          title={collapsed ? 'Déconnexion' : undefined}
+        >
+          <LogOut className={`${collapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0`} />
+          {!collapsed && <span>Déconnexion</span>}
         </button>
-      </div>
-    </div>
+      </SidebarFooter>
+    </SidebarWrapper>
   );
 };
 
