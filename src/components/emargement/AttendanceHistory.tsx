@@ -277,14 +277,17 @@ const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ isOpen, onClose }
                             </div>
                           </div>
                           
-                          <Button 
-                            variant="outline" 
-                            onClick={() => handleViewSheet(sheet)}
-                            className="ml-4"
-                          >
-                            <FileText className="h-4 w-4 mr-2" />
-                            Voir la feuille
-                          </Button>
+                          {/* Seule l'administration peut voir les feuilles d'émargement */}
+                          {userRole === 'admin' && (
+                            <Button 
+                              variant="outline" 
+                              onClick={() => handleViewSheet(sheet)}
+                              className="ml-4"
+                            >
+                              <FileText className="h-4 w-4 mr-2" />
+                              Voir la feuille
+                            </Button>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
