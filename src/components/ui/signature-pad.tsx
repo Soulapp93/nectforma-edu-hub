@@ -15,6 +15,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
   onSave,
   onCancel
 }) => {
+  console.log('SignaturePad component loaded successfully');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isEmpty, setIsEmpty] = useState(true);

@@ -26,6 +26,7 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
   instructorId,
   onSigned
 }) => {
+  console.log('InstructorSigningModal component loaded', { instructorId });
   const [showSignature, setShowSignature] = useState(false);
   const [signing, setSigning] = useState(false);
 
