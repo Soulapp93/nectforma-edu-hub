@@ -18,7 +18,6 @@ const AttendanceManagement = () => {
   const [pendingSheets, setPendingSheets] = useState<AttendanceSheet[]>([]);
   const [allSheets, setAllSheets] = useState<AttendanceSheet[]>([]);
   const [formationSheets, setFormationSheets] = useState<AttendanceSheet[]>([]);
-  const [pendingFormationSheets, setPendingFormationSheets] = useState<AttendanceSheet[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedSheet, setSelectedSheet] = useState<AttendanceSheet | null>(null);
   const [selectedFormationId, setSelectedFormationId] = useState<string | null>(null);
@@ -26,7 +25,7 @@ const AttendanceManagement = () => {
   const [showReasonModal, setShowReasonModal] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [selectedSignature, setSelectedSignature] = useState<any>(null);
-  const [view, setView] = useState<'formations' | 'sheets' | 'pending-formation'>('formations');
+  const [view, setView] = useState<'formations' | 'sheets'>('formations');
   const { userId } = useCurrentUser();
   const { formations, loading: formationsLoading } = useFormations();
 
@@ -50,34 +49,23 @@ const AttendanceManagement = () => {
     try {
       setLoading(true);
       const sheets = await attendanceService.getAttendanceSheetsByFormation(formationId);
-      // Trier les feuilles du plus ancien au plus récent
+      // Trier les feuilles : feuilles en attente de validation en haut, puis par date
       sheets.sort((a, b) => {
+        // Priorité aux feuilles en attente de validation
+        if (a.status === 'En attente de validation' && b.status !== 'En attente de validation') {
+          return -1;
+        }
+        if (b.status === 'En attente de validation' && a.status !== 'En attente de validation') {
+          return 1;
+        }
+        // Ensuite trier par date (plus récent en premier)
         const dateA = new Date(`${a.date} ${a.start_time}`);
         const dateB = new Date(`${b.date} ${b.start_time}`);
-        return dateA.getTime() - dateB.getTime();
+        return dateB.getTime() - dateA.getTime();
       });
       setFormationSheets(sheets);
     } catch (error) {
       toast.error('Erreur lors du chargement des feuilles d\'émargement');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchPendingFormationSheets = async (formationId: string) => {
-    try {
-      setLoading(true);
-      const sheets = await attendanceService.getAttendanceSheetsByFormation(formationId);
-      // Filtrer seulement les feuilles en attente de validation
-      const pending = sheets.filter(sheet => sheet.status === 'En attente de validation');
-      pending.sort((a, b) => {
-        const dateA = new Date(`${a.date} ${a.start_time}`);
-        const dateB = new Date(`${b.date} ${b.start_time}`);
-        return dateA.getTime() - dateB.getTime();
-      });
-      setPendingFormationSheets(pending);
-    } catch (error) {
-      toast.error('Erreur lors du chargement des feuilles en attente');
     } finally {
       setLoading(false);
     }
@@ -93,17 +81,10 @@ const AttendanceManagement = () => {
     await fetchFormationSheets(formationId);
   };
 
-  const handlePendingFormationClick = async (formationId: string) => {
-    setSelectedFormationId(formationId);
-    setView('pending-formation');
-    await fetchPendingFormationSheets(formationId);
-  };
-
   const handleBackToFormations = () => {
     setView('formations');
     setSelectedFormationId(null);
     setFormationSheets([]);
-    setPendingFormationSheets([]);
   };
 
   const handleEditReason = (sheet: AttendanceSheet, signature: any) => {
@@ -143,9 +124,7 @@ const AttendanceManagement = () => {
       );
       await fetchData();
       // Rafraîchir la vue courante
-      if (view === 'pending-formation' && selectedFormationId) {
-        await fetchPendingFormationSheets(selectedFormationId);
-      } else if (view === 'sheets' && selectedFormationId) {
+      if (view === 'sheets' && selectedFormationId) {
         await fetchFormationSheets(selectedFormationId);
       }
     } catch (error) {
@@ -190,19 +169,6 @@ const AttendanceManagement = () => {
                 <>
                   <FileText className="h-5 w-5 mr-2" />
                   Gestion des émargements par formation
-                </>
-              ) : view === 'pending-formation' ? (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleBackToFormations}
-                    className="mr-2 p-1"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                  <FileText className="h-5 w-5 mr-2" />
-                  Feuilles en attente d'être traitées - {selectedFormation?.title}
                 </>
               ) : (
                 <>
@@ -259,7 +225,7 @@ const AttendanceManagement = () => {
                                  className="bg-orange-100 text-orange-800 border-orange-200 cursor-pointer hover:bg-orange-200"
                                  onClick={(e) => {
                                    e.stopPropagation();
-                                   handlePendingFormationClick(formation.id);
+                                   handleFormationClick(formation.id);
                                  }}
                                >
                                  {pendingCount} à traiter
@@ -275,78 +241,6 @@ const AttendanceManagement = () => {
                    );
                  })
               )}
-             </div>
-           ) : view === 'pending-formation' ? (
-             // Vue des feuilles en attente pour une formation
-             <div>
-               {pendingFormationSheets.length === 0 ? (
-                 <div className="text-center py-8 text-gray-500">
-                   Aucune feuille en attente de validation pour cette formation
-                 </div>
-               ) : (
-                 <div className="space-y-4">
-                   <div className="mb-4 p-4 bg-orange-50 border-l-4 border-l-orange-500 rounded-r-lg">
-                     <h3 className="font-semibold text-orange-800 mb-2">En attente d'être traitées</h3>
-                     <p className="text-sm text-orange-700">
-                       {pendingFormationSheets.length} feuille(s) d'émargement nécessitent une validation par l'administration.
-                     </p>
-                   </div>
-                   <Table>
-                     <TableHeader>
-                       <TableRow>
-                         <TableHead>Date</TableHead>
-                         <TableHead>Horaires</TableHead>
-                         <TableHead>Salle</TableHead>
-                         <TableHead>Présents</TableHead>
-                         <TableHead>Actions</TableHead>
-                       </TableRow>
-                     </TableHeader>
-                     <TableBody>
-                       {pendingFormationSheets.map((sheet) => (
-                         <TableRow key={sheet.id} className="bg-orange-50/50">
-                           <TableCell className="font-medium">
-                             {format(new Date(sheet.date), 'dd/MM/yyyy', { locale: fr })}
-                           </TableCell>
-                           <TableCell>
-                             {sheet.start_time} - {sheet.end_time}
-                           </TableCell>
-                           <TableCell>
-                             {sheet.room || '-'}
-                           </TableCell>
-                           <TableCell>
-                             <span className="font-medium">
-                               {sheet.signatures?.filter(s => s.present).length || 0}
-                             </span>
-                           </TableCell>
-                           <TableCell>
-                             <div className="flex space-x-2">
-                               <Button
-                                 variant="outline"
-                                 size="sm"
-                                 onClick={() => {
-                                   setSelectedSheet(sheet);
-                                   setShowSheetModal(true);
-                                 }}
-                               >
-                                 <Edit3 className="h-4 w-4 mr-1" />
-                                 Modifier
-                               </Button>
-                               <Button
-                                 size="sm"
-                                 onClick={() => handleValidateSheet(sheet)}
-                                 className="bg-green-600 hover:bg-green-700"
-                               >
-                                 <CheckCircle2 className="h-4 w-4 mr-1" />
-                                 Valider
-                               </Button>
-                             </div>
-                           </TableCell>
-                         </TableRow>
-                       ))}
-                     </TableBody>
-                   </Table>
-                 </div>
-               )}
              </div>
            ) : (
             // Vue des feuilles d'émargement pour une formation
@@ -397,7 +291,7 @@ const AttendanceManagement = () => {
                             }}
                           >
                             <Eye className="h-4 w-4 mr-1" />
-                            Détails
+                            Consulter
                           </Button>
                         </TableCell>
                       </TableRow>
