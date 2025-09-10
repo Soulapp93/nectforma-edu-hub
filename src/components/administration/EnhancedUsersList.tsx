@@ -20,6 +20,7 @@ const EnhancedUsersList: React.FC = () => {
   const [isExcelImportOpen, setIsExcelImportOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [preselectedRole, setPreselectedRole] = useState<'Admin' | 'Formateur' | 'Étudiant' | null>(null);
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = 
@@ -33,15 +34,25 @@ const EnhancedUsersList: React.FC = () => {
     return matchesSearch && matchesRole && matchesStatus;
   });
 
-  const handleCreateUser = () => {
+  const handleCreateUser = (role?: 'Admin' | 'Formateur' | 'Étudiant') => {
     setSelectedUser(null);
     setModalMode('create');
+    setPreselectedRole(role || null);
     setIsUserModalOpen(true);
+  };
+
+  const handleCreateInstructor = () => {
+    handleCreateUser('Formateur');
+  };
+
+  const handleCreateAdmin = () => {
+    handleCreateUser('Admin');
   };
 
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
     setModalMode('edit');
+    setPreselectedRole(null);
     setIsUserModalOpen(true);
   };
 
@@ -164,14 +175,6 @@ const EnhancedUsersList: React.FC = () => {
           
           <div className="flex flex-wrap gap-3">
             <Button
-              onClick={() => setIsExcelImportOpen(true)}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <Upload className="h-4 w-4" />
-              Import Excel
-            </Button>
-            <Button
               onClick={exportUsers}
               variant="outline"
               className="flex items-center gap-2"
@@ -180,11 +183,27 @@ const EnhancedUsersList: React.FC = () => {
               Exporter
             </Button>
             <Button
-              onClick={handleCreateUser}
+              onClick={() => setIsExcelImportOpen(true)}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Importer Formateurs
+            </Button>
+            <Button
+              onClick={handleCreateAdmin}
+              variant="outline"
+              className="flex items-center gap-2 bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-100"
+            >
+              <Plus className="h-4 w-4" />
+              Ajouter un Administrateur
+            </Button>
+            <Button
+              onClick={handleCreateInstructor}
               className="flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
-              Ajouter un utilisateur
+              Ajouter un Formateur
             </Button>
           </div>
         </div>
@@ -338,6 +357,7 @@ const EnhancedUsersList: React.FC = () => {
         onSave={handleSaveUser}
         user={selectedUser}
         mode={modalMode}
+        preselectedRole={preselectedRole}
       />
 
       {isExcelImportOpen && (

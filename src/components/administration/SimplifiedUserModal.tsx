@@ -14,6 +14,7 @@ interface SimplifiedUserModalProps {
   onSave: (userData: CreateUserData, formationIds: string[]) => Promise<UserType>;
   user?: UserType | null;
   mode: 'create' | 'edit';
+  preselectedRole?: 'Admin' | 'Formateur' | 'Étudiant' | null;
 }
 
 const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
@@ -21,7 +22,8 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
   onClose,
   onSave,
   user,
-  mode
+  mode,
+  preselectedRole
 }) => {
   const [formData, setFormData] = useState({
     first_name: '',
@@ -54,14 +56,14 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
           first_name: '',
           last_name: '',
           email: '',
-          role: 'Étudiant',
+          role: preselectedRole || 'Étudiant',
           status: 'Actif'
         });
       }
       setSelectedFormations([]);
       setErrors({});
     }
-  }, [user, mode, isOpen]);
+  }, [user, mode, isOpen, preselectedRole]);
 
   const loadFormations = async () => {
     try {
@@ -158,7 +160,11 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
       <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">
-            {mode === 'create' ? 'Ajouter un utilisateur' : 'Modifier l\'utilisateur'}
+            {mode === 'create' 
+              ? preselectedRole 
+                ? `Ajouter un ${preselectedRole === 'Admin' ? 'Administrateur' : preselectedRole}`
+                : 'Ajouter un utilisateur'
+              : 'Modifier l\'utilisateur'}
           </h2>
           <button
             onClick={onClose}
@@ -239,7 +245,10 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
                   id="role"
                   value={formData.role}
                   onChange={(e) => handleChange('role', e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  disabled={!!preselectedRole && mode === 'create'}
+                  className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                    !!preselectedRole && mode === 'create' ? 'opacity-60 cursor-not-allowed' : ''
+                  }`}
                 >
                   <option value="Étudiant">Étudiant</option>
                   <option value="Formateur">Formateur</option>
