@@ -49,6 +49,10 @@ const EnhancedUsersList: React.FC = () => {
     handleCreateUser('Admin');
   };
 
+  const handleCreateStudent = () => {
+    handleCreateUser('Étudiant');
+  };
+
   const handleEditUser = (user: User) => {
     setSelectedUser(user);
     setModalMode('edit');
@@ -191,6 +195,14 @@ const EnhancedUsersList: React.FC = () => {
               Importer Formateurs
             </Button>
             <Button
+              onClick={() => setIsExcelImportOpen(true)}
+              variant="outline"
+              className="flex items-center gap-2 bg-green-50 text-green-600 border-green-200 hover:bg-green-100"
+            >
+              <Upload className="h-4 w-4" />
+              Importer Étudiants
+            </Button>
+            <Button
               onClick={handleCreateAdmin}
               variant="outline"
               className="flex items-center gap-2 bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-100"
@@ -200,10 +212,18 @@ const EnhancedUsersList: React.FC = () => {
             </Button>
             <Button
               onClick={handleCreateInstructor}
-              className="flex items-center gap-2"
+              variant="outline"
+              className="flex items-center gap-2 bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
             >
               <Plus className="h-4 w-4" />
               Ajouter un Formateur
+            </Button>
+            <Button
+              onClick={handleCreateStudent}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Ajouter un Étudiant
             </Button>
           </div>
         </div>
