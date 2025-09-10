@@ -12,6 +12,7 @@ import AttendanceSigningModal from '../components/emargement/AttendanceSigningMo
 import InstructorSigningModal from '../components/emargement/InstructorSigningModal';
 import EnhancedAttendanceSheetModal from '../components/administration/EnhancedAttendanceSheetModal';
 import AttendanceHistory from '../components/emargement/AttendanceHistory';
+import SignatureManagementModal from '../components/ui/signature-management-modal';
 
 const Emargement = () => {
   const [attendanceSheets, setAttendanceSheets] = useState<AttendanceSheet[]>([]);
@@ -21,6 +22,8 @@ const Emargement = () => {
   const [isInstructorSigningModalOpen, setIsInstructorSigningModalOpen] = useState(false);
   const [showAttendanceSheet, setShowAttendanceSheet] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const [userSignature, setUserSignature] = useState<string | null>(null);
   const { userId, userRole } = useCurrentUser();
 
   // Données fictives pour la demo - Multiple cours
@@ -275,7 +278,24 @@ const Emargement = () => {
   useEffect(() => {
     // Charger les données dès le montage du composant
     fetchTodaysAttendance();
+    loadUserSignature();
   }, []);
+
+  const loadUserSignature = () => {
+    // Charger la signature utilisateur depuis le localStorage
+    const signature = localStorage.getItem(`user_signature_${userId}`);
+    setUserSignature(signature);
+  };
+
+  const handleSaveUserSignature = async (signatureData: string) => {
+    if (signatureData) {
+      localStorage.setItem(`user_signature_${userId}`, signatureData);
+      setUserSignature(signatureData);
+    } else {
+      localStorage.removeItem(`user_signature_${userId}`);
+      setUserSignature(null);
+    }
+  };
 
   const handleSignAttendance = (sheet: AttendanceSheet) => {
     console.log('handleSignAttendance called with sheet:', sheet);
@@ -380,6 +400,13 @@ const Emargement = () => {
               <p className="text-gray-600">mercredi 23 juillet 2025</p>
             </div>
             <div className="flex gap-3">
+              <Button
+                onClick={() => setShowSignatureModal(true)}
+                className="bg-purple-600 hover:bg-purple-700 text-white"
+              >
+                <PenTool className="h-4 w-4 mr-2" />
+                Enregistrement signature
+              </Button>
               <Button 
                 variant="outline" 
                 className="bg-purple-600 text-white hover:bg-purple-700 border-purple-600"
@@ -520,6 +547,14 @@ const Emargement = () => {
       <AttendanceHistory
         isOpen={showHistory}
         onClose={() => setShowHistory(false)}
+      />
+
+      <SignatureManagementModal
+        isOpen={showSignatureModal}
+        onClose={() => setShowSignatureModal(false)}
+        currentSignature={userSignature}
+        onSave={handleSaveUserSignature}
+        title={`Gestion de ma signature ${userRole === 'Formateur' ? 'formateur' : 'étudiant'}`}
       />
     </div>
   );

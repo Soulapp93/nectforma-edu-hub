@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, CheckCircle2, XCircle, Edit3, FileText, Eye, ArrowLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, Users, CheckCircle2, XCircle, Edit3, FileText, Eye, ArrowLeft, ChevronRight, PenTool } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import EnhancedAttendanceSheetModal from './EnhancedAttendanceSheetModal';
 import AbsenceReasonModal from './AbsenceReasonModal';
 import AdminValidationModal from './AdminValidationModal';
+import SignatureManagementModal from '../ui/signature-management-modal';
 
 const AttendanceManagement = () => {
   const [pendingSheets, setPendingSheets] = useState<AttendanceSheet[]>([]);
@@ -24,14 +25,23 @@ const AttendanceManagement = () => {
   const [showSheetModal, setShowSheetModal] = useState(false);
   const [showReasonModal, setShowReasonModal] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [selectedSignature, setSelectedSignature] = useState<any>(null);
+  const [adminSignature, setAdminSignature] = useState<string | null>(null);
   const [view, setView] = useState<'formations' | 'sheets'>('formations');
   const { userId } = useCurrentUser();
   const { formations, loading: formationsLoading } = useFormations();
 
   useEffect(() => {
     fetchData();
+    loadAdminSignature();
   }, []);
+
+  const loadAdminSignature = () => {
+    // Charger la signature administrateur depuis le localStorage
+    const signature = localStorage.getItem('admin_signature');
+    setAdminSignature(signature);
+  };
 
   const fetchData = async () => {
     try {
@@ -132,6 +142,16 @@ const AttendanceManagement = () => {
     }
   };
 
+  const handleSaveAdminSignature = async (signatureData: string) => {
+    if (signatureData) {
+      localStorage.setItem('admin_signature', signatureData);
+      setAdminSignature(signatureData);
+    } else {
+      localStorage.removeItem('admin_signature');
+      setAdminSignature(null);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'En attente':
@@ -185,6 +205,15 @@ const AttendanceManagement = () => {
                 </>
               )}
             </CardTitle>
+            {view === 'formations' && (
+              <Button
+                onClick={() => setShowSignatureModal(true)}
+                className="bg-purple-600 hover:bg-purple-700 text-white"
+              >
+                <PenTool className="h-4 w-4 mr-2" />
+                Enregistrement signature
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -339,6 +368,14 @@ const AttendanceManagement = () => {
           onValidate={handleConfirmValidation}
         />
       )}
+
+      <SignatureManagementModal
+        isOpen={showSignatureModal}
+        onClose={() => setShowSignatureModal(false)}
+        currentSignature={adminSignature}
+        onSave={handleSaveAdminSignature}
+        title="Gestion de la signature administrative"
+      />
     </div>
   );
 };
