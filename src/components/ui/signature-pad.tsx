@@ -41,12 +41,19 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
 
     // Charger la signature initiale si elle existe
     if (initialSignature) {
+      console.log('Chargement de la signature initiale...');
       const img = new Image();
       img.onload = () => {
+        console.log('Signature initiale chargée avec succès');
         context.drawImage(img, 0, 0, width, height);
         setIsEmpty(false);
       };
+      img.onerror = (error) => {
+        console.error('Erreur lors du chargement de la signature initiale:', error);
+      };
       img.src = initialSignature;
+    } else {
+      setIsEmpty(true);
     }
   }, [width, height, initialSignature]);
 

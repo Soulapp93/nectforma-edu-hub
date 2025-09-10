@@ -33,6 +33,9 @@ const AdminValidationModal: React.FC<AdminValidationModalProps> = ({
     const loadSavedSignature = async () => {
       if (!isOpen || !userId) return;
       
+      // Réinitialiser la signature quand on ouvre le modal
+      setSavedSignature(null);
+      
       try {
         const { data, error } = await supabase
           .from('user_signatures')
@@ -47,6 +50,9 @@ const AdminValidationModal: React.FC<AdminValidationModalProps> = ({
 
         if (data?.signature_data) {
           setSavedSignature(data.signature_data);
+          console.log('Signature administrateur chargée:', !!data.signature_data);
+        } else {
+          console.log('Aucune signature sauvegardée trouvée pour cet administrateur');
         }
       } catch (error) {
         console.error('Error loading admin signature:', error);
@@ -55,6 +61,14 @@ const AdminValidationModal: React.FC<AdminValidationModalProps> = ({
 
     loadSavedSignature();
   }, [isOpen, userId]);
+
+  // Réinitialiser l'état quand le modal se ferme
+  useEffect(() => {
+    if (!isOpen) {
+      setShowSignature(false);
+      setSavedSignature(null);
+    }
+  }, [isOpen]);
 
   const handleStartSigning = () => {
     setShowSignature(true);
