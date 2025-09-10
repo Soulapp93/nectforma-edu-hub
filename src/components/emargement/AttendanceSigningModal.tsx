@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Calendar, Clock, FileText, Users } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { AttendanceSheet, attendanceService } from '@/services/attendanceService
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import SignaturePad from '@/components/ui/signature-pad';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AttendanceSigningModalProps {
   isOpen: boolean;
@@ -29,6 +30,35 @@ const AttendanceSigningModal: React.FC<AttendanceSigningModalProps> = ({
 }) => {
   const [showSignature, setShowSignature] = useState(false);
   const [signing, setSigning] = useState(false);
+  const [savedSignature, setSavedSignature] = useState<string | null>(null);
+
+  // Charger la signature sauvegardée de l'utilisateur
+  useEffect(() => {
+    const loadSavedSignature = async () => {
+      if (!isOpen || !userId) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('user_signatures')
+          .select('signature_data')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error loading saved signature:', error);
+          return;
+        }
+
+        if (data?.signature_data) {
+          setSavedSignature(data.signature_data);
+        }
+      } catch (error) {
+        console.error('Error loading saved signature:', error);
+      }
+    };
+
+    loadSavedSignature();
+  }, [isOpen, userId]);
 
   const handleStartSigning = () => {
     setShowSignature(true);
@@ -150,6 +180,7 @@ const AttendanceSigningModal: React.FC<AttendanceSigningModalProps> = ({
                   height={200}
                   onSave={handleSignature}
                   onCancel={handleCancelSignature}
+                  initialSignature={savedSignature || undefined}
                 />
               </CardContent>
             </Card>

@@ -7,13 +7,15 @@ interface SignaturePadProps {
   height?: number;
   onSave: (signature: string) => void;
   onCancel: () => void;
+  initialSignature?: string;
 }
 
 const SignaturePad: React.FC<SignaturePadProps> = ({
   width = 400,
   height = 200,
   onSave,
-  onCancel
+  onCancel,
+  initialSignature
 }) => {
   console.log('SignaturePad component loaded successfully');
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -36,7 +38,17 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     // Effacer le canvas
     context.fillStyle = '#ffffff';
     context.fillRect(0, 0, width, height);
-  }, [width, height]);
+
+    // Charger la signature initiale si elle existe
+    if (initialSignature) {
+      const img = new Image();
+      img.onload = () => {
+        context.drawImage(img, 0, 0, width, height);
+        setIsEmpty(false);
+      };
+      img.src = initialSignature;
+    }
+  }, [width, height, initialSignature]);
 
   const getMousePos = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
