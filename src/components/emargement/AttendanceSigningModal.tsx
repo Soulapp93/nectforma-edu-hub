@@ -39,10 +39,10 @@ const AttendanceSigningModal: React.FC<AttendanceSigningModalProps> = ({
       
       try {
         const { data, error } = await supabase
-          .from('user_signatures')
+          .from('user_signatures' as any)
           .select('signature_data')
           .eq('user_id', userId)
-          .maybeSingle();
+          .maybeSingle() as any;
 
         if (error) {
           console.error('Error loading saved signature:', error);
