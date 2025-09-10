@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import SignaturePad from '@/components/ui/signature-pad';
@@ -7,6 +7,8 @@ import { AttendanceSheet } from '@/services/attendanceService';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface AdminValidationModalProps {
   isOpen: boolean;
@@ -23,6 +25,36 @@ const AdminValidationModal: React.FC<AdminValidationModalProps> = ({
 }) => {
   const [showSignature, setShowSignature] = useState(false);
   const [validating, setValidating] = useState(false);
+  const [savedSignature, setSavedSignature] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
+
+  // Charger la signature sauvegardée de l'admin
+  useEffect(() => {
+    const loadSavedSignature = async () => {
+      if (!isOpen || !userId) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('user_signatures')
+          .select('signature_data')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error loading admin signature:', error);
+          return;
+        }
+
+        if (data?.signature_data) {
+          setSavedSignature(data.signature_data);
+        }
+      } catch (error) {
+        console.error('Error loading admin signature:', error);
+      }
+    };
+
+    loadSavedSignature();
+  }, [isOpen, userId]);
 
   const handleStartSigning = () => {
     setShowSignature(true);
@@ -141,6 +173,7 @@ const AdminValidationModal: React.FC<AdminValidationModalProps> = ({
               <SignaturePad
                 onSave={handleValidate}
                 onCancel={handleCancelSignature}
+                initialSignature={savedSignature || undefined}
               />
             </div>
           )}
