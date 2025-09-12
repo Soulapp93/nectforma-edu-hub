@@ -21,16 +21,54 @@ export type VirtualClassMaterial = Database['public']['Tables']['virtual_class_m
 
 export const virtualClassService = {
   async getVirtualClasses() {
-    const { data, error } = await supabase
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id;
+
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
+
+    // Récupérer les informations de l'utilisateur
+    const { data: user } = await supabase
+      .from('users')
+      .select('role, establishment_id')
+      .eq('id', userId)
+      .single();
+
+    let query = supabase
       .from('virtual_classes')
       .select(`
         *,
         instructor:users!instructor_id(id, first_name, last_name, email),
         formation:formations!formation_id(id, title, color),
         participants:virtual_class_participants(count)
-      `)
+      `);
+
+    // Filtrage selon le rôle
+    if (user?.role === 'Étudiant') {
+      // Les étudiants ne voient que les classes de leurs formations
+      const { data: userFormations } = await supabase
+        .from('user_formation_assignments')
+        .select('formation_id')
+        .eq('user_id', userId);
+
+      const formationIds = userFormations?.map(uf => uf.formation_id) || [];
+      if (formationIds.length > 0) {
+        query = query.in('formation_id', formationIds);
+      } else {
+        return []; // Aucune formation assignée
+      }
+    } else if (user?.role === 'Formateur') {
+      // Les formateurs ne voient que leurs classes
+      query = query.eq('instructor_id', userId);
+    }
+    // Les administrateurs voient toutes les classes (pas de filtre supplémentaire)
+
+    query = query
       .order('date', { ascending: true })
       .order('start_time', { ascending: true });
+
+    const { data, error } = await query;
 
     if (error) throw error;
     return data as VirtualClass[];

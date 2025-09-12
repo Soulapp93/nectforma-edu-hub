@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Calendar, Clock, Users, Video } from 'lucide-react';
 import { useCreateVirtualClass, useInstructors, useFormationsForSelect } from '@/hooks/useVirtualClasses';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { moduleService } from '@/services/moduleService';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,17 +25,69 @@ const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, onClose, on
   const { data: formations = [] } = useFormationsForSelect();
   const createClassMutation = useCreateVirtualClass();
 
+  const [modules, setModules] = useState<any[]>([]);
+  const [selectedFormation, setSelectedFormation] = useState<any>(null);
+  const [loadingModules, setLoadingModules] = useState(false);
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     instructor_id: userRole === 'Formateur' ? currentUserId : '',
     formation_id: '',
+    module_id: '',
     date: '',
     start_time: '',
     end_time: '',
     max_participants: 25,
     recording_enabled: false,
   });
+
+  // Charger les modules quand une formation est sélectionnée
+  useEffect(() => {
+    const loadModules = async () => {
+      if (formData.formation_id) {
+        setLoadingModules(true);
+        try {
+          const formationData = formations.find(f => f.id === formData.formation_id);
+          setSelectedFormation(formationData);
+          
+          const modulesList = await moduleService.getFormationModules(formData.formation_id);
+          setModules(modulesList || []);
+          
+          // Auto-remplir le titre avec la formation
+          if (formationData && !formData.title) {
+            setFormData(prev => ({
+              ...prev,
+              title: `Classe virtuelle - ${formationData.title}`
+            }));
+          }
+        } catch (error) {
+          console.error('Erreur lors du chargement des modules:', error);
+          setModules([]);
+        }
+        setLoadingModules(false);
+      } else {
+        setModules([]);
+        setSelectedFormation(null);
+      }
+    };
+
+    loadModules();
+  }, [formData.formation_id, formations]);
+
+  // Auto-remplir l'instructeur quand un module est sélectionné
+  useEffect(() => {
+    if (formData.module_id && modules.length > 0) {
+      const selectedModule = modules.find(m => m.id === formData.module_id);
+      if (selectedModule?.module_instructors?.length > 0 && userRole !== 'Formateur') {
+        const instructor = selectedModule.module_instructors[0].instructor;
+        setFormData(prev => ({
+          ...prev,
+          instructor_id: instructor.id
+        }));
+      }
+    }
+  }, [formData.module_id, modules, userRole]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,12 +101,15 @@ const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, onClose, on
         description: '',
         instructor_id: userRole === 'Formateur' ? currentUserId : '',
         formation_id: '',
+        module_id: '',
         date: '',
         start_time: '',
         end_time: '',
         max_participants: 25,
         recording_enabled: false,
       });
+      setModules([]);
+      setSelectedFormation(null);
     } catch (error) {
       console.error('Error creating class:', error);
     }
@@ -89,42 +145,65 @@ const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, onClose, on
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="formation">Formation</Label>
-                <Select value={formData.formation_id} onValueChange={(value) => setFormData({ ...formData, formation_id: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner une formation" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {formations.map((formation) => (
-                      <SelectItem key={formation.id} value={formation.id}>
-                        {formation.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div>
+              <Label htmlFor="formation">Formation</Label>
+              <Select 
+                value={formData.formation_id} 
+                onValueChange={(value) => setFormData({ ...formData, formation_id: value, module_id: '', instructor_id: userRole === 'Formateur' ? currentUserId : '' })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une formation" />
+                </SelectTrigger>
+                <SelectContent>
+                  {formations.map((formation) => (
+                    <SelectItem key={formation.id} value={formation.id}>
+                      {formation.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
+            {formData.formation_id && (
               <div>
-                <Label htmlFor="instructor">Formateur</Label>
+                <Label htmlFor="module">Module</Label>
                 <Select 
-                  value={formData.instructor_id} 
-                  onValueChange={(value) => setFormData({ ...formData, instructor_id: value })}
-                  disabled={userRole === 'Formateur'}
+                  value={formData.module_id} 
+                  onValueChange={(value) => setFormData({ ...formData, module_id: value })}
+                  disabled={loadingModules}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un formateur" />
+                    <SelectValue placeholder={loadingModules ? "Chargement..." : "Sélectionner un module"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {instructors.map((instructor) => (
-                      <SelectItem key={instructor.id} value={instructor.id}>
-                        {instructor.first_name} {instructor.last_name}
+                    {modules.map((module) => (
+                      <SelectItem key={module.id} value={module.id}>
+                        {module.title}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+            )}
+
+            <div>
+              <Label htmlFor="instructor">Formateur</Label>
+              <Select 
+                value={formData.instructor_id} 
+                onValueChange={(value) => setFormData({ ...formData, instructor_id: value })}
+                disabled={userRole === 'Formateur'}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un formateur" />
+                </SelectTrigger>
+                <SelectContent>
+                  {instructors.map((instructor) => (
+                    <SelectItem key={instructor.id} value={instructor.id}>
+                      {instructor.first_name} {instructor.last_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
