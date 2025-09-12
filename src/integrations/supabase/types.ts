@@ -1385,6 +1385,7 @@ export type Database = {
           materials: Json | null
           max_participants: number
           meeting_room_id: string | null
+          module_id: string | null
           recording_enabled: boolean
           recording_url: string | null
           start_time: string
@@ -1406,6 +1407,7 @@ export type Database = {
           materials?: Json | null
           max_participants?: number
           meeting_room_id?: string | null
+          module_id?: string | null
           recording_enabled?: boolean
           recording_url?: string | null
           start_time: string
@@ -1427,6 +1429,7 @@ export type Database = {
           materials?: Json | null
           max_participants?: number
           meeting_room_id?: string | null
+          module_id?: string | null
           recording_enabled?: boolean
           recording_url?: string | null
           start_time?: string
@@ -1461,6 +1464,13 @@ export type Database = {
             columns: ["instructor_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "virtual_classes_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "formation_modules"
             referencedColumns: ["id"]
           },
         ]

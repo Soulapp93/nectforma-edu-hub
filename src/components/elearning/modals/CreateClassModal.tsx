@@ -4,7 +4,7 @@ import { X, Calendar, Clock, Users, Video } from 'lucide-react';
 import { useCreateVirtualClass, useInstructors, useFormationsForSelect } from '@/hooks/useVirtualClasses';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { moduleService } from '@/services/moduleService';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -73,7 +73,7 @@ const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, onClose, on
     };
 
     loadModules();
-  }, [formData.formation_id, formations]);
+  }, [formData.formation_id]);
 
   // Auto-remplir l'instructeur quand un module est sélectionné
   useEffect(() => {
@@ -120,6 +120,7 @@ const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, onClose, on
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Nouvelle classe virtuelle</DialogTitle>
+          <DialogDescription>Remplissez les informations pour planifier une classe virtuelle.</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
