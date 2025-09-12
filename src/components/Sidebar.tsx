@@ -25,23 +25,40 @@ import {
   SidebarFooter,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const Sidebar = () => {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
+  const { userRole } = useCurrentUser();
   
-  const navigation = [
+  // Navigation complète pour les administrateurs
+  const adminNavigation = [
     { name: 'Tableau de bord', href: '/', icon: LayoutDashboard },
     { name: 'Administration', href: '/administration', icon: Users },
     { name: 'Formation', href: '/formations', icon: BookOpen },
     { name: 'E-Learning', href: '/e-learning', icon: Monitor },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
     { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
-    { name: 'Émargement', href: '/emargement', icon: FileText },
     { name: 'Événements', href: '/evenements', icon: Calendar1 },
     { name: 'Coffre-fort', href: '/coffre-fort', icon: FileText },
     { name: 'Gestion du compte', href: '/compte', icon: Settings },
   ];
+
+  // Navigation limitée pour les formateurs et étudiants
+  const limitedNavigation = [
+    { name: 'Formation', href: '/formations', icon: BookOpen },
+    { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
+    { name: 'Émargement', href: '/emargement', icon: FileText },
+    { name: 'Événements', href: '/evenements', icon: Calendar1 },
+    { name: 'Coffre-fort', href: '/coffre-fort', icon: FileText },
+    { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
+    { name: 'E-Learning', href: '/e-learning', icon: Monitor },
+    { name: 'Gestion du compte', href: '/compte', icon: Settings },
+  ];
+
+  // Sélectionner la navigation selon le rôle
+  const navigation = userRole === 'Administrateur' ? adminNavigation : limitedNavigation;
 
   return (
     <SidebarWrapper 
