@@ -41,7 +41,13 @@ const Evenements = () => {
   };
 
   const canCreateEvent = () => {
-    return currentUser?.userRole === 'Administrateur' || currentUser?.userRole === 'Super Administrateur' || currentUser?.userRole === 'Formateur';
+    console.log('Current user:', currentUser);
+    console.log('User role:', currentUser.userRole);
+    return currentUser.userRole === 'Administrateur' || 
+           currentUser.userRole === 'Super Administrateur' || 
+           currentUser.userRole === 'Formateur' ||
+           currentUser.userRole === 'admin' ||
+           currentUser.userRole === 'instructor';
   };
 
   const getStatusColor = (status: string) => {
