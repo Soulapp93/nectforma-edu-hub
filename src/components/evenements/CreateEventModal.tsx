@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import { useCreateEvent } from '@/hooks/useEvents';
 import { useFormations } from '@/hooks/useFormations';
 import { CreateEventData } from '@/services/eventService';
+import { fileUploadService } from '@/services/fileUploadService';
+import { toast } from 'sonner';
 
 interface CreateEventModalProps {
   isOpen: boolean;
@@ -40,6 +42,11 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
     formation_id: 'none',
     audience: ''
   });
+  
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const createEventMutation = useCreateEvent();
   const { formations } = useFormations();
@@ -51,6 +58,58 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
     }));
   };
 
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Vérifier le type de fichier
+      if (!file.type.startsWith('image/')) {
+        toast.error('Veuillez sélectionner une image valide');
+        return;
+      }
+      
+      // Vérifier la taille (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('L\'image ne doit pas dépasser 5MB');
+        return;
+      }
+      
+      setSelectedImage(file);
+      
+      // Créer un aperçu
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageUpload = async (): Promise<string | null> => {
+    if (!selectedImage) return null;
+    
+    setIsUploading(true);
+    try {
+      const imageUrl = await fileUploadService.uploadFile(selectedImage, 'event-images');
+      toast.success('Image téléchargée avec succès');
+      return imageUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Erreur lors du téléchargement de l\'image');
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImagePreview('');
+    handleInputChange('image_url', '');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -59,14 +118,26 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
     }
 
     try {
+      let imageUrl = formData.image_url;
+      
+      // Upload image if selected
+      if (selectedImage) {
+        const uploadedUrl = await handleImageUpload();
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl;
+        }
+      }
+      
       // Préparer les données en nettoyant les valeurs "none"
       const cleanedData = {
         ...formData,
+        image_url: imageUrl,
         formation_id: formData.formation_id === 'none' ? undefined : formData.formation_id,
       };
       
       await createEventMutation.mutateAsync(cleanedData);
       onClose();
+      
       // Reset form
       setFormData({
         title: '',
@@ -83,6 +154,8 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
         formation_id: 'none',
         audience: ''
       });
+      setSelectedImage(null);
+      setImagePreview('');
     } catch (error) {
       console.error('Error creating event:', error);
     }
@@ -224,20 +297,55 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm font-medium">Image</Label>
-                <div className="space-y-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-start"
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Importer
-                  </Button>
+                <div className="space-y-3">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageSelect}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  
+                  {!imagePreview && !formData.image_url && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-start"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {isUploading ? 'Téléchargement...' : 'Importer'}
+                    </Button>
+                  )}
+                  
+                  {(imagePreview || formData.image_url) && (
+                    <div className="relative">
+                      <img
+                        src={imagePreview || formData.image_url}
+                        alt="Aperçu"
+                        className="w-full h-20 object-cover rounded-lg border"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
+                  
                   <Input
                     type="url"
                     value={formData.image_url}
-                    onChange={(e) => handleInputChange('image_url', e.target.value)}
+                    onChange={(e) => {
+                      handleInputChange('image_url', e.target.value);
+                      if (e.target.value && !selectedImage) {
+                        setImagePreview('');
+                      }
+                    }}
                     placeholder="ou URL d'image"
                     className="text-xs"
                   />
@@ -314,10 +422,10 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
             </Button>
             <Button 
               type="submit" 
-              disabled={createEventMutation.isPending || !formData.title || !formData.category}
+              disabled={createEventMutation.isPending || isUploading || !formData.title || !formData.category}
               className="bg-purple-600 hover:bg-purple-700"
             >
-              {createEventMutation.isPending ? 'Création...' : 'Enregistrer'}
+              {createEventMutation.isPending || isUploading ? 'Création...' : 'Enregistrer'}
             </Button>
           </div>
         </form>
