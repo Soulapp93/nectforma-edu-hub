@@ -33,6 +33,9 @@ export interface CreateEventData {
   category: string;
   max_participants?: number;
   image_url?: string;
+  status?: 'Ouvert' | 'Bientôt complet' | 'Complet' | 'Annulé';
+  formation_id?: string;
+  audience?: string;
 }
 
 export interface EventRegistration {
