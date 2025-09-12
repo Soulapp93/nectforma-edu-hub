@@ -1271,6 +1271,200 @@ export type Database = {
           },
         ]
       }
+      virtual_class_materials: {
+        Row: {
+          created_at: string
+          description: string | null
+          file_name: string
+          file_size: number | null
+          file_type: string
+          file_url: string
+          id: string
+          title: string
+          uploaded_by: string | null
+          virtual_class_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          file_name: string
+          file_size?: number | null
+          file_type: string
+          file_url: string
+          id?: string
+          title: string
+          uploaded_by?: string | null
+          virtual_class_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          title?: string
+          uploaded_by?: string | null
+          virtual_class_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "virtual_class_materials_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "virtual_class_materials_virtual_class_id_fkey"
+            columns: ["virtual_class_id"]
+            isOneToOne: false
+            referencedRelation: "virtual_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      virtual_class_participants: {
+        Row: {
+          created_at: string
+          id: string
+          joined_at: string | null
+          left_at: string | null
+          status: string
+          user_id: string
+          virtual_class_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          joined_at?: string | null
+          left_at?: string | null
+          status?: string
+          user_id: string
+          virtual_class_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          joined_at?: string | null
+          left_at?: string | null
+          status?: string
+          user_id?: string
+          virtual_class_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "virtual_class_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "virtual_class_participants_virtual_class_id_fkey"
+            columns: ["virtual_class_id"]
+            isOneToOne: false
+            referencedRelation: "virtual_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      virtual_classes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          current_participants: number
+          date: string
+          description: string | null
+          end_time: string
+          establishment_id: string
+          formation_id: string | null
+          id: string
+          instructor_id: string | null
+          materials: Json | null
+          max_participants: number
+          meeting_room_id: string | null
+          recording_enabled: boolean
+          recording_url: string | null
+          start_time: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          current_participants?: number
+          date: string
+          description?: string | null
+          end_time: string
+          establishment_id: string
+          formation_id?: string | null
+          id?: string
+          instructor_id?: string | null
+          materials?: Json | null
+          max_participants?: number
+          meeting_room_id?: string | null
+          recording_enabled?: boolean
+          recording_url?: string | null
+          start_time: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          current_participants?: number
+          date?: string
+          description?: string | null
+          end_time?: string
+          establishment_id?: string
+          formation_id?: string | null
+          id?: string
+          instructor_id?: string | null
+          materials?: Json | null
+          max_participants?: number
+          meeting_room_id?: string | null
+          recording_enabled?: boolean
+          recording_url?: string | null
+          start_time?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "virtual_classes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "virtual_classes_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "virtual_classes_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "virtual_classes_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

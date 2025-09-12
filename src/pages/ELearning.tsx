@@ -7,30 +7,39 @@ import Materials from '../components/elearning/Materials';
 import SettingsTab from '../components/elearning/Settings';
 import VideoCall from '../components/elearning/VideoCall';
 import CreateClassModal from '../components/elearning/modals/CreateClassModal';
+import { VirtualClass } from '@/services/virtualClassService';
 
-interface VirtualClass {
+// Legacy interface for video call compatibility
+interface LegacyVirtualClass {
   id: number;
   title: string;
   instructor: string;
-  status: 'En cours' | 'Programmé' | 'Terminé';
   participants: number;
   maxParticipants: number;
   startTime: string;
   endTime: string;
   date: string;
-  description: string;
-  materials: string[];
-  recording: boolean;
 }
 
 const ELearning = () => {
   const [activeTab, setActiveTab] = useState('classes');
-  const [selectedClass, setSelectedClass] = useState<VirtualClass | null>(null);
+  const [selectedClass, setSelectedClass] = useState<LegacyVirtualClass | null>(null);
   const [isInCall, setIsInCall] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const handleJoinClass = (classItem: VirtualClass) => {
-    setSelectedClass(classItem);
+    // Convert to legacy format for video call compatibility
+    const legacyClass: LegacyVirtualClass = {
+      id: parseInt(classItem.id.slice(-8), 16), // Convert UUID to number for compatibility
+      title: classItem.title,
+      instructor: classItem.instructor ? `${classItem.instructor.first_name} ${classItem.instructor.last_name}` : 'Instructeur',
+      participants: classItem.current_participants,
+      maxParticipants: classItem.max_participants,
+      startTime: classItem.start_time,
+      endTime: classItem.end_time,
+      date: classItem.date
+    };
+    setSelectedClass(legacyClass);
     setIsInCall(true);
   };
 
@@ -41,7 +50,7 @@ const ELearning = () => {
 
   const handleCreateClass = (classData: any) => {
     console.log('Nouvelle classe créée:', classData);
-    // Ici, vous pourriez ajouter la logique pour sauvegarder la classe
+    setIsCreateModalOpen(false);
   };
 
   // If user is in a video call, show the video call interface
@@ -59,12 +68,12 @@ const ELearning = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">E-Learning</h1>
-          <p className="text-gray-600">Gérez vos cours en ligne et vidéoconférences</p>
+          <h1 className="text-3xl font-bold mb-2">E-Learning</h1>
+          <p className="text-muted-foreground">Gérez vos cours en ligne et vidéoconférences</p>
         </div>
         <button 
           onClick={() => setIsCreateModalOpen(true)}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center font-medium"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-lg flex items-center font-medium transition-colors"
         >
           <Plus className="h-5 w-5 mr-2" />
           Nouvelle classe virtuelle
@@ -72,7 +81,7 @@ const ELearning = () => {
       </div>
 
       {/* Tabs Navigation */}
-      <div className="border-b border-gray-200 mb-6">
+      <div className="border-b mb-6">
         <nav className="-mb-px flex space-x-8">
           {[
             { id: 'classes', label: 'Classes virtuelles', icon: Monitor },
@@ -87,8 +96,8 @@ const ELearning = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
-                    ? 'border-purple-500 text-purple-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground'
                 }`}
               >
                 <Icon className="h-4 w-4 mr-2" />
