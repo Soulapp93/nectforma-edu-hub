@@ -150,7 +150,7 @@ const VirtualClasses: React.FC<VirtualClassesProps> = ({ onJoinClass }) => {
                     {classItem.status}
                   </Badge>
                 </div>
-                {(userRole === 'Admin' || userRole === 'Formateur') && (
+                {userRole === 'Admin' && (
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                     <div className="flex space-x-1">
                       <Button variant="ghost" size="sm" className="p-1">
@@ -205,13 +205,15 @@ const VirtualClasses: React.FC<VirtualClassesProps> = ({ onJoinClass }) => {
               </div>
 
               <div className="flex space-x-2 pt-2">
-                <Button
-                  onClick={() => handleJoinClass(classItem)}
-                  className="flex-1"
-                  disabled={joinClassMutation.isPending}
-                >
-                  {classItem.status === 'En cours' ? 'Rejoindre' : 'S\'inscrire'}
-                </Button>
+                {(userRole === 'Étudiant' || userRole === 'Formateur') && (
+                  <Button
+                    onClick={() => handleJoinClass(classItem)}
+                    className="flex-1"
+                    disabled={joinClassMutation.isPending}
+                  >
+                    Rejoindre
+                  </Button>
+                )}
                 <Button variant="outline" size="sm">
                   Détails
                 </Button>

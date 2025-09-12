@@ -85,7 +85,6 @@ const ELearning = () => {
         <nav className="-mb-px flex space-x-8">
           {[
             { id: 'classes', label: 'Classes virtuelles', icon: Monitor },
-            { id: 'recordings', label: 'Enregistrements', icon: Video },
             { id: 'materials', label: 'Ressources', icon: FileText },
             { id: 'settings', label: 'Paramètres', icon: Settings }
           ].map((tab) => {
@@ -112,10 +111,6 @@ const ELearning = () => {
       <div className="min-h-screen">
         {activeTab === 'classes' && (
           <VirtualClasses onJoinClass={handleJoinClass} />
-        )}
-        
-        {activeTab === 'recordings' && (
-          <Recordings />
         )}
         
         {activeTab === 'materials' && (
