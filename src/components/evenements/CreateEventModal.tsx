@@ -37,7 +37,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
     max_participants: 0,
     image_url: '',
     status: 'Ouvert',
-    formation_id: '',
+    formation_id: 'none',
     audience: ''
   });
 
@@ -59,7 +59,13 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
     }
 
     try {
-      await createEventMutation.mutateAsync(formData);
+      // Préparer les données en nettoyant les valeurs "none"
+      const cleanedData = {
+        ...formData,
+        formation_id: formData.formation_id === 'none' ? undefined : formData.formation_id,
+      };
+      
+      await createEventMutation.mutateAsync(cleanedData);
       onClose();
       // Reset form
       setFormData({
@@ -74,7 +80,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
         max_participants: 0,
         image_url: '',
         status: 'Ouvert',
-        formation_id: '',
+        formation_id: 'none',
         audience: ''
       });
     } catch (error) {
@@ -191,7 +197,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
                     <SelectValue placeholder="Aucune" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Aucune</SelectItem>
+                    <SelectItem value="none">Aucune</SelectItem>
                     {formations.map(formation => (
                       <SelectItem key={formation.id} value={formation.id}>
                         {formation.title}
