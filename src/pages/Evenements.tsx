@@ -168,7 +168,11 @@ const Evenements = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredEvents.map((event) => (
-            <div key={event.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+            <div 
+              key={event.id} 
+              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:scale-[1.02] transition-all duration-300 cursor-pointer group"
+              onClick={() => handleViewDetails(event)}
+            >
               <div className="h-48 bg-gradient-to-br from-purple-500 to-blue-600 relative">
                 <div className="absolute top-4 left-4">
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${getCategoryColor(event.category)}`}>
@@ -190,10 +194,18 @@ const Evenements = () => {
                     <span className="text-sm">{event.start_time}</span>
                   </div>
                 </div>
+                {/* Overlay pour indiquer la cliquabilité */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
+                  <div className="bg-white/0 group-hover:bg-white/20 backdrop-blur-sm rounded-full p-3 transform scale-0 group-hover:scale-100 transition-transform duration-300">
+                    <Eye className="h-6 w-6 text-white" />
+                  </div>
+                </div>
               </div>
               
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{event.title}</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors">
+                  {event.title}
+                </h3>
                 <p className="text-gray-600 text-sm mb-4 line-clamp-2">{event.description}</p>
                 
                 <div className="space-y-2 mb-4">
@@ -208,17 +220,17 @@ const Evenements = () => {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <button
-                    onClick={() => handleViewDetails(event)}
-                    className="flex items-center text-purple-600 hover:text-purple-700 text-sm font-medium"
-                  >
+                  <div className="flex items-center text-purple-600 text-sm font-medium">
                     <Eye className="h-4 w-4 mr-1" />
-                    Voir détails
-                  </button>
+                    Cliquer pour voir les détails
+                  </div>
                   <button
-                    onClick={() => handleRegister(event.id, event.is_registered || false)}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Empêche l'ouverture des détails
+                      handleRegister(event.id, event.is_registered || false);
+                    }}
                     disabled={registerMutation.isPending || unregisterMutation.isPending || (event.max_participants > 0 && event.registered_count >= event.max_participants && !event.is_registered)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:scale-105 ${
                       event.is_registered 
                         ? 'bg-red-600 hover:bg-red-700 text-white'
                         : 'bg-purple-600 hover:bg-purple-700 disabled:bg-gray-300 text-white'
