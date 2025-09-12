@@ -6,11 +6,12 @@ import { User } from '@/services/userService';
 import * as XLSX from 'xlsx';
 
 interface ExcelImportProps {
-  onImport: (users: Omit<User, 'id' | 'created_at' | 'updated_at'>[]) => Promise<void>;
+  onImport: (users: Omit<User, 'id' | 'created_at' | 'updated_at'>[], formationIds?: string[]) => Promise<void>;
   onClose: () => void;
+  preselectedRole?: 'Étudiant' | 'Formateur';
 }
 
-const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose }) => {
+const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselectedRole }) => {
   const [file, setFile] = useState<File | null>(null);
   const [previewData, setPreviewData] = useState<any[]>([]);
   const [importing, setImporting] = useState(false);
@@ -31,12 +32,12 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose }) => {
         
         // Mapper les données Excel vers notre format
         const mappedData = jsonData.map((row: any) => ({
-          first_name: row['Prénom'] || row['First Name'] || row['first_name'] || '',
-          last_name: row['Nom'] || row['Last Name'] || row['last_name'] || '',
+          first_name: row['Prénom'] || row['prénom'] || row['First Name'] || row['first_name'] || '',
+          last_name: row['Nom'] || row['nom'] || row['Last Name'] || row['last_name'] || '',
           email: row['Email'] || row['email'] || '',
-          phone: row['Téléphone'] || row['Phone'] || row['phone'] || '',
-          role: row['Rôle'] || row['Role'] || row['role'] || 'Étudiant',
-          status: row['Statut'] || row['Status'] || row['status'] || 'En attente'
+          role: preselectedRole || row['Rôle'] || row['Role'] || row['role'] || 'Étudiant',
+          status: 'En attente',
+          formationIds: row['Formations'] || row['formations'] || ''
         }));
 
         // Valider les données
@@ -60,7 +61,17 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose }) => {
 
     try {
       setImporting(true);
-      await onImport(previewData as Omit<User, 'id' | 'created_at' | 'updated_at'>[]);
+      
+      // Extraire les IDs de formations depuis les données
+      const usersWithFormations = previewData.map((user: any) => {
+        const { formationIds, ...userData } = user;
+        return userData;
+      });
+      
+      // Extraire les formations pour le premier utilisateur (assumption: tous ont les mêmes formations)
+      const firstUserFormations = previewData[0]?.formationIds?.split(',').map((f: string) => f.trim()).filter(Boolean) || [];
+      
+      await onImport(usersWithFormations as Omit<User, 'id' | 'created_at' | 'updated_at'>[], firstUserFormations);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors de l\'import');
@@ -70,32 +81,65 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose }) => {
   };
 
   const downloadTemplate = () => {
-    // Créer un template Excel
-    const template = [
-      {
-        'Prénom': 'Jean',
-        'Nom': 'Dupont',
-        'Email': 'jean.dupont@exemple.com',
-        'Téléphone': '01 23 45 67 89',
-        'Rôle': 'Étudiant',
-        'Statut': 'En attente'
-      },
-      {
-        'Prénom': 'Marie',
-        'Nom': 'Martin',
-        'Email': 'marie.martin@exemple.com',
-        'Téléphone': '01 98 76 54 32',
-        'Rôle': 'Formateur',
-        'Statut': 'Actif'
-      }
-    ];
+    // Créer un template Excel selon le rôle
+    let template;
+    let fileName;
+
+    if (preselectedRole === 'Étudiant') {
+      template = [
+        {
+          'Prénom': 'Jean',
+          'Nom': 'Dupont',
+          'Email': 'jean.dupont@exemple.com',
+          'Rôle': 'Étudiant',
+          'Formations': 'Formation Web,Formation Mobile'
+        },
+        {
+          'Prénom': 'Marie',
+          'Nom': 'Martin', 
+          'Email': 'marie.martin@exemple.com',
+          'Rôle': 'Étudiant',
+          'Formations': 'Formation Web'
+        }
+      ];
+      fileName = 'modele_etudiants.xlsx';
+    } else if (preselectedRole === 'Formateur') {
+      template = [
+        {
+          'Prénom': 'Pierre',
+          'Nom': 'Durand',
+          'Email': 'pierre.durand@exemple.com',
+          'Rôle': 'Formateur',
+          'Formations': 'Formation Web,Formation Mobile'
+        },
+        {
+          'Prénom': 'Sophie',
+          'Nom': 'Bernard',
+          'Email': 'sophie.bernard@exemple.com',
+          'Rôle': 'Formateur',
+          'Formations': 'Formation Design'
+        }
+      ];
+      fileName = 'modele_formateurs.xlsx';
+    } else {
+      template = [
+        {
+          'Prénom': 'Jean',
+          'Nom': 'Dupont',
+          'Email': 'jean.dupont@exemple.com',
+          'Rôle': 'Étudiant',
+          'Formations': 'Formation Web'
+        }
+      ];
+      fileName = 'modele_utilisateurs.xlsx';
+    }
 
     const ws = XLSX.utils.json_to_sheet(template);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Utilisateurs');
     
     // Télécharger le fichier
-    XLSX.writeFile(wb, 'modele_utilisateurs.xlsx');
+    XLSX.writeFile(wb, fileName);
   };
 
   const triggerFileSelect = () => {
@@ -108,10 +152,14 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl shadow-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Import Excel des utilisateurs</h2>
-          <p className="text-gray-600 mt-1">Importez plusieurs utilisateurs à partir d'un fichier Excel</p>
-        </div>
+      <div className="p-6 border-b border-gray-200">
+        <h2 className="text-xl font-semibold text-gray-900">
+          Import Excel des {preselectedRole === 'Étudiant' ? 'étudiants' : preselectedRole === 'Formateur' ? 'formateurs' : 'utilisateurs'}
+        </h2>
+        <p className="text-gray-600 mt-1">
+          Importez plusieurs {preselectedRole === 'Étudiant' ? 'étudiants' : preselectedRole === 'Formateur' ? 'formateurs' : 'utilisateurs'} à partir d'un fichier Excel
+        </p>
+      </div>
 
         <div className="p-6">
           {!file ? (
@@ -154,10 +202,12 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose }) => {
               <div className="mt-6 text-left bg-blue-50 p-4 rounded-lg">
                 <h4 className="font-medium text-blue-900 mb-2">Instructions :</h4>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• Les colonnes requises sont : Prénom, Nom, Email</li>
-                  <li>• Les colonnes optionnelles : Téléphone, Rôle, Statut</li>
-                  <li>• Rôles acceptés : Admin, Formateur, Étudiant</li>
-                  <li>• Statuts acceptés : Actif, Inactif, En attente</li>
+                  <li>• Les colonnes requises sont : Prénom, Nom, Email, Rôle, Formations</li>
+                  <li>• Dans la colonne "Formations", séparez les formations par des virgules</li>
+                  <li>• Exemple : "Formation Web,Formation Mobile,Formation Design"</li>
+                  {preselectedRole && (
+                    <li>• Le rôle sera automatiquement défini comme "{preselectedRole}"</li>
+                  )}
                   <li>• Téléchargez le modèle Excel pour voir un exemple</li>
                 </ul>
               </div>
@@ -186,45 +236,43 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose }) => {
               {previewData.length > 0 && (
                 <div>
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    Aperçu des données ({previewData.length} utilisateurs)
+                    Aperçu des données ({previewData.length} {preselectedRole === 'Étudiant' ? 'étudiants' : preselectedRole === 'Formateur' ? 'formateurs' : 'utilisateurs'})
                   </h3>
                   
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                            Prénom
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                            Nom
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                            Email
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                            Téléphone
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                            Rôle
-                          </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                            Statut
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {previewData.slice(0, 10).map((user, index) => (
-                          <tr key={index}>
-                            <td className="px-4 py-3 text-sm text-gray-900">{user.first_name}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{user.last_name}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{user.email}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{user.phone || '-'}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{user.role}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{user.status}</td>
-                          </tr>
-                        ))}
-                      </tbody>
+                       <thead className="bg-gray-50">
+                         <tr>
+                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                             Prénom
+                           </th>
+                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                             Nom
+                           </th>
+                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                             Email
+                           </th>
+                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                             Rôle
+                           </th>
+                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                             Formations
+                           </th>
+                         </tr>
+                       </thead>
+                       <tbody className="bg-white divide-y divide-gray-200">
+                         {previewData.slice(0, 10).map((user: any, index) => (
+                           <tr key={index}>
+                             <td className="px-4 py-3 text-sm text-gray-900">{user.first_name}</td>
+                             <td className="px-4 py-3 text-sm text-gray-900">{user.last_name}</td>
+                             <td className="px-4 py-3 text-sm text-gray-900">{user.email}</td>
+                             <td className="px-4 py-3 text-sm text-gray-900">{user.role}</td>
+                             <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" title={user.formationIds}>
+                               {user.formationIds || '-'}
+                             </td>
+                           </tr>
+                         ))}
+                       </tbody>
                     </table>
                     {previewData.length > 10 && (
                       <p className="text-sm text-gray-500 mt-2 text-center">

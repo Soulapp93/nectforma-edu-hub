@@ -18,6 +18,8 @@ const EnhancedUsersList: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isExcelImportOpen, setIsExcelImportOpen] = useState(false);
+  const [isStudentExcelImportOpen, setIsStudentExcelImportOpen] = useState(false);
+  const [isInstructorExcelImportOpen, setIsInstructorExcelImportOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [preselectedRole, setPreselectedRole] = useState<'Admin' | 'Formateur' | 'Étudiant' | null>(null);
@@ -75,7 +77,7 @@ const EnhancedUsersList: React.FC = () => {
     throw new Error('Mode invalide');
   };
 
-  const handleExcelImport = async (usersData: CreateUserData[]) => {
+  const handleExcelImport = async (usersData: CreateUserData[], formationIds?: string[]) => {
     await bulkCreateUsers(usersData);
   };
 
@@ -187,7 +189,7 @@ const EnhancedUsersList: React.FC = () => {
               Exporter
             </Button>
             <Button
-              onClick={() => setIsExcelImportOpen(true)}
+              onClick={() => setIsInstructorExcelImportOpen(true)}
               variant="outline"
               className="flex items-center gap-2"
             >
@@ -195,7 +197,7 @@ const EnhancedUsersList: React.FC = () => {
               Importer Formateurs
             </Button>
             <Button
-              onClick={() => setIsExcelImportOpen(true)}
+              onClick={() => setIsStudentExcelImportOpen(true)}
               variant="outline"
               className="flex items-center gap-2 bg-green-50 text-green-600 border-green-200 hover:bg-green-100"
             >
@@ -384,6 +386,22 @@ const EnhancedUsersList: React.FC = () => {
         <ExcelImport
           onImport={handleExcelImport}
           onClose={() => setIsExcelImportOpen(false)}
+        />
+      )}
+
+      {isInstructorExcelImportOpen && (
+        <ExcelImport
+          onImport={handleExcelImport}
+          onClose={() => setIsInstructorExcelImportOpen(false)}
+          preselectedRole="Formateur"
+        />
+      )}
+
+      {isStudentExcelImportOpen && (
+        <ExcelImport
+          onImport={handleExcelImport}
+          onClose={() => setIsStudentExcelImportOpen(false)}
+          preselectedRole="Étudiant"
         />
       )}
     </div>
