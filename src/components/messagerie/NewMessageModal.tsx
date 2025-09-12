@@ -27,6 +27,7 @@ const NewMessageModal = ({ isOpen, onClose }: NewMessageModalProps) => {
   const [selectedFormations, setSelectedFormations] = useState<string[]>([]);
   const [selectedInstructors, setSelectedInstructors] = useState<string[]>([]);
   const [allInstructors, setAllInstructors] = useState(false);
+  const [allFormations, setAllFormations] = useState(false);
   const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sending, setSending] = useState(false);
@@ -60,6 +61,7 @@ const NewMessageModal = ({ isOpen, onClose }: NewMessageModalProps) => {
     setSelectedFormations([]);
     setSelectedInstructors([]);
     setAllInstructors(false);
+    setAllFormations(false);
     setSearchTerm('');
     setSending(false);
   };
@@ -91,11 +93,15 @@ const NewMessageModal = ({ isOpen, onClose }: NewMessageModalProps) => {
         }
         recipients = { type: 'user', ids: [selectedUser.id] };
       } else if (activeTab === 'groups') {
-        if (selectedFormations.length === 0) {
+        if (!allFormations && selectedFormations.length === 0) {
           toast.error('Veuillez sélectionner au moins une formation');
           return;
         }
-        recipients = { type: 'formation', ids: selectedFormations };
+        if (allFormations) {
+          recipients = { type: 'formation', ids: formations.map(f => f.id) };
+        } else {
+          recipients = { type: 'formation', ids: selectedFormations };
+        }
       } else if (activeTab === 'instructors') {
         if (allInstructors) {
           recipients = { type: 'all_instructors' };
@@ -237,24 +243,44 @@ const NewMessageModal = ({ isOpen, onClose }: NewMessageModalProps) => {
               <Label className="text-sm font-medium">
                 Formations cibles (sélection multiple)
               </Label>
-              <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
-                <div className="grid grid-cols-2 gap-2">
-                  {formations.map(formation => (
-                    <div key={formation.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`formation-${formation.id}`}
-                        checked={selectedFormations.includes(formation.id)}
-                        onCheckedChange={() => handleFormationToggle(formation.id)}
-                      />
-                      <Label 
-                        htmlFor={`formation-${formation.id}`} 
-                        className="text-sm cursor-pointer flex-1"
-                      >
-                        {formation.title}
-                      </Label>
-                    </div>
-                  ))}
+              <div className="mt-2 space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="all-formations"
+                    checked={allFormations}
+                    onCheckedChange={(checked) => {
+                      setAllFormations(checked as boolean);
+                      if (checked) {
+                        setSelectedFormations([]);
+                      }
+                    }}
+                  />
+                  <Label htmlFor="all-formations" className="font-medium">
+                    Toutes les formations
+                  </Label>
                 </div>
+                
+                {!allFormations && (
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    <div className="grid grid-cols-2 gap-2">
+                      {formations.map(formation => (
+                        <div key={formation.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`formation-${formation.id}`}
+                            checked={selectedFormations.includes(formation.id)}
+                            onCheckedChange={() => handleFormationToggle(formation.id)}
+                          />
+                          <Label 
+                            htmlFor={`formation-${formation.id}`} 
+                            className="text-sm cursor-pointer flex-1"
+                          >
+                            {formation.title}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               <p className="text-xs text-muted-foreground mt-2">
                 Astuce : vous pouvez cocher plusieurs formations pour envoyer le même message à tous leurs étudiants.
