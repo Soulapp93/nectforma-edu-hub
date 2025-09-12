@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { virtualClassService, VirtualClass } from '@/services/virtualClassService';
 import { useCurrentUser } from './useCurrentUser';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useVirtualClasses = () => {
   return useQuery({
@@ -23,13 +24,27 @@ export const useCreateVirtualClass = () => {
   const { userId: currentUserId } = useCurrentUser();
 
   return useMutation({
-    mutationFn: (classData: any) => {
+    mutationFn: async (classData: any) => {
+      // Récupérer l'établissement de l'utilisateur courant (requis par les politiques RLS)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) throw new Error('Utilisateur non authentifié');
+
+      const { data: profile, error } = await supabase
+        .from('users')
+        .select('establishment_id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (error || !profile?.establishment_id) {
+        throw error ?? new Error('Impossible de déterminer votre établissement');
+      }
+
       return virtualClassService.createVirtualClass({
         ...classData,
-        establishment_id: '550e8400-e29b-41d4-a716-446655440000', // Will be dynamic later
-        created_by: currentUserId,
+        establishment_id: profile.establishment_id,
+        created_by: currentUserId ?? user.id,
         current_participants: 0,
-        status: 'Programmé'
+        status: 'Programmé',
       });
     },
     onSuccess: () => {
