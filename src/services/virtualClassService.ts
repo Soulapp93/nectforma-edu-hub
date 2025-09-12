@@ -24,16 +24,16 @@ export const virtualClassService = {
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
 
-    if (!userId) {
-      throw new Error('User not authenticated');
+    // Récupérer l'utilisateur si authentifié (sinon, on ne filtre pas et on retourne tout)
+    let user: { role?: string | null; establishment_id?: string | null } | null = null;
+    if (userId) {
+      const { data } = await supabase
+        .from('users')
+        .select('role, establishment_id')
+        .eq('id', userId)
+        .maybeSingle();
+      user = data ?? null;
     }
-
-    // Récupérer les informations de l'utilisateur
-    const { data: user } = await supabase
-      .from('users')
-      .select('role, establishment_id')
-      .eq('id', userId)
-      .single();
 
     let query = supabase
       .from('virtual_classes')
@@ -44,8 +44,8 @@ export const virtualClassService = {
         participants:virtual_class_participants(count)
       `);
 
-    // Filtrage selon le rôle
-    if (user?.role === 'Étudiant') {
+    // Filtrage selon le rôle (si on connaît le rôle); sinon, on laisse tout (utile en mode démo)
+    if (user?.role === 'Étudiant' && userId) {
       // Les étudiants ne voient que les classes de leurs formations
       const { data: userFormations } = await supabase
         .from('user_formation_assignments')
@@ -56,13 +56,13 @@ export const virtualClassService = {
       if (formationIds.length > 0) {
         query = query.in('formation_id', formationIds);
       } else {
-        return []; // Aucune formation assignée
+        return [];
       }
-    } else if (user?.role === 'Formateur') {
+    } else if (user?.role === 'Formateur' && userId) {
       // Les formateurs ne voient que leurs classes
       query = query.eq('instructor_id', userId);
     }
-    // Les administrateurs voient toutes les classes (pas de filtre supplémentaire)
+    // Les administrateurs ou utilisateurs non authentifiés voient tout (RLS gère l'accès)
 
     query = query
       .order('date', { ascending: true })
