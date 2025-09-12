@@ -1,70 +1,21 @@
 
 import React, { useState } from 'react';
 import { Calendar, MapPin, Users, Clock, Plus, Eye, Edit, Trash2, Star } from 'lucide-react';
+import { useEvents, useRegisterForEvent, useUnregisterFromEvent } from '@/hooks/useEvents';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import CreateEventModal from '@/components/evenements/CreateEventModal';
+import { toast } from 'sonner';
 
 const Evenements = () => {
-  const [events, setEvents] = useState([
-    {
-      id: 1,
-      title: 'Conférence Marketing Digital 2024',
-      description: 'Une conférence exclusive sur les dernières tendances du marketing digital.',
-      date: '2024-03-15',
-      time: '14:00',
-      location: 'Amphithéâtre A',
-      category: 'Conférence',
-      maxParticipants: 100,
-      registeredParticipants: 45,
-      status: 'Ouvert',
-      image: '/placeholder.svg',
-      organizer: 'Admin Nect'
-    },
-    {
-      id: 2,
-      title: 'Atelier Créativité & Innovation',
-      description: 'Développez votre créativité avec des techniques innovantes.',
-      date: '2024-03-20',
-      time: '10:00',
-      location: 'Salle de créativité',
-      category: 'Atelier',
-      maxParticipants: 25,
-      registeredParticipants: 18,
-      status: 'Ouvert',
-      image: '/placeholder.svg',
-      organizer: 'Formateur Prof'
-    },
-    {
-      id: 3,
-      title: 'Présentation des Projets Étudiants',
-      description: 'Les étudiants présentent leurs projets de fin d\'année.',
-      date: '2024-04-10',
-      time: '16:00',
-      location: 'Salle de conférence',
-      category: 'Présentation',
-      maxParticipants: 50,
-      registeredParticipants: 30,
-      status: 'Bientôt complet',
-      image: '/placeholder.svg',
-      organizer: 'Administration'
-    },
-    {
-      id: 4,
-      title: 'Remise des Diplômes',
-      description: 'Cérémonie officielle de remise des diplômes.',
-      date: '2024-06-15',
-      time: '18:00',
-      location: 'Grand Amphithéâtre',
-      category: 'Cérémonie',
-      maxParticipants: 200,
-      registeredParticipants: 85,
-      status: 'Ouvert',
-      image: '/placeholder.svg',
-      organizer: 'Direction'
-    }
-  ]);
+  const { data: events = [], isLoading } = useEvents();
+  const currentUser = useCurrentUser();
+  const registerMutation = useRegisterForEvent();
+  const unregisterMutation = useUnregisterFromEvent();
 
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const categories = ['Conférence', 'Atelier', 'Présentation', 'Cérémonie', 'Formation', 'Networking'];
 
@@ -72,17 +23,25 @@ const Evenements = () => {
     ? events 
     : events.filter(event => event.category === selectedCategory);
 
-  const handleRegister = (eventId: number) => {
-    setEvents(events.map(event => 
-      event.id === eventId 
-        ? { ...event, registeredParticipants: event.registeredParticipants + 1 }
-        : event
-    ));
+  const handleRegister = async (eventId: string, isRegistered: boolean) => {
+    try {
+      if (isRegistered) {
+        await unregisterMutation.mutateAsync(eventId);
+      } else {
+        await registerMutation.mutateAsync(eventId);
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+    }
   };
 
   const handleViewDetails = (event: any) => {
     setSelectedEvent(event);
     setShowDetails(true);
+  };
+
+  const canCreateEvent = () => {
+    return currentUser?.userRole === 'Administrateur' || currentUser?.userRole === 'Super Administrateur' || currentUser?.userRole === 'Formateur';
   };
 
   const getStatusColor = (status: string) => {
@@ -120,10 +79,15 @@ const Evenements = () => {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Événements</h1>
             <p className="text-gray-600">Découvrez et participez aux événements de votre établissement</p>
           </div>
-          <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center font-medium">
-            <Plus className="h-5 w-5 mr-2" />
-            Créer un événement
-          </button>
+          {canCreateEvent() && (
+            <button 
+              onClick={() => setShowCreateModal(true)}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center font-medium"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Créer un événement
+            </button>
+          )}
         </div>
       </div>
 
@@ -157,67 +121,87 @@ const Evenements = () => {
       </div>
 
       {/* Events Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredEvents.map((event) => (
-          <div key={event.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-            <div className="h-48 bg-gradient-to-br from-purple-500 to-blue-600 relative">
-              <div className="absolute top-4 left-4">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getCategoryColor(event.category)}`}>
-                  {event.category}
-                </span>
-              </div>
-              <div className="absolute top-4 right-4">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}>
-                  {event.status}
-                </span>
-              </div>
-              <div className="absolute bottom-4 left-4 text-white">
-                <div className="flex items-center mb-2">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  <span className="text-sm font-medium">{event.date}</span>
-                </div>
-                <div className="flex items-center">
-                  <Clock className="h-4 w-4 mr-2" />
-                  <span className="text-sm">{event.time}</span>
-                </div>
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="h-48 bg-gray-200 animate-pulse"></div>
+              <div className="p-6 space-y-4">
+                <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-3 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-3 bg-gray-200 rounded animate-pulse w-2/3"></div>
               </div>
             </div>
-            
-            <div className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">{event.title}</h3>
-              <p className="text-gray-600 text-sm mb-4 line-clamp-2">{event.description}</p>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredEvents.map((event) => (
+            <div key={event.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+              <div className="h-48 bg-gradient-to-br from-purple-500 to-blue-600 relative">
+                <div className="absolute top-4 left-4">
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getCategoryColor(event.category)}`}>
+                    {event.category}
+                  </span>
+                </div>
+                <div className="absolute top-4 right-4">
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}>
+                    {event.status}
+                  </span>
+                </div>
+                <div className="absolute bottom-4 left-4 text-white">
+                  <div className="flex items-center mb-2">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    <span className="text-sm font-medium">{new Date(event.start_date).toLocaleDateString('fr-FR')}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Clock className="h-4 w-4 mr-2" />
+                    <span className="text-sm">{event.start_time}</span>
+                  </div>
+                </div>
+              </div>
               
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center text-sm text-gray-500">
-                  <MapPin className="h-4 w-4 mr-2" />
-                  {event.location}
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{event.title}</h3>
+                <p className="text-gray-600 text-sm mb-4 line-clamp-2">{event.description}</p>
+                
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center text-sm text-gray-500">
+                    <MapPin className="h-4 w-4 mr-2" />
+                    {event.location || 'Lieu non précisé'}
+                  </div>
+                  <div className="flex items-center text-sm text-gray-500">
+                    <Users className="h-4 w-4 mr-2" />
+                    {event.registered_count || 0}/{event.max_participants || '∞'} participants
+                  </div>
                 </div>
-                <div className="flex items-center text-sm text-gray-500">
-                  <Users className="h-4 w-4 mr-2" />
-                  {event.registeredParticipants}/{event.maxParticipants} participants
-                </div>
-              </div>
 
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={() => handleViewDetails(event)}
-                  className="flex items-center text-purple-600 hover:text-purple-700 text-sm font-medium"
-                >
-                  <Eye className="h-4 w-4 mr-1" />
-                  Voir détails
-                </button>
-                <button
-                  onClick={() => handleRegister(event.id)}
-                  disabled={event.registeredParticipants >= event.maxParticipants}
-                  className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                >
-                  S'inscrire
-                </button>
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => handleViewDetails(event)}
+                    className="flex items-center text-purple-600 hover:text-purple-700 text-sm font-medium"
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    Voir détails
+                  </button>
+                  <button
+                    onClick={() => handleRegister(event.id, event.is_registered || false)}
+                    disabled={registerMutation.isPending || unregisterMutation.isPending || (event.max_participants > 0 && event.registered_count >= event.max_participants && !event.is_registered)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      event.is_registered 
+                        ? 'bg-red-600 hover:bg-red-700 text-white'
+                        : 'bg-purple-600 hover:bg-purple-700 disabled:bg-gray-300 text-white'
+                    }`}
+                  >
+                    {registerMutation.isPending || unregisterMutation.isPending ? '...' : 
+                     event.is_registered ? 'Se désinscrire' : 'S\'inscrire'}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Event Details Modal */}
       {showDetails && selectedEvent && (
@@ -235,11 +219,11 @@ const Evenements = () => {
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center">
                     <Calendar className="h-5 w-5 mr-2" />
-                    <span>{selectedEvent.date}</span>
+                    <span>{new Date(selectedEvent.start_date).toLocaleDateString('fr-FR')}</span>
                   </div>
                   <div className="flex items-center">
                     <Clock className="h-5 w-5 mr-2" />
-                    <span>{selectedEvent.time}</span>
+                    <span>{selectedEvent.start_time}</span>
                   </div>
                 </div>
               </div>
@@ -263,15 +247,15 @@ const Evenements = () => {
                   <div className="space-y-2">
                     <div className="flex items-center text-sm text-gray-600">
                       <MapPin className="h-4 w-4 mr-2" />
-                      {selectedEvent.location}
+                      {selectedEvent.location || 'Lieu non précisé'}
                     </div>
                     <div className="flex items-center text-sm text-gray-600">
                       <Users className="h-4 w-4 mr-2" />
-                      {selectedEvent.registeredParticipants}/{selectedEvent.maxParticipants} participants
+                      {selectedEvent.registered_count || 0}/{selectedEvent.max_participants || '∞'} participants
                     </div>
                     <div className="flex items-center text-sm text-gray-600">
                       <Star className="h-4 w-4 mr-2" />
-                      Organisé par {selectedEvent.organizer}
+                      Créé le {new Date(selectedEvent.created_at).toLocaleDateString('fr-FR')}
                     </div>
                   </div>
                 </div>
@@ -281,14 +265,21 @@ const Evenements = () => {
                   <div className="bg-gray-50 rounded-lg p-4">
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm text-gray-600">Places disponibles</span>
-                      <span className="font-medium">{selectedEvent.maxParticipants - selectedEvent.registeredParticipants}</span>
+                      <span className="font-medium">
+                        {selectedEvent.max_participants > 0 
+                          ? Math.max(0, selectedEvent.max_participants - (selectedEvent.registered_count || 0))
+                          : '∞'
+                        }
+                      </span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-purple-600 h-2 rounded-full" 
-                        style={{ width: `${(selectedEvent.registeredParticipants / selectedEvent.maxParticipants) * 100}%` }}
-                      ></div>
-                    </div>
+                    {selectedEvent.max_participants > 0 && (
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-purple-600 h-2 rounded-full" 
+                          style={{ width: `${Math.min(100, ((selectedEvent.registered_count || 0) / selectedEvent.max_participants) * 100)}%` }}
+                        ></div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -302,13 +293,18 @@ const Evenements = () => {
                 </button>
                 <button
                   onClick={() => {
-                    handleRegister(selectedEvent.id);
+                    handleRegister(selectedEvent.id, selectedEvent.is_registered || false);
                     setShowDetails(false);
                   }}
-                  disabled={selectedEvent.registeredParticipants >= selectedEvent.maxParticipants}
-                  className="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-300 text-white rounded-lg font-medium"
+                  disabled={registerMutation.isPending || unregisterMutation.isPending || (selectedEvent.max_participants > 0 && selectedEvent.registered_count >= selectedEvent.max_participants && !selectedEvent.is_registered)}
+                  className={`px-6 py-2 rounded-lg font-medium ${
+                    selectedEvent.is_registered 
+                      ? 'bg-red-600 hover:bg-red-700 text-white'
+                      : 'bg-purple-600 hover:bg-purple-700 disabled:bg-gray-300 text-white'
+                  }`}
                 >
-                  S'inscrire à l'événement
+                  {registerMutation.isPending || unregisterMutation.isPending ? '...' : 
+                   selectedEvent.is_registered ? 'Se désinscrire' : 'S\'inscrire à l\'événement'}
                 </button>
               </div>
             </div>
@@ -316,8 +312,14 @@ const Evenements = () => {
         </div>
       )}
 
+      {/* Create Event Modal */}
+      <CreateEventModal 
+        isOpen={showCreateModal} 
+        onClose={() => setShowCreateModal(false)} 
+      />
+
       {/* Empty State */}
-      {filteredEvents.length === 0 && (
+      {!isLoading && filteredEvents.length === 0 && (
         <div className="bg-gray-50 rounded-xl p-8 text-center">
           <div className="max-w-md mx-auto">
             <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -327,9 +329,14 @@ const Evenements = () => {
             <p className="text-gray-600 mb-4">
               Aucun événement ne correspond à vos critères de recherche.
             </p>
-            <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium">
-              Créer un événement
-            </button>
+            {canCreateEvent() && (
+              <button 
+                onClick={() => setShowCreateModal(true)}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium"
+              >
+                Créer un événement
+              </button>
+            )}
           </div>
         </div>
       )}
