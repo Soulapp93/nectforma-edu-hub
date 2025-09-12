@@ -80,20 +80,45 @@ const Evenements = () => {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Événements</h1>
-            <p className="text-gray-600">Découvrez et participez aux événements de votre établissement</p>
+            <p className="text-gray-600">Créez et gérez les événements de votre établissement.</p>
           </div>
-          {canCreateEvent() && (
-            <button 
-              onClick={() => setShowCreateModal(true)}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center font-medium"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Créer un événement
-            </button>
-          )}
+          <button 
+            onClick={() => setShowCreateModal(true)}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center font-medium transition-colors"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Nouvel événement
+          </button>
+        </div>
+        
+        {/* Search and Filter Bar */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                placeholder="Rechercher un événement..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <select className="border border-gray-200 rounded-lg px-3 py-2 text-sm">
+                <option>Tous les statuts</option>
+                <option>Ouvert</option>
+                <option>Bientôt complet</option>
+                <option>Complet</option>
+                <option>Annulé</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
