@@ -26,11 +26,43 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { supabase } from '@/integrations/supabase/client';
 
 const Sidebar = () => {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
-  const { userRole } = useCurrentUser();
+  const { userRole, userId } = useCurrentUser();
+
+  const handleLogout = async () => {
+    // Nettoyer la session démo
+    sessionStorage.removeItem('demo_user');
+    
+    // Déconnexion Supabase si connecté
+    await supabase.auth.signOut();
+    
+    // Rediriger vers la page d'authentification
+    window.location.href = '/auth';
+  };
+
+  // Obtenir les informations utilisateur pour l'affichage
+  const getUserDisplayInfo = () => {
+    const demoUser = sessionStorage.getItem('demo_user');
+    if (demoUser) {
+      const userData = JSON.parse(demoUser);
+      return {
+        name: `${userData.first_name} ${userData.last_name}`,
+        role: userData.role,
+        initials: `${userData.first_name[0]}${userData.last_name[0]}`
+      };
+    }
+    return {
+      name: 'Utilisateur',
+      role: userRole || 'Utilisateur',
+      initials: 'AN'
+    };
+  };
+
+  const userInfo = getUserDisplayInfo();
   
   // Navigation complète pour les administrateurs
   const adminNavigation = [
@@ -57,8 +89,8 @@ const Sidebar = () => {
     { name: 'Gestion du compte', href: '/compte', icon: Settings },
   ];
 
-  // Sélectionner la navigation selon le rôle
-  const navigation = userRole === 'Administrateur' ? adminNavigation : limitedNavigation;
+  // Sélectionner la navigation selon le rôle - corriger la comparaison de rôle
+  const navigation = userRole === 'Admin' ? adminNavigation : limitedNavigation;
 
   return (
     <SidebarWrapper 
@@ -87,12 +119,12 @@ const Sidebar = () => {
         <div className="px-6 py-4 border-b border-white/20">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-sm font-medium">AN</span>
+              <span className="text-sm font-medium">{userInfo.initials}</span>
             </div>
             {!collapsed && (
               <div>
-                <p className="text-sm font-medium">Admin Nect</p>
-                <p className="text-xs text-white/70">Admin</p>
+                <p className="text-sm font-medium">{userInfo.name}</p>
+                <p className="text-xs text-white/70">{userInfo.role}</p>
               </div>
             )}
           </div>
@@ -135,6 +167,7 @@ const Sidebar = () => {
 
       <SidebarFooter className="p-4 border-t border-white/20">
         <button 
+          onClick={handleLogout}
           className="flex items-center px-3 py-2 text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white rounded-lg transition-colors w-full"
           title={collapsed ? 'Déconnexion' : undefined}
         >

@@ -1,12 +1,16 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Mail, Lock, User, Building, MapPin, Phone, Eye, EyeOff } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Mail, Lock, User, Building, MapPin, Phone, Eye, EyeOff, Shield, GraduationCap, Users2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const Auth = () => {
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     // Personal info
     email: '',
@@ -42,6 +46,44 @@ const Auth = () => {
     '101-500',
     '500+'
   ];
+
+  const handleDemoLogin = async (role: string) => {
+    setLoading(true);
+    try {
+      const emailMap = {
+        'Admin': 'admin@demo.com',
+        'Formateur': 'formateur@demo.com',
+        'Étudiant': 'etudiant@demo.com'
+      };
+      
+      const email = emailMap[role as keyof typeof emailMap];
+      if (!email) {
+        throw new Error('Rôle non reconnu');
+      }
+
+      // Créer une session temporaire pour l'utilisateur démo
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .single();
+
+      if (userError || !userData) {
+        throw new Error('Utilisateur démo non trouvé');
+      }
+
+      // Simuler une connexion en créant une session côté client
+      // Note: En production, vous devriez utiliser l'authentification Supabase appropriée
+      sessionStorage.setItem('demo_user', JSON.stringify(userData));
+      toast.success(`Connexion réussie en tant que ${role} démo`);
+      navigate('/');
+    } catch (error) {
+      toast.error('Erreur lors de la connexion démo');
+      console.error('Demo login error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -334,15 +376,64 @@ const Auth = () => {
               <button
                 type="submit"
                 className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                disabled={loading}
               >
-                {isLogin 
+                {loading ? 'Connexion...' : (isLogin 
                   ? 'Se connecter' 
                   : step === 1 
                     ? 'Continuer' 
                     : 'Créer mon compte'
-                }
+                )}
               </button>
             </form>
+
+            {isLogin && (
+              <>
+                <div className="mt-6 flex items-center">
+                  <div className="flex-1 border-t border-gray-300"></div>
+                  <div className="px-3 text-sm text-gray-500">OU COMPTES DE DÉMO</div>
+                  <div className="flex-1 border-t border-gray-300"></div>
+                </div>
+
+                <div className="mt-6 grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => handleDemoLogin('Admin')}
+                    disabled={loading}
+                    className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    <Shield className="h-4 w-4 mr-2 text-purple-600" />
+                    Admin
+                  </button>
+                  
+                  <button
+                    onClick={() => handleDemoLogin('Formateur')}
+                    disabled={loading}
+                    className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    <Users2 className="h-4 w-4 mr-2 text-blue-600" />
+                    Formateur
+                  </button>
+                  
+                  <button
+                    onClick={() => handleDemoLogin('Étudiant')}
+                    disabled={loading}
+                    className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    <GraduationCap className="h-4 w-4 mr-2 text-green-600" />
+                    Étudiant
+                  </button>
+                  
+                  <button
+                    onClick={() => handleDemoLogin('Formateur')}
+                    disabled={loading}
+                    className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    <User className="h-4 w-4 mr-2 text-orange-600" />
+                    Tuteur
+                  </button>
+                </div>
+              </>
+            )}
 
             {!isLogin && step === 2 && (
               <button

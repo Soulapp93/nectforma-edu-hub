@@ -9,6 +9,16 @@ export const useCurrentUser = () => {
   useEffect(() => {
     const getCurrentUser = async () => {
       try {
+        // Vérifier d'abord s'il y a un utilisateur démo en session
+        const demoUser = sessionStorage.getItem('demo_user');
+        if (demoUser) {
+          const userData = JSON.parse(demoUser);
+          setUserId(userData.id);
+          setUserRole(userData.role);
+          setLoading(false);
+          return;
+        }
+
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.id) {
           setUserId(user.id);
@@ -44,7 +54,9 @@ export const useCurrentUser = () => {
     // Écouter les changements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        // Nettoyer la session démo si une vraie session arrive
         if (session?.user?.id) {
+          sessionStorage.removeItem('demo_user');
           setUserId(session.user.id);
           
           // Récupérer les informations de l'utilisateur
@@ -58,8 +70,12 @@ export const useCurrentUser = () => {
             setUserRole(userData.role);
           }
         } else {
-          setUserId(null);
-          setUserRole(null);
+          // Vérifier s'il y a encore un utilisateur démo
+          const demoUser = sessionStorage.getItem('demo_user');
+          if (!demoUser) {
+            setUserId(null);
+            setUserRole(null);
+          }
         }
         setLoading(false);
       }
