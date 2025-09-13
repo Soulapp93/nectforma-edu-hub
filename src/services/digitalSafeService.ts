@@ -28,9 +28,42 @@ export interface DigitalSafeFile {
   updated_at: string;
 }
 
+// Fonction utilitaire pour obtenir l'utilisateur actuel (réel ou démo)
+const getCurrentUser = async () => {
+  // Vérifier d'abord s'il y a un utilisateur démo
+  const demoUser = sessionStorage.getItem('demo_user');
+  if (demoUser) {
+    return JSON.parse(demoUser);
+  }
+  
+  // Sinon, utiliser l'authentification Supabase
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) {
+    throw new Error('Utilisateur non authentifié');
+  }
+  
+  return user;
+};
+
 export const digitalSafeService = {
   async getFolders(parentId?: string) {
     console.log('Récupération des dossiers...');
+    
+    // Pour le mode démo, retourner des données mockées
+    const currentUser = await getCurrentUser();
+    if (sessionStorage.getItem('demo_user')) {
+      return [
+        {
+          id: 'demo-folder-1',
+          name: 'Documents',
+          parent_folder_id: null,
+          user_id: currentUser.id,
+          establishment_id: 'demo-establishment',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      ];
+    }
     
     let query = supabase
       .from('digital_safe_folders')
@@ -56,13 +89,25 @@ export const digitalSafeService = {
   async createFolder(name: string, parentId?: string) {
     console.log('Création du dossier:', name);
     
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) throw new Error('Utilisateur non authentifié');
+    const currentUser = await getCurrentUser();
+    
+    // Mode démo - simuler la création
+    if (sessionStorage.getItem('demo_user')) {
+      return {
+        id: `demo-folder-${Date.now()}`,
+        name,
+        parent_folder_id: parentId || null,
+        user_id: currentUser.id,
+        establishment_id: 'demo-establishment',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+    }
 
     const { data: userProfile } = await supabase
       .from('users')
       .select('establishment_id')
-      .eq('id', user.id)
+      .eq('id', currentUser.id)
       .single();
 
     if (!userProfile) throw new Error('Profil utilisateur non trouvé');
@@ -72,7 +117,7 @@ export const digitalSafeService = {
       .insert([{
         name,
         parent_folder_id: parentId || null,
-        user_id: user.id,
+        user_id: currentUser.id,
         establishment_id: userProfile.establishment_id
       }])
       .select()
@@ -88,6 +133,28 @@ export const digitalSafeService = {
 
   async getFiles(folderId?: string) {
     console.log('Récupération des fichiers...');
+    
+    // Mode démo - retourner des fichiers mockés
+    const currentUser = await getCurrentUser();
+    if (sessionStorage.getItem('demo_user')) {
+      return [
+        {
+          id: 'demo-file-1',
+          name: 'demo-document.pdf',
+          original_name: 'Document Demo.pdf',
+          file_path: 'demo/demo-document.pdf',
+          file_url: '#',
+          file_size: 1024000,
+          content_type: 'application/pdf',
+          folder_id: folderId || null,
+          user_id: currentUser.id,
+          establishment_id: 'demo-establishment',
+          is_shared: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      ];
+    }
     
     let query = supabase
       .from('digital_safe_files')
@@ -113,13 +180,31 @@ export const digitalSafeService = {
   async uploadFiles(files: File[], folderId?: string) {
     console.log('Upload de fichiers:', files.length, 'fichiers');
     
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) throw new Error('Utilisateur non authentifié');
+    const currentUser = await getCurrentUser();
+    
+    // Mode démo - simuler l'upload
+    if (sessionStorage.getItem('demo_user')) {
+      return files.map(file => ({
+        id: `demo-file-${Date.now()}-${Math.random()}`,
+        name: `${Date.now()}_${file.name}`,
+        original_name: file.name,
+        file_path: `demo/${file.name}`,
+        file_url: URL.createObjectURL(file),
+        file_size: file.size,
+        content_type: file.type || 'application/octet-stream',
+        folder_id: folderId || null,
+        user_id: currentUser.id,
+        establishment_id: 'demo-establishment',
+        is_shared: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }));
+    }
 
     const { data: userProfile } = await supabase
       .from('users')
       .select('establishment_id')
-      .eq('id', user.id)
+      .eq('id', currentUser.id)
       .single();
 
     if (!userProfile) throw new Error('Profil utilisateur non trouvé');
@@ -129,7 +214,7 @@ export const digitalSafeService = {
     for (const file of files) {
       try {
         const fileName = `${Date.now()}_${file.name}`;
-        const filePath = `${user.id}/${fileName}`;
+        const filePath = `${currentUser.id}/${fileName}`;
         
         // Upload vers le storage
         const { data: uploadData, error: uploadError } = await supabase.storage
@@ -157,7 +242,7 @@ export const digitalSafeService = {
             file_size: file.size,
             content_type: file.type || 'application/octet-stream',
             folder_id: folderId || null,
-            user_id: user.id,
+            user_id: currentUser.id,
             establishment_id: userProfile.establishment_id,
             is_shared: false
           }])
@@ -246,8 +331,7 @@ export const digitalSafeService = {
     }
 
     // Créer les permissions individuelles
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) throw new Error('Utilisateur non authentifié');
+    const currentUser = await getCurrentUser();
 
     const permissions = [];
     
@@ -256,7 +340,7 @@ export const digitalSafeService = {
         file_id: fileId,
         user_id: userId,
         permission_type: 'view',
-        granted_by: user.id
+        granted_by: currentUser.id
       });
     }
 
@@ -265,7 +349,7 @@ export const digitalSafeService = {
         file_id: fileId,
         role,
         permission_type: 'view',
-        granted_by: user.id
+        granted_by: currentUser.id
       });
     }
 
