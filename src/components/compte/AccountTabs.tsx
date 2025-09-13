@@ -15,12 +15,7 @@ interface AccountTabsProps {
 
 const AccountTabs: React.FC<AccountTabsProps> = ({ activeTab, onTabChange }) => {
   const tabs: Tab[] = [
-    { id: 'profile', name: 'Profil', icon: User },
     { id: 'establishment', name: 'Établissement', icon: Building },
-    { id: 'security', name: 'Sécurité', icon: Shield },
-    { id: 'notifications', name: 'Notifications', icon: Bell },
-    { id: 'subscription', name: 'Abonnement', icon: CreditCard },
-    { id: 'team', name: 'Équipe', icon: Users },
   ];
 
   return (
