@@ -3,11 +3,14 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Separator } from '../ui/separator';
-import { Building, User, Phone, Globe, MapPin, Users, FileText } from 'lucide-react';
+import FileUpload from '../ui/file-upload';
+import { Building, User, Phone, Globe, MapPin, Users, FileText, Mail, Upload } from 'lucide-react';
 
 interface AdminData {
   firstName: string;
   lastName: string;
+  email: string;
+  phone: string;
   role: string;
   personalAddress: string;
 }
@@ -21,6 +24,7 @@ interface EstablishmentData {
   director: string;
   siret: string;
   numberOfUsers: number;
+  logoUrl?: string;
 }
 
 interface EstablishmentSettingsProps {
@@ -28,6 +32,7 @@ interface EstablishmentSettingsProps {
   establishmentData: EstablishmentData;
   onAdminDataChange: (data: AdminData) => void;
   onEstablishmentDataChange: (data: EstablishmentData) => void;
+  onLogoUpload: (files: File[]) => void;
   onSave: () => void;
 }
 
@@ -36,6 +41,7 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
   establishmentData,
   onAdminDataChange,
   onEstablishmentDataChange,
+  onLogoUpload,
   onSave
 }) => {
   const handleAdminChange = (field: keyof AdminData, value: string) => {
@@ -87,6 +93,35 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
           </div>
           
           <div>
+            <Label htmlFor="adminEmail">Email</Label>
+            <div className="relative mt-1">
+              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                id="adminEmail"
+                type="email"
+                value={adminData.email}
+                onChange={(e) => handleAdminChange('email', e.target.value)}
+                className="pl-10"
+                placeholder="admin@exemple.com"
+              />
+            </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="adminPhone">Téléphone</Label>
+            <div className="relative mt-1">
+              <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Input
+                id="adminPhone"
+                value={adminData.phone}
+                onChange={(e) => handleAdminChange('phone', e.target.value)}
+                className="pl-10"
+                placeholder="+33 6 12 34 56 78"
+              />
+            </div>
+          </div>
+          
+          <div>
             <Label htmlFor="role">Rôle/Poste dans l'établissement</Label>
             <Input
               id="role"
@@ -97,7 +132,7 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
             />
           </div>
           
-          <div>
+          <div className="md:col-span-2">
             <Label htmlFor="personalAddress">Adresse personnelle</Label>
             <Input
               id="personalAddress"
@@ -118,16 +153,41 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
           Informations de l'établissement
         </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          {/* Logo de l'établissement */}
           <div>
-            <Label htmlFor="establishmentName">Nom de l'établissement</Label>
-            <Input
-              id="establishmentName"
-              value={establishmentData.name}
-              onChange={(e) => handleEstablishmentChange('name', e.target.value)}
-              className="mt-1"
-            />
+            <Label>Logo de l'établissement</Label>
+            <div className="mt-2 flex items-center gap-4">
+              {establishmentData.logoUrl && (
+                <div className="flex-shrink-0">
+                  <img
+                    src={establishmentData.logoUrl}
+                    alt="Logo de l'établissement"
+                    className="h-16 w-16 object-contain rounded-md border border-gray-200"
+                  />
+                </div>
+              )}
+              <div className="flex-1">
+                <FileUpload
+                  onFileSelect={onLogoUpload}
+                  accept="image/*"
+                  maxSize={5}
+                  className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-purple-500 transition-colors"
+                />
+              </div>
+            </div>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Label htmlFor="establishmentName">Nom de l'établissement</Label>
+              <Input
+                id="establishmentName"
+                value={establishmentData.name}
+                onChange={(e) => handleEstablishmentChange('name', e.target.value)}
+                className="mt-1"
+              />
+            </div>
           
           <div>
             <Label htmlFor="establishmentPhone">Téléphone</Label>
@@ -218,6 +278,7 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
                 min="1"
               />
             </div>
+          </div>
           </div>
         </div>
       </div>

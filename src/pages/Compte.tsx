@@ -2,16 +2,30 @@ import React, { useState } from 'react';
 import AccountTabs from '../components/compte/AccountTabs';
 import EstablishmentSettings from '../components/compte/EstablishmentSettings';
 
+type EstablishmentDataState = {
+  name: string;
+  phone: string;
+  website: string;
+  address: string;
+  type: string;
+  director: string;
+  siret: string;
+  numberOfUsers: number;
+  logoUrl?: string;
+};
+
 const Compte = () => {
   const [activeTab, setActiveTab] = useState('establishment');
   const [adminData, setAdminData] = useState({
     firstName: 'Admin',
     lastName: 'Nect',
+    email: 'admin@ecole-formation.fr',
+    phone: '+33 6 12 34 56 78',
     role: 'Directeur',
     personalAddress: '123 Rue Personnelle, 75001 Paris'
   });
 
-  const [establishmentData, setEstablishmentData] = useState({
+  const [establishmentData, setEstablishmentData] = useState<EstablishmentDataState>({
     name: 'École Supérieure de Formation',
     phone: '+33 1 23 45 67 89',
     website: 'www.ecole-formation.fr',
@@ -21,6 +35,16 @@ const Compte = () => {
     siret: '12345678901234',
     numberOfUsers: 25
   });
+
+  const handleLogoUpload = (files: File[]) => {
+    if (files.length > 0) {
+      const file = files[0];
+      // Créer une URL temporaire pour prévisualiser l'image
+      const logoUrl = URL.createObjectURL(file);
+      setEstablishmentData(prev => ({ ...prev, logoUrl }));
+      console.log('Logo uploadé:', file);
+    }
+  };
 
   const handleSaveEstablishment = () => {
     console.log('Saving admin data:', adminData);
@@ -43,6 +67,7 @@ const Compte = () => {
             establishmentData={establishmentData}
             onAdminDataChange={setAdminData}
             onEstablishmentDataChange={setEstablishmentData}
+            onLogoUpload={handleLogoUpload}
             onSave={handleSaveEstablishment}
           />
         </div>
