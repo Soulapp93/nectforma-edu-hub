@@ -1,6 +1,14 @@
 
 import React, { useState } from 'react';
 import { Save, Volume2, Mic, Video, Monitor, Globe, Shield, Database } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Progress } from '@/components/ui/progress';
+import { toast } from '@/hooks/use-toast';
 
 interface NotificationSettings {
   email: boolean;
@@ -72,252 +80,256 @@ const Settings: React.FC = () => {
 
   const handleSave = () => {
     console.log('Saving settings:', settings);
-    // Here you would typically save to your backend
-    alert('Paramètres sauvegardés avec succès !');
+    toast({
+      title: "Paramètres sauvegardés",
+      description: "Vos paramètres ont été mis à jour avec succès.",
+    });
   };
 
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-4xl space-y-6">
       {/* Video Conference Settings */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-        <div className="flex items-center mb-6">
-          <Video className="h-6 w-6 text-purple-600 mr-3" />
-          <h3 className="text-lg font-semibold text-gray-900">Paramètres de vidéoconférence</h3>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Qualité vidéo</label>
-            <select 
-              value={settings.videoQuality}
-              onChange={(e) => handleSettingChange('videoQuality', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-            >
-              <option value="720p">HD (720p)</option>
-              <option value="1080p">Full HD (1080p)</option>
-              <option value="4k">4K (2160p)</option>
-            </select>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Video className="h-5 w-5 mr-2" />
+            Paramètres de vidéoconférence
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="videoQuality">Qualité vidéo</Label>
+              <Select 
+                value={settings.videoQuality}
+                onValueChange={(value) => handleSettingChange('videoQuality', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="720p">HD (720p)</SelectItem>
+                  <SelectItem value="1080p">Full HD (1080p)</SelectItem>
+                  <SelectItem value="4k">4K (2160p)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="audioQuality">Qualité audio</Label>
+              <Select 
+                value={settings.audioQuality}
+                onValueChange={(value) => handleSettingChange('audioQuality', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="standard">Standard</SelectItem>
+                  <SelectItem value="high">Haute qualité</SelectItem>
+                  <SelectItem value="studio">Qualité studio</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="maxParticipants">Participants maximum</Label>
+              <Input
+                type="number"
+                value={settings.maxParticipants}
+                onChange={(e) => handleSettingChange('maxParticipants', parseInt(e.target.value))}
+                min="1"
+                max="500"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="sessionTimeout">Timeout de session (minutes)</Label>
+              <Input
+                type="number"
+                value={settings.sessionTimeout}
+                onChange={(e) => handleSettingChange('sessionTimeout', parseInt(e.target.value))}
+                min="30"
+                max="480"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Qualité audio</label>
-            <select 
-              value={settings.audioQuality}
-              onChange={(e) => handleSettingChange('audioQuality', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-            >
-              <option value="standard">Standard</option>
-              <option value="high">Haute qualité</option>
-              <option value="studio">Qualité studio</option>
-            </select>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="autoRecord"
+                checked={settings.autoRecord}
+                onCheckedChange={(checked) => handleSettingChange('autoRecord', checked)}
+              />
+              <Label htmlFor="autoRecord">Activer l'enregistrement automatique</Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="allowScreenShare"
+                checked={settings.allowScreenShare}
+                onCheckedChange={(checked) => handleSettingChange('allowScreenShare', checked)}
+              />
+              <Label htmlFor="allowScreenShare">Autoriser le partage d'écran pour les participants</Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="chatEnabled"
+                checked={settings.chatEnabled}
+                onCheckedChange={(checked) => handleSettingChange('chatEnabled', checked)}
+              />
+              <Label htmlFor="chatEnabled">Chat activé pendant les cours</Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="waitingRoom"
+                checked={settings.waitingRoom}
+                onCheckedChange={(checked) => handleSettingChange('waitingRoom', checked)}
+              />
+              <Label htmlFor="waitingRoom">Salle d'attente activée</Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="muteOnEntry"
+                checked={settings.muteOnEntry}
+                onCheckedChange={(checked) => handleSettingChange('muteOnEntry', checked)}
+              />
+              <Label htmlFor="muteOnEntry">Couper le micro à l'entrée</Label>
+            </div>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Participants maximum</label>
-            <input
-              type="number"
-              value={settings.maxParticipants}
-              onChange={(e) => handleSettingChange('maxParticipants', parseInt(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-              min="1"
-              max="500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Timeout de session (minutes)</label>
-            <input
-              type="number"
-              value={settings.sessionTimeout}
-              onChange={(e) => handleSettingChange('sessionTimeout', parseInt(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-              min="30"
-              max="480"
-            />
-          </div>
-        </div>
-
-        <div className="mt-6 space-y-4">
-          <label className="flex items-center">
-            <input 
-              type="checkbox" 
-              checked={settings.autoRecord}
-              onChange={(e) => handleSettingChange('autoRecord', e.target.checked)}
-              className="rounded border-gray-300 text-purple-600 mr-3" 
-            />
-            <span className="text-sm text-gray-700">Activer l'enregistrement automatique</span>
-          </label>
-
-          <label className="flex items-center">
-            <input 
-              type="checkbox" 
-              checked={settings.allowScreenShare}
-              onChange={(e) => handleSettingChange('allowScreenShare', e.target.checked)}
-              className="rounded border-gray-300 text-purple-600 mr-3" 
-            />
-            <span className="text-sm text-gray-700">Autoriser le partage d'écran pour les participants</span>
-          </label>
-
-          <label className="flex items-center">
-            <input 
-              type="checkbox" 
-              checked={settings.chatEnabled}
-              onChange={(e) => handleSettingChange('chatEnabled', e.target.checked)}
-              className="rounded border-gray-300 text-purple-600 mr-3" 
-            />
-            <span className="text-sm text-gray-700">Chat activé pendant les cours</span>
-          </label>
-
-          <label className="flex items-center">
-            <input 
-              type="checkbox" 
-              checked={settings.waitingRoom}
-              onChange={(e) => handleSettingChange('waitingRoom', e.target.checked)}
-              className="rounded border-gray-300 text-purple-600 mr-3" 
-            />
-            <span className="text-sm text-gray-700">Salle d'attente activée</span>
-          </label>
-
-          <label className="flex items-center">
-            <input 
-              type="checkbox" 
-              checked={settings.muteOnEntry}
-              onChange={(e) => handleSettingChange('muteOnEntry', e.target.checked)}
-              className="rounded border-gray-300 text-purple-600 mr-3" 
-            />
-            <span className="text-sm text-gray-700">Couper le micro à l'entrée</span>
-          </label>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Storage Settings */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-        <div className="flex items-center mb-6">
-          <Database className="h-6 w-6 text-purple-600 mr-3" />
-          <h3 className="text-lg font-semibold text-gray-900">Stockage des enregistrements</h3>
-        </div>
-        
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Emplacement de stockage</label>
-          <select 
-            value={settings.storageLocation}
-            onChange={(e) => handleSettingChange('storageLocation', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-          >
-            <option value="cloud">Cloud (recommandé)</option>
-            <option value="local">Stockage local</option>
-            <option value="hybrid">Hybride</option>
-          </select>
-        </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Database className="h-5 w-5 mr-2" />
+            Stockage des enregistrements
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="storageLocation">Emplacement de stockage</Label>
+            <Select 
+              value={settings.storageLocation}
+              onValueChange={(value) => handleSettingChange('storageLocation', value)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="cloud">Cloud (recommandé)</SelectItem>
+                <SelectItem value="local">Stockage local</SelectItem>
+                <SelectItem value="hybrid">Hybride</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-600">Espace utilisé</span>
-            <span className="text-sm font-medium">2.4 GB / 10 GB</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div className="bg-purple-600 h-2 rounded-full" style={{ width: '24%' }}></div>
-          </div>
-          <p className="text-xs text-gray-500 mt-2">Espace disponible : 7.6 GB</p>
-        </div>
-      </div>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-muted-foreground">Espace utilisé</span>
+                <span className="text-sm font-medium">2.4 GB / 10 GB</span>
+              </div>
+              <Progress value={24} className="mb-2" />
+              <p className="text-xs text-muted-foreground">Espace disponible : 7.6 GB</p>
+            </CardContent>
+          </Card>
+        </CardContent>
+      </Card>
 
       {/* Notification Settings */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-        <div className="flex items-center mb-6">
-          <Globe className="h-6 w-6 text-purple-600 mr-3" />
-          <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
-        </div>
-        
-        <div className="space-y-4">
-          <label className="flex items-center">
-            <input 
-              type="checkbox" 
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Globe className="h-5 w-5 mr-2" />
+            Notifications
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Switch 
+              id="emailNotifications"
               checked={settings.notifications.email}
-              onChange={(e) => handleNestedSettingChange('notifications', 'email', e.target.checked)}
-              className="rounded border-gray-300 text-purple-600 mr-3" 
+              onCheckedChange={(checked) => handleNestedSettingChange('notifications', 'email', checked)}
             />
-            <span className="text-sm text-gray-700">Notifications par email</span>
-          </label>
+            <Label htmlFor="emailNotifications">Notifications par email</Label>
+          </div>
 
-          <label className="flex items-center">
-            <input 
-              type="checkbox" 
+          <div className="flex items-center space-x-2">
+            <Switch 
+              id="pushNotifications"
               checked={settings.notifications.push}
-              onChange={(e) => handleNestedSettingChange('notifications', 'push', e.target.checked)}
-              className="rounded border-gray-300 text-purple-600 mr-3" 
+              onCheckedChange={(checked) => handleNestedSettingChange('notifications', 'push', checked)}
             />
-            <span className="text-sm text-gray-700">Notifications push</span>
-          </label>
+            <Label htmlFor="pushNotifications">Notifications push</Label>
+          </div>
 
-          <label className="flex items-center">
-            <input 
-              type="checkbox" 
+          <div className="flex items-center space-x-2">
+            <Switch 
+              id="smsNotifications"
               checked={settings.notifications.sms}
-              onChange={(e) => handleNestedSettingChange('notifications', 'sms', e.target.checked)}
-              className="rounded border-gray-300 text-purple-600 mr-3" 
+              onCheckedChange={(checked) => handleNestedSettingChange('notifications', 'sms', checked)}
             />
-            <span className="text-sm text-gray-700">Notifications SMS</span>
-          </label>
-        </div>
-      </div>
+            <Label htmlFor="smsNotifications">Notifications SMS</Label>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Privacy Settings */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-        <div className="flex items-center mb-6">
-          <Shield className="h-6 w-6 text-purple-600 mr-3" />
-          <h3 className="text-lg font-semibold text-gray-900">Confidentialité et sécurité</h3>
-        </div>
-        
-        <div className="space-y-4 mb-4">
-          <label className="flex items-center">
-            <input 
-              type="checkbox" 
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Shield className="h-5 w-5 mr-2" />
+            Confidentialité et sécurité
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Switch 
+              id="recordingConsent"
               checked={settings.privacy.recordingConsent}
-              onChange={(e) => handleNestedSettingChange('privacy', 'recordingConsent', e.target.checked)}
-              className="rounded border-gray-300 text-purple-600 mr-3" 
+              onCheckedChange={(checked) => handleNestedSettingChange('privacy', 'recordingConsent', checked)}
             />
-            <span className="text-sm text-gray-700">Demander le consentement pour les enregistrements</span>
-          </label>
+            <Label htmlFor="recordingConsent">Demander le consentement pour les enregistrements</Label>
+          </div>
 
-          <label className="flex items-center">
-            <input 
-              type="checkbox" 
+          <div className="flex items-center space-x-2">
+            <Switch 
+              id="shareAnalytics"
               checked={settings.privacy.shareAnalytics}
-              onChange={(e) => handleNestedSettingChange('privacy', 'shareAnalytics', e.target.checked)}
-              className="rounded border-gray-300 text-purple-600 mr-3" 
+              onCheckedChange={(checked) => handleNestedSettingChange('privacy', 'shareAnalytics', checked)}
             />
-            <span className="text-sm text-gray-700">Partager les données d'analyse (anonymes)</span>
-          </label>
-        </div>
+            <Label htmlFor="shareAnalytics">Partager les données d'analyse (anonymes)</Label>
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Rétention des données (jours)
-          </label>
-          <input
-            type="number"
-            value={settings.privacy.dataRetention}
-            onChange={(e) => handleNestedSettingChange('privacy', 'dataRetention', parseInt(e.target.value))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-            min="30"
-            max="365"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Durée de conservation des enregistrements et données de session
-          </p>
-        </div>
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="dataRetention">Rétention des données (jours)</Label>
+            <Input
+              type="number"
+              value={settings.privacy.dataRetention}
+              onChange={(e) => handleNestedSettingChange('privacy', 'dataRetention', parseInt(e.target.value))}
+              min="30"
+              max="365"
+            />
+            <p className="text-xs text-muted-foreground">
+              Durée de conservation des enregistrements et données de session
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Save Button */}
       <div className="flex justify-end">
-        <button 
-          onClick={handleSave}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium flex items-center"
-        >
+        <Button onClick={handleSave} className="flex items-center">
           <Save className="h-4 w-4 mr-2" />
           Sauvegarder les paramètres
-        </button>
+        </Button>
       </div>
     </div>
   );

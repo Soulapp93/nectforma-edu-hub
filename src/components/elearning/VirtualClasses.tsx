@@ -11,6 +11,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { VirtualClass } from '@/services/virtualClassService';
+import EditClassModal from './modals/EditClassModal';
+import ClassDetailsModal from './modals/ClassDetailsModal';
 
 interface VirtualClassesProps {
   onJoinClass: (classItem: VirtualClass) => void;
@@ -19,6 +21,10 @@ interface VirtualClassesProps {
 const VirtualClasses: React.FC<VirtualClassesProps> = ({ onJoinClass }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedClassForEdit, setSelectedClassForEdit] = useState<VirtualClass | null>(null);
+  const [selectedClassForDetails, setSelectedClassForDetails] = useState<VirtualClass | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   const { data: virtualClasses = [], isLoading } = useVirtualClasses();
   const { userId: currentUserId, userRole } = useCurrentUser();
@@ -48,6 +54,16 @@ const VirtualClasses: React.FC<VirtualClassesProps> = ({ onJoinClass }) => {
       // Join the class first if not already joined
       await joinClassMutation.mutateAsync(classItem.id);
     }
+  };
+
+  const handleEditClass = (classItem: VirtualClass) => {
+    setSelectedClassForEdit(classItem);
+    setIsEditModalOpen(true);
+  };
+
+  const handleShowDetails = (classItem: VirtualClass) => {
+    setSelectedClassForDetails(classItem);
+    setIsDetailsModalOpen(true);
   };
 
   const getStatusColor = (status: string) => {
@@ -153,7 +169,12 @@ const VirtualClasses: React.FC<VirtualClassesProps> = ({ onJoinClass }) => {
                 {userRole === 'Admin' && (
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                     <div className="flex space-x-1">
-                      <Button variant="ghost" size="sm" className="p-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="p-1"
+                        onClick={() => handleEditClass(classItem)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button 
@@ -214,7 +235,11 @@ const VirtualClasses: React.FC<VirtualClassesProps> = ({ onJoinClass }) => {
                     Rejoindre
                   </Button>
                 )}
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleShowDetails(classItem)}
+                >
                   Détails
                 </Button>
               </div>
@@ -232,6 +257,20 @@ const VirtualClasses: React.FC<VirtualClassesProps> = ({ onJoinClass }) => {
           </CardContent>
         </Card>
       )}
+
+      {/* Modals */}
+      <EditClassModal 
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        virtualClass={selectedClassForEdit}
+      />
+      
+      <ClassDetailsModal 
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        virtualClass={selectedClassForDetails}
+        onJoinClass={onJoinClass}
+      />
     </div>
   );
 };
