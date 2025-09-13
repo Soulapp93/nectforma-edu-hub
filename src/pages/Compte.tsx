@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AccountTabs from '../components/compte/AccountTabs';
 import EstablishmentSettings from '../components/compte/EstablishmentSettings';
+import { toast } from 'sonner';
 
 type EstablishmentDataState = {
   name: string;
@@ -17,24 +18,46 @@ type EstablishmentDataState = {
 const Compte = () => {
   const [activeTab, setActiveTab] = useState('establishment');
   const [adminData, setAdminData] = useState({
-    firstName: 'Admin',
-    lastName: 'Nect',
-    email: 'admin@ecole-formation.fr',
-    phone: '+33 6 12 34 56 78',
-    role: 'Directeur',
-    personalAddress: '123 Rue Personnelle, 75001 Paris'
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    role: '',
+    personalAddress: ''
   });
 
   const [establishmentData, setEstablishmentData] = useState<EstablishmentDataState>({
-    name: 'École Supérieure de Formation',
-    phone: '+33 1 23 45 67 89',
-    website: 'www.ecole-formation.fr',
-    address: '123 Rue de la Formation, 75001 Paris',
-    type: 'École supérieure',
-    director: 'Jean Dupont',
-    siret: '12345678901234',
-    numberOfUsers: 25
+    name: '',
+    phone: '',
+    website: '',
+    address: '',
+    type: '',
+    director: '',
+    siret: '',
+    numberOfUsers: 0
   });
+
+  // Charger les données sauvegardées au montage du composant
+  useEffect(() => {
+    const savedAdminData = localStorage.getItem('adminData');
+    const savedEstablishmentData = localStorage.getItem('establishmentData');
+
+    if (savedAdminData) {
+      try {
+        setAdminData(JSON.parse(savedAdminData));
+      } catch (error) {
+        console.error('Erreur lors du chargement des données admin:', error);
+      }
+    }
+
+    if (savedEstablishmentData) {
+      try {
+        setEstablishmentData(JSON.parse(savedEstablishmentData));
+      } catch (error) {
+        console.error('Erreur lors du chargement des données établissement:', error);
+      }
+    }
+  }, []);
 
   const handleLogoUpload = (files: File[]) => {
     if (files.length > 0) {
@@ -42,13 +65,28 @@ const Compte = () => {
       // Créer une URL temporaire pour prévisualiser l'image
       const logoUrl = URL.createObjectURL(file);
       setEstablishmentData(prev => ({ ...prev, logoUrl }));
-      console.log('Logo uploadé:', file);
+      
+      // Sauvegarder le logo en base64 pour la persistance
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const logoData = e.target?.result as string;
+        setEstablishmentData(prev => ({ ...prev, logoUrl: logoData }));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   const handleSaveEstablishment = () => {
-    console.log('Saving admin data:', adminData);
-    console.log('Saving establishment data:', establishmentData);
+    try {
+      // Sauvegarder les données dans localStorage
+      localStorage.setItem('adminData', JSON.stringify(adminData));
+      localStorage.setItem('establishmentData', JSON.stringify(establishmentData));
+      
+      toast.success('Informations sauvegardées avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      toast.error('Erreur lors de la sauvegarde des informations');
+    }
   };
 
   return (
