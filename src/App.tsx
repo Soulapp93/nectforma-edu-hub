@@ -17,6 +17,7 @@ import EmploiTemps from './pages/EmploiTemps';
 import ScheduleEditor from './pages/ScheduleEditor';
 import Messagerie from './pages/Messagerie';
 import Emargement from './pages/Emargement';
+import AttendanceImprovements from './pages/AttendanceImprovements';
 import Evenements from './pages/Evenements';
 import CoffreFort from './pages/CoffreFort';
 import Compte from './pages/Compte';
@@ -68,6 +69,7 @@ const AppContent = () => {
               <Route path="/emploi-temps/view/:scheduleId" element={<ProtectedRoute><ScheduleEditor /></ProtectedRoute>} />
               <Route path="/messagerie" element={<ProtectedRoute><Messagerie /></ProtectedRoute>} />
               <Route path="/emargement" element={<ProtectedRoute><Emargement /></ProtectedRoute>} />
+              <Route path="/emargement/ameliorations" element={<ProtectedRoute><AttendanceImprovements /></ProtectedRoute>} />
               <Route path="/evenements" element={<ProtectedRoute><Evenements /></ProtectedRoute>} />
               <Route path="/coffre-fort" element={<ProtectedRoute><CoffreFort /></ProtectedRoute>} />
               <Route path="/compte" element={<ProtectedRoute><Compte /></ProtectedRoute>} />

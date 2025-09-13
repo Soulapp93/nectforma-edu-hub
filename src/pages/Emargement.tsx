@@ -420,6 +420,13 @@ const Emargement = () => {
               >
                 🕒 Historique
               </Button>
+              <Button 
+                variant="outline"
+                className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                onClick={() => window.location.href = '/emargement/ameliorations'}
+              >
+                💡 Améliorations
+              </Button>
             </div>
           </div>
 
