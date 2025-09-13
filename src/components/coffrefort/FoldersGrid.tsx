@@ -3,7 +3,7 @@ import React from 'react';
 import { Folder, Eye } from 'lucide-react';
 
 interface Folder {
-  id: number;
+  id: string;
   name: string;
   icon: React.ComponentType<any>;
   files: number;
@@ -12,9 +12,11 @@ interface Folder {
 
 interface FoldersGridProps {
   folders: Folder[];
+  onFolderClick?: (folderId: string) => void;
+  onDeleteFolder?: (folderId: string) => void;
 }
 
-const FoldersGrid: React.FC<FoldersGridProps> = ({ folders }) => {
+const FoldersGrid: React.FC<FoldersGridProps> = ({ folders, onFolderClick, onDeleteFolder }) => {
   return (
     <div className="mb-8">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Dossiers</h2>
@@ -22,7 +24,11 @@ const FoldersGrid: React.FC<FoldersGridProps> = ({ folders }) => {
         {folders.map((folder) => {
           const Icon = folder.icon;
           return (
-            <div key={folder.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow cursor-pointer">
+            <div 
+              key={folder.id} 
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => onFolderClick?.(folder.id)}
+            >
               <div className="flex items-center justify-between mb-4">
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                   <Icon className="h-6 w-6 text-purple-600" />

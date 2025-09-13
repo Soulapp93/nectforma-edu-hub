@@ -290,6 +290,151 @@ export type Database = {
           },
         ]
       }
+      digital_safe_file_permissions: {
+        Row: {
+          created_at: string
+          file_id: string
+          granted_by: string
+          id: string
+          permission_type: string
+          role: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_id: string
+          granted_by: string
+          id?: string
+          permission_type?: string
+          role?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_id?: string
+          granted_by?: string
+          id?: string
+          permission_type?: string
+          role?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_safe_file_permissions_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "digital_safe_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_safe_file_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      digital_safe_files: {
+        Row: {
+          content_type: string
+          created_at: string
+          establishment_id: string
+          file_path: string
+          file_size: number
+          file_url: string
+          folder_id: string | null
+          id: string
+          is_shared: boolean | null
+          name: string
+          original_name: string
+          shared_with_roles: string[] | null
+          shared_with_users: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content_type: string
+          created_at?: string
+          establishment_id: string
+          file_path: string
+          file_size: number
+          file_url: string
+          folder_id?: string | null
+          id?: string
+          is_shared?: boolean | null
+          name: string
+          original_name: string
+          shared_with_roles?: string[] | null
+          shared_with_users?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          establishment_id?: string
+          file_path?: string
+          file_size?: number
+          file_url?: string
+          folder_id?: string | null
+          id?: string
+          is_shared?: boolean | null
+          name?: string
+          original_name?: string
+          shared_with_roles?: string[] | null
+          shared_with_users?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_safe_files_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "digital_safe_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      digital_safe_folders: {
+        Row: {
+          created_at: string
+          establishment_id: string
+          id: string
+          name: string
+          parent_folder_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          establishment_id: string
+          id?: string
+          name: string
+          parent_folder_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          establishment_id?: string
+          id?: string
+          name?: string
+          parent_folder_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_safe_folders_parent_folder_id_fkey"
+            columns: ["parent_folder_id"]
+            isOneToOne: false
+            referencedRelation: "digital_safe_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       establishments: {
         Row: {
           address: string | null

@@ -3,77 +3,36 @@ import { FileText, Folder, Upload, Download, Trash2, Eye, Share, Plus } from 'lu
 import StorageInfo from '../components/coffrefort/StorageInfo';
 import FileFilters from '../components/coffrefort/FileFilters';
 import FoldersGrid from '../components/coffrefort/FoldersGrid';
+import FileUploadModal from '../components/coffrefort/FileUploadModal';
+import CreateFolderModal from '../components/coffrefort/CreateFolderModal';
+import FileViewerModal from '../components/coffrefort/FileViewerModal';
+import { useDigitalSafe } from '@/hooks/useDigitalSafe';
+import { DigitalSafeFile } from '@/services/digitalSafeService';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 const CoffreFort = () => {
-  const [currentFolder, setCurrentFolder] = useState('root');
-  const [selectedFiles, setSelectedFiles] = useState<number[]>([]);
+  const {
+    folders,
+    files,
+    currentFolder,
+    setCurrentFolder,
+    loading,
+    storageInfo,
+    loadData,
+    deleteFile,
+    deleteFolder,
+    downloadFile
+  } = useDigitalSafe();
+
+  const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showCreateFolderModal, setShowCreateFolderModal] = useState(false);
+  const [selectedFileForView, setSelectedFileForView] = useState<DigitalSafeFile | null>(null);
 
-  const folders = [
-    { id: 1, name: 'Documents administratifs', icon: Folder, files: 12, size: '45 MB' },
-    { id: 2, name: 'Formations', icon: Folder, files: 28, size: '156 MB' },
-    { id: 3, name: 'Évaluations', icon: Folder, files: 15, size: '23 MB' },
-    { id: 4, name: 'Ressources pédagogiques', icon: Folder, files: 42, size: '287 MB' }
-  ];
-
-  const files = [
-    {
-      id: 1,
-      name: 'Règlement intérieur 2024.pdf',
-      type: 'PDF',
-      size: '2.3 MB',
-      modified: '2024-01-15',
-      owner: 'Admin Nect',
-      shared: true,
-      icon: FileText
-    },
-    {
-      id: 2,
-      name: 'Programme Marketing Digital.docx',
-      type: 'DOCX',
-      size: '1.8 MB',
-      modified: '2024-01-12',
-      owner: 'Formateur Prof',
-      shared: false,
-      icon: FileText
-    },
-    {
-      id: 3,
-      name: 'Certificat formation Photoshop.pdf',
-      type: 'PDF',
-      size: '856 KB',
-      modified: '2024-01-10',
-      owner: 'Sangare Souleymane',
-      shared: false,
-      icon: FileText
-    },
-    {
-      id: 4,
-      name: 'Présentation communication digitale.pptx',
-      type: 'PPTX',
-      size: '4.2 MB',
-      modified: '2024-01-08',
-      owner: 'Formateur Communication',
-      shared: true,
-      icon: FileText
-    },
-    {
-      id: 5,
-      name: 'Évaluation finale - Marketing.xlsx',
-      type: 'XLSX',
-      size: '1.1 MB',
-      modified: '2024-01-05',
-      owner: 'Admin Nect',
-      shared: false,
-      icon: FileText
-    }
-  ];
-
-  const storageUsed = 512; // MB
-  const storageTotal = 3000; // MB (3 GB for Basic plan)
-
-  const handleSelectFile = (fileId: number) => {
+  const handleSelectFile = (fileId: string) => {
     setSelectedFiles(prev => 
       prev.includes(fileId) 
         ? prev.filter(id => id !== fileId)
@@ -85,21 +44,81 @@ const CoffreFort = () => {
     setSelectedFiles(selectedFiles.length === files.length ? [] : files.map(f => f.id));
   };
 
+  const getFileTypeFromName = (name: string) => {
+    const extension = name.split('.').pop()?.toUpperCase() || '';
+    return extension;
+  };
+
   const getFileTypeColor = (type: string) => {
     const colors = {
       'PDF': 'bg-red-100 text-red-800',
       'DOCX': 'bg-blue-100 text-blue-800',
+      'DOC': 'bg-blue-100 text-blue-800',
       'XLSX': 'bg-green-100 text-green-800',
+      'XLS': 'bg-green-100 text-green-800',
       'PPTX': 'bg-orange-100 text-orange-800',
-      'IMG': 'bg-purple-100 text-purple-800'
+      'PPT': 'bg-orange-100 text-orange-800',
+      'JPG': 'bg-purple-100 text-purple-800',
+      'JPEG': 'bg-purple-100 text-purple-800',
+      'PNG': 'bg-purple-100 text-purple-800',
+      'GIF': 'bg-purple-100 text-purple-800',
+      'TXT': 'bg-gray-100 text-gray-800',
+      'MD': 'bg-gray-100 text-gray-800'
     };
     return colors[type as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const formatDate = (dateString: string) => {
+    return format(new Date(dateString), 'dd/MM/yyyy', { locale: fr });
+  };
+
   const filteredFiles = files.filter(file =>
-    file.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    file.owner.toLowerCase().includes(searchTerm.toLowerCase())
+    file.original_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleDeleteSelected = async () => {
+    if (selectedFiles.length === 0) return;
+    
+    if (confirm(`Êtes-vous sûr de vouloir supprimer ${selectedFiles.length} fichier(s) ?`)) {
+      try {
+        await Promise.all(selectedFiles.map(fileId => deleteFile(fileId)));
+        setSelectedFiles([]);
+      } catch (error) {
+        console.error('Erreur suppression multiple:', error);
+      }
+    }
+  };
+
+  const handleDownloadSelected = async () => {
+    if (selectedFiles.length === 0) return;
+    
+    try {
+      const filesToDownload = files.filter(file => selectedFiles.includes(file.id));
+      for (const file of filesToDownload) {
+        await downloadFile(file);
+      }
+    } catch (error) {
+      console.error('Erreur téléchargement multiple:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-500">Chargement...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
@@ -110,18 +129,27 @@ const CoffreFort = () => {
             <p className="text-gray-600">Stockage sécurisé de vos documents importants</p>
           </div>
           <div className="flex items-center space-x-3">
-            <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+            <button 
+              onClick={() => setShowCreateFolderModal(true)}
+              className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Nouveau dossier
             </button>
-            <button className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+            <button 
+              onClick={() => setShowUploadModal(true)}
+              className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+            >
               <Upload className="h-4 w-4 mr-2" />
               Importer des fichiers
             </button>
           </div>
         </div>
 
-        <StorageInfo storageUsed={storageUsed} storageTotal={storageTotal} />
+        <StorageInfo 
+          storageUsed={Math.round(storageInfo.used / (1024 * 1024))} 
+          storageTotal={Math.round(storageInfo.total / (1024 * 1024))} 
+        />
       </div>
 
       <FileFilters
@@ -132,9 +160,21 @@ const CoffreFort = () => {
         selectedFiles={selectedFiles}
         onSelectAll={handleSelectAll}
         filesCount={files.length}
+        onDownloadSelected={handleDownloadSelected}
+        onDeleteSelected={handleDeleteSelected}
       />
 
-      <FoldersGrid folders={folders} />
+      <FoldersGrid 
+        folders={folders.map(folder => ({
+          id: folder.id,
+          name: folder.name,
+          icon: Folder,
+          files: 0, // TODO: compter les fichiers dans le dossier
+          size: '0 MB' // TODO: calculer la taille
+        }))} 
+        onFolderClick={(folderId) => setCurrentFolder(folderId)}
+        onDeleteFolder={deleteFolder}
+      />
 
       <div>
         <div className="flex items-center justify-between mb-4">
@@ -152,7 +192,7 @@ const CoffreFort = () => {
         {viewMode === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredFiles.map((file) => {
-              const Icon = file.icon;
+              const fileType = getFileTypeFromName(file.original_name);
               return (
                 <div 
                   key={file.id} 
@@ -163,22 +203,52 @@ const CoffreFort = () => {
                 >
                   <div className="flex items-center justify-between mb-4">
                     <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <Icon className="h-6 w-6 text-gray-600" />
+                      <FileText className="h-6 w-6 text-gray-600" />
                     </div>
                     <div className="flex items-center space-x-1">
-                      {file.shared && (
+                      {file.is_shared && (
                         <div className="w-2 h-2 bg-green-500 rounded-full" title="Partagé"></div>
                       )}
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getFileTypeColor(file.type)}`}>
-                        {file.type}
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getFileTypeColor(fileType)}`}>
+                        {fileType}
                       </span>
                     </div>
                   </div>
-                  <h3 className="font-medium text-gray-900 mb-2 text-sm line-clamp-2">{file.name}</h3>
+                  <h3 className="font-medium text-gray-900 mb-2 text-sm line-clamp-2">{file.original_name}</h3>
                   <div className="text-xs text-gray-500 space-y-1">
-                    <div>{file.size}</div>
-                    <div>Modifié le {file.modified}</div>
-                    <div>Par {file.owner}</div>
+                    <div>{formatFileSize(file.file_size)}</div>
+                    <div>Modifié le {formatDate(file.updated_at)}</div>
+                  </div>
+                  <div className="flex items-center space-x-1 mt-3">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedFileForView(file);
+                      }}
+                      className="p-1 text-purple-600 hover:text-purple-900 rounded"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        downloadFile(file);
+                      }}
+                      className="p-1 text-blue-600 hover:text-blue-900 rounded"
+                    >
+                      <Download className="h-4 w-4" />
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm('Êtes-vous sûr de vouloir supprimer ce fichier ?')) {
+                          deleteFile(file.id);
+                        }
+                      }}
+                      className="p-1 text-red-600 hover:text-red-900 rounded"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
               );
@@ -206,7 +276,7 @@ const CoffreFort = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredFiles.map((file) => {
-                  const Icon = file.icon;
+                  const fileType = getFileTypeFromName(file.original_name);
                   return (
                     <tr key={file.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -220,36 +290,49 @@ const CoffreFort = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
-                            <Icon className="h-4 w-4 text-gray-600" />
+                            <FileText className="h-4 w-4 text-gray-600" />
                           </div>
                           <div>
-                            <div className="text-sm font-medium text-gray-900">{file.name}</div>
+                            <div className="text-sm font-medium text-gray-900">{file.original_name}</div>
                             <div className="flex items-center space-x-2">
-                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${getFileTypeColor(file.type)}`}>
-                                {file.type}
+                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${getFileTypeColor(fileType)}`}>
+                                {fileType}
                               </span>
-                              {file.shared && (
+                              {file.is_shared && (
                                 <span className="text-xs text-green-600 font-medium">Partagé</span>
                               )}
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{file.size}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{file.modified}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{file.owner}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatFileSize(file.file_size)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatDate(file.updated_at)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Moi</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center space-x-2">
-                          <button className="text-purple-600 hover:text-purple-900 p-1">
+                          <button 
+                            onClick={() => setSelectedFileForView(file)}
+                            className="text-purple-600 hover:text-purple-900 p-1"
+                          >
                             <Eye className="h-4 w-4" />
                           </button>
-                          <button className="text-blue-600 hover:text-blue-900 p-1">
+                          <button 
+                            onClick={() => downloadFile(file)}
+                            className="text-blue-600 hover:text-blue-900 p-1"
+                          >
                             <Download className="h-4 w-4" />
                           </button>
                           <button className="text-green-600 hover:text-green-900 p-1">
                             <Share className="h-4 w-4" />
                           </button>
-                          <button className="text-red-600 hover:text-red-900 p-1">
+                          <button 
+                            onClick={() => {
+                              if (confirm('Êtes-vous sûr de vouloir supprimer ce fichier ?')) {
+                                deleteFile(file.id);
+                              }
+                            }}
+                            className="text-red-600 hover:text-red-900 p-1"
+                          >
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
@@ -278,7 +361,10 @@ const CoffreFort = () => {
                 }
               </p>
               {!searchTerm && (
-                <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium">
+                <button 
+                  onClick={() => setShowUploadModal(true)}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium"
+                >
                   Importer des fichiers
                 </button>
               )}
@@ -286,6 +372,27 @@ const CoffreFort = () => {
           </div>
         )}
       </div>
+
+      {/* Modals */}
+      <FileUploadModal
+        open={showUploadModal}
+        onOpenChange={setShowUploadModal}
+        folderId={currentFolder}
+        onSuccess={loadData}
+      />
+
+      <CreateFolderModal
+        open={showCreateFolderModal}
+        onOpenChange={setShowCreateFolderModal}
+        parentId={currentFolder}
+        onSuccess={loadData}
+      />
+
+      <FileViewerModal
+        open={!!selectedFileForView}
+        onOpenChange={(open) => !open && setSelectedFileForView(null)}
+        file={selectedFileForView}
+      />
     </div>
   );
 };

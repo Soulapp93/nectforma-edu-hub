@@ -7,9 +7,11 @@ interface FileFiltersProps {
   onSearchChange: (value: string) => void;
   viewMode: 'grid' | 'list';
   onViewModeChange: (mode: 'grid' | 'list') => void;
-  selectedFiles: number[];
+  selectedFiles: string[];
   onSelectAll: () => void;
   filesCount: number;
+  onDownloadSelected?: () => void;
+  onDeleteSelected?: () => void;
 }
 
 const FileFilters: React.FC<FileFiltersProps> = ({
@@ -19,7 +21,9 @@ const FileFilters: React.FC<FileFiltersProps> = ({
   onViewModeChange,
   selectedFiles,
   onSelectAll,
-  filesCount
+  filesCount,
+  onDownloadSelected,
+  onDeleteSelected
 }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
@@ -72,13 +76,21 @@ const FileFilters: React.FC<FileFiltersProps> = ({
             {selectedFiles.length} fichier(s) sélectionné(s)
           </span>
           <div className="flex items-center space-x-2">
-            <button className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg">
+            <button 
+              onClick={onDownloadSelected}
+              className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg"
+              title="Télécharger les fichiers sélectionnés"
+            >
               <Download className="h-4 w-4" />
             </button>
             <button className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg">
               <Share className="h-4 w-4" />
             </button>
-            <button className="p-2 text-red-600 hover:bg-red-100 rounded-lg">
+            <button 
+              onClick={onDeleteSelected}
+              className="p-2 text-red-600 hover:bg-red-100 rounded-lg"
+              title="Supprimer les fichiers sélectionnés"
+            >
               <Trash2 className="h-4 w-4" />
             </button>
           </div>
