@@ -56,13 +56,13 @@ export const digitalSafeService = {
   async createFolder(name: string, parentId?: string) {
     console.log('Création du dossier:', name);
     
-    const { data: currentUser } = await supabase.auth.getUser();
-    if (!currentUser.user) throw new Error('Utilisateur non authentifié');
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) throw new Error('Utilisateur non authentifié');
 
     const { data: userProfile } = await supabase
       .from('users')
       .select('establishment_id')
-      .eq('id', currentUser.user.id)
+      .eq('id', user.id)
       .single();
 
     if (!userProfile) throw new Error('Profil utilisateur non trouvé');
@@ -72,7 +72,7 @@ export const digitalSafeService = {
       .insert([{
         name,
         parent_folder_id: parentId || null,
-        user_id: currentUser.user.id,
+        user_id: user.id,
         establishment_id: userProfile.establishment_id
       }])
       .select()
@@ -113,13 +113,13 @@ export const digitalSafeService = {
   async uploadFiles(files: File[], folderId?: string) {
     console.log('Upload de fichiers:', files.length, 'fichiers');
     
-    const { data: currentUser } = await supabase.auth.getUser();
-    if (!currentUser.user) throw new Error('Utilisateur non authentifié');
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) throw new Error('Utilisateur non authentifié');
 
     const { data: userProfile } = await supabase
       .from('users')
       .select('establishment_id')
-      .eq('id', currentUser.user.id)
+      .eq('id', user.id)
       .single();
 
     if (!userProfile) throw new Error('Profil utilisateur non trouvé');
@@ -129,7 +129,7 @@ export const digitalSafeService = {
     for (const file of files) {
       try {
         const fileName = `${Date.now()}_${file.name}`;
-        const filePath = `${currentUser.user.id}/${fileName}`;
+        const filePath = `${user.id}/${fileName}`;
         
         // Upload vers le storage
         const { data: uploadData, error: uploadError } = await supabase.storage
@@ -157,7 +157,7 @@ export const digitalSafeService = {
             file_size: file.size,
             content_type: file.type || 'application/octet-stream',
             folder_id: folderId || null,
-            user_id: currentUser.user.id,
+            user_id: user.id,
             establishment_id: userProfile.establishment_id,
             is_shared: false
           }])
@@ -246,8 +246,8 @@ export const digitalSafeService = {
     }
 
     // Créer les permissions individuelles
-    const { data: currentUser } = await supabase.auth.getUser();
-    if (!currentUser.user) throw new Error('Utilisateur non authentifié');
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) throw new Error('Utilisateur non authentifié');
 
     const permissions = [];
     
@@ -256,7 +256,7 @@ export const digitalSafeService = {
         file_id: fileId,
         user_id: userId,
         permission_type: 'view',
-        granted_by: currentUser.user.id
+        granted_by: user.id
       });
     }
 
@@ -265,7 +265,7 @@ export const digitalSafeService = {
         file_id: fileId,
         role,
         permission_type: 'view',
-        granted_by: currentUser.user.id
+        granted_by: user.id
       });
     }
 
