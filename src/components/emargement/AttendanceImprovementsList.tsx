@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   Smartphone, 
   MapPin, 
@@ -200,69 +199,69 @@ const AttendanceImprovementsList = () => {
       ]
     },
     {
-      id: 'real-time-notifications',
-      category: 'Communication',
-      title: 'Notifications Push Temps Réel',
-      description: 'Système de notifications automatiques pour rappels, ouvertures/fermetures d\'émargement.',
-      detailedDescription: 'Un système de communication proactif qui envoie des notifications push personnalisées aux étudiants et formateurs. Le système gère différents types d\'alertes : rappels avant le début des cours, notifications d\'ouverture/fermeture d\'émargement, alertes d\'absence, confirmations de présence. Les notifications sont personnalisables par profil utilisateur et peuvent être programmées selon des règles métier complexes. L\'intégration avec les calendriers personnels et les préférences utilisateur garantit une communication pertinente et non intrusive.',
-      priority: 'Moyenne',
-      effort: 'Élevé',
+      id: 'auto-timing',
+      category: 'Automatisation',
+      title: 'Gestion Automatique des Horaires',
+      description: 'Ouverture/fermeture automatique des émargements selon les créneaux planifiés.',
+      detailedDescription: 'Système d\'automatisation intelligent qui synchronise parfaitement les émargements avec les plannings académiques. Le système ouvre et ferme automatiquement les sessions d\'émargement selon les créneaux définis, avec gestion avancée des exceptions (jours fériés, événements spéciaux, annulations). Il intègre des règles métier flexibles pour gérer les retards, les prolongations de cours, et les situations exceptionnelles. L\'automatisation complète élimine les erreurs humaines et garantit une cohérence parfaite des processus.',
+      priority: 'Élevée',
+      effort: 'Faible',
       impact: 'Moyen',
-      icon: <Bell className="h-5 w-5" />,
+      icon: <Clock className="h-5 w-5" />,
       benefits: [
-        'Réduction drastique des oublis d\'émargement',
-        'Communication proactive et personnalisée',
-        'Amélioration significative du taux de participation',
-        'Notifications contextuelles par rôle utilisateur',
-        'Réduction de la charge administrative',
-        'Amélioration de l\'engagement étudiant'
+        'Élimination totale des erreurs d\'ouverture/fermeture',
+        'Respect automatique des créneaux horaires',
+        'Réduction drastique de la charge administrative',
+        'Cohérence parfaite des processus',
+        'Gestion intelligente des exceptions',
+        'Audit trail complet des actions automatiques'
       ],
       technicalRequirements: [
-        'Service Worker pour notifications web',
-        'Firebase Cloud Messaging ou équivalent',
-        'Système de gestion des abonnements utilisateur',
-        'Templates de messages personnalisables',
-        'Scheduler pour programmation automatique',
-        'Analytics de délivrabilité des notifications'
+        'Système de cron jobs ou task scheduler',
+        'Intégration API avec calendrier académique',
+        'Gestionnaire d\'exceptions et règles métier',
+        'Système de logs et audit trail',
+        'Interface de configuration des règles',
+        'Mécanisme de rollback en cas d\'erreur'
       ],
-      estimatedTime: '3-4 semaines',
-      estimatedCost: '4 000 - 7 000 €',
+      estimatedTime: '1 semaine',
+      estimatedCost: '1 500 - 2 500 €',
       useCases: [
-        'Rappel 15 minutes avant le début du cours',
-        'Notification d\'ouverture d\'émargement en temps réel',
-        'Alerte formateur si taux de présence anormalement bas',
-        'Confirmation de présence pour rassurer les parents'
+        'Ouverture automatique 10 minutes avant le cours',
+        'Fermeture automatique 15 minutes après le début',
+        'Gestion des cours annulés sans intervention manuelle',
+        'Adaptation automatique aux changements d\'horaires'
       ],
       implementationSteps: [
-        'Configuration service de notifications push',
-        'Développement système d\'abonnements',
-        'Création templates et règles de déclenchement',
-        'Intégration avec calendrier et planning',
-        'Tests multi-navigateurs et multi-dispositifs',
-        'Déploiement progressif avec groupes pilotes'
+        'Configuration du système de planification',
+        'Intégration avec le calendrier existant',
+        'Développement des règles métier',
+        'Tests des scénarios d\'exception',
+        'Mise en place monitoring et alertes',
+        'Validation avec utilisateurs pilotes'
       ],
       risks: [
-        'Notifications bloquées par les navigateurs',
-        'Surcharge d\'information pour les utilisateurs',
-        'Problèmes de délivrabilité selon les plateformes',
-        'Coûts variables selon le volume d\'envois'
+        'Défaillance du système de planification',
+        'Désynchronisation avec le calendrier',
+        'Gestion inadequate des exceptions',
+        'Perte de contrôle manuel en cas de besoin'
       ],
       successMetrics: [
-        'Taux d\'ouverture notifications > 70%',
-        'Réduction oublis émargement de 60%',
-        'Engagement utilisateur +40%',
-        'Satisfaction communication > 4/5'
+        'Ponctualité ouverture/fermeture = 100%',
+        'Réduction interventions manuelles de 95%',
+        'Zéro erreur d\'horaire sur 1 mois',
+        'Temps de configuration < 5 minutes par règle'
       ],
       alternatives: [
-        'SMS traditionnel',
-        'Email automatique',
-        'Notifications in-app uniquement',
-        'Intégration applications calendrier'
+        'Notifications de rappel pour actions manuelles',
+        'Semi-automatisation avec validation',
+        'Intégration directe calendrier Google/Outlook',
+        'Planification hebdomadaire récurrente'
       ],
       dependencies: [
-        'Consentement utilisateur pour notifications',
-        'Service de messagerie externe',
-        'Calendrier académique numérisé'
+        'Calendrier académique numérisé',
+        'Système de planification fiable',
+        'Définition claire des règles métier'
       ]
     },
     {
@@ -332,69 +331,69 @@ const AttendanceImprovementsList = () => {
       ]
     },
     {
-      id: 'auto-timing',
-      category: 'Automatisation',
-      title: 'Gestion Automatique des Horaires',
-      description: 'Ouverture/fermeture automatique des émargements selon les créneaux planifiés.',
-      detailedDescription: 'Système d\'automatisation intelligent qui synchronise parfaitement les émargements avec les plannings académiques. Le système ouvre et ferme automatiquement les sessions d\'émargement selon les créneaux définis, avec gestion avancée des exceptions (jours fériés, événements spéciaux, annulations). Il intègre des règles métier flexibles pour gérer les retards, les prolongations de cours, et les situations exceptionnelles. L\'automatisation complète élimine les erreurs humaines et garantit une cohérence parfaite des processus.',
-      priority: 'Élevée',
-      effort: 'Faible',
+      id: 'real-time-notifications',
+      category: 'Communication',
+      title: 'Notifications Push Temps Réel',
+      description: 'Système de notifications automatiques pour rappels, ouvertures/fermetures d\'émargement.',
+      detailedDescription: 'Un système de communication proactif qui envoie des notifications push personnalisées aux étudiants et formateurs. Le système gère différents types d\'alertes : rappels avant le début des cours, notifications d\'ouverture/fermeture d\'émargement, alertes d\'absence, confirmations de présence. Les notifications sont personnalisables par profil utilisateur et peuvent être programmées selon des règles métier complexes. L\'intégration avec les calendriers personnels et les préférences utilisateur garantit une communication pertinente et non intrusive.',
+      priority: 'Moyenne',
+      effort: 'Élevé',
       impact: 'Moyen',
-      icon: <Clock className="h-5 w-5" />,
+      icon: <Bell className="h-5 w-5" />,
       benefits: [
-        'Élimination totale des erreurs d\'ouverture/fermeture',
-        'Respect automatique des créneaux horaires',
-        'Réduction drastique de la charge administrative',
-        'Cohérence parfaite des processus',
-        'Gestion intelligente des exceptions',
-        'Audit trail complet des actions automatiques'
+        'Réduction drastique des oublis d\'émargement',
+        'Communication proactive et personnalisée',
+        'Amélioration significative du taux de participation',
+        'Notifications contextuelles par rôle utilisateur',
+        'Réduction de la charge administrative',
+        'Amélioration de l\'engagement étudiant'
       ],
       technicalRequirements: [
-        'Système de cron jobs ou task scheduler',
-        'Intégration API avec calendrier académique',
-        'Gestionnaire d\'exceptions et règles métier',
-        'Système de logs et audit trail',
-        'Interface de configuration des règles',
-        'Mécanisme de rollback en cas d\'erreur'
+        'Service Worker pour notifications web',
+        'Firebase Cloud Messaging ou équivalent',
+        'Système de gestion des abonnements utilisateur',
+        'Templates de messages personnalisables',
+        'Scheduler pour programmation automatique',
+        'Analytics de délivrabilité des notifications'
       ],
-      estimatedTime: '1 semaine',
-      estimatedCost: '1 500 - 2 500 €',
+      estimatedTime: '3-4 semaines',
+      estimatedCost: '4 000 - 7 000 €',
       useCases: [
-        'Ouverture automatique 10 minutes avant le cours',
-        'Fermeture automatique 15 minutes après le début',
-        'Gestion des cours annulés sans intervention manuelle',
-        'Adaptation automatique aux changements d\'horaires'
+        'Rappel 15 minutes avant le début du cours',
+        'Notification d\'ouverture d\'émargement en temps réel',
+        'Alerte formateur si taux de présence anormalement bas',
+        'Confirmation de présence pour rassurer les parents'
       ],
       implementationSteps: [
-        'Configuration du système de planification',
-        'Intégration avec le calendrier existant',
-        'Développement des règles métier',
-        'Tests des scénarios d\'exception',
-        'Mise en place monitoring et alertes',
-        'Validation avec utilisateurs pilotes'
+        'Configuration service de notifications push',
+        'Développement système d\'abonnements',
+        'Création templates et règles de déclenchement',
+        'Intégration avec calendrier et planning',
+        'Tests multi-navigateurs et multi-dispositifs',
+        'Déploiement progressif avec groupes pilotes'
       ],
       risks: [
-        'Défaillance du système de planification',
-        'Désynchronisation avec le calendrier',
-        'Gestion inadequate des exceptions',
-        'Perte de contrôle manuel en cas de besoin'
+        'Notifications bloquées par les navigateurs',
+        'Surcharge d\'information pour les utilisateurs',
+        'Problèmes de délivrabilité selon les plateformes',
+        'Coûts variables selon le volume d\'envois'
       ],
       successMetrics: [
-        'Ponctualité ouverture/fermeture = 100%',
-        'Réduction interventions manuelles de 95%',
-        'Zéro erreur d\'horaire sur 1 mois',
-        'Temps de configuration < 5 minutes par règle'
+        'Taux d\'ouverture notifications > 70%',
+        'Réduction oublis émargement de 60%',
+        'Engagement utilisateur +40%',
+        'Satisfaction communication > 4/5'
       ],
       alternatives: [
-        'Notifications de rappel pour actions manuelles',
-        'Semi-automatisation avec validation',
-        'Intégration directe calendrier Google/Outlook',
-        'Planification hebdomadaire récurrente'
+        'SMS traditionnel',
+        'Email automatique',
+        'Notifications in-app uniquement',
+        'Intégration applications calendrier'
       ],
       dependencies: [
-        'Calendrier académique numérisé',
-        'Système de planification fiable',
-        'Définition claire des règles métier'
+        'Consentement utilisateur pour notifications',
+        'Service de messagerie externe',
+        'Calendrier académique numérisé'
       ]
     }
   ];
@@ -497,210 +496,215 @@ const AttendanceImprovementsList = () => {
             <div className="space-y-6">
               {improvements
                 .filter(imp => imp.category === category)
-                .map(improvement => (
-                  <Card key={improvement.id} className="border border-gray-200 hover:shadow-lg transition-shadow">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start space-x-4">
-                          <div className="p-2 bg-blue-50 rounded-lg">
-                            {improvement.icon}
-                          </div>
-                          <div className="flex-1">
-                            <CardTitle className="text-xl mb-2">{improvement.title}</CardTitle>
-                            <p className="text-gray-600 mb-3">{improvement.description}</p>
-                            <div className="flex items-center space-x-2 mb-2">
-                              <DollarSign className="h-4 w-4 text-green-600" />
-                              <span className="text-sm font-medium text-green-600">{improvement.estimatedCost}</span>
-                              <span className="text-gray-400">•</span>
-                              <Calendar className="h-4 w-4 text-blue-600" />
-                              <span className="text-sm font-medium text-blue-600">{improvement.estimatedTime}</span>
+                .map(improvement => {
+                  const isExpanded = expandedItems.has(improvement.id);
+                  return (
+                    <Card key={improvement.id} className="border border-gray-200 hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start space-x-4">
+                            <div className="p-2 bg-blue-50 rounded-lg">
+                              {improvement.icon}
                             </div>
+                            <div className="flex-1">
+                              <CardTitle className="text-xl mb-2">{improvement.title}</CardTitle>
+                              <p className="text-gray-600 mb-3">{improvement.description}</p>
+                              <div className="flex items-center space-x-2 mb-2">
+                                <DollarSign className="h-4 w-4 text-green-600" />
+                                <span className="text-sm font-medium text-green-600">{improvement.estimatedCost}</span>
+                                <span className="text-gray-400">•</span>
+                                <Calendar className="h-4 w-4 text-blue-600" />
+                                <span className="text-sm font-medium text-blue-600">{improvement.estimatedTime}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col space-y-2">
+                            <Badge className={getPriorityColor(improvement.priority)}>
+                              {improvement.priority}
+                            </Badge>
+                            <Badge className={getEffortColor(improvement.effort)}>
+                              Effort {improvement.effort}
+                            </Badge>
+                            <Badge className={getImpactColor(improvement.impact)}>
+                              Impact {improvement.impact}
+                            </Badge>
                           </div>
                         </div>
-                        <div className="flex flex-col space-y-2">
-                          <Badge className={getPriorityColor(improvement.priority)}>
-                            {improvement.priority}
-                          </Badge>
-                          <Badge className={getEffortColor(improvement.effort)}>
-                            Effort {improvement.effort}
-                          </Badge>
-                          <Badge className={getImpactColor(improvement.impact)}>
-                            Impact {improvement.impact}
-                          </Badge>
+                      </CardHeader>
+                      <CardContent>
+                        {/* Description détaillée */}
+                        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                          <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
+                            <FileText className="h-4 w-4 mr-2" />
+                            Description Détaillée
+                          </h4>
+                          <p className="text-sm text-gray-700 leading-relaxed">{improvement.detailedDescription}</p>
                         </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {/* Description détaillée */}
-                      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                        <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
-                          <FileText className="h-4 w-4 mr-2" />
-                          Description Détaillée
-                        </h4>
-                        <p className="text-sm text-gray-700 leading-relaxed">{improvement.detailedDescription}</p>
-                      </div>
 
-                      <Collapsible open={expandedItems.has(improvement.id)} onOpenChange={() => toggleExpanded(improvement.id)}>
-                        <CollapsibleTrigger asChild>
-                          <Button variant="outline" className="w-full mb-4">
-                            {expandedItems.has(improvement.id) ? <ChevronDown className="h-4 w-4 mr-2" /> : <ChevronRight className="h-4 w-4 mr-2" />}
-                            {expandedItems.has(improvement.id) ? 'Masquer les détails' : 'Voir tous les détails'}
-                          </Button>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                          <div className="grid md:grid-cols-2 gap-6">
-                            {/* Bénéfices */}
-                            <div>
-                              <h4 className="font-semibold text-green-800 mb-3 flex items-center">
-                                <CheckCircle className="h-4 w-4 mr-2" />
-                                Bénéfices Attendus
-                              </h4>
-                              <ul className="space-y-2 text-sm">
-                                {improvement.benefits.map((benefit, index) => (
-                                  <li key={index} className="flex items-start">
-                                    <span className="text-green-600 mr-2 mt-0.5">•</span>
-                                    <span>{benefit}</span>
-                                  </li>
-                                ))}
-                              </ul>
+                        <Button 
+                          variant="outline" 
+                          className="w-full mb-4"
+                          onClick={() => toggleExpanded(improvement.id)}
+                        >
+                          {isExpanded ? <ChevronDown className="h-4 w-4 mr-2" /> : <ChevronRight className="h-4 w-4 mr-2" />}
+                          {isExpanded ? 'Masquer les détails' : 'Voir tous les détails'}
+                        </Button>
+
+                        {isExpanded && (
+                          <div className="space-y-6">
+                            <div className="grid md:grid-cols-2 gap-6">
+                              {/* Bénéfices */}
+                              <div>
+                                <h4 className="font-semibold text-green-800 mb-3 flex items-center">
+                                  <CheckCircle className="h-4 w-4 mr-2" />
+                                  Bénéfices Attendus
+                                </h4>
+                                <ul className="space-y-2 text-sm">
+                                  {improvement.benefits.map((benefit, index) => (
+                                    <li key={index} className="flex items-start">
+                                      <span className="text-green-600 mr-2 mt-0.5">•</span>
+                                      <span>{benefit}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+
+                              {/* Exigences techniques */}
+                              <div>
+                                <h4 className="font-semibold text-blue-800 mb-3 flex items-center">
+                                  <Settings className="h-4 w-4 mr-2" />
+                                  Exigences Techniques
+                                </h4>
+                                <ul className="space-y-2 text-sm">
+                                  {improvement.technicalRequirements.map((req, index) => (
+                                    <li key={index} className="flex items-start">
+                                      <span className="text-blue-600 mr-2 mt-0.5">•</span>
+                                      <span>{req}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+
+                              {/* Cas d'usage */}
+                              <div>
+                                <h4 className="font-semibold text-purple-800 mb-3 flex items-center">
+                                  <Target className="h-4 w-4 mr-2" />
+                                  Cas d'Usage Concrets
+                                </h4>
+                                <ul className="space-y-2 text-sm">
+                                  {improvement.useCases.map((useCase, index) => (
+                                    <li key={index} className="flex items-start">
+                                      <span className="text-purple-600 mr-2 mt-0.5">•</span>
+                                      <span>{useCase}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+
+                              {/* Étapes d'implémentation */}
+                              <div>
+                                <h4 className="font-semibold text-indigo-800 mb-3 flex items-center">
+                                  <Workflow className="h-4 w-4 mr-2" />
+                                  Étapes d'Implémentation
+                                </h4>
+                                <ol className="space-y-2 text-sm">
+                                  {improvement.implementationSteps.map((step, index) => (
+                                    <li key={index} className="flex items-start">
+                                      <span className="bg-indigo-100 text-indigo-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium mr-2 mt-0.5">
+                                        {index + 1}
+                                      </span>
+                                      <span>{step}</span>
+                                    </li>
+                                  ))}
+                                </ol>
+                              </div>
+
+                              {/* Risques et mitigation */}
+                              <div>
+                                <h4 className="font-semibold text-red-800 mb-3 flex items-center">
+                                  <AlertTriangle className="h-4 w-4 mr-2" />
+                                  Risques et Mitigation
+                                </h4>
+                                <ul className="space-y-2 text-sm">
+                                  {improvement.risks.map((risk, index) => (
+                                    <li key={index} className="flex items-start">
+                                      <span className="text-red-600 mr-2 mt-0.5">⚠</span>
+                                      <span>{risk}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+
+                              {/* Métriques de succès */}
+                              <div>
+                                <h4 className="font-semibold text-teal-800 mb-3 flex items-center">
+                                  <TrendingUp className="h-4 w-4 mr-2" />
+                                  Métriques de Succès
+                                </h4>
+                                <ul className="space-y-2 text-sm">
+                                  {improvement.successMetrics.map((metric, index) => (
+                                    <li key={index} className="flex items-start">
+                                      <span className="text-teal-600 mr-2 mt-0.5">📊</span>
+                                      <span>{metric}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+
+                              {/* Alternatives */}
+                              <div>
+                                <h4 className="font-semibold text-orange-800 mb-3 flex items-center">
+                                  <Lightbulb className="h-4 w-4 mr-2" />
+                                  Solutions Alternatives
+                                </h4>
+                                <ul className="space-y-2 text-sm">
+                                  {improvement.alternatives.map((alt, index) => (
+                                    <li key={index} className="flex items-start">
+                                      <span className="text-orange-600 mr-2 mt-0.5">💡</span>
+                                      <span>{alt}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+
+                              {/* Dépendances */}
+                              <div>
+                                <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
+                                  <Link className="h-4 w-4 mr-2" />
+                                  Dépendances
+                                </h4>
+                                <ul className="space-y-2 text-sm">
+                                  {improvement.dependencies.map((dep, index) => (
+                                    <li key={index} className="flex items-start">
+                                      <span className="text-gray-600 mr-2 mt-0.5">🔗</span>
+                                      <span>{dep}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
                             </div>
 
-                            {/* Exigences techniques */}
-                            <div>
-                              <h4 className="font-semibold text-blue-800 mb-3 flex items-center">
-                                <Settings className="h-4 w-4 mr-2" />
-                                Exigences Techniques
-                              </h4>
-                              <ul className="space-y-2 text-sm">
-                                {improvement.technicalRequirements.map((req, index) => (
-                                  <li key={index} className="flex items-start">
-                                    <span className="text-blue-600 mr-2 mt-0.5">•</span>
-                                    <span>{req}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-
-                            {/* Cas d'usage */}
-                            <div>
-                              <h4 className="font-semibold text-purple-800 mb-3 flex items-center">
-                                <Target className="h-4 w-4 mr-2" />
-                                Cas d'Usage Concrets
-                              </h4>
-                              <ul className="space-y-2 text-sm">
-                                {improvement.useCases.map((useCase, index) => (
-                                  <li key={index} className="flex items-start">
-                                    <span className="text-purple-600 mr-2 mt-0.5">•</span>
-                                    <span>{useCase}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-
-                            {/* Étapes d'implémentation */}
-                            <div>
-                              <h4 className="font-semibold text-indigo-800 mb-3 flex items-center">
-                                <Workflow className="h-4 w-4 mr-2" />
-                                Étapes d'Implémentation
-                              </h4>
-                              <ol className="space-y-2 text-sm">
-                                {improvement.implementationSteps.map((step, index) => (
-                                  <li key={index} className="flex items-start">
-                                    <span className="bg-indigo-100 text-indigo-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium mr-2 mt-0.5">
-                                      {index + 1}
-                                    </span>
-                                    <span>{step}</span>
-                                  </li>
-                                ))}
-                              </ol>
-                            </div>
-
-                            {/* Risques et mitigation */}
-                            <div>
-                              <h4 className="font-semibold text-red-800 mb-3 flex items-center">
-                                <AlertTriangle className="h-4 w-4 mr-2" />
-                                Risques et Mitigation
-                              </h4>
-                              <ul className="space-y-2 text-sm">
-                                {improvement.risks.map((risk, index) => (
-                                  <li key={index} className="flex items-start">
-                                    <span className="text-red-600 mr-2 mt-0.5">⚠</span>
-                                    <span>{risk}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-
-                            {/* Métriques de succès */}
-                            <div>
-                              <h4 className="font-semibold text-teal-800 mb-3 flex items-center">
-                                <TrendingUp className="h-4 w-4 mr-2" />
-                                Métriques de Succès
-                              </h4>
-                              <ul className="space-y-2 text-sm">
-                                {improvement.successMetrics.map((metric, index) => (
-                                  <li key={index} className="flex items-start">
-                                    <span className="text-teal-600 mr-2 mt-0.5">📊</span>
-                                    <span>{metric}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-
-                            {/* Alternatives */}
-                            <div>
-                              <h4 className="font-semibold text-orange-800 mb-3 flex items-center">
-                                <Lightbulb className="h-4 w-4 mr-2" />
-                                Solutions Alternatives
-                              </h4>
-                              <ul className="space-y-2 text-sm">
-                                {improvement.alternatives.map((alt, index) => (
-                                  <li key={index} className="flex items-start">
-                                    <span className="text-orange-600 mr-2 mt-0.5">💡</span>
-                                    <span>{alt}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-
-                            {/* Dépendances */}
-                            <div>
-                              <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
-                                <Link className="h-4 w-4 mr-2" />
-                                Dépendances
-                              </h4>
-                              <ul className="space-y-2 text-sm">
-                                {improvement.dependencies.map((dep, index) => (
-                                  <li key={index} className="flex items-start">
-                                    <span className="text-gray-600 mr-2 mt-0.5">🔗</span>
-                                    <span>{dep}</span>
-                                  </li>
-                                ))}
-                              </ul>
+                            <div className="mt-6 pt-4 border-t flex items-center justify-between">
+                              <div className="text-sm text-gray-500">
+                                Dernière mise à jour: {new Date().toLocaleDateString('fr-FR')}
+                              </div>
+                              <div className="flex space-x-2">
+                                <Button variant="outline" size="sm">
+                                  <Download className="h-4 w-4 mr-1" />
+                                  Cahier des charges
+                                </Button>
+                                <Button variant="outline" size="sm">
+                                  <MessageSquare className="h-4 w-4 mr-1" />
+                                  Discuter
+                                </Button>
+                              </div>
                             </div>
                           </div>
-
-                          <div className="mt-6 pt-4 border-t flex items-center justify-between">
-                            <div className="text-sm text-gray-500">
-                              Dernière mise à jour: {new Date().toLocaleDateString('fr-FR')}
-                            </div>
-                            <div className="flex space-x-2">
-                              <Button variant="outline" size="sm">
-                                <Download className="h-4 w-4 mr-1" />
-                                Cahier des charges
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                <MessageSquare className="h-4 w-4 mr-1" />
-                                Discuter
-                              </Button>
-                            </div>
-                          </div>
-                        </CollapsibleContent>
-                      </Collapsible>
-                    </CardContent>
-                  </Card>
-                ))
-              }
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
             </div>
           </CardContent>
         </Card>
@@ -737,21 +741,7 @@ const AttendanceImprovementsList = () => {
                   <p className="text-sm font-medium text-gray-700">ROI attendu: 250%</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Inclut: Rapports intelligents, notifications push</p>
-                </div>
-              </div>
-            </div>
-            <div className="p-6 bg-white rounded-lg border-l-4 border-l-purple-500">
-              <h4 className="font-bold text-purple-800 text-lg mb-2">Phase 3 - Innovation Avancée</h4>
-              <p className="text-gray-600 mb-3">Technologies de pointe et analytics IA</p>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-700">Durée: 8-12 semaines</p>
-                  <p className="text-sm font-medium text-gray-700">Budget: 12 000 - 25 000 €</p>
-                  <p className="text-sm font-medium text-gray-700">ROI attendu: 200%</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Inclut: Analytics IA, authentification biométrique</p>
+                  <p className="text-sm text-gray-600">Inclut: Notifications push, Analytics avancés</p>
                 </div>
               </div>
             </div>
@@ -796,8 +786,8 @@ const AttendanceImprovementsList = () => {
             <h4 className="font-bold text-lg mb-4">Investissement Total & Retour sur Investissement</h4>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <p className="text-sm text-gray-600 mb-2">Investissement total estimé (3 phases)</p>
-                <p className="text-2xl font-bold text-gray-800">26 500 - 51 000 €</p>
+                <p className="text-sm text-gray-600 mb-2">Investissement total estimé (2 phases)</p>
+                <p className="text-2xl font-bold text-gray-800">16 500 - 28 000 €</p>
               </div>
               <div>
                 <p className="text-sm text-gray-600 mb-2">ROI global attendu sur 2 ans</p>
