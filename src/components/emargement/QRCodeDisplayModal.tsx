@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { QrCode, Hash, Users, Clock, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import QRCode from 'qrcode';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +25,7 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
 }) => {
   const [currentCode, setCurrentCode] = useState('123456');
   const [qrCodeData, setQRCodeData] = useState('');
+  const [qrCodeImage, setQRCodeImage] = useState('');
   const [timeRemaining, setTimeRemaining] = useState(30 * 60); // 30 minutes
   const [signedCount, setSignedCount] = useState(0);
   const [showCode, setShowCode] = useState(true);
@@ -65,7 +67,17 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
     try {
       // Générer un nouveau code unique
       const newCode = Math.floor(100000 + Math.random() * 900000).toString();
-      const qrData = `${window.location.origin}/emargement/${attendanceSheet.id}?code=${newCode}`;
+      const qrData = `${window.location.origin}/emargement-qr-student?sheet=${attendanceSheet.id}&code=${newCode}`;
+      
+      // Générer l'image QR code
+      const qrImageUrl = await QRCode.toDataURL(qrData, {
+        width: 300,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
       
       // Sauvegarder le code dans la base de données pour validation
       const { error } = await supabase
@@ -80,12 +92,13 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
 
       setCurrentCode(newCode);
       setQRCodeData(qrData);
+      setQRCodeImage(qrImageUrl);
       setTimeRemaining(30 * 60); // Reset timer
       
-      toast.success('Nouveau code généré !');
+      toast.success('Nouveau code QR généré !');
     } catch (error) {
       console.error('Error generating QR code:', error);
-      toast.error('Erreur lors de la génération du code');
+      toast.error('Erreur lors de la génération du code QR');
     } finally {
       setIsRegenerating(false);
     }
@@ -148,18 +161,19 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
               </CardTitle>
             </CardHeader>
             <CardContent className="text-center space-y-4">
-              {/* QR Code simulé */}
-              <div className="mx-auto w-48 h-48 bg-black border-4 border-white rounded-lg flex items-center justify-center">
-                <div className="w-40 h-40 bg-white rounded grid grid-cols-8 gap-0.5 p-2">
-                  {Array.from({ length: 64 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className={`aspect-square ${
-                        Math.random() > 0.5 ? 'bg-black' : 'bg-white'
-                      } rounded-sm`}
-                    />
-                  ))}
-                </div>
+              {/* QR Code réel */}
+              <div className="mx-auto w-48 h-48 bg-white border-4 border-gray-200 rounded-lg flex items-center justify-center">
+                {qrCodeImage ? (
+                  <img 
+                    src={qrCodeImage} 
+                    alt="QR Code d'émargement" 
+                    className="w-44 h-44 object-contain"
+                  />
+                ) : (
+                  <div className="w-40 h-40 bg-gray-100 rounded flex items-center justify-center">
+                    <span className="text-gray-500">Génération...</span>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-center gap-2">

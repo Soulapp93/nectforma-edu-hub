@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FileText, Download, Printer, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { FileText, Download, Printer, CheckCircle, XCircle, Clock, PenTool } from 'lucide-react';
+import InstructorSigningModal from './InstructorSigningModal';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,6 +46,7 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
   const [attendanceSheet, setAttendanceSheet] = useState<AttendanceSheet | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showInstructorSignModal, setShowInstructorSignModal] = useState(false);
 
   // Charger les données de la feuille d'émargement
   const loadAttendanceData = async () => {
@@ -322,7 +324,18 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
           <div className="grid grid-cols-2 gap-8">
             <div>
               <h4 className="font-semibold mb-3">Signature du Formateur</h4>
-              <div className="border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-center justify-center p-2">
+              <div 
+                className={`border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-center justify-center p-2 relative ${
+                  !(attendanceSheet as any).signatures?.find((sig: any) => sig.user_type === 'instructor') 
+                    ? 'cursor-pointer hover:bg-gray-100 transition-colors print:cursor-default print:hover:bg-gray-50' 
+                    : ''
+                }`}
+                onClick={() => {
+                  if (!(attendanceSheet as any).signatures?.find((sig: any) => sig.user_type === 'instructor')) {
+                    setShowInstructorSignModal(true);
+                  }
+                }}
+              >
                 {(attendanceSheet as any).signatures?.find((sig: any) => sig.user_type === 'instructor')?.signature_data ? (
                   <img 
                     src={(attendanceSheet as any).signatures.find((sig: any) => sig.user_type === 'instructor')?.signature_data} 
@@ -330,8 +343,9 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
                     className="h-16 w-auto"
                   />
                 ) : (
-                  <div className="text-xs text-gray-500 text-center">
-                    En attente de signature
+                  <div className="text-xs text-gray-500 text-center flex flex-col items-center gap-2">
+                    <PenTool className="w-5 h-5 print:hidden" />
+                    <span>Cliquez pour signer</span>
                   </div>
                 )}
               </div>
@@ -355,6 +369,18 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
           Document généré le {format(new Date(), 'PPP à HH:mm', { locale: fr })} - NECTFORIA
         </div>
       </div>
+
+      {/* Modal de signature instructeur */}
+      <InstructorSigningModal
+        isOpen={showInstructorSignModal}
+        onClose={() => setShowInstructorSignModal(false)}
+        attendanceSheet={attendanceSheet}
+        instructorId={attendanceSheet?.instructor_id || ''}
+        onSigned={() => {
+          loadAttendanceData();
+          setShowInstructorSignModal(false);
+        }}
+      />
     </div>
   );
 };
