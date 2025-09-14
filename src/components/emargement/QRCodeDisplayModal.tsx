@@ -8,6 +8,8 @@ import { Progress } from '@/components/ui/progress';
 import { AttendanceSheet } from '@/services/attendanceService';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface QRCodeDisplayModalProps {
   isOpen: boolean;
@@ -60,15 +62,33 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
   const generateNewCode = async () => {
     setIsRegenerating(true);
     
-    // Simulation de génération
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const newCode = Math.floor(100000 + Math.random() * 900000).toString();
-    setCurrentCode(newCode);
-    setQRCodeData(`attendance:${attendanceSheet.id}:${Date.now()}:${newCode}`);
-    setTimeRemaining(30 * 60); // Reset timer
-    
-    setIsRegenerating(false);
+    try {
+      // Générer un nouveau code unique
+      const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const qrData = `${window.location.origin}/emargement/${attendanceSheet.id}?code=${newCode}`;
+      
+      // Sauvegarder le code dans la base de données pour validation
+      const { error } = await supabase
+        .from('attendance_sheets')
+        .update({ 
+          qr_code: newCode,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', attendanceSheet.id);
+
+      if (error) throw error;
+
+      setCurrentCode(newCode);
+      setQRCodeData(qrData);
+      setTimeRemaining(30 * 60); // Reset timer
+      
+      toast.success('Nouveau code généré !');
+    } catch (error) {
+      console.error('Error generating QR code:', error);
+      toast.error('Erreur lors de la génération du code');
+    } finally {
+      setIsRegenerating(false);
+    }
   };
 
   // Initialiser le QR code

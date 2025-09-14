@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import EnhancedAttendanceSheetModal from './EnhancedAttendanceSheetModal';
 import AbsenceReasonModal from './AbsenceReasonModal';
 import AdminValidationModal from './AdminValidationModal';
+import AdminAttendanceValidation from '../emargement/AdminAttendanceValidation';
 import SignatureManagementModal from '../ui/signature-management-modal';
 
 const AttendanceManagement = () => {
@@ -307,17 +308,29 @@ const AttendanceManagement = () => {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedSheet(sheet);
-                              setShowSheetModal(true);
-                            }}
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            Consulter
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedSheet(sheet);
+                                setShowSheetModal(true);
+                              }}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              Consulter
+                            </Button>
+                            {sheet.status === 'En attente de validation' && (
+                              <Button
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700"
+                                onClick={() => handleValidateSheet(sheet)}
+                              >
+                                <CheckCircle2 className="h-4 w-4 mr-1" />
+                                Valider
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -358,7 +371,7 @@ const AttendanceManagement = () => {
       )}
 
       {selectedSheet && showValidationModal && (
-        <AdminValidationModal
+        <AdminAttendanceValidation
           isOpen={showValidationModal}
           onClose={() => {
             setShowValidationModal(false);
