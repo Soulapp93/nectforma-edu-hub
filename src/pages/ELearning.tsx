@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
-import { Plus, Monitor, Video, FileText, Settings } from 'lucide-react';
+import { Plus, Monitor, Video, FileText, Settings, History } from 'lucide-react';
 import VirtualClasses from '../components/elearning/VirtualClasses';
+import ClassHistory from '../components/elearning/ClassHistory';
 import Recordings from '../components/elearning/Recordings';
 import Materials from '../components/elearning/Materials';
 import SettingsTab from '../components/elearning/Settings';
@@ -92,6 +93,7 @@ const ELearning = () => {
         <nav className="-mb-px flex space-x-8">
           {[
             { id: 'classes', label: 'Classes virtuelles', icon: Monitor },
+            { id: 'history', label: 'Historique', icon: History },
             { id: 'settings', label: 'Paramètres', icon: Settings }
           ].map((tab) => {
             const Icon = tab.icon;
@@ -117,6 +119,10 @@ const ELearning = () => {
       <div className="min-h-screen">
         {activeTab === 'classes' && (
           <VirtualClasses onJoinClass={handleJoinClass} />
+        )}
+        
+        {activeTab === 'history' && (
+          <ClassHistory />
         )}
         
         {activeTab === 'settings' && (

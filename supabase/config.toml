@@ -1,1 +1,4 @@
 project_id = "cvuyglhivifusdahoztd"
+
+[functions.update-class-status]
+verify_jwt = false
