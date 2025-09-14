@@ -80,15 +80,7 @@ export const formationService = {
           title,
           description,
           duration_hours,
-          order_index,
-          schedules (
-            id,
-            start_time,
-            end_time,
-            day_of_week,
-            room,
-            instructor_id
-          )
+          order_index
         )
       `)
       .eq('id', id)
