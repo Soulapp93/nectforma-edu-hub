@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Clock, Users, Eye, Edit } from 'lucide-react';
+import { ArrowLeft, BookOpen, Clock, Users, Eye, Edit, FileText } from 'lucide-react';
 import { formationService, Formation } from '@/services/formationService';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,8 @@ import ModuleContentTab from '@/components/module/ModuleContentTab';
 import ModuleAssignmentsTab from '@/components/module/ModuleAssignmentsTab';
 import ModuleCorrectionsTab from '@/components/module/ModuleCorrectionsTab';
 import ModuleDocumentsTab from '@/components/module/ModuleDocumentsTab';
+import CreateAttendanceSessionModal from '@/components/emargement/CreateAttendanceSessionModal';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const FormationDetail = () => {
   const { formationId } = useParams<{ formationId: string }>();
@@ -17,6 +19,8 @@ const FormationDetail = () => {
   const [formation, setFormation] = useState<Formation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showAttendanceModal, setShowAttendanceModal] = useState(false);
+  const { userRole } = useCurrentUser();
 
   useEffect(() => {
     const fetchFormation = async () => {
@@ -122,6 +126,16 @@ const FormationDetail = () => {
                 <BookOpen className="h-4 w-4 mr-2" />
                 Accéder au Cahier de Texte
               </Button>
+              {(userRole === 'Formateur' || userRole === 'Admin' || userRole === 'AdminPrincipal') && (
+                <Button 
+                  variant="secondary" 
+                  onClick={() => setShowAttendanceModal(true)}
+                  className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Créer une session d'émargement
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -214,6 +228,17 @@ const FormationDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal pour créer une session d'émargement */}
+      {formation && (
+        <CreateAttendanceSessionModal
+          isOpen={showAttendanceModal}
+          onClose={() => setShowAttendanceModal(false)}
+          formationId={formation.id}
+          formationTitle={formation.title}
+          formationColor={formationColor}
+        />
+      )}
     </div>
   );
 };

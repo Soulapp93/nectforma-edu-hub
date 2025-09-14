@@ -94,7 +94,6 @@ const Sidebar = () => {
   const limitedNavigation = [
     { name: 'Formation', href: '/formations', icon: BookOpen },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
-    { name: 'Émargement', href: '/emargement', icon: FileText },
     { name: 'Événements', href: '/evenements', icon: Calendar1 },
     { name: 'Coffre-fort', href: '/coffre-fort', icon: FileText },
     { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
