@@ -9,6 +9,7 @@ import { fr } from 'date-fns/locale';
 import { scheduleService, ScheduleSlot } from '@/services/scheduleService';
 import { toast } from 'sonner';
 import GeneratedAttendanceSheet from './GeneratedAttendanceSheet';
+import { demoDataService } from '@/services/demoDataService';
 
 interface CreateAttendanceSessionModalProps {
   isOpen: boolean;
@@ -25,64 +26,41 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
   formationTitle,
   formationColor
 }) => {
-  const [todaysSchedules, setTodaysSchedules] = useState<ScheduleSlot[]>([]);
+  const [todaysSchedules, setTodaysSchedules] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState<ScheduleSlot | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<any>(null);
   const [generatingSheet, setGeneratingSheet] = useState(false);
   const [showAttendanceSheet, setShowAttendanceSheet] = useState(false);
   const [attendanceSessionData, setAttendanceSessionData] = useState<any>(null);
 
-  // Récupérer les cours du jour pour cette formation
+  // Utiliser les données de démonstration pour les cours d'aujourd'hui
   useEffect(() => {
-    const fetchTodaysSchedules = async () => {
-      if (!isOpen) return;
-      
-      try {
-        setLoading(true);
-        const today = new Date().toISOString().split('T')[0];
-        
-        // Récupérer tous les créneaux publiés
-        const allSchedules = await scheduleService.getAllPublishedSchedules();
-        
-        // Filtrer pour aujourd'hui
-        const todaysSlots = allSchedules.filter(slot => {
-          return slot.date === today;
-        });
-        
-        setTodaysSchedules(todaysSlots);
-      } catch (error) {
-        console.error('Erreur lors du chargement des cours:', error);
-        toast.error('Erreur lors du chargement des cours du jour');
-      } finally {
+    if (isOpen) {
+      setLoading(true);
+      // Simuler un délai de chargement
+      setTimeout(() => {
+        const demoSchedules = demoDataService.getTodaySchedules();
+        setTodaysSchedules(demoSchedules);
         setLoading(false);
-      }
-    };
+      }, 500);
+    }
+  }, [isOpen]);
 
-    fetchTodaysSchedules();
-  }, [isOpen, formationId]);
-
-  const generateAttendanceSheet = async (slot: ScheduleSlot) => {
+  const generateAttendanceSheet = async (slot: any) => {
     setGeneratingSheet(true);
     try {
       // Simuler la génération de la feuille d'émargement
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Préparer les données de la session
-      const sessionData = {
-        formationTitle,
-        moduleTitle: slot.formation_modules?.title || 'Module',
-        date: slot.date,
-        startTime: formatTime(slot.start_time),
-        endTime: formatTime(slot.end_time),
-        room: slot.room,
-        instructor: slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Formateur',
-        formationColor
-      };
+      // Créer la session avec les données de démonstration
+      const sessionData = demoDataService.createDemoAttendanceSession(slot.id);
       
-      setAttendanceSessionData(sessionData);
-      setShowAttendanceSheet(true);
-      
-      toast.success('Feuille d\'émargement générée avec succès !');
+      if (sessionData) {
+        setAttendanceSessionData(sessionData);
+        setShowAttendanceSheet(true);
+        
+        toast.success('Feuille d\'émargement générée avec succès !');
+      }
     } catch (error) {
       toast.error('Erreur lors de la génération de la feuille');
     } finally {
@@ -157,25 +135,23 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
                           </div>
                           <div>
                             <h4 className="font-semibold text-gray-900">
-                              {slot.formation_modules?.title || 'Module'}
+                              {slot.module_title}
                             </h4>
                             <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
                               <div className="flex items-center gap-1">
                                 <Clock className="w-4 h-4" />
-                                <span>{formatTime(slot.start_time)} - {formatTime(slot.end_time)}</span>
+                                <span>{slot.start_time} - {slot.end_time}</span>
                               </div>
                               {slot.room && (
                                 <div className="flex items-center gap-1">
                                   <MapPin className="w-4 h-4" />
-                                  <span>Salle {slot.room}</span>
+                                  <span>{slot.room}</span>
                                 </div>
                               )}
-                              {slot.users && (
-                                <div className="flex items-center gap-1">
-                                  <Users className="w-4 h-4" />
-                                  <span>{slot.users.first_name} {slot.users.last_name}</span>
-                                </div>
-                              )}
+                              <div className="flex items-center gap-1">
+                                <Users className="w-4 h-4" />
+                                <span>{slot.instructor_name}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -198,16 +174,14 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
                   <div className="bg-gray-50 rounded-lg p-4 mb-4">
                     <h4 className="font-medium mb-2">Aperçu de la feuille d'émargement</h4>
                     <div className="text-sm text-gray-600 space-y-1">
-                      <div><strong>Formation:</strong> {formationTitle}</div>
-                      <div><strong>Module:</strong> {selectedSlot.formation_modules?.title}</div>
+                      <div><strong>Formation:</strong> {selectedSlot.formation_title}</div>
+                      <div><strong>Module:</strong> {selectedSlot.module_title}</div>
                       <div><strong>Date:</strong> {format(new Date(), 'PPP', { locale: fr })}</div>
-                      <div><strong>Horaire:</strong> {formatTime(selectedSlot.start_time)} - {formatTime(selectedSlot.end_time)}</div>
+                      <div><strong>Horaire:</strong> {selectedSlot.start_time} - {selectedSlot.end_time}</div>
                       {selectedSlot.room && (
                         <div><strong>Salle:</strong> {selectedSlot.room}</div>
                       )}
-                      {selectedSlot.users && (
-                        <div><strong>Formateur:</strong> {selectedSlot.users.first_name} {selectedSlot.users.last_name}</div>
-                      )}
+                      <div><strong>Formateur:</strong> {selectedSlot.instructor_name}</div>
                     </div>
                   </div>
 

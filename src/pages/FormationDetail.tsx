@@ -126,16 +126,6 @@ const FormationDetail = () => {
                 <BookOpen className="h-4 w-4 mr-2" />
                 Accéder au Cahier de Texte
               </Button>
-              {(userRole === 'Formateur' || userRole === 'Admin' || userRole === 'AdminPrincipal') && (
-                <Button 
-                  variant="secondary" 
-                  onClick={() => setShowAttendanceModal(true)}
-                  className="bg-white/20 border-white/30 text-white hover:bg-white/30"
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Créer une session d'émargement
-                </Button>
-              )}
             </div>
           </div>
         </div>
@@ -164,11 +154,29 @@ const FormationDetail = () => {
                           <BookOpen className="h-6 w-6" />
                         </div>
                         <div className="text-left flex-1">
-                          <h3 className="font-semibold text-gray-900">{module.title}</h3>
-                          <div className="flex items-center text-sm text-gray-600 mt-1">
-                            <span>Formateur: Marie Dubois</span>
-                            <Clock className="h-4 w-4 ml-4 mr-1" />
-                            <span>{module.duration_hours}h</span>
+                          <div className="flex items-center justify-between w-full">
+                            <div>
+                              <h3 className="font-semibold text-gray-900">{module.title}</h3>
+                              <div className="flex items-center text-sm text-gray-600 mt-1">
+                                <span>Formateur: Marie Dubois</span>
+                                <Clock className="h-4 w-4 ml-4 mr-1" />
+                                <span>{module.duration_hours}h</span>
+                              </div>
+                            </div>
+                            {(userRole === 'Formateur' || userRole === 'Admin' || userRole === 'AdminPrincipal') && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setShowAttendanceModal(true);
+                                }}
+                                className="ml-4 shrink-0"
+                              >
+                                <FileText className="h-4 w-4 mr-2" />
+                                Créer une session d'émargement
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </div>
