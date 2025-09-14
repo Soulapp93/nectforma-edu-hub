@@ -18,8 +18,6 @@ interface SettingsState {
   chatEnabled: boolean;
   waitingRoom: boolean;
   muteOnEntry: boolean;
-  maxParticipants: number;
-  sessionTimeout: number;
 }
 
 const Settings: React.FC = () => {
@@ -30,9 +28,7 @@ const Settings: React.FC = () => {
     allowScreenShare: false,
     chatEnabled: true,
     waitingRoom: true,
-    muteOnEntry: true,
-    maxParticipants: 50,
-    sessionTimeout: 120
+    muteOnEntry: true
   });
 
   const handleSettingChange = (key: keyof SettingsState, value: any) => {
@@ -94,28 +90,6 @@ const Settings: React.FC = () => {
                   <SelectItem value="studio">Qualité studio</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="maxParticipants">Participants maximum</Label>
-              <Input
-                type="number"
-                value={settings.maxParticipants}
-                onChange={(e) => handleSettingChange('maxParticipants', parseInt(e.target.value))}
-                min="1"
-                max="500"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="sessionTimeout">Timeout de session (minutes)</Label>
-              <Input
-                type="number"
-                value={settings.sessionTimeout}
-                onChange={(e) => handleSettingChange('sessionTimeout', parseInt(e.target.value))}
-                min="30"
-                max="480"
-              />
             </div>
           </div>
 
