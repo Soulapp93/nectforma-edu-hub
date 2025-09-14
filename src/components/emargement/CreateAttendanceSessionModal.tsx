@@ -10,6 +10,7 @@ import { scheduleService, ScheduleSlot } from '@/services/scheduleService';
 import { toast } from 'sonner';
 import GeneratedAttendanceSheet from './GeneratedAttendanceSheet';
 import { demoDataService } from '@/services/demoDataService';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CreateAttendanceSessionModalProps {
   isOpen: boolean;
@@ -49,20 +50,77 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
   const generateAttendanceSheet = async (slot: any) => {
     setGeneratingSheet(true);
     try {
-      // Simuler la génération de la feuille d'émargement
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Créer la session avec les données de démonstration
-      const sessionData = demoDataService.createDemoAttendanceSession(slot.id);
-      
-      if (sessionData) {
-        setAttendanceSessionData(sessionData);
+      // Chercher ou créer un planning pour cette formation
+      let { data: existingSchedule, error: scheduleError } = await supabase
+        .from('schedules')
+        .select('id')
+        .eq('formation_id', formationId)
+        .limit(1)
+        .single();
+
+      let scheduleId = existingSchedule?.id;
+
+      // Si aucun planning n'existe, en créer un
+      if (!scheduleId) {
+        const { data: newSchedule, error: newScheduleError } = await supabase
+          .from('schedules')
+          .insert({
+            formation_id: formationId,
+            title: `Planning - ${formationTitle}`,
+            academic_year: '2025-2026',
+            status: 'Publié'
+          })
+          .select()
+          .single();
+
+        if (newScheduleError) throw newScheduleError;
+        scheduleId = newSchedule.id;
+      }
+
+      // Créer un créneau d'horaire pour cette session
+      const { data: scheduleSlot, error: slotError } = await supabase
+        .from('schedule_slots')
+        .insert({
+          schedule_id: scheduleId,
+          date: new Date().toISOString().split('T')[0],
+          start_time: slot.start_time,
+          end_time: slot.end_time,
+          room: slot.room
+        })
+        .select()
+        .single();
+
+      if (slotError) throw slotError;
+
+      // Créer la feuille d'émargement
+      const { data, error } = await supabase
+        .from('attendance_sheets')
+        .insert({
+          schedule_slot_id: scheduleSlot.id,
+          formation_id: formationId,
+          title: `${slot.formation_title} - ${slot.module_title}`,
+          date: new Date().toISOString().split('T')[0],
+          start_time: slot.start_time,
+          end_time: slot.end_time,
+          room: slot.room,
+          status: 'En cours',
+          is_open_for_signing: true,
+          opened_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setAttendanceSessionData({ id: data.id });
         setShowAttendanceSheet(true);
         
         toast.success('Feuille d\'émargement générée avec succès !');
       }
     } catch (error) {
-      toast.error('Erreur lors de la génération de la feuille');
+      console.error('Erreur lors de la génération:', error);
+      toast.error(`Erreur lors de la génération: ${error.message}`);
     } finally {
       setGeneratingSheet(false);
     }
