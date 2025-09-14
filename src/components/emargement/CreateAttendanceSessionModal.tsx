@@ -8,9 +8,10 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { scheduleService, ScheduleSlot } from '@/services/scheduleService';
 import { toast } from 'sonner';
-import GeneratedAttendanceSheet from './GeneratedAttendanceSheet';
+import QRAttendanceManager from './QRAttendanceManager';
 import { demoDataService } from '@/services/demoDataService';
 import { supabase } from '@/integrations/supabase/client';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface CreateAttendanceSessionModalProps {
   isOpen: boolean;
@@ -31,8 +32,9 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
   const [loading, setLoading] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
   const [generatingSheet, setGeneratingSheet] = useState(false);
-  const [showAttendanceSheet, setShowAttendanceSheet] = useState(false);
+  const [showQRManager, setShowQRManager] = useState(false);
   const [attendanceSessionData, setAttendanceSessionData] = useState<any>(null);
+  const { userId } = useCurrentUser();
 
   // Utiliser les données de démonstration pour les cours d'aujourd'hui
   useEffect(() => {
@@ -92,12 +94,13 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
 
       if (slotError) throw slotError;
 
-      // Créer la feuille d'émargement
+      // Créer la feuille d'émargement avec le formateur actuel
       const { data, error } = await supabase
         .from('attendance_sheets')
         .insert({
           schedule_slot_id: scheduleSlot.id,
           formation_id: formationId,
+          instructor_id: userId,
           title: `${slot.formation_title} - ${slot.module_title}`,
           date: new Date().toISOString().split('T')[0],
           start_time: slot.start_time,
@@ -107,16 +110,19 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
           is_open_for_signing: true,
           opened_at: new Date().toISOString()
         })
-        .select()
+        .select(`
+          *,
+          formations(title, color)
+        `)
         .single();
 
       if (error) throw error;
 
       if (data) {
-        setAttendanceSessionData({ id: data.id });
-        setShowAttendanceSheet(true);
+        setAttendanceSessionData(data);
+        setShowQRManager(true);
         
-        toast.success('Feuille d\'émargement générée avec succès !');
+        toast.success('Session d\'émargement créée avec succès ! Vous pouvez maintenant afficher le QR code aux étudiants.');
       }
     } catch (error) {
       console.error('Erreur lors de la génération:', error);
@@ -130,15 +136,33 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
     return time.slice(0, 5); // Afficher seulement HH:MM
   };
 
-  if (showAttendanceSheet && attendanceSessionData) {
+  if (showQRManager && attendanceSessionData) {
     return (
-      <GeneratedAttendanceSheet
-        attendanceSheetId={attendanceSessionData.id}
-        onClose={() => {
-          setShowAttendanceSheet(false);
-          onClose();
-        }}
-      />
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Gestion de l'émargement - {formationTitle}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <QRAttendanceManager
+            attendanceSheet={attendanceSessionData}
+            instructorId={userId}
+            onUpdate={() => {
+              // Recharger les données si nécessaire
+              console.log('Session updated');
+            }}
+          />
+          
+          <div className="flex justify-end pt-4 border-t">
+            <Button onClick={onClose}>
+              Fermer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     );
   }
 
@@ -230,7 +254,7 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
               {selectedSlot && (
                 <div className="border-t pt-4">
                   <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium mb-2">Aperçu de la feuille d'émargement</h4>
+                    <h4 className="font-medium mb-2">Aperçu de la session d'émargement</h4>
                     <div className="text-sm text-gray-600 space-y-1">
                       <div><strong>Formation:</strong> {selectedSlot.formation_title}</div>
                       <div><strong>Module:</strong> {selectedSlot.module_title}</div>
@@ -250,11 +274,11 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
                       className="flex-1"
                     >
                       {generatingSheet ? (
-                        'Génération en cours...'
+                        'Création de la session...'
                       ) : (
                         <>
                           <FileText className="w-4 h-4 mr-2" />
-                          Générer la feuille d'émargement
+                          Créer la session d'émargement
                         </>
                       )}
                     </Button>
