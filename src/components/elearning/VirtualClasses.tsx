@@ -33,12 +33,8 @@ const VirtualClasses: React.FC<VirtualClassesProps> = ({ onJoinClass }) => {
   const joinClassMutation = useJoinClass();
   const updateStatusMutation = useUpdateClassStatus();
 
-  // Filter out terminated and cancelled classes from main view
-  const activeClasses = virtualClasses.filter(cls => 
-    cls.status !== 'Terminé' && cls.status !== 'Annulé'
-  );
-
-  const filteredClasses = activeClasses.filter(cls => {
+  // Toutes les classes virtuelles sont affichées - pas de filtrage par statut
+  const filteredClasses = virtualClasses.filter(cls => {
     const instructorName = cls.instructor 
       ? `${cls.instructor.first_name} ${cls.instructor.last_name}` 
       : '';
@@ -311,25 +307,16 @@ const VirtualClasses: React.FC<VirtualClassesProps> = ({ onJoinClass }) => {
               </div>
 
               <div className="flex space-x-2 pt-2">
-                {(userRole === 'Étudiant' || userRole === 'Formateur') && classItem.status === 'En cours' && (
-                  <Button
-                    onClick={() => handleJoinClass(classItem)}
-                    className="flex-1"
-                    disabled={joinClassMutation.isPending}
-                  >
-                    Rejoindre
-                  </Button>
-                )}
-                {(userRole === 'Étudiant' || userRole === 'Formateur') && classItem.status === 'Programmé' && (
-                  <Button
-                    onClick={() => handleJoinClass(classItem)}
-                    variant="outline"
-                    className="flex-1"
-                    disabled={joinClassMutation.isPending}
-                  >
-                    S'inscrire
-                  </Button>
-                )}
+                <Button
+                  onClick={() => handleJoinClass(classItem)}
+                  className="flex-1"
+                  disabled={joinClassMutation.isPending || classItem.status === 'Terminé' || classItem.status === 'Annulé'}
+                  variant={classItem.status === 'En cours' ? 'default' : 'outline'}
+                >
+                  {classItem.status === 'En cours' ? 'Rejoindre' : 
+                   classItem.status === 'Programmé' ? 'S\'inscrire' :
+                   classItem.status === 'Terminé' ? 'Terminé' : 'Annulé'}
+                </Button>
                 <Button 
                   variant="outline" 
                   size="sm"
@@ -347,10 +334,10 @@ const VirtualClasses: React.FC<VirtualClassesProps> = ({ onJoinClass }) => {
         <Card>
           <CardContent className="p-8 text-center">
             <Monitor className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">Aucune classe active</h3>
+            <h3 className="text-lg font-medium mb-2">Aucune classe trouvée</h3>
             <p className="text-muted-foreground">
-              {activeClasses.length === 0 
-                ? "Aucune classe virtuelle programmée ou en cours."
+              {virtualClasses.length === 0 
+                ? "Aucune classe virtuelle créée pour le moment."
                 : "Aucune classe ne correspond à vos critères de recherche."
               }
             </p>

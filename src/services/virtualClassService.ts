@@ -44,29 +44,9 @@ export const virtualClassService = {
         participants:virtual_class_participants(count)
       `);
 
-    // Filtrage selon le rôle (si on connaît le rôle); sinon, on laisse tout (utile en mode démo)
-    if (user?.role === 'Étudiant' && userId) {
-      // Les étudiants ne voient que les classes de leurs formations assignées
-      const { data: userFormations } = await supabase
-        .from('user_formation_assignments')
-        .select('formation_id')
-        .eq('user_id', userId);
-
-      const formationIds = userFormations?.map(uf => uf.formation_id) || [];
-      
-      if (formationIds.length > 0) {
-        // Filtrer seulement les classes des formations auxquelles l'étudiant est inscrit
-        query = query.in('formation_id', formationIds);
-      } else {
-        // Si l'étudiant n'est inscrit à aucune formation, ne retourner aucune classe
-        return [];
-      }
-    } else if (user?.role === 'Formateur' && userId) {
-      // Les formateurs voient leurs propres classes et celles de leur établissement
-      query = query.or(`instructor_id.eq.${userId},establishment_id.eq.${user.establishment_id}`);
-    }
-    // Les administrateurs ou utilisateurs non authentifiés voient tout (RLS gère l'accès)
-
+    // Tous les utilisateurs peuvent voir toutes les classes virtuelles
+    // Pas de filtrage par rôle ou formation - accès universel
+    
     query = query
       .order('date', { ascending: true })
       .order('start_time', { ascending: true });
