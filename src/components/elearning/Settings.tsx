@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Save, Volume2, Mic, Video, Monitor, Globe, Shield, Database } from 'lucide-react';
+import { Save, Volume2, Mic, Video, Monitor, Globe, Shield } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +32,6 @@ interface SettingsState {
   muteOnEntry: boolean;
   maxParticipants: number;
   sessionTimeout: number;
-  storageLocation: string;
   notifications: NotificationSettings;
   privacy: PrivacySettings;
 }
@@ -48,7 +47,6 @@ const Settings: React.FC = () => {
     muteOnEntry: true,
     maxParticipants: 50,
     sessionTimeout: 120,
-    storageLocation: 'cloud',
     notifications: {
       email: true,
       push: true,
@@ -204,44 +202,6 @@ const Settings: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Storage Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Database className="h-5 w-5 mr-2" />
-            Stockage des enregistrements
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="storageLocation">Emplacement de stockage</Label>
-            <Select 
-              value={settings.storageLocation}
-              onValueChange={(value) => handleSettingChange('storageLocation', value)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cloud">Cloud (recommandé)</SelectItem>
-                <SelectItem value="local">Stockage local</SelectItem>
-                <SelectItem value="hybrid">Hybride</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-muted-foreground">Espace utilisé</span>
-                <span className="text-sm font-medium">2.4 GB / 10 GB</span>
-              </div>
-              <Progress value={24} className="mb-2" />
-              <p className="text-xs text-muted-foreground">Espace disponible : 7.6 GB</p>
-            </CardContent>
-          </Card>
-        </CardContent>
-      </Card>
 
       {/* Notification Settings */}
       <Card>

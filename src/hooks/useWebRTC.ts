@@ -143,9 +143,19 @@ export const useWebRTC = (config: WebRTCConfig = { audio: true, video: true }) =
       });
     } catch (error) {
       console.error('Error starting screen share:', error);
+      let message = "Impossible de partager l'écran";
+      
+      if (error instanceof Error) {
+        if (error.name === 'NotAllowedError') {
+          message = "Veuillez autoriser le partage d'écran dans votre navigateur";
+        } else if (error.name === 'NotFoundError') {
+          message = "Aucun écran disponible pour le partage";
+        }
+      }
+      
       toast({
-        title: "Erreur",
-        description: "Impossible de partager l'écran",
+        title: "Partage d'écran",
+        description: message,
         variant: "destructive",
       });
     }

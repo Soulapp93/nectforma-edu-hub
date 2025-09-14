@@ -18,13 +18,13 @@ import {
 
 interface VideoControlsProps {
   isMuted: boolean;
-  setIsMuted: (muted: boolean) => void;
+  toggleAudio: () => void;
   isVideoOff: boolean;
-  setIsVideoOff: (off: boolean) => void;
+  toggleVideo: () => void;
   isSpeakerOff: boolean;
-  setIsSpeakerOff: (off: boolean) => void;
+  toggleSpeaker: () => void;
   isScreenSharing: boolean;
-  setIsScreenSharing: (sharing: boolean) => void;
+  toggleScreenShare: () => void;
   isHandRaised: boolean;
   setIsHandRaised: (raised: boolean) => void;
   isChatOpen: boolean;
@@ -38,13 +38,13 @@ interface VideoControlsProps {
 
 const VideoControls: React.FC<VideoControlsProps> = ({
   isMuted,
-  setIsMuted,
+  toggleAudio,
   isVideoOff,
-  setIsVideoOff,
+  toggleVideo,
   isSpeakerOff,
-  setIsSpeakerOff,
+  toggleSpeaker,
   isScreenSharing,
-  setIsScreenSharing,
+  toggleScreenShare,
   isHandRaised,
   setIsHandRaised,
   isChatOpen,
@@ -71,7 +71,7 @@ const VideoControls: React.FC<VideoControlsProps> = ({
         {/* Center - Main controls */}
         <div className="flex items-center space-x-3">
           <button
-            onClick={() => setIsMuted(!isMuted)}
+            onClick={toggleAudio}
             className={`p-3 rounded-full ${isMuted ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-600 hover:bg-gray-700'} text-white transition-colors`}
             title={isMuted ? 'Activer le micro' : 'Couper le micro'}
           >
@@ -79,7 +79,7 @@ const VideoControls: React.FC<VideoControlsProps> = ({
           </button>
 
           <button
-            onClick={() => setIsVideoOff(!isVideoOff)}
+            onClick={toggleVideo}
             className={`p-3 rounded-full ${isVideoOff ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-600 hover:bg-gray-700'} text-white transition-colors`}
             title={isVideoOff ? 'Activer la caméra' : 'Couper la caméra'}
           >
@@ -87,7 +87,7 @@ const VideoControls: React.FC<VideoControlsProps> = ({
           </button>
 
           <button
-            onClick={() => setIsSpeakerOff(!isSpeakerOff)}
+            onClick={toggleSpeaker}
             className={`p-3 rounded-full ${isSpeakerOff ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-600 hover:bg-gray-700'} text-white transition-colors`}
             title={isSpeakerOff ? 'Activer le son' : 'Couper le son'}
           >
@@ -95,7 +95,7 @@ const VideoControls: React.FC<VideoControlsProps> = ({
           </button>
 
           <button
-            onClick={() => setIsScreenSharing(!isScreenSharing)}
+            onClick={toggleScreenShare}
             className={`p-3 rounded-full ${isScreenSharing ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'} text-white transition-colors`}
             title="Partager l'écran"
           >

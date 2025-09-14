@@ -226,13 +226,13 @@ const VideoCall: React.FC<VideoCallProps> = ({ selectedClass, onLeaveCall }) => 
         {/* Control Bar */}
         <VideoControls 
           isMuted={!mediaState.audio}
-          setIsMuted={toggleAudio}
+          toggleAudio={toggleAudio}
           isVideoOff={!mediaState.video}
-          setIsVideoOff={toggleVideo}
+          toggleVideo={toggleVideo}
           isSpeakerOff={false}
-          setIsSpeakerOff={() => {}}
+          toggleSpeaker={() => {}}
           isScreenSharing={streamState.isScreenSharing}
-          setIsScreenSharing={handleScreenShare}
+          toggleScreenShare={handleScreenShare}
           isHandRaised={isHandRaised}
           setIsHandRaised={setIsHandRaised}
           isChatOpen={isChatOpen}
