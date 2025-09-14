@@ -3,6 +3,8 @@ import AccountTabs from '../components/compte/AccountTabs';
 import EstablishmentSettings from '../components/compte/EstablishmentSettings';
 import ProfileSettings from '../components/compte/ProfileSettings';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { userService } from '@/services/userService';
+import { fileUploadService } from '@/services/fileUploadService';
 import { toast } from 'sonner';
 
 type EstablishmentDataState = {
@@ -18,7 +20,7 @@ type EstablishmentDataState = {
 };
 
 const Compte = () => {
-  const { userRole } = useCurrentUser();
+  const { userRole, userId } = useCurrentUser();
   
   // TOUS LES HOOKS DOIVENT ÊTRE APPELÉS EN PREMIER - JAMAIS APRÈS UN RETURN CONDITIONNEL
   const [activeTab, setActiveTab] = useState(
@@ -53,11 +55,34 @@ const Compte = () => {
     profilePhotoUrl: undefined as string | undefined
   });
 
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+
   // Charger les données sauvegardées au montage du composant
   useEffect(() => {
+    const loadUserData = async () => {
+      if (userId) {
+        try {
+          const userData = await userService.getUserById(userId);
+          setProfileData({
+            firstName: userData.first_name || '',
+            lastName: userData.last_name || '',
+            email: userData.email || '',
+            phone: userData.phone || '',
+            profilePhotoUrl: userData.profile_photo_url
+          });
+        } catch (error) {
+          console.error('Erreur lors du chargement des données utilisateur:', error);
+          toast.error('Erreur lors du chargement du profil');
+        } finally {
+          setIsLoadingProfile(false);
+        }
+      } else {
+        setIsLoadingProfile(false);
+      }
+    };
+
     const savedAdminData = localStorage.getItem('adminData');
     const savedEstablishmentData = localStorage.getItem('establishmentData');
-    const savedProfileData = localStorage.getItem('profileData');
 
     if (savedAdminData) {
       try {
@@ -75,17 +100,12 @@ const Compte = () => {
       }
     }
 
-    if (savedProfileData) {
-      try {
-        setProfileData(JSON.parse(savedProfileData));
-      } catch (error) {
-        console.error('Erreur lors du chargement des données profil:', error);
-      }
-    }
+    // Charger les données utilisateur depuis la base de données
+    loadUserData();
 
     // Ajuster l'onglet actif selon le rôle de l'utilisateur
     setActiveTab(userRole === 'AdminPrincipal' ? 'establishment' : 'profile');
-  }, [userRole]);
+  }, [userRole, userId]);
 
   const handleLogoUpload = (files: File[]) => {
     if (files.length > 0) {
@@ -117,15 +137,18 @@ const Compte = () => {
     }
   };
 
-  const handleProfilePhotoUpload = (files: File[]) => {
+  const handleProfilePhotoUpload = async (files: File[]) => {
     if (files.length > 0) {
       const file = files[0];
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const photoData = e.target?.result as string;
-        setProfileData(prev => ({ ...prev, profilePhotoUrl: photoData }));
-      };
-      reader.readAsDataURL(file);
+      try {
+        // Uploader le fichier vers Supabase Storage
+        const uploadedUrl = await fileUploadService.uploadFile(file, 'avatars');
+        setProfileData(prev => ({ ...prev, profilePhotoUrl: uploadedUrl }));
+        toast.success('Photo de profil téléchargée avec succès');
+      } catch (error) {
+        console.error('Erreur lors du téléchargement de la photo:', error);
+        toast.error('Erreur lors du téléchargement de la photo');
+      }
     }
   };
 
@@ -136,9 +159,25 @@ const Compte = () => {
     });
   };
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
+    if (!userId) {
+      toast.error('Utilisateur non connecté');
+      return;
+    }
+
     try {
-      localStorage.setItem('profileData', JSON.stringify(profileData));
+      // D'abord récupérer les données actuelles de l'utilisateur pour préserver le rôle et statut
+      const currentUser = await userService.getUserById(userId);
+      
+      await userService.updateUser(userId, {
+        first_name: profileData.firstName,
+        last_name: profileData.lastName,
+        email: profileData.email,
+        phone: profileData.phone,
+        profile_photo_url: profileData.profilePhotoUrl,
+        role: currentUser.role,
+        status: currentUser.status
+      });
       toast.success('Profil sauvegardé avec succès');
     } catch (error) {
       console.error('Erreur lors de la sauvegarde du profil:', error);

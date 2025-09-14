@@ -1371,6 +1371,7 @@ export type Database = {
           is_activated: boolean | null
           last_name: string
           phone: string | null
+          profile_photo_url: string | null
           role: Database["public"]["Enums"]["user_role"]
           status: Database["public"]["Enums"]["user_status"]
           temp_password_hash: string | null
@@ -1386,6 +1387,7 @@ export type Database = {
           is_activated?: boolean | null
           last_name: string
           phone?: string | null
+          profile_photo_url?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           status?: Database["public"]["Enums"]["user_status"]
           temp_password_hash?: string | null
@@ -1401,6 +1403,7 @@ export type Database = {
           is_activated?: boolean | null
           last_name?: string
           phone?: string | null
+          profile_photo_url?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           status?: Database["public"]["Enums"]["user_status"]
           temp_password_hash?: string | null

@@ -13,6 +13,7 @@ export interface User {
   updated_at: string;
   establishment_id: string;
   is_activated?: boolean;
+  profile_photo_url?: string;
 }
 
 export interface CreateUserData {
@@ -22,6 +23,7 @@ export interface CreateUserData {
   role: 'Admin' | 'Formateur' | 'Étudiant';
   status: 'Actif' | 'Inactif' | 'En attente';
   phone?: string;
+  profile_photo_url?: string;
 }
 
 export const userService = {

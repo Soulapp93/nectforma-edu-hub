@@ -288,10 +288,18 @@ const EnhancedUsersList: React.FC = () => {
                 <TableRow key={user.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-purple-600">
-                          {user.first_name[0]}{user.last_name[0]}
-                        </span>
+                      <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center overflow-hidden">
+                        {user.profile_photo_url ? (
+                          <img 
+                            src={user.profile_photo_url} 
+                            alt={`Photo de profil de ${user.first_name} ${user.last_name}`}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-sm font-medium text-purple-600">
+                            {user.first_name[0]}{user.last_name[0]}
+                          </span>
+                        )}
                       </div>
                       <div>
                         <div className="font-medium text-gray-900">
