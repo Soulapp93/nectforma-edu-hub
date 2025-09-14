@@ -158,20 +158,6 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
     }
     
     if (student.signature.present) {
-      // Vérifier si c'est un retard (signé après l'heure de début + 10 minutes de grâce)
-      const signedAt = new Date(student.signature.signed_at);
-      const startTime = new Date(`${attendanceSheet?.date}T${attendanceSheet?.start_time}`);
-      const graceTime = new Date(startTime.getTime() + 10 * 60000); // 10 minutes de grâce
-      
-      if (signedAt > graceTime) {
-        return {
-          status: 'Retard',
-          icon: <Clock className="w-4 h-4 text-yellow-500" />,
-          bgColor: 'bg-yellow-50',
-          textColor: 'text-yellow-700'
-        };
-      }
-      
       return {
         status: 'Présent',
         icon: <CheckCircle className="w-4 h-4 text-green-500" />,
@@ -181,10 +167,10 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
     }
 
     return {
-      status: 'Absent justifié',
-      icon: <XCircle className="w-4 h-4 text-orange-500" />,
-      bgColor: 'bg-orange-50',
-      textColor: 'text-orange-700'
+      status: 'Absent',
+      icon: <XCircle className="w-4 h-4 text-red-500" />,
+      bgColor: 'bg-red-50',
+      textColor: 'text-red-700'
     };
   };
 
@@ -227,19 +213,19 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
       <div className="max-w-4xl mx-auto bg-white shadow-lg print:shadow-none">
         {/* En-tête */}
         <div 
-          className="p-6 text-white text-center"
+          className="p-8 text-white text-center"
           style={{ backgroundColor: formationColor }}
         >
-          <h1 className="text-2xl font-bold mb-2">FEUILLE D'ÉMARGEMENT</h1>
-          <div className="flex items-center justify-center gap-6 text-sm">
-            <div className="flex items-center gap-1">
-              <FileText className="w-4 h-4" />
-              <span>{attendanceSheet.formations?.title}</span>
+          <h1 className="text-4xl font-bold mb-6">FEUILLE D'ÉMARGEMENT</h1>
+          <div className="space-y-2 text-base">
+            <div className="font-semibold text-xl">{attendanceSheet.formations?.title}</div>
+            <div className="font-medium">{attendanceSheet.title}</div>
+            <div className="flex items-center justify-center gap-8 text-sm mt-4">
+              <div>📅 {format(new Date(attendanceSheet.date), 'dd/MM/yyyy', { locale: fr })}</div>
+              <div>🕒 {attendanceSheet.start_time} - {attendanceSheet.end_time}</div>
+              <div>🏫 {attendanceSheet.room || 'Salle non spécifiée'}</div>
+              <div>👨‍🏫 {attendanceSheet.instructor ? `${attendanceSheet.instructor.first_name} ${attendanceSheet.instructor.last_name}` : 'Non assigné'}</div>
             </div>
-            <div>📅 {format(new Date(attendanceSheet.date), 'PPP', { locale: fr })}</div>
-            <div>🕒 {attendanceSheet.start_time}</div>
-            <div>🏫 {attendanceSheet.room || 'Salle non spécifiée'}</div>
-            <div>👨‍🏫 {attendanceSheet.instructor ? `${attendanceSheet.instructor.first_name} ${attendanceSheet.instructor.last_name}` : 'Non assigné'}</div>
           </div>
         </div>
 
@@ -275,15 +261,6 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-green-500" />
               <span className="text-green-700">Présents: {students.filter(s => s.signature?.present).length}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-yellow-500" />
-              <span className="text-yellow-700">En retard: {students.filter(s => {
-                if (!s.signature?.present) return false;
-                const signedAt = new Date(s.signature.signed_at);
-                const startTime = new Date(`${attendanceSheet.date}T${attendanceSheet.start_time}`);
-                return signedAt > new Date(startTime.getTime() + 10 * 60000);
-              }).length}</span>
             </div>
             <div className="flex items-center gap-2">
               <XCircle className="w-4 h-4 text-red-500" />
@@ -367,7 +344,7 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
           <div className="grid grid-cols-2 gap-8">
             <div>
               <h4 className="font-semibold mb-3">Signature du Formateur</h4>
-              <div className="border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-end justify-start p-2">
+              <div className="border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-center justify-center p-2">
                 {(attendanceSheet as any).signatures?.find((sig: any) => sig.user_type === 'instructor')?.signature_data ? (
                   <img 
                     src={(attendanceSheet as any).signatures.find((sig: any) => sig.user_type === 'instructor')?.signature_data} 
@@ -375,10 +352,13 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
                     className="h-16 w-auto"
                   />
                 ) : (
-                  <div className="text-xs text-gray-500">
-                    {attendanceSheet.instructor ? `${attendanceSheet.instructor.first_name} ${attendanceSheet.instructor.last_name}` : 'En attente de signature'}
+                  <div className="text-xs text-gray-500 text-center">
+                    En attente de signature
                   </div>
                 )}
+              </div>
+              <div className="mt-2 text-center text-sm text-gray-600 border-t pt-2">
+                {attendanceSheet.instructor ? `${attendanceSheet.instructor.first_name} ${attendanceSheet.instructor.last_name}` : 'Formateur non assigné'}
               </div>
             </div>
             <div>
