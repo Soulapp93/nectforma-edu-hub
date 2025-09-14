@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { AttendanceSheet } from '@/services/attendanceService';
 import { attendanceService } from '@/services/attendanceService';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
 
 interface InstructorSigningModalProps {
   isOpen: boolean;
@@ -26,7 +27,32 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
   instructorId,
   onSigned
 }) => {
-  console.log('InstructorSigningModal component loaded', { instructorId });
+  console.log('InstructorSigningModal component loaded', { 
+    instructorId, 
+    attendanceSheetInstructorId: attendanceSheet?.instructor_id,
+    attendanceSheetInstructor: attendanceSheet?.instructor
+  });
+  
+  // Utiliser l'ID du current user si l'instructorId n'est pas fourni
+  const [currentUserId, setCurrentUserId] = useState<string>('');
+  
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUserId(user.id);
+        console.log('Current user ID:', user.id);
+      }
+    };
+    
+    if (!instructorId || instructorId.trim() === '') {
+      getCurrentUser();
+    }
+  }, [instructorId]);
+  
+  const effectiveInstructorId = instructorId && instructorId.trim() !== '' ? instructorId : currentUserId;
+  console.log('Effective instructor ID:', effectiveInstructorId);
+  
   const [showSignature, setShowSignature] = useState(false);
   const [signing, setSigning] = useState(false);
 
@@ -38,14 +64,17 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
     try {
       setSigning(true);
       
-      if (!instructorId || instructorId.trim() === '') {
-        throw new Error('ID formateur manquant');
+      const idToUse = effectiveInstructorId;
+      console.log('Attempting to sign with ID:', idToUse);
+      
+      if (!idToUse || idToUse.trim() === '') {
+        throw new Error('ID formateur manquant - impossible de récupérer l\'ID utilisateur');
       }
       
       // Signer la feuille d'émargement en tant que formateur
       await attendanceService.signAttendanceSheet(
         attendanceSheet.id,
-        instructorId,
+        idToUse,
         'instructor',
         signatureData
       );
@@ -66,7 +95,7 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
   };
 
   const isAlreadySigned = attendanceSheet.signatures?.some(
-    sig => sig.user_id === instructorId && sig.user_type === 'instructor'
+    sig => sig.user_id === effectiveInstructorId && sig.user_type === 'instructor'
   );
 
   return (
