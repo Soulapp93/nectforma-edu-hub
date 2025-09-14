@@ -51,6 +51,7 @@ const Auth = () => {
     setLoading(true);
     try {
       const emailMap = {
+        'AdminPrincipal': 'admin.principal@demo.com',
         'Admin': 'admin@demo.com',
         'Formateur': 'formateur@demo.com',
         'Étudiant': 'etudiant@demo.com'
@@ -61,20 +62,22 @@ const Auth = () => {
         throw new Error('Rôle non reconnu');
       }
 
-      // Créer une session temporaire pour l'utilisateur démo
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .single();
-
-      if (userError || !userData) {
-        throw new Error('Utilisateur démo non trouvé');
-      }
+      // Créer des données démo directement côté client
+      const demoUserData = {
+        id: `demo-${role.toLowerCase()}`,
+        email: email,
+        first_name: role === 'AdminPrincipal' ? 'Admin' : role === 'Admin' ? 'Administrateur' : role === 'Formateur' ? 'Jean' : 'Marie',
+        last_name: role === 'AdminPrincipal' ? 'Principal' : role === 'Admin' ? 'Système' : role === 'Formateur' ? 'Dupont' : 'Martin',
+        role: role,
+        establishment_id: 'demo-establishment',
+        status: 'Actif',
+        is_activated: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
 
       // Simuler une connexion en créant une session côté client
-      // Note: En production, vous devriez utiliser l'authentification Supabase appropriée
-      sessionStorage.setItem('demo_user', JSON.stringify(userData));
+      sessionStorage.setItem('demo_user', JSON.stringify(demoUserData));
       toast.success(`Connexion réussie en tant que ${role} démo`);
       navigate('/');
     } catch (error) {
@@ -397,12 +400,21 @@ const Auth = () => {
 
                 <div className="mt-6 grid grid-cols-2 gap-3">
                   <button
+                    onClick={() => handleDemoLogin('AdminPrincipal')}
+                    disabled={loading}
+                    className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    <Shield className="h-4 w-4 mr-2 text-red-600" />
+                    Admin Principal
+                  </button>
+                  
+                  <button
                     onClick={() => handleDemoLogin('Admin')}
                     disabled={loading}
                     className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
                   >
                     <Shield className="h-4 w-4 mr-2 text-purple-600" />
-                    Admin
+                    Administrateur
                   </button>
                   
                   <button
@@ -421,15 +433,6 @@ const Auth = () => {
                   >
                     <GraduationCap className="h-4 w-4 mr-2 text-green-600" />
                     Étudiant
-                  </button>
-                  
-                  <button
-                    onClick={() => handleDemoLogin('Formateur')}
-                    disabled={loading}
-                    className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
-                  >
-                    <User className="h-4 w-4 mr-2 text-orange-600" />
-                    Tuteur
                   </button>
                 </div>
               </>

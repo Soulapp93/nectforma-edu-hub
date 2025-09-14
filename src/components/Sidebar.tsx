@@ -89,8 +89,8 @@ const Sidebar = () => {
     { name: 'Gestion du compte', href: '/compte', icon: Settings },
   ];
 
-  // Sélectionner la navigation selon le rôle - corriger la comparaison de rôle
-  const navigation = userRole === 'Admin' ? adminNavigation : limitedNavigation;
+  // Sélectionner la navigation selon le rôle - AdminPrincipal et Admin ont accès complet
+  const navigation = (userRole === 'AdminPrincipal' || userRole === 'Admin') ? adminNavigation : limitedNavigation;
 
   return (
     <SidebarWrapper 
