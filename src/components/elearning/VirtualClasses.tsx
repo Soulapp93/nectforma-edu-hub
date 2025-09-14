@@ -213,10 +213,6 @@ const VirtualClasses: React.FC<VirtualClassesProps> = ({ onJoinClass }) => {
                   <Calendar className="h-4 w-4 mr-2" />
                   {format(new Date(classItem.date), 'dd MMMM yyyy', { locale: fr })} • {classItem.start_time} - {classItem.end_time}
                 </div>
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Users className="h-4 w-4 mr-2" />
-                  {classItem.current_participants}/{classItem.max_participants} participants
-                </div>
                 {classItem.recording_enabled && (
                   <div className="flex items-center text-sm text-destructive">
                     <Video className="h-4 w-4 mr-2" />
