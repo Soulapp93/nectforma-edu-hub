@@ -229,28 +229,6 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
           </div>
         </div>
 
-        {/* Informations de session */}
-        <div className="p-6 border-b">
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <h3 className="font-semibold text-lg mb-3">{attendanceSheet.title}</h3>
-              <div className="space-y-1 text-sm text-gray-600">
-                <div><strong>Formation:</strong> {attendanceSheet.formations?.title}</div>
-                <div><strong>Date:</strong> {format(new Date(attendanceSheet.date), 'PPP', { locale: fr })}</div>
-                <div><strong>Horaire:</strong> {attendanceSheet.start_time} - {attendanceSheet.end_time}</div>
-                {attendanceSheet.room && <div><strong>Salle:</strong> {attendanceSheet.room}</div>}
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-sm text-gray-600">
-                <div><strong>Formateur:</strong> {attendanceSheet.instructor ? `${attendanceSheet.instructor.first_name} ${attendanceSheet.instructor.last_name}` : 'Non assigné'}</div>
-                <div><strong>Nombre d'inscrits:</strong> {students.length}</div>
-                <div><strong>Présents:</strong> {students.filter(s => s.signature?.present).length}</div>
-                <div><strong>Statut:</strong> <Badge variant="outline">{attendanceSheet.status}</Badge></div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Liste des participants */}
         <div className="p-6">
@@ -275,7 +253,7 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
           >
             <div className="col-span-2">Nom et Prénom</div>
             <div className="text-center">Statut</div>
-            <div className="text-center">Signature / Heure</div>
+            <div className="text-center">Signature</div>
           </div>
 
           {/* Lignes des étudiants */}
