@@ -20,27 +20,7 @@ type EstablishmentDataState = {
 const Compte = () => {
   const { userRole } = useCurrentUser();
   
-  // Vérifier si l'utilisateur a accès à la gestion du compte
-  const hasAccessToAccount = userRole === 'AdminPrincipal' || (userRole !== 'Admin');
-  
-  // Si l'utilisateur n'a pas accès, afficher un message
-  if (!hasAccessToAccount) {
-    return (
-      <div className="p-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Accès non autorisé</h1>
-          <p className="text-gray-600 mb-6">
-            Vous n'avez pas les permissions nécessaires pour accéder à cette page.
-          </p>
-          <p className="text-sm text-gray-500">
-            Seul l'administrateur principal peut gérer les informations de l'établissement.
-            Les autres utilisateurs peuvent gérer leur profil personnel.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
+  // TOUS LES HOOKS DOIVENT ÊTRE APPELÉS EN PREMIER - JAMAIS APRÈS UN RETURN CONDITIONNEL
   const [activeTab, setActiveTab] = useState(
     userRole === 'AdminPrincipal' ? 'establishment' : 'profile'
   );
@@ -165,6 +145,27 @@ const Compte = () => {
       toast.error('Erreur lors de la sauvegarde du profil');
     }
   };
+
+  // LOGIQUE CONDITIONNELLE APRÈS TOUS LES HOOKS
+  const hasAccessToAccount = userRole === 'AdminPrincipal' || (userRole !== 'Admin');
+  
+  // Si l'utilisateur n'a pas accès, afficher un message
+  if (!hasAccessToAccount) {
+    return (
+      <div className="p-8">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Accès non autorisé</h1>
+          <p className="text-gray-600 mb-6">
+            Vous n'avez pas les permissions nécessaires pour accéder à cette page.
+          </p>
+          <p className="text-sm text-gray-500">
+            Seul l'administrateur principal peut gérer les informations de l'établissement.
+            Les autres utilisateurs peuvent gérer leur profil personnel.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
