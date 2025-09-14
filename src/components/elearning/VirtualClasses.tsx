@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Search, Monitor, Users, Calendar, Video, Edit, Trash2, Plus } from 'lucide-react';
-import { useVirtualClasses, useDeleteVirtualClass, useJoinClass } from '@/hooks/useVirtualClasses';
+import { Search, Monitor, Calendar, Video, Edit, Trash2, XCircle, Play, Square } from 'lucide-react';
+import { useVirtualClasses, useDeleteVirtualClass, useJoinClass, useUpdateClassStatus } from '@/hooks/useVirtualClasses';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { VirtualClass } from '@/services/virtualClassService';
@@ -30,6 +31,7 @@ const VirtualClasses: React.FC<VirtualClassesProps> = ({ onJoinClass }) => {
   const { userId: currentUserId, userRole } = useCurrentUser();
   const deleteClassMutation = useDeleteVirtualClass();
   const joinClassMutation = useJoinClass();
+  const updateStatusMutation = useUpdateClassStatus();
 
   const filteredClasses = virtualClasses.filter(cls => {
     const instructorName = cls.instructor 
@@ -41,9 +43,50 @@ const VirtualClasses: React.FC<VirtualClassesProps> = ({ onJoinClass }) => {
     return matchesSearch && matchesStatus;
   });
 
+  const canManageClass = (classItem: VirtualClass) => {
+    return userRole === 'Administrateur principal' || 
+           userRole === 'Administrateur' || 
+           (userRole === 'Formateur' && classItem.instructor_id === currentUserId);
+  };
+
+  const getAvailableActions = (classItem: VirtualClass) => {
+    const actions = [];
+    
+    if (canManageClass(classItem)) {
+      actions.push('edit');
+      
+      if (classItem.status === 'Programmé') {
+        actions.push('start', 'cancel');
+      }
+      
+      if (classItem.status === 'En cours') {
+        actions.push('end');
+      }
+      
+      if (classItem.status !== 'En cours') {
+        actions.push('delete');
+      }
+    }
+    
+    return actions;
+  };
+
   const handleDeleteClass = async (classId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette classe ?')) {
       await deleteClassMutation.mutateAsync(classId);
+    }
+  };
+
+  const handleUpdateStatus = async (classId: string, status: string) => {
+    const confirmMessages = {
+      'Annulé': 'Êtes-vous sûr de vouloir annuler cette classe ?',
+      'En cours': 'Êtes-vous sûr de vouloir démarrer cette classe ?',
+      'Terminé': 'Êtes-vous sûr de vouloir terminer cette classe ?'
+    };
+    
+    const message = confirmMessages[status as keyof typeof confirmMessages];
+    if (message && confirm(message)) {
+      await updateStatusMutation.mutateAsync({ id: classId, status });
     }
   };
 
@@ -166,26 +209,67 @@ const VirtualClasses: React.FC<VirtualClassesProps> = ({ onJoinClass }) => {
                     {classItem.status}
                   </Badge>
                 </div>
-                {userRole === 'Admin' && (
+                
+                {canManageClass(classItem) && (
                   <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="flex space-x-1">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="p-1"
-                        onClick={() => handleEditClass(classItem)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="p-1 text-destructive hover:text-destructive" 
-                        onClick={() => handleDeleteClass(classItem.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <span className="sr-only">Ouvrir le menu</span>
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01" />
+                          </svg>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {getAvailableActions(classItem).includes('edit') && (
+                          <DropdownMenuItem onClick={() => handleEditClass(classItem)}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Modifier
+                          </DropdownMenuItem>
+                        )}
+                        
+                        {getAvailableActions(classItem).includes('start') && (
+                          <DropdownMenuItem onClick={() => handleUpdateStatus(classItem.id, 'En cours')}>
+                            <Play className="h-4 w-4 mr-2" />
+                            Démarrer
+                          </DropdownMenuItem>
+                        )}
+                        
+                        {getAvailableActions(classItem).includes('end') && (
+                          <DropdownMenuItem onClick={() => handleUpdateStatus(classItem.id, 'Terminé')}>
+                            <Square className="h-4 w-4 mr-2" />
+                            Terminer
+                          </DropdownMenuItem>
+                        )}
+                        
+                        {getAvailableActions(classItem).includes('cancel') && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => handleUpdateStatus(classItem.id, 'Annulé')}
+                              className="text-orange-600"
+                            >
+                              <XCircle className="h-4 w-4 mr-2" />
+                              Annuler
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                        
+                        {getAvailableActions(classItem).includes('delete') && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => handleDeleteClass(classItem.id)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Supprimer
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 )}
               </div>
@@ -222,13 +306,23 @@ const VirtualClasses: React.FC<VirtualClassesProps> = ({ onJoinClass }) => {
               </div>
 
               <div className="flex space-x-2 pt-2">
-                {(userRole === 'Étudiant' || userRole === 'Formateur') && (
+                {(userRole === 'Étudiant' || userRole === 'Formateur') && classItem.status === 'En cours' && (
                   <Button
                     onClick={() => handleJoinClass(classItem)}
                     className="flex-1"
                     disabled={joinClassMutation.isPending}
                   >
                     Rejoindre
+                  </Button>
+                )}
+                {(userRole === 'Étudiant' || userRole === 'Formateur') && classItem.status === 'Programmé' && (
+                  <Button
+                    onClick={() => handleJoinClass(classItem)}
+                    variant="outline"
+                    className="flex-1"
+                    disabled={joinClassMutation.isPending}
+                  >
+                    S'inscrire
                   </Button>
                 )}
                 <Button 

@@ -83,6 +83,30 @@ export const useUpdateVirtualClass = () => {
   });
 };
 
+export const useUpdateClassStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) => {
+      return virtualClassService.updateVirtualClass(id, { status });
+    },
+    onSuccess: (_, { status }) => {
+      queryClient.invalidateQueries({ queryKey: ['virtual-classes'] });
+      const statusMessages = {
+        'Annulé': 'Classe virtuelle annulée',
+        'En cours': 'Classe virtuelle démarrée',
+        'Terminé': 'Classe virtuelle terminée',
+        'Programmé': 'Classe virtuelle reprogrammée'
+      };
+      toast.success(statusMessages[status as keyof typeof statusMessages] || 'Statut mis à jour');
+    },
+    onError: (error) => {
+      console.error('Error updating class status:', error);
+      toast.error('Erreur lors de la mise à jour du statut');
+    },
+  });
+};
+
 export const useDeleteVirtualClass = () => {
   const queryClient = useQueryClient();
 

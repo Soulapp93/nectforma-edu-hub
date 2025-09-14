@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, Users, Video } from 'lucide-react';
+import { X, Calendar, Clock, Video } from 'lucide-react';
 import { useUpdateVirtualClass, useInstructors, useFormationsForSelect } from '@/hooks/useVirtualClasses';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { moduleService } from '@/services/moduleService';
@@ -9,9 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
 
 interface EditClassModalProps {
   isOpen: boolean;
@@ -38,8 +36,6 @@ const EditClassModal: React.FC<EditClassModalProps> = ({ isOpen, onClose, virtua
     date: '',
     start_time: '',
     end_time: '',
-    max_participants: 25,
-    recording_enabled: false,
   });
 
   // Initialiser le formulaire avec les données de la classe
@@ -54,8 +50,6 @@ const EditClassModal: React.FC<EditClassModalProps> = ({ isOpen, onClose, virtua
         date: virtualClass.date || '',
         start_time: virtualClass.start_time || '',
         end_time: virtualClass.end_time || '',
-        max_participants: virtualClass.max_participants || 25,
-        recording_enabled: virtualClass.recording_enabled || false,
       });
     }
   }, [virtualClass]);
@@ -236,37 +230,6 @@ const EditClassModal: React.FC<EditClassModalProps> = ({ isOpen, onClose, virtua
                 />
               </div>
             </div>
-
-            <div>
-              <Label htmlFor="max_participants" className="flex items-center">
-                <Users className="h-4 w-4 mr-1" />
-                Nombre maximum de participants
-              </Label>
-              <Input
-                id="max_participants"
-                type="number"
-                value={formData.max_participants}
-                onChange={(e) => setFormData({ ...formData, max_participants: parseInt(e.target.value) })}
-                min="1"
-                max="100"
-              />
-            </div>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="recording"
-                    checked={formData.recording_enabled}
-                    onCheckedChange={(checked) => setFormData({ ...formData, recording_enabled: checked })}
-                  />
-                  <Label htmlFor="recording" className="flex items-center">
-                    <Video className="h-4 w-4 mr-1" />
-                    Activer l'enregistrement automatique
-                  </Label>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           <div className="flex space-x-4 pt-4">
