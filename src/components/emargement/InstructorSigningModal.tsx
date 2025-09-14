@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { AttendanceSheet } from '@/services/attendanceService';
 import { attendanceService } from '@/services/attendanceService';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { supabase } from '@/integrations/supabase/client';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface InstructorSigningModalProps {
   isOpen: boolean;
@@ -27,73 +27,20 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
   instructorId,
   onSigned
 }) => {
+  const { userId, loading } = useCurrentUser();
+  const [showSignature, setShowSignature] = useState(false);
+  const [signing, setSigning] = useState(false);
+  
+  // Utiliser l'ID de l'utilisateur actuel si disponible, sinon l'instructorId fourni
+  const effectiveInstructorId = userId || instructorId;
+  
   console.log('InstructorSigningModal component loaded', { 
+    userId, 
     instructorId, 
+    effectiveInstructorId,
     attendanceSheetInstructorId: attendanceSheet?.instructor_id,
     attendanceSheetInstructor: attendanceSheet?.instructor
   });
-  
-  // États pour gérer l'utilisateur actuel et la signature
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [effectiveInstructorId, setEffectiveInstructorId] = useState<string>('');
-  const [showSignature, setShowSignature] = useState(false);
-  const [signing, setSigning] = useState(false);
-  const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    const getCurrentUser = async () => {
-      try {
-        setLoading(true);
-        console.log('Fetching current user...');
-        
-        // Récupérer l'utilisateur actuel depuis Supabase Auth
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        
-        if (authError) {
-          console.error('Auth error:', authError);
-          throw authError;
-        }
-        
-        if (!user) {
-          console.error('No authenticated user found');
-          toast.error('Vous devez être connecté pour signer');
-          return;
-        }
-        
-        console.log('Authenticated user:', user.id);
-        
-        // Récupérer les données utilisateur depuis la table users
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-        
-        if (userError) {
-          console.error('User data error:', userError);
-          // Si l'utilisateur n'existe pas dans la table users, utiliser quand même l'ID auth
-          setCurrentUser(user);
-          setEffectiveInstructorId(user.id);
-        } else {
-          console.log('User data:', userData);
-          setCurrentUser(userData);
-          setEffectiveInstructorId(userData.id);
-        }
-        
-        console.log('Effective instructor ID set to:', userData?.id || user.id);
-        
-      } catch (error) {
-        console.error('Error getting current user:', error);
-        toast.error('Erreur lors de la récupération des données utilisateur');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    if (isOpen) {
-      getCurrentUser();
-    }
-  }, [isOpen]);
   
   const handleStartSigning = () => {
     if (!effectiveInstructorId) {
@@ -108,7 +55,6 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
       setSigning(true);
       
       console.log('Attempting to sign with ID:', effectiveInstructorId);
-      console.log('Current user data:', currentUser);
       
       if (!effectiveInstructorId || effectiveInstructorId.trim() === '') {
         throw new Error('ID formateur manquant - utilisateur non connecté');
