@@ -160,6 +160,7 @@ export type Database = {
           instructor_id: string | null
           is_open_for_signing: boolean | null
           opened_at: string | null
+          qr_code: string | null
           room: string | null
           schedule_slot_id: string
           start_time: string
@@ -180,6 +181,7 @@ export type Database = {
           instructor_id?: string | null
           is_open_for_signing?: boolean | null
           opened_at?: string | null
+          qr_code?: string | null
           room?: string | null
           schedule_slot_id: string
           start_time: string
@@ -200,6 +202,7 @@ export type Database = {
           instructor_id?: string | null
           is_open_for_signing?: boolean | null
           opened_at?: string | null
+          qr_code?: string | null
           room?: string | null
           schedule_slot_id?: string
           start_time?: string
@@ -1628,6 +1631,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_attendance_qr_code: {
+        Args: { attendance_sheet_id_param: string }
+        Returns: string
+      }
       get_attendance_stats: {
         Args: { sheet_id: string }
         Returns: {
@@ -1664,6 +1671,17 @@ export type Database = {
       is_attendance_open_for_time: {
         Args: { sheet_date: string; start_time: string }
         Returns: boolean
+      }
+      validate_qr_code: {
+        Args: { code_param: string }
+        Returns: {
+          date: string
+          end_time: string
+          formation_title: string
+          is_valid: boolean
+          sheet_id: string
+          start_time: string
+        }[]
       }
     }
     Enums: {
