@@ -80,7 +80,7 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
             </div>
             <div>📅 {format(new Date(sessionData.date), 'PPP', { locale: fr })}</div>
             <div>🕒 {sessionData.startTime}</div>
-            <div>🏫 A101</div>
+            <div>🏫 {sessionData.room || 'Salle non spécifiée'}</div>
             <div>👨‍🏫 {sessionData.instructor}</div>
           </div>
         </div>
