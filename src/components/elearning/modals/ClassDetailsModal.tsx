@@ -94,11 +94,6 @@ const ClassDetailsModal: React.FC<ClassDetailsModalProps> = ({
                     <span className="font-medium mr-2">Heure:</span>
                     <span>{virtualClass.start_time} - {virtualClass.end_time}</span>
                   </div>
-                  <div className="flex items-center text-sm">
-                    <Users className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span className="font-medium mr-2">Participants:</span>
-                    <span>{virtualClass.current_participants}/{virtualClass.max_participants}</span>
-                  </div>
                 </div>
 
               <div className="space-y-3">
@@ -125,35 +120,6 @@ const ClassDetailsModal: React.FC<ClassDetailsModalProps> = ({
                 )}
               </div>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Meeting info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Informations de la réunion</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {virtualClass.meeting_room_id && (
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground">ID de la salle:</span>
-                  <p className="text-sm font-mono bg-muted p-2 rounded mt-1">
-                    {virtualClass.meeting_room_id}
-                  </p>
-                </div>
-              )}
-              
-              <div>
-                <span className="text-sm font-medium text-muted-foreground">Capacité:</span>
-                <p className="text-sm">{virtualClass.max_participants} participants maximum</p>
-              </div>
-
-              {virtualClass.recording_enabled && (
-                <div>
-                  <span className="text-sm font-medium text-muted-foreground">Enregistrement:</span>
-                  <p className="text-sm">Cette session sera enregistrée automatiquement</p>
-                </div>
-              )}
             </CardContent>
           </Card>
 
