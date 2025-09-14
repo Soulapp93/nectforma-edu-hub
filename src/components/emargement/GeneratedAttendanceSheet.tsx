@@ -200,10 +200,6 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
               <Download className="w-4 h-4 mr-2" />
               Télécharger PDF
             </Button>
-            <Button variant="outline" onClick={handlePrint}>
-              <Printer className="w-4 h-4 mr-2" />
-              Imprimer
-            </Button>
             <Button onClick={onClose}>
               Fermer
             </Button>

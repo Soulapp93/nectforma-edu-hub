@@ -166,10 +166,10 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
             </DialogTitle>
           </DialogHeader>
           
-          {userId && (
+          {attendanceSessionData && (
             <QRAttendanceManager
               attendanceSheet={attendanceSessionData}
-              instructorId={userId}
+              instructorId={attendanceSessionData.instructor_id || userId || ''}
               onUpdate={() => {
                 // Recharger les données si nécessaire
                 console.log('Session updated');
