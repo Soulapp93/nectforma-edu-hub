@@ -166,14 +166,22 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
             </DialogTitle>
           </DialogHeader>
           
-          <QRAttendanceManager
-            attendanceSheet={attendanceSessionData}
-            instructorId={userId}
-            onUpdate={() => {
-              // Recharger les données si nécessaire
-              console.log('Session updated');
-            }}
-          />
+          {userId && (
+            <QRAttendanceManager
+              attendanceSheet={attendanceSessionData}
+              instructorId={userId}
+              onUpdate={() => {
+                // Recharger les données si nécessaire
+                console.log('Session updated');
+              }}
+            />
+          )}
+          
+          {!userId && (
+            <div className="text-center p-8">
+              <p className="text-gray-500">Chargement des informations utilisateur...</p>
+            </div>
+          )}
           
           <div className="flex justify-end pt-4 border-t">
             <Button onClick={onClose}>

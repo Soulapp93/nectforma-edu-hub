@@ -83,8 +83,7 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
       const { error } = await supabase
         .from('attendance_sheets')
         .update({ 
-          qr_code: newCode,
-          updated_at: new Date().toISOString()
+          qr_code: newCode
         })
         .eq('id', attendanceSheet.id);
 

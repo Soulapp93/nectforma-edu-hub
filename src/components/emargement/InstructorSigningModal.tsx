@@ -38,6 +38,10 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
     try {
       setSigning(true);
       
+      if (!instructorId || instructorId.trim() === '') {
+        throw new Error('ID formateur manquant');
+      }
+      
       // Signer la feuille d'émargement en tant que formateur
       await attendanceService.signAttendanceSheet(
         attendanceSheet.id,
