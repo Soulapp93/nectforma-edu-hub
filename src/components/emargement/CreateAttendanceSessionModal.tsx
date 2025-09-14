@@ -34,7 +34,10 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
   const [generatingSheet, setGeneratingSheet] = useState(false);
   const [showQRManager, setShowQRManager] = useState(false);
   const [attendanceSessionData, setAttendanceSessionData] = useState<any>(null);
-  const { userId } = useCurrentUser();
+  const { userId, loading: userLoading } = useCurrentUser();
+
+  // Debug logging
+  console.log('CreateAttendanceSessionModal - userId:', userId, 'userLoading:', userLoading);
 
   // Utiliser les données de démonstration pour les cours d'aujourd'hui
   useEffect(() => {
@@ -50,6 +53,12 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
   }, [isOpen]);
 
   const generateAttendanceSheet = async (slot: any) => {
+    // Vérifier que l'utilisateur est chargé et que userId est disponible
+    if (!userId || userLoading) {
+      toast.error('Utilisateur non identifié. Veuillez vous reconnecter.');
+      return;
+    }
+
     setGeneratingSheet(true);
     try {
       // Chercher ou créer un planning pour cette formation
@@ -270,11 +279,13 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
                   <div className="flex gap-2">
                     <Button 
                       onClick={() => generateAttendanceSheet(selectedSlot)}
-                      disabled={generatingSheet}
+                      disabled={generatingSheet || userLoading || !userId}
                       className="flex-1"
                     >
                       {generatingSheet ? (
                         'Création de la session...'
+                      ) : userLoading ? (
+                        'Chargement utilisateur...'
                       ) : (
                         <>
                           <FileText className="w-4 h-4 mr-2" />
