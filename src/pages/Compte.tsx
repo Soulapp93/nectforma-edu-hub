@@ -141,8 +141,8 @@ const Compte = () => {
     if (files.length > 0) {
       const file = files[0];
       try {
-        // Uploader le fichier vers Supabase Storage
-        const uploadedUrl = await fileUploadService.uploadFile(file, 'avatars');
+        // Uploader le fichier vers Supabase Storage avec l'ID utilisateur
+        const uploadedUrl = await fileUploadService.uploadFile(file, 'avatars', userId);
         setProfileData(prev => ({ ...prev, profilePhotoUrl: uploadedUrl }));
         toast.success('Photo de profil téléchargée avec succès');
       } catch (error) {

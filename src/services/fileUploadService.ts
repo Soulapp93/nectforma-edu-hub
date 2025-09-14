@@ -2,18 +2,25 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export const fileUploadService = {
-  async uploadFile(file: File, bucket: string = 'module-files'): Promise<string> {
+  async uploadFile(file: File, bucket: string = 'module-files', userId?: string): Promise<string> {
     try {
       console.log('Uploading file:', file.name, 'to bucket:', bucket);
       
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      let fileName: string;
+      
+      if (bucket === 'avatars' && userId) {
+        // Pour les avatars, utiliser la structure userId/filename
+        fileName = `${userId}/avatar.${fileExt}`;
+      } else {
+        fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      }
       
       const { data, error } = await supabase.storage
         .from(bucket)
         .upload(fileName, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: bucket === 'avatars' // Permettre l'écrasement pour les avatars
         });
 
       if (error) {
