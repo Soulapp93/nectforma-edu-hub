@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Save, Volume2, Mic, Video, Monitor, Globe, Shield } from 'lucide-react';
+import { Save, Video } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,18 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/hooks/use-toast';
-
-interface NotificationSettings {
-  email: boolean;
-  push: boolean;
-  sms: boolean;
-}
-
-interface PrivacySettings {
-  recordingConsent: boolean;
-  dataRetention: number;
-  shareAnalytics: boolean;
-}
 
 interface SettingsState {
   videoQuality: string;
@@ -32,8 +20,6 @@ interface SettingsState {
   muteOnEntry: boolean;
   maxParticipants: number;
   sessionTimeout: number;
-  notifications: NotificationSettings;
-  privacy: PrivacySettings;
 }
 
 const Settings: React.FC = () => {
@@ -46,33 +32,13 @@ const Settings: React.FC = () => {
     waitingRoom: true,
     muteOnEntry: true,
     maxParticipants: 50,
-    sessionTimeout: 120,
-    notifications: {
-      email: true,
-      push: true,
-      sms: false
-    },
-    privacy: {
-      recordingConsent: true,
-      dataRetention: 90,
-      shareAnalytics: false
-    }
+    sessionTimeout: 120
   });
 
   const handleSettingChange = (key: keyof SettingsState, value: any) => {
     setSettings(prev => ({
       ...prev,
       [key]: value
-    }));
-  };
-
-  const handleNestedSettingChange = (parent: 'notifications' | 'privacy', key: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      [parent]: {
-        ...prev[parent],
-        [key]: value
-      }
     }));
   };
 
@@ -202,87 +168,6 @@ const Settings: React.FC = () => {
         </CardContent>
       </Card>
 
-
-      {/* Notification Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Globe className="h-5 w-5 mr-2" />
-            Notifications
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Switch 
-              id="emailNotifications"
-              checked={settings.notifications.email}
-              onCheckedChange={(checked) => handleNestedSettingChange('notifications', 'email', checked)}
-            />
-            <Label htmlFor="emailNotifications">Notifications par email</Label>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Switch 
-              id="pushNotifications"
-              checked={settings.notifications.push}
-              onCheckedChange={(checked) => handleNestedSettingChange('notifications', 'push', checked)}
-            />
-            <Label htmlFor="pushNotifications">Notifications push</Label>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Switch 
-              id="smsNotifications"
-              checked={settings.notifications.sms}
-              onCheckedChange={(checked) => handleNestedSettingChange('notifications', 'sms', checked)}
-            />
-            <Label htmlFor="smsNotifications">Notifications SMS</Label>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Privacy Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Shield className="h-5 w-5 mr-2" />
-            Confidentialité et sécurité
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Switch 
-              id="recordingConsent"
-              checked={settings.privacy.recordingConsent}
-              onCheckedChange={(checked) => handleNestedSettingChange('privacy', 'recordingConsent', checked)}
-            />
-            <Label htmlFor="recordingConsent">Demander le consentement pour les enregistrements</Label>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Switch 
-              id="shareAnalytics"
-              checked={settings.privacy.shareAnalytics}
-              onCheckedChange={(checked) => handleNestedSettingChange('privacy', 'shareAnalytics', checked)}
-            />
-            <Label htmlFor="shareAnalytics">Partager les données d'analyse (anonymes)</Label>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="dataRetention">Rétention des données (jours)</Label>
-            <Input
-              type="number"
-              value={settings.privacy.dataRetention}
-              onChange={(e) => handleNestedSettingChange('privacy', 'dataRetention', parseInt(e.target.value))}
-              min="30"
-              max="365"
-            />
-            <p className="text-xs text-muted-foreground">
-              Durée de conservation des enregistrements et données de session
-            </p>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Save Button */}
       <div className="flex justify-end">
