@@ -75,7 +75,7 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
   if (showAttendanceSheet && attendanceSessionData) {
     return (
       <GeneratedAttendanceSheet
-        sessionData={attendanceSessionData}
+        attendanceSheetId={attendanceSessionData.id}
         onClose={() => {
           setShowAttendanceSheet(false);
           onClose();
