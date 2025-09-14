@@ -110,17 +110,24 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
         <div className="p-6">
           <h4 className="font-semibold mb-4">Liste des participants ({mockStudents.length})</h4>
           
+          {/* Légende */}
+          <div className="mb-4 flex items-center gap-6 text-xs text-gray-600">
+            <div className="flex items-center gap-1">
+              <span className="font-medium">Statut:</span>
+              <span>P = Présent</span>
+              <span>R = Retard</span>
+              <span>A = Absent</span>
+            </div>
+          </div>
+          
           {/* En-tête du tableau */}
           <div 
-            className="grid grid-cols-6 gap-4 p-3 text-white font-medium text-sm rounded-t-lg"
+            className="grid grid-cols-4 gap-4 p-3 text-white font-medium text-sm rounded-t-lg"
             style={{ backgroundColor: sessionData.formationColor }}
           >
-            <div>Nom et Prénom</div>
-            <div>Statut</div>
-            <div>Statut</div>
-            <div>Statut</div>
-            <div>Signature</div>
-            <div>Signature</div>
+            <div className="col-span-2">Nom et Prénom</div>
+            <div className="text-center">Statut</div>
+            <div className="text-center">Signature</div>
           </div>
 
           {/* Lignes des étudiants */}
@@ -128,43 +135,40 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
             {mockStudents.map((student, index) => (
               <div 
                 key={student.id}
-                className={`grid grid-cols-6 gap-4 p-3 border-b border-gray-200 last:border-b-0 ${
+                className={`grid grid-cols-4 gap-4 p-3 border-b border-gray-200 last:border-b-0 ${
                   index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
                 }`}
               >
-                <div className="flex items-center gap-2">
+                <div className="col-span-2 flex items-center gap-3">
                   <div 
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium"
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-medium"
                     style={{ backgroundColor: sessionData.formationColor }}
                   >
                     {student.firstName[0]}{student.lastName[0]}
                   </div>
                   <div>
-                    <div className="font-medium text-sm">{student.lastName}</div>
-                    <div className="text-xs text-gray-600">{student.firstName}</div>
-                    <div className="text-xs text-gray-500">{student.formation}</div>
+                    <div className="font-medium">{student.lastName} {student.firstName}</div>
+                    <div className="text-sm text-gray-500">{student.formation}</div>
                   </div>
                 </div>
-                <div className="flex items-center">
-                  <Badge variant="secondary" className="bg-green-100 text-green-700">
-                    Présent
-                  </Badge>
-                </div>
-                <div className="flex items-center">
-                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
-                    Retard
-                  </Badge>
-                </div>
-                <div className="flex items-center">
-                  <Badge variant="secondary" className="bg-red-100 text-red-700">
-                    Absent
-                  </Badge>
+                <div className="flex items-center justify-center">
+                  <div className="flex gap-1">
+                    <label className="flex items-center text-xs">
+                      <input type="checkbox" className="mr-1" />
+                      P
+                    </label>
+                    <label className="flex items-center text-xs">
+                      <input type="checkbox" className="mr-1" />
+                      R
+                    </label>
+                    <label className="flex items-center text-xs">
+                      <input type="checkbox" className="mr-1" />
+                      A
+                    </label>
+                  </div>
                 </div>
                 <div className="flex items-center justify-center">
-                  <div className="w-16 h-8 border border-gray-300 rounded bg-gray-50"></div>
-                </div>
-                <div className="flex items-center justify-center">
-                  <div className="w-16 h-8 border border-gray-300 rounded bg-gray-50"></div>
+                  <div className="w-24 h-12 border-2 border-gray-300 rounded bg-gray-50"></div>
                 </div>
               </div>
             ))}
