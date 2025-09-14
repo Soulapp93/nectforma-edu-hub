@@ -8,6 +8,7 @@ import SettingsTab from '../components/elearning/Settings';
 import VideoCall from '../components/elearning/VideoCall';
 import CreateClassModal from '../components/elearning/modals/CreateClassModal';
 import { VirtualClass } from '@/services/virtualClassService';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 // Legacy interface for video call compatibility
 interface LegacyVirtualClass {
@@ -22,10 +23,14 @@ interface LegacyVirtualClass {
 }
 
 const ELearning = () => {
+  const { userRole } = useCurrentUser();
   const [activeTab, setActiveTab] = useState('classes');
   const [selectedClass, setSelectedClass] = useState<LegacyVirtualClass | null>(null);
   const [isInCall, setIsInCall] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  // Vérifier si l'utilisateur peut créer des classes virtuelles
+  const canCreateClass = userRole === 'Formateur' || userRole === 'Administrateur principal' || userRole === 'Administrateur';
 
   const handleJoinClass = (classItem: VirtualClass) => {
     // Convert to legacy format for video call compatibility
@@ -71,13 +76,15 @@ const ELearning = () => {
           <h1 className="text-3xl font-bold mb-2">E-Learning</h1>
           <p className="text-muted-foreground">Gérez vos cours en ligne et vidéoconférences</p>
         </div>
-        <button 
-          onClick={() => setIsCreateModalOpen(true)}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-lg flex items-center font-medium transition-colors"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Nouvelle classe virtuelle
-        </button>
+        {canCreateClass && (
+          <button 
+            onClick={() => setIsCreateModalOpen(true)}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-lg flex items-center font-medium transition-colors"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Nouvelle classe virtuelle
+          </button>
+        )}
       </div>
 
       {/* Tabs Navigation */}

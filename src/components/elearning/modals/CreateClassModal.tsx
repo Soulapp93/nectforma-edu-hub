@@ -38,8 +38,6 @@ const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, onClose, on
     date: '',
     start_time: '',
     end_time: '',
-    max_participants: 25,
-    recording_enabled: false,
   });
 
   // Charger les modules quand une formation est sélectionnée
@@ -105,8 +103,6 @@ const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, onClose, on
         date: '',
         start_time: '',
         end_time: '',
-        max_participants: 25,
-        recording_enabled: false,
       });
       setModules([]);
       setSelectedFormation(null);
@@ -248,37 +244,6 @@ const CreateClassModal: React.FC<CreateClassModalProps> = ({ isOpen, onClose, on
                 />
               </div>
             </div>
-
-            <div>
-              <Label htmlFor="max_participants" className="flex items-center">
-                <Users className="h-4 w-4 mr-1" />
-                Nombre maximum de participants
-              </Label>
-              <Input
-                id="max_participants"
-                type="number"
-                value={formData.max_participants}
-                onChange={(e) => setFormData({ ...formData, max_participants: parseInt(e.target.value) })}
-                min="1"
-                max="100"
-              />
-            </div>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="recording"
-                    checked={formData.recording_enabled}
-                    onCheckedChange={(checked) => setFormData({ ...formData, recording_enabled: checked })}
-                  />
-                  <Label htmlFor="recording" className="flex items-center">
-                    <Video className="h-4 w-4 mr-1" />
-                    Activer l'enregistrement automatique
-                  </Label>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           <div className="flex space-x-4 pt-4">
