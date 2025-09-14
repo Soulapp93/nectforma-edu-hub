@@ -28,6 +28,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
   onPhotoUpload,
   onSave
 }) => {
+  const [isEditing, setIsEditing] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -37,6 +38,16 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
       ...profileData,
       [field]: value
     });
+  };
+
+  const handleEditToggle = () => {
+    setIsEditing(!isEditing);
+  };
+
+  const handleSave = () => {
+    onSave();
+    setIsEditing(false);
+    toast.success('Profil mis à jour avec succès');
   };
 
   const handlePasswordChange = () => {
@@ -98,13 +109,22 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
       {/* Informations personnelles */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <User className="h-5 w-5 mr-2" />
-            Informations personnelles
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center">
+              <User className="h-5 w-5 mr-2" />
+              Informations personnelles
+            </CardTitle>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleEditToggle}
+            >
+              {isEditing ? 'Annuler' : 'Modifier les informations'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="firstName">Prénom</Label>
               <Input
@@ -112,6 +132,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                 value={profileData.firstName}
                 onChange={(e) => handleInputChange('firstName', e.target.value)}
                 placeholder="Votre prénom"
+                disabled={!isEditing}
               />
             </div>
             <div>
@@ -121,6 +142,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                 value={profileData.lastName}
                 onChange={(e) => handleInputChange('lastName', e.target.value)}
                 placeholder="Votre nom"
+                disabled={!isEditing}
               />
             </div>
           </div>
@@ -134,6 +156,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                 value={profileData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 placeholder="votre@email.com"
+                disabled={!isEditing}
               />
             </div>
             <div>
@@ -143,6 +166,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                 value={profileData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
                 placeholder="Votre numéro de téléphone"
+                disabled={!isEditing}
               />
             </div>
           </div>
@@ -202,11 +226,13 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
       </Card>
 
       {/* Bouton de sauvegarde */}
-      <div className="flex justify-end">
-        <Button onClick={onSave} className="px-6">
-          Sauvegarder les modifications
-        </Button>
-      </div>
+      {isEditing && (
+        <div className="flex justify-end">
+          <Button onClick={handleSave} className="px-6">
+            Sauvegarder les modifications
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
