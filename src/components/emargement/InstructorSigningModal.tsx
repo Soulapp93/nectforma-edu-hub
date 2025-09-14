@@ -33,30 +33,73 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
     attendanceSheetInstructor: attendanceSheet?.instructor
   });
   
-  // Utiliser l'ID du current user si l'instructorId n'est pas fourni
-  const [currentUserId, setCurrentUserId] = useState<string>('');
+  // États pour gérer l'utilisateur actuel et la signature
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [effectiveInstructorId, setEffectiveInstructorId] = useState<string>('');
+  const [showSignature, setShowSignature] = useState(false);
+  const [signing, setSigning] = useState(false);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
     const getCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setCurrentUserId(user.id);
-        console.log('Current user ID:', user.id);
+      try {
+        setLoading(true);
+        console.log('Fetching current user...');
+        
+        // Récupérer l'utilisateur actuel depuis Supabase Auth
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError) {
+          console.error('Auth error:', authError);
+          throw authError;
+        }
+        
+        if (!user) {
+          console.error('No authenticated user found');
+          toast.error('Vous devez être connecté pour signer');
+          return;
+        }
+        
+        console.log('Authenticated user:', user.id);
+        
+        // Récupérer les données utilisateur depuis la table users
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        
+        if (userError) {
+          console.error('User data error:', userError);
+          // Si l'utilisateur n'existe pas dans la table users, utiliser quand même l'ID auth
+          setCurrentUser(user);
+          setEffectiveInstructorId(user.id);
+        } else {
+          console.log('User data:', userData);
+          setCurrentUser(userData);
+          setEffectiveInstructorId(userData.id);
+        }
+        
+        console.log('Effective instructor ID set to:', userData?.id || user.id);
+        
+      } catch (error) {
+        console.error('Error getting current user:', error);
+        toast.error('Erreur lors de la récupération des données utilisateur');
+      } finally {
+        setLoading(false);
       }
     };
     
-    if (!instructorId || instructorId.trim() === '') {
+    if (isOpen) {
       getCurrentUser();
     }
-  }, [instructorId]);
+  }, [isOpen]);
   
-  const effectiveInstructorId = instructorId && instructorId.trim() !== '' ? instructorId : currentUserId;
-  console.log('Effective instructor ID:', effectiveInstructorId);
-  
-  const [showSignature, setShowSignature] = useState(false);
-  const [signing, setSigning] = useState(false);
-
   const handleStartSigning = () => {
+    if (!effectiveInstructorId) {
+      toast.error('Impossible de démarrer la signature : utilisateur non identifié');
+      return;
+    }
     setShowSignature(true);
   };
 
@@ -64,17 +107,24 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
     try {
       setSigning(true);
       
-      const idToUse = effectiveInstructorId;
-      console.log('Attempting to sign with ID:', idToUse);
+      console.log('Attempting to sign with ID:', effectiveInstructorId);
+      console.log('Current user data:', currentUser);
       
-      if (!idToUse || idToUse.trim() === '') {
-        throw new Error('ID formateur manquant - impossible de récupérer l\'ID utilisateur');
+      if (!effectiveInstructorId || effectiveInstructorId.trim() === '') {
+        throw new Error('ID formateur manquant - utilisateur non connecté');
       }
       
       // Signer la feuille d'émargement en tant que formateur
+      console.log('Calling attendanceService.signAttendanceSheet with:', {
+        attendanceSheetId: attendanceSheet.id,
+        userId: effectiveInstructorId,
+        userType: 'instructor',
+        signatureData: signatureData ? 'present' : 'empty'
+      });
+      
       await attendanceService.signAttendanceSheet(
         attendanceSheet.id,
-        idToUse,
+        effectiveInstructorId,
         'instructor',
         signatureData
       );
@@ -97,6 +147,37 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
   const isAlreadySigned = attendanceSheet.signatures?.some(
     sig => sig.user_id === effectiveInstructorId && sig.user_type === 'instructor'
   );
+
+  if (loading) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl">
+          <div className="flex items-center justify-center p-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mr-3"></div>
+            <span>Chargement des données utilisateur...</span>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+  
+  if (!effectiveInstructorId) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl">
+          <div className="text-center p-8">
+            <div className="text-red-600 mb-4">
+              ⚠️ Erreur d'authentification
+            </div>
+            <p className="text-gray-600 mb-6">
+              Impossible de vous identifier. Veuillez vous reconnecter.
+            </p>
+            <Button onClick={onClose}>Fermer</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
