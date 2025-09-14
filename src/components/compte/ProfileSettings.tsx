@@ -29,6 +29,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
   onSave
 }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -42,6 +43,16 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
 
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
+  };
+
+  const handlePasswordEditToggle = () => {
+    setIsEditingPassword(!isEditingPassword);
+    if (!isEditingPassword) {
+      // Reset les champs quand on active l'édition
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    }
   };
 
   const handleSave = () => {
@@ -66,6 +77,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
     setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
+    setIsEditingPassword(false);
   };
 
   return (
@@ -176,10 +188,19 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
       {/* Changement de mot de passe */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Lock className="h-5 w-5 mr-2" />
-            Sécurité
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center">
+              <Lock className="h-5 w-5 mr-2" />
+              Sécurité
+            </CardTitle>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handlePasswordEditToggle}
+            >
+              {isEditingPassword ? 'Annuler' : 'Modifier mot de passe'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
@@ -190,6 +211,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               placeholder="Saisissez votre mot de passe actuel"
+              disabled={!isEditingPassword}
             />
           </div>
           
@@ -201,6 +223,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Nouveau mot de passe (min. 6 caractères)"
+              disabled={!isEditingPassword}
             />
           </div>
           
@@ -212,16 +235,19 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirmez votre nouveau mot de passe"
+              disabled={!isEditingPassword}
             />
           </div>
           
-          <Button 
-            onClick={handlePasswordChange}
-            disabled={!currentPassword || !newPassword || !confirmPassword}
-            className="w-full md:w-auto"
-          >
-            Changer le mot de passe
-          </Button>
+          {isEditingPassword && (
+            <Button 
+              onClick={handlePasswordChange}
+              disabled={!currentPassword || !newPassword || !confirmPassword}
+              className="w-full md:w-auto"
+            >
+              Changer le mot de passe
+            </Button>
+          )}
         </CardContent>
       </Card>
 
