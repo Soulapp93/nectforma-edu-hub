@@ -64,8 +64,8 @@ const Sidebar = () => {
 
   const userInfo = getUserDisplayInfo();
   
-  // Navigation complète pour les administrateurs
-  const adminNavigation = [
+  // Navigation pour AdminPrincipal uniquement (avec gestion du compte)
+  const principalAdminNavigation = [
     { name: 'Tableau de bord', href: '/', icon: LayoutDashboard },
     { name: 'Administration', href: '/administration', icon: Users },
     { name: 'Formation', href: '/formations', icon: BookOpen },
@@ -77,7 +77,20 @@ const Sidebar = () => {
     { name: 'Gestion du compte', href: '/compte', icon: Settings },
   ];
 
-  // Navigation limitée pour les formateurs et étudiants
+  // Navigation pour Admin (avec profil au lieu de gestion du compte)
+  const adminNavigation = [
+    { name: 'Tableau de bord', href: '/', icon: LayoutDashboard },
+    { name: 'Administration', href: '/administration', icon: Users },
+    { name: 'Formation', href: '/formations', icon: BookOpen },
+    { name: 'E-Learning', href: '/e-learning', icon: Monitor },
+    { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
+    { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
+    { name: 'Événements', href: '/evenements', icon: Calendar1 },
+    { name: 'Coffre-fort', href: '/coffre-fort', icon: FileText },
+    { name: 'Mon Profil', href: '/compte', icon: Settings },
+  ];
+
+  // Navigation limitée pour les formateurs et étudiants (avec profil)
   const limitedNavigation = [
     { name: 'Formation', href: '/formations', icon: BookOpen },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
@@ -86,11 +99,15 @@ const Sidebar = () => {
     { name: 'Coffre-fort', href: '/coffre-fort', icon: FileText },
     { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
     { name: 'E-Learning', href: '/e-learning', icon: Monitor },
-    { name: 'Gestion du compte', href: '/compte', icon: Settings },
+    { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
 
-  // Sélectionner la navigation selon le rôle - AdminPrincipal et Admin ont accès complet
-  const navigation = (userRole === 'AdminPrincipal' || userRole === 'Admin') ? adminNavigation : limitedNavigation;
+  // Sélectionner la navigation selon le rôle
+  const navigation = userRole === 'AdminPrincipal' 
+    ? principalAdminNavigation 
+    : userRole === 'Admin' 
+    ? adminNavigation 
+    : limitedNavigation;
 
   return (
     <SidebarWrapper 
