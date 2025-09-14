@@ -22,15 +22,23 @@ const AccountTabs: React.FC<AccountTabsProps> = ({ activeTab, onTabChange }) => 
     { id: 'establishment', name: 'Établissement', icon: Building },
   ];
   
-  // Tabs pour tous les autres utilisateurs (admin, formateur, étudiant)
+  // Tabs pour tous les autres utilisateurs (formateur, étudiant)
   const regularUserTabs: Tab[] = [
     { id: 'profile', name: 'Profil', icon: User },
   ];
   
   // Déterminer quels onglets afficher selon le rôle
-  // Pour l'instant, on considère que "Admin" est l'admin principal
-  // Vous pourrez plus tard différencier "AdminPrincipal" de "Admin"
-  const tabs = userRole === 'AdminPrincipal' ? principalAdminTabs : regularUserTabs;
+  // AdminPrincipal = accès à l'établissement
+  // Admin = pas d'accès à la gestion du compte (retourne un tableau vide)
+  // Autres = accès au profil
+  const tabs = userRole === 'AdminPrincipal' 
+    ? principalAdminTabs 
+    : (userRole === 'Admin' ? [] : regularUserTabs);
+
+  // Si aucun onglet disponible, ne rien afficher
+  if (tabs.length === 0) {
+    return null;
+  }
 
   return (
     <div className="lg:w-64">
