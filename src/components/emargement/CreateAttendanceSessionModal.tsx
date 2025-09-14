@@ -103,22 +103,32 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
 
       if (slotError) throw slotError;
 
-      // Créer la feuille d'émargement avec le formateur actuel
+      // Vérifier si userId est un UUID valide (pour éviter les erreurs avec les users de demo)
+      const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
+      
+      // Préparer les données pour la feuille d'émargement
+      const attendanceData: any = {
+        schedule_slot_id: scheduleSlot.id,
+        formation_id: formationId,
+        title: `${slot.formation_title} - ${slot.module_title}`,
+        date: new Date().toISOString().split('T')[0],
+        start_time: slot.start_time,
+        end_time: slot.end_time,
+        room: slot.room,
+        status: 'En cours',
+        is_open_for_signing: true,
+        opened_at: new Date().toISOString()
+      };
+
+      // N'ajouter instructor_id que si c'est un UUID valide
+      if (isValidUUID) {
+        attendanceData.instructor_id = userId;
+      }
+
+      // Créer la feuille d'émargement
       const { data, error } = await supabase
         .from('attendance_sheets')
-        .insert({
-          schedule_slot_id: scheduleSlot.id,
-          formation_id: formationId,
-          instructor_id: userId,
-          title: `${slot.formation_title} - ${slot.module_title}`,
-          date: new Date().toISOString().split('T')[0],
-          start_time: slot.start_time,
-          end_time: slot.end_time,
-          room: slot.room,
-          status: 'En cours',
-          is_open_for_signing: true,
-          opened_at: new Date().toISOString()
-        })
+        .insert(attendanceData)
         .select(`
           *,
           formations(title, color)
