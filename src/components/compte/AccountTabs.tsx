@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { User, Mail, Phone, MapPin, Lock, Bell, Shield, CreditCard, Users, Building } from 'lucide-react';
+import { User, Building } from 'lucide-react';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface Tab {
   id: string;
@@ -14,9 +15,22 @@ interface AccountTabsProps {
 }
 
 const AccountTabs: React.FC<AccountTabsProps> = ({ activeTab, onTabChange }) => {
-  const tabs: Tab[] = [
+  const { userRole } = useCurrentUser();
+  
+  // Tabs pour l'administrateur principal seulement
+  const principalAdminTabs: Tab[] = [
     { id: 'establishment', name: 'Établissement', icon: Building },
   ];
+  
+  // Tabs pour tous les autres utilisateurs (admin, formateur, étudiant)
+  const regularUserTabs: Tab[] = [
+    { id: 'profile', name: 'Profil', icon: User },
+  ];
+  
+  // Déterminer quels onglets afficher selon le rôle
+  // Pour l'instant, on considère que "Admin" est l'admin principal
+  // Vous pourrez plus tard différencier "AdminPrincipal" de "Admin"
+  const tabs = userRole === 'AdminPrincipal' ? principalAdminTabs : regularUserTabs;
 
   return (
     <div className="lg:w-64">

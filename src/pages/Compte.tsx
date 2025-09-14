@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import AccountTabs from '../components/compte/AccountTabs';
 import EstablishmentSettings from '../components/compte/EstablishmentSettings';
+import ProfileSettings from '../components/compte/ProfileSettings';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { toast } from 'sonner';
 
 type EstablishmentDataState = {
@@ -16,7 +18,10 @@ type EstablishmentDataState = {
 };
 
 const Compte = () => {
-  const [activeTab, setActiveTab] = useState('establishment');
+  const { userRole } = useCurrentUser();
+  const [activeTab, setActiveTab] = useState(
+    userRole === 'AdminPrincipal' ? 'establishment' : 'profile'
+  );
   const [adminData, setAdminData] = useState({
     firstName: '',
     lastName: '',
@@ -37,10 +42,20 @@ const Compte = () => {
     numberOfUsers: 0
   });
 
+  // État pour les données de profil utilisateur
+  const [profileData, setProfileData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    profilePhotoUrl: undefined as string | undefined
+  });
+
   // Charger les données sauvegardées au montage du composant
   useEffect(() => {
     const savedAdminData = localStorage.getItem('adminData');
     const savedEstablishmentData = localStorage.getItem('establishmentData');
+    const savedProfileData = localStorage.getItem('profileData');
 
     if (savedAdminData) {
       try {
@@ -57,7 +72,18 @@ const Compte = () => {
         console.error('Erreur lors du chargement des données établissement:', error);
       }
     }
-  }, []);
+
+    if (savedProfileData) {
+      try {
+        setProfileData(JSON.parse(savedProfileData));
+      } catch (error) {
+        console.error('Erreur lors du chargement des données profil:', error);
+      }
+    }
+
+    // Ajuster l'onglet actif selon le rôle de l'utilisateur
+    setActiveTab(userRole === 'AdminPrincipal' ? 'establishment' : 'profile');
+  }, [userRole]);
 
   const handleLogoUpload = (files: File[]) => {
     if (files.length > 0) {
@@ -89,6 +115,35 @@ const Compte = () => {
     }
   };
 
+  const handleProfilePhotoUpload = (files: File[]) => {
+    if (files.length > 0) {
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const photoData = e.target?.result as string;
+        setProfileData(prev => ({ ...prev, profilePhotoUrl: photoData }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleProfileDataChange = (data: { firstName: string; lastName: string; email: string; phone: string; profilePhotoUrl?: string }) => {
+    setProfileData({
+      ...data,
+      profilePhotoUrl: data.profilePhotoUrl
+    });
+  };
+
+  const handleSaveProfile = () => {
+    try {
+      localStorage.setItem('profileData', JSON.stringify(profileData));
+      toast.success('Profil sauvegardé avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde du profil:', error);
+      toast.error('Erreur lors de la sauvegarde du profil');
+    }
+  };
+
   return (
     <div className="p-8">
       <div className="mb-8">
@@ -100,14 +155,25 @@ const Compte = () => {
         <AccountTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
         <div className="flex-1">
-          <EstablishmentSettings
-            adminData={adminData}
-            establishmentData={establishmentData}
-            onAdminDataChange={setAdminData}
-            onEstablishmentDataChange={setEstablishmentData}
-            onLogoUpload={handleLogoUpload}
-            onSave={handleSaveEstablishment}
-          />
+          {activeTab === 'establishment' && (
+            <EstablishmentSettings
+              adminData={adminData}
+              establishmentData={establishmentData}
+              onAdminDataChange={setAdminData}
+              onEstablishmentDataChange={setEstablishmentData}
+              onLogoUpload={handleLogoUpload}
+              onSave={handleSaveEstablishment}
+            />
+          )}
+          
+          {activeTab === 'profile' && (
+            <ProfileSettings
+              profileData={profileData}
+              onProfileDataChange={handleProfileDataChange}
+              onPhotoUpload={handleProfilePhotoUpload}
+              onSave={handleSaveProfile}
+            />
+          )}
         </div>
       </div>
     </div>
