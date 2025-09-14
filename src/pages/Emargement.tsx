@@ -13,6 +13,7 @@ import InstructorSigningModal from '../components/emargement/InstructorSigningMo
 import EnhancedAttendanceSheetModal from '../components/administration/EnhancedAttendanceSheetModal';
 import AttendanceHistory from '../components/emargement/AttendanceHistory';
 import SignatureManagementModal from '../components/ui/signature-management-modal';
+import QRAttendanceCard from '../components/emargement/QRAttendanceCard';
 
 const Emargement = () => {
   const [attendanceSheets, setAttendanceSheets] = useState<AttendanceSheet[]>([]);
