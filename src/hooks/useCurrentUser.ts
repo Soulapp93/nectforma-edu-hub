@@ -13,7 +13,17 @@ export const useCurrentUser = () => {
         const demoUser = sessionStorage.getItem('demo_user');
         if (demoUser) {
           const userData = JSON.parse(demoUser);
-          setUserId(userData.id);
+          // Convertir les IDs démo en UUIDs valides
+          let userId = userData.id;
+          if (userId === 'demo-adminprincipal') {
+            userId = '00000000-0000-4000-8000-000000000001'; // UUID valide pour admin démo
+          } else if (userId === 'demo-student') {
+            userId = '00000000-0000-4000-8000-000000000002'; // UUID valide pour étudiant démo
+          } else if (typeof userId === 'string' && !userId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
+            // Générer un UUID valide basé sur l'ID original
+            userId = '00000000-0000-4000-8000-' + userData.id.replace(/[^a-f0-9]/gi, '').padEnd(12, '0').substr(0, 12);
+          }
+          setUserId(userId);
           setUserRole(userData.role);
           setLoading(false);
           return;
@@ -72,7 +82,21 @@ export const useCurrentUser = () => {
         } else {
           // Vérifier s'il y a encore un utilisateur démo
           const demoUser = sessionStorage.getItem('demo_user');
-          if (!demoUser) {
+          if (demoUser) {
+            const userData = JSON.parse(demoUser);
+            // Convertir les IDs démo en UUIDs valides
+            let userId = userData.id;
+            if (userId === 'demo-adminprincipal') {
+              userId = '00000000-0000-4000-8000-000000000001'; // UUID valide pour admin démo
+            } else if (userId === 'demo-student') {
+              userId = '00000000-0000-4000-8000-000000000002'; // UUID valide pour étudiant démo
+            } else if (typeof userId === 'string' && !userId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
+              // Générer un UUID valide basé sur l'ID original
+              userId = '00000000-0000-4000-8000-' + userData.id.replace(/[^a-f0-9]/gi, '').padEnd(12, '0').substr(0, 12);
+            }
+            setUserId(userId);
+            setUserRole(userData.role);
+          } else {
             setUserId(null);
             setUserRole(null);
           }
