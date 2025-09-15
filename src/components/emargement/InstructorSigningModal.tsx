@@ -281,19 +281,19 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div className="bg-green-50 p-3 rounded-lg">
                   <div className="text-2xl font-bold text-green-600">
-                    {attendanceSheet.signatures?.filter(s => s.present).length || 0}
+                    {attendanceSheet.signatures?.filter(s => s.present && s.user_type === 'student').length || 0}
                   </div>
                   <div className="text-xs text-green-700">Présents</div>
                 </div>
                 <div className="bg-red-50 p-3 rounded-lg">
                   <div className="text-2xl font-bold text-red-600">
-                    {attendanceSheet.signatures?.filter(s => !s.present).length || 0}
+                    {attendanceSheet.signatures?.filter(s => !s.present && s.user_type === 'student').length || 0}
                   </div>
                   <div className="text-xs text-red-700">Absents</div>
                 </div>
                 <div className="bg-blue-50 p-3 rounded-lg">
                   <div className="text-2xl font-bold text-blue-600">
-                    {attendanceSheet.signatures?.length || 0}
+                    {attendanceSheet.signatures?.filter(s => s.user_type === 'student').length || 0}
                   </div>
                   <div className="text-xs text-blue-700">Total</div>
                 </div>
