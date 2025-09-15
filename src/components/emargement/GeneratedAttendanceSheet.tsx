@@ -196,10 +196,6 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
         <div className="flex items-center justify-between bg-white p-4 rounded-lg shadow">
           <h2 className="text-lg font-semibold">Feuille d'émargement générée</h2>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleDownload}>
-              <Download className="w-4 h-4 mr-2" />
-              Télécharger PDF
-            </Button>
             <Button onClick={onClose}>
               Fermer
             </Button>

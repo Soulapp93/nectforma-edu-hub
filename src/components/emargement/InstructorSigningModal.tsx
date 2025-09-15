@@ -75,7 +75,17 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
         signatureData
       );
 
-      toast.success('Votre signature a été enregistrée avec succès ! ✍️');
+      // Envoyer automatiquement la feuille à l'administration
+      const { supabase } = await import('@/integrations/supabase/client');
+      await supabase
+        .from('attendance_sheets')
+        .update({ 
+          status: 'En attente de validation',
+          closed_at: new Date().toISOString()
+        })
+        .eq('id', attendanceSheet.id);
+
+      toast.success('Signature enregistrée et feuille envoyée à l\'administration ! ✍️📤');
       onSigned();
       onClose();
     } catch (error: any) {

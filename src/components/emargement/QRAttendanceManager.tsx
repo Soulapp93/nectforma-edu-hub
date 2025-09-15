@@ -265,17 +265,6 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
             </Button>
           )}
 
-          {/* Signature formateur */}
-          {!stats.instructorSigned && attendanceSheet.status === 'En cours' && (
-            <Button 
-              onClick={handleInstructorSign}
-              className="w-full bg-blue-600 hover:bg-blue-700"
-              size="lg"
-            >
-              <PenTool className="w-4 h-4 mr-2" />
-              Signer en tant que formateur
-            </Button>
-          )}
 
           {/* Consulter la feuille d'émargement */}
           <Button 
