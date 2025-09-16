@@ -59,18 +59,22 @@ const AttendanceManagement = () => {
 
       if (error) {
         console.error('Error loading admin signature:', error);
+        setAdminSignature(null);
         return;
       }
 
       if (data?.signature_data) {
         setAdminSignature(data.signature_data);
-        console.log('Signature administrateur chargée depuis Supabase:', !!data.signature_data);
+        console.log('Signature admin trouvée:', { 
+          "_type": typeof data.signature_data, 
+          "value": data.signature_data ? "trouvée" : "undefined" 
+        });
       } else {
         setAdminSignature(null);
-        console.log('Aucune signature enregistrée trouvée dans user_signatures');
+        console.log('Aucune signature trouvée dans user_signatures');
       }
     } catch (error) {
-      console.error('Error loading admin signature:', error);
+      console.error('Error loading admin signature:', error);  
       setAdminSignature(null);
     }
   };
@@ -157,33 +161,13 @@ const AttendanceManagement = () => {
     }
 
     console.log('Début validation, vérification signature admin...');
+    console.log('Signature admin disponible:', !!adminSignature);
     
     try {
-      // Récupérer la signature admin directement depuis la base de données
-      const { data, error } = await supabase
-        .from('user_signatures')
-        .select('signature_data')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      let signatureToUse = null;
-      
-      if (error) {
-        console.error('Error loading admin signature:', error);
-      } else if (data?.signature_data) {
-        signatureToUse = data.signature_data;
-        console.log('Signature trouvée dans la base de données');
-      } else {
-        console.log('Aucune signature trouvée dans user_signatures');
-      }
-
-      if (signatureToUse) {
+      if (adminSignature) {
         console.log('Validation avec signature existante');
-        await attendanceService.validateAttendanceSheet(sheet.id, userId, signatureToUse);
+        await attendanceService.validateAttendanceSheet(sheet.id, userId, adminSignature);
         toast.success('Feuille d\'émargement validée avec la signature enregistrée');
-        
-        // Mettre à jour l'état local
-        setAdminSignature(signatureToUse);
         
         await fetchData();
         // Rafraîchir la vue courante
@@ -222,12 +206,49 @@ const AttendanceManagement = () => {
   };
 
   const handleSaveAdminSignature = async (signatureData: string) => {
-    if (signatureData) {
-      localStorage.setItem('admin_signature', signatureData);
-      setAdminSignature(signatureData);
-    } else {
-      localStorage.removeItem('admin_signature');
-      setAdminSignature(null);
+    if (!userId) return;
+    
+    try {
+      if (signatureData) {
+        // Sauvegarder dans la base de données
+        const { error } = await supabase
+          .from('user_signatures')
+          .upsert({
+            user_id: userId,
+            signature_data: signatureData
+          }, {
+            onConflict: 'user_id'
+          });
+
+        if (error) {
+          console.error('Error saving admin signature:', error);
+          toast.error('Erreur lors de la sauvegarde de la signature');
+          return;
+        }
+
+        setAdminSignature(signatureData);
+        toast.success('Signature administrative sauvegardée');
+        console.log('Signature admin sauvegardée dans la base de données');
+      } else {
+        // Supprimer de la base de données
+        const { error } = await supabase
+          .from('user_signatures')
+          .delete()
+          .eq('user_id', userId);
+
+        if (error) {
+          console.error('Error deleting admin signature:', error);
+          toast.error('Erreur lors de la suppression de la signature');
+          return;
+        }
+
+        setAdminSignature(null);
+        toast.success('Signature administrative supprimée');
+        console.log('Signature admin supprimée de la base de données');
+      }
+    } catch (error) {
+      console.error('Error managing admin signature:', error);
+      toast.error('Erreur lors de la gestion de la signature');
     }
   };
 
