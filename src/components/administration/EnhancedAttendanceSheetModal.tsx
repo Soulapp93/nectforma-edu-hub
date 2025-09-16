@@ -155,10 +155,11 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
     }
 
     try {
-      setAdminSignature(signature);
       await attendanceService.validateAttendanceSheet(attendanceSheet.id, userId, signature);
       toast.success('Feuille d\'émargement validée et signée');
       setMode('view');
+      // Petit délai pour s'assurer que la base de données est mise à jour
+      await new Promise(resolve => setTimeout(resolve, 500));
       // Recharger les données pour voir la signature
       await loadAttendanceData();
       onUpdate();
