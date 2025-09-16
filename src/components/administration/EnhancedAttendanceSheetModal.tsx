@@ -115,16 +115,17 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
       console.log('instructor_id de la feuille:', attendanceSheet.instructor_id);
       console.log('validated_by de la feuille:', attendanceSheet.validated_by);
       
-      // Signature du formateur: user_type='instructor' ET user_id = instructor_id de la feuille
+      // Signature du formateur: TOUJOURS chercher la signature du formateur original (instructor_id de la feuille)
       const instrSig = signatures?.find((sig: any) => 
         sig.user_type === 'instructor' && 
         sig.user_id === attendanceSheet.instructor_id
       )?.signature_data;
       
       console.log('Signature formateur trouvée:', !!instrSig);
+      console.log('ID formateur:', attendanceSheet.instructor_id);
       
       if (instrSig) {
-        console.log('Mise à jour signature instructeur');
+        console.log('Conservation signature formateur originale');
         setInstructorSignature(instrSig);
       }
 
@@ -132,19 +133,25 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
       if (attendanceSheet.validated_by) {
         console.log('Chargement signature admin pour validated_by:', attendanceSheet.validated_by);
         
-        const { data: adminSigData, error: adminSigError } = await supabase
-          .from('user_signatures')
-          .select('signature_data')
-          .eq('user_id', attendanceSheet.validated_by)
-          .maybeSingle();
+        // Si l'admin qui a validé est différent du formateur, chercher la signature admin
+        if (attendanceSheet.validated_by !== attendanceSheet.instructor_id) {
+          const { data: adminSigData, error: adminSigError } = await supabase
+            .from('user_signatures')
+            .select('signature_data')
+            .eq('user_id', attendanceSheet.validated_by)
+            .maybeSingle();
 
-        if (adminSigError) {
-          console.error('Erreur récupération signature admin:', adminSigError);
-        } else if (adminSigData && adminSigData.signature_data) {
-          console.log('Signature admin trouvée dans user_signatures');
-          setAdminSignature(adminSigData.signature_data);
+          if (adminSigError) {
+            console.error('Erreur récupération signature admin:', adminSigError);
+          } else if (adminSigData && adminSigData.signature_data) {
+            console.log('Signature admin trouvée dans user_signatures');
+            setAdminSignature(adminSigData.signature_data);
+          } else {
+            console.log('Aucune signature admin trouvée dans user_signatures');
+          }
         } else {
-          console.log('Aucune signature admin trouvée dans user_signatures');
+          console.log('Admin et formateur sont la même personne, utilisation signature formateur comme admin');
+          setAdminSignature(instrSig || '');
         }
       }
     } catch (error) {

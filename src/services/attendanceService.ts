@@ -433,11 +433,18 @@ export const attendanceService = {
 
       if (error) throw error;
 
-      // Ajouter la signature administrative si fournie
+      // Ajouter la signature administrative si fournie (ne pas toucher à la signature du formateur)
       if (signatureData && signatureData.trim() !== '') {
         console.log('Service: Ajout signature administrative dans la base, longueur:', signatureData.length);
         
-        // Vérifier si une signature admin existe déjà pour cette feuille
+        // Récupérer la feuille pour connaître l'instructor_id original
+        const { data: sheetData } = await supabase
+          .from('attendance_sheets')
+          .select('instructor_id')
+          .eq('id', attendanceSheetId)
+          .single();
+        
+        // Vérifier si une signature administrative existe déjà (différente de celle du formateur)
         const { data: existingSignature } = await supabase
           .from('attendance_signatures')
           .select('id')
@@ -447,43 +454,49 @@ export const attendanceService = {
           .maybeSingle();
 
         if (existingSignature) {
-          // Mettre à jour la signature existante
-          const { data: updateResult, error: updateError } = await supabase
-            .from('attendance_signatures')
-            .update({
-              signature_data: signatureData,
-              signed_at: new Date().toISOString()
-            })
-            .eq('id', existingSignature.id)
-            .select()
-            .single();
+          // Mettre à jour la signature administrative existante seulement si c'est bien l'admin et pas le formateur
+          if (adminUserId !== sheetData?.instructor_id) {
+            const { data: updateResult, error: updateError } = await supabase
+              .from('attendance_signatures')
+              .update({
+                signature_data: signatureData,
+                signed_at: new Date().toISOString()
+              })
+              .eq('id', existingSignature.id)
+              .select()
+              .single();
+              
+            if (updateError) {
+              console.error('Erreur mise à jour signature:', updateError);
+              throw updateError;
+            }
             
-          if (updateError) {
-            console.error('Erreur mise à jour signature:', updateError);
-            throw updateError;
+            console.log('Service: Signature administrative mise à jour:', !!updateResult);
           }
-          
-          console.log('Service: Signature administrative mise à jour:', !!updateResult);
         } else {
-          // Créer une nouvelle signature - utilise 'instructor' car 'admin' n'est pas autorisé
-          const { data: signatureResult, error: signatureError } = await supabase
-            .from('attendance_signatures')
-            .insert({
-              attendance_sheet_id: attendanceSheetId,
-              user_id: adminUserId,
-              user_type: 'instructor', // Utilise instructor car admin n'est pas dans les valeurs autorisées
-              signature_data: signatureData,
-              present: true
-            })
-            .select()
-            .single();
+          // Créer une nouvelle signature administrative seulement si l'admin n'est pas le formateur
+          if (adminUserId !== sheetData?.instructor_id) {
+            const { data: signatureResult, error: signatureError } = await supabase
+              .from('attendance_signatures')
+              .insert({
+                attendance_sheet_id: attendanceSheetId,
+                user_id: adminUserId,
+                user_type: 'instructor', // Utilise instructor car admin n'est pas dans les valeurs autorisées
+                signature_data: signatureData,
+                present: true
+              })
+              .select()
+              .single();
+              
+            if (signatureError) {
+              console.error('Erreur insertion signature:', signatureError);
+              throw signatureError;
+            }
             
-          if (signatureError) {
-            console.error('Erreur insertion signature:', signatureError);
-            throw signatureError;
+            console.log('Service: Signature administrative ajoutée:', !!signatureResult);
+          } else {
+            console.log('Service: Admin est le formateur, signature administrative non ajoutée séparément');
           }
-          
-          console.log('Service: Signature administrative ajoutée:', !!signatureResult);
         }
       }
 
