@@ -160,13 +160,31 @@ const AttendanceManagement = () => {
     }
 
     console.log('Début validation, vérification signature admin...');
-    console.log('Signature admin disponible:', !!adminSignature);
-    console.log('Valeur de la signature:', adminSignature ? adminSignature.substring(0, 50) + '...' : 'null');
+    console.log('Signature admin disponible dans state:', !!adminSignature);
+    console.log('Valeur de la signature dans state:', adminSignature ? adminSignature.substring(0, 50) + '...' : 'null');
     
     try {
-      if (adminSignature && adminSignature.trim() !== '') {
-        console.log('Validation avec signature existante, longueur:', adminSignature.length);
-        await attendanceService.validateAttendanceSheet(sheet.id, userId, adminSignature);
+      // Recharger la signature depuis la base pour s'assurer d'avoir la plus récente
+      console.log('Rechargement de la signature depuis la base...');
+      await loadAdminSignature();
+      
+      // Attendre un petit délai pour s'assurer que le state est mis à jour
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Vérifier directement en base aussi au cas où le state ne serait pas à jour
+      const { data: signatureData, error } = await supabase
+        .from('user_signatures')
+        .select('signature_data')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      console.log('Signature trouvée en base:', !!signatureData?.signature_data);
+      
+      const currentSignature = signatureData?.signature_data || adminSignature;
+      
+      if (currentSignature && currentSignature.trim() !== '') {
+        console.log('Validation avec signature existante, longueur:', currentSignature.length);
+        await attendanceService.validateAttendanceSheet(sheet.id, userId, currentSignature);
         toast.success('Feuille d\'émargement validée avec la signature enregistrée');
         
         await fetchData();
@@ -233,15 +251,37 @@ const AttendanceManagement = () => {
         }
 
         console.log('Signature sauvegardée en base:', data);
-        setAdminSignature(signatureData);
-        toast.success('Signature administrative sauvegardée');
-        console.log('État signature mis à jour, longueur:', signatureData.length);
         
-        // Vérifier immédiatement la sauvegarde
+        // Mettre à jour immédiatement le state local
+        setAdminSignature(signatureData);
+        console.log('État signature mis à jour localement, longueur:', signatureData.length);
+        
+        toast.success('Signature administrative sauvegardée');
+        
+        // Vérifier la sauvegarde en rechargeant depuis la base
         setTimeout(async () => {
           console.log('Vérification de la signature sauvegardée...');
-          await loadAdminSignature();
-        }, 200);
+          try {
+            const { data: verifyData, error: verifyError } = await supabase
+              .from('user_signatures')
+              .select('signature_data')
+              .eq('user_id', userId)
+              .single();
+            
+            if (verifyError) {
+              console.error('Erreur lors de la vérification:', verifyError);
+            } else {
+              console.log('Vérification OK - signature trouvée en base, longueur:', verifyData.signature_data?.length);
+              // Synchroniser le state avec la base si nécessaire
+              if (verifyData.signature_data !== adminSignature) {
+                console.log('Synchronisation du state avec la base...');
+                setAdminSignature(verifyData.signature_data);
+              }
+            }
+          } catch (error) {
+            console.error('Erreur de vérification:', error);
+          }
+        }, 500);
         
       } else {
         console.log('Suppression signature admin');
