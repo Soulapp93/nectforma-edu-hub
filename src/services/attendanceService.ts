@@ -434,26 +434,57 @@ export const attendanceService = {
       if (error) throw error;
 
       // Ajouter la signature administrative si fournie
-      if (signatureData) {
-        console.log('Service: Ajout signature administrative dans la base');
-        const { data: signatureResult, error: signatureError } = await supabase
-          .from('attendance_signatures')
-          .insert({
-            attendance_sheet_id: attendanceSheetId,
-            user_id: adminUserId,
-            user_type: 'instructor', // Utilise instructor car admin n'existe pas dans le type
-            signature_data: signatureData,
-            present: true
-          })
-          .select()
-          .single();
-          
-        if (signatureError) {
-          console.error('Erreur insertion signature:', signatureError);
-          throw signatureError;
-        }
+      if (signatureData && signatureData.trim() !== '') {
+        console.log('Service: Ajout signature administrative dans la base, longueur:', signatureData.length);
         
-        console.log('Service: Signature administrative ajoutée:', !!signatureResult);
+        // Vérifier si une signature admin existe déjà pour cette feuille
+        const { data: existingSignature } = await supabase
+          .from('attendance_signatures')
+          .select('id')
+          .eq('attendance_sheet_id', attendanceSheetId)
+          .eq('user_id', adminUserId)
+          .eq('user_type', 'admin')
+          .maybeSingle();
+
+        if (existingSignature) {
+          // Mettre à jour la signature existante
+          const { data: updateResult, error: updateError } = await supabase
+            .from('attendance_signatures')
+            .update({
+              signature_data: signatureData,
+              signed_at: new Date().toISOString()
+            })
+            .eq('id', existingSignature.id)
+            .select()
+            .single();
+            
+          if (updateError) {
+            console.error('Erreur mise à jour signature:', updateError);
+            throw updateError;
+          }
+          
+          console.log('Service: Signature administrative mise à jour:', !!updateResult);
+        } else {
+          // Créer une nouvelle signature
+          const { data: signatureResult, error: signatureError } = await supabase
+            .from('attendance_signatures')
+            .insert({
+              attendance_sheet_id: attendanceSheetId,
+              user_id: adminUserId,
+              user_type: 'admin', // Utilise admin pour différencier
+              signature_data: signatureData,
+              present: true
+            })
+            .select()
+            .single();
+            
+          if (signatureError) {
+            console.error('Erreur insertion signature:', signatureError);
+            throw signatureError;
+          }
+          
+          console.log('Service: Signature administrative ajoutée:', !!signatureResult);
+        }
       }
 
       console.log('Service: Validation terminée avec succès');

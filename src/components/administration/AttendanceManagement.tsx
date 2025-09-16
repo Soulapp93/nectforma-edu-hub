@@ -63,11 +63,11 @@ const AttendanceManagement = () => {
         return;
       }
 
-      console.log('Données récupérées:', { data, hasData: !!data, hasSignatureData: !!(data?.signature_data) });
+      console.log('Données signature récupérées:', data);
 
-      if (data?.signature_data && data.signature_data.trim() !== '') {
+      if (data && data.signature_data && data.signature_data.trim() !== '') {
         setAdminSignature(data.signature_data);
-        console.log('Signature admin chargée avec succès');
+        console.log('Signature admin chargée avec succès, longueur:', data.signature_data.length);
       } else {
         setAdminSignature(null);
         console.log('Aucune signature valide trouvée');
@@ -161,10 +161,11 @@ const AttendanceManagement = () => {
 
     console.log('Début validation, vérification signature admin...');
     console.log('Signature admin disponible:', !!adminSignature);
+    console.log('Valeur de la signature:', adminSignature ? adminSignature.substring(0, 50) + '...' : 'null');
     
     try {
-      if (adminSignature) {
-        console.log('Validation avec signature existante');
+      if (adminSignature && adminSignature.trim() !== '') {
+        console.log('Validation avec signature existante, longueur:', adminSignature.length);
         await attendanceService.validateAttendanceSheet(sheet.id, userId, adminSignature);
         toast.success('Feuille d\'émargement validée avec la signature enregistrée');
         
