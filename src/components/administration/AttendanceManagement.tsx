@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { attendanceService, AttendanceSheet } from '@/services/attendanceService';
+import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useFormations } from '@/hooks/useFormations';
 import { format } from 'date-fns';
@@ -36,13 +37,37 @@ const AttendanceManagement = () => {
 
   useEffect(() => {
     fetchData();
-    loadAdminSignature();
-  }, []);
+    if (userId) {
+      loadAdminSignature();
+    }
+  }, [userId]);
 
-  const loadAdminSignature = () => {
-    // Charger la signature administrateur depuis le localStorage
-    const signature = localStorage.getItem('admin_signature');
-    setAdminSignature(signature);
+  const loadAdminSignature = async () => {
+    if (!userId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_signatures')
+        .select('signature_data')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error loading admin signature:', error);
+        return;
+      }
+
+      if (data?.signature_data) {
+        setAdminSignature(data.signature_data);
+        console.log('Signature administrateur chargée depuis Supabase');
+      } else {
+        setAdminSignature(null);
+        console.log('Aucune signature enregistrée trouvée');
+      }
+    } catch (error) {
+      console.error('Error loading admin signature:', error);
+      setAdminSignature(null);
+    }
   };
 
   const fetchData = async () => {
