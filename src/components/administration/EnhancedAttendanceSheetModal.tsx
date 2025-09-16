@@ -113,7 +113,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
       // Charger les signatures existantes si disponibles
       console.log('Signatures récupérées:', signatures);
       console.log('instructor_id de la feuille:', attendanceSheet.instructor_id);
-      console.log('userId actuel:', userId);
+      console.log('validated_by de la feuille:', attendanceSheet.validated_by);
       
       // Signature du formateur: user_type='instructor' ET user_id = instructor_id de la feuille
       const instrSig = signatures?.find((sig: any) => 
@@ -121,23 +121,31 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
         sig.user_id === attendanceSheet.instructor_id
       )?.signature_data;
       
-      // Signature admin: user_type='instructor' ET user_id = validated_by (admin qui a validé)
-      const adminSig = signatures?.find((sig: any) => 
-        sig.user_type === 'instructor' && 
-        sig.user_id === attendanceSheet.validated_by
-      )?.signature_data;
-      
       console.log('Signature formateur trouvée:', !!instrSig);
-      console.log('Signature admin trouvée:', !!adminSig);
-      console.log('Valeur signature admin:', adminSig);
       
       if (instrSig) {
         console.log('Mise à jour signature instructeur');
         setInstructorSignature(instrSig);
       }
-      if (adminSig) {
-        console.log('Mise à jour signature admin');
-        setAdminSignature(adminSig);
+
+      // Charger la signature administrative depuis user_signatures si la feuille est validée
+      if (attendanceSheet.validated_by) {
+        console.log('Chargement signature admin pour validated_by:', attendanceSheet.validated_by);
+        
+        const { data: adminSigData, error: adminSigError } = await supabase
+          .from('user_signatures')
+          .select('signature_data')
+          .eq('user_id', attendanceSheet.validated_by)
+          .maybeSingle();
+
+        if (adminSigError) {
+          console.error('Erreur récupération signature admin:', adminSigError);
+        } else if (adminSigData && adminSigData.signature_data) {
+          console.log('Signature admin trouvée dans user_signatures');
+          setAdminSignature(adminSigData.signature_data);
+        } else {
+          console.log('Aucune signature admin trouvée dans user_signatures');
+        }
       }
     } catch (error) {
       console.error('Error loading attendance data:', error);
