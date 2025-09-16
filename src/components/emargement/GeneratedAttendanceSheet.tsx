@@ -318,19 +318,19 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
               <h4 className="font-semibold mb-3">Signature du Formateur</h4>
               <div 
                 className={`border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-center justify-center p-2 relative ${
-                  !(attendanceSheet as any).signatures?.find((sig: any) => sig.user_type === 'instructor') 
+                  !(attendanceSheet as any).signatures?.find((sig: any) => sig.user_type === 'instructor' && sig.user_id === attendanceSheet.instructor_id) 
                     ? 'cursor-pointer hover:bg-gray-100 transition-colors print:cursor-default print:hover:bg-gray-50' 
                     : ''
                 }`}
                 onClick={() => {
-                  if (!(attendanceSheet as any).signatures?.find((sig: any) => sig.user_type === 'instructor')) {
+                  if (!(attendanceSheet as any).signatures?.find((sig: any) => sig.user_type === 'instructor' && sig.user_id === attendanceSheet.instructor_id)) {
                     setShowInstructorSignModal(true);
                   }
                 }}
               >
-                {(attendanceSheet as any).signatures?.find((sig: any) => sig.user_type === 'instructor')?.signature_data ? (
+                {(attendanceSheet as any).signatures?.find((sig: any) => sig.user_type === 'instructor' && sig.user_id === attendanceSheet.instructor_id)?.signature_data ? (
                   <img 
-                    src={(attendanceSheet as any).signatures.find((sig: any) => sig.user_type === 'instructor')?.signature_data} 
+                    src={(attendanceSheet as any).signatures.find((sig: any) => sig.user_type === 'instructor' && sig.user_id === attendanceSheet.instructor_id)?.signature_data} 
                     alt="Signature formateur" 
                     className="h-16 w-auto"
                   />
@@ -347,10 +347,21 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
             </div>
             <div>
               <h4 className="font-semibold mb-3">Signature de l'Administration</h4>
-              <div className="border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-end justify-start p-2">
-                <div className="text-xs text-gray-500">
-                  Administration
-                </div>
+              <div className="border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-center justify-center p-2">
+                {(attendanceSheet as any).signatures?.find((sig: any) => sig.user_type === 'instructor' && sig.user_id !== attendanceSheet.instructor_id)?.signature_data ? (
+                  <img 
+                    src={(attendanceSheet as any).signatures.find((sig: any) => sig.user_type === 'instructor' && sig.user_id !== attendanceSheet.instructor_id)?.signature_data} 
+                    alt="Signature administration" 
+                    className="h-16 w-auto"
+                  />
+                ) : (
+                  <div className="text-xs text-gray-500 text-center">
+                    En attente de validation
+                  </div>
+                )}
+              </div>
+              <div className="mt-2 text-center text-sm text-gray-600 border-t pt-2">
+                Administration
               </div>
             </div>
           </div>

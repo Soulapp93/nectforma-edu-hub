@@ -112,8 +112,8 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
       
       // Charger les signatures existantes si disponibles
       console.log('Signatures récupérées:', signatures);
-      const instrSig = signatures?.find((sig: any) => sig.user_type === 'instructor')?.signature_data;
-      const adminSig = signatures?.find((sig: any) => sig.user_type === 'admin')?.signature_data;
+      const instrSig = signatures?.find((sig: any) => sig.user_type === 'instructor' && sig.user_id === attendanceSheet.instructor_id)?.signature_data;
+      const adminSig = signatures?.find((sig: any) => sig.user_type === 'instructor' && sig.user_id !== attendanceSheet.instructor_id)?.signature_data;
       console.log('Signature admin trouvée:', adminSig);
       
       if (instrSig) {
