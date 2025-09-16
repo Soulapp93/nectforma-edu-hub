@@ -10,6 +10,7 @@ import SignaturePad from '@/components/ui/signature-pad';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface EnhancedAttendanceSheetModalProps {
   isOpen: boolean;
@@ -57,6 +58,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
   attendanceSheet,
   onUpdate
 }) => {
+  const { userId } = useCurrentUser();
   const [mode, setMode] = useState<'view' | 'edit' | 'signature'>('view');
   const [students, setStudents] = useState<Student[]>([]);
   const [adminSignature, setAdminSignature] = useState<string>('');
@@ -147,9 +149,14 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
   };
 
   const handleSaveSignature = async (signature: string) => {
+    if (!userId) {
+      toast.error('Utilisateur non identifié');
+      return;
+    }
+
     try {
       setAdminSignature(signature);
-      await attendanceService.validateAttendanceSheet(attendanceSheet.id, 'admin-user-id', signature);
+      await attendanceService.validateAttendanceSheet(attendanceSheet.id, userId, signature);
       toast.success('Feuille d\'émargement validée et signée');
       setMode('view');
       onUpdate();
