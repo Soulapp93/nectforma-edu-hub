@@ -280,31 +280,6 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={handleExportPDF}>
-                <Download className="h-4 w-4 mr-2" />
-                📄 Télécharger en PDF  
-              </Button>
-              <Button 
-                className="bg-green-600 hover:bg-green-700 text-white"
-                onClick={mode === 'edit' ? handleValidateAndSign : () => setMode('edit')}
-              >
-                {mode === 'edit' ? (
-                  <>
-                    <CheckCircle2 className="h-4 w-4 mr-2" />
-                    ✅ Valider & Signer
-                  </>
-                ) : (
-                  <>
-                    <Edit className="h-4 w-4 mr-2" />
-                    ✏️ Modifier
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
 
           {/* Liste des participants */}
           <div className="p-6">
@@ -436,10 +411,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
               </div>
               <div>
                 <h4 className="font-semibold mb-3">Signature de l'Administration</h4>
-                <div 
-                  className="border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-center justify-center p-2 cursor-pointer hover:bg-gray-100"
-                  onClick={() => !adminSignature && setMode('signature')}
-                >
+                <div className="border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-center justify-center p-2">
                   {adminSignature ? (
                     <img 
                       src={adminSignature} 
@@ -448,7 +420,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
                     />
                   ) : (
                     <div className="text-xs text-gray-500 text-center">
-                      Cliquez pour signer
+                      En attente de validation
                     </div>
                   )}
                 </div>
