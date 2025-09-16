@@ -43,7 +43,12 @@ const AttendanceManagement = () => {
   }, [userId]);
 
   const loadAdminSignature = async () => {
-    if (!userId) return;
+    if (!userId) {
+      console.log('Pas d\'userId pour charger la signature');
+      return;
+    }
+    
+    console.log('Chargement signature admin pour userId:', userId);
     
     try {
       const { data, error } = await supabase
@@ -59,10 +64,10 @@ const AttendanceManagement = () => {
 
       if (data?.signature_data) {
         setAdminSignature(data.signature_data);
-        console.log('Signature administrateur chargée depuis Supabase');
+        console.log('Signature administrateur chargée depuis Supabase:', !!data.signature_data);
       } else {
         setAdminSignature(null);
-        console.log('Aucune signature enregistrée trouvée');
+        console.log('Aucune signature enregistrée trouvée dans user_signatures');
       }
     } catch (error) {
       console.error('Error loading admin signature:', error);
@@ -151,24 +156,49 @@ const AttendanceManagement = () => {
       return;
     }
 
-    // Si une signature admin est enregistrée, valider directement
-    if (adminSignature) {
-      try {
-        await attendanceService.validateAttendanceSheet(sheet.id, userId, adminSignature);
+    console.log('Début validation, vérification signature admin...');
+    
+    try {
+      // Récupérer la signature admin directement depuis la base de données
+      const { data, error } = await supabase
+        .from('user_signatures')
+        .select('signature_data')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      let signatureToUse = null;
+      
+      if (error) {
+        console.error('Error loading admin signature:', error);
+      } else if (data?.signature_data) {
+        signatureToUse = data.signature_data;
+        console.log('Signature trouvée dans la base de données');
+      } else {
+        console.log('Aucune signature trouvée dans user_signatures');
+      }
+
+      if (signatureToUse) {
+        console.log('Validation avec signature existante');
+        await attendanceService.validateAttendanceSheet(sheet.id, userId, signatureToUse);
         toast.success('Feuille d\'émargement validée avec la signature enregistrée');
+        
+        // Mettre à jour l'état local
+        setAdminSignature(signatureToUse);
+        
         await fetchData();
         // Rafraîchir la vue courante
         if (view === 'sheets' && selectedFormationId) {
           await fetchFormationSheets(selectedFormationId);
         }
-      } catch (error) {
-        console.error('Error validating with saved signature:', error);
-        toast.error('Erreur lors de la validation');
+      } else {
+        // Aucune signature trouvée, ouvrir le modal pour signature manuelle
+        console.log('Aucune signature trouvée, ouverture du modal');
+        setSelectedSheet(sheet);
+        setShowValidationModal(true);
       }
-    } else {
-      // Sinon ouvrir le modal de validation pour signature manuelle
-      setSelectedSheet(sheet);
-      setShowValidationModal(true);
+    } catch (error) {
+      console.error('Error validating attendance sheet:', error);
+      toast.error('Erreur lors de la validation');
     }
   };
 
