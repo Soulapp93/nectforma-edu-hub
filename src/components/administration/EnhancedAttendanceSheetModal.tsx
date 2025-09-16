@@ -133,25 +133,23 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
       if (attendanceSheet.validated_by) {
         console.log('Chargement signature admin pour validated_by:', attendanceSheet.validated_by);
         
-        // Si l'admin qui a validé est différent du formateur, chercher la signature admin
-        if (attendanceSheet.validated_by !== attendanceSheet.instructor_id) {
-          const { data: adminSigData, error: adminSigError } = await supabase
-            .from('user_signatures')
-            .select('signature_data')
-            .eq('user_id', attendanceSheet.validated_by)
-            .maybeSingle();
+        // TOUJOURS chercher la signature de l'administrateur dans user_signatures
+        // Même si c'est la même personne que le formateur, chaque rôle a sa propre signature
+        const { data: adminSigData, error: adminSigError } = await supabase
+          .from('user_signatures')
+          .select('signature_data')
+          .eq('user_id', attendanceSheet.validated_by)
+          .maybeSingle();
 
-          if (adminSigError) {
-            console.error('Erreur récupération signature admin:', adminSigError);
-          } else if (adminSigData && adminSigData.signature_data) {
-            console.log('Signature admin trouvée dans user_signatures');
-            setAdminSignature(adminSigData.signature_data);
-          } else {
-            console.log('Aucune signature admin trouvée dans user_signatures');
-          }
+        if (adminSigError) {
+          console.error('Erreur récupération signature admin:', adminSigError);
+        } else if (adminSigData && adminSigData.signature_data) {
+          console.log('Signature admin trouvée dans user_signatures');
+          setAdminSignature(adminSigData.signature_data);
         } else {
-          console.log('Admin et formateur sont la même personne, utilisation signature formateur comme admin');
-          setAdminSignature(instrSig || '');
+          console.log('Aucune signature admin trouvée dans user_signatures');
+          // Réinitialiser la signature admin si aucune trouvée
+          setAdminSignature('');
         }
       }
     } catch (error) {
