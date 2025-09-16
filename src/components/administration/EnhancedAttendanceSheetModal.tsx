@@ -111,10 +111,19 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
       setStudents(mappedStudents);
       
       // Charger les signatures existantes si disponibles
+      console.log('Signatures récupérées:', signatures);
       const instrSig = signatures?.find((sig: any) => sig.user_type === 'instructor')?.signature_data;
       const adminSig = signatures?.find((sig: any) => sig.user_type === 'admin')?.signature_data;
-      if (instrSig) setInstructorSignature(instrSig);
-      if (adminSig) setAdminSignature(adminSig);
+      console.log('Signature admin trouvée:', adminSig);
+      
+      if (instrSig) {
+        console.log('Mise à jour signature instructeur');
+        setInstructorSignature(instrSig);
+      }
+      if (adminSig) {
+        console.log('Mise à jour signature admin');
+        setAdminSignature(adminSig);
+      }
     } catch (error) {
       console.error('Error loading attendance data:', error);
     } finally {
@@ -155,13 +164,21 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
     }
 
     try {
+      console.log('Début sauvegarde signature admin:', { userId, attendanceSheetId: attendanceSheet.id });
       await attendanceService.validateAttendanceSheet(attendanceSheet.id, userId, signature);
+      console.log('Signature admin sauvegardée avec succès');
+      
       toast.success('Feuille d\'émargement validée et signée');
       setMode('view');
+      
       // Petit délai pour s'assurer que la base de données est mise à jour
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       // Recharger les données pour voir la signature
+      console.log('Rechargement des données...');
       await loadAttendanceData();
+      console.log('Données rechargées, signature admin actuelle:', adminSignature);
+      
       onUpdate();
     } catch (error) {
       console.error('Error saving signature:', error);
