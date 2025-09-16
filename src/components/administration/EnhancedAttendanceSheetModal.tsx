@@ -121,10 +121,10 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
         sig.user_id === attendanceSheet.instructor_id
       )?.signature_data;
       
-      // Signature admin: user_type='instructor' ET user_id = userId actuel (admin connecté)
+      // Signature admin: user_type='instructor' ET user_id = validated_by (admin qui a validé)
       const adminSig = signatures?.find((sig: any) => 
         sig.user_type === 'instructor' && 
-        sig.user_id === userId
+        sig.user_id === attendanceSheet.validated_by
       )?.signature_data;
       
       console.log('Signature formateur trouvée:', !!instrSig);
@@ -427,7 +427,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
               <div>
                 <h4 className="font-semibold mb-3">Signature de l'Administration</h4>
                 <div className="border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-center justify-center p-2">
-                  {adminSignature ? (
+                  {attendanceSheet.validated_by && adminSignature ? (
                     <img 
                       src={adminSignature} 
                       alt="Signature administration" 
@@ -435,7 +435,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
                     />
                   ) : (
                     <div className="text-xs text-gray-500 text-center">
-                      En attente de validation
+                      {attendanceSheet.status === 'Validé' ? 'Signature non disponible' : 'En attente de validation'}
                     </div>
                   )}
                 </div>
@@ -452,9 +452,24 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
           </div>
         </div>
 
-        {/* Close button at bottom */}
-        <div className="flex justify-end p-4 border-t">
-          <Button onClick={onClose}>Fermer</Button>
+        {/* Actions footer */}
+        <div className="flex justify-between items-center p-4 border-t">
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleExportPDF}>
+              <Download className="h-4 w-4 mr-2" />
+              Exporter PDF
+            </Button>
+          </div>
+          
+          <div className="flex gap-2">
+            {attendanceSheet.status !== 'Validé' && (
+              <Button onClick={handleValidateAndSign} className="bg-green-600 hover:bg-green-700">
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+                Valider et Signer
+              </Button>
+            )}
+            <Button variant="outline" onClick={onClose}>Fermer</Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
