@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, CheckCircle2, XCircle, Edit3, FileText, Eye, ArrowLeft, ChevronRight, PenTool } from 'lucide-react';
+import { Calendar, Clock, Users, CheckCircle2, XCircle, Edit3, FileText, Eye, ArrowLeft, ChevronRight, PenTool, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,7 @@ import AbsenceReasonModal from './AbsenceReasonModal';
 import AdminValidationModal from './AdminValidationModal';
 import AdminAttendanceValidation from '../emargement/AdminAttendanceValidation';
 import SignatureManagementModal from '../ui/signature-management-modal';
+import { pdfExportService } from '@/services/pdfExportService';
 
 const AttendanceManagement = () => {
   const [pendingSheets, setPendingSheets] = useState<AttendanceSheet[]>([]);
@@ -119,9 +120,31 @@ const AttendanceManagement = () => {
     }
   };
 
-  const handleValidateSheet = (sheet: AttendanceSheet) => {
-    setSelectedSheet(sheet);
-    setShowValidationModal(true);
+  const handleValidateSheet = async (sheet: AttendanceSheet) => {
+    if (!userId) {
+      toast.error('Utilisateur non identifié');
+      return;
+    }
+
+    // Si une signature admin est enregistrée, valider directement
+    if (adminSignature) {
+      try {
+        await attendanceService.validateAttendanceSheet(sheet.id, userId, adminSignature);
+        toast.success('Feuille d\'émargement validée avec la signature enregistrée');
+        await fetchData();
+        // Rafraîchir la vue courante
+        if (view === 'sheets' && selectedFormationId) {
+          await fetchFormationSheets(selectedFormationId);
+        }
+      } catch (error) {
+        console.error('Error validating with saved signature:', error);
+        toast.error('Erreur lors de la validation');
+      }
+    } else {
+      // Sinon ouvrir le modal de validation pour signature manuelle
+      setSelectedSheet(sheet);
+      setShowValidationModal(true);
+    }
   };
 
   const handleConfirmValidation = async (signatureData?: string) => {
@@ -151,6 +174,21 @@ const AttendanceManagement = () => {
       localStorage.removeItem('admin_signature');
       setAdminSignature(null);
     }
+  };
+
+  const handleDownloadPDF = async (sheet: AttendanceSheet) => {
+    try {
+      await pdfExportService.exportAttendanceSheetSimple(sheet);
+      toast.success('Feuille d\'émargement téléchargée');
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      toast.error('Erreur lors du téléchargement');
+    }
+  };
+
+  const handleRowClick = (sheet: AttendanceSheet) => {
+    setSelectedSheet(sheet);
+    setShowSheetModal(true);
   };
 
   const getStatusColor = (status: string) => {
@@ -285,6 +323,7 @@ const AttendanceManagement = () => {
                     <TableRow>
                       <TableHead>Date</TableHead>
                       <TableHead>Horaires</TableHead>
+                      <TableHead>Module</TableHead>
                       <TableHead>Salle</TableHead>
                       <TableHead>Statut</TableHead>
                       <TableHead>Actions</TableHead>
@@ -292,12 +331,19 @@ const AttendanceManagement = () => {
                   </TableHeader>
                   <TableBody>
                     {formationSheets.map((sheet) => (
-                      <TableRow key={sheet.id}>
+                      <TableRow 
+                        key={sheet.id} 
+                        className="cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleRowClick(sheet)}
+                      >
                         <TableCell>
                           {format(new Date(sheet.date), 'dd/MM/yyyy', { locale: fr })}
                         </TableCell>
                         <TableCell>
                           {sheet.start_time} - {sheet.end_time}
+                        </TableCell>
+                        <TableCell>
+                          {(sheet as any).schedule_slots?.formation_modules?.title || 'Module non défini'}
                         </TableCell>
                         <TableCell>
                           {sheet.room || '-'}
@@ -307,18 +353,15 @@ const AttendanceManagement = () => {
                             {sheet.status}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           <div className="flex gap-2">
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                setSelectedSheet(sheet);
-                                setShowSheetModal(true);
-                              }}
+                              onClick={() => handleDownloadPDF(sheet)}
                             >
-                              <Eye className="h-4 w-4 mr-1" />
-                              Consulter
+                              <Download className="h-4 w-4 mr-1" />
+                              Télécharger
                             </Button>
                             {sheet.status === 'En attente de validation' && (
                               <Button

@@ -148,6 +148,10 @@ export const attendanceService = {
           *,
           formations!formation_id(title, level),
           users:instructor_id(first_name, last_name),
+          schedule_slots!schedule_slot_id(
+            module_id,
+            formation_modules(title, description)
+          ),
           attendance_signatures(
             *,
             users(first_name, last_name, email)
