@@ -63,15 +63,14 @@ const AttendanceManagement = () => {
         return;
       }
 
-      if (data?.signature_data) {
+      console.log('Données récupérées:', { data, hasData: !!data, hasSignatureData: !!(data?.signature_data) });
+
+      if (data?.signature_data && data.signature_data.trim() !== '') {
         setAdminSignature(data.signature_data);
-        console.log('Signature admin trouvée:', { 
-          "_type": typeof data.signature_data, 
-          "value": data.signature_data ? "trouvée" : "undefined" 
-        });
+        console.log('Signature admin chargée avec succès');
       } else {
         setAdminSignature(null);
-        console.log('Aucune signature trouvée dans user_signatures');
+        console.log('Aucune signature valide trouvée');
       }
     } catch (error) {
       console.error('Error loading admin signature:', error);  
@@ -209,7 +208,9 @@ const AttendanceManagement = () => {
     if (!userId) return;
     
     try {
-      if (signatureData) {
+      if (signatureData && signatureData.trim() !== '') {
+        console.log('Sauvegarde signature admin, longueur:', signatureData.length);
+        
         // Sauvegarder dans la base de données
         const { error } = await supabase
           .from('user_signatures')
@@ -228,8 +229,16 @@ const AttendanceManagement = () => {
 
         setAdminSignature(signatureData);
         toast.success('Signature administrative sauvegardée');
-        console.log('Signature admin sauvegardée dans la base de données');
+        console.log('Signature admin sauvegardée avec succès');
+        
+        // Recharger pour vérification
+        setTimeout(() => {
+          loadAdminSignature();
+        }, 500);
+        
       } else {
+        console.log('Suppression signature admin');
+        
         // Supprimer de la base de données
         const { error } = await supabase
           .from('user_signatures')
@@ -244,7 +253,7 @@ const AttendanceManagement = () => {
 
         setAdminSignature(null);
         toast.success('Signature administrative supprimée');
-        console.log('Signature admin supprimée de la base de données');
+        console.log('Signature admin supprimée avec succès');
       }
     } catch (error) {
       console.error('Error managing admin signature:', error);

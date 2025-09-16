@@ -418,6 +418,8 @@ export const attendanceService = {
   // Valider et signer une feuille d'émargement par l'administration
   async validateAttendanceSheet(attendanceSheetId: string, adminUserId: string, signatureData?: string) {
     try {
+      console.log('Service: Début validation avec signature:', !!signatureData);
+      
       const { data, error } = await supabase
         .from('attendance_sheets')
         .update({
@@ -433,17 +435,28 @@ export const attendanceService = {
 
       // Ajouter la signature administrative si fournie
       if (signatureData) {
-        await supabase
+        console.log('Service: Ajout signature administrative dans la base');
+        const { data: signatureResult, error: signatureError } = await supabase
           .from('attendance_signatures')
           .insert({
             attendance_sheet_id: attendanceSheetId,
             user_id: adminUserId,
-            user_type: 'admin', // Utilise admin pour la signature administrative
+            user_type: 'instructor', // Utilise instructor car admin n'existe pas dans le type
             signature_data: signatureData,
             present: true
-          });
+          })
+          .select()
+          .single();
+          
+        if (signatureError) {
+          console.error('Erreur insertion signature:', signatureError);
+          throw signatureError;
+        }
+        
+        console.log('Service: Signature administrative ajoutée:', !!signatureResult);
       }
 
+      console.log('Service: Validation terminée avec succès');
       return data;
     } catch (error) {
       console.error('Error validating attendance sheet:', error);
