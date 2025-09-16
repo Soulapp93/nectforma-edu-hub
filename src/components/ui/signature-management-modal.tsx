@@ -28,10 +28,16 @@ const SignatureManagementModal: React.FC<SignatureManagementModalProps> = ({
   const handleSaveSignature = async (signatureData: string) => {
     try {
       setLoading(true);
+      console.log('Modal: Sauvegarde signature, longueur:', signatureData.length);
       await onSave(signatureData);
       toast.success('Signature enregistrée avec succès');
       setMode('view');
+      // Forcer une petite pause pour permettre la mise à jour du parent
+      setTimeout(() => {
+        console.log('Modal: Signature sauvegardée, currentSignature:', currentSignature?.length || 'null');
+      }, 100);
     } catch (error) {
+      console.error('Modal: Erreur sauvegarde signature:', error);
       toast.error('Erreur lors de l\'enregistrement de la signature');
     } finally {
       setLoading(false);

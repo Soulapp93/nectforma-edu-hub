@@ -206,36 +206,42 @@ const AttendanceManagement = () => {
   };
 
   const handleSaveAdminSignature = async (signatureData: string) => {
-    if (!userId) return;
+    if (!userId) {
+      console.error('Pas d\'userId pour sauvegarder la signature');
+      return;
+    }
     
     try {
       if (signatureData && signatureData.trim() !== '') {
-        console.log('Sauvegarde signature admin, longueur:', signatureData.length);
+        console.log('Sauvegarde signature admin, userId:', userId, 'longueur:', signatureData.length);
         
         // Sauvegarder dans la base de données
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('user_signatures')
           .upsert({
             user_id: userId,
             signature_data: signatureData
           }, {
             onConflict: 'user_id'
-          });
+          })
+          .select();
 
         if (error) {
           console.error('Error saving admin signature:', error);
-          toast.error('Erreur lors de la sauvegarde de la signature');
-          return;
+          toast.error(`Erreur lors de la sauvegarde de la signature: ${error.message}`);
+          throw error;
         }
 
+        console.log('Signature sauvegardée en base:', data);
         setAdminSignature(signatureData);
         toast.success('Signature administrative sauvegardée');
-        console.log('Signature admin sauvegardée avec succès');
+        console.log('État signature mis à jour, longueur:', signatureData.length);
         
-        // Recharger pour vérification
-        setTimeout(() => {
-          loadAdminSignature();
-        }, 500);
+        // Vérifier immédiatement la sauvegarde
+        setTimeout(async () => {
+          console.log('Vérification de la signature sauvegardée...');
+          await loadAdminSignature();
+        }, 200);
         
       } else {
         console.log('Suppression signature admin');
