@@ -443,7 +443,7 @@ export const attendanceService = {
           .select('id')
           .eq('attendance_sheet_id', attendanceSheetId)
           .eq('user_id', adminUserId)
-          .eq('user_type', 'admin')
+          .eq('user_type', 'instructor')
           .maybeSingle();
 
         if (existingSignature) {
@@ -465,13 +465,13 @@ export const attendanceService = {
           
           console.log('Service: Signature administrative mise à jour:', !!updateResult);
         } else {
-          // Créer une nouvelle signature
+          // Créer une nouvelle signature - utilise 'instructor' car 'admin' n'est pas autorisé
           const { data: signatureResult, error: signatureError } = await supabase
             .from('attendance_signatures')
             .insert({
               attendance_sheet_id: attendanceSheetId,
               user_id: adminUserId,
-              user_type: 'admin', // Utilise admin pour différencier
+              user_type: 'instructor', // Utilise instructor car admin n'est pas dans les valeurs autorisées
               signature_data: signatureData,
               present: true
             })
