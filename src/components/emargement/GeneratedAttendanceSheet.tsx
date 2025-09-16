@@ -348,9 +348,15 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
             <div>
               <h4 className="font-semibold mb-3">Signature de l'Administration</h4>
               <div className="border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-center justify-center p-2">
-                {(attendanceSheet as any).signatures?.find((sig: any) => sig.user_type === 'instructor' && sig.user_id !== attendanceSheet.instructor_id)?.signature_data ? (
+                {(attendanceSheet as any).signatures?.find((sig: any) => 
+                    sig.user_type === 'instructor' && 
+                    sig.user_id === attendanceSheet.validated_by
+                  )?.signature_data ? (
                   <img 
-                    src={(attendanceSheet as any).signatures.find((sig: any) => sig.user_type === 'instructor' && sig.user_id !== attendanceSheet.instructor_id)?.signature_data} 
+                    src={(attendanceSheet as any).signatures.find((sig: any) => 
+                      sig.user_type === 'instructor' && 
+                      sig.user_id === attendanceSheet.validated_by
+                    )?.signature_data} 
                     alt="Signature administration" 
                     className="h-16 w-auto"
                   />
