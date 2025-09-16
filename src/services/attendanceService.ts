@@ -434,7 +434,7 @@ export const attendanceService = {
           .insert({
             attendance_sheet_id: attendanceSheetId,
             user_id: adminUserId,
-            user_type: 'instructor', // Utilise instructor pour l'admin
+            user_type: 'admin', // Utilise admin pour la signature administrative
             signature_data: signatureData,
             present: true
           });

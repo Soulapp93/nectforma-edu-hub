@@ -159,6 +159,8 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
       await attendanceService.validateAttendanceSheet(attendanceSheet.id, userId, signature);
       toast.success('Feuille d\'émargement validée et signée');
       setMode('view');
+      // Recharger les données pour voir la signature
+      await loadAttendanceData();
       onUpdate();
     } catch (error) {
       console.error('Error saving signature:', error);
