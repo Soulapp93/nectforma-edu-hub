@@ -84,6 +84,16 @@ const AdminAttendanceValidation: React.FC<AdminAttendanceValidationProps> = ({
                           <div className="text-sm text-gray-600">{attendanceSheet.formations?.level}</div>
                         </div>
                       </div>
+
+                      {attendanceSheet.title && (
+                        <div className="flex items-center gap-3">
+                          <FileText className="w-4 h-4 text-gray-600" />
+                          <div>
+                            <div className="text-sm text-gray-600">Module:</div>
+                            <div className="font-medium">{attendanceSheet.title}</div>
+                          </div>
+                        </div>
+                      )}
                       
                       <div className="flex items-center gap-3">
                         <Calendar className="w-4 h-4 text-gray-600" />
@@ -161,36 +171,6 @@ const AdminAttendanceValidation: React.FC<AdminAttendanceValidationProps> = ({
                 </CardContent>
               </Card>
 
-              {/* Liste des signatures */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Détail des signatures</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-64">
-                    <div className="space-y-2">
-                      {attendanceSheet.signatures?.filter(s => s.user_type === 'student').map((signature, index) => (
-                        <div key={signature.id} className="flex items-center justify-between p-3 border rounded-lg">
-                          <div>
-                            <div className="font-medium">
-                              {signature.user?.first_name} {signature.user?.last_name}
-                            </div>
-                            <div className="text-sm text-gray-600">
-                              Signé le {format(new Date(signature.signed_at), 'dd/MM/yyyy à HH:mm', { locale: fr })}
-                            </div>
-                          </div>
-                          <Badge className={signature.present 
-                            ? 'bg-green-100 text-green-800 border-green-200'
-                            : 'bg-red-100 text-red-800 border-red-200'
-                          }>
-                            {signature.present ? 'Présent' : 'Absent'}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </CardContent>
-              </Card>
 
               {/* Signature du formateur */}
               <Card>
