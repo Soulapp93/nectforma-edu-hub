@@ -11,6 +11,7 @@ import ModuleAssignmentsTab from '@/components/module/ModuleAssignmentsTab';
 import ModuleCorrectionsTab from '@/components/module/ModuleCorrectionsTab';
 import ModuleDocumentsTab from '@/components/module/ModuleDocumentsTab';
 import CreateAttendanceSessionModal from '@/components/emargement/CreateAttendanceSessionModal';
+import FormationParticipantsModal from '@/components/administration/FormationParticipantsModal';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const FormationDetail = () => {
@@ -20,6 +21,7 @@ const FormationDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
+  const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const { userRole } = useCurrentUser();
 
   useEffect(() => {
@@ -101,10 +103,6 @@ const FormationDetail = () => {
                   <span>{formation.duration}h</span>
                 </div>
                 <div className="flex items-center">
-                  <Users className="h-5 w-5 mr-2" />
-                  <span>Max {formation.max_students} étudiants</span>
-                </div>
-                <div className="flex items-center">
                   <BookOpen className="h-5 w-5 mr-2" />
                   <span>{formation.formation_modules?.length || 0} module{(formation.formation_modules?.length || 0) > 1 ? 's' : ''}</span>
                 </div>
@@ -113,6 +111,7 @@ const FormationDetail = () => {
             <div className="flex items-center gap-2">
               <Button 
                 variant="secondary" 
+                onClick={() => setShowParticipantsModal(true)}
                 className="bg-white/20 border-white/30 text-white hover:bg-white/30"
               >
                 <Users className="h-4 w-4 mr-2" />
@@ -242,6 +241,17 @@ const FormationDetail = () => {
         <CreateAttendanceSessionModal
           isOpen={showAttendanceModal}
           onClose={() => setShowAttendanceModal(false)}
+          formationId={formation.id}
+          formationTitle={formation.title}
+          formationColor={formationColor}
+        />
+      )}
+
+      {/* Modal pour voir les participants */}
+      {formation && (
+        <FormationParticipantsModal
+          isOpen={showParticipantsModal}
+          onClose={() => setShowParticipantsModal(false)}
           formationId={formation.id}
           formationTitle={formation.title}
           formationColor={formationColor}

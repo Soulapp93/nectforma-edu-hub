@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, BookOpen, User, Clock, DollarSign, Calendar, Users } from 'lucide-react';
+import { X, BookOpen, User, Clock, Calendar } from 'lucide-react';
 
 interface Formation {
   id?: number;
@@ -8,10 +8,8 @@ interface Formation {
   level: string;
   instructor: string;
   duration: string;
-  maxStudents: string;
   startDate: string;
   endDate: string;
-  price: string;
   description?: string;
 }
 
@@ -29,10 +27,8 @@ const FormationModal: React.FC<FormationModalProps> = ({ isOpen, onClose, onSave
     level: 'BAC+1',
     instructor: '',
     duration: '',
-    maxStudents: '',
     startDate: '',
     endDate: '',
-    price: '',
     description: ''
   });
 
@@ -45,10 +41,8 @@ const FormationModal: React.FC<FormationModalProps> = ({ isOpen, onClose, onSave
         level: 'BAC+1',
         instructor: '',
         duration: '',
-        maxStudents: '',
         startDate: '',
         endDate: '',
-        price: '',
         description: ''
       });
     }
@@ -145,35 +139,6 @@ const FormationModal: React.FC<FormationModalProps> = ({ isOpen, onClose, onSave
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                <Users className="h-4 w-4 inline mr-2" />
-                Nombre max d'étudiants
-              </label>
-              <input
-                type="number"
-                name="maxStudents"
-                value={formData.maxStudents}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                <DollarSign className="h-4 w-4 inline mr-2" />
-                Prix (€)
-              </label>
-              <input
-                type="number"
-                name="price"
-                value={formData.price}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                required
-              />
-            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

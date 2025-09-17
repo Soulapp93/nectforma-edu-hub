@@ -18,9 +18,7 @@ interface EditFormationData {
   end_date: string;
   status: string;
   color: string;
-  max_students: number;
   duration: number;
-  price: number;
 }
 
 const EditFormationModal: React.FC<EditFormationModalProps> = ({ 
@@ -37,9 +35,7 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
     end_date: '',
     status: 'Actif',
     color: '#8B5CF6',
-    max_students: 25,
-    duration: 0,
-    price: 0
+    duration: 0
   });
 
   const [loading, setLoading] = useState(false);
@@ -68,9 +64,7 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
         end_date: formation.end_date,
         status: formation.status,
         color: formation.color || '#8B5CF6',
-        max_students: formation.max_students,
-        duration: formation.duration,
-        price: formation.price || 0
+        duration: formation.duration
       });
     } catch (error) {
       console.error('Erreur lors du chargement de la formation:', error);
@@ -84,7 +78,7 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'max_students' || name === 'duration' || name === 'price' ? Number(value) : value
+      [name]: name === 'duration' ? Number(value) : value
     }));
     if (error) setError(null);
   };
@@ -245,20 +239,6 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nombre max d'étudiants
-                  </label>
-                  <input
-                    type="number"
-                    name="max_students"
-                    value={formData.max_students}
-                    onChange={handleChange}
-                    min="1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Durée (heures)
                   </label>
                   <input
@@ -267,21 +247,6 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
                     value={formData.duration}
                     onChange={handleChange}
                     min="0"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Prix (€)
-                  </label>
-                  <input
-                    type="number"
-                    name="price"
-                    value={formData.price}
-                    onChange={handleChange}
-                    min="0"
-                    step="0.01"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>
