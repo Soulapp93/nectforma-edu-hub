@@ -1,13 +1,15 @@
 
 import React, { useState } from 'react';
-import { Users, BookOpen, Calendar, TrendingUp, Clock, FileText, AlertCircle, UserCheck, ClockIcon, MessageSquare } from 'lucide-react';
+import { Users, BookOpen, Calendar, TrendingUp, Clock, FileText, AlertCircle, UserCheck, UsersIcon } from 'lucide-react';
 import DashboardCard from '../components/DashboardCard';
+import EnhancedDashboardCard from '../components/EnhancedDashboardCard';
 import DashboardFilters from '../components/DashboardFilters';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 
 const Dashboard = () => {
   const [selectedFormationId, setSelectedFormationId] = useState<string | undefined>();
-  const { stats, loading, error } = useDashboardStats(selectedFormationId);
+  const [selectedTimePeriod, setSelectedTimePeriod] = useState('month');
+  const { stats, loading, error } = useDashboardStats(selectedFormationId, selectedTimePeriod);
 
   const dashboardCards = [
     {
@@ -33,24 +35,6 @@ const Dashboard = () => {
       value: loading ? '...' : stats.weeklyScheduledCourses.toString(),
       icon: Calendar,
       description: 'Sessions programmées',
-    },
-    {
-      title: 'Heures semaine',
-      value: loading ? '...' : `${stats.weeklyHours}h`,
-      icon: Clock,
-      description: 'Total heures cette semaine',
-    },
-    {
-      title: 'Heures mois',
-      value: loading ? '...' : `${stats.monthlyHours}h`,
-      icon: ClockIcon,
-      description: 'Total heures ce mois',
-    },
-    {
-      title: 'Heures année',
-      value: loading ? '...' : `${stats.yearlyHours}h`,
-      icon: Clock,
-      description: 'Total heures cette année',
     },
     {
       title: 'Taux de présence',
@@ -96,6 +80,8 @@ const Dashboard = () => {
       <DashboardFilters 
         selectedFormationId={selectedFormationId}
         onFormationChange={setSelectedFormationId}
+        selectedTimePeriod={selectedTimePeriod}
+        onTimePeriodChange={setSelectedTimePeriod}
       />
 
       {/* Stats Grid */}
@@ -103,6 +89,25 @@ const Dashboard = () => {
         {dashboardCards.map((card, index) => (
           <DashboardCard key={index} {...card} />
         ))}
+        
+        {/* Carte heures regroupées */}
+        <EnhancedDashboardCard
+          type="hours"
+          title="Heures de cours"
+          icon={Clock}
+          weeklyHours={loading ? 0 : stats.weeklyHours}
+          monthlyHours={loading ? 0 : stats.monthlyHours}
+          yearlyHours={loading ? 0 : stats.yearlyHours}
+        />
+        
+        {/* Carte étudiants à risque/assidus */}
+        <EnhancedDashboardCard
+          type="students"
+          title="Suivi des étudiants"
+          icon={UsersIcon}
+          riskStudents={loading ? [] : stats.riskStudents}
+          excellentStudents={loading ? [] : stats.excellentStudents}
+        />
       </div>
     </div>
   );

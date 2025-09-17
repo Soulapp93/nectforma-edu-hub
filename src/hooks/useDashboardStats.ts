@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useFormations } from './useFormations';
 
+export interface StudentRisk {
+  id: string;
+  name: string;
+  attendanceRate: number;
+}
+
 export interface DashboardStats {
   studentsCount: number;
   instructorsCount: number;
@@ -13,9 +19,11 @@ export interface DashboardStats {
   attendanceRate: number;
   textBookMissingEntries: number;
   pendingAttendanceSheets: number;
+  riskStudents: StudentRisk[];
+  excellentStudents: StudentRisk[];
 }
 
-export const useDashboardStats = (selectedFormationId?: string) => {
+export const useDashboardStats = (selectedFormationId?: string, timePeriod: string = 'month') => {
   const [stats, setStats] = useState<DashboardStats>({
     studentsCount: 0,
     instructorsCount: 0,
@@ -27,6 +35,8 @@ export const useDashboardStats = (selectedFormationId?: string) => {
     attendanceRate: 0,
     textBookMissingEntries: 0,
     pendingAttendanceSheets: 0,
+    riskStudents: [],
+    excellentStudents: [],
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -212,6 +222,87 @@ export const useDashboardStats = (selectedFormationId?: string) => {
 
       const { count: pendingAttendanceSheets } = await pendingQuery;
 
+      // Étudiants à risque et assidus
+      const getStudentsAttendance = async () => {
+        let query = supabase
+          .from('attendance_signatures')
+          .select(`
+            present,
+            user_id,
+            users!inner(first_name, last_name),
+            attendance_sheets!inner(formation_id)
+          `);
+
+        // Période basée sur timePeriod
+        let periodStart = new Date();
+        switch (timePeriod) {
+          case 'week':
+            periodStart = startOfWeek;
+            break;
+          case 'month':
+            periodStart = startOfMonth;
+            break;
+          case 'trimester':
+            periodStart = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+            break;
+          case 'semester':
+            periodStart = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+            break;
+          case 'year':
+            periodStart = startOfYear;
+            break;
+          default:
+            periodStart = startOfMonth;
+        }
+
+        query = query.gte('signed_at', periodStart.toISOString());
+
+        if (selectedFormationId) {
+          query = query.eq('attendance_sheets.formation_id', selectedFormationId);
+        }
+
+        const { data: attendanceData } = await query;
+
+        if (!attendanceData) return { riskStudents: [], excellentStudents: [] };
+
+        // Grouper par utilisateur
+        const userAttendance = attendanceData.reduce((acc, record) => {
+          if (!acc[record.user_id]) {
+            acc[record.user_id] = {
+              name: `${record.users.first_name} ${record.users.last_name}`,
+              total: 0,
+              present: 0,
+            };
+          }
+          acc[record.user_id].total++;
+          if (record.present) acc[record.user_id].present++;
+          return acc;
+        }, {} as Record<string, { name: string; total: number; present: number }>);
+
+        // Calculer les taux et créer les listes
+        const studentsWithRates = Object.entries(userAttendance)
+          .map(([id, data]) => ({
+            id,
+            name: data.name,
+            attendanceRate: Math.round((data.present / data.total) * 100),
+          }))
+          .filter(student => student.attendanceRate >= 0);
+
+        const riskStudents = studentsWithRates
+          .filter(student => student.attendanceRate < 75)
+          .sort((a, b) => a.attendanceRate - b.attendanceRate)
+          .slice(0, 3);
+
+        const excellentStudents = studentsWithRates
+          .filter(student => student.attendanceRate >= 90)
+          .sort((a, b) => b.attendanceRate - a.attendanceRate)
+          .slice(0, 3);
+
+        return { riskStudents, excellentStudents };
+      };
+
+      const { riskStudents, excellentStudents } = await getStudentsAttendance();
+
       setStats({
         studentsCount: studentsCount || 0,
         instructorsCount: instructorsCount || 0,
@@ -223,6 +314,8 @@ export const useDashboardStats = (selectedFormationId?: string) => {
         attendanceRate,
         textBookMissingEntries,
         pendingAttendanceSheets: pendingAttendanceSheets || 0,
+        riskStudents,
+        excellentStudents,
       });
 
     } catch (err) {
@@ -234,7 +327,7 @@ export const useDashboardStats = (selectedFormationId?: string) => {
 
   useEffect(() => {
     fetchStats();
-  }, [selectedFormationId, formations]);
+  }, [selectedFormationId, formations, timePeriod]);
 
   return {
     stats,
