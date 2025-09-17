@@ -6,6 +6,7 @@ export interface StudentRisk {
   id: string;
   name: string;
   attendanceRate: number;
+  formationName?: string;
 }
 
 export interface DashboardStats {
@@ -230,7 +231,7 @@ export const useDashboardStats = (selectedFormationId?: string, timePeriod: stri
             present,
             user_id,
             users!inner(first_name, last_name),
-            attendance_sheets!inner(formation_id)
+            attendance_sheets!inner(formation_id, formations!inner(title))
           `);
 
         // Période basée sur timePeriod
@@ -270,6 +271,7 @@ export const useDashboardStats = (selectedFormationId?: string, timePeriod: stri
           if (!acc[record.user_id]) {
             acc[record.user_id] = {
               name: `${record.users.first_name} ${record.users.last_name}`,
+              formationName: record.attendance_sheets.formations?.title || 'Formation inconnue',
               total: 0,
               present: 0,
             };
@@ -277,26 +279,29 @@ export const useDashboardStats = (selectedFormationId?: string, timePeriod: stri
           acc[record.user_id].total++;
           if (record.present) acc[record.user_id].present++;
           return acc;
-        }, {} as Record<string, { name: string; total: number; present: number }>);
+        }, {} as Record<string, { name: string; formationName: string; total: number; present: number }>);
 
         // Calculer les taux et créer les listes
         const studentsWithRates = Object.entries(userAttendance)
           .map(([id, data]) => ({
             id,
             name: data.name,
+            formationName: selectedFormationId ? undefined : data.formationName,
             attendanceRate: Math.round((data.present / data.total) * 100),
           }))
           .filter(student => student.attendanceRate >= 0);
 
+        const maxStudents = selectedFormationId ? 3 : 5;
+        
         const riskStudents = studentsWithRates
           .filter(student => student.attendanceRate < 75)
           .sort((a, b) => a.attendanceRate - b.attendanceRate)
-          .slice(0, 3);
+          .slice(0, maxStudents);
 
         const excellentStudents = studentsWithRates
           .filter(student => student.attendanceRate >= 90)
           .sort((a, b) => b.attendanceRate - a.attendanceRate)
-          .slice(0, 3);
+          .slice(0, maxStudents);
 
         return { riskStudents, excellentStudents };
       };

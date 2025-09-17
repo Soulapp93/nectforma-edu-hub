@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Users, BookOpen, Calendar, TrendingUp, Clock, FileText, AlertCircle, UserCheck, UsersIcon } from 'lucide-react';
+import { Users, BookOpen, Calendar, TrendingUp, Clock, FileText, AlertCircle, UserCheck, UsersIcon, Trophy } from 'lucide-react';
 import DashboardCard from '../components/DashboardCard';
 import EnhancedDashboardCard from '../components/EnhancedDashboardCard';
 import DashboardFilters from '../components/DashboardFilters';
@@ -100,13 +100,20 @@ const Dashboard = () => {
           yearlyHours={loading ? 0 : stats.yearlyHours}
         />
         
-        {/* Carte étudiants à risque/assidus */}
+        {/* Carte étudiants assidus */}
         <EnhancedDashboardCard
-          type="students"
-          title="Suivi des étudiants"
-          icon={UsersIcon}
-          riskStudents={loading ? [] : stats.riskStudents}
-          excellentStudents={loading ? [] : stats.excellentStudents}
+          type="excellent-students"
+          title="Top Étudiants Assidus (≥90%)"
+          icon={Trophy}
+          students={loading ? [] : stats.excellentStudents}
+        />
+        
+        {/* Carte étudiants à risque */}
+        <EnhancedDashboardCard
+          type="risk-students"
+          title="Étudiants à Risque (<75% Présence)"
+          icon={AlertCircle}
+          students={loading ? [] : stats.riskStudents}
         />
       </div>
     </div>

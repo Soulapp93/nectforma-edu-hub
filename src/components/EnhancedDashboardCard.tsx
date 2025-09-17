@@ -7,14 +7,13 @@ import { StudentRisk } from '@/hooks/useDashboardStats';
 interface EnhancedDashboardCardProps {
   title: string;
   icon: LucideIcon;
-  type?: 'hours' | 'students' | 'default';
+  type?: 'hours' | 'excellent-students' | 'risk-students' | 'default';
   // Pour le type 'hours'
   weeklyHours?: number;
   monthlyHours?: number;
   yearlyHours?: number;
-  // Pour le type 'students'
-  riskStudents?: StudentRisk[];
-  excellentStudents?: StudentRisk[];
+  // Pour les types 'excellent-students' et 'risk-students'
+  students?: StudentRisk[];
   // Pour le type 'default'
   value?: string;
   description?: string;
@@ -31,8 +30,7 @@ const EnhancedDashboardCard: React.FC<EnhancedDashboardCardProps> = ({
   weeklyHours,
   monthlyHours,
   yearlyHours,
-  riskStudents,
-  excellentStudents,
+  students,
   value,
   description,
   trend
@@ -66,58 +64,70 @@ const EnhancedDashboardCard: React.FC<EnhancedDashboardCardProps> = ({
     );
   }
 
-  if (type === 'students') {
+  if (type === 'excellent-students') {
     return (
-      <Card className="bg-card col-span-full lg:col-span-2">
+      <Card className="bg-card">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <CardTitle className="text-sm font-medium">{title}</CardTitle>
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Trophy className="h-4 w-4 text-green-600" />
+            {title}
+          </CardTitle>
           <Icon className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Étudiants assidus */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-green-600" />
-                <span className="text-sm font-medium text-foreground">Top Étudiants Assidus (≥90%)</span>
-              </div>
-              <div className="space-y-1">
-                {excellentStudents?.length ? (
-                  excellentStudents.map((student) => (
-                    <div key={student.id} className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground truncate">{student.name}</span>
-                      <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
-                        {student.attendanceRate}%
-                      </Badge>
-                    </div>
-                  ))
-                ) : (
-                  <span className="text-xs text-muted-foreground">Aucun étudiant avec une assiduité ≥ 90% pour cette période/formation</span>
-                )}
-              </div>
-            </div>
+          <div className="space-y-2">
+            {students?.length ? (
+              students.map((student) => (
+                <div key={student.id} className="flex items-center justify-between text-sm">
+                  <div className="flex-1 truncate">
+                    <span className="text-foreground font-medium">{student.name}</span>
+                    {student.formationName && (
+                      <div className="text-xs text-muted-foreground truncate">{student.formationName}</div>
+                    )}
+                  </div>
+                  <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50 ml-2">
+                    {student.attendanceRate}%
+                  </Badge>
+                </div>
+              ))
+            ) : (
+              <span className="text-xs text-muted-foreground">Aucun étudiant avec une assiduité ≥ 90% pour cette période/formation</span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
-            {/* Étudiants à risque */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-red-600" />
-                <span className="text-sm font-medium text-foreground">Étudiants à Risque (&lt;75% Présence)</span>
-              </div>
-              <div className="space-y-1">
-                {riskStudents?.length ? (
-                  riskStudents.map((student) => (
-                    <div key={student.id} className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground truncate">{student.name}</span>
-                      <Badge variant="outline" className="text-red-600 border-red-200 bg-red-50">
-                        {student.attendanceRate}%
-                      </Badge>
-                    </div>
-                  ))
-                ) : (
-                  <span className="text-xs text-muted-foreground">Aucun étudiant à risque détecté pour cette période/formation</span>
-                )}
-              </div>
-            </div>
+  if (type === 'risk-students') {
+    return (
+      <Card className="bg-card">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+            {title}
+          </CardTitle>
+          <Icon className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {students?.length ? (
+              students.map((student) => (
+                <div key={student.id} className="flex items-center justify-between text-sm">
+                  <div className="flex-1 truncate">
+                    <span className="text-foreground font-medium">{student.name}</span>
+                    {student.formationName && (
+                      <div className="text-xs text-muted-foreground truncate">{student.formationName}</div>
+                    )}
+                  </div>
+                  <Badge variant="outline" className="text-red-600 border-red-200 bg-red-50 ml-2">
+                    {student.attendanceRate}%
+                  </Badge>
+                </div>
+              ))
+            ) : (
+              <span className="text-xs text-muted-foreground">Aucun étudiant à risque détecté pour cette période/formation</span>
+            )}
           </div>
         </CardContent>
       </Card>
