@@ -17,7 +17,7 @@ interface AttendanceRecord {
   title: string;
   room?: string;
   formation_title: string;
-  status: 'Présent' | 'Absent' | 'En retard' | 'Justifié';
+  status: 'Présent' | 'Absent';
   signed_at?: string;
   absence_reason?: string;
   instructor_name?: string;
@@ -66,7 +66,7 @@ const SuiviEmargement = () => {
     const formations = ['Formation Développement Web', 'Formation React Avancé', 'Formation Base de données'];
     const instructors = ['Marie Dubois', 'Pierre Martin', 'Sophie Laurent'];
     const rooms = ['Salle A101', 'Salle B203', 'Lab Informatique'];
-    const statuses: AttendanceRecord['status'][] = ['Présent', 'Absent', 'En retard', 'Justifié'];
+    const statuses: AttendanceRecord['status'][] = ['Présent', 'Absent'];
     
     return Array.from({ length: 25 }, (_, i) => {
       const date = new Date();
@@ -83,7 +83,7 @@ const SuiviEmargement = () => {
         formation_title: formations[Math.floor(Math.random() * formations.length)],
         status,
         signed_at: status === 'Présent' ? date.toISOString() : undefined,
-        absence_reason: status === 'Justifié' ? 'Maladie' : status === 'Absent' ? 'Non justifiée' : undefined,
+        absence_reason: undefined,
         instructor_name: instructors[Math.floor(Math.random() * instructors.length)]
       };
     });
@@ -134,16 +134,12 @@ const SuiviEmargement = () => {
   const getStatusBadge = (status: AttendanceRecord['status']) => {
     const variants = {
       'Présent': 'bg-green-100 text-green-800 border-green-200',
-      'Absent': 'bg-red-100 text-red-800 border-red-200',
-      'En retard': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      'Justifié': 'bg-blue-100 text-blue-800 border-blue-200'
+      'Absent': 'bg-red-100 text-red-800 border-red-200'
     };
 
     const icons = {
       'Présent': CheckCircle,
-      'Absent': XCircle,
-      'En retard': AlertCircle,
-      'Justifié': CheckCircle
+      'Absent': XCircle
     };
 
     const Icon = icons[status];
@@ -160,10 +156,8 @@ const SuiviEmargement = () => {
     const total = filteredRecords.length;
     const present = filteredRecords.filter(r => r.status === 'Présent').length;
     const absent = filteredRecords.filter(r => r.status === 'Absent').length;
-    const late = filteredRecords.filter(r => r.status === 'En retard').length;
-    const justified = filteredRecords.filter(r => r.status === 'Justifié').length;
     
-    const attendanceRate = total > 0 ? ((present + late + justified) / total * 100).toFixed(1) : '0';
+    const attendanceRate = total > 0 ? (present / total * 100).toFixed(1) : '0';
 
     return [
       {
@@ -186,13 +180,6 @@ const SuiviEmargement = () => {
         description: 'Cours manqués',
         icon: XCircle,
         color: 'text-red-600'
-      },
-      {
-        title: 'Retards',
-        value: late.toString(),
-        description: 'Arrivées tardives',
-        icon: AlertCircle,
-        color: 'text-yellow-600'
       }
     ];
   };
@@ -241,7 +228,7 @@ const SuiviEmargement = () => {
       </div>
 
       {/* Statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {getStatsCards().map((stat, index) => {
           const Icon = stat.icon;
           return (
@@ -291,8 +278,6 @@ const SuiviEmargement = () => {
                 <SelectItem value="all">Tous les statuts</SelectItem>
                 <SelectItem value="Présent">Présent</SelectItem>
                 <SelectItem value="Absent">Absent</SelectItem>
-                <SelectItem value="En retard">En retard</SelectItem>
-                <SelectItem value="Justifié">Justifié</SelectItem>
               </SelectContent>
             </Select>
             
