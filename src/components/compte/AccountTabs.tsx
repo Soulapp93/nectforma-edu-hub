@@ -17,10 +17,10 @@ interface AccountTabsProps {
 const AccountTabs: React.FC<AccountTabsProps> = ({ activeTab, onTabChange }) => {
   const { userRole } = useCurrentUser();
   
-  // Tabs pour l'administrateur principal (gestion du compte + profil)
+  // Tabs pour l'administrateur principal (établissement + profil)
   const principalAdminTabs: Tab[] = [
-    { id: 'establishment', name: 'Gestion du compte', icon: Building },
-    { id: 'profile', name: 'Mon Profil', icon: User },
+    { id: 'establishment', name: 'Établissement', icon: Building },
+    { id: 'profile', name: 'Profil', icon: User },
   ];
   
   // Tabs pour tous les autres utilisateurs (formateur, étudiant)

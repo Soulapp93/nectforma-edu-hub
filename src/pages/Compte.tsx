@@ -185,8 +185,8 @@ const Compte = () => {
     }
   };
 
-  // Déterminer le titre selon le rôle et l'onglet actif
-  const pageTitle = activeTab === 'establishment' ? 'Gestion du compte' : 'Mon Profil';
+  // Déterminer le titre selon l'onglet actif
+  const pageTitle = activeTab === 'establishment' ? 'Gestion de l\'établissement' : 'Mon Profil';
   const pageDescription = activeTab === 'establishment' 
     ? 'Gérez les informations de l\'établissement et les paramètres administrateur'
     : 'Gérez vos informations personnelles et les paramètres de votre profil';
