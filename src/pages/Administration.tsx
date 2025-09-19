@@ -5,7 +5,6 @@ import FormationsList from '../components/administration/FormationsList';
 import TextBooksList from '../components/administration/TextBooksList';
 import ScheduleManagement from '../components/administration/ScheduleManagement';
 import AttendanceManagement from '../components/administration/AttendanceManagement';
-import { TutorsList } from '../components/administration/TutorsList';
 
 const Administration = () => {
   const [activeTab, setActiveTab] = useState('users');

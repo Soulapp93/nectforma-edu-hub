@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Users, BookOpen, Shield, Clock, FileText, ClipboardCheck, Building2 } from 'lucide-react';
+import { Users, BookOpen, Shield, Clock, FileText, ClipboardCheck } from 'lucide-react';
 
 interface Tab {
   id: string;
