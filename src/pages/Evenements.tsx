@@ -122,7 +122,7 @@ const Evenements = () => {
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-2">Formations concernées</h4>
                   <p className="text-sm text-gray-600">
-                    {selectedEvent.formation_ids.length > 0 
+                    {selectedEvent.formation_ids && selectedEvent.formation_ids.length > 0 
                       ? `${selectedEvent.formation_ids.length} formation(s) sélectionnée(s)`
                       : 'Toutes les formations'
                     }
@@ -132,7 +132,7 @@ const Evenements = () => {
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-2">Audiences concernées</h4>
                   <p className="text-sm text-gray-600">
-                    {selectedEvent.audiences.length > 0 
+                    {selectedEvent.audiences && selectedEvent.audiences.length > 0 
                       ? selectedEvent.audiences.join(', ')
                       : 'Toutes les audiences'
                     }
