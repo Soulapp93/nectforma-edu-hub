@@ -1,14 +1,18 @@
 
 import React, { useState } from 'react';
-import { Plus, Calendar, Users, Search, Filter, FileText } from 'lucide-react';
+import { Plus, Calendar, Users, Search, Filter, FileText, Edit } from 'lucide-react';
 import CreateEventModal from '@/components/evenements/CreateEventModal';
+import EditEventModal from '@/components/evenements/EditEventModal';
 import EventCard from '@/components/evenements/EventCard';
 import { useEvents } from '@/hooks/useEvents';
 import { Event } from '@/services/eventService';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const Evenements = () => {
   const { data: events = [], isLoading } = useEvents();
+  const { userRole } = useCurrentUser();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showEventDetails, setShowEventDetails] = useState(false);
 
@@ -19,6 +23,13 @@ const Evenements = () => {
       setShowEventDetails(true);
     }
   };
+
+  const handleEditEvent = (event: Event) => {
+    setSelectedEvent(event);
+    setIsEditModalOpen(true);
+  };
+
+  const isAdmin = userRole === 'admin';
 
   if (isLoading) {
     return (
@@ -118,27 +129,6 @@ const Evenements = () => {
             <div className="p-6">
               <p className="text-gray-700 mb-6">{selectedEvent.description || 'Aucune description disponible'}</p>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Formations concernées</h4>
-                  <p className="text-sm text-gray-600">
-                    {selectedEvent.formation_ids && selectedEvent.formation_ids.length > 0 
-                      ? `${selectedEvent.formation_ids.length} formation(s) sélectionnée(s)`
-                      : 'Toutes les formations'
-                    }
-                  </p>
-                </div>
-                
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Audiences concernées</h4>
-                  <p className="text-sm text-gray-600">
-                    {selectedEvent.audiences && selectedEvent.audiences.length > 0 
-                      ? selectedEvent.audiences.join(', ')
-                      : 'Toutes les audiences'
-                    }
-                  </p>
-                </div>
-              </div>
 
               {selectedEvent.file_urls && selectedEvent.file_urls.length > 0 && (
                 <div className="mb-6">
@@ -150,17 +140,29 @@ const Evenements = () => {
                         href={fileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center px-3 py-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                        className="flex items-center px-3 py-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
                       >
-                        <FileText className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm text-gray-700">Fichier {index + 1}</span>
+                        <FileText className="h-4 w-4 mr-2 text-blue-600" />
+                        <span className="text-sm text-blue-600 hover:text-blue-800">Fichier {index + 1}</span>
                       </a>
                     ))}
                   </div>
                 </div>
               )}
               
-              <div className="flex justify-end">
+              <div className="flex justify-end space-x-3">
+                {isAdmin && (
+                  <button
+                    onClick={() => {
+                      setShowEventDetails(false);
+                      handleEditEvent(selectedEvent);
+                    }}
+                    className="flex items-center px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Modifier
+                  </button>
+                )}
                 <button
                   onClick={() => setShowEventDetails(false)}
                   className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
@@ -178,6 +180,15 @@ const Evenements = () => {
         isOpen={isCreateModalOpen} 
         onClose={() => setIsCreateModalOpen(false)} 
       />
+
+      {/* Edit Event Modal */}
+      {isEditModalOpen && selectedEvent && (
+        <EditEventModal 
+          isOpen={isEditModalOpen} 
+          onClose={() => setIsEditModalOpen(false)}
+          event={selectedEvent}
+        />
+      )}
     </div>
   );
 };
