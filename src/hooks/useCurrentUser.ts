@@ -114,3 +114,73 @@ export const useCurrentUser = () => {
 
   return { userId, userRole, loading };
 };
+
+// Créer un hook pour récupérer les informations utilisateur avec tuteur/apprenti
+export const useUserWithRelations = () => {
+  const { userId, userRole, loading } = useCurrentUser();
+  const [userInfo, setUserInfo] = useState<any>(null);
+  const [relationInfo, setRelationInfo] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchUserRelations = async () => {
+      if (!userId) return;
+
+      try {
+        // Récupérer les informations de base de l'utilisateur
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', userId)
+          .single();
+
+        if (userError) throw userError;
+        setUserInfo(userData);
+
+        // Si c'est un étudiant, chercher son tuteur
+        if (userRole === 'Étudiant') {
+          const { data: tutorData, error: tutorError } = await supabase
+            .from('tutor_students_view')
+            .select('*')
+            .eq('student_id', userId)
+            .eq('is_active', true)
+            .single();
+
+          if (!tutorError && tutorData) {
+            setRelationInfo({
+              type: 'tutor',
+              name: `${tutorData.tutor_first_name} ${tutorData.tutor_last_name}`,
+              company: tutorData.company_name,
+              position: tutorData.position
+            });
+          }
+        }
+
+        // Si c'est un tuteur, chercher ses apprentis
+        // Note: Un tuteur peut avoir plusieurs apprentis, on prend le premier actif pour l'affichage
+        if (userRole === 'Tuteur') {
+          const { data: studentData, error: studentError } = await supabase
+            .from('tutor_students_view')
+            .select('*')
+            .eq('tutor_id', userId)
+            .eq('is_active', true)
+            .limit(1)
+            .single();
+
+          if (!studentError && studentData) {
+            setRelationInfo({
+              type: 'student',
+              name: `${studentData.student_first_name} ${studentData.student_last_name}`,
+              formation: studentData.formation_title
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération des relations:', error);
+      }
+    };
+
+    fetchUserRelations();
+  }, [userId, userRole]);
+
+  return { userInfo, relationInfo, loading };
+};

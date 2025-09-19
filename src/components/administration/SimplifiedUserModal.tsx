@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, Mail, Building, Users } from 'lucide-react';
+import { X, User, Mail, Building, Users, UserCheck, Phone, MapPin, FileText, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,11 +7,17 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { User as UserType, CreateUserData } from '@/services/userService';
 import { Formation, formationService } from '@/services/formationService';
 import { activationService } from '@/services/activationService';
+import { tutorService, CreateTutorData } from '@/services/tutorService';
+import { Switch } from '@/components/ui/switch';
 
 interface SimplifiedUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (userData: CreateUserData, formationIds: string[]) => Promise<UserType>;
+  onSave: (userData: CreateUserData, formationIds: string[], tutorData?: CreateTutorData & {
+    contract_type?: string;
+    contract_start_date?: string;
+    contract_end_date?: string;
+  }) => Promise<UserType>;
   user?: UserType | null;
   mode: 'create' | 'edit';
   preselectedRole?: 'Admin' | 'Formateur' | 'Étudiant' | null;
@@ -32,6 +38,21 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
     role: 'Étudiant' as 'Admin' | 'Formateur' | 'Étudiant',
     status: 'Actif' as 'Actif' | 'Inactif' | 'En attente'
   });
+
+  const [tutorData, setTutorData] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    company_name: '',
+    company_address: '',
+    position: '',
+    contract_type: '',
+    contract_start_date: '',
+    contract_end_date: ''
+  });
+
+  const [showTutorSection, setShowTutorSection] = useState(false);
 
   const [formations, setFormations] = useState<Formation[]>([]);
   const [selectedFormations, setSelectedFormations] = useState<string[]>([]);
@@ -61,6 +82,19 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
         });
       }
       setSelectedFormations([]);
+      setTutorData({
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone: '',
+        company_name: '',
+        company_address: '',
+        position: '',
+        contract_type: '',
+        contract_start_date: '',
+        contract_end_date: ''
+      });
+      setShowTutorSection(false);
       setErrors({});
     }
   }, [user, mode, isOpen, preselectedRole]);
@@ -92,6 +126,24 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
       newErrors.email = 'Format d\'email invalide';
     }
 
+    // Validation des données du tuteur si la section est activée
+    if (showTutorSection && formData.role === 'Étudiant') {
+      if (!tutorData.first_name.trim()) {
+        newErrors.tutor_first_name = 'Le prénom du tuteur est requis';
+      }
+      if (!tutorData.last_name.trim()) {
+        newErrors.tutor_last_name = 'Le nom du tuteur est requis';
+      }
+      if (!tutorData.email.trim()) {
+        newErrors.tutor_email = 'L\'email du tuteur est requis';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(tutorData.email)) {
+        newErrors.tutor_email = 'Format d\'email du tuteur invalide';
+      }
+      if (!tutorData.company_name.trim()) {
+        newErrors.tutor_company_name = 'Le nom de l\'entreprise est requis';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -104,6 +156,21 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
     try {
       setLoading(true);
       
+      // Préparer les données du tuteur si nécessaire
+      const tutorInfo = showTutorSection && formData.role === 'Étudiant' ? {
+        first_name: tutorData.first_name,
+        last_name: tutorData.last_name,
+        email: tutorData.email,
+        phone: tutorData.phone,
+        company_name: tutorData.company_name,
+        company_address: tutorData.company_address,
+        position: tutorData.position,
+        establishment_id: '', // Sera défini dans le service
+        contract_type: tutorData.contract_type,
+        contract_start_date: tutorData.contract_start_date,
+        contract_end_date: tutorData.contract_end_date
+      } : undefined;
+
       // Créer l'utilisateur
       const newUser = await onSave({
         first_name: formData.first_name,
@@ -111,7 +178,7 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
         email: formData.email,
         role: formData.role,
         status: formData.status
-      }, selectedFormations);
+      }, selectedFormations, tutorInfo);
 
       // Si c'est un nouvel utilisateur, créer un token d'activation et envoyer l'email
       if (mode === 'create') {
@@ -151,6 +218,13 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
         ? [...prev, formationId]
         : prev.filter(id => id !== formationId)
     );
+  };
+
+  const handleTutorChange = (field: string, value: string) => {
+    setTutorData(prev => ({ ...prev, [field]: value }));
+    if (errors[`tutor_${field}`]) {
+      setErrors(prev => ({ ...prev, [`tutor_${field}`]: '' }));
+    }
   };
 
   if (!isOpen) return null;
@@ -270,6 +344,192 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Tuteur - Uniquement pour les étudiants en mode création */}
+          {formData.role === 'Étudiant' && mode === 'create' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+                  <UserCheck className="h-5 w-5 text-purple-600" />
+                  Associer un tuteur entreprise
+                </h3>
+                <Switch
+                  checked={showTutorSection}
+                  onCheckedChange={setShowTutorSection}
+                />
+              </div>
+              
+              {showTutorSection && (
+                <div className="space-y-6 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                  {/* Informations personnelles du tuteur */}
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-gray-700 flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Informations personnelles
+                    </h4>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="tutor_first_name">Prénom du tuteur *</Label>
+                        <Input
+                          id="tutor_first_name"
+                          value={tutorData.first_name}
+                          onChange={(e) => handleTutorChange('first_name', e.target.value)}
+                          className={errors.tutor_first_name ? 'border-red-500' : ''}
+                          placeholder="Prénom"
+                        />
+                        {errors.tutor_first_name && (
+                          <p className="text-sm text-red-600 mt-1">{errors.tutor_first_name}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <Label htmlFor="tutor_last_name">Nom du tuteur *</Label>
+                        <Input
+                          id="tutor_last_name"
+                          value={tutorData.last_name}
+                          onChange={(e) => handleTutorChange('last_name', e.target.value)}
+                          className={errors.tutor_last_name ? 'border-red-500' : ''}
+                          placeholder="Nom"
+                        />
+                        {errors.tutor_last_name && (
+                          <p className="text-sm text-red-600 mt-1">{errors.tutor_last_name}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="tutor_email">Email du tuteur *</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input
+                            id="tutor_email"
+                            type="email"
+                            value={tutorData.email}
+                            onChange={(e) => handleTutorChange('email', e.target.value)}
+                            className={`pl-10 ${errors.tutor_email ? 'border-red-500' : ''}`}
+                            placeholder="tuteur@entreprise.com"
+                          />
+                        </div>
+                        {errors.tutor_email && (
+                          <p className="text-sm text-red-600 mt-1">{errors.tutor_email}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <Label htmlFor="tutor_phone">Téléphone</Label>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input
+                            id="tutor_phone"
+                            value={tutorData.phone}
+                            onChange={(e) => handleTutorChange('phone', e.target.value)}
+                            className="pl-10"
+                            placeholder="+33 6 12 34 56 78"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Informations entreprise */}
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-gray-700 flex items-center gap-2">
+                      <Building className="h-4 w-4" />
+                      Informations entreprise
+                    </h4>
+                    
+                    <div>
+                      <Label htmlFor="tutor_company_name">Nom de l'entreprise *</Label>
+                      <Input
+                        id="tutor_company_name"
+                        value={tutorData.company_name}
+                        onChange={(e) => handleTutorChange('company_name', e.target.value)}
+                        className={errors.tutor_company_name ? 'border-red-500' : ''}
+                        placeholder="Nom de l'entreprise"
+                      />
+                      {errors.tutor_company_name && (
+                        <p className="text-sm text-red-600 mt-1">{errors.tutor_company_name}</p>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="tutor_position">Poste du tuteur</Label>
+                        <Input
+                          id="tutor_position"
+                          value={tutorData.position}
+                          onChange={(e) => handleTutorChange('position', e.target.value)}
+                          placeholder="Responsable formation"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="tutor_contract_type">Type de contrat</Label>
+                        <select
+                          id="tutor_contract_type"
+                          value={tutorData.contract_type}
+                          onChange={(e) => handleTutorChange('contract_type', e.target.value)}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                          <option value="">Sélectionner</option>
+                          <option value="Apprentissage">Apprentissage</option>
+                          <option value="Professionnalisation">Professionnalisation</option>
+                          <option value="Stage">Stage</option>
+                          <option value="Autre">Autre</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="tutor_company_address">Adresse de l'entreprise</Label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="tutor_company_address"
+                          value={tutorData.company_address}
+                          onChange={(e) => handleTutorChange('company_address', e.target.value)}
+                          className="pl-10"
+                          placeholder="123 Rue de l'Entreprise, Paris"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="tutor_contract_start_date">Date de début</Label>
+                        <div className="relative">
+                          <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input
+                            id="tutor_contract_start_date"
+                            type="date"
+                            value={tutorData.contract_start_date}
+                            onChange={(e) => handleTutorChange('contract_start_date', e.target.value)}
+                            className="pl-10"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="tutor_contract_end_date">Date de fin</Label>
+                        <div className="relative">
+                          <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input
+                            id="tutor_contract_end_date"
+                            type="date"
+                            value={tutorData.contract_end_date}
+                            onChange={(e) => handleTutorChange('contract_end_date', e.target.value)}
+                            className="pl-10"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Inscription aux formations - Caché pour les administrateurs */}
           {formData.role !== 'Admin' && (

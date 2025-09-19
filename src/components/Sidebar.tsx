@@ -25,13 +25,14 @@ import {
   SidebarFooter,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useCurrentUser, useUserWithRelations } from '@/hooks/useCurrentUser';
 import { supabase } from '@/integrations/supabase/client';
 
 const Sidebar = () => {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const { userRole, userId } = useCurrentUser();
+  const { userInfo, relationInfo } = useUserWithRelations();
 
   const handleLogout = async () => {
     // Nettoyer la session démo
@@ -52,17 +53,29 @@ const Sidebar = () => {
       return {
         name: `${userData.first_name} ${userData.last_name}`,
         role: userData.role,
-        initials: `${userData.first_name[0]}${userData.last_name[0]}`
+        initials: `${userData.first_name[0]}${userData.last_name[0]}`,
+        relationInfo: null // Les utilisateurs démo n'ont pas de relations
       };
     }
+    
+    if (userInfo) {
+      return {
+        name: `${userInfo.first_name} ${userInfo.last_name}`,
+        role: userRole || 'Utilisateur',
+        initials: `${userInfo.first_name[0]}${userInfo.last_name[0]}`,
+        relationInfo
+      };
+    }
+    
     return {
       name: 'Utilisateur',
       role: userRole || 'Utilisateur',
-      initials: 'AN'
+      initials: 'AN',
+      relationInfo: null
     };
   };
 
-  const userInfo = getUserDisplayInfo();
+  const userDisplayInfo = getUserDisplayInfo();
   
   // Navigation pour AdminPrincipal uniquement (avec gestion du compte)
   const principalAdminNavigation = [
@@ -135,12 +148,21 @@ const Sidebar = () => {
         <div className="px-6 py-4 border-b border-white/20">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-sm font-medium">{userInfo.initials}</span>
+              <span className="text-sm font-medium">{userDisplayInfo.initials}</span>
             </div>
             {!collapsed && (
-              <div>
-                <p className="text-sm font-medium">{userInfo.name}</p>
-                <p className="text-xs text-white/70">{userInfo.role}</p>
+              <div className="flex-1">
+                <p className="text-sm font-medium">{userDisplayInfo.name}</p>
+                <p className="text-xs text-white/70">{userDisplayInfo.role}</p>
+                {userDisplayInfo.relationInfo && (
+                  <div className="text-xs text-white/60 mt-1">
+                    {userDisplayInfo.relationInfo.type === 'tutor' ? (
+                      <span>🏢 Tuteur: {userDisplayInfo.relationInfo.name}</span>
+                    ) : (
+                      <span>👨‍🎓 Apprenti: {userDisplayInfo.relationInfo.name}</span>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

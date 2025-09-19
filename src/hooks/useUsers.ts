@@ -20,10 +20,10 @@ export const useUsers = () => {
     }
   };
 
-  const createUser = async (userData: CreateUserData, formationIds: string[] = []) => {
+  const createUser = async (userData: CreateUserData, formationIds: string[] = [], tutorData?: any) => {
     try {
       setLoading(true);
-      const newUser = await userService.createUser(userData, formationIds);
+      const newUser = await userService.createUser(userData, formationIds, tutorData);
       setUsers(prev => [newUser, ...prev]);
       return newUser;
     } catch (err) {
