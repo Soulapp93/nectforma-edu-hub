@@ -33,8 +33,8 @@ const EventCard: React.FC<EventCardProps> = ({
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-      <div className="h-24 bg-gradient-to-r from-purple-500 to-purple-600 relative">
-        <div className="absolute bottom-3 left-4 text-white">
+      <div className="h-24 bg-gradient-to-r from-purple-500 to-purple-600 relative flex items-center justify-center">
+        <div className="text-white text-center">
           <h3 className="font-semibold text-lg">{title}</h3>
         </div>
       </div>

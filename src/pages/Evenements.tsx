@@ -1,16 +1,17 @@
 
 import React, { useState } from 'react';
-import { Plus, Calendar, Users, Search, Filter, FileText, Edit } from 'lucide-react';
+import { Plus, Calendar, Users, Search, Filter, FileText, Edit, Trash2 } from 'lucide-react';
 import CreateEventModal from '@/components/evenements/CreateEventModal';
 import EditEventModal from '@/components/evenements/EditEventModal';
 import EventCard from '@/components/evenements/EventCard';
-import { useEvents } from '@/hooks/useEvents';
+import { useEvents, useDeleteEvent } from '@/hooks/useEvents';
 import { Event } from '@/services/eventService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const Evenements = () => {
   const { data: events = [], isLoading } = useEvents();
   const { userRole } = useCurrentUser();
+  const deleteEventMutation = useDeleteEvent();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -27,6 +28,17 @@ const Evenements = () => {
   const handleEditEvent = (event: Event) => {
     setSelectedEvent(event);
     setIsEditModalOpen(true);
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet événement ?')) {
+      try {
+        await deleteEventMutation.mutateAsync(eventId);
+        setShowEventDetails(false);
+      } catch (error) {
+        console.error('Error deleting event:', error);
+      }
+    }
   };
 
   const isAdmin = userRole === 'admin';
@@ -152,16 +164,25 @@ const Evenements = () => {
               
               <div className="flex justify-end space-x-3">
                 {isAdmin && (
-                  <button
-                    onClick={() => {
-                      setShowEventDetails(false);
-                      handleEditEvent(selectedEvent);
-                    }}
-                    className="flex items-center px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium"
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Modifier
-                  </button>
+                  <>
+                    <button
+                      onClick={() => {
+                        setShowEventDetails(false);
+                        handleEditEvent(selectedEvent);
+                      }}
+                      className="flex items-center px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Modifier
+                    </button>
+                    <button
+                      onClick={() => handleDeleteEvent(selectedEvent.id)}
+                      className="flex items-center px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Supprimer
+                    </button>
+                  </>
                 )}
                 <button
                   onClick={() => setShowEventDetails(false)}
