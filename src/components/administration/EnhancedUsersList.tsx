@@ -327,7 +327,9 @@ const EnhancedUsersList: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <div className="max-w-xs">
-                      {userFormations.length > 0 ? (
+                      {user.role === 'Admin' ? (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      ) : userFormations.length > 0 ? (
                         <div className="space-y-1">
                           {userFormations.slice(0, 2).map((assignment) => (
                             <div key={assignment.id} className="text-xs bg-info/10 text-info px-2 py-1 rounded-full inline-block mr-1">

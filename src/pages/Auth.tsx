@@ -54,7 +54,8 @@ const Auth = () => {
         'AdminPrincipal': 'admin.principal@demo.com',
         'Admin': 'admin@demo.com',
         'Formateur': 'formateur@demo.com',
-        'Étudiant': 'etudiant@demo.com'
+        'Étudiant': 'etudiant@demo.com',
+        'Tuteur': 'tuteur-demo@test.com'
       };
       
       const email = emailMap[role as keyof typeof emailMap];
@@ -66,8 +67,8 @@ const Auth = () => {
       const demoUserData = {
         id: `demo-${role.toLowerCase()}`,
         email: email,
-        first_name: role === 'AdminPrincipal' ? 'Admin' : role === 'Admin' ? 'Administrateur' : role === 'Formateur' ? 'Jean' : 'Marie',
-        last_name: role === 'AdminPrincipal' ? 'Principal' : role === 'Admin' ? 'Système' : role === 'Formateur' ? 'Dupont' : 'Martin',
+        first_name: role === 'AdminPrincipal' ? 'Admin' : role === 'Admin' ? 'Administrateur' : role === 'Formateur' ? 'Jean' : role === 'Tuteur' ? 'Tuteur' : 'Marie',
+        last_name: role === 'AdminPrincipal' ? 'Principal' : role === 'Admin' ? 'Système' : role === 'Formateur' ? 'Dupont' : role === 'Tuteur' ? 'Démo' : 'Martin',
         role: role,
         establishment_id: 'demo-establishment',
         status: 'Actif',
@@ -84,7 +85,8 @@ const Auth = () => {
         'AdminPrincipal': 'Admin Principal - Accès complet à la gestion du compte établissement',
         'Admin': 'Admin - Accès à la gestion du profil personnel uniquement',
         'Formateur': 'Formateur - Accès à la gestion du profil personnel',
-        'Étudiant': 'Étudiant - Accès à la gestion du profil personnel'
+        'Étudiant': 'Étudiant - Accès à la gestion du profil personnel',
+        'Tuteur': 'Tuteur - Accès aux formations de l\'apprenti et au profil personnel'
       };
       
       toast.success(`Connexion réussie en tant que ${roleMessages[role as keyof typeof roleMessages]}`);
@@ -407,7 +409,7 @@ const Auth = () => {
                   <div className="flex-1 border-t border-gray-300"></div>
                 </div>
 
-                <div className="mt-6 grid grid-cols-2 gap-3">
+                <div className="mt-6 grid grid-cols-1 gap-3">
                   <button
                     onClick={() => handleDemoLogin('AdminPrincipal')}
                     disabled={loading}
@@ -442,6 +444,15 @@ const Auth = () => {
                   >
                     <GraduationCap className="h-4 w-4 mr-2 text-green-600" />
                     Étudiant
+                  </button>
+                  
+                  <button
+                    onClick={() => handleDemoLogin('Tuteur')}
+                    disabled={loading}
+                    className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  >
+                    <User className="h-4 w-4 mr-2 text-orange-600" />
+                    Tuteur
                   </button>
                 </div>
               </>

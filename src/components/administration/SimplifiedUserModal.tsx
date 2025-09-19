@@ -345,8 +345,8 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
             </div>
           </div>
 
-          {/* Tuteur - Uniquement pour les étudiants en mode création */}
-          {formData.role === 'Étudiant' && mode === 'create' && (
+          {/* Tuteur - Pour les étudiants */}
+          {formData.role === 'Étudiant' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
