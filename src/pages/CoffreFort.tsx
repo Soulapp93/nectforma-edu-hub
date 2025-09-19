@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { FileText, Folder, Upload, Download, Trash2, Eye, Share, Plus, ArrowLeft, Filter, X } from 'lucide-react';
-import StorageInfo from '../components/coffrefort/StorageInfo';
 import FoldersGrid from '../components/coffrefort/FoldersGrid';
 import FileUploadModal from '../components/coffrefort/FileUploadModal';
 import CreateFolderModal from '../components/coffrefort/CreateFolderModal';
@@ -17,7 +16,6 @@ const CoffreFort = () => {
     currentFolder,
     setCurrentFolder,
     loading,
-    storageInfo,
     loadData,
     deleteFile,
     deleteFolder,
@@ -197,11 +195,6 @@ const CoffreFort = () => {
             </button>
           </div>
         </div>
-
-        <StorageInfo 
-          storageUsed={Math.round(storageInfo.used / (1024 * 1024))} 
-          storageTotal={Math.round(storageInfo.total / (1024 * 1024))} 
-        />
       </div>
 
       {!currentFolder && (
@@ -602,18 +595,24 @@ const CoffreFort = () => {
       )}
 
       {/* Modals */}
-      <FileUploadModal
+      <FileUploadModal 
         open={showUploadModal}
         onOpenChange={setShowUploadModal}
-        folderId={currentFolder}
-        onSuccess={loadData}
+        folderId={currentFolder || undefined}
+        onSuccess={() => {
+          console.log('Upload réussi, rechargement des données...');
+          loadData();
+        }}
       />
 
       <CreateFolderModal
         open={showCreateFolderModal}
         onOpenChange={setShowCreateFolderModal}
-        parentId={currentFolder}
-        onSuccess={loadData}
+        parentId={currentFolder || undefined}
+        onSuccess={() => {
+          console.log('Dossier créé, rechargement des données...');
+          loadData();
+        }}
       />
 
       <FileViewerModal

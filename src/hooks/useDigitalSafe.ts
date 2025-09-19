@@ -7,21 +7,23 @@ export const useDigitalSafe = () => {
   const [files, setFiles] = useState<DigitalSafeFile[]>([]);
   const [currentFolder, setCurrentFolder] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [storageInfo, setStorageInfo] = useState({ used: 0, total: 0 });
   const { toast } = useToast();
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [foldersData, filesData, storageData] = await Promise.all([
+      console.log('Chargement des données du coffre-fort...');
+      
+      const [foldersData, filesData] = await Promise.all([
         digitalSafeService.getFolders(currentFolder || undefined),
-        digitalSafeService.getFiles(currentFolder || undefined),
-        digitalSafeService.getStorageInfo()
+        digitalSafeService.getFiles(currentFolder || undefined)
       ]);
+      
+      console.log('Dossiers chargés:', foldersData.length);
+      console.log('Fichiers chargés:', filesData.length);
       
       setFolders(foldersData);
       setFiles(filesData);
-      setStorageInfo(storageData);
     } catch (error: any) {
       console.error('Erreur chargement données:', error);
       toast({
@@ -97,7 +99,6 @@ export const useDigitalSafe = () => {
     currentFolder,
     setCurrentFolder,
     loading,
-    storageInfo,
     loadData,
     deleteFile,
     deleteFolder,
