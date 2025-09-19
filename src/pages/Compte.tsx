@@ -23,9 +23,7 @@ const Compte = () => {
   const { userRole, userId } = useCurrentUser();
   
   // TOUS LES HOOKS DOIVENT ÊTRE APPELÉS EN PREMIER - JAMAIS APRÈS UN RETURN CONDITIONNEL
-  const [activeTab, setActiveTab] = useState(
-    userRole === 'AdminPrincipal' ? 'establishment' : 'profile'
-  );
+  const [activeTab, setActiveTab] = useState('profile'); // Tous les utilisateurs ont maintenant un onglet profil
   const [adminData, setAdminData] = useState({
     firstName: '',
     lastName: '',
@@ -103,8 +101,8 @@ const Compte = () => {
     // Charger les données utilisateur depuis la base de données
     loadUserData();
 
-    // Ajuster l'onglet actif selon le rôle de l'utilisateur
-    setActiveTab(userRole === 'AdminPrincipal' ? 'establishment' : 'profile');
+    // Maintenant tous les utilisateurs utilisent le même onglet profil
+    setActiveTab('profile');
   }, [userRole, userId]);
 
   const handleLogoUpload = (files: File[]) => {
@@ -186,10 +184,8 @@ const Compte = () => {
   };
 
   // Déterminer le titre selon le rôle
-  const pageTitle = userRole === 'AdminPrincipal' ? 'Gestion du compte' : 'Mon Profil';
-  const pageDescription = userRole === 'AdminPrincipal' 
-    ? 'Gérez les informations de l\'établissement et les paramètres administrateur'
-    : 'Gérez vos informations personnelles et les paramètres de votre profil';
+  const pageTitle = 'Mon Profil';
+  const pageDescription = 'Gérez vos informations personnelles et les paramètres de votre profil';
 
   return (
     <div className="p-8">
@@ -202,17 +198,7 @@ const Compte = () => {
         <AccountTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
         <div className="flex-1">
-          {activeTab === 'establishment' && (
-            <EstablishmentSettings
-              adminData={adminData}
-              establishmentData={establishmentData}
-              onAdminDataChange={setAdminData}
-              onEstablishmentDataChange={setEstablishmentData}
-              onLogoUpload={handleLogoUpload}
-              onSave={handleSaveEstablishment}
-            />
-          )}
-          
+          {/* Tous les utilisateurs ont maintenant le même onglet profil */}
           {activeTab === 'profile' && (
             <ProfileSettings
               profileData={profileData}

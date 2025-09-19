@@ -28,13 +28,13 @@ const FileUploadModal: React.FC<FileUploadModalProps> = ({
 
     setIsUploading(true);
     try {
-      await digitalSafeService.uploadFiles(selectedFiles, folderId);
+      const uploadedFiles = await digitalSafeService.uploadFiles(selectedFiles, folderId);
       toast({
         title: "Succès",
         description: `${selectedFiles.length} fichier(s) uploadé(s) avec succès.`,
       });
       setSelectedFiles([]);
-      onSuccess();
+      onSuccess(); // Actualise les données dans le parent
       onOpenChange(false);
     } catch (error: any) {
       console.error('Erreur upload:', error);

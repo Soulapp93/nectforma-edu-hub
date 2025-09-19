@@ -77,17 +77,16 @@ const Sidebar = () => {
 
   const userDisplayInfo = getUserDisplayInfo();
   
-  // Navigation pour AdminPrincipal uniquement (avec gestion du compte)
+  // Navigation pour AdminPrincipal uniquement (avec profil comme les autres utilisateurs)
   const principalAdminNavigation = [
     { name: 'Tableau de bord', href: '/', icon: LayoutDashboard },
     { name: 'Administration', href: '/administration', icon: Users },
     { name: 'Formation', href: '/formations', icon: BookOpen },
-    { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
     { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
     { name: 'Événements', href: '/evenements', icon: Calendar1 },
     { name: 'Coffre-fort', href: '/coffre-fort', icon: FileText },
-    { name: 'Gestion du compte', href: '/compte', icon: Settings },
+    { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
 
   // Navigation pour Admin (avec profil au lieu de gestion du compte - sans suivi émargement)
