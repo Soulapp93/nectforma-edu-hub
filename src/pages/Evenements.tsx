@@ -18,13 +18,18 @@ const Evenements = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showEventDetails, setShowEventDetails] = useState(false);
 
+  // Debug logs
+  console.log('userRole:', userRole);
+  console.log('events:', events);
+  console.log('isAdmin:', userRole === 'admin');
+
   // Initialiser les données démo au premier chargement
   useEffect(() => {
-    const existingEvents = localStorage.getItem('demo_events');
-    if (!existingEvents || JSON.parse(existingEvents).length === 0) {
+    const hasInitialized = sessionStorage.getItem('demo_initialized');
+    if (!hasInitialized) {
+      console.log('Initializing demo data...');
       seedDemoEvents();
-      // Forcer le rafraîchissement
-      window.location.reload();
+      sessionStorage.setItem('demo_initialized', 'true');
     }
   }, []);
 

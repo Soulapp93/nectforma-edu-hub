@@ -28,6 +28,10 @@ const EventCard: React.FC<EventCardProps> = ({
   onDelete,
   isAdmin = false
 }) => {
+  // Debug logs
+  console.log('EventCard - isAdmin:', isAdmin);
+  console.log('EventCard - file_urls:', file_urls);
+  console.log('EventCard - id:', id);
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-FR', {

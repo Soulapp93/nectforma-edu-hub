@@ -7,6 +7,8 @@ export const seedDemoEvents = () => {
     last_name: 'Principal'
   };
   sessionStorage.setItem('demo_user', JSON.stringify(demoAdmin));
+  
+  console.log('Setting demo user:', demoAdmin);
 
   // Créer des événements démo avec fichiers
   const demoEvents = [
@@ -61,4 +63,5 @@ export const seedDemoEvents = () => {
   ];
 
   localStorage.setItem('demo_events', JSON.stringify(demoEvents));
+  console.log('Demo events set:', demoEvents);
 };
