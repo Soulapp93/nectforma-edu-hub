@@ -90,12 +90,11 @@ const Sidebar = () => {
     { name: 'Gestion du compte', href: '/compte', icon: Settings },
   ];
 
-  // Navigation pour Admin (avec profil au lieu de gestion du compte)
+  // Navigation pour Admin (avec profil au lieu de gestion du compte - sans suivi émargement)
   const adminNavigation = [
     { name: 'Tableau de bord', href: '/', icon: LayoutDashboard },
     { name: 'Administration', href: '/administration', icon: Users },
     { name: 'Formation', href: '/formations', icon: BookOpen },
-    { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
     { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
     { name: 'Événements', href: '/evenements', icon: Calendar1 },
@@ -103,7 +102,15 @@ const Sidebar = () => {
     { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
 
-  // Navigation limitée pour les formateurs et étudiants (avec profil)
+  // Navigation pour tuteurs (limitée)
+  const tutorNavigation = [
+    { name: 'Formation', href: '/formations', icon: BookOpen },
+    { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck },
+    { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
+    { name: 'Mon Profil', href: '/compte', icon: Settings },
+  ];
+
+  // Navigation pour les formateurs et étudiants (avec profil)
   const limitedNavigation = [
     { name: 'Formation', href: '/formations', icon: BookOpen },
     { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck },
@@ -119,6 +126,8 @@ const Sidebar = () => {
     ? principalAdminNavigation 
     : userRole === 'Admin' 
     ? adminNavigation 
+    : userRole === 'Tuteur'
+    ? tutorNavigation
     : limitedNavigation;
 
   return (
