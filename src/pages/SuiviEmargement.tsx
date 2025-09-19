@@ -29,7 +29,7 @@ const SuiviEmargement = () => {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('');
 
   useEffect(() => {
@@ -125,7 +125,7 @@ const SuiviEmargement = () => {
       record.formation_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (record.instructor_name && record.instructor_name.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesStatus = statusFilter === '' || record.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' || statusFilter === '' || record.status === statusFilter;
     const matchesDate = dateFilter === '' || record.date.includes(dateFilter);
     
     return matchesSearch && matchesStatus && matchesDate;
@@ -283,12 +283,12 @@ const SuiviEmargement = () => {
               />
             </div>
             
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter || 'all'} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full lg:w-48">
                 <SelectValue placeholder="Tous les statuts" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous les statuts</SelectItem>
+                <SelectItem value="all">Tous les statuts</SelectItem>
                 <SelectItem value="Présent">Présent</SelectItem>
                 <SelectItem value="Absent">Absent</SelectItem>
                 <SelectItem value="En retard">En retard</SelectItem>
@@ -307,7 +307,7 @@ const SuiviEmargement = () => {
               variant="outline" 
               onClick={() => {
                 setSearchTerm('');
-                setStatusFilter('');
+                setStatusFilter('all');
                 setDateFilter('');
               }}
             >
