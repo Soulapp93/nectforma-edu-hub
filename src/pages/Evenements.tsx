@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Calendar, Users, Search, Filter, FileText, Edit, Trash2 } from 'lucide-react';
 import CreateEventModal from '@/components/evenements/CreateEventModal';
 import EditEventModal from '@/components/evenements/EditEventModal';
@@ -7,6 +7,7 @@ import EventCard from '@/components/evenements/EventCard';
 import { useEvents, useDeleteEvent } from '@/hooks/useEvents';
 import { Event } from '@/services/eventService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { seedDemoEvents } from '@/utils/seedEvents';
 
 const Evenements = () => {
   const { data: events = [], isLoading } = useEvents();
@@ -16,6 +17,16 @@ const Evenements = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showEventDetails, setShowEventDetails] = useState(false);
+
+  // Initialiser les données démo au premier chargement
+  useEffect(() => {
+    const existingEvents = localStorage.getItem('demo_events');
+    if (!existingEvents || JSON.parse(existingEvents).length === 0) {
+      seedDemoEvents();
+      // Forcer le rafraîchissement
+      window.location.reload();
+    }
+  }, []);
 
   const handleEventClick = (eventId: string) => {
     const event = events.find(e => e.id === eventId);
