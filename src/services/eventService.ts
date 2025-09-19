@@ -8,17 +8,17 @@ export interface Event {
   created_by?: string;
   created_at: string;
   updated_at: string;
-  formation_ids: string[];
-  audiences: string[];
-  file_urls: string[];
+  formation_ids?: string[];
+  audiences?: string[];
+  file_urls?: string[];
 }
 
 export interface CreateEventData {
   title: string;
   description?: string;
-  formation_ids: string[];
-  audiences: string[];
-  file_urls: string[];
+  formation_ids?: string[];
+  audiences?: string[];
+  file_urls?: string[];
 }
 
 export interface EventRegistration {
@@ -73,6 +73,9 @@ export const eventService = {
         id: Date.now().toString(),
         establishment_id: 'demo-establishment',
         ...eventData,
+        formation_ids: eventData.formation_ids || [],
+        audiences: eventData.audiences || [],
+        file_urls: eventData.file_urls || [],
         created_by: 'demo-user',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()

@@ -5,9 +5,9 @@ interface EventCardProps {
   id: string;
   title: string;
   description: string;
-  formation_ids: string[];
-  audiences: string[];
-  file_urls: string[];
+  formation_ids?: string[];
+  audiences?: string[];
+  file_urls?: string[];
   created_at: string;
   onView: (eventId: string) => void;
 }
@@ -16,9 +16,9 @@ const EventCard: React.FC<EventCardProps> = ({
   id,
   title,
   description,
-  formation_ids,
-  audiences,
-  file_urls,
+  formation_ids = [],
+  audiences = [],
+  file_urls = [],
   created_at,
   onView
 }) => {
