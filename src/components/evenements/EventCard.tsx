@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Calendar, FileText, Eye } from 'lucide-react';
+import { Users, Calendar, FileText, Eye, Edit, Trash2 } from 'lucide-react';
 
 interface EventCardProps {
   id: string;
@@ -10,6 +10,9 @@ interface EventCardProps {
   file_urls?: string[];
   created_at: string;
   onView: (eventId: string) => void;
+  onEdit?: (eventId: string) => void;
+  onDelete?: (eventId: string) => void;
+  isAdmin?: boolean;
 }
 
 const EventCard: React.FC<EventCardProps> = ({
@@ -20,7 +23,10 @@ const EventCard: React.FC<EventCardProps> = ({
   audiences = [],
   file_urls = [],
   created_at,
-  onView
+  onView,
+  onEdit,
+  onDelete,
+  isAdmin = false
 }) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -37,6 +43,30 @@ const EventCard: React.FC<EventCardProps> = ({
         <div className="text-white text-center">
           <h3 className="font-semibold text-lg">{title}</h3>
         </div>
+        {isAdmin && (
+          <div className="absolute top-2 right-2 flex space-x-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit?.(id);
+              }}
+              className="p-1.5 bg-white/20 text-white rounded-full hover:bg-white/30 transition-colors"
+              title="Modifier"
+            >
+              <Edit className="h-3 w-3" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.(id);
+              }}
+              className="p-1.5 bg-white/20 text-white rounded-full hover:bg-red-500 transition-colors"
+              title="Supprimer"
+            >
+              <Trash2 className="h-3 w-3" />
+            </button>
+          </div>
+        )}
       </div>
       
       <div className="p-4">
@@ -52,31 +82,32 @@ const EventCard: React.FC<EventCardProps> = ({
             <span>Créé le {formatDate(created_at)}</span>
           </div>
           
-          <div className="flex items-center text-sm text-gray-600">
-            <Users className="h-4 w-4 mr-2 flex-shrink-0" />
-            <span>
-              {audiences.length > 0 
-                ? audiences.join(', ') 
-                : 'Toutes les audiences'
-              }
-            </span>
-          </div>
-          
           {file_urls.length > 0 && (
-            <div className="flex items-center text-sm text-gray-600">
-              <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span>{file_urls.length} fichier{file_urls.length > 1 ? 's' : ''}</span>
+            <div className="space-y-1">
+              <div className="flex items-center text-sm text-gray-600 mb-1">
+                <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
+                <span>Fichiers joints:</span>
+              </div>
+              <div className="ml-6 space-y-1">
+                {file_urls.map((fileUrl, index) => (
+                  <a
+                    key={index}
+                    href={fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center text-sm text-blue-600 hover:text-blue-800 cursor-pointer"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <FileText className="h-3 w-3 mr-1" />
+                    <span>Fichier {index + 1}</span>
+                  </a>
+                ))}
+              </div>
             </div>
           )}
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="text-xs text-gray-500">
-            {formation_ids.length > 0 
-              ? `${formation_ids.length} formation${formation_ids.length > 1 ? 's' : ''}`
-              : 'Toutes les formations'
-            }
-          </div>
+        <div className="flex items-center justify-end">
           <button 
             onClick={() => onView(id)}
             className="flex items-center px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"

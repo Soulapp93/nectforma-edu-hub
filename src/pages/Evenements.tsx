@@ -25,9 +25,12 @@ const Evenements = () => {
     }
   };
 
-  const handleEditEvent = (event: Event) => {
-    setSelectedEvent(event);
-    setIsEditModalOpen(true);
+  const handleEditEvent = (eventId: string) => {
+    const event = events.find(e => e.id === eventId);
+    if (event) {
+      setSelectedEvent(event);
+      setIsEditModalOpen(true);
+    }
   };
 
   const handleDeleteEvent = async (eventId: string) => {
@@ -117,6 +120,9 @@ const Evenements = () => {
               key={event.id}
               {...event}
               onView={handleEventClick}
+              onEdit={handleEditEvent}
+              onDelete={handleDeleteEvent}
+              isAdmin={isAdmin}
             />
           ))}
         </div>
@@ -168,7 +174,7 @@ const Evenements = () => {
                     <button
                       onClick={() => {
                         setShowEventDetails(false);
-                        handleEditEvent(selectedEvent);
+                        handleEditEvent(selectedEvent.id);
                       }}
                       className="flex items-center px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium"
                     >
