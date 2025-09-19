@@ -23,7 +23,8 @@ const categories = [
   'Présentation',
   'Cérémonie',
   'Formation',
-  'Networking'
+  'Networking',
+  'Porte ouverte'
 ];
 
 const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) => {
@@ -36,7 +37,6 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
     end_time: '',
     location: '',
     category: '',
-    max_participants: 0,
     image_url: '',
     status: 'Ouvert',
     formation_id: 'none',
@@ -120,11 +120,16 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
     try {
       let imageUrl = formData.image_url;
       
-      // Upload image if selected
+      // Upload image if selected (but don't fail if upload fails)
       if (selectedImage) {
-        const uploadedUrl = await handleImageUpload();
-        if (uploadedUrl) {
-          imageUrl = uploadedUrl;
+        try {
+          const uploadedUrl = await handleImageUpload();
+          if (uploadedUrl) {
+            imageUrl = uploadedUrl;
+          }
+        } catch (error) {
+          console.warn('Image upload failed, proceeding without image:', error);
+          // Continue without image
         }
       }
       
@@ -148,7 +153,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
         end_time: '',
         location: '',
         category: '',
-        max_participants: 0,
+        
         image_url: '',
         status: 'Ouvert',
         formation_id: 'none',
@@ -373,41 +378,25 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="category" className="text-sm font-medium">
-                  Catégorie *
-                </Label>
-                <Select 
-                  value={formData.category} 
-                  onValueChange={(value) => handleInputChange('category', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner une catégorie" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map(category => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="max_participants" className="text-sm font-medium">
-                  Participants max
-                </Label>
-                <Input
-                  id="max_participants"
-                  type="number"
-                  min="0"
-                  value={formData.max_participants}
-                  onChange={(e) => handleInputChange('max_participants', parseInt(e.target.value) || 0)}
-                  placeholder="0 = illimité"
-                />
-              </div>
+            <div>
+              <Label htmlFor="category" className="text-sm font-medium">
+                Catégorie *
+              </Label>
+              <Select 
+                value={formData.category} 
+                onValueChange={(value) => handleInputChange('category', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une catégorie" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map(category => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

@@ -11,7 +11,6 @@ export interface Event {
   end_time?: string;
   location?: string;
   category: string;
-  max_participants?: number;
   image_url?: string;
   status: 'Ouvert' | 'Bientôt complet' | 'Complet' | 'Annulé';
   created_by?: string;
@@ -31,7 +30,6 @@ export interface CreateEventData {
   end_time?: string;
   location?: string;
   category: string;
-  max_participants?: number;
   image_url?: string;
   status?: 'Ouvert' | 'Bientôt complet' | 'Complet' | 'Annulé';
   formation_id?: string;
@@ -49,107 +47,34 @@ export interface EventRegistration {
 export const eventService = {
   async getEvents() {
     try {
-      const { data: events, error } = await supabase
-        .from('events')
-        .select(`
-          *,
-          event_registrations!inner(count)
-        `)
-        .order('start_date', { ascending: true })
-        .order('start_time', { ascending: true });
-
-      if (error) throw error;
-
-      // Obtenir l'utilisateur actuel pour vérifier les inscriptions
-      const { data: { user } } = await supabase.auth.getUser();
-
-      // Enrichir avec les statistiques et les inscriptions de l'utilisateur
-      const enrichedEvents = await Promise.all(
-        (events || []).map(async (event) => {
-          // Obtenir les statistiques
-          const { data: stats } = await supabase
-            .rpc('get_event_stats', { event_id_param: event.id });
-
-          const registered_count = stats?.[0]?.registered_count || 0;
-          const available_spots = stats?.[0]?.available_spots || 0;
-
-          // Vérifier si l'utilisateur est inscrit
-          let is_registered = false;
-          if (user) {
-            const { data: registration } = await supabase
-              .from('event_registrations')
-              .select('id')
-              .eq('event_id', event.id)
-              .eq('user_id', user.id)
-              .eq('status', 'Confirmée')
-              .single();
-            is_registered = !!registration;
-          }
-
-          // Déterminer le statut automatique
-          let status = event.status;
-          if (status === 'Ouvert' && event.max_participants > 0) {
-            if (registered_count >= event.max_participants) {
-              status = 'Complet';
-            } else if (registered_count >= event.max_participants * 0.8) {
-              status = 'Bientôt complet';
-            }
-          }
-
-          return {
-            ...event,
-            registered_count,
-            available_spots,
-            is_registered,
-            status
-          };
-        })
-      );
-
-      return enrichedEvents;
+      // Mode démo : utiliser les événements du localStorage
+      const demoEvents = JSON.parse(localStorage.getItem('demo_events') || '[]');
+      
+      // Trier par date et heure
+      const sortedEvents = demoEvents.sort((a: Event, b: Event) => {
+        const dateA = new Date(`${a.start_date} ${a.start_time}`);
+        const dateB = new Date(`${b.start_date} ${b.start_time}`);
+        return dateA.getTime() - dateB.getTime();
+      });
+      
+      return sortedEvents;
     } catch (error) {
       console.error('Error fetching events:', error);
-      throw error;
+      return [];
     }
   },
 
   async getEventById(eventId: string) {
     try {
-      const { data: event, error } = await supabase
-        .from('events')
-        .select('*')
-        .eq('id', eventId)
-        .single();
-
-      if (error) throw error;
-
-      // Enrichir avec les statistiques
-      const { data: stats } = await supabase
-        .rpc('get_event_stats', { event_id_param: eventId });
-
-      const registered_count = stats?.[0]?.registered_count || 0;
-      const available_spots = stats?.[0]?.available_spots || 0;
-
-      // Vérifier si l'utilisateur est inscrit
-      const { data: { user } } = await supabase.auth.getUser();
-      let is_registered = false;
-      if (user) {
-        const { data: registration } = await supabase
-          .from('event_registrations')
-          .select('id')
-          .eq('event_id', eventId)
-          .eq('user_id', user.id)
-          .eq('status', 'Confirmée')
-          .single();
-        is_registered = !!registration;
+      // Mode démo : chercher dans localStorage
+      const demoEvents = JSON.parse(localStorage.getItem('demo_events') || '[]');
+      const event = demoEvents.find((e: Event) => e.id === eventId);
+      
+      if (!event) {
+        throw new Error('Event not found');
       }
-
-      return {
-        ...event,
-        registered_count,
-        available_spots,
-        is_registered
-      };
+      
+      return event;
     } catch (error) {
       console.error('Error fetching event:', error);
       throw error;
@@ -158,32 +83,26 @@ export const eventService = {
 
   async createEvent(eventData: CreateEventData) {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      // Obtenir l'establishment_id de l'utilisateur
-      const { data: userData } = await supabase
-        .from('users')
-        .select('establishment_id')
-        .eq('id', user.id)
-        .single();
-
-      if (!userData?.establishment_id) {
-        throw new Error('User establishment not found');
-      }
-
-      const { data: event, error } = await supabase
-        .from('events')
-        .insert({
-          ...eventData,
-          establishment_id: userData.establishment_id,
-          created_by: user.id
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return event;
+      // Mode démo : gestion locale des événements
+      const existingEvents = JSON.parse(localStorage.getItem('demo_events') || '[]');
+      
+      const newEvent: Event = {
+        id: Date.now().toString(),
+        establishment_id: 'demo-establishment',
+        ...eventData,
+        status: eventData.status || 'Ouvert',
+        created_by: 'demo-user',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        registered_count: 0,
+        available_spots: null,
+        is_registered: false
+      };
+      
+      const updatedEvents = [...existingEvents, newEvent];
+      localStorage.setItem('demo_events', JSON.stringify(updatedEvents));
+      
+      return newEvent;
     } catch (error) {
       console.error('Error creating event:', error);
       throw error;
@@ -192,15 +111,22 @@ export const eventService = {
 
   async updateEvent(eventId: string, eventData: Partial<CreateEventData>) {
     try {
-      const { data: event, error } = await supabase
-        .from('events')
-        .update(eventData)
-        .eq('id', eventId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return event;
+      // Mode démo : mise à jour locale
+      const demoEvents = JSON.parse(localStorage.getItem('demo_events') || '[]');
+      
+      const eventIndex = demoEvents.findIndex((e: Event) => e.id === eventId);
+      if (eventIndex === -1) {
+        throw new Error('Event not found');
+      }
+      
+      demoEvents[eventIndex] = {
+        ...demoEvents[eventIndex],
+        ...eventData,
+        updated_at: new Date().toISOString()
+      };
+      
+      localStorage.setItem('demo_events', JSON.stringify(demoEvents));
+      return demoEvents[eventIndex];
     } catch (error) {
       console.error('Error updating event:', error);
       throw error;
@@ -209,12 +135,18 @@ export const eventService = {
 
   async deleteEvent(eventId: string) {
     try {
-      const { error } = await supabase
-        .from('events')
-        .delete()
-        .eq('id', eventId);
-
-      if (error) throw error;
+      // Mode démo : suppression locale
+      const demoEvents = JSON.parse(localStorage.getItem('demo_events') || '[]');
+      
+      const updatedEvents = demoEvents.filter((e: Event) => e.id !== eventId);
+      localStorage.setItem('demo_events', JSON.stringify(updatedEvents));
+      
+      // Supprimer aussi les inscriptions liées
+      const demoRegistrations = JSON.parse(localStorage.getItem('demo_event_registrations') || '[]');
+      const updatedRegistrations = demoRegistrations.filter(
+        (reg: EventRegistration) => reg.event_id !== eventId
+      );
+      localStorage.setItem('demo_event_registrations', JSON.stringify(updatedRegistrations));
     } catch (error) {
       console.error('Error deleting event:', error);
       throw error;
@@ -223,35 +155,30 @@ export const eventService = {
 
   async registerForEvent(eventId: string) {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      // Vérifier d'abord si l'événement est disponible
-      const event = await this.getEventById(eventId);
-      if (!event) throw new Error('Event not found');
-
-      if (event.max_participants > 0 && event.registered_count >= event.max_participants) {
-        throw new Error('Event is full');
+      // Mode démo : gestion locale des inscriptions
+      const demoRegistrations = JSON.parse(localStorage.getItem('demo_event_registrations') || '[]');
+      
+      // Vérifier si déjà inscrit
+      const existingRegistration = demoRegistrations.find(
+        (reg: EventRegistration) => reg.event_id === eventId && reg.user_id === 'demo-user'
+      );
+      
+      if (existingRegistration) {
+        throw new Error('Already registered for this event');
       }
-
-      const { data: registration, error } = await supabase
-        .from('event_registrations')
-        .insert({
-          event_id: eventId,
-          user_id: user.id,
-          status: 'Confirmée'
-        })
-        .select()
-        .single();
-
-      if (error) {
-        if (error.code === '23505') { // Unique constraint violation
-          throw new Error('Already registered for this event');
-        }
-        throw error;
-      }
-
-      return registration;
+      
+      const newRegistration: EventRegistration = {
+        id: Date.now().toString(),
+        event_id: eventId,
+        user_id: 'demo-user',
+        registered_at: new Date().toISOString(),
+        status: 'Confirmée'
+      };
+      
+      const updatedRegistrations = [...demoRegistrations, newRegistration];
+      localStorage.setItem('demo_event_registrations', JSON.stringify(updatedRegistrations));
+      
+      return newRegistration;
     } catch (error) {
       console.error('Error registering for event:', error);
       throw error;
@@ -260,16 +187,14 @@ export const eventService = {
 
   async unregisterFromEvent(eventId: string) {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      const { error } = await supabase
-        .from('event_registrations')
-        .delete()
-        .eq('event_id', eventId)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
+      // Mode démo : suppression locale
+      const demoRegistrations = JSON.parse(localStorage.getItem('demo_event_registrations') || '[]');
+      
+      const updatedRegistrations = demoRegistrations.filter(
+        (reg: EventRegistration) => !(reg.event_id === eventId && reg.user_id === 'demo-user')
+      );
+      
+      localStorage.setItem('demo_event_registrations', JSON.stringify(updatedRegistrations));
     } catch (error) {
       console.error('Error unregistering from event:', error);
       throw error;
@@ -278,25 +203,25 @@ export const eventService = {
 
   async getEventRegistrations(eventId: string) {
     try {
-      const { data: registrations, error } = await supabase
-        .from('event_registrations')
-        .select(`
-          *,
-          users (
-            first_name,
-            last_name,
-            email
-          )
-        `)
-        .eq('event_id', eventId)
-        .eq('status', 'Confirmée')
-        .order('registered_at', { ascending: true });
-
-      if (error) throw error;
-      return registrations || [];
+      // Mode démo : récupérer les inscriptions du localStorage
+      const demoRegistrations = JSON.parse(localStorage.getItem('demo_event_registrations') || '[]');
+      
+      const eventRegistrations = demoRegistrations.filter(
+        (reg: EventRegistration) => reg.event_id === eventId
+      );
+      
+      // Simuler les informations utilisateur
+      return eventRegistrations.map((reg: EventRegistration) => ({
+        ...reg,
+        users: {
+          first_name: 'Démo',
+          last_name: 'Utilisateur',
+          email: 'demo@example.com'
+        }
+      }));
     } catch (error) {
       console.error('Error fetching event registrations:', error);
-      throw error;
+      return [];
     }
   }
 };
