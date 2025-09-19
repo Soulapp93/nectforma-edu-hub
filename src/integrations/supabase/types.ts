@@ -59,6 +59,13 @@ export type Database = {
             foreignKeyName: "assignment_corrections_corrected_by_fkey"
             columns: ["corrected_by"]
             isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["student_id"]
+          },
+          {
+            foreignKeyName: "assignment_corrections_corrected_by_fkey"
+            columns: ["corrected_by"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -143,6 +150,13 @@ export type Database = {
             foreignKeyName: "assignment_submissions_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["student_id"]
+          },
+          {
+            foreignKeyName: "assignment_submissions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -221,6 +235,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fk_attendance_sheets_formation"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["formation_id"]
+          },
+          {
+            foreignKeyName: "fk_attendance_sheets_instructor"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["student_id"]
+          },
+          {
             foreignKeyName: "fk_attendance_sheets_instructor"
             columns: ["instructor_id"]
             isOneToOne: false
@@ -288,6 +316,13 @@ export type Database = {
             foreignKeyName: "fk_attendance_signatures_user"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["student_id"]
+          },
+          {
+            foreignKeyName: "fk_attendance_signatures_user"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -328,6 +363,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "digital_safe_files"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_safe_file_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["student_id"]
           },
           {
             foreignKeyName: "digital_safe_file_permissions_user_id_fkey"
@@ -597,6 +639,13 @@ export type Database = {
             referencedRelation: "formations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "formation_modules_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["formation_id"]
+          },
         ]
       }
       formations: {
@@ -815,6 +864,13 @@ export type Database = {
             foreignKeyName: "module_assignments_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["student_id"]
+          },
+          {
+            foreignKeyName: "module_assignments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -948,6 +1004,13 @@ export type Database = {
             foreignKeyName: "module_instructors_instructor_id_fkey"
             columns: ["instructor_id"]
             isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["student_id"]
+          },
+          {
+            foreignKeyName: "module_instructors_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -1004,6 +1067,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "schedule_slots_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["student_id"]
+          },
           {
             foreignKeyName: "schedule_slots_instructor_id_fkey"
             columns: ["instructor_id"]
@@ -1066,6 +1136,13 @@ export type Database = {
             referencedRelation: "formations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "schedules_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["formation_id"]
+          },
         ]
       }
       student_formations: {
@@ -1094,6 +1171,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "formations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_formations_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["formation_id"]
+          },
+          {
+            foreignKeyName: "student_formations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["student_id"]
           },
           {
             foreignKeyName: "student_formations_student_id_fkey"
@@ -1266,7 +1357,124 @@ export type Database = {
             referencedRelation: "formations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "text_books_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["formation_id"]
+          },
         ]
+      }
+      tutor_student_assignments: {
+        Row: {
+          assigned_at: string
+          contract_end_date: string | null
+          contract_start_date: string | null
+          contract_type: string | null
+          id: string
+          is_active: boolean | null
+          student_id: string
+          tutor_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          contract_end_date?: string | null
+          contract_start_date?: string | null
+          contract_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          student_id: string
+          tutor_id: string
+        }
+        Update: {
+          assigned_at?: string
+          contract_end_date?: string | null
+          contract_start_date?: string | null
+          contract_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          student_id?: string
+          tutor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutor_student_assignments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["student_id"]
+          },
+          {
+            foreignKeyName: "tutor_student_assignments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tutor_student_assignments_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["tutor_id"]
+          },
+          {
+            foreignKeyName: "tutor_student_assignments_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tutors: {
+        Row: {
+          company_address: string | null
+          company_name: string
+          created_at: string
+          email: string
+          establishment_id: string
+          first_name: string
+          id: string
+          is_activated: boolean | null
+          last_name: string
+          phone: string | null
+          position: string | null
+          profile_photo_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_address?: string | null
+          company_name: string
+          created_at?: string
+          email: string
+          establishment_id: string
+          first_name: string
+          id?: string
+          is_activated?: boolean | null
+          last_name: string
+          phone?: string | null
+          position?: string | null
+          profile_photo_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_address?: string | null
+          company_name?: string
+          created_at?: string
+          email?: string
+          establishment_id?: string
+          first_name?: string
+          id?: string
+          is_activated?: boolean | null
+          last_name?: string
+          phone?: string | null
+          position?: string | null
+          profile_photo_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_activation_tokens: {
         Row: {
@@ -1294,6 +1502,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "user_activation_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["student_id"]
+          },
           {
             foreignKeyName: "user_activation_tokens_user_id_fkey"
             columns: ["user_id"]
@@ -1329,6 +1544,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "formations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_formation_assignments_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["formation_id"]
+          },
+          {
+            foreignKeyName: "user_formation_assignments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["student_id"]
           },
           {
             foreignKeyName: "user_formation_assignments_user_id_fkey"
@@ -1464,6 +1693,13 @@ export type Database = {
             foreignKeyName: "virtual_class_materials_uploaded_by_fkey"
             columns: ["uploaded_by"]
             isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["student_id"]
+          },
+          {
+            foreignKeyName: "virtual_class_materials_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -1505,6 +1741,13 @@ export type Database = {
           virtual_class_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "virtual_class_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["student_id"]
+          },
           {
             foreignKeyName: "virtual_class_participants_user_id_fkey"
             columns: ["user_id"]
@@ -1593,6 +1836,13 @@ export type Database = {
             foreignKeyName: "virtual_classes_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["student_id"]
+          },
+          {
+            foreignKeyName: "virtual_classes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -1609,6 +1859,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "formations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "virtual_classes_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["formation_id"]
+          },
+          {
+            foreignKeyName: "virtual_classes_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["student_id"]
           },
           {
             foreignKeyName: "virtual_classes_instructor_id_fkey"
@@ -1628,7 +1892,29 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      tutor_students_view: {
+        Row: {
+          company_name: string | null
+          contract_end_date: string | null
+          contract_start_date: string | null
+          contract_type: string | null
+          formation_id: string | null
+          formation_level: string | null
+          formation_title: string | null
+          is_activated: boolean | null
+          is_active: boolean | null
+          position: string | null
+          student_email: string | null
+          student_first_name: string | null
+          student_id: string | null
+          student_last_name: string | null
+          tutor_email: string | null
+          tutor_first_name: string | null
+          tutor_id: string | null
+          tutor_last_name: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       generate_attendance_qr_code: {
