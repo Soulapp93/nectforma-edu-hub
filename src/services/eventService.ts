@@ -5,22 +5,20 @@ export interface Event {
   establishment_id: string;
   title: string;
   description?: string;
-  category: string;
-  image_url?: string;
   created_by?: string;
   created_at: string;
   updated_at: string;
   formation_ids: string[];
   audiences: string[];
+  file_urls: string[];
 }
 
 export interface CreateEventData {
   title: string;
   description?: string;
-  category: string;
-  image_url?: string;
   formation_ids: string[];
   audiences: string[];
+  file_urls: string[];
 }
 
 export interface EventRegistration {

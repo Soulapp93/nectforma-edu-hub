@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, X } from 'lucide-react';
+import { Upload, X, FileText } from 'lucide-react';
 import { useCreateEvent } from '@/hooks/useEvents';
 import { useFormations } from '@/hooks/useFormations';
 import { CreateEventData } from '@/services/eventService';
@@ -16,16 +15,6 @@ interface CreateEventModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const categories = [
-  'Conférence',
-  'Atelier', 
-  'Présentation',
-  'Cérémonie',
-  'Formation',
-  'Networking',
-  'Porte ouverte'
-];
 
 const audiences = [
   'Étudiants',
@@ -38,14 +27,12 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
   const [formData, setFormData] = useState<CreateEventData>({
     title: '',
     description: '',
-    category: '',
-    image_url: '',
     formation_ids: [],
-    audiences: []
+    audiences: [],
+    file_urls: []
   });
   
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>('');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -91,85 +78,67 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
     }));
   };
 
-  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Vérifier le type de fichier
-      if (!file.type.startsWith('image/')) {
-        toast.error('Veuillez sélectionner une image valide');
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length > 0) {
+      // Vérifier la taille totale (max 20MB au total)
+      const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+      if (totalSize > 20 * 1024 * 1024) {
+        toast.error('La taille totale des fichiers ne doit pas dépasser 20MB');
         return;
       }
       
-      // Vérifier la taille (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('L\'image ne doit pas dépasser 5MB');
-        return;
-      }
-      
-      setSelectedImage(file);
-      
-      // Créer un aperçu
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      setSelectedFiles(prevFiles => [...prevFiles, ...files]);
     }
   };
 
-  const handleImageUpload = async (): Promise<string | null> => {
-    if (!selectedImage) return null;
+  const handleFileUpload = async (): Promise<string[]> => {
+    if (selectedFiles.length === 0) return [];
     
     setIsUploading(true);
     try {
-      const imageUrl = await fileUploadService.uploadFile(selectedImage, 'event-images');
-      toast.success('Image téléchargée avec succès');
-      return imageUrl;
+      const uploadPromises = selectedFiles.map(file => 
+        fileUploadService.uploadFile(file, 'event-files')
+      );
+      const fileUrls = await Promise.all(uploadPromises);
+      toast.success('Fichiers téléchargés avec succès');
+      return fileUrls;
     } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error('Erreur lors du téléchargement de l\'image');
-      return null;
+      console.error('Error uploading files:', error);
+      toast.error('Erreur lors du téléchargement des fichiers');
+      return [];
     } finally {
       setIsUploading(false);
     }
   };
 
-  const removeImage = () => {
-    setSelectedImage(null);
-    setImagePreview('');
-    handleInputChange('image_url', '');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title || !formData.category) {
+    if (!formData.title) {
       return;
     }
 
     try {
-      let imageUrl = formData.image_url;
+      let fileUrls: string[] = [];
       
-      // Upload image if selected (but don't fail if upload fails)
-      if (selectedImage) {
+      // Upload files if selected
+      if (selectedFiles.length > 0) {
         try {
-          const uploadedUrl = await handleImageUpload();
-          if (uploadedUrl) {
-            imageUrl = uploadedUrl;
-          }
+          fileUrls = await handleFileUpload();
         } catch (error) {
-          console.warn('Image upload failed, proceeding without image:', error);
-          // Continue without image
+          console.warn('File upload failed, proceeding without files:', error);
         }
       }
       
       // Préparer les données 
       const cleanedData = {
         ...formData,
-        image_url: imageUrl,
+        file_urls: fileUrls,
       };
       
       await createEventMutation.mutateAsync(cleanedData);
@@ -179,13 +148,11 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
       setFormData({
         title: '',
         description: '',
-        category: '',
-        image_url: '',
         formation_ids: [],
-        audiences: []
+        audiences: [],
+        file_urls: []
       });
-      setSelectedImage(null);
-      setImagePreview('');
+      setSelectedFiles([]);
     } catch (error) {
       console.error('Error creating event:', error);
     }
@@ -227,61 +194,52 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
             />
           </div>
 
-          {/* Image */}
+          {/* Fichiers */}
           <div>
-            <Label className="text-sm font-medium">Image</Label>
+            <Label className="text-sm font-medium">Fichiers</Label>
             <div className="space-y-3">
               <input
                 type="file"
                 ref={fileInputRef}
-                onChange={handleImageSelect}
-                accept="image/*"
+                onChange={handleFileSelect}
+                multiple
                 className="hidden"
               />
               
-              {!imagePreview && !formData.image_url && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full justify-start"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploading}
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  {isUploading ? 'Téléchargement...' : 'Importer une image'}
-                </Button>
-              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full justify-start"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                {isUploading ? 'Téléchargement...' : 'Ajouter des fichiers'}
+              </Button>
               
-              {(imagePreview || formData.image_url) && (
-                <div className="relative">
-                  <img
-                    src={imagePreview || formData.image_url}
-                    alt="Aperçu"
-                    className="w-full h-32 object-cover rounded-lg border"
-                  />
-                  <button
-                    type="button"
-                    onClick={removeImage}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
+              {selectedFiles.length > 0 && (
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {selectedFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded-lg">
+                      <div className="flex items-center">
+                        <FileText className="h-4 w-4 mr-2 text-gray-500" />
+                        <span className="text-sm truncate">{file.name}</span>
+                        <span className="text-xs text-gray-500 ml-2">
+                          ({(file.size / 1024 / 1024).toFixed(1)} MB)
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeFile(index)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
-              
-              <Input
-                type="url"
-                value={formData.image_url}
-                onChange={(e) => {
-                  handleInputChange('image_url', e.target.value);
-                  if (e.target.value && !selectedImage) {
-                    setImagePreview('');
-                  }
-                }}
-                placeholder="ou URL d'image"
-                className="text-xs"
-              />
             </div>
           </div>
 
@@ -357,27 +315,6 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
             </p>
           </div>
 
-          {/* Catégorie */}
-          <div>
-            <Label htmlFor="category" className="text-sm font-medium">
-              Catégorie *
-            </Label>
-            <Select 
-              value={formData.category} 
-              onValueChange={(value) => handleInputChange('category', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionner une catégorie" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
 
           <div className="flex justify-end space-x-4 pt-4">
             <Button
@@ -390,7 +327,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
             </Button>
             <Button 
               type="submit" 
-              disabled={createEventMutation.isPending || isUploading || !formData.title || !formData.category}
+              disabled={createEventMutation.isPending || isUploading || !formData.title}
               className="bg-purple-600 hover:bg-purple-700"
             >
               {createEventMutation.isPending || isUploading ? 'Création...' : 'Créer l\'événement'}
