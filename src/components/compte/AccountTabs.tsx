@@ -17,9 +17,10 @@ interface AccountTabsProps {
 const AccountTabs: React.FC<AccountTabsProps> = ({ activeTab, onTabChange }) => {
   const { userRole } = useCurrentUser();
   
-  // Tabs pour l'administrateur principal seulement
+  // Tabs pour l'administrateur principal (gestion du compte + profil)
   const principalAdminTabs: Tab[] = [
-    { id: 'establishment', name: 'Établissement', icon: Building },
+    { id: 'establishment', name: 'Gestion du compte', icon: Building },
+    { id: 'profile', name: 'Mon Profil', icon: User },
   ];
   
   // Tabs pour tous les autres utilisateurs (formateur, étudiant)
@@ -28,9 +29,11 @@ const AccountTabs: React.FC<AccountTabsProps> = ({ activeTab, onTabChange }) => 
   ];
   
   // Déterminer quels onglets afficher selon le rôle
-  // Maintenant tous les utilisateurs ont accès au même onglet profil
-  // L'AdminPrincipal a maintenant un onglet profil comme les autres
-  const tabs = regularUserTabs;
+  // AdminPrincipal a accès aux deux onglets (gestion du compte + profil)
+  // Tous les autres utilisateurs ont accès uniquement au profil
+  const tabs = userRole === 'AdminPrincipal' 
+    ? principalAdminTabs 
+    : regularUserTabs;
 
   // Si aucun onglet disponible, ne rien afficher
   if (tabs.length === 0) {

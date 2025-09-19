@@ -23,7 +23,9 @@ const Compte = () => {
   const { userRole, userId } = useCurrentUser();
   
   // TOUS LES HOOKS DOIVENT ÊTRE APPELÉS EN PREMIER - JAMAIS APRÈS UN RETURN CONDITIONNEL
-  const [activeTab, setActiveTab] = useState('profile'); // Tous les utilisateurs ont maintenant un onglet profil
+  const [activeTab, setActiveTab] = useState(
+    userRole === 'AdminPrincipal' ? 'establishment' : 'profile'
+  );
   const [adminData, setAdminData] = useState({
     firstName: '',
     lastName: '',
@@ -101,8 +103,8 @@ const Compte = () => {
     // Charger les données utilisateur depuis la base de données
     loadUserData();
 
-    // Maintenant tous les utilisateurs utilisent le même onglet profil
-    setActiveTab('profile');
+    // Ajuster l'onglet actif selon le rôle de l'utilisateur
+    setActiveTab(userRole === 'AdminPrincipal' ? 'establishment' : 'profile');
   }, [userRole, userId]);
 
   const handleLogoUpload = (files: File[]) => {
@@ -183,9 +185,11 @@ const Compte = () => {
     }
   };
 
-  // Déterminer le titre selon le rôle
-  const pageTitle = 'Mon Profil';
-  const pageDescription = 'Gérez vos informations personnelles et les paramètres de votre profil';
+  // Déterminer le titre selon le rôle et l'onglet actif
+  const pageTitle = activeTab === 'establishment' ? 'Gestion du compte' : 'Mon Profil';
+  const pageDescription = activeTab === 'establishment' 
+    ? 'Gérez les informations de l\'établissement et les paramètres administrateur'
+    : 'Gérez vos informations personnelles et les paramètres de votre profil';
 
   return (
     <div className="p-8">
@@ -198,7 +202,17 @@ const Compte = () => {
         <AccountTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
         <div className="flex-1">
-          {/* Tous les utilisateurs ont maintenant le même onglet profil */}
+          {activeTab === 'establishment' && (
+            <EstablishmentSettings
+              adminData={adminData}
+              establishmentData={establishmentData}
+              onAdminDataChange={setAdminData}
+              onEstablishmentDataChange={setEstablishmentData}
+              onLogoUpload={handleLogoUpload}
+              onSave={handleSaveEstablishment}
+            />
+          )}
+          
           {activeTab === 'profile' && (
             <ProfileSettings
               profileData={profileData}
