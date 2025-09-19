@@ -90,13 +90,6 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({
                 <Download className="h-4 w-4 mr-2" />
                 Télécharger
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onOpenChange(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
             </div>
           </div>
           <div className="text-sm text-muted-foreground">

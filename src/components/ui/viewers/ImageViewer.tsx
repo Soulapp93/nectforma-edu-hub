@@ -67,19 +67,12 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ fileUrl, fileName }) => {
           <Button size="sm" variant="outline" onClick={handleZoomIn}>
             +
           </Button>
-          <Button size="sm" variant="outline" onClick={handleResetZoom}>
-            Reset
-          </Button>
         </div>
         
         <div className="flex space-x-2">
           <Button size="sm" variant="outline" onClick={openInNewTab}>
             <ExternalLink className="h-4 w-4 mr-1" />
             Nouvel onglet
-          </Button>
-          <Button size="sm" variant="outline" onClick={handleDownload}>
-            <Download className="h-4 w-4 mr-1" />
-            Télécharger
           </Button>
         </div>
       </div>
