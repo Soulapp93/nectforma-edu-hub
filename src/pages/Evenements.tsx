@@ -20,10 +20,13 @@ const Evenements = () => {
   const [showEventDetails, setShowEventDetails] = useState(false);
   const [selectedFile, setSelectedFile] = useState<{url: string, name: string} | null>(null);
 
+  // Vérification des permissions admin
+  const isAdmin = userRole === 'admin' || userRole === 'Administrateur' || userRole === 'Super Administrateur';
+  
   // Debug logs
   console.log('userRole:', userRole);
   console.log('events:', events);
-  console.log('isAdmin:', userRole === 'admin');
+  console.log('isAdmin:', isAdmin);
 
   // Initialiser les données démo au premier chargement
   useEffect(() => {
@@ -62,7 +65,7 @@ const Evenements = () => {
     }
   };
 
-  const isAdmin = userRole === 'admin';
+  
 
   if (isLoading) {
     return (
@@ -141,6 +144,7 @@ const Evenements = () => {
               onEdit={handleEditEvent}
               onDelete={handleDeleteEvent}
               isAdmin={isAdmin}
+              currentUserId={userRole ? '00000000-0000-4000-8000-000000000001' : undefined}
             />
           ))}
         </div>
@@ -171,7 +175,21 @@ const Evenements = () => {
                   <h4 className="font-semibold text-gray-900 mb-2">Fichiers joints</h4>
                   <div className="space-y-2">
                     {selectedEvent.file_urls.map((fileUrl, index) => {
-                      const fileName = `Fichier ${index + 1}`;
+                      // Extraire un nom de fichier plus descriptif basé sur l'URL
+                      let fileName = `Fichier ${index + 1}`;
+                      
+                      if (fileUrl.includes('dummy.pdf')) {
+                        fileName = 'Programme de la conférence.pdf';
+                      } else if (fileUrl.includes('file_example_JPG')) {
+                        fileName = 'Image promotionnelle.jpg';
+                      } else if (fileUrl.includes('sample-pdf-file.pdf')) {
+                        fileName = 'Brochure établissement.pdf';
+                      } else if (fileUrl.includes('sample.pdf')) {
+                        fileName = 'Règlement cérémonie.pdf';
+                      } else if (fileUrl.includes('placeholder')) {
+                        fileName = 'Programme événement.png';
+                      }
+                      
                       return (
                         <button
                           key={index}

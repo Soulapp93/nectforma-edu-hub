@@ -10,10 +10,12 @@ interface EventCardProps {
   audiences?: string[];
   file_urls?: string[];
   created_at: string;
+  created_by?: string;
   onView: (eventId: string) => void;
   onEdit?: (eventId: string) => void;
   onDelete?: (eventId: string) => void;
   isAdmin?: boolean;
+  currentUserId?: string;
 }
 
 const EventCard: React.FC<EventCardProps> = ({
@@ -24,17 +26,24 @@ const EventCard: React.FC<EventCardProps> = ({
   audiences = [],
   file_urls = [],
   created_at,
+  created_by,
   onView,
   onEdit,
   onDelete,
-  isAdmin = false
+  isAdmin = false,
+  currentUserId
 }) => {
   const [selectedFile, setSelectedFile] = useState<{url: string, name: string} | null>(null);
   
+  // Vérifier si l'utilisateur peut modifier/supprimer l'événement
+  const canEdit = isAdmin || created_by === currentUserId;
+  
   // Debug logs
   console.log('EventCard - isAdmin:', isAdmin);
+  console.log('EventCard - canEdit:', canEdit);
   console.log('EventCard - file_urls:', file_urls);
   console.log('EventCard - id:', id);
+  
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-FR', {
@@ -50,7 +59,7 @@ const EventCard: React.FC<EventCardProps> = ({
         <div className="text-white text-center">
           <h3 className="font-semibold text-lg">{title}</h3>
         </div>
-        {isAdmin && (
+        {canEdit && (
           <div className="absolute top-2 right-2 flex space-x-1">
             <button
               onClick={(e) => {
@@ -97,7 +106,21 @@ const EventCard: React.FC<EventCardProps> = ({
               </div>
               <div className="ml-6 space-y-1">
                 {file_urls.map((fileUrl, index) => {
-                  const fileName = `Fichier ${index + 1}`;
+                  // Extraire un nom de fichier plus descriptif basé sur l'URL
+                  let fileName = `Fichier ${index + 1}`;
+                  
+                  if (fileUrl.includes('dummy.pdf')) {
+                    fileName = 'Programme de la conférence.pdf';
+                  } else if (fileUrl.includes('file_example_JPG')) {
+                    fileName = 'Image promotionnelle.jpg';
+                  } else if (fileUrl.includes('sample-pdf-file.pdf')) {
+                    fileName = 'Brochure établissement.pdf';
+                  } else if (fileUrl.includes('sample.pdf')) {
+                    fileName = 'Règlement cérémonie.pdf';
+                  } else if (fileUrl.includes('placeholder')) {
+                    fileName = 'Programme événement.png';
+                  }
+                  
                   return (
                     <button
                       key={index}
