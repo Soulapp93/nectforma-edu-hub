@@ -5,18 +5,22 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useUsers } from '@/hooks/useUsers';
 import { useUserFormations } from '@/hooks/useUserFormations';
+import { useUserTutors } from '@/hooks/useUserTutors';
 import { User, CreateUserData } from '@/services/userService';
 import SimplifiedUserModal from './SimplifiedUserModal';
+import UserDetailModal from './UserDetailModal';
 import ExcelImport from './ExcelImport';
 import * as XLSX from 'xlsx';
 
 const EnhancedUsersList: React.FC = () => {
   const { users, loading, error, createUser, updateUser, deleteUser, bulkCreateUsers } = useUsers();
   const { getUserFormations } = useUserFormations();
+  const { getUserTutors } = useUserTutors();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [isUserDetailModalOpen, setIsUserDetailModalOpen] = useState(false);
   const [isExcelImportOpen, setIsExcelImportOpen] = useState(false);
   const [isStudentExcelImportOpen, setIsStudentExcelImportOpen] = useState(false);
   const [isInstructorExcelImportOpen, setIsInstructorExcelImportOpen] = useState(false);
@@ -68,13 +72,18 @@ const EnhancedUsersList: React.FC = () => {
     }
   };
 
-  const handleSaveUser = async (userData: CreateUserData, formationIds: string[]) => {
+  const handleSaveUser = async (userData: CreateUserData, formationIds: string[], tutorData?: any) => {
     if (modalMode === 'create') {
-      return await createUser(userData, formationIds);
+      return await createUser(userData, formationIds, tutorData);
     } else if (selectedUser) {
       return await updateUser(selectedUser.id!, userData);
     }
     throw new Error('Mode invalide');
+  };
+
+  const handleViewUser = (user: User) => {
+    setSelectedUser(user);
+    setIsUserDetailModalOpen(true);
   };
 
   const handleExcelImport = async (usersData: CreateUserData[], formationIds?: string[]) => {
@@ -277,18 +286,20 @@ const EnhancedUsersList: React.FC = () => {
               <TableHead>Email</TableHead>
               <TableHead>Rôle</TableHead>
               <TableHead>Formations</TableHead>
+              <TableHead>Tuteurs</TableHead>
               <TableHead>Statut</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredUsers.map((user) => {
+          {filteredUsers.map((user) => {
               const userFormations = getUserFormations(user.id!);
+              const userTutorsList = getUserTutors(user.id!);
               return (
-                <TableRow key={user.id}>
+                <TableRow key={user.id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleViewUser(user)}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center overflow-hidden">
+                      <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center overflow-hidden">
                         {user.profile_photo_url ? (
                           <img 
                             src={user.profile_photo_url} 
@@ -296,20 +307,20 @@ const EnhancedUsersList: React.FC = () => {
                             className="h-full w-full object-cover"
                           />
                         ) : (
-                          <span className="text-sm font-medium text-purple-600">
+                          <span className="text-sm font-medium text-primary">
                             {user.first_name[0]}{user.last_name[0]}
                           </span>
                         )}
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-foreground">
                           {user.first_name} {user.last_name}
                         </div>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm text-gray-900">{user.email}</div>
+                    <div className="text-sm text-foreground">{user.email}</div>
                   </TableCell>
                   <TableCell>
                     {getRoleBadge(user.role)}
@@ -319,18 +330,40 @@ const EnhancedUsersList: React.FC = () => {
                       {userFormations.length > 0 ? (
                         <div className="space-y-1">
                           {userFormations.slice(0, 2).map((assignment) => (
-                            <div key={assignment.id} className="text-xs bg-blue-50 text-blue-800 px-2 py-1 rounded-full inline-block mr-1">
+                            <div key={assignment.id} className="text-xs bg-info/10 text-info px-2 py-1 rounded-full inline-block mr-1">
                               {assignment.formation.title}
                             </div>
                           ))}
                           {userFormations.length > 2 && (
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-muted-foreground">
                               +{userFormations.length - 2} autre{userFormations.length - 2 > 1 ? 's' : ''}
                             </div>
                           )}
                         </div>
                       ) : (
-                        <span className="text-xs text-gray-500">Aucune formation</span>
+                        <span className="text-xs text-muted-foreground">Aucune formation</span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="max-w-xs">
+                      {user.role === 'Étudiant' && userTutorsList.length > 0 ? (
+                        <div className="space-y-1">
+                          {userTutorsList.slice(0, 2).map((tutor, index) => (
+                            <div key={index} className="text-xs bg-secondary/10 text-secondary-foreground px-2 py-1 rounded-full inline-block mr-1">
+                              {tutor.tutor_first_name} {tutor.tutor_last_name}
+                            </div>
+                          ))}
+                          {userTutorsList.length > 2 && (
+                            <div className="text-xs text-muted-foreground">
+                              +{userTutorsList.length - 2} autre{userTutorsList.length - 2 > 1 ? 's' : ''}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          {user.role === 'Étudiant' ? 'Aucun tuteur' : '-'}
+                        </span>
                       )}
                     </div>
                   </TableCell>
@@ -338,7 +371,7 @@ const EnhancedUsersList: React.FC = () => {
                     {getStatusBadge(user.status)}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                       {user.status === 'En attente' && (
                         <Button
                           size="sm"
@@ -361,7 +394,7 @@ const EnhancedUsersList: React.FC = () => {
                         size="sm"
                         variant="outline"
                         onClick={() => handleDeleteUser(user.id!)}
-                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive/80"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -388,6 +421,12 @@ const EnhancedUsersList: React.FC = () => {
         user={selectedUser}
         mode={modalMode}
         preselectedRole={preselectedRole}
+      />
+
+      <UserDetailModal
+        isOpen={isUserDetailModalOpen}
+        onClose={() => setIsUserDetailModalOpen(false)}
+        user={selectedUser}
       />
 
       {isExcelImportOpen && (

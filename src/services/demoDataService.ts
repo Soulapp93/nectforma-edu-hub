@@ -63,6 +63,21 @@ export const demoDataService = {
     return Math.floor(100000 + Math.random() * 900000).toString();
   },
 
+  // Créer des comptes de démonstration
+  createDemoTutor: async () => {
+    const demoTutor = {
+      first_name: 'Tuteur',
+      last_name: 'Démo',
+      email: 'tuteur-demo@test.com',
+      phone: '0123456789',
+      company_name: 'Entreprise Démo',
+      company_address: '123 Rue de la Démo, 75001 Paris',
+      position: 'Responsable Formation',
+      is_activated: true
+    };
+    return demoTutor;
+  },
+
   // Créer une session d'émargement de démonstration
   createDemoAttendanceSession: (scheduleId: string) => {
     const schedule = demoDataService.getTodaySchedules().find(s => s.id === scheduleId);
