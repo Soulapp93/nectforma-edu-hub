@@ -12,7 +12,7 @@ import Formations from './pages/Formations';
 import FormationDetail from './pages/FormationDetail';
 import TextBookDetail from './pages/TextBookDetail';
 import TextBookByFormation from './pages/TextBookByFormation';
-import ELearning from './pages/ELearning';
+import SuiviEmargement from './pages/SuiviEmargement';
 import EmploiTemps from './pages/EmploiTemps';
 import ScheduleEditor from './pages/ScheduleEditor';
 import Messagerie from './pages/Messagerie';
@@ -64,7 +64,7 @@ const AppContent = () => {
               <Route path="/formations/:formationId" element={<ProtectedRoute><FormationDetail /></ProtectedRoute>} />
               <Route path="/cahier-texte/:textBookId" element={<ProtectedRoute><TextBookDetail /></ProtectedRoute>} />
               <Route path="/cahier-texte/formation/:formationId" element={<ProtectedRoute><TextBookByFormation /></ProtectedRoute>} />
-              <Route path="/e-learning" element={<ProtectedRoute><ELearning /></ProtectedRoute>} />
+              <Route path="/suivi-emargement" element={<ProtectedRoute><SuiviEmargement /></ProtectedRoute>} />
               <Route path="/emploi-temps" element={<ProtectedRoute><EmploiTemps /></ProtectedRoute>} />
               <Route path="/emploi-temps/edit/:scheduleId" element={<ProtectedRoute><ScheduleEditor /></ProtectedRoute>} />
               <Route path="/emploi-temps/view/:scheduleId" element={<ProtectedRoute><ScheduleEditor /></ProtectedRoute>} />

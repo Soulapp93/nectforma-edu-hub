@@ -10,7 +10,7 @@ import {
   Calendar1, 
   Settings,
   LogOut,
-  Monitor
+  ClipboardCheck
 } from 'lucide-react';
 import {
   Sidebar as SidebarWrapper,
@@ -82,7 +82,7 @@ const Sidebar = () => {
     { name: 'Tableau de bord', href: '/', icon: LayoutDashboard },
     { name: 'Administration', href: '/administration', icon: Users },
     { name: 'Formation', href: '/formations', icon: BookOpen },
-    { name: 'E-Learning', href: '/e-learning', icon: Monitor },
+    { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
     { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
     { name: 'Événements', href: '/evenements', icon: Calendar1 },
@@ -95,7 +95,7 @@ const Sidebar = () => {
     { name: 'Tableau de bord', href: '/', icon: LayoutDashboard },
     { name: 'Administration', href: '/administration', icon: Users },
     { name: 'Formation', href: '/formations', icon: BookOpen },
-    { name: 'E-Learning', href: '/e-learning', icon: Monitor },
+    { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
     { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
     { name: 'Événements', href: '/evenements', icon: Calendar1 },
@@ -106,11 +106,11 @@ const Sidebar = () => {
   // Navigation limitée pour les formateurs et étudiants (avec profil)
   const limitedNavigation = [
     { name: 'Formation', href: '/formations', icon: BookOpen },
+    { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
     { name: 'Événements', href: '/evenements', icon: Calendar1 },
     { name: 'Coffre-fort', href: '/coffre-fort', icon: FileText },
     { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
-    { name: 'E-Learning', href: '/e-learning', icon: Monitor },
     { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
 
