@@ -10,7 +10,8 @@ import {
   Calendar1, 
   Settings,
   LogOut,
-  ClipboardCheck
+  ClipboardCheck,
+  Building
 } from 'lucide-react';
 import {
   Sidebar as SidebarWrapper,
@@ -77,7 +78,7 @@ const Sidebar = () => {
 
   const userDisplayInfo = getUserDisplayInfo();
   
-  // Navigation pour AdminPrincipal uniquement (avec profil comme les autres utilisateurs)
+  // Navigation pour AdminPrincipal uniquement (avec gestion établissement et profil séparés)
   const principalAdminNavigation = [
     { name: 'Tableau de bord', href: '/', icon: LayoutDashboard },
     { name: 'Administration', href: '/administration', icon: Users },
@@ -86,6 +87,7 @@ const Sidebar = () => {
     { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
     { name: 'Événements', href: '/evenements', icon: Calendar1 },
     { name: 'Coffre-fort', href: '/coffre-fort', icon: FileText },
+    { name: 'Gestion du compte', href: '/gestion-etablissement', icon: Building },
     { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
 
