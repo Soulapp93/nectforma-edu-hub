@@ -5,6 +5,7 @@ import FormationsList from '../components/administration/FormationsList';
 import TextBooksList from '../components/administration/TextBooksList';
 import ScheduleManagement from '../components/administration/ScheduleManagement';
 import AttendanceManagement from '../components/administration/AttendanceManagement';
+import { TutorsList } from '../components/administration/TutorsList';
 
 const Administration = () => {
   const [activeTab, setActiveTab] = useState('users');
@@ -22,13 +23,15 @@ const Administration = () => {
 
       {activeTab === 'formations' && <FormationsList />}
 
+      {activeTab === 'tutors' && <TutorsList />}
+
       {activeTab === 'textbooks' && <TextBooksList />}
 
       {activeTab === 'schedules' && <ScheduleManagement />}
 
       {activeTab === 'attendance' && <AttendanceManagement />}
 
-      {activeTab !== 'users' && activeTab !== 'formations' && activeTab !== 'textbooks' && activeTab !== 'schedules' && activeTab !== 'attendance' && (
+      {activeTab !== 'users' && activeTab !== 'formations' && activeTab !== 'tutors' && activeTab !== 'textbooks' && activeTab !== 'schedules' && activeTab !== 'attendance' && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
           <div className="max-w-md mx-auto">
             <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
