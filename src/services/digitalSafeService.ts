@@ -45,24 +45,46 @@ const getCurrentUser = async () => {
   return user;
 };
 
+// Fonctions utilitaires pour le mode démo avec persistance localStorage
+const getDemoFolders = () => {
+  const stored = localStorage.getItem('demo_coffre_folders');
+  return stored ? JSON.parse(stored) : [
+    {
+      id: 'demo-folder-1',
+      name: 'Documents',
+      parent_folder_id: null,
+      user_id: 'demo-user',
+      establishment_id: 'demo-establishment',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+  ];
+};
+
+const saveDemoFolders = (folders: any[]) => {
+  localStorage.setItem('demo_coffre_folders', JSON.stringify(folders));
+};
+
+const getDemoFiles = () => {
+  const stored = localStorage.getItem('demo_coffre_files');
+  return stored ? JSON.parse(stored) : [];
+};
+
+const saveDemoFiles = (files: any[]) => {
+  localStorage.setItem('demo_coffre_files', JSON.stringify(files));
+};
+
 export const digitalSafeService = {
   async getFolders(parentId?: string) {
     console.log('Récupération des dossiers...');
     
-    // Pour le mode démo, retourner des données mockées
+    // Pour le mode démo, retourner des données persistantes
     const currentUser = await getCurrentUser();
     if (sessionStorage.getItem('demo_user')) {
-      return [
-        {
-          id: 'demo-folder-1',
-          name: 'Documents',
-          parent_folder_id: null,
-          user_id: currentUser.id,
-          establishment_id: 'demo-establishment',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ];
+      const folders = getDemoFolders();
+      return folders.filter(folder => 
+        parentId ? folder.parent_folder_id === parentId : !folder.parent_folder_id
+      );
     }
     
     let query = supabase
@@ -91,9 +113,10 @@ export const digitalSafeService = {
     
     const currentUser = await getCurrentUser();
     
-    // Mode démo - simuler la création
+    // Mode démo - persister dans localStorage
     if (sessionStorage.getItem('demo_user')) {
-      return {
+      const folders = getDemoFolders();
+      const newFolder = {
         id: `demo-folder-${Date.now()}`,
         name,
         parent_folder_id: parentId || null,
@@ -102,6 +125,9 @@ export const digitalSafeService = {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
+      folders.push(newFolder);
+      saveDemoFolders(folders);
+      return newFolder;
     }
 
     const { data: userProfile } = await supabase
@@ -134,26 +160,13 @@ export const digitalSafeService = {
   async getFiles(folderId?: string) {
     console.log('Récupération des fichiers...');
     
-    // Mode démo - retourner des fichiers mockés
+    // Mode démo - retourner des fichiers persistants
     const currentUser = await getCurrentUser();
     if (sessionStorage.getItem('demo_user')) {
-      return [
-        {
-          id: 'demo-file-1',
-          name: 'demo-document.pdf',
-          original_name: 'Document Demo.pdf',
-          file_path: 'demo/demo-document.pdf',
-          file_url: '#',
-          file_size: 1024000,
-          content_type: 'application/pdf',
-          folder_id: folderId || null,
-          user_id: currentUser.id,
-          establishment_id: 'demo-establishment',
-          is_shared: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ];
+      const files = getDemoFiles();
+      return files.filter(file => 
+        folderId ? file.folder_id === folderId : !file.folder_id
+      );
     }
     
     let query = supabase
@@ -182,9 +195,10 @@ export const digitalSafeService = {
     
     const currentUser = await getCurrentUser();
     
-    // Mode démo - simuler l'upload
+    // Mode démo - persister dans localStorage
     if (sessionStorage.getItem('demo_user')) {
-      return files.map(file => ({
+      const existingFiles = getDemoFiles();
+      const newFiles = files.map(file => ({
         id: `demo-file-${Date.now()}-${Math.random()}`,
         name: `${Date.now()}_${file.name}`,
         original_name: file.name,
@@ -199,6 +213,10 @@ export const digitalSafeService = {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }));
+      
+      const allFiles = [...existingFiles, ...newFiles];
+      saveDemoFiles(allFiles);
+      return newFiles;
     }
 
     const { data: userProfile } = await supabase
@@ -267,6 +285,14 @@ export const digitalSafeService = {
   async deleteFile(fileId: string) {
     console.log('Suppression du fichier:', fileId);
     
+    // Mode démo - supprimer du localStorage
+    if (sessionStorage.getItem('demo_user')) {
+      const files = getDemoFiles();
+      const updatedFiles = files.filter(file => file.id !== fileId);
+      saveDemoFiles(updatedFiles);
+      return;
+    }
+    
     // Récupérer les infos du fichier
     const { data: file, error: fetchError } = await supabase
       .from('digital_safe_files')
@@ -301,6 +327,14 @@ export const digitalSafeService = {
 
   async deleteFolder(folderId: string) {
     console.log('Suppression du dossier:', folderId);
+    
+    // Mode démo - supprimer du localStorage
+    if (sessionStorage.getItem('demo_user')) {
+      const folders = getDemoFolders();
+      const updatedFolders = folders.filter(folder => folder.id !== folderId);
+      saveDemoFolders(updatedFolders);
+      return;
+    }
     
     const { error } = await supabase
       .from('digital_safe_folders')
