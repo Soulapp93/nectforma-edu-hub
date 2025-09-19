@@ -17,7 +17,7 @@ const Evenements = () => {
   const [showDetails, setShowDetails] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const categories = ['Conférence', 'Atelier', 'Présentation', 'Cérémonie', 'Formation', 'Networking'];
+  const categories = ['Conférence', 'Atelier', 'Présentation', 'Cérémonie', 'Formation', 'Networking', 'Porte ouverte'];
 
   const filteredEvents = selectedCategory === 'all' 
     ? events 
@@ -173,29 +173,23 @@ const Evenements = () => {
               className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:scale-[1.02] transition-all duration-300 cursor-pointer group"
               onClick={() => handleViewDetails(event)}
             >
-              <div className="h-48 bg-gradient-to-br from-purple-500 to-blue-600 relative">
+              <div className="h-48 relative overflow-hidden">
+                {event.image_url ? (
+                  <img 
+                    src={event.image_url} 
+                    alt={event.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-purple-500 to-blue-600"></div>
+                )}
                 <div className="absolute top-4 left-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getCategoryColor(event.category)}`}>
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getCategoryColor(event.category)} backdrop-blur-sm bg-white/90`}>
                     {event.category}
                   </span>
                 </div>
-                <div className="absolute top-4 right-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}>
-                    {event.status}
-                  </span>
-                </div>
-                <div className="absolute bottom-4 left-4 text-white">
-                  <div className="flex items-center mb-2">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    <span className="text-sm font-medium">{new Date(event.start_date).toLocaleDateString('fr-FR')}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Clock className="h-4 w-4 mr-2" />
-                    <span className="text-sm">{event.start_time}</span>
-                  </div>
-                </div>
                 {/* Overlay pour indiquer la cliquabilité */}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
                   <div className="bg-white/0 group-hover:bg-white/20 backdrop-blur-sm rounded-full p-3 transform scale-0 group-hover:scale-100 transition-transform duration-300">
                     <Eye className="h-6 w-6 text-white" />
                   </div>
@@ -209,36 +203,25 @@ const Evenements = () => {
                 <p className="text-gray-600 text-sm mb-4 line-clamp-2">{event.description}</p>
                 
                 <div className="space-y-2 mb-4">
-                  <div className="flex items-center text-sm text-gray-500">
-                    <MapPin className="h-4 w-4 mr-2" />
-                    {event.location || 'Lieu non précisé'}
-                  </div>
-                  <div className="flex items-center text-sm text-gray-500">
-                    <Users className="h-4 w-4 mr-2" />
-                    {event.registered_count || 0}/{event.max_participants || '∞'} participants
-                  </div>
+                  {event.formation_ids && event.formation_ids.length > 0 && (
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Users className="h-4 w-4 mr-2" />
+                      {event.formation_ids.length} formation(s) concernée(s)
+                    </div>
+                  )}
+                  {event.audiences && event.audiences.length > 0 && (
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Users className="h-4 w-4 mr-2" />
+                      {event.audiences.join(', ')}
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-center">
                   <div className="flex items-center text-purple-600 text-sm font-medium">
                     <Eye className="h-4 w-4 mr-1" />
                     Cliquer pour voir les détails
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation(); // Empêche l'ouverture des détails
-                      handleRegister(event.id, event.is_registered || false);
-                    }}
-                    disabled={registerMutation.isPending || unregisterMutation.isPending || (event.max_participants > 0 && event.registered_count >= event.max_participants && !event.is_registered)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:scale-105 ${
-                      event.is_registered 
-                        ? 'bg-red-600 hover:bg-red-700 text-white'
-                        : 'bg-purple-600 hover:bg-purple-700 disabled:bg-gray-300 text-white'
-                    }`}
-                  >
-                    {registerMutation.isPending || unregisterMutation.isPending ? '...' : 
-                     event.is_registered ? 'Se désinscrire' : 'S\'inscrire'}
-                  </button>
                 </div>
               </div>
             </div>
@@ -250,7 +233,17 @@ const Evenements = () => {
       {showDetails && selectedEvent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="relative h-64 bg-gradient-to-br from-purple-500 to-blue-600">
+            <div className="relative h-64 overflow-hidden">
+              {selectedEvent.image_url ? (
+                <img 
+                  src={selectedEvent.image_url} 
+                  alt={selectedEvent.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-purple-500 to-blue-600"></div>
+              )}
+              <div className="absolute inset-0 bg-black/40"></div>
               <button
                 onClick={() => setShowDetails(false)}
                 className="absolute top-4 right-4 text-white hover:bg-white/20 p-2 rounded-full"
@@ -259,16 +252,6 @@ const Evenements = () => {
               </button>
               <div className="absolute bottom-6 left-6 text-white">
                 <h2 className="text-2xl font-bold mb-2">{selectedEvent.title}</h2>
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center">
-                    <Calendar className="h-5 w-5 mr-2" />
-                    <span>{new Date(selectedEvent.start_date).toLocaleDateString('fr-FR')}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Clock className="h-5 w-5 mr-2" />
-                    <span>{selectedEvent.start_time}</span>
-                  </div>
-                </div>
               </div>
             </div>
             
@@ -277,77 +260,40 @@ const Evenements = () => {
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${getCategoryColor(selectedEvent.category)}`}>
                   {selectedEvent.category}
                 </span>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedEvent.status)}`}>
-                  {selectedEvent.status}
-                </span>
               </div>
               
               <p className="text-gray-700 mb-6">{selectedEvent.description}</p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Informations pratiques</h4>
+                  <h4 className="font-semibold text-gray-900 mb-2">Formations concernées</h4>
                   <div className="space-y-2">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <MapPin className="h-4 w-4 mr-2" />
-                      {selectedEvent.location || 'Lieu non précisé'}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Users className="h-4 w-4 mr-2" />
-                      {selectedEvent.registered_count || 0}/{selectedEvent.max_participants || '∞'} participants
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Star className="h-4 w-4 mr-2" />
-                      Créé le {new Date(selectedEvent.created_at).toLocaleDateString('fr-FR')}
-                    </div>
+                    {selectedEvent.formation_ids && selectedEvent.formation_ids.length > 0 ? (
+                      <p className="text-sm text-gray-600">{selectedEvent.formation_ids.length} formation(s) sélectionnée(s)</p>
+                    ) : (
+                      <p className="text-sm text-gray-600">Toutes les formations</p>
+                    )}
                   </div>
                 </div>
                 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Participation</h4>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm text-gray-600">Places disponibles</span>
-                      <span className="font-medium">
-                        {selectedEvent.max_participants > 0 
-                          ? Math.max(0, selectedEvent.max_participants - (selectedEvent.registered_count || 0))
-                          : '∞'
-                        }
-                      </span>
-                    </div>
-                    {selectedEvent.max_participants > 0 && (
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-purple-600 h-2 rounded-full" 
-                          style={{ width: `${Math.min(100, ((selectedEvent.registered_count || 0) / selectedEvent.max_participants) * 100)}%` }}
-                        ></div>
-                      </div>
+                  <h4 className="font-semibold text-gray-900 mb-2">Audiences concernées</h4>
+                  <div className="space-y-2">
+                    {selectedEvent.audiences && selectedEvent.audiences.length > 0 ? (
+                      <p className="text-sm text-gray-600">{selectedEvent.audiences.join(', ')}</p>
+                    ) : (
+                      <p className="text-sm text-gray-600">Toutes les audiences</p>
                     )}
                   </div>
                 </div>
               </div>
               
-              <div className="flex justify-end space-x-4">
+              <div className="flex justify-end">
                 <button
                   onClick={() => setShowDetails(false)}
                   className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
                 >
                   Fermer
-                </button>
-                <button
-                  onClick={() => {
-                    handleRegister(selectedEvent.id, selectedEvent.is_registered || false);
-                    setShowDetails(false);
-                  }}
-                  disabled={registerMutation.isPending || unregisterMutation.isPending || (selectedEvent.max_participants > 0 && selectedEvent.registered_count >= selectedEvent.max_participants && !selectedEvent.is_registered)}
-                  className={`px-6 py-2 rounded-lg font-medium ${
-                    selectedEvent.is_registered 
-                      ? 'bg-red-600 hover:bg-red-700 text-white'
-                      : 'bg-purple-600 hover:bg-purple-700 disabled:bg-gray-300 text-white'
-                  }`}
-                >
-                  {registerMutation.isPending || unregisterMutation.isPending ? '...' : 
-                   selectedEvent.is_registered ? 'Se désinscrire' : 'S\'inscrire à l\'événement'}
                 </button>
               </div>
             </div>

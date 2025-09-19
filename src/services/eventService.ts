@@ -5,35 +5,22 @@ export interface Event {
   establishment_id: string;
   title: string;
   description?: string;
-  start_date: string;
-  start_time: string;
-  end_date?: string;
-  end_time?: string;
-  location?: string;
   category: string;
   image_url?: string;
-  status: 'Ouvert' | 'Bientôt complet' | 'Complet' | 'Annulé';
   created_by?: string;
   created_at: string;
   updated_at: string;
-  registered_count?: number;
-  available_spots?: number;
-  is_registered?: boolean;
+  formation_ids: string[];
+  audiences: string[];
 }
 
 export interface CreateEventData {
   title: string;
   description?: string;
-  start_date: string;
-  start_time: string;
-  end_date?: string;
-  end_time?: string;
-  location?: string;
   category: string;
   image_url?: string;
-  status?: 'Ouvert' | 'Bientôt complet' | 'Complet' | 'Annulé';
-  formation_id?: string;
-  audience?: string;
+  formation_ids: string[];
+  audiences: string[];
 }
 
 export interface EventRegistration {
@@ -50,11 +37,9 @@ export const eventService = {
       // Mode démo : utiliser les événements du localStorage
       const demoEvents = JSON.parse(localStorage.getItem('demo_events') || '[]');
       
-      // Trier par date et heure
+      // Trier par date de création (plus récent en premier)
       const sortedEvents = demoEvents.sort((a: Event, b: Event) => {
-        const dateA = new Date(`${a.start_date} ${a.start_time}`);
-        const dateB = new Date(`${b.start_date} ${b.start_time}`);
-        return dateA.getTime() - dateB.getTime();
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
       
       return sortedEvents;
@@ -90,13 +75,9 @@ export const eventService = {
         id: Date.now().toString(),
         establishment_id: 'demo-establishment',
         ...eventData,
-        status: eventData.status || 'Ouvert',
         created_by: 'demo-user',
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        registered_count: 0,
-        available_spots: null,
-        is_registered: false
+        updated_at: new Date().toISOString()
       };
       
       const updatedEvents = [...existingEvents, newEvent];
