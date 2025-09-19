@@ -11,6 +11,8 @@ interface DashboardCardProps {
     value: number;
     isPositive: boolean;
   };
+  onClick?: () => void;
+  clickable?: boolean;
 }
 
 const DashboardCard: React.FC<DashboardCardProps> = ({
@@ -18,10 +20,17 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
   value,
   icon: Icon,
   description,
-  trend
+  trend,
+  onClick,
+  clickable = false
 }) => {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    <div 
+      className={`bg-white rounded-xl shadow-sm border border-gray-100 p-6 ${
+        clickable ? 'cursor-pointer hover:shadow-md hover:border-purple-200 transition-all duration-200' : ''
+      }`}
+      onClick={onClick}
+    >
       <div className="flex items-center justify-between">
         <div className="flex-1">
           <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>

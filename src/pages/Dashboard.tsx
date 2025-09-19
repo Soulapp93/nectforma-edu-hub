@@ -1,14 +1,18 @@
 
 import React, { useState } from 'react';
 import { Users, BookOpen, Calendar, TrendingUp, Clock, FileText, AlertCircle, UserCheck, UsersIcon, Trophy } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import DashboardCard from '../components/DashboardCard';
 import EnhancedDashboardCard from '../components/EnhancedDashboardCard';
 import DashboardFilters from '../components/DashboardFilters';
+import MissingTextBookEntriesModal from '../components/dashboard/MissingTextBookEntriesModal';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [selectedFormationId, setSelectedFormationId] = useState<string | undefined>();
   const [selectedTimePeriod, setSelectedTimePeriod] = useState('month');
+  const [showTextBookModal, setShowTextBookModal] = useState(false);
   const { stats, loading, error } = useDashboardStats(selectedFormationId, selectedTimePeriod);
 
   const dashboardCards = [
@@ -48,12 +52,16 @@ const Dashboard = () => {
       value: loading ? '...' : stats.textBookMissingEntries.toString(),
       icon: FileText,
       description: 'Entrées non effectuées',
+      clickable: true,
+      onClick: () => setShowTextBookModal(true),
     },
     {
       title: 'Émargements à traiter',
       value: loading ? '...' : stats.pendingAttendanceSheets.toString(),
       icon: AlertCircle,
       description: 'Feuilles à valider',
+      clickable: true,
+      onClick: () => navigate('/emargement'),
     }
   ];
 
@@ -116,6 +124,13 @@ const Dashboard = () => {
           students={loading ? [] : stats.riskStudents}
         />
       </div>
+
+      {/* Modales */}
+      <MissingTextBookEntriesModal
+        isOpen={showTextBookModal}
+        onOpenChange={setShowTextBookModal}
+        selectedFormationId={selectedFormationId}
+      />
     </div>
   );
 };
