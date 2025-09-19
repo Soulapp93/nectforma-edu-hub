@@ -61,7 +61,7 @@ const Dashboard = () => {
       icon: AlertCircle,
       description: 'Feuilles à valider',
       clickable: true,
-      onClick: () => navigate('/emargement'),
+      onClick: () => navigate('/administration?tab=attendance'),
     }
   ];
 

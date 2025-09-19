@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AdministrationTabs from '../components/administration/AdministrationTabs';
 import EnhancedUsersList from '../components/administration/EnhancedUsersList';
 import FormationsList from '../components/administration/FormationsList';
@@ -7,7 +8,15 @@ import ScheduleManagement from '../components/administration/ScheduleManagement'
 import AttendanceManagement from '../components/administration/AttendanceManagement';
 
 const Administration = () => {
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('users');
+
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['users', 'formations', 'textbooks', 'schedules', 'attendance', 'roles'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   return (
     <div className="p-8">
