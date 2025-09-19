@@ -4,6 +4,7 @@ import { Plus, Calendar, Users, Search, Filter, FileText, Edit, Trash2 } from 'l
 import CreateEventModal from '@/components/evenements/CreateEventModal';
 import EditEventModal from '@/components/evenements/EditEventModal';
 import EventCard from '@/components/evenements/EventCard';
+import FileViewerModal from '@/components/evenements/FileViewerModal';
 import { useEvents, useDeleteEvent } from '@/hooks/useEvents';
 import { Event } from '@/services/eventService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -17,6 +18,7 @@ const Evenements = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showEventDetails, setShowEventDetails] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<{url: string, name: string} | null>(null);
 
   // Debug logs
   console.log('userRole:', userRole);
@@ -168,18 +170,19 @@ const Evenements = () => {
                 <div className="mb-6">
                   <h4 className="font-semibold text-gray-900 mb-2">Fichiers joints</h4>
                   <div className="space-y-2">
-                    {selectedEvent.file_urls.map((fileUrl, index) => (
-                      <a 
-                        key={index}
-                        href={fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center px-3 py-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-                      >
-                        <FileText className="h-4 w-4 mr-2 text-blue-600" />
-                        <span className="text-sm text-blue-600 hover:text-blue-800">Fichier {index + 1}</span>
-                      </a>
-                    ))}
+                    {selectedEvent.file_urls.map((fileUrl, index) => {
+                      const fileName = `Fichier ${index + 1}`;
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => setSelectedFile({url: fileUrl, name: fileName})}
+                          className="flex items-center px-3 py-2 bg-gray-50 rounded-lg hover:bg-purple-50 hover:border-purple-200 border border-transparent transition-colors cursor-pointer w-full text-left"
+                        >
+                          <FileText className="h-4 w-4 mr-2 text-blue-600" />
+                          <span className="text-sm text-blue-600 hover:text-purple-600">{fileName}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -232,6 +235,14 @@ const Evenements = () => {
           event={selectedEvent}
         />
       )}
+
+      {/* File Viewer Modal */}
+      <FileViewerModal
+        isOpen={selectedFile !== null}
+        onClose={() => setSelectedFile(null)}
+        fileUrl={selectedFile?.url || ''}
+        fileName={selectedFile?.name || ''}
+      />
     </div>
   );
 };

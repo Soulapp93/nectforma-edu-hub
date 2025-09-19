@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Users, Calendar, FileText, Eye, Edit, Trash2 } from 'lucide-react';
+import FileViewerModal from './FileViewerModal';
 
 interface EventCardProps {
   id: string;
@@ -28,6 +29,8 @@ const EventCard: React.FC<EventCardProps> = ({
   onDelete,
   isAdmin = false
 }) => {
+  const [selectedFile, setSelectedFile] = useState<{url: string, name: string} | null>(null);
+  
   // Debug logs
   console.log('EventCard - isAdmin:', isAdmin);
   console.log('EventCard - file_urls:', file_urls);
@@ -93,19 +96,22 @@ const EventCard: React.FC<EventCardProps> = ({
                 <span>Fichiers joints:</span>
               </div>
               <div className="ml-6 space-y-1">
-                {file_urls.map((fileUrl, index) => (
-                  <a
-                    key={index}
-                    href={fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center text-sm text-blue-600 hover:text-blue-800 cursor-pointer"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <FileText className="h-3 w-3 mr-1" />
-                    <span>Fichier {index + 1}</span>
-                  </a>
-                ))}
+                {file_urls.map((fileUrl, index) => {
+                  const fileName = `Fichier ${index + 1}`;
+                  return (
+                    <button
+                      key={index}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedFile({url: fileUrl, name: fileName});
+                      }}
+                      className="flex items-center text-sm text-blue-600 hover:text-blue-800 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                    >
+                      <FileText className="h-3 w-3 mr-1" />
+                      <span>{fileName}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -121,6 +127,14 @@ const EventCard: React.FC<EventCardProps> = ({
           </button>
         </div>
       </div>
+
+      {/* File Viewer Modal */}
+      <FileViewerModal
+        isOpen={selectedFile !== null}
+        onClose={() => setSelectedFile(null)}
+        fileUrl={selectedFile?.url || ''}
+        fileName={selectedFile?.name || ''}
+      />
     </div>
   );
 };
