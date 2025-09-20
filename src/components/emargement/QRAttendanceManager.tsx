@@ -44,6 +44,7 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
   const [sendingToAdmin, setSendingToAdmin] = useState(false);
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [moduleInfo, setModuleInfo] = useState<{ title: string } | null>(null);
 
   // Charger les statistiques d'émargement
   const loadStats = async () => {
@@ -88,6 +89,35 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
   // Écouter les mises à jour temps réel
   useEffect(() => {
     loadStats();
+
+    // Charger les informations du module
+    const loadModuleInfo = async () => {
+      try {
+        if (attendanceSheet.schedule_slot_id) {
+          const { data: slotData } = await supabase
+            .from('schedule_slots')
+            .select(`
+              module_id,
+              formation_modules!module_id(title)
+            `)
+            .eq('id', attendanceSheet.schedule_slot_id)
+            .single();
+
+          if (slotData?.formation_modules) {
+            setModuleInfo(slotData.formation_modules as { title: string });
+          } else {
+            setModuleInfo({ title: attendanceSheet.title || 'Module non spécifié' });
+          }
+        } else {
+          setModuleInfo({ title: attendanceSheet.title || 'Module non spécifié' });
+        }
+      } catch (error) {
+        console.error('Error loading module info:', error);
+        setModuleInfo({ title: attendanceSheet.title || 'Module non spécifié' });
+      }
+    };
+
+    loadModuleInfo();
 
     const channel = supabase
       .channel('qr_attendance_manager')
@@ -161,7 +191,17 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Informations de la session */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+            <div>
+              <span className="text-gray-500">Formation:</span>
+              <div className="font-medium">{attendanceSheet.formations?.title}</div>
+            </div>
+            <div>
+              <span className="text-gray-500">Module:</span>
+              <div className="font-medium">
+                {moduleInfo?.title || attendanceSheet.title || 'Module non spécifié'}
+              </div>
+            </div>
             <div>
               <span className="text-gray-500">Date:</span>
               <div className="font-medium">
@@ -174,11 +214,15 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
                 {attendanceSheet.start_time} - {attendanceSheet.end_time}
               </div>
             </div>
-            <div>
-              <span className="text-gray-500">Salle:</span>
-              <div className="font-medium">{attendanceSheet.room || 'Non spécifiée'}</div>
-            </div>
           </div>
+
+          {/* Informations supplémentaires */}
+          {attendanceSheet.room && (
+            <div className="pt-2 border-t">
+              <span className="text-gray-500 text-sm">Salle:</span>
+              <span className="font-medium ml-2">{attendanceSheet.room}</span>
+            </div>
+          )}
 
           {/* Statut */}
           <div className="flex items-center justify-between">
