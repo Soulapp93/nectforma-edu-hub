@@ -311,14 +311,14 @@ const EmploiTemps = () => {
                   ))}
                 </div>
 
-                {/* Grille des créneaux ultra-compacte */}
-                <div className="grid grid-cols-7 gap-0.5 h-96 overflow-hidden">
+                {/* Grille des créneaux compacte comme la capture */}
+                <div className="grid grid-cols-7 gap-1 h-auto">
                   {getWeekDates().map((date, dayIndex) => {
                     const daySlots = getSlotsForDate(date);
                     return (
-                      <div key={dayIndex} className="flex flex-col space-y-0.5">
+                      <div key={dayIndex} className="flex flex-col gap-1 min-w-0">
                         {daySlots.length === 0 && (
-                          <div className="h-full bg-gray-50 border border-dashed border-gray-200 rounded flex items-center justify-center">
+                          <div className="h-20 bg-gray-50 border border-dashed border-gray-200 rounded flex items-center justify-center">
                             <span className="text-xs text-gray-400">Aucun</span>
                           </div>
                         )}
@@ -326,25 +326,30 @@ const EmploiTemps = () => {
                         {daySlots.map((slot) => (
                           <div
                             key={slot.id}
-                            className="px-1 py-1 rounded text-white font-medium shadow-sm"
+                            className="relative px-2 py-1 rounded text-white text-xs shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
                             style={{
                               backgroundColor: slot.color || '#8B5CF6',
-                              minHeight: '40px'
+                              minHeight: '32px',
+                              maxWidth: '100%'
                             }}
                           >
-                            {/* Titre du module */}
-                            <div className="font-semibold mb-0.5 text-xs leading-tight line-clamp-1">
-                              {slot.formation_modules?.title || 'Module'}
+                            {/* Menu points */}
+                            <div className="absolute top-1 right-1 text-white opacity-70">
+                              <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                                <circle cx="2" cy="6" r="1"/>
+                                <circle cx="6" cy="6" r="1"/>
+                                <circle cx="10" cy="6" r="1"/>
+                              </svg>
                             </div>
                             
                             {/* Horaire */}
-                            <div className="text-xs opacity-90 mb-0.5">
+                            <div className="font-medium text-xs leading-tight">
                               {formatTime(slot.start_time)}-{formatTime(slot.end_time)}
                             </div>
                             
-                            {/* Salle */}
-                            <div className="text-xs opacity-80">
-                              {slot.room || 'A101'}
+                            {/* Titre du module */}
+                            <div className="text-xs opacity-90 leading-tight truncate">
+                              {slot.formation_modules?.title || 'Module'}
                             </div>
                           </div>
                         ))}
