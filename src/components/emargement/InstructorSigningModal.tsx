@@ -33,11 +33,13 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
   const [signing, setSigning] = useState(false);
   const [moduleInfo, setModuleInfo] = useState<{ title: string } | null>(null);
   const [instructorInfo, setInstructorInfo] = useState<{ first_name: string; last_name: string } | null>(null);
+  const [savedSignature, setSavedSignature] = useState<string | null>(null);
+  const [loadingSignature, setLoadingSignature] = useState(false);
   
   // Utiliser l'ID de l'utilisateur actuel si disponible, sinon l'instructorId fourni
   const effectiveInstructorId = userId || instructorId;
   
-  // Charger les informations du module et du formateur
+  // Charger les informations du module et du formateur + signature enregistrée
   useEffect(() => {
     const loadAdditionalInfo = async () => {
       if (!isOpen || !attendanceSheet) return;
@@ -85,15 +87,34 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
             setInstructorInfo(instructorData);
           }
         }
+
+        // Charger la signature enregistrée du formateur
+        if (effectiveInstructorId) {
+          setLoadingSignature(true);
+          const { data: signatureData, error: signatureError } = await supabase
+            .from('user_signatures')
+            .select('signature_data')
+            .eq('user_id', effectiveInstructorId)
+            .maybeSingle();
+
+          console.log('Signature data:', { signatureData, signatureError });
+
+          if (signatureData?.signature_data) {
+            setSavedSignature(signatureData.signature_data);
+            console.log('Signature enregistrée chargée pour le formateur');
+          }
+          setLoadingSignature(false);
+        }
       } catch (error) {
         console.error('Error loading additional info:', error);
         // En cas d'erreur, utiliser le titre de la feuille d'émargement comme fallback
         setModuleInfo({ title: attendanceSheet.title || 'Module non spécifié' });
+        setLoadingSignature(false);
       }
     };
 
     loadAdditionalInfo();
-  }, [isOpen, attendanceSheet]);
+  }, [isOpen, attendanceSheet, effectiveInstructorId]);
 
   console.log('InstructorSigningModal component loaded', { 
     userId, 
@@ -347,12 +368,20 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
                     </div>
                     
                     <div className="space-y-3">
-                      <SignaturePad
-                        onSave={handleSignature}
-                        onCancel={handleCancelSignature}
-                        width={500}
-                        height={200}
-                      />
+                      {loadingSignature ? (
+                        <div className="text-center p-4">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600 mx-auto mb-2"></div>
+                          <p className="text-sm text-gray-600">Chargement de votre signature...</p>
+                        </div>
+                      ) : (
+                        <SignaturePad
+                          onSave={handleSignature}
+                          onCancel={handleCancelSignature}
+                          width={500}
+                          height={200}
+                          initialSignature={savedSignature || undefined}
+                        />
+                      )}
                       
                       {signing && (
                         <div className="text-center">
