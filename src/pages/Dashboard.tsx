@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Users, BookOpen, Calendar, TrendingUp, Clock, FileText, AlertCircle, UserCheck, UsersIcon, Trophy } from 'lucide-react';
+import { Users, BookOpen, Calendar, TrendingUp, Clock, FileText, AlertCircle, UserCheck, UsersIcon, Trophy, User2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardCard from '../components/DashboardCard';
 import EnhancedDashboardCard from '../components/EnhancedDashboardCard';
@@ -27,6 +27,12 @@ const Dashboard = () => {
       value: loading ? '...' : stats.instructorsCount.toString(),
       icon: UserCheck,
       description: 'Formateurs actifs',
+    },
+    {
+      title: 'Tuteurs',
+      value: loading ? '...' : stats.tutorsCount.toString(),
+      icon: User2,
+      description: 'Tuteurs enregistrés',
     },
     {
       title: 'Formations',
@@ -107,7 +113,10 @@ const Dashboard = () => {
           monthlyHours={loading ? 0 : stats.monthlyHours}
           yearlyHours={loading ? 0 : stats.yearlyHours}
         />
-        
+      </div>
+      
+      {/* Cartes étudiants en pleine largeur */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         {/* Carte étudiants assidus */}
         <EnhancedDashboardCard
           type="excellent-students"

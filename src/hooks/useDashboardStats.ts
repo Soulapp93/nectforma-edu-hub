@@ -12,6 +12,7 @@ export interface StudentRisk {
 export interface DashboardStats {
   studentsCount: number;
   instructorsCount: number;
+  tutorsCount: number;
   formationsCount: number;
   weeklyScheduledCourses: number;
   weeklyHours: number;
@@ -28,6 +29,7 @@ export const useDashboardStats = (selectedFormationId?: string, timePeriod: stri
   const [stats, setStats] = useState<DashboardStats>({
     studentsCount: 0,
     instructorsCount: 0,
+    tutorsCount: 0,
     formationsCount: 0,
     weeklyScheduledCourses: 0,
     weeklyHours: 0,
@@ -84,6 +86,11 @@ export const useDashboardStats = (selectedFormationId?: string, timePeriod: stri
         .from('users')
         .select('id', { count: 'exact', head: true })
         .eq('role', 'Formateur');
+
+      // Compter les tuteurs
+      const { count: tutorsCount } = await supabase
+        .from('tutors')
+        .select('id', { count: 'exact', head: true });
 
       // Compter les formations
       let formationsCount = 0;
@@ -311,6 +318,7 @@ export const useDashboardStats = (selectedFormationId?: string, timePeriod: stri
       setStats({
         studentsCount: studentsCount || 0,
         instructorsCount: instructorsCount || 0,
+        tutorsCount: tutorsCount || 0,
         formationsCount: formationsCount || 0,
         weeklyScheduledCourses: weeklyScheduledCourses || 0,
         weeklyHours: Math.round(weeklyHours),
