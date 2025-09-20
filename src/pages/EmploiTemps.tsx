@@ -301,53 +301,57 @@ const EmploiTemps = () => {
             {/* Weekly Schedule */}
             {currentView === 'week' && displayMode === 'planning' && (
               <div className="p-6">
-                <div className="grid grid-cols-7 gap-3">
+                <div className="grid grid-cols-7 gap-1">
                   {getWeekDates().map((date, index) => (
                     <div key={index} className="min-h-[500px]">
-                      <div className="text-center mb-4 p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border border-primary/10">
-                        <div className="font-semibold text-base text-primary">{weekDays[index]}</div>
-                        <div className="text-3xl font-bold mt-2 text-foreground">
+                      <div className="text-center mb-2 p-2 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border border-primary/10">
+                        <div className="font-semibold text-xs text-primary">{weekDays[index].substring(0, 2)}</div>
+                        <div className="text-lg font-bold mt-1 text-foreground">
                           {date.getDate()}
                         </div>
-                        <div className="text-sm text-muted-foreground mt-1">
+                        <div className="text-xs text-muted-foreground">
                           {date.toLocaleDateString('fr-FR', { month: 'short' })}
                         </div>
                       </div>
                       
-                      <div className="space-y-3">
+                      <div className="space-y-1">
                         {getSlotsForDate(date).map((slot) => (
                           <div
                             key={slot.id}
-                            className="p-4 rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-white/20 group"
+                            className="p-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border border-white/20 group w-full max-w-[120px]"
                             style={{
                               backgroundColor: slot.color || '#8B5CF6',
                               color: 'white'
                             }}
                           >
-                            <div className="flex items-start justify-between mb-2">
-                              <div className="font-semibold text-sm leading-tight flex-1">
+                            <div className="mb-1">
+                              <div className="font-semibold text-xs leading-tight truncate">
                                 {slot.formation_modules?.title || 'Module non défini'}
                               </div>
                             </div>
                             
-                            <div className="flex items-center text-xs opacity-95 mb-2">
-                              <Clock className="h-3 w-3 mr-2" />
-                              {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                            <div className="flex items-center text-xs opacity-95 mb-1">
+                              <Clock className="h-2 w-2 mr-1" />
+                              <span className="text-xs">
+                                {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                              </span>
                             </div>
                             
-                            <div className="flex items-center text-xs opacity-95 mb-2">
-                              <MapPin className="h-3 w-3 mr-2" />
-                              {slot.room || 'Salle non définie'}
+                            <div className="flex items-center text-xs opacity-95 mb-1">
+                              <MapPin className="h-2 w-2 mr-1" />
+                              <span className="truncate text-xs">
+                                {slot.room || 'Salle non définie'}
+                              </span>
                             </div>
                             
                             <div className="flex items-center text-xs opacity-90">
-                              <div className="w-4 h-4 mr-2 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
+                              <div className="w-3 h-3 mr-1 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
                                 {slot.users ? 
                                   `${slot.users.first_name[0]}${slot.users.last_name[0]}` : 
                                   'F'
                                 }
                               </div>
-                              <span className="truncate">
+                              <span className="truncate text-xs">
                                 {slot.users ? 
                                   `${slot.users.first_name} ${slot.users.last_name}` : 
                                   'Formateur'
@@ -358,9 +362,9 @@ const EmploiTemps = () => {
                         ))}
                         
                         {getSlotsForDate(date).length === 0 && (
-                          <div className="text-center py-8 text-muted-foreground">
-                            <Calendar className="h-6 w-6 mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">Aucun cours</p>
+                          <div className="text-center py-4 text-muted-foreground">
+                            <Calendar className="h-4 w-4 mx-auto mb-1 opacity-50" />
+                            <p className="text-xs">Aucun cours</p>
                           </div>
                         )}
                       </div>
