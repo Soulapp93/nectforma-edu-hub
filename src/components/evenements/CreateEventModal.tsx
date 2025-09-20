@@ -95,16 +95,18 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
   const handleFileUpload = async (): Promise<string[]> => {
     if (selectedFiles.length === 0) return [];
     
+    console.log('CreateEventModal - Starting file upload for files:', selectedFiles.map(f => f.name));
     setIsUploading(true);
     try {
       const uploadPromises = selectedFiles.map(file => 
         fileUploadService.uploadFile(file, 'event-files')
       );
       const fileUrls = await Promise.all(uploadPromises);
+      console.log('CreateEventModal - File upload successful, URLs:', fileUrls);
       toast.success('Fichiers téléchargés avec succès');
       return fileUrls;
     } catch (error) {
-      console.error('Error uploading files:', error);
+      console.error('CreateEventModal - Error uploading files:', error);
       toast.error('Erreur lors du téléchargement des fichiers');
       return [];
     } finally {
@@ -126,20 +128,31 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({ isOpen, onClose }) 
     try {
       let fileUrls: string[] = [];
       
+      console.log('CreateEventModal - Selected files:', selectedFiles);
+      
       // Upload files if selected
       if (selectedFiles.length > 0) {
         try {
+          console.log('CreateEventModal - Starting file upload...');
           fileUrls = await handleFileUpload();
+          console.log('CreateEventModal - Upload completed, URLs:', fileUrls);
         } catch (error) {
-          console.warn('File upload failed, proceeding without files:', error);
+          console.error('CreateEventModal - File upload failed:', error);
+          fileUrls = []; // Explicit empty array
         }
       }
       
-      // Préparer les données 
+      // Préparer les données avec logs
       const cleanedData = {
-        ...formData,
+        title: formData.title,
+        description: formData.description,
+        formation_ids: formData.formation_ids,
+        audiences: formData.audiences,
         file_urls: fileUrls,
       };
+      
+      console.log('CreateEventModal - Final event data:', cleanedData);
+      console.log('CreateEventModal - Final file_urls:', fileUrls);
       
       await createEventMutation.mutateAsync(cleanedData);
       onClose();
