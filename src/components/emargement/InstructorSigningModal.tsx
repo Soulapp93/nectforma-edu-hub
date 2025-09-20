@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, Users, FileText, PenTool } from 'lucide-react';
+import { Calendar, Clock, Users, FileText, PenTool, BookOpen, UserCheck } from 'lucide-react';
 import SignaturePad from '@/components/ui/signature-pad';
 import { AttendanceSheet } from '@/services/attendanceService';
 import { attendanceService } from '@/services/attendanceService';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { supabase } from '@/integrations/supabase/client';
 
 interface InstructorSigningModalProps {
   isOpen: boolean;
@@ -30,16 +31,62 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
   const { userId, loading } = useCurrentUser();
   const [showSignature, setShowSignature] = useState(false);
   const [signing, setSigning] = useState(false);
+  const [moduleInfo, setModuleInfo] = useState<{ title: string } | null>(null);
+  const [instructorInfo, setInstructorInfo] = useState<{ first_name: string; last_name: string } | null>(null);
   
   // Utiliser l'ID de l'utilisateur actuel si disponible, sinon l'instructorId fourni
   const effectiveInstructorId = userId || instructorId;
   
+  // Charger les informations du module et du formateur
+  useEffect(() => {
+    const loadAdditionalInfo = async () => {
+      if (!isOpen || !attendanceSheet) return;
+
+      try {
+        // Récupérer les informations du module via schedule_slot
+        if (attendanceSheet.schedule_slot_id) {
+          const { data: slotData } = await supabase
+            .from('schedule_slots')
+            .select(`
+              module_id,
+              formation_modules!module_id(title)
+            `)
+            .eq('id', attendanceSheet.schedule_slot_id)
+            .single();
+
+          if (slotData?.formation_modules) {
+            setModuleInfo(slotData.formation_modules as { title: string });
+          }
+        }
+
+        // Récupérer les informations du formateur
+        if (attendanceSheet.instructor_id) {
+          const { data: instructorData } = await supabase
+            .from('users')
+            .select('first_name, last_name')
+            .eq('id', attendanceSheet.instructor_id)
+            .single();
+
+          if (instructorData) {
+            setInstructorInfo(instructorData);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading additional info:', error);
+      }
+    };
+
+    loadAdditionalInfo();
+  }, [isOpen, attendanceSheet]);
+
   console.log('InstructorSigningModal component loaded', { 
     userId, 
     instructorId, 
     effectiveInstructorId,
     attendanceSheetInstructorId: attendanceSheet?.instructor_id,
-    attendanceSheetInstructor: attendanceSheet?.instructor
+    attendanceSheetInstructor: attendanceSheet?.instructor,
+    moduleInfo,
+    instructorInfo
   });
   
   const handleStartSigning = () => {
@@ -166,6 +213,30 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
                     </div>
                   </div>
                 </div>
+
+                {moduleInfo && (
+                  <div className="flex items-center text-gray-700">
+                    <BookOpen className="h-4 w-4 mr-2 text-purple-600" />
+                    <div>
+                      <span className="font-medium">Module:</span>
+                      <div className="text-gray-900 font-semibold">
+                        {moduleInfo.title}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {instructorInfo && (
+                  <div className="flex items-center text-gray-700">
+                    <UserCheck className="h-4 w-4 mr-2 text-purple-600" />
+                    <div>
+                      <span className="font-medium">Formateur:</span>
+                      <div className="text-gray-900 font-semibold">
+                        {instructorInfo.first_name} {instructorInfo.last_name}
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="flex items-center text-gray-700">
                   <Calendar className="h-4 w-4 mr-2 text-purple-600" />
