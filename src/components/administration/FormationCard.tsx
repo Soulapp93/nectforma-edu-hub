@@ -17,6 +17,7 @@ interface FormationCardProps extends Formation {
       };
     }>;
   }>;
+  participantsCount?: number;
   onEdit?: () => void;
   onDelete?: () => void;
 }
@@ -34,6 +35,7 @@ const FormationCard: React.FC<FormationCardProps> = ({
   price,
   color = '#8B5CF6',
   modules = [],
+  participantsCount = 0,
   onEdit,
   onDelete
 }) => {
@@ -139,18 +141,6 @@ const FormationCard: React.FC<FormationCardProps> = ({
               <Clock className="h-4 w-4 mr-2 text-gray-400" />
               <span>{duration}h de formation</span>
             </div>
-
-            <div className="flex items-center text-sm text-gray-600">
-              <Users className="h-4 w-4 mr-2 text-gray-400" />
-              <span>Max {max_students} étudiants</span>
-            </div>
-
-            {price && (
-              <div className="flex items-center text-sm font-medium text-gray-900">
-                <span>€</span>
-                <span className="ml-1">{price}€</span>
-              </div>
-            )}
           </div>
 
           {/* Modules */}
@@ -193,7 +183,7 @@ const FormationCard: React.FC<FormationCardProps> = ({
               className="flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
             >
               <Users className="h-4 w-4 mr-2" />
-              Voir les participants
+              Voir les participants ({participantsCount})
             </button>
             <button
               onClick={handleViewDetail}

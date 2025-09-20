@@ -147,5 +147,21 @@ export const formationService = {
       console.error('Erreur lors de la suppression:', error);
       throw error;
     }
+  },
+
+  async getFormationParticipantsCount(formationId: string): Promise<number> {
+    console.log('Récupération du nombre de participants pour la formation:', formationId);
+    
+    const { count, error } = await supabase
+      .from('user_formation_assignments')
+      .select('*', { count: 'exact', head: true })
+      .eq('formation_id', formationId);
+
+    if (error) {
+      console.error('Erreur lors de la récupération des participants:', error);
+      return 0;
+    }
+
+    return count || 0;
   }
 };

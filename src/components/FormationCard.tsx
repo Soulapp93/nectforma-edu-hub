@@ -64,7 +64,6 @@ const FormationCard: React.FC<FormationCardProps> = ({
           <div className="flex items-center text-sm text-gray-600">
             <Users className="h-4 w-4 mr-2" />
             {students} étudiant{students > 1 ? 's' : ''} inscrit{students > 1 ? 's' : ''}
-            {maxStudents && ` / ${maxStudents} max`}
           </div>
           <div className="flex items-center text-sm text-gray-600">
             <BookOpen className="h-4 w-4 mr-2" />

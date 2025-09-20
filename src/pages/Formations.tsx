@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Search, Filter, BookOpen, Users, Clock, Star } from 'lucide-react';
 import FormationCard from '../components/administration/FormationCard';
 import FormationModal from '../components/FormationModal';
@@ -14,8 +14,29 @@ const Formations = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [formationsWithParticipants, setFormationsWithParticipants] = useState<any[]>([]);
   
   const { formations, loading, error, refetch } = useFormations();
+
+  // Récupérer le nombre de participants pour chaque formation
+  useEffect(() => {
+    const fetchParticipantsCount = async () => {
+      if (formations && formations.length > 0) {
+        const formationsWithCounts = await Promise.all(
+          formations.map(async (formation) => {
+            const participantsCount = await formationService.getFormationParticipantsCount(formation.id);
+            return {
+              ...formation,
+              participantsCount
+            };
+          })
+        );
+        setFormationsWithParticipants(formationsWithCounts);
+      }
+    };
+
+    fetchParticipantsCount();
+  }, [formations]);
 
   const handleCreateFormation = () => {
     setSelectedFormation(null);
@@ -62,7 +83,7 @@ const Formations = () => {
     }
   };
 
-  const filteredFormations = formations.filter(formation => {
+  const filteredFormations = formationsWithParticipants.filter(formation => {
     const matchesSearch = formation.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          formation.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesLevel = selectedLevel === 'all' || formation.level === selectedLevel;

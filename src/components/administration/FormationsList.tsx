@@ -21,7 +21,19 @@ const FormationsList: React.FC = () => {
     try {
       setLoading(true);
       const data = await formationService.getAllFormations();
-      setFormations(data || []);
+      
+      // Récupérer le nombre de participants pour chaque formation
+      const formationsWithParticipants = await Promise.all(
+        (data || []).map(async (formation) => {
+          const participantsCount = await formationService.getFormationParticipantsCount(formation.id);
+          return {
+            ...formation,
+            participantsCount
+          };
+        })
+      );
+      
+      setFormations(formationsWithParticipants);
     } catch (error) {
       console.error('Erreur lors du chargement des formations:', error);
       toast.error('Erreur lors du chargement des formations');
