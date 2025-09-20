@@ -22,8 +22,7 @@ const CreateScheduleModal: React.FC<CreateScheduleModalProps> = ({
   const { formations } = useFormations();
   const [formData, setFormData] = useState({
     title: '',
-    formation_id: '',
-    academic_year: '2025-2026'
+    formation_id: ''
   });
   const [loading, setLoading] = useState(false);
 
@@ -36,17 +35,19 @@ const CreateScheduleModal: React.FC<CreateScheduleModalProps> = ({
 
     setLoading(true);
     try {
+      const currentYear = new Date().getFullYear();
+      const academicYear = `${currentYear}-${currentYear + 1}`;
+      
       await scheduleService.createSchedule({
         title: formData.title,
         formation_id: formData.formation_id,
-        academic_year: formData.academic_year,
+        academic_year: academicYear,
         status: 'Brouillon'
       });
       
       setFormData({
         title: '',
-        formation_id: '',
-        academic_year: '2025-2026'
+        formation_id: ''
       });
       onSuccess();
     } catch (error) {
@@ -99,29 +100,13 @@ const CreateScheduleModal: React.FC<CreateScheduleModalProps> = ({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="academic_year">Année académique</Label>
-            <Select
-              value={formData.academic_year}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, academic_year: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="2024-2025">2024-2025</SelectItem>
-                <SelectItem value="2025-2026">2025-2026</SelectItem>
-                <SelectItem value="2026-2027">2026-2027</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
 
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>
               Annuler
             </Button>
             <Button type="submit" disabled={loading} className="bg-primary hover:bg-primary/90">
-              {loading ? 'Création...' : '2. Créer et modifier l\'emploi du temps'}
+              {loading ? 'Création...' : 'Créer l\'emploi du temps'}
             </Button>
           </div>
         </form>
