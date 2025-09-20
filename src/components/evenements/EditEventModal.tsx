@@ -159,11 +159,17 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
       // Combine existing files with new files
       const allFileUrls = [...formData.file_urls, ...newFileUrls];
       
-      // Préparer les données 
+      // Préparer les données avec tous les fichiers
       const cleanedData = {
-        ...formData,
+        title: formData.title,
+        description: formData.description,
+        formation_ids: formData.formation_ids,
+        audiences: formData.audiences,
         file_urls: allFileUrls,
       };
+      
+      console.log('Updating event with data:', cleanedData);
+      console.log('All file URLs:', allFileUrls);
       
       await updateEventMutation.mutateAsync({ 
         eventId: event.id, 

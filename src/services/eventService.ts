@@ -101,14 +101,20 @@ export const eventService = {
         throw new Error('Event not found');
       }
       
-      demoEvents[eventIndex] = {
+      // S'assurer que les file_urls sont préservés ou mis à jour correctement
+      const updatedEvent = {
         ...demoEvents[eventIndex],
         ...eventData,
         updated_at: new Date().toISOString()
       };
       
+      console.log('Updating event in localStorage:', updatedEvent);
+      console.log('Updated file_urls:', updatedEvent.file_urls);
+      
+      demoEvents[eventIndex] = updatedEvent;
+      
       localStorage.setItem('demo_events', JSON.stringify(demoEvents));
-      return demoEvents[eventIndex];
+      return updatedEvent;
     } catch (error) {
       console.error('Error updating event:', error);
       throw error;
