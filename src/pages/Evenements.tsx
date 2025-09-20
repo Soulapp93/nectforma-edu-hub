@@ -12,7 +12,7 @@ import { seedDemoEvents } from '@/utils/seedEvents';
 
 const Evenements = () => {
   const { data: events = [], isLoading } = useEvents();
-  const { userRole } = useCurrentUser();
+  const { userId, userRole } = useCurrentUser();
   const deleteEventMutation = useDeleteEvent();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -24,6 +24,7 @@ const Evenements = () => {
   const isAdmin = userRole === 'admin' || userRole === 'Administrateur' || userRole === 'Super Administrateur';
   
   // Debug logs
+  console.log('userId:', userId);
   console.log('userRole:', userRole);
   console.log('events:', events);
   console.log('isAdmin:', isAdmin);
@@ -144,7 +145,7 @@ const Evenements = () => {
               onEdit={handleEditEvent}
               onDelete={handleDeleteEvent}
               isAdmin={isAdmin}
-              currentUserId={userRole ? '00000000-0000-4000-8000-000000000001' : undefined}
+              currentUserId={userId}
             />
           ))}
         </div>
