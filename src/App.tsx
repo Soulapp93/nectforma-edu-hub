@@ -20,7 +20,6 @@ import Messagerie from './pages/Messagerie';
 import Emargement from './pages/Emargement';
 import EmargementQR from './pages/EmargementQR';
 import AttendanceImprovements from './pages/AttendanceImprovements';
-import Evenements from './pages/Evenements';
 import CoffreFort from './pages/CoffreFort';
 import GestionEtablissement from './pages/GestionEtablissement';
 import Compte from './pages/Compte';
@@ -77,7 +76,6 @@ const AppContent = () => {
               <Route path="/emargement" element={<ProtectedRoute><Emargement /></ProtectedRoute>} />
               <Route path="/emargement-qr" element={<ProtectedRoute><EmargementQR /></ProtectedRoute>} />
               <Route path="/emargement/ameliorations" element={<ProtectedRoute><AttendanceImprovements /></ProtectedRoute>} />
-              <Route path="/evenements" element={<ProtectedRoute><Evenements /></ProtectedRoute>} />
               <Route path="/coffre-fort" element={<ProtectedRoute><CoffreFort /></ProtectedRoute>} />
               <Route path="/gestion-etablissement" element={<ProtectedRoute><GestionEtablissement /></ProtectedRoute>} />
               <Route path="/compte" element={<ProtectedRoute><Compte /></ProtectedRoute>} />
