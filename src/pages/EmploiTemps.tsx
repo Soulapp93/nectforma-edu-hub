@@ -301,7 +301,7 @@ const EmploiTemps = () => {
             {/* Weekly Schedule */}
             {currentView === 'week' && displayMode === 'planning' && (
               <div className="p-6">
-                <div className="grid grid-cols-7 gap-1">
+                <div className="grid grid-cols-7 gap-0.5">
                   {getWeekDates().map((date, index) => (
                     <div key={index} className="min-h-[500px]">
                       <div className="text-center mb-2 p-2 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border border-primary/10 w-full max-w-[120px]">
