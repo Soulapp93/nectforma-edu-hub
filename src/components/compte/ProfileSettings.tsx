@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import FileUpload from '@/components/ui/file-upload';
-import { User, Lock, Camera } from 'lucide-react';
+import SignatureManagementModal from '@/components/ui/signature-management-modal';
+import { User, Lock, Camera, PenTool } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface ProfileData {
   firstName: string;
@@ -28,11 +31,48 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
   onPhotoUpload,
   onSave
 }) => {
+  const { userRole, userId } = useCurrentUser();
   const [isEditing, setIsEditing] = useState(false);
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  
+  // États pour la gestion des signatures (formateurs uniquement)
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const [currentSignature, setCurrentSignature] = useState<string | null>(null);
+  const [loadingSignature, setLoadingSignature] = useState(false);
+
+  // Charger la signature actuelle du formateur
+  useEffect(() => {
+    const loadUserSignature = async () => {
+      if (userRole === 'Formateur' && userId) {
+        try {
+          setLoadingSignature(true);
+          const { data, error } = await supabase
+            .from('user_signatures')
+            .select('signature_data')
+            .eq('user_id', userId)
+            .maybeSingle();
+
+          if (error && error.code !== 'PGRST116') {
+            console.error('Erreur lors du chargement de la signature:', error);
+            return;
+          }
+
+          if (data?.signature_data) {
+            setCurrentSignature(data.signature_data);
+          }
+        } catch (error) {
+          console.error('Erreur lors du chargement de la signature:', error);
+        } finally {
+          setLoadingSignature(false);
+        }
+      }
+    };
+
+    loadUserSignature();
+  }, [userRole, userId]);
 
   const handleInputChange = (field: keyof ProfileData, value: string) => {
     onProfileDataChange({
@@ -78,6 +118,37 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
     setNewPassword('');
     setConfirmPassword('');
     setIsEditingPassword(false);
+  };
+
+  // Fonction pour sauvegarder la signature
+  const handleSaveSignature = async (signatureData: string) => {
+    if (!userId) {
+      throw new Error('Utilisateur non connecté');
+    }
+
+    try {
+      const { error } = await supabase
+        .from('user_signatures')
+        .upsert({
+          user_id: userId,
+          signature_data: signatureData,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (error) {
+        console.error('Erreur lors de la sauvegarde de la signature:', error);
+        throw error;
+      }
+
+      // Mettre à jour l'état local
+      setCurrentSignature(signatureData);
+      setShowSignatureModal(false);
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde de la signature:', error);
+      throw error;
+    }
   };
 
   return (
@@ -185,6 +256,57 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
         </CardContent>
       </Card>
 
+      {/* Gestion de signature - uniquement pour les formateurs */}
+      {userRole === 'Formateur' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <PenTool className="h-5 w-5 mr-2" />
+              Signature du Formateur
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center justify-center w-16 h-16 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg">
+                  {loadingSignature ? (
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
+                  ) : currentSignature ? (
+                    <img 
+                      src={currentSignature} 
+                      alt="Signature" 
+                      className="max-w-full max-h-full object-contain"
+                    />
+                  ) : (
+                    <PenTool className="h-6 w-6 text-gray-400" />
+                  )}
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">
+                    {currentSignature ? 'Signature enregistrée' : 'Aucune signature'}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {currentSignature 
+                      ? 'Votre signature sera automatiquement utilisée lors de la validation des émargements'
+                      : 'Enregistrez votre signature pour la validation automatique des feuilles d\'émargement'
+                    }
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => setShowSignatureModal(true)}
+                disabled={loadingSignature}
+                className="flex items-center"
+              >
+                <PenTool className="h-4 w-4 mr-2" />
+                {currentSignature ? 'Modifier' : 'Créer'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Changement de mot de passe */}
       <Card>
         <CardHeader>
@@ -258,6 +380,17 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
             Sauvegarder les modifications
           </Button>
         </div>
+      )}
+      
+      {/* Modal de gestion des signatures */}
+      {userRole === 'Formateur' && (
+        <SignatureManagementModal
+          isOpen={showSignatureModal}
+          onClose={() => setShowSignatureModal(false)}
+          currentSignature={currentSignature}
+          onSave={handleSaveSignature}
+          title="Gestion de votre signature"
+        />
       )}
     </div>
   );
