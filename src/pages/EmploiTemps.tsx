@@ -300,51 +300,51 @@ const EmploiTemps = () => {
           <>
             {/* Weekly Schedule */}
             {currentView === 'week' && displayMode === 'planning' && (
-              <div className="p-2">
-                {/* En-têtes des jours compacts */}
-                <div className="grid grid-cols-7 gap-1 mb-2">
+              <div className="p-1">
+                {/* En-têtes des jours ultra-compacts */}
+                <div className="grid grid-cols-7 gap-0.5 mb-1">
                   {getWeekDates().map((date, index) => (
-                    <div key={index} className="text-center p-1 bg-gray-100 rounded">
-                      <div className="text-xs font-medium text-gray-700">{weekDays[index].substring(0,3)}</div>
-                      <div className="text-lg font-bold text-gray-900">{date.getDate()}</div>
+                    <div key={index} className="text-center px-0.5 py-1 bg-gray-100 rounded text-xs">
+                      <div className="text-xs font-medium text-gray-700">{weekDays[index].substring(0,2)}</div>
+                      <div className="text-sm font-bold text-gray-900">{date.getDate()}</div>
                     </div>
                   ))}
                 </div>
 
-                {/* Grille des créneaux compacte */}
-                <div className="grid grid-cols-7 gap-1 h-96 overflow-hidden">
+                {/* Grille des créneaux ultra-compacte */}
+                <div className="grid grid-cols-7 gap-0.5 h-96 overflow-hidden">
                   {getWeekDates().map((date, dayIndex) => {
                     const daySlots = getSlotsForDate(date);
                     return (
-                      <div key={dayIndex} className="flex flex-col space-y-1">
+                      <div key={dayIndex} className="flex flex-col space-y-0.5">
                         {daySlots.length === 0 && (
                           <div className="h-full bg-gray-50 border border-dashed border-gray-200 rounded flex items-center justify-center">
-                            <span className="text-xs text-gray-400">Aucun cours</span>
+                            <span className="text-xs text-gray-400">Aucun</span>
                           </div>
                         )}
                         
                         {daySlots.map((slot) => (
                           <div
                             key={slot.id}
-                            className="p-2 rounded text-white text-xs font-medium shadow-sm"
+                            className="px-1 py-1 rounded text-white font-medium shadow-sm"
                             style={{
                               backgroundColor: slot.color || '#8B5CF6',
-                              minHeight: '60px'
+                              minHeight: '40px'
                             }}
                           >
                             {/* Titre du module */}
-                            <div className="font-semibold mb-1 text-xs leading-tight line-clamp-2">
+                            <div className="font-semibold mb-0.5 text-xs leading-tight line-clamp-1">
                               {slot.formation_modules?.title || 'Module'}
                             </div>
                             
                             {/* Horaire */}
-                            <div className="text-xs opacity-90 mb-1">
-                              {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                            <div className="text-xs opacity-90 mb-0.5">
+                              {formatTime(slot.start_time)}-{formatTime(slot.end_time)}
                             </div>
                             
                             {/* Salle */}
                             <div className="text-xs opacity-80">
-                              {slot.room || 'Salle A101'}
+                              {slot.room || 'A101'}
                             </div>
                           </div>
                         ))}
