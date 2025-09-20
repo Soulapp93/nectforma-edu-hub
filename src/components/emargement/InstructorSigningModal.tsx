@@ -43,9 +43,11 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
       if (!isOpen || !attendanceSheet) return;
 
       try {
+        console.log('Loading additional info for attendance sheet:', attendanceSheet.schedule_slot_id);
+        
         // Récupérer les informations du module via schedule_slot
         if (attendanceSheet.schedule_slot_id) {
-          const { data: slotData } = await supabase
+          const { data: slotData, error: slotError } = await supabase
             .from('schedule_slots')
             .select(`
               module_id,
@@ -54,18 +56,30 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
             .eq('id', attendanceSheet.schedule_slot_id)
             .single();
 
+          console.log('Schedule slot data:', { slotData, slotError });
+
           if (slotData?.formation_modules) {
+            console.log('Module found:', slotData.formation_modules);
             setModuleInfo(slotData.formation_modules as { title: string });
+          } else {
+            // Fallback: utiliser le titre de la feuille d'émargement
+            console.log('No module found, using attendance sheet title as fallback');
+            setModuleInfo({ title: attendanceSheet.title || 'Module non spécifié' });
           }
+        } else {
+          // Fallback: utiliser le titre de la feuille d'émargement
+          setModuleInfo({ title: attendanceSheet.title || 'Module non spécifié' });
         }
 
         // Récupérer les informations du formateur
         if (attendanceSheet.instructor_id) {
-          const { data: instructorData } = await supabase
+          const { data: instructorData, error: instructorError } = await supabase
             .from('users')
             .select('first_name, last_name')
             .eq('id', attendanceSheet.instructor_id)
             .single();
+
+          console.log('Instructor data:', { instructorData, instructorError });
 
           if (instructorData) {
             setInstructorInfo(instructorData);
@@ -73,6 +87,8 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
         }
       } catch (error) {
         console.error('Error loading additional info:', error);
+        // En cas d'erreur, utiliser le titre de la feuille d'émargement comme fallback
+        setModuleInfo({ title: attendanceSheet.title || 'Module non spécifié' });
       }
     };
 
@@ -214,17 +230,15 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
                   </div>
                 </div>
 
-                {moduleInfo && (
-                  <div className="flex items-center text-gray-700">
-                    <BookOpen className="h-4 w-4 mr-2 text-purple-600" />
-                    <div>
-                      <span className="font-medium">Module:</span>
-                      <div className="text-gray-900 font-semibold">
-                        {moduleInfo.title}
-                      </div>
+                <div className="flex items-center text-gray-700">
+                  <BookOpen className="h-4 w-4 mr-2 text-purple-600" />
+                  <div>
+                    <span className="font-medium">Module:</span>
+                    <div className="text-gray-900 font-semibold">
+                      {moduleInfo?.title || attendanceSheet.title || 'Module non spécifié'}
                     </div>
                   </div>
-                )}
+                </div>
 
                 {instructorInfo && (
                   <div className="flex items-center text-gray-700">
