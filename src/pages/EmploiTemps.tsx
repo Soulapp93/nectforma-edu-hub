@@ -300,77 +300,54 @@ const EmploiTemps = () => {
           <>
             {/* Weekly Schedule */}
             {currentView === 'week' && displayMode === 'planning' && (
-              <div className="p-1">
-                {/* En-têtes des jours ultra-compacts */}
-                <div className="grid grid-cols-7 gap-px mb-1">
+              <div className="p-2">
+                {/* En-têtes des jours compacts */}
+                <div className="grid grid-cols-7 gap-1 mb-2">
                   {getWeekDates().map((date, index) => (
-                    <div key={index} className="text-center p-1 bg-primary/5 rounded-sm">
-                      <div className="text-[10px] font-medium text-primary">{weekDays[index].substring(0,3)}</div>
-                      <div className="text-sm font-bold text-foreground">{date.getDate()}</div>
-                      <div className="text-[10px] text-muted-foreground">
-                        {date.toLocaleDateString('fr-FR', { month: 'short' })}
-                      </div>
+                    <div key={index} className="text-center p-1 bg-gray-100 rounded">
+                      <div className="text-xs font-medium text-gray-700">{weekDays[index].substring(0,3)}</div>
+                      <div className="text-lg font-bold text-gray-900">{date.getDate()}</div>
                     </div>
                   ))}
                 </div>
 
-                {/* Grille des créneaux ultra-compacte */}
-                <div className="grid grid-cols-7 gap-px overflow-hidden">
+                {/* Grille des créneaux compacte */}
+                <div className="grid grid-cols-7 gap-1 h-96 overflow-hidden">
                   {getWeekDates().map((date, dayIndex) => {
                     const daySlots = getSlotsForDate(date);
                     return (
-                      <div key={dayIndex} className="min-h-[400px] border-r border-gray-100 last:border-r-0">
-                        {/* Zone de dépôt vide */}
+                      <div key={dayIndex} className="flex flex-col space-y-1">
                         {daySlots.length === 0 && (
-                          <div className="h-full bg-gray-25 flex items-center justify-center">
-                            <div className="text-center text-gray-300">
-                              <span className="text-[10px]">Aucun cours</span>
-                            </div>
+                          <div className="h-full bg-gray-50 border border-dashed border-gray-200 rounded flex items-center justify-center">
+                            <span className="text-xs text-gray-400">Aucun cours</span>
                           </div>
                         )}
                         
-                        {/* Créneaux du jour */}
-                        <div className="space-y-px p-px">
-                          {daySlots.map((slot) => (
-                            <div
-                              key={slot.id}
-                              className="p-1 rounded-sm border-l-2 bg-white hover:bg-gray-50 transition-colors"
-                              style={{
-                                borderLeftColor: slot.color || '#8B5CF6'
-                              }}
-                            >
-                              {/* Titre du module ultra-compact */}
-                              <div className="font-medium text-gray-900 mb-0.5 leading-tight text-[10px] line-clamp-1">
-                                {slot.formation_modules?.title || 'Module non défini'}
-                              </div>
-                              
-                              {/* Horaire ultra-compact */}
-                              <div className="flex items-center text-[9px] text-gray-600 mb-0.5">
-                                <Clock className="h-2 w-2 mr-0.5" />
-                                <span className="font-medium">
-                                  {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
-                                </span>
-                              </div>
-                              
-                              {/* Salle ultra-compact */}
-                              <div className="flex items-center text-[9px] text-gray-600 mb-0.5">
-                                <MapPin className="h-2 w-2 mr-0.5" />
-                                <span>{slot.room || 'Salle A101'}</span>
-                              </div>
-                              
-                              {/* Formateur ultra-compact */}
-                              <div className="flex items-center text-[9px] text-gray-600">
-                                <User className="h-2 w-2 mr-0.5" />
-                                <span className="truncate">
-                                  {slot.users ? 
-                                    `${slot.users.first_name} ${slot.users.last_name}` : 
-                                    'Formateur'
-                                  }
-                                </span>
-                              </div>
+                        {daySlots.map((slot) => (
+                          <div
+                            key={slot.id}
+                            className="p-2 rounded text-white text-xs font-medium shadow-sm"
+                            style={{
+                              backgroundColor: slot.color || '#8B5CF6',
+                              minHeight: '60px'
+                            }}
+                          >
+                            {/* Titre du module */}
+                            <div className="font-semibold mb-1 text-xs leading-tight line-clamp-2">
+                              {slot.formation_modules?.title || 'Module'}
                             </div>
-                          ))}
-                        </div>
+                            
+                            {/* Horaire */}
+                            <div className="text-xs opacity-90 mb-1">
+                              {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                            </div>
+                            
+                            {/* Salle */}
+                            <div className="text-xs opacity-80">
+                              {slot.room || 'Salle A101'}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     );
                   })}
