@@ -103,8 +103,10 @@ const Dashboard = () => {
         {dashboardCards.map((card, index) => (
           <DashboardCard key={index} {...card} />
         ))}
-        
-        {/* Carte heures regroupées */}
+      </div>
+      
+      {/* Carte heures de cours en pleine largeur */}
+      <div className="mt-6">
         <EnhancedDashboardCard
           type="hours"
           title="Heures de cours"
