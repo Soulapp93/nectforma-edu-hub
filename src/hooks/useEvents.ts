@@ -36,19 +36,25 @@ export const useUpdateEvent = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ eventId, eventData }: { eventId: string; eventData: Partial<CreateEventData> }) =>
-      eventService.updateEvent(eventId, eventData),
+    mutationFn: ({ eventId, eventData }: { eventId: string; eventData: Partial<CreateEventData> }) => {
+      console.log('useUpdateEvent - Calling updateEvent with:', { eventId, eventData });
+      return eventService.updateEvent(eventId, eventData);
+    },
     onSuccess: (updatedEvent, { eventId }) => {
+      console.log('useUpdateEvent - Update successful, updated event:', updatedEvent);
       // Invalider toutes les queries des événements
       queryClient.invalidateQueries({ queryKey: ['events'] });
       queryClient.invalidateQueries({ queryKey: ['event', eventId] });
       
       // Forcer la mise à jour du cache avec les nouvelles données
       queryClient.setQueryData(['events'], (oldData: any) => {
+        console.log('useUpdateEvent - Updating cache with old data:', oldData);
         if (!oldData) return oldData;
-        return oldData.map((event: any) => 
+        const newData = oldData.map((event: any) => 
           event.id === eventId ? updatedEvent : event
         );
+        console.log('useUpdateEvent - New cache data:', newData);
+        return newData;
       });
       
       queryClient.setQueryData(['event', eventId], updatedEvent);
@@ -56,6 +62,7 @@ export const useUpdateEvent = () => {
       toast.success('Événement mis à jour avec succès');
     },
     onError: (error: Error) => {
+      console.error('useUpdateEvent - Error:', error);
       toast.error(error.message || 'Erreur lors de la mise à jour de l\'événement');
     },
   });

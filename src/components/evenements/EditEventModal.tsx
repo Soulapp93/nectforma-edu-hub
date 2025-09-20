@@ -42,6 +42,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
 
   // Initialize form data when event changes
   useEffect(() => {
+    console.log('EditEventModal - Initializing with event:', event);
     if (event) {
       setFormData({
         title: event.title || '',
@@ -50,6 +51,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
         audiences: event.audiences || [],
         file_urls: event.file_urls || []
       });
+      console.log('EditEventModal - Initialized file_urls:', event.file_urls);
     }
   }, [event]);
 
@@ -109,12 +111,14 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
   const handleFileUpload = async (): Promise<string[]> => {
     if (selectedFiles.length === 0) return [];
     
+    console.log('EditEventModal - Starting file upload for files:', selectedFiles.map(f => f.name));
     setIsUploading(true);
     try {
       const uploadPromises = selectedFiles.map(file => 
         fileUploadService.uploadFile(file, 'event-files')
       );
       const fileUrls = await Promise.all(uploadPromises);
+      console.log('EditEventModal - File upload successful, URLs:', fileUrls);
       toast.success('Nouveaux fichiers téléchargés avec succès');
       return fileUrls;
     } catch (error) {

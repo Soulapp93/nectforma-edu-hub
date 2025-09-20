@@ -38,11 +38,9 @@ const EventCard: React.FC<EventCardProps> = ({
   // Vérifier si l'utilisateur peut modifier/supprimer l'événement
   const canEdit = isAdmin || created_by === currentUserId;
   
-  // Debug logs
-  console.log('EventCard - isAdmin:', isAdmin);
-  console.log('EventCard - canEdit:', canEdit);
-  console.log('EventCard - file_urls:', file_urls);
-  console.log('EventCard - id:', id);
+  // Debug logs pour traquer les file_urls
+  console.log(`EventCard ${id} - Rendering with file_urls:`, file_urls);
+  console.log(`EventCard ${id} - file_urls length:`, file_urls?.length || 0);
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
