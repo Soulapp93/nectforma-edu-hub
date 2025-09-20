@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { X, Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from './button';
-import SimplePDFViewer from './viewers/SimplePDFViewer';
+import BasicPDFViewer from './viewers/BasicPDFViewer';
 import ImageViewer from './viewers/ImageViewer';
 import EnhancedOfficeViewer from './viewers/EnhancedOfficeViewer';
 import TextViewer from './viewers/TextViewer';
@@ -34,14 +34,12 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   const renderDocumentContent = () => {
     console.log('Visualisation du fichier:', fileName, 'URL:', fileUrl, 'Extension:', fileExtension);
 
-    // PDF - Utilisation du visualiseur PDF simple
+    // PDF - Utilisation du visualiseur PDF basique
     if (fileExtension === 'pdf') {
       return (
-        <SimplePDFViewer 
+        <BasicPDFViewer 
           fileUrl={fileUrl} 
           fileName={fileName}
-          isFullscreen={isFullscreen}
-          onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
         />
       );
     }
@@ -83,7 +81,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     setIsFullscreen(!isFullscreen);
   };
 
-  const showHeader = !isFullscreen || !['pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension);
+  const showHeader = !isFullscreen || !['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension);
 
   return (
     <div className={`fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50 ${
@@ -107,7 +105,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
             </div>
             
             <div className="flex items-center space-x-2">
-              {!['pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension) && (
+              {!['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension) && (
                 <Button size="sm" variant="ghost" onClick={toggleFullscreen}>
                   {isFullscreen ? (
                     <Minimize2 className="h-4 w-4" />
@@ -129,8 +127,8 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
           {renderDocumentContent()}
         </div>
 
-        {/* Bouton de fermeture en plein écran pour PDF et Office */}
-        {isFullscreen && ['pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension) && (
+        {/* Bouton de fermeture en plein écran pour Office */}
+        {isFullscreen && ['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension) && (
           <Button 
             size="sm" 
             variant="ghost" 
