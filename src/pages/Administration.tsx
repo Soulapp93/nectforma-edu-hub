@@ -13,7 +13,7 @@ const Administration = () => {
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['users', 'formations', 'textbooks', 'schedules', 'attendance', 'roles'].includes(tabParam)) {
+    if (tabParam && ['users', 'formations', 'textbooks', 'schedules', 'attendance'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
