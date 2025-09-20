@@ -300,62 +300,72 @@ const EmploiTemps = () => {
           <>
             {/* Weekly Schedule */}
             {currentView === 'week' && displayMode === 'planning' && (
-              <div className="p-1">
-                {/* En-têtes des jours ultra-compacts */}
-                <div className="grid grid-cols-7 gap-0.5 mb-1">
+              <div className="p-6">
+                <div className="grid grid-cols-7 gap-3">
                   {getWeekDates().map((date, index) => (
-                    <div key={index} className="text-center px-0.5 py-1 bg-gray-100 rounded text-xs">
-                      <div className="text-xs font-medium text-gray-700">{weekDays[index].substring(0,2)}</div>
-                      <div className="text-sm font-bold text-gray-900">{date.getDate()}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Grille des créneaux compacte comme la capture */}
-                <div className="grid grid-cols-7 gap-1 h-auto">
-                  {getWeekDates().map((date, dayIndex) => {
-                    const daySlots = getSlotsForDate(date);
-                    return (
-                      <div key={dayIndex} className="flex flex-col gap-1 min-w-0">
-                        {daySlots.length === 0 && (
-                          <div className="h-20 bg-gray-50 border border-dashed border-gray-200 rounded flex items-center justify-center">
-                            <span className="text-xs text-gray-400">Aucun</span>
-                          </div>
-                        )}
-                        
-                        {daySlots.map((slot) => (
+                    <div key={index} className="min-h-[500px]">
+                      <div className="text-center mb-4 p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border border-primary/10">
+                        <div className="font-semibold text-base text-primary">{weekDays[index]}</div>
+                        <div className="text-3xl font-bold mt-2 text-foreground">
+                          {date.getDate()}
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          {date.toLocaleDateString('fr-FR', { month: 'short' })}
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {getSlotsForDate(date).map((slot) => (
                           <div
                             key={slot.id}
-                            className="relative px-2 py-1 rounded text-white text-xs shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
+                            className="p-4 rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-white/20 group"
                             style={{
                               backgroundColor: slot.color || '#8B5CF6',
-                              minHeight: '32px',
-                              maxWidth: '100%'
+                              color: 'white'
                             }}
                           >
-                            {/* Menu points */}
-                            <div className="absolute top-1 right-1 text-white opacity-70">
-                              <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
-                                <circle cx="2" cy="6" r="1"/>
-                                <circle cx="6" cy="6" r="1"/>
-                                <circle cx="10" cy="6" r="1"/>
-                              </svg>
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="font-semibold text-sm leading-tight flex-1">
+                                {slot.formation_modules?.title || 'Module non défini'}
+                              </div>
                             </div>
                             
-                            {/* Horaire */}
-                            <div className="font-medium text-xs leading-tight">
-                              {formatTime(slot.start_time)}-{formatTime(slot.end_time)}
+                            <div className="flex items-center text-xs opacity-95 mb-2">
+                              <Clock className="h-3 w-3 mr-2" />
+                              {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
                             </div>
                             
-                            {/* Titre du module */}
-                            <div className="text-xs opacity-90 leading-tight truncate">
-                              {slot.formation_modules?.title || 'Module'}
+                            <div className="flex items-center text-xs opacity-95 mb-2">
+                              <MapPin className="h-3 w-3 mr-2" />
+                              {slot.room || 'Salle non définie'}
+                            </div>
+                            
+                            <div className="flex items-center text-xs opacity-90">
+                              <div className="w-4 h-4 mr-2 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
+                                {slot.users ? 
+                                  `${slot.users.first_name[0]}${slot.users.last_name[0]}` : 
+                                  'F'
+                                }
+                              </div>
+                              <span className="truncate">
+                                {slot.users ? 
+                                  `${slot.users.first_name} ${slot.users.last_name}` : 
+                                  'Formateur'
+                                }
+                              </span>
                             </div>
                           </div>
                         ))}
+                        
+                        {getSlotsForDate(date).length === 0 && (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <Calendar className="h-6 w-6 mx-auto mb-2 opacity-50" />
+                            <p className="text-sm">Aucun cours</p>
+                          </div>
+                        )}
                       </div>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
