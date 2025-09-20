@@ -97,11 +97,21 @@ const ScheduleEditor = () => {
     setIsAddSlotModalOpen(true);
   };
 
-  const handleSlotAdded = () => {
+  const handleSlotAdded = async () => {
     fetchScheduleData();
     setIsAddSlotModalOpen(false);
     setSelectedSlot(null);
     toast.success('Créneau ajouté avec succès');
+    
+    // Notifier les utilisateurs si l'emploi du temps est publié
+    if (schedule?.status === 'Publié') {
+      try {
+        await scheduleService.notifyScheduleUpdate(schedule);
+        toast.success('Les utilisateurs ont été notifiés des modifications');
+      } catch (error) {
+        console.error('Erreur lors de l\'envoi des notifications:', error);
+      }
+    }
   };
 
   const handleEditSlot = (slot: ScheduleSlot) => {
@@ -109,11 +119,21 @@ const ScheduleEditor = () => {
     setIsEditSlotModalOpen(true);
   };
 
-  const handleSlotEdited = () => {
+  const handleSlotEdited = async () => {
     fetchScheduleData();
     setIsEditSlotModalOpen(false);
     setSlotToEdit(null);
     toast.success('Créneau modifié avec succès');
+    
+    // Notifier les utilisateurs si l'emploi du temps est publié
+    if (schedule?.status === 'Publié') {
+      try {
+        await scheduleService.notifyScheduleUpdate(schedule);
+        toast.success('Les utilisateurs ont été notifiés des modifications');
+      } catch (error) {
+        console.error('Erreur lors de l\'envoi des notifications:', error);
+      }
+    }
   };
 
   const handleDuplicateSlot = async (slot: ScheduleSlot) => {
