@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Users, FileText, Download, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AttendanceSheet } from '@/services/attendanceService';
+import { AttendanceSheet, AttendanceSignature } from '@/services/attendanceService';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AttendanceSheetViewProps {
   attendanceSheet: AttendanceSheet;
@@ -15,14 +16,63 @@ interface AttendanceSheetViewProps {
 }
 
 const AttendanceSheetView: React.FC<AttendanceSheetViewProps> = ({
-  attendanceSheet,
+  attendanceSheet: initialAttendanceSheet,
   onExportPDF,
   onValidate,
   showActions = true
 }) => {
-  const signedUsers = attendanceSheet.signatures?.filter(sig => sig.present) || [];
-  const absentUsers = attendanceSheet.signatures?.filter(sig => !sig.present) || [];
-  const delayedUsers = attendanceSheet.signatures?.filter(sig => sig.present && sig.user_type === 'student') || [];
+  const [attendanceSheet, setAttendanceSheet] = useState<AttendanceSheet>(initialAttendanceSheet);
+  const [realTimeSignatures, setRealTimeSignatures] = useState<AttendanceSignature[]>(attendanceSheet.signatures || []);
+
+  // Écouter les mises à jour en temps réel des signatures
+  useEffect(() => {
+    if (!attendanceSheet.id) return;
+
+    const channel = supabase
+      .channel(`attendance_sheet_view_${attendanceSheet.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'attendance_signatures',
+          filter: `attendance_sheet_id=eq.${attendanceSheet.id}`
+        },
+        async (payload) => {
+          console.log('Real-time signature update:', payload);
+          
+          // Recharger toutes les signatures pour avoir les données complètes
+          const { data: signatures, error } = await supabase
+            .from('attendance_signatures')
+            .select(`
+              *,
+              user:users(first_name, last_name, email)
+            `)
+            .eq('attendance_sheet_id', attendanceSheet.id);
+
+          if (!error && signatures) {
+            setRealTimeSignatures(signatures as AttendanceSignature[]);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [attendanceSheet.id]);
+
+  // Mettre à jour l'attendance sheet avec les nouvelles signatures
+  useEffect(() => {
+    setAttendanceSheet(prev => ({
+      ...prev,
+      signatures: realTimeSignatures
+    }));
+  }, [realTimeSignatures]);
+
+  const signedUsers = realTimeSignatures?.filter(sig => sig.present) || [];
+  const absentUsers = realTimeSignatures?.filter(sig => !sig.present) || [];
+  const delayedUsers = realTimeSignatures?.filter(sig => sig.present && sig.user_type === 'student') || [];
 
   // Simulated total expected users (in production, fetch from formation enrollment)
   const totalExpectedUsers = Math.max(signedUsers.length + absentUsers.length, 8);

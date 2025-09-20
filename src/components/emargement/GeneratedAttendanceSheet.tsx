@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, Download, Printer, CheckCircle, XCircle, Clock, PenTool } from 'lucide-react';
 import InstructorSigningModal from './InstructorSigningModal';
+import RealtimeAttendanceIndicator from './RealtimeAttendanceIndicator';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,6 +48,8 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [showInstructorSignModal, setShowInstructorSignModal] = useState(false);
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
   // Charger les données de la feuille d'émargement
   const loadAttendanceData = async () => {
@@ -131,10 +134,14 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
         },
         (payload) => {
           console.log('Signature change detected:', payload);
+          setLastUpdate(new Date());
           loadAttendanceData(); // Recharger les données
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+        setIsRealtimeConnected(status === 'SUBSCRIBED');
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -194,7 +201,13 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
       {/* Actions bar - Non imprimable */}
       <div className="max-w-4xl mx-auto mb-6 print:hidden">
         <div className="flex items-center justify-between bg-white p-4 rounded-lg shadow">
-          <h2 className="text-lg font-semibold">Feuille d'émargement générée</h2>
+          <div>
+            <h2 className="text-lg font-semibold">Feuille d'émargement générée</h2>
+            <RealtimeAttendanceIndicator 
+              isConnected={isRealtimeConnected} 
+              lastUpdate={lastUpdate}
+            />
+          </div>
           <div className="flex gap-2">
             <Button onClick={onClose}>
               Fermer

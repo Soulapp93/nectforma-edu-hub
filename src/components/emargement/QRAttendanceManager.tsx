@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import QRCodeDisplayModal from './QRCodeDisplayModal';
 import InstructorSigningModal from './InstructorSigningModal';
 import GeneratedAttendanceSheet from './GeneratedAttendanceSheet';
+import RealtimeAttendanceIndicator from './RealtimeAttendanceIndicator';
 
 interface QRAttendanceManagerProps {
   attendanceSheet: AttendanceSheet;
@@ -41,6 +42,8 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
   const [showInstructorSignModal, setShowInstructorSignModal] = useState(false);
   const [showAttendanceSheet, setShowAttendanceSheet] = useState(false);
   const [sendingToAdmin, setSendingToAdmin] = useState(false);
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
   // Charger les statistiques d'émargement
   const loadStats = async () => {
@@ -97,11 +100,14 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
           filter: `attendance_sheet_id=eq.${attendanceSheet.id}`
         },
         () => {
+          setLastUpdate(new Date());
           loadStats();
           onUpdate();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        setIsRealtimeConnected(status === 'SUBSCRIBED');
+      });
 
     return () => {
       supabase.removeChannel(channel);
@@ -199,9 +205,15 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
       {/* Statistiques d'émargement */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            Suivi des signatures
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              Suivi des signatures
+            </div>
+            <RealtimeAttendanceIndicator 
+              isConnected={isRealtimeConnected} 
+              lastUpdate={lastUpdate}
+            />
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">

@@ -159,10 +159,45 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
     }
   };
 
+  // Écouter les mises à jour en temps réel
   useEffect(() => {
-    if (isOpen && attendanceSheet.id) {
-      loadAttendanceData();
-    }
+    if (!isOpen || !attendanceSheet.id) return;
+
+    loadAttendanceData();
+
+    const channel = supabase
+      .channel(`enhanced_attendance_modal_${attendanceSheet.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'attendance_signatures',
+          filter: `attendance_sheet_id=eq.${attendanceSheet.id}`
+        },
+        () => {
+          console.log('Real-time update detected in modal');
+          loadAttendanceData(); // Recharger les données
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'attendance_sheets',
+          filter: `id=eq.${attendanceSheet.id}`
+        },
+        () => {
+          console.log('Attendance sheet updated');
+          loadAttendanceData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [isOpen, attendanceSheet.id]);
 
   const handleStudentStatusChange = (studentId: string, present: boolean, absenceReason?: string) => {
