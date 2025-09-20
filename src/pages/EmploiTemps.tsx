@@ -304,7 +304,7 @@ const EmploiTemps = () => {
                 <div className="grid grid-cols-7 gap-1">
                   {getWeekDates().map((date, index) => (
                     <div key={index} className="min-h-[500px]">
-                      <div className="text-center mb-2 p-2 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border border-primary/10">
+                      <div className="text-center mb-2 p-2 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border border-primary/10 w-full max-w-[120px]">
                         <div className="font-semibold text-xs text-primary">{weekDays[index].substring(0, 2)}</div>
                         <div className="text-lg font-bold mt-1 text-foreground">
                           {date.getDate()}
