@@ -154,19 +154,18 @@ const Evenements = () => {
       {showEventDetails && selectedEvent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="relative h-32 bg-gradient-to-r from-purple-500 to-purple-600">
+            <div className="relative h-24 bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center">
+              <h1 className="text-xl font-bold text-white">Détails de l'événement</h1>
               <button
                 onClick={() => setShowEventDetails(false)}
                 className="absolute top-4 right-4 text-white hover:bg-white/20 p-2 rounded-full"
               >
                 ×
               </button>
-              <div className="absolute bottom-4 left-6 text-white">
-                <h2 className="text-2xl font-bold">{selectedEvent.title}</h2>
-              </div>
             </div>
             
             <div className="p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">{selectedEvent.title}</h2>
               <p className="text-gray-700 mb-6">{selectedEvent.description || 'Aucune description disponible'}</p>
               
 
