@@ -300,68 +300,68 @@ const EmploiTemps = () => {
           <>
             {/* Weekly Schedule */}
             {currentView === 'week' && displayMode === 'planning' && (
-              <div className="p-2">
-                {/* En-têtes des jours compacts */}
-                <div className="grid grid-cols-7 gap-1 mb-2">
+              <div className="p-1">
+                {/* En-têtes des jours ultra-compacts */}
+                <div className="grid grid-cols-7 gap-px mb-1">
                   {getWeekDates().map((date, index) => (
-                    <div key={index} className="text-center p-2 bg-primary/5 rounded border border-primary/10">
-                      <div className="text-xs font-medium text-primary">{weekDays[index]}</div>
-                      <div className="text-lg font-bold text-foreground">{date.getDate()}</div>
-                      <div className="text-xs text-muted-foreground">
+                    <div key={index} className="text-center p-1 bg-primary/5 rounded-sm">
+                      <div className="text-[10px] font-medium text-primary">{weekDays[index].substring(0,3)}</div>
+                      <div className="text-sm font-bold text-foreground">{date.getDate()}</div>
+                      <div className="text-[10px] text-muted-foreground">
                         {date.toLocaleDateString('fr-FR', { month: 'short' })}
                       </div>
                     </div>
                   ))}
                 </div>
 
-                {/* Grille des créneaux compacte */}
-                <div className="grid grid-cols-7 gap-1" style={{ height: 'calc(100vh - 300px)', minHeight: '500px' }}>
+                {/* Grille des créneaux ultra-compacte */}
+                <div className="grid grid-cols-7 gap-px overflow-hidden">
                   {getWeekDates().map((date, dayIndex) => {
                     const daySlots = getSlotsForDate(date);
                     return (
-                      <div key={dayIndex} className="relative border-r border-gray-100 last:border-r-0">
+                      <div key={dayIndex} className="min-h-[400px] border-r border-gray-100 last:border-r-0">
                         {/* Zone de dépôt vide */}
                         {daySlots.length === 0 && (
                           <div className="h-full bg-gray-25 flex items-center justify-center">
                             <div className="text-center text-gray-300">
-                              <span className="text-xs">Aucun cours</span>
+                              <span className="text-[10px]">Aucun cours</span>
                             </div>
                           </div>
                         )}
                         
                         {/* Créneaux du jour */}
-                        <div className="space-y-1 p-1">
+                        <div className="space-y-px p-px">
                           {daySlots.map((slot) => (
                             <div
                               key={slot.id}
-                              className="p-2 rounded border-l-2 bg-white hover:bg-gray-50 transition-colors text-xs"
+                              className="p-1 rounded-sm border-l-2 bg-white hover:bg-gray-50 transition-colors"
                               style={{
                                 borderLeftColor: slot.color || '#8B5CF6'
                               }}
                             >
-                              {/* Titre du module compact */}
-                              <div className="font-medium text-gray-900 mb-1 leading-tight line-clamp-2">
+                              {/* Titre du module ultra-compact */}
+                              <div className="font-medium text-gray-900 mb-0.5 leading-tight text-[10px] line-clamp-1">
                                 {slot.formation_modules?.title || 'Module non défini'}
                               </div>
                               
-                              {/* Horaire compact */}
-                              <div className="flex items-center text-xs text-gray-600 mb-1">
-                                <Clock className="h-2.5 w-2.5 mr-1" />
-                                <span className="font-medium text-xs">
+                              {/* Horaire ultra-compact */}
+                              <div className="flex items-center text-[9px] text-gray-600 mb-0.5">
+                                <Clock className="h-2 w-2 mr-0.5" />
+                                <span className="font-medium">
                                   {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
                                 </span>
                               </div>
                               
-                              {/* Salle compact */}
-                              <div className="flex items-center text-xs text-gray-600 mb-1">
-                                <MapPin className="h-2.5 w-2.5 mr-1" />
-                                <span className="text-xs">{slot.room || 'Salle A101'}</span>
+                              {/* Salle ultra-compact */}
+                              <div className="flex items-center text-[9px] text-gray-600 mb-0.5">
+                                <MapPin className="h-2 w-2 mr-0.5" />
+                                <span>{slot.room || 'Salle A101'}</span>
                               </div>
                               
-                              {/* Formateur compact */}
-                              <div className="flex items-center text-xs text-gray-600">
-                                <User className="h-2.5 w-2.5 mr-1" />
-                                <span className="truncate text-xs">
+                              {/* Formateur ultra-compact */}
+                              <div className="flex items-center text-[9px] text-gray-600">
+                                <User className="h-2 w-2 mr-0.5" />
+                                <span className="truncate">
                                   {slot.users ? 
                                     `${slot.users.first_name} ${slot.users.last_name}` : 
                                     'Formateur'
