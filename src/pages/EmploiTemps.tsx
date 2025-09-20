@@ -300,15 +300,13 @@ const EmploiTemps = () => {
           <>
             {/* Weekly Schedule */}
             {currentView === 'week' && displayMode === 'planning' && (
-              <div className="p-4">
-                {/* En-têtes des jours */}
-                <div className="grid grid-cols-7 gap-3 mb-4">
+              <div className="p-2">
+                {/* En-têtes des jours compacts */}
+                <div className="grid grid-cols-7 gap-1 mb-2">
                   {getWeekDates().map((date, index) => (
-                    <div key={index} className="text-center p-3 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border border-primary/20">
-                      <div className="font-semibold text-sm text-primary mb-1">{weekDays[index]}</div>
-                      <div className="text-2xl font-bold text-foreground">
-                        {date.getDate()}
-                      </div>
+                    <div key={index} className="text-center p-2 bg-primary/5 rounded border border-primary/10">
+                      <div className="text-xs font-medium text-primary">{weekDays[index]}</div>
+                      <div className="text-lg font-bold text-foreground">{date.getDate()}</div>
                       <div className="text-xs text-muted-foreground">
                         {date.toLocaleDateString('fr-FR', { month: 'short' })}
                       </div>
@@ -316,73 +314,60 @@ const EmploiTemps = () => {
                   ))}
                 </div>
 
-                {/* Grille des créneaux */}
-                <div className="grid grid-cols-7 gap-3" style={{ minHeight: '600px' }}>
+                {/* Grille des créneaux compacte */}
+                <div className="grid grid-cols-7 gap-1" style={{ height: 'calc(100vh - 300px)', minHeight: '500px' }}>
                   {getWeekDates().map((date, dayIndex) => {
                     const daySlots = getSlotsForDate(date);
                     return (
-                      <div key={dayIndex} className="relative">
-                        {/* Ligne de séparation verticale */}
-                        {dayIndex < 6 && (
-                          <div className="absolute right-0 top-0 bottom-0 w-px bg-gray-200"></div>
-                        )}
-                        
+                      <div key={dayIndex} className="relative border-r border-gray-100 last:border-r-0">
                         {/* Zone de dépôt vide */}
                         {daySlots.length === 0 && (
-                          <div className="h-full min-h-[400px] bg-gray-50/50 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center">
-                            <div className="text-center text-gray-400">
-                              <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                              <span className="text-sm">Aucun cours</span>
+                          <div className="h-full bg-gray-25 flex items-center justify-center">
+                            <div className="text-center text-gray-300">
+                              <span className="text-xs">Aucun cours</span>
                             </div>
                           </div>
                         )}
                         
                         {/* Créneaux du jour */}
-                        <div className="space-y-2">
+                        <div className="space-y-1 p-1">
                           {daySlots.map((slot) => (
                             <div
                               key={slot.id}
-                              className="p-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border-l-4 bg-white"
+                              className="p-2 rounded border-l-2 bg-white hover:bg-gray-50 transition-colors text-xs"
                               style={{
                                 borderLeftColor: slot.color || '#8B5CF6'
                               }}
                             >
-                              {/* Titre du module */}
-                              <div className="font-semibold text-sm text-gray-900 mb-2 leading-tight">
+                              {/* Titre du module compact */}
+                              <div className="font-medium text-gray-900 mb-1 leading-tight line-clamp-2">
                                 {slot.formation_modules?.title || 'Module non défini'}
                               </div>
                               
-                              {/* Horaire */}
+                              {/* Horaire compact */}
                               <div className="flex items-center text-xs text-gray-600 mb-1">
-                                <Clock className="h-3 w-3 mr-1.5" />
-                                <span className="font-medium">
+                                <Clock className="h-2.5 w-2.5 mr-1" />
+                                <span className="font-medium text-xs">
                                   {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
                                 </span>
                               </div>
                               
-                              {/* Salle */}
+                              {/* Salle compact */}
                               <div className="flex items-center text-xs text-gray-600 mb-1">
-                                <MapPin className="h-3 w-3 mr-1.5" />
-                                <span>{slot.room || 'Salle A101'}</span>
+                                <MapPin className="h-2.5 w-2.5 mr-1" />
+                                <span className="text-xs">{slot.room || 'Salle A101'}</span>
                               </div>
                               
-                              {/* Formateur */}
+                              {/* Formateur compact */}
                               <div className="flex items-center text-xs text-gray-600">
-                                <User className="h-3 w-3 mr-1.5" />
-                                <span className="truncate">
+                                <User className="h-2.5 w-2.5 mr-1" />
+                                <span className="truncate text-xs">
                                   {slot.users ? 
                                     `${slot.users.first_name} ${slot.users.last_name}` : 
                                     'Formateur'
                                   }
                                 </span>
                               </div>
-                              
-                              {/* Notes (si présentes) */}
-                              {slot.notes && (
-                                <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600">
-                                  {slot.notes}
-                                </div>
-                              )}
                             </div>
                           ))}
                         </div>
