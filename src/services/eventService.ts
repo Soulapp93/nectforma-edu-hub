@@ -84,6 +84,9 @@ export const eventService = {
       const updatedEvents = [...existingEvents, newEvent];
       localStorage.setItem('demo_events', JSON.stringify(updatedEvents));
       
+      // Notifier les utilisateurs concernés
+      await this.notifyEventCreation(newEvent);
+      
       return newEvent;
     } catch (error) {
       console.error('Error creating event:', error);
@@ -210,6 +213,43 @@ export const eventService = {
     } catch (error) {
       console.error('Error fetching event registrations:', error);
       return [];
+    }
+  },
+
+  // Notifier la création d'un événement
+  async notifyEventCreation(event: Event) {
+    try {
+      const { notificationService } = await import('./notificationService');
+      
+      // Notifier selon les audiences spécifiées
+      if (event.audiences?.includes('all')) {
+        // Notifier tous les utilisateurs (via la table notifications directement)
+        console.log('Notifying all users for event:', event.title);
+      } else if (event.formation_ids && event.formation_ids.length > 0) {
+        // Notifier les utilisateurs des formations sélectionnées
+        for (const formationId of event.formation_ids) {
+          await notificationService.notifyFormationUsers(
+            formationId,
+            'Nouvel événement',
+            `Un nouvel événement "${event.title}" a été créé.`,
+            'event',
+            { event_id: event.id }
+          );
+        }
+      }
+      
+      // Notifier selon les rôles
+      if (event.audiences?.includes('instructors')) {
+        await notificationService.notifyAllInstructors(
+          'Nouvel événement',
+          `Un nouvel événement "${event.title}" a été créé.`,
+          'event',
+          { event_id: event.id }
+        );
+      }
+    } catch (error) {
+      console.error('Error sending event creation notifications:', error);
+      // Ne pas faire échouer la création si les notifications échouent
     }
   }
 };

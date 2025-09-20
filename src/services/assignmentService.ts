@@ -31,6 +31,12 @@ export const assignmentService = {
       .single();
 
     if (error) throw error;
+
+    // Notifier si le devoir est publié directement
+    if (assignment.is_published) {
+      await this.notifyAssignmentPublication(data);
+    }
+
     return data;
   },
 
@@ -43,6 +49,12 @@ export const assignmentService = {
       .single();
 
     if (error) throw error;
+
+    // Notifier si le devoir vient d'être publié
+    if (updates.is_published === true) {
+      await this.notifyAssignmentPublication(data);
+    }
+
     return data;
   },
 
@@ -146,5 +158,75 @@ export const assignmentService = {
       .eq('is_corrected', true);
 
     if (error) throw error;
+
+    // Notifier la publication des corrections
+    await this.notifyCorrectionsPublished(assignmentId);
+  },
+
+  // Notifier la publication d'un devoir
+  async notifyAssignmentPublication(assignment: Assignment) {
+    try {
+      const { notificationService } = await import('./notificationService');
+      
+      // Récupérer la formation via le module
+      const { data: module } = await supabase
+        .from('formation_modules')
+        .select('formation_id')
+        .eq('id', assignment.module_id)
+        .single();
+
+      if (module?.formation_id) {
+        await notificationService.notifyFormationUsers(
+          module.formation_id,
+          'Nouveau devoir publié',
+          `Un nouveau devoir "${assignment.title}" a été publié.`,
+          'assignment',
+          { 
+            assignment_id: assignment.id,
+            module_id: assignment.module_id,
+            due_date: assignment.due_date
+          }
+        );
+      }
+    } catch (error) {
+      console.error('Error sending assignment publication notifications:', error);
+    }
+  },
+
+  // Notifier la publication des corrections
+  async notifyCorrectionsPublished(assignmentId: string) {
+    try {
+      const { notificationService } = await import('./notificationService');
+      
+      // Récupérer l'assignment et les étudiants qui ont rendu
+      const { data: assignment } = await supabase
+        .from('module_assignments')
+        .select(`
+          *,
+          assignment_submissions(student_id)
+        `)
+        .eq('id', assignmentId)
+        .single();
+
+      if (assignment?.assignment_submissions) {
+        // Notifier chaque étudiant qui a rendu le devoir
+        const studentIds = assignment.assignment_submissions.map(s => s.student_id);
+        
+        for (const studentId of studentIds) {
+          await notificationService.notifyUser(
+            studentId,
+            'Correction publiée',
+            `La correction du devoir "${assignment.title}" est disponible.`,
+            'correction',
+            { 
+              assignment_id: assignmentId,
+              module_id: assignment.module_id
+            }
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error sending correction notifications:', error);
+    }
   }
 };

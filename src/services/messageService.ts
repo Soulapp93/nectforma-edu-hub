@@ -100,6 +100,11 @@ export const messageService = {
         await this.uploadAttachments(message.id, messageData.attachments);
       }
 
+      // Notifier les destinataires du nouveau message
+      if (!messageData.is_draft) {
+        await this.notifyMessageRecipients(message, messageData.recipients);
+      }
+
       return message;
     } catch (error) {
       console.error('Erreur lors de la création du message:', error);
@@ -195,6 +200,47 @@ export const messageService = {
     } catch (error) {
       console.error('Erreur lors du marquage comme lu:', error);
       throw error;
+    }
+  },
+
+  // Notifier les destinataires d'un nouveau message
+  async notifyMessageRecipients(message: Message, recipients: CreateMessageData['recipients']) {
+    try {
+      const { notificationService } = await import('./notificationService');
+      
+      if (recipients.type === 'all_instructors') {
+        await notificationService.notifyAllInstructors(
+          'Nouveau message',
+          `Vous avez reçu un nouveau message: "${message.subject}"`,
+          'message',
+          { message_id: message.id }
+        );
+      } else if (recipients.type === 'formation' && recipients.ids) {
+        // Notifier tous les utilisateurs des formations sélectionnées
+        for (const formationId of recipients.ids) {
+          await notificationService.notifyFormationUsers(
+            formationId,
+            'Nouveau message',
+            `Vous avez reçu un nouveau message: "${message.subject}"`,
+            'message',
+            { message_id: message.id }
+          );
+        }
+      } else if (recipients.type === 'user' && recipients.ids) {
+        // Notifier les utilisateurs individuellement
+        for (const userId of recipients.ids) {
+          await notificationService.notifyUser(
+            userId,
+            'Nouveau message',
+            `Vous avez reçu un nouveau message: "${message.subject}"`,
+            'message',
+            { message_id: message.id }
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error sending message notifications:', error);
+      // Ne pas faire échouer l'envoi du message si les notifications échouent
     }
   }
 };

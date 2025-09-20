@@ -281,7 +281,8 @@ export const scheduleService = {
         schedule.formation_id,
         'Nouvel emploi du temps publié',
         `L'emploi du temps "${schedule.title}" a été publié et est maintenant disponible.`,
-        'schedule_published'
+        'schedule_published',
+        { schedule_id: schedule.id }
       );
     } catch (error) {
       console.error('Error sending schedule publication notifications:', error);
@@ -298,7 +299,8 @@ export const scheduleService = {
         schedule.formation_id,
         'Emploi du temps modifié',
         `L'emploi du temps "${schedule.title}" a été modifié. Veuillez consulter les nouvelles informations.`,
-        'schedule_update'
+        'schedule_update',
+        { schedule_id: schedule.id }
       );
     } catch (error) {
       console.error('Error sending schedule update notifications:', error);

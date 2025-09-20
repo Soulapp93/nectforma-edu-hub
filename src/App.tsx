@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import Sidebar from './components/Sidebar';
+import NotificationBell from './components/NotificationBell';
 import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
 import Administration from './pages/Administration';
@@ -54,8 +55,11 @@ const AppContent = () => {
       <div className="flex h-screen w-full bg-gray-50">
         <Sidebar />
         <div className="flex flex-col flex-1">
-          <header className="h-12 flex items-center border-b bg-white px-4">
+          <header className="h-12 flex items-center justify-between border-b bg-white px-4">
             <SidebarTrigger />
+            <div className="flex items-center space-x-2">
+              <NotificationBell />
+            </div>
           </header>
           <main className="flex-1 overflow-auto">
             <Routes>

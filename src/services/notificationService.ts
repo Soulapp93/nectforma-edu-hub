@@ -1,43 +1,139 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export const notificationService = {
-  // Notifier les utilisateurs d'une formation spécifique via messages
-  async notifyFormationUsers(formationId: string, title: string, message: string, type: string) {
+  // Notifier les utilisateurs d'une formation spécifique
+  async notifyFormationUsers(formationId: string, title: string, message: string, type: string, metadata?: any) {
     try {
-      // Utiliser le système de messages existant pour envoyer une notification
-      const { data: currentUser } = await supabase.auth.getUser();
-      if (!currentUser.user) {
-        throw new Error('Utilisateur non authentifié');
+      // Récupérer tous les utilisateurs assignés à cette formation
+      const { data: userAssignments, error: assignError } = await supabase
+        .from('user_formation_assignments')
+        .select('user_id')
+        .eq('formation_id', formationId);
+
+      if (assignError) throw assignError;
+
+      if (!userAssignments || userAssignments.length === 0) {
+        return { success: true, notified_users: 0 };
       }
 
-      // Créer un message système pour notifier les utilisateurs de la formation
-      const { data: messageData, error: messageError } = await supabase
-        .from('messages')
-        .insert({
-          sender_id: currentUser.user.id,
-          subject: title,
-          content: message,
-          is_draft: false
-        })
-        .select()
-        .single();
+      // Créer une notification pour chaque utilisateur
+      const notifications = userAssignments.map(assignment => ({
+        user_id: assignment.user_id,
+        title,
+        message,
+        type,
+        metadata: metadata || {},
+        is_read: false
+      }));
 
-      if (messageError) throw messageError;
+      const { error: insertError } = await supabase
+        .from('notifications')
+        .insert(notifications);
 
-      // Ajouter les destinataires (formation)
-      const { error: recipientError } = await supabase
-        .from('message_recipients')
-        .insert({
-          message_id: messageData.id,
-          recipient_type: 'formation',
-          recipient_id: formationId
-        });
+      if (insertError) throw insertError;
 
-      if (recipientError) throw recipientError;
-
-      return { success: true, message_id: messageData.id };
+      return { success: true, notified_users: notifications.length };
     } catch (error) {
       console.error('Erreur lors de l\'envoi des notifications:', error);
+      throw error;
+    }
+  },
+
+  // Notifier un utilisateur spécifique
+  async notifyUser(userId: string, title: string, message: string, type: string, metadata?: any) {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: userId,
+          title,
+          message,
+          type,
+          metadata: metadata || {},
+          is_read: false
+        });
+
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi de la notification:', error);
+      throw error;
+    }
+  },
+
+  // Notifier tous les formateurs
+  async notifyAllInstructors(title: string, message: string, type: string, metadata?: any) {
+    try {
+      // Récupérer tous les formateurs
+      const { data: instructors, error: instructorError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('role', 'Formateur');
+
+      if (instructorError) throw instructorError;
+
+      if (!instructors || instructors.length === 0) {
+        return { success: true, notified_users: 0 };
+      }
+
+      // Créer une notification pour chaque formateur
+      const notifications = instructors.map(instructor => ({
+        user_id: instructor.id,
+        title,
+        message,
+        type,
+        metadata: metadata || {},
+        is_read: false
+      }));
+
+      const { error: insertError } = await supabase
+        .from('notifications')
+        .insert(notifications);
+
+      if (insertError) throw insertError;
+
+      return { success: true, notified_users: notifications.length };
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi des notifications aux formateurs:', error);
+      throw error;
+    }
+  },
+
+  // Notifier pour un événement
+  async notifyEventParticipants(eventId: string, title: string, message: string, type: string, metadata?: any) {
+    try {
+      // Récupérer tous les participants à l'événement
+      const { data: registrations, error: regError } = await supabase
+        .from('event_registrations')
+        .select('user_id')
+        .eq('event_id', eventId)
+        .eq('status', 'Confirmée');
+
+      if (regError) throw regError;
+
+      if (!registrations || registrations.length === 0) {
+        return { success: true, notified_users: 0 };
+      }
+
+      // Créer une notification pour chaque participant
+      const notifications = registrations.map(registration => ({
+        user_id: registration.user_id,
+        title,
+        message,
+        type,
+        metadata: { ...metadata, event_id: eventId },
+        is_read: false
+      }));
+
+      const { error: insertError } = await supabase
+        .from('notifications')
+        .insert(notifications);
+
+      if (insertError) throw insertError;
+
+      return { success: true, notified_users: notifications.length };
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi des notifications d\'événement:', error);
       throw error;
     }
   },
