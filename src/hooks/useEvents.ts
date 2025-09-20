@@ -38,9 +38,21 @@ export const useUpdateEvent = () => {
   return useMutation({
     mutationFn: ({ eventId, eventData }: { eventId: string; eventData: Partial<CreateEventData> }) =>
       eventService.updateEvent(eventId, eventData),
-    onSuccess: (_, { eventId }) => {
+    onSuccess: (updatedEvent, { eventId }) => {
+      // Invalider toutes les queries des événements
       queryClient.invalidateQueries({ queryKey: ['events'] });
       queryClient.invalidateQueries({ queryKey: ['event', eventId] });
+      
+      // Forcer la mise à jour du cache avec les nouvelles données
+      queryClient.setQueryData(['events'], (oldData: any) => {
+        if (!oldData) return oldData;
+        return oldData.map((event: any) => 
+          event.id === eventId ? updatedEvent : event
+        );
+      });
+      
+      queryClient.setQueryData(['event', eventId], updatedEvent);
+      
       toast.success('Événement mis à jour avec succès');
     },
     onError: (error: Error) => {
