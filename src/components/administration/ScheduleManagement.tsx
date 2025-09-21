@@ -20,7 +20,19 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { format, addWeeks, subWeeks, addMonths, subMonths } from 'date-fns';
+import { 
+  format, 
+  addWeeks, 
+  subWeeks, 
+  addMonths, 
+  subMonths, 
+  startOfMonth, 
+  endOfMonth, 
+  eachDayOfInterval, 
+  isSameMonth, 
+  isToday, 
+  isSameDay 
+} from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { WeekNavigator } from '@/components/schedule/WeekNavigator';
 import { useSchedules } from '@/hooks/useSchedules';
@@ -338,97 +350,447 @@ const ScheduleManagement = () => {
       }
     };
 
-    const renderDayView = () => (
-      <div className="container mx-auto px-6 py-8">
-        <Card className="overflow-hidden border-border/50 bg-card shadow-md">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-2xl font-bold text-foreground">
-                  {format(selectedDate, 'EEEE d MMMM yyyy', { locale: fr })}
-                </CardTitle>
-                <p className="text-muted-foreground mt-1">Emploi du temps de la journée</p>
+    const renderDayView = () => {
+      // Convertir les slots en événements pour la vue jour
+      const daySlots = slots.filter(slot => 
+        new Date(slot.date).toDateString() === selectedDate.toDateString()
+      ).sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+      const slotsAsEvents = daySlots.map(slot => ({
+        id: slot.id,
+        title: slot.formation_modules?.title || 'Module non défini',
+        date: new Date(slot.date),
+        startTime: slot.start_time,
+        endTime: slot.end_time,
+        instructor: slot.users?.first_name && slot.users?.last_name 
+          ? `${slot.users.first_name} ${slot.users.last_name}` 
+          : 'Instructeur non défini',
+        room: slot.room || 'Salle non définie',
+        formation: selectedSchedule?.formations?.title || 'Formation',
+        color: slot.color || '#3B82F6',
+        description: slot.notes || ''
+      }));
+
+      const getEventForTimeSlot = (time: string) => {
+        return slotsAsEvents.find(event => {
+          const eventStart = event.startTime;
+          const nextHour = String(parseInt(time.split(':')[0]) + 1).padStart(2, '0') + ':00';
+          return eventStart >= time && eventStart < nextHour;
+        });
+      };
+
+      return (
+        <div className="max-w-4xl mx-auto p-6">
+          {/* Header */}
+          <Card className="mb-8 border-0 shadow-xl overflow-hidden bg-gradient-to-br from-background via-muted/30 to-primary/5 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-accent/10"></div>
+            <CardHeader className="relative">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-14 h-14 rounded-3xl nect-gradient flex items-center justify-center shadow-lg relative overflow-hidden">
+                    <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                    <Calendar className="h-7 w-7 text-white relative z-10" />
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+                      {format(selectedDate, 'EEEE d MMMM yyyy', { locale: fr })}
+                    </h2>
+                    <p className="text-muted-foreground font-medium mt-1">
+                      {slotsAsEvents.length} cours programmé{slotsAsEvents.length > 1 ? 's' : ''}
+                    </p>
+                  </div>
+                </div>
+                
+                <Badge 
+                  variant="secondary" 
+                  className="text-base px-6 py-3 bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20 text-primary font-semibold rounded-full"
+                >
+                  Vue journalière
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+          </Card>
+
+          {slotsAsEvents.length === 0 ? (
+            <Card className="border-0 shadow-2xl glass-card rounded-3xl overflow-hidden">
+              <CardContent className="p-16 text-center relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5"></div>
+                <div className="relative">
+                  <div className="w-20 h-20 rounded-full nect-gradient flex items-center justify-center mx-auto mb-6 shadow-lg">
+                    <Calendar className="h-10 w-10 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-foreground mb-3">
+                    Aucun cours aujourd'hui
+                  </h3>
+                  <p className="text-muted-foreground text-lg">
+                    Profitez de cette journée libre ! 🌟
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Timeline */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-8 h-8 rounded-2xl nect-gradient flex items-center justify-center">
+                    <Clock className="h-4 w-4 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground">
+                    Planning de la journée
+                  </h3>
+                </div>
+                <div className="relative">
+                  <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-primary/50 to-transparent"></div>
+                  
+                  {timeSlots.map((time) => {
+                    const event = getEventForTimeSlot(time);
+                    
+                    return (
+                      <div key={time} className="relative flex items-start space-x-4 pb-6">
+                        <div className="flex-shrink-0 w-12 text-center">
+                          <div className={`w-5 h-5 rounded-full border-3 ${
+                            event ? 'timeline-dot pulse-dot' : 'bg-muted border-border'
+                          } relative z-10 transition-all duration-300`}></div>
+                          <div className="text-xs text-muted-foreground mt-2 font-medium">{time}</div>
+                        </div>
+                        
+                        <div className="flex-1 min-w-0 pb-2">
+                          {event ? (
+                            <div 
+                              className="px-3 py-2 rounded-md shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer text-white"
+                              style={{ 
+                                backgroundColor: event.color || '#3B82F6'
+                              }}
+                              onClick={() => handleEditSlot(daySlots.find(s => s.id === event.id)!)}
+                            >
+                              <div className="space-y-1">
+                                <h4 className="font-semibold text-white text-sm leading-tight">
+                                  Module {event.title}
+                                </h4>
+                                
+                                <div className="flex items-center text-xs text-white/90">
+                                  <Clock className="h-3 w-3 mr-1.5 text-white/80" />
+                                  <span>{event.startTime} - {event.endTime}</span>
+                                </div>
+                                
+                                {event.room && (
+                                  <div className="flex items-center text-xs text-white/90">
+                                    <MapPin className="h-3 w-3 mr-1.5 text-white/80" />
+                                    <span>Salle {event.room}</span>
+                                  </div>
+                                )}
+                                
+                                {event.instructor && (
+                                  <div className="flex items-center text-xs text-white/90">
+                                    <User className="h-3 w-3 mr-1.5 text-white/80" />
+                                    <span>{event.instructor}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-muted-foreground text-sm italic opacity-60">Libre</div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Détails des cours */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-8 h-8 rounded-2xl nect-gradient flex items-center justify-center">
+                    <Book className="h-4 w-4 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground">
+                    Détails des cours
+                  </h3>
+                </div>
+                
+                <div className="space-y-3">
+                    {slotsAsEvents.map((event) => (
+                       <div
+                         key={event.id}
+                         className="rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 text-white"
+                         style={{ 
+                           backgroundColor: event.color || '#3B82F6'
+                         }}
+                         onClick={() => handleEditSlot(daySlots.find(s => s.id === event.id)!)}
+                       >
+                         <div className="p-4">
+                           <div className="space-y-2">
+                              <div className="font-semibold text-white text-sm">
+                                Module {event.title}
+                              </div>
+                              
+                              <div className="flex items-center text-xs text-white/90">
+                                <Clock className="h-3 w-3 mr-1.5 text-white/80" />
+                                <span>{event.startTime}</span>
+                              </div>
+                              <div className="flex items-center text-xs text-white/90">
+                                <Clock className="h-3 w-3 mr-1.5 text-white/80" />
+                                <span>{event.endTime}</span>
+                              </div>
+                              
+                              {event.room && (
+                                <div className="flex items-center text-xs text-white/90">
+                                  <MapPin className="h-3 w-3 mr-1.5 text-white/80" />
+                                  <span>Salle {event.room}</span>
+                                </div>
+                              )}
+                              
+                              {event.instructor && (
+                                <div className="flex items-center text-xs text-white/90">
+                                  <User className="h-3 w-3 mr-1.5 text-white/80" />
+                                  <span>{event.instructor}</span>
+                                </div>
+                              )}
+                           </div>
+                         </div>
+                       </div>
+                    ))}
+                </div>
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {timeSlots.map((time) => {
-                const daySlots = slots.filter(slot => 
-                  new Date(slot.date).toDateString() === selectedDate.toDateString() &&
-                  slot.start_time === time
-                );
-                
-                return (
-                  <div key={time} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-sm font-medium text-muted-foreground">{time}</div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleAddSlot(selectedDate, time)}
-                        className="text-xs"
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        Ajouter
-                      </Button>
-                    </div>
-                    {daySlots.map((slot) => (
-                      <div key={slot.id} className="ml-4 p-3 bg-card rounded border-l-4" style={{ borderLeftColor: slot.color }}>
-                        <h4 className="font-semibold">{slot.formation_modules?.title}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {slot.start_time} - {slot.end_time} • {slot.room} • {slot.users?.first_name} {slot.users?.last_name}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+          )}
+        </div>
+      );
+    };
 
-    const renderMonthView = () => (
-      <div className="container mx-auto px-6 py-8">
-        <Card className="overflow-hidden border-border/50 bg-card shadow-md">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-foreground">
-              Vue mensuelle - {format(selectedDate, 'MMMM yyyy', { locale: fr })}
-            </CardTitle>
-            <p className="text-muted-foreground">Vue d'ensemble du mois</p>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-7 gap-2">
-              {/* Grid mensuel simplifié */}
-              {Array.from({ length: 35 }, (_, index) => {
-                const dayDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), index - 6);
-                const daySlots = slots.filter(slot => 
-                  new Date(slot.date).toDateString() === dayDate.toDateString()
-                );
-                
-                return (
-                  <div key={index} className="min-h-[80px] p-2 border rounded hover:bg-muted/30 transition-colors">
-                    <div className="text-sm font-medium">{dayDate.getDate()}</div>
-                    <div className="space-y-1">
-                      {daySlots.slice(0, 2).map((slot) => (
-                        <div key={slot.id} className="text-xs p-1 rounded" style={{ backgroundColor: slot.color + '20', color: slot.color }}>
-                          {slot.formation_modules?.title?.substring(0, 10)}...
-                        </div>
-                      ))}
-                      {daySlots.length > 2 && (
-                        <div className="text-xs text-muted-foreground">+{daySlots.length - 2}</div>
-                      )}
-                    </div>
+    const renderMonthView = () => {
+      // Convertir les slots en événements pour la vue mensuelle
+      const monthStart = startOfMonth(selectedDate);
+      const monthEnd = endOfMonth(selectedDate);
+      
+      // Créer un calendrier avec les jours de la semaine précédente/suivante
+      const calendarStart = new Date(monthStart);
+      calendarStart.setDate(calendarStart.getDate() - calendarStart.getDay() + 1); // Commencer le lundi
+      
+      const calendarEnd = new Date(monthEnd);
+      const daysToAdd = 7 - calendarEnd.getDay();
+      if (daysToAdd < 7) {
+        calendarEnd.setDate(calendarEnd.getDate() + daysToAdd);
+      }
+
+      const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+      
+      const getSlotsForDate = (date: Date) => {
+        return slots.filter(slot => isSameDay(new Date(slot.date), date));
+      };
+
+      const navigateMonth = (direction: 'prev' | 'next') => {
+        const newDate = new Date(selectedDate);
+        newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
+        setSelectedDate(newDate);
+      };
+
+      const weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+
+      return (
+        <div className="max-w-7xl mx-auto p-6">
+          {/* Header */}
+          <Card className="mb-8 border-0 shadow-xl overflow-hidden bg-gradient-to-br from-background via-muted/30 to-primary/5 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-accent/10"></div>
+            <CardHeader className="relative">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-14 h-14 rounded-3xl nect-gradient flex items-center justify-center shadow-lg relative overflow-hidden">
+                    <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                    <Calendar className="h-7 w-7 text-white relative z-10" />
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+                  <div>
+                    <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+                      {format(selectedDate, 'MMMM yyyy', { locale: fr })}
+                    </h2>
+                    <p className="text-muted-foreground font-medium mt-1">
+                      {slots.length} cours ce mois-ci
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigateMonth('prev')}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  
+                  <Badge 
+                    variant="secondary" 
+                    className="text-base px-6 py-3 bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20 text-primary font-semibold rounded-full"
+                  >
+                    Vue mensuelle
+                  </Badge>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigateMonth('next')}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardTitle>
+            </CardHeader>
+          </Card>
+
+          {/* Calendrier */}
+          <Card className="border-0 shadow-2xl overflow-hidden rounded-3xl bg-gradient-to-br from-card to-muted/10">
+            <CardContent className="p-0">
+              {/* En-têtes des jours */}
+              <div className="grid grid-cols-7 border-b border-border bg-gradient-to-r from-primary/5 via-muted/50 to-accent/5">
+                {weekDays.map((day) => (
+                  <div
+                    key={day}
+                    className="p-4 text-center font-bold text-primary/80 backdrop-blur-sm"
+                  >
+                    {day}
+                  </div>
+                ))}
+              </div>
+
+              {/* Jours du calendrier */}
+              <div className="grid grid-cols-7">
+                {calendarDays.map((date) => {
+                  const daySlots = getSlotsForDate(date);
+                  const isCurrentMonth = isSameMonth(date, selectedDate);
+                  const isSelected = isSameDay(date, selectedDate);
+                  const isTodayDate = isToday(date);
+
+                  const slotsAsEvents = daySlots.map(slot => ({
+                    id: slot.id,
+                    title: slot.formation_modules?.title || 'Module non défini',
+                    startTime: slot.start_time,
+                    endTime: slot.end_time,
+                    instructor: slot.users?.first_name && slot.users?.last_name 
+                      ? `${slot.users.first_name} ${slot.users.last_name}` 
+                      : 'Instructeur non défini',
+                    room: slot.room || 'Salle non définie',
+                    color: slot.color || '#3B82F6'
+                  }));
+
+                  return (
+                    <div
+                      key={date.toISOString()}
+                      className={`min-h-[130px] border-r border-b border-border/50 last:border-r-0 cursor-pointer transition-all duration-300 hover:bg-muted/30 ${
+                        !isCurrentMonth ? 'bg-muted/20 opacity-60' : 'bg-background hover:shadow-lg'
+                      } ${isSelected ? 'ring-2 ring-primary shadow-lg bg-primary/5' : ''}`}
+                      onClick={() => setSelectedDate(date)}
+                    >
+                      <div className="p-2 h-full flex flex-col">
+                        {/* Numéro du jour */}
+                        <div className="flex items-center justify-between mb-2">
+                          <span
+                            className={`text-sm font-bold ${
+                              !isCurrentMonth 
+                                ? 'text-muted-foreground' 
+                                : isTodayDate 
+                                  ? 'nect-gradient text-white w-7 h-7 rounded-full flex items-center justify-center text-xs shadow-lg'
+                                  : 'text-foreground'
+                            }`}
+                          >
+                            {format(date, 'd')}
+                          </span>
+                          
+                          {slotsAsEvents.length > 0 && (
+                            <Badge variant="secondary" className="text-xs px-2 py-1 nect-gradient text-white rounded-full shadow-sm font-semibold">
+                              {slotsAsEvents.length}
+                            </Badge>
+                          )}
+                        </div>
+
+                        {/* Événements */}
+                        <div className="flex-1 space-y-1 overflow-hidden">
+                           {slotsAsEvents.slice(0, 3).map((event, index) => {
+                             const originalSlot = daySlots.find(s => s.id === event.id);
+                             return (
+                               <div
+                                 key={event.id}
+                                 className="px-2 py-2 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 mb-1 text-white"
+                                 style={{ 
+                                   backgroundColor: event.color || '#3B82F6'
+                                 }}
+                                title={`${event.title} - ${event.startTime}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (originalSlot) handleEditSlot(originalSlot);
+                                }}
+                              >
+                                <div className="space-y-0.5">
+                                   <div className="font-semibold text-white text-[11px] leading-tight">
+                                     Module {event.title}
+                                   </div>
+                                   
+                                    <div className="flex items-center text-[9px] text-white/90">
+                                      <Clock className="h-2.5 w-2.5 mr-1 text-white/80" />
+                                      <span>{event.startTime}</span>
+                                    </div>
+                                    <div className="flex items-center text-[9px] text-white/90">
+                                      <Clock className="h-2.5 w-2.5 mr-1 text-white/80" />
+                                      <span>{event.endTime}</span>
+                                    </div>
+                                   
+                                   {event.room && (
+                                     <div className="flex items-center text-[9px] text-white/90">
+                                       <MapPin className="h-2.5 w-2.5 mr-1 text-white/80" />
+                                       <span>Salle {event.room}</span>
+                                     </div>
+                                   )}
+                                   
+                                   {event.instructor && (
+                                     <div className="flex items-center text-[9px] text-white/90">
+                                       <User className="h-2.5 w-2.5 mr-1 text-white/80" />
+                                       <span>{event.instructor}</span>
+                                     </div>
+                                   )}
+                                </div>
+                             </div>
+                           );
+                           })}
+                           
+                            {slotsAsEvents.length > 3 && (
+                              <div className="text-xs text-muted-foreground text-center py-2 font-medium opacity-75">
+                                +{slotsAsEvents.length - 3} autres
+                              </div>
+                            )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Légende */}
+          <Card className="mt-8 border-0 shadow-xl glass-card rounded-2xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <div className="flex items-center space-x-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-4 h-4 nect-gradient rounded-full shadow-md"></div>
+                    <span className="font-medium">Aujourd'hui</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-4 h-4 border-2 border-primary rounded-full"></div>
+                    <span className="font-medium">Jour sélectionné</span>
+                  </div>
+                </div>
+                
+                <div className="text-right">
+                  <p className="font-medium">Cliquez sur un jour pour voir les détails ✨</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    };
 
     const renderWeekOrListView = () => (
       <div className="container mx-auto px-6 py-8">
