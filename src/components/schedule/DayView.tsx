@@ -161,68 +161,49 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
               </h3>
             </div>
             
-                     <div className="space-y-4">
-               {dayEvents.map((event) => (
-                  <Card 
-                    key={event.id} 
-                    className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer floating-card rounded-2xl overflow-hidden bg-gradient-to-br from-card to-muted/20"
-                    onClick={() => onEventClick?.(event)}
-                  >
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">
-                          {event.title}
-                        </h4>
-                        <div className="flex items-center text-sm text-slate-600 dark:text-slate-300">
-                          <Clock className="h-4 w-4 mr-2" />
-                          {event.startTime} - {event.endTime}
-                          <span className="mx-2">•</span>
-                          <span>
-                            {Math.round((parseInt(event.endTime.split(':')[0]) - parseInt(event.startTime.split(':')[0])) * 60 + 
-                            (parseInt(event.endTime.split(':')[1]) - parseInt(event.startTime.split(':')[1])))} min
-                          </span>
-                        </div>
-                      </div>
-                      <div 
-                        className="w-4 h-4 rounded-full" 
-                        style={{ backgroundColor: event.color || 'hsl(var(--primary))' }}
-                      ></div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      {event.instructor && (
-                        <div className="flex items-center text-sm text-slate-600 dark:text-slate-300">
-                          <User className="h-4 w-4 mr-2 flex-shrink-0" />
-                          <span>{event.instructor}</span>
-                        </div>
-                      )}
-                      
-                      {event.room && (
-                        <div className="flex items-center text-sm text-slate-600 dark:text-slate-300">
-                          <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-                          <span>{event.room}</span>
-                        </div>
-                      )}
-                      
-                      {event.formation && (
-                        <div className="flex items-center text-sm text-slate-600 dark:text-slate-300 md:col-span-2">
-                          <Book className="h-4 w-4 mr-2 flex-shrink-0" />
-                          <span>{event.formation}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {event.description && (
-                      <div className="p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
-                        <p className="text-sm text-slate-700 dark:text-slate-300">
-                          {event.description}
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="space-y-3">
+                {dayEvents.map((event) => (
+                   <div
+                     key={event.id}
+                     className="bg-white rounded-lg shadow-sm border cursor-pointer hover:shadow-md transition-all duration-200"
+                     style={{ 
+                       borderLeftColor: event.color || '#3B82F6',
+                       borderLeftWidth: '4px'
+                     }}
+                     onClick={() => onEventClick?.(event)}
+                   >
+                     <div className="p-4">
+                       <div className="space-y-2">
+                         <div className="font-semibold text-gray-900 text-sm">
+                           Module {event.title}
+                         </div>
+                         
+                         <div className="flex items-center text-xs text-gray-600">
+                           <Clock className="h-3 w-3 mr-1.5 text-gray-500" />
+                           <span>{event.startTime}</span>
+                         </div>
+                         <div className="flex items-center text-xs text-gray-600">
+                           <Clock className="h-3 w-3 mr-1.5 text-gray-500" />
+                           <span>{event.endTime}</span>
+                         </div>
+                         
+                         {event.room && (
+                           <div className="flex items-center text-xs text-gray-600">
+                             <MapPin className="h-3 w-3 mr-1.5 text-gray-500" />
+                             <span>Salle {event.room}</span>
+                           </div>
+                         )}
+                         
+                         {event.instructor && (
+                           <div className="flex items-center text-xs text-gray-600">
+                             <User className="h-3 w-3 mr-1.5 text-gray-500" />
+                             <span>{event.instructor}</span>
+                           </div>
+                         )}
+                       </div>
+                     </div>
+                   </div>
+                ))}
             </div>
           </div>
         </div>

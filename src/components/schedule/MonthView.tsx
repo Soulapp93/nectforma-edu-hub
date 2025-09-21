@@ -157,7 +157,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
                        {dayEvents.slice(0, 3).map((event, index) => (
                           <div
                             key={event.id}
-                            className="px-2 py-1.5 rounded-md bg-white border-l-3 shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 mb-1"
+                            className="px-2 py-2 rounded-md bg-white border shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 mb-1"
                             style={{ 
                               borderLeftColor: event.color || '#3B82F6',
                               borderLeftWidth: '3px'
@@ -173,10 +173,14 @@ export const MonthView: React.FC<MonthViewProps> = ({
                                Module {event.title}
                              </div>
                              
-                             <div className="flex items-center text-[9px] text-gray-600">
-                               <Clock className="h-2.5 w-2.5 mr-1 text-gray-500" />
-                               <span>{event.startTime} - {event.endTime}</span>
-                             </div>
+                              <div className="flex items-center text-[9px] text-gray-600">
+                                <Clock className="h-2.5 w-2.5 mr-1 text-gray-500" />
+                                <span>{event.startTime}</span>
+                              </div>
+                              <div className="flex items-center text-[9px] text-gray-600">
+                                <Clock className="h-2.5 w-2.5 mr-1 text-gray-500" />
+                                <span>{event.endTime}</span>
+                              </div>
                              
                              {event.room && (
                                <div className="flex items-center text-[9px] text-gray-600">
