@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -213,7 +214,9 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
                 <DialogTitle className="text-xl font-bold">
                   Ajouter un créneau
                 </DialogTitle>
-                <p className="text-white/80 text-sm">Créez un nouveau cours dans votre emploi du temps</p>
+                <DialogDescription className="text-white/80 text-sm">
+                  Créez un nouveau cours dans votre emploi du temps
+                </DialogDescription>
               </div>
             </div>
             <Button 
@@ -290,7 +293,10 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
               </Label>
               <Select 
                 value={eventData.startTime} 
-                onValueChange={(value) => setEventData(prev => ({ ...prev, startTime: value }))}
+                onValueChange={(value) => {
+                  console.log('Start time selected:', value);
+                  setEventData(prev => ({ ...prev, startTime: value }));
+                }}
               >
                 <SelectTrigger className="w-full text-xs px-3 py-3 h-auto bg-gradient-to-r from-green-500/5 to-green-500/10 border-green-500/20 hover:border-green-500/30 transition-all duration-200">
                   <SelectValue placeholder="08:00" />
@@ -312,7 +318,10 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
               </Label>
               <Select 
                 value={eventData.endTime} 
-                onValueChange={(value) => setEventData(prev => ({ ...prev, endTime: value }))}
+                onValueChange={(value) => {
+                  console.log('End time selected:', value);
+                  setEventData(prev => ({ ...prev, endTime: value }));
+                }}
               >
                 <SelectTrigger className="w-full text-xs px-3 py-3 h-auto bg-gradient-to-r from-orange-500/5 to-orange-500/10 border-orange-500/20 hover:border-orange-500/30 transition-all duration-200">
                   <SelectValue placeholder="10:00" />
