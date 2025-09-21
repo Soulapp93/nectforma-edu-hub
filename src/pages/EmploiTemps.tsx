@@ -299,52 +299,50 @@ const EmploiTemps = () => {
           <>
             {/* Vue Semaine - Mode Planning */}
             {currentView === 'week' && displayMode === 'planning' && (
-              <div className="overflow-x-auto">
-                <div className="flex gap-4 min-w-max pb-4">
-                  {getWeekDates().map((date, index) => (
-                    <div key={index} className="flex-shrink-0 w-48 sm:w-56 md:w-64">
-                      {/* En-tête du jour */}
-                      <div className="text-center mb-6 pb-4 border-b border-gray-100">
-                        <div className="text-sm font-medium text-gray-600 mb-1">
-                          {weekDays[index].substring(0, 3).toLowerCase()}.
-                        </div>
-                        <div className="text-2xl font-bold text-gray-900 mb-1">
-                          {date.getDate()}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {date.toLocaleDateString('fr-FR', { month: 'short' })}
-                        </div>
+              <div className="grid grid-cols-7 gap-2 lg:gap-4">
+                {getWeekDates().map((date, index) => (
+                  <div key={index} className="min-w-0">
+                    {/* En-tête du jour */}
+                    <div className="text-center mb-3 pb-2 border-b border-gray-100">
+                      <div className="text-xs font-medium text-gray-600 mb-1">
+                        {weekDays[index].substring(0, 3)}
                       </div>
-                      
-                      {/* Créneaux du jour */}
-                      <div className="space-y-3 min-h-[400px]">
-                        {getSlotsForDate(date).map((slot) => (
-                          <div
-                            key={slot.id}
-                            className="rounded-lg p-3 text-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                            style={{
-                              backgroundColor: slot.color || (index % 2 === 0 ? '#8B5A8C' : '#5B9BD5'),
-                            }}
-                          >
-                            <div className="font-medium text-sm mb-2 leading-tight">
-                              {slot.formation_modules?.title || 'Algorithmes'}
-                            </div>
-                            <div className="text-xs opacity-95">
-                              {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
-                            </div>
-                          </div>
-                        ))}
-                        
-                        {/* Bouton d'ajout */}
-                        <div className="pt-4">
-                          <button className="w-full h-12 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 hover:border-gray-400 hover:text-gray-500 transition-colors">
-                            <span className="text-2xl">+</span>
-                          </button>
-                        </div>
+                      <div className="text-lg lg:text-2xl font-bold text-gray-900 mb-1">
+                        {date.getDate()}
+                      </div>
+                      <div className="text-xs text-gray-500 hidden sm:block">
+                        {date.toLocaleDateString('fr-FR', { month: 'short' })}
                       </div>
                     </div>
-                  ))}
-                </div>
+                    
+                    {/* Créneaux du jour */}
+                    <div className="space-y-2 min-h-[300px]">
+                      {getSlotsForDate(date).map((slot) => (
+                        <div
+                          key={slot.id}
+                          className="rounded-lg p-2 lg:p-3 text-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                          style={{
+                            backgroundColor: slot.color || (index % 2 === 0 ? '#8B5A8C' : '#5B9BD5'),
+                          }}
+                        >
+                          <div className="font-medium text-xs lg:text-sm mb-1 leading-tight truncate">
+                            {slot.formation_modules?.title || 'Algorithmes'}
+                          </div>
+                          <div className="text-xs opacity-95">
+                            {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {/* Bouton d'ajout */}
+                      <div className="pt-2">
+                        <button className="w-full h-8 lg:h-12 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 hover:border-gray-400 hover:text-gray-500 transition-colors">
+                          <span className="text-lg lg:text-2xl">+</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
