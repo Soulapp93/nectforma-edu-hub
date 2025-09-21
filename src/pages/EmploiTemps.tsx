@@ -7,8 +7,7 @@ import {
   Book,
   Grid3X3,
   List,
-  Eye,
-  Settings
+  Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,11 +15,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format, addWeeks, subWeeks, addMonths, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { WeekNavigator } from '@/components/schedule/WeekNavigator';
-import { FilterModal, FilterOptions } from '@/components/schedule/FilterModal';
 import { CreateEventModal, ScheduleEvent } from '@/components/schedule/CreateEventModal';
-import { ExportModal, ExportOptions } from '@/components/schedule/ExportModal';
 import { EventDetailsModal } from '@/components/schedule/EventDetailsModal';
-import { SettingsModal } from '@/components/schedule/SettingsModal';
 import { DayView } from '@/components/schedule/DayView';
 import { MonthView } from '@/components/schedule/MonthView';
 import { navigateWeek, getWeekInfo, getWeekDays } from '@/utils/calendarUtils';
@@ -46,25 +42,6 @@ const EmploiTemps = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
   const [isEventDetailsOpen, setIsEventDetailsOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [settings, setSettings] = useState<ScheduleSettings>({
-    theme: 'auto',
-    defaultView: 'week',
-    startHour: 8,
-    endHour: 18,
-    showWeekends: true,
-    showHours: true,
-    enableNotifications: true,
-    autoRefresh: false,
-    compactMode: false,
-    colorScheme: 'default'
-  });
-  const [activeFilters, setActiveFilters] = useState<FilterOptions>({
-    instructors: [],
-    rooms: [],
-    formations: [],
-    timeSlots: []
-  });
   const [events, setEvents] = useState<ScheduleEvent[]>([
     {
       id: '1',
@@ -142,13 +119,6 @@ const EmploiTemps = () => {
     });
   };
 
-  const handleSettingsChange = (newSettings: ScheduleSettings) => {
-    setSettings(newSettings);
-    if (newSettings.defaultView !== viewMode) {
-      setViewMode(newSettings.defaultView);
-    }
-  };
-
   // Navigation handlers
   const handleNavigate = (direction: 'prev' | 'next' | 'today') => {
     if (viewMode === 'month') {
@@ -172,44 +142,13 @@ const EmploiTemps = () => {
     }
   };
 
-  // Filter handler
-  const handleApplyFilters = (filters: FilterOptions) => {
-    setActiveFilters(filters);
-    toast({
-      title: "Filtres appliqués",
-      description: `${Object.values(filters).flat().length} filtres actifs`,
-    });
-  };
-
   // Event handlers
   const handleEventCreated = (event: ScheduleEvent) => {
     setEvents(prev => [...prev, event]);
   };
 
-  const handleExport = (options: ExportOptions) => {
-    // Simulation de l'export
-    setTimeout(() => {
-      toast({
-        title: "Export terminé",
-        description: `Fichier ${options.format.toUpperCase()} généré avec succès`,
-      });
-    }, 2000);
-  };
-
-  // Filter events based on active filters
-  const filteredEvents = events.filter(event => {
-    const { instructors, rooms, formations, timeSlots } = activeFilters;
-    
-    if (instructors.length > 0 && !instructors.includes(event.instructor)) return false;
-    if (rooms.length > 0 && !rooms.includes(event.room)) return false;
-    if (formations.length > 0 && !formations.includes(event.formation)) return false;
-    if (timeSlots.length > 0) {
-      const eventTimeSlot = `${event.startTime.substring(0, 5)}-${event.endTime.substring(0, 5)}`;
-      if (!timeSlots.some(slot => eventTimeSlot.includes(slot.split('-')[0]))) return false;
-    }
-    
-    return true;
-  });
+  // All events are displayed without filters
+  const filteredEvents = events;
 
   // Prepare week schedule data for week and list views
   const weekDays = getWeekDays(currentDate);
@@ -269,32 +208,32 @@ const EmploiTemps = () => {
           {mockSchedule.map((day) => (
             <Card
               key={day.id}
-              className={`overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 border-0 ${
+              className={`overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 ${
                 day.modules.length > 0 
-                  ? 'bg-white dark:bg-slate-800 shadow-lg' 
-                  : 'bg-slate-50 dark:bg-slate-900 shadow-sm opacity-60'
+                  ? 'bg-card shadow-md hover:shadow-primary/10' 
+                  : 'bg-muted/30 shadow-sm opacity-70'
               }`}
             >
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-lg font-bold text-slate-900 dark:text-white">
+                    <CardTitle className="text-lg font-bold text-foreground">
                       {day.day}
                     </CardTitle>
                     <div className="flex items-center space-x-2 mt-1">
-                      <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                      <span className="text-2xl font-bold text-primary">
                         {day.date}
                       </span>
                       {day.modules.length > 0 && (
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
                           {day.modules.length} cours
                         </Badge>
                       )}
                     </div>
                   </div>
                   {day.modules.length === 0 && (
-                    <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
-                      <Calendar className="h-4 w-4 text-slate-400" />
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
                     </div>
                   )}
                 </div>
@@ -302,14 +241,14 @@ const EmploiTemps = () => {
 
               <CardContent className="space-y-3">
                 {day.modules.length === 0 ? (
-                  <p className="text-center text-slate-500 dark:text-slate-400 text-sm py-4">
+                  <p className="text-center text-muted-foreground text-sm py-4">
                     Aucun cours
                   </p>
                 ) : (
                   day.modules.map((module, index) => (
                      <div
                        key={index}
-                       className="relative p-4 rounded-xl bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-600 border border-slate-200 dark:border-slate-600 hover:shadow-md transition-all duration-200 cursor-pointer"
+                       className="relative p-4 rounded-xl bg-gradient-to-r from-card to-muted/30 border border-border hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-pointer group"
                        onClick={() => {
                          const fullEvent = filteredEvents.find(e => 
                            e.title === module.title && 
@@ -322,20 +261,20 @@ const EmploiTemps = () => {
                       <div className={`absolute top-0 left-0 w-1 h-full ${module.color} rounded-l-xl`} />
                       
                       <div className="ml-3">
-                        <h4 className="font-semibold text-slate-900 dark:text-white text-sm mb-2">
+                        <h4 className="font-semibold text-foreground text-sm mb-2 group-hover:text-primary transition-colors">
                           {module.title}
                         </h4>
                         
                         <div className="space-y-1">
-                          <div className="flex items-center text-xs text-slate-600 dark:text-slate-300">
+                          <div className="flex items-center text-xs text-muted-foreground">
                             <Clock className="h-3 w-3 mr-1" />
                             {module.time}
                           </div>
-                          <div className="flex items-center text-xs text-slate-600 dark:text-slate-300">
+                          <div className="flex items-center text-xs text-muted-foreground">
                             <MapPin className="h-3 w-3 mr-1" />
                             {module.room}
                           </div>
-                          <div className="flex items-center text-xs text-slate-600 dark:text-slate-300">
+                          <div className="flex items-center text-xs text-muted-foreground">
                             <User className="h-3 w-3 mr-1" />
                             {module.instructor}
                           </div>
@@ -409,18 +348,18 @@ const EmploiTemps = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
       {/* Header moderne */}
-      <div className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-700/50">
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border shadow-sm">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center shadow-lg">
-                <Calendar className="h-6 w-6 text-white" />
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
+                <Calendar className="h-6 w-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Emploi du Temps</h1>
-                <p className="text-slate-600 dark:text-slate-300">
+                <h1 className="text-3xl font-bold text-foreground">Emploi du Temps</h1>
+                <p className="text-muted-foreground">
                   {viewMode === 'month' 
                     ? format(currentDate, 'MMMM yyyy', { locale: fr })
                     : `Semaine du ${weekInfo.start} au ${weekInfo.end}`
@@ -430,8 +369,6 @@ const EmploiTemps = () => {
             </div>
 
             <div className="flex items-center space-x-3">
-              <FilterModal onApplyFilters={handleApplyFilters} />
-              <ExportModal onExport={handleExport} />
               <CreateEventModal onEventCreated={handleEventCreated} />
             </div>
           </div>
@@ -443,12 +380,12 @@ const EmploiTemps = () => {
               onNavigate={handleNavigate}
             />
 
-            <div className="flex items-center space-x-2 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+            <div className="flex items-center space-x-2 bg-muted/50 rounded-xl p-1 border">
               <Button
                 variant={viewMode === 'day' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('day')}
-                className="px-3"
+                className={`px-3 ${viewMode === 'day' ? 'bg-primary text-primary-foreground shadow-md' : 'hover:bg-primary/10'}`}
               >
                 <Eye className="h-4 w-4 mr-2" />
                 Jour
@@ -457,7 +394,7 @@ const EmploiTemps = () => {
                 variant={viewMode === 'week' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('week')}
-                className="px-3"
+                className={`px-3 ${viewMode === 'week' ? 'bg-primary text-primary-foreground shadow-md' : 'hover:bg-primary/10'}`}
               >
                 <Grid3X3 className="h-4 w-4 mr-2" />
                 Semaine
@@ -466,7 +403,7 @@ const EmploiTemps = () => {
                 variant={viewMode === 'month' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('month')}
-                className="px-3"
+                className={`px-3 ${viewMode === 'month' ? 'bg-primary text-primary-foreground shadow-md' : 'hover:bg-primary/10'}`}
               >
                 <Calendar className="h-4 w-4 mr-2" />
                 Mois
@@ -475,7 +412,7 @@ const EmploiTemps = () => {
                 variant={viewMode === 'list' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('list')}
-                className="px-3"
+                className={`px-3 ${viewMode === 'list' ? 'bg-primary text-primary-foreground shadow-md' : 'hover:bg-primary/10'}`}
               >
                 <List className="h-4 w-4 mr-2" />
                 Liste
@@ -488,16 +425,6 @@ const EmploiTemps = () => {
       {/* Contenu principal */}
       {renderCurrentView()}
 
-      {/* Bouton flottant */}
-      <div className="fixed bottom-6 right-6 z-40">
-        <Button
-          size="lg"
-          className="rounded-full w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 hover:scale-110"
-          onClick={() => setIsSettingsOpen(true)}
-        >
-          <Settings className="h-6 w-6" />
-        </Button>
-      </div>
       {/* Modals */}
       <EventDetailsModal
         event={selectedEvent}
@@ -506,13 +433,6 @@ const EmploiTemps = () => {
         onEdit={handleEventEdit}
         onDelete={handleEventDelete}
         onDuplicate={handleEventDuplicate}
-      />
-
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        settings={settings}
-        onSettingsChange={handleSettingsChange}
       />
     </div>
   );
