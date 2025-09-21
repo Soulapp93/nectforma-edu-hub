@@ -301,9 +301,11 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
                 <SelectTrigger className="w-full text-xs px-3 py-3 h-auto bg-gradient-to-r from-green-500/5 to-green-500/10 border-green-500/20 hover:border-green-500/30 transition-all duration-200">
                   <SelectValue placeholder="08:00" />
                 </SelectTrigger>
-                <SelectContent className="bg-background/95 backdrop-blur-sm border-primary/20">
+                <SelectContent className="z-50 max-h-60 bg-white border border-gray-200 shadow-lg">
                   {timeSlots.map((time) => (
-                    <SelectItem key={time} value={time}>{time}</SelectItem>
+                    <SelectItem key={time} value={time} className="cursor-pointer hover:bg-gray-100">
+                      {time}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -326,9 +328,11 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
                 <SelectTrigger className="w-full text-xs px-3 py-3 h-auto bg-gradient-to-r from-orange-500/5 to-orange-500/10 border-orange-500/20 hover:border-orange-500/30 transition-all duration-200">
                   <SelectValue placeholder="10:00" />
                 </SelectTrigger>
-                <SelectContent className="bg-background/95 backdrop-blur-sm border-primary/20">
+                <SelectContent className="z-50 max-h-60 bg-white border border-gray-200 shadow-lg">
                   {timeSlots.map((time) => (
-                    <SelectItem key={time} value={time}>{time}</SelectItem>
+                    <SelectItem key={time} value={time} className="cursor-pointer hover:bg-gray-100">
+                      {time}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
