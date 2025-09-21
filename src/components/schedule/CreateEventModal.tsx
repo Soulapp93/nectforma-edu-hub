@@ -91,10 +91,44 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!eventData.title || !eventData.date || !eventData.startTime || !eventData.endTime) {
+    console.log('Form submitted with data:', eventData);
+    
+    // Validation avec logs détaillés
+    if (!eventData.formation) {
+      console.log('Formation missing');
       toast({
         title: "Erreur",
-        description: "Veuillez remplir tous les champs obligatoires.",
+        description: "Veuillez sélectionner un module.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!eventData.date) {
+      console.log('Date missing');
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner une date.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!eventData.startTime) {
+      console.log('Start time missing');
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner une heure de début.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!eventData.endTime) {
+      console.log('End time missing');
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner une heure de fin.",
         variant: "destructive",
       });
       return;
