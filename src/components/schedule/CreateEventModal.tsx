@@ -200,6 +200,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
                     selected={eventData.date}
                     onSelect={(date) => setEventData(prev => ({ ...prev, date }))}
                     initialFocus
+                    className="pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>
