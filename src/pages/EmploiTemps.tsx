@@ -299,7 +299,7 @@ const EmploiTemps = () => {
           <>
             {/* Vue Semaine - Mode Planning */}
             {currentView === 'week' && displayMode === 'planning' && (
-              <div className="grid grid-cols-7 gap-1 overflow-x-auto">
+              <div className="grid grid-cols-7 overflow-x-auto">
                 {getWeekDates().map((date, index) => (
                   <div key={index} className="min-w-[160px] max-w-[200px]">
                     {/* En-tête du jour */}
