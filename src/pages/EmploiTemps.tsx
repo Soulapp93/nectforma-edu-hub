@@ -300,25 +300,25 @@ const EmploiTemps = () => {
           <>
             {/* Weekly Schedule */}
             {currentView === 'week' && displayMode === 'planning' && (
-              <div className="p-1">
+              <div className="p-0.5">
                 <div className="grid grid-cols-7 gap-0.5 text-xs">
                   {getWeekDates().map((date, index) => (
                     <div key={index} className="min-w-0">
-                      <div className="text-center mb-1 p-1 bg-gradient-to-br from-primary/10 to-primary/5 rounded-sm border border-primary/10">
-                        <div className="font-medium text-[10px] text-primary">{weekDays[index].substring(0, 3)}</div>
-                        <div className="text-sm font-bold text-foreground">
+                      <div className="text-center mb-0.5 p-0.5 bg-gradient-to-br from-primary/10 to-primary/5 rounded-sm border border-primary/10">
+                        <div className="font-medium text-[8px] text-primary">{weekDays[index].substring(0, 3)}</div>
+                        <div className="text-xs font-bold text-foreground">
                           {date.getDate()}
                         </div>
-                        <div className="text-[9px] text-muted-foreground">
+                        <div className="text-[8px] text-muted-foreground">
                           {date.toLocaleDateString('fr-FR', { month: 'short' })}
                         </div>
                       </div>
                       
-                       <div className="space-y-0.5 min-h-[200px]">
+                       <div className="space-y-0.5 min-h-[150px]">
                          {getSlotsForDate(date).map((slot) => (
                            <div
                              key={slot.id}
-                             className="p-1.5 rounded-sm text-white text-[10px] leading-tight hover:shadow-sm transition-all duration-200 border border-white/20"
+                             className="p-1 rounded-sm text-white text-[9px] leading-tight hover:shadow-sm transition-all duration-200 border border-white/20"
                              style={{
                                backgroundColor: slot.color || '#8B5CF6',
                              }}
@@ -328,22 +328,22 @@ const EmploiTemps = () => {
                              </div>
                              
                              <div className="flex items-center opacity-95 mb-0.5">
-                               <Clock className="h-2 w-2 mr-1 flex-shrink-0" />
-                               <span className="truncate">
+                               <Clock className="h-1.5 w-1.5 mr-0.5 flex-shrink-0" />
+                               <span className="truncate text-[8px]">
                                  {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
                                </span>
                              </div>
                              
                              <div className="flex items-center opacity-95 mb-0.5">
-                               <MapPin className="h-2 w-2 mr-1 flex-shrink-0" />
-                               <span className="truncate">
+                               <MapPin className="h-1.5 w-1.5 mr-0.5 flex-shrink-0" />
+                               <span className="truncate text-[8px]">
                                  {slot.room || 'Salle A101'}
                                </span>
                              </div>
                              
                              <div className="flex items-center opacity-90">
-                               <User className="h-2 w-2 mr-1 flex-shrink-0" />
-                               <span className="truncate">
+                               <User className="h-1.5 w-1.5 mr-0.5 flex-shrink-0" />
+                               <span className="truncate text-[8px]">
                                  Formateur
                                </span>
                              </div>
@@ -351,8 +351,8 @@ const EmploiTemps = () => {
                          ))}
                         
                         {getSlotsForDate(date).length === 0 && (
-                          <div className="text-center py-4 text-muted-foreground">
-                            <p className="text-[9px]">Aucun cours</p>
+                          <div className="text-center py-2 text-muted-foreground">
+                            <p className="text-[8px]">Aucun cours</p>
                           </div>
                         )}
                       </div>
