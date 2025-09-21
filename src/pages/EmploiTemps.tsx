@@ -200,13 +200,6 @@ const EmploiTemps = () => {
         </div>
       </div>
 
-      {/* Barre de navigation avec calendrier */}
-      <WeekNavigation
-        selectedDate={selectedDate}
-        onDateChange={setSelectedDate}
-        onWeekSelect={navigateToWeek}
-        className="mb-6"
-      />
 
       {/* Header avec navigation */}
       <div className="bg-white rounded-lg shadow-sm mb-4 p-4">
@@ -578,6 +571,69 @@ const EmploiTemps = () => {
           </>
         )}
       </div>
+
+      {/* Barre de navigation par semaine en bas */}
+      {currentView === 'week' && (
+        <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="text-sm text-gray-600 mb-3 text-center">Navigation par semaines</div>
+          <div className="flex justify-center overflow-x-auto">
+            <div className="flex space-x-2 min-w-max px-4">
+              {(() => {
+                const currentYear = selectedDate.getFullYear();
+                const weeks = [];
+                
+                // Générer toutes les semaines de l'année
+                for (let weekNum = 1; weekNum <= 52; weekNum++) {
+                  const jan4 = new Date(currentYear, 0, 4);
+                  const week1Thursday = new Date(jan4);
+                  week1Thursday.setDate(jan4.getDate() - (jan4.getDay() + 6) % 7 + 3);
+                  const week1Monday = new Date(week1Thursday);
+                  week1Monday.setDate(week1Thursday.getDate() - 3);
+                  const weekStartDate = new Date(week1Monday);
+                  weekStartDate.setDate(week1Monday.getDate() + (weekNum - 1) * 7);
+                  
+                  weeks.push({
+                    number: weekNum,
+                    startDate: weekStartDate,
+                    label: `S${weekNum}`
+                  });
+                }
+                
+                // Obtenir le numéro de semaine actuel
+                const getCurrentWeekNumber = (date: Date): number => {
+                  const tempDate = new Date(date.getTime());
+                  tempDate.setHours(0, 0, 0, 0);
+                  tempDate.setDate(tempDate.getDate() + 3 - (tempDate.getDay() + 6) % 7);
+                  const week1 = new Date(tempDate.getFullYear(), 0, 4);
+                  return 1 + Math.round(((tempDate.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+                };
+                
+                const currentWeekNumber = getCurrentWeekNumber(selectedDate);
+                
+                return weeks.map((week) => {
+                  const isCurrentWeek = currentWeekNumber === week.number;
+                  return (
+                    <button
+                      key={week.number}
+                      onClick={() => {
+                        setSelectedDate(new Date(week.startDate));
+                        navigateToWeek(week.startDate);
+                      }}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 min-w-[50px] ${
+                        isCurrentWeek
+                          ? 'bg-primary text-white shadow-md'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800'
+                      }`}
+                    >
+                      {week.label}
+                    </button>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal d'export */}
       <ExportFilterModal
