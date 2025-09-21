@@ -86,16 +86,12 @@ export const KanbanView: React.FC<KanbanViewProps> = ({ schedules, selectedDate 
                     daySlots.map((slot) => (
                       <div
                         key={slot.id}
-                        className={`course-card rounded-xl p-4 cursor-pointer transition-all duration-300 ${
+                        className={`rounded-xl p-4 cursor-pointer transition-all duration-300 text-white shadow-md ${
                           expandedCard === slot.id ? 'scale-105' : ''
                         }`}
+                        style={{ backgroundColor: slot.color || '#8B5CF6' }}
                         onClick={() => setExpandedCard(expandedCard === slot.id ? null : slot.id)}
                       >
-                        {/* Color indicator */}
-                        <div 
-                          className="w-full h-1 rounded-full mb-3"
-                          style={{ backgroundColor: slot.color || '#8B5CF6' }}
-                        ></div>
 
                         {/* Course title */}
                         <h4 className="text-white font-semibold text-sm mb-2 line-clamp-2">
