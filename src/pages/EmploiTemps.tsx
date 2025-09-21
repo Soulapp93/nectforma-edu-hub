@@ -19,6 +19,8 @@ import { WeekNavigator } from '@/components/schedule/WeekNavigator';
 import { FilterModal, FilterOptions } from '@/components/schedule/FilterModal';
 import { CreateEventModal, ScheduleEvent } from '@/components/schedule/CreateEventModal';
 import { ExportModal, ExportOptions } from '@/components/schedule/ExportModal';
+import { EventDetailsModal } from '@/components/schedule/EventDetailsModal';
+import { SettingsModal } from '@/components/schedule/SettingsModal';
 import { DayView } from '@/components/schedule/DayView';
 import { MonthView } from '@/components/schedule/MonthView';
 import { navigateWeek, getWeekInfo, getWeekDays } from '@/utils/calendarUtils';
@@ -26,9 +28,37 @@ import { useToast } from '@/hooks/use-toast';
 
 type ViewMode = 'day' | 'week' | 'month' | 'list';
 
+interface ScheduleSettings {
+  theme: 'auto' | 'light' | 'dark';
+  defaultView: 'day' | 'week' | 'month' | 'list';
+  startHour: number;
+  endHour: number;
+  showWeekends: boolean;
+  showHours: boolean;
+  enableNotifications: boolean;
+  autoRefresh: boolean;
+  compactMode: boolean;
+  colorScheme: 'default' | 'modern' | 'pastel' | 'vibrant';
+}
+
 const EmploiTemps = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('week');
+  const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
+  const [isEventDetailsOpen, setIsEventDetailsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settings, setSettings] = useState<ScheduleSettings>({
+    theme: 'auto',
+    defaultView: 'week',
+    startHour: 8,
+    endHour: 18,
+    showWeekends: true,
+    showHours: true,
+    enableNotifications: true,
+    autoRefresh: false,
+    compactMode: false,
+    colorScheme: 'default'
+  });
   const [activeFilters, setActiveFilters] = useState<FilterOptions>({
     instructors: [],
     rooms: [],
@@ -75,6 +105,49 @@ const EmploiTemps = () => {
   ]);
   
   const { toast } = useToast();
+
+  // Event handlers
+  const handleEventClick = (event: ScheduleEvent) => {
+    setSelectedEvent(event);
+    setIsEventDetailsOpen(true);
+  };
+
+  const handleEventEdit = (event: ScheduleEvent) => {
+    // TODO: Implémenter l'édition d'événement
+    toast({
+      title: "Modification d'événement",
+      description: "Fonctionnalité en cours de développement",
+    });
+  };
+
+  const handleEventDelete = (eventId: string) => {
+    setEvents(prev => prev.filter(e => e.id !== eventId));
+    toast({
+      title: "Événement supprimé",
+      description: "L'événement a été supprimé avec succès",
+    });
+  };
+
+  const handleEventDuplicate = (event: ScheduleEvent) => {
+    const newEvent = {
+      ...event,
+      id: Date.now().toString(),
+      title: `${event.title} (Copie)`,
+      date: new Date(event.date.getTime() + 24 * 60 * 60 * 1000) // Jour suivant
+    };
+    setEvents(prev => [...prev, newEvent]);
+    toast({
+      title: "Événement dupliqué",
+      description: "L'événement a été dupliqué pour le jour suivant",
+    });
+  };
+
+  const handleSettingsChange = (newSettings: ScheduleSettings) => {
+    setSettings(newSettings);
+    if (newSettings.defaultView !== viewMode) {
+      setViewMode(newSettings.defaultView);
+    }
+  };
 
   // Navigation handlers
   const handleNavigate = (direction: 'prev' | 'next' | 'today') => {
@@ -153,7 +226,13 @@ const EmploiTemps = () => {
   const renderCurrentView = () => {
     switch (viewMode) {
       case 'day':
-        return <DayView selectedDate={currentDate} events={filteredEvents} />;
+        return (
+          <DayView 
+            selectedDate={currentDate} 
+            events={filteredEvents}
+            onEventClick={handleEventClick}
+          />
+        );
       case 'month':
         return (
           <MonthView 
@@ -161,6 +240,7 @@ const EmploiTemps = () => {
             events={filteredEvents}
             onDateSelect={setCurrentDate}
             onMonthChange={setCurrentDate}
+            onEventClick={handleEventClick}
           />
         );
       case 'week':
@@ -215,10 +295,18 @@ const EmploiTemps = () => {
                   </p>
                 ) : (
                   day.modules.map((module, index) => (
-                    <div
-                      key={index}
-                      className="relative p-4 rounded-xl bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-600 border border-slate-200 dark:border-slate-600 hover:shadow-md transition-all duration-200"
-                    >
+                     <div
+                       key={index}
+                       className="relative p-4 rounded-xl bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-600 border border-slate-200 dark:border-slate-600 hover:shadow-md transition-all duration-200 cursor-pointer"
+                       onClick={() => {
+                         const fullEvent = filteredEvents.find(e => 
+                           e.title === module.title && 
+                           e.instructor === module.instructor &&
+                           e.room === module.room
+                         );
+                         if (fullEvent) handleEventClick(fullEvent);
+                       }}
+                     >
                       <div className={`absolute top-0 left-0 w-1 h-full ${module.color} rounded-l-xl`} />
                       
                       <div className="ml-3">
@@ -263,10 +351,18 @@ const EmploiTemps = () => {
               <CardContent className="p-6">
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {day.modules.map((module, index) => (
-                    <div
-                      key={index}
-                      className="p-4 rounded-xl border border-slate-200 dark:border-slate-600 hover:shadow-md transition-all duration-200"
-                    >
+                   <div
+                     key={index}
+                     className="p-4 rounded-xl border border-slate-200 dark:border-slate-600 hover:shadow-md transition-all duration-200 cursor-pointer"
+                     onClick={() => {
+                       const fullEvent = filteredEvents.find(e => 
+                         e.title === module.title && 
+                         e.instructor === module.instructor &&
+                         e.room === module.room
+                       );
+                       if (fullEvent) handleEventClick(fullEvent);
+                     }}
+                   >
                       <div className="flex items-start space-x-3">
                         <div className={`w-3 h-3 ${module.color} rounded-full mt-1`} />
                         <div className="flex-1">
@@ -385,10 +481,27 @@ const EmploiTemps = () => {
         <Button
           size="lg"
           className="rounded-full w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 hover:scale-110"
+          onClick={() => setIsSettingsOpen(true)}
         >
           <Settings className="h-6 w-6" />
         </Button>
       </div>
+      {/* Modals */}
+      <EventDetailsModal
+        event={selectedEvent}
+        isOpen={isEventDetailsOpen}
+        onClose={() => setIsEventDetailsOpen(false)}
+        onEdit={handleEventEdit}
+        onDelete={handleEventDelete}
+        onDuplicate={handleEventDuplicate}
+      />
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        settings={settings}
+        onSettingsChange={handleSettingsChange}
+      />
     </div>
   );
 };

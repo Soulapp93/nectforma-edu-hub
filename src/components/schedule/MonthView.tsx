@@ -12,13 +12,15 @@ interface MonthViewProps {
   events: ScheduleEvent[];
   onDateSelect: (date: Date) => void;
   onMonthChange: (date: Date) => void;
+  onEventClick?: (event: ScheduleEvent) => void;
 }
 
-export const MonthView: React.FC<MonthViewProps> = ({ 
-  selectedDate, 
-  events, 
+export const MonthView: React.FC<MonthViewProps> = ({
+  selectedDate,
+  events,
   onDateSelect,
-  onMonthChange 
+  onMonthChange,
+  onEventClick
 }) => {
   const monthStart = startOfMonth(selectedDate);
   const monthEnd = endOfMonth(selectedDate);
@@ -147,12 +149,16 @@ export const MonthView: React.FC<MonthViewProps> = ({
 
                     {/* Événements */}
                     <div className="flex-1 space-y-1 overflow-hidden">
-                      {dayEvents.slice(0, 3).map((event, index) => (
-                        <div
-                          key={event.id}
-                          className={`text-xs p-1.5 rounded text-white truncate ${event.color}`}
-                          title={`${event.title} - ${event.startTime}`}
-                        >
+                       {dayEvents.slice(0, 3).map((event, index) => (
+                         <div
+                           key={event.id}
+                           className={`text-xs p-1.5 rounded text-white truncate ${event.color} cursor-pointer hover:opacity-80 transition-opacity`}
+                           title={`${event.title} - ${event.startTime}`}
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             onEventClick?.(event);
+                           }}
+                         >
                           <div className="flex items-center space-x-1">
                             <Clock className="h-2 w-2 flex-shrink-0" />
                             <span className="truncate">{event.title}</span>

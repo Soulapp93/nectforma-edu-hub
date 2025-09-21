@@ -9,9 +9,10 @@ import { ScheduleEvent } from './CreateEventModal';
 interface DayViewProps {
   selectedDate: Date;
   events: ScheduleEvent[];
+  onEventClick?: (event: ScheduleEvent) => void;
 }
 
-export const DayView: React.FC<DayViewProps> = ({ selectedDate, events }) => {
+export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventClick }) => {
   const dayEvents = events.filter(event => 
     event.date.toDateString() === selectedDate.toDateString()
   ).sort((a, b) => a.startTime.localeCompare(b.startTime));
@@ -134,9 +135,13 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events }) => {
               Détails des cours
             </h3>
             
-            <div className="space-y-4">
-              {dayEvents.map((event) => (
-                <Card key={event.id} className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+                     <div className="space-y-4">
+               {dayEvents.map((event) => (
+                 <Card 
+                   key={event.id} 
+                   className="border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                   onClick={() => onEventClick?.(event)}
+                 >
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div>
