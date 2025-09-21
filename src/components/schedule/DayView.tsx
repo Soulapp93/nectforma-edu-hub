@@ -92,12 +92,20 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
                     
                     <div className="flex-1 min-w-0 pb-2">
                       {event ? (
-                        <div className="p-4 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-sm">
+                        <div 
+                          className="p-4 rounded-lg border-2 bg-white dark:bg-slate-800 shadow-sm"
+                          style={{ 
+                            borderColor: event.color || 'hsl(var(--primary))'
+                          }}
+                        >
                           <div className="flex items-start justify-between mb-2">
                             <h4 className="font-semibold text-slate-900 dark:text-white">
                               {event.title}
                             </h4>
-                            <div className={`w-3 h-3 rounded-full ${event.color}`}></div>
+                            <div 
+                              className="w-3 h-3 rounded-full" 
+                              style={{ backgroundColor: event.color || 'hsl(var(--primary))' }}
+                            ></div>
                           </div>
                           
                           <div className="text-sm text-slate-600 dark:text-slate-300 space-y-1">
@@ -158,7 +166,10 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
                           </span>
                         </div>
                       </div>
-                      <div className={`w-4 h-4 rounded-full ${event.color}`}></div>
+                      <div 
+                        className="w-4 h-4 rounded-full" 
+                        style={{ backgroundColor: event.color || 'hsl(var(--primary))' }}
+                      ></div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">

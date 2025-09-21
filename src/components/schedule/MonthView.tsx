@@ -150,9 +150,10 @@ export const MonthView: React.FC<MonthViewProps> = ({
                     {/* Événements */}
                     <div className="flex-1 space-y-1 overflow-hidden">
                        {dayEvents.slice(0, 3).map((event, index) => (
-                         <div
-                           key={event.id}
-                           className={`text-xs p-1.5 rounded text-white truncate ${event.color} cursor-pointer hover:opacity-80 transition-opacity`}
+                          <div
+                            key={event.id}
+                            className="text-xs p-1.5 rounded text-white truncate cursor-pointer hover:opacity-80 transition-opacity"
+                            style={{ backgroundColor: event.color || 'hsl(var(--primary))' }}
                            title={`${event.title} - ${event.startTime}`}
                            onClick={(e) => {
                              e.stopPropagation();

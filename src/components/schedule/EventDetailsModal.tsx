@@ -73,7 +73,10 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-3">
-            <div className={`w-4 h-4 ${event.color} rounded-full`} />
+            <div 
+              className="w-4 h-4 rounded-full" 
+              style={{ backgroundColor: event.color || 'hsl(var(--primary))' }}
+            />
             <span>{event.title}</span>
           </DialogTitle>
         </DialogHeader>

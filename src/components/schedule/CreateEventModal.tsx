@@ -47,7 +47,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
     room: '',
     formation: '',
     description: '',
-    color: 'bg-blue-500'
+    color: '#8B5CF6' // Couleur primaire de l'application par défaut
   });
   const { toast } = useToast();
 
@@ -73,11 +73,11 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
   const rooms = ['Salle A1', 'Salle B2', 'Salle C3', 'Amphithéâtre', 'Atelier'];
 
   const colors = [
+    '#8B5CF6', // Violet (couleur de l'app)
     '#3B82F6', // Bleu
     '#10B981', // Vert
     '#F59E0B', // Orange
     '#EF4444', // Rouge
-    '#8B5CF6', // Violet
     '#EC4899'  // Rose
   ];
 
@@ -163,7 +163,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
       room: '',
       formation: '',
       description: '',
-      color: 'bg-blue-500'
+      color: '#8B5CF6' // Couleur primaire de l'application par défaut
     });
     
     setOpen(false);
@@ -313,10 +313,10 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
                 <button
                   key={color}
                   type="button"
-                  onClick={() => setEventData(prev => ({ ...prev, color: `bg-[${color}]` }))}
+                  onClick={() => setEventData(prev => ({ ...prev, color: color }))}
                   className={cn(
                     "w-8 h-8 rounded-full border-2 transition-all",
-                    eventData.color === `bg-[${color}]` ? "border-gray-900 scale-110" : "border-gray-200"
+                    eventData.color === color ? "border-gray-900 scale-110" : "border-gray-200"
                   )}
                   style={{ backgroundColor: color }}
                 />
