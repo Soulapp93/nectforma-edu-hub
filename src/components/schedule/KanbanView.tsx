@@ -78,7 +78,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({ schedules, selectedDate 
                 {/* Course Cards */}
                 <div className="space-y-3 min-h-[200px]">
                   {daySlots.length === 0 ? (
-                    <div className="course-card rounded-xl p-4 text-center opacity-50">
+                    <div className="rounded-xl p-4 text-center opacity-50 bg-white/5 backdrop-blur-sm border border-white/10">
                       <Calendar className="h-8 w-8 text-white/30 mx-auto mb-2" />
                       <p className="text-white/50 text-xs">Libre</p>
                     </div>
@@ -86,10 +86,13 @@ export const KanbanView: React.FC<KanbanViewProps> = ({ schedules, selectedDate 
                     daySlots.map((slot) => (
                       <div
                         key={slot.id}
-                        className={`rounded-xl p-4 cursor-pointer transition-all duration-300 text-white shadow-md ${
+                        className={`rounded-xl p-4 cursor-pointer transition-all duration-300 text-white shadow-lg border border-white/10 backdrop-blur-sm ${
                           expandedCard === slot.id ? 'scale-105' : ''
                         }`}
-                        style={{ backgroundColor: slot.color || '#8B5CF6' }}
+                        style={{ 
+                          backgroundColor: slot.color || '#8B5CF6',
+                          backgroundImage: 'none'
+                        }}
                         onClick={() => setExpandedCard(expandedCard === slot.id ? null : slot.id)}
                       >
 
