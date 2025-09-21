@@ -157,9 +157,10 @@ export const MonthView: React.FC<MonthViewProps> = ({
                        {dayEvents.slice(0, 3).map((event, index) => (
                           <div
                             key={event.id}
-                            className="p-2 rounded-lg bg-white border-l-4 shadow-sm cursor-pointer hover:shadow-md transition-all duration-200"
+                            className="px-2 py-1.5 rounded-md bg-white border-l-3 shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 mb-1"
                             style={{ 
-                              borderLeftColor: event.color || 'hsl(var(--primary))'
+                              borderLeftColor: event.color || '#3B82F6',
+                              borderLeftWidth: '3px'
                             }}
                            title={`${event.title} - ${event.startTime}`}
                            onClick={(e) => {
@@ -167,28 +168,29 @@ export const MonthView: React.FC<MonthViewProps> = ({
                              onEventClick?.(event);
                            }}
                          >
-                           <div className="space-y-1">
-                             <div className="font-bold text-gray-900 text-xs leading-tight">
+                           <div className="space-y-0.5">
+                             <div className="font-semibold text-gray-900 text-[11px] leading-tight">
                                Module {event.title}
                              </div>
-                             <div className="text-[10px] text-gray-600 space-y-0.5">
-                               <div className="flex items-center">
-                                 <Clock className="h-2 w-2 mr-1 text-gray-400" />
-                                 <span>{event.startTime} - {event.endTime}</span>
-                               </div>
-                               {event.room && (
-                                 <div className="flex items-center">
-                                   <MapPin className="h-2 w-2 mr-1 text-gray-400" />
-                                   <span>Salle {event.room}</span>
-                                 </div>
-                               )}
-                               {event.instructor && (
-                                 <div className="flex items-center">
-                                   <User className="h-2 w-2 mr-1 text-gray-400" />
-                                   <span>{event.instructor}</span>
-                                 </div>
-                               )}
+                             
+                             <div className="flex items-center text-[9px] text-gray-600">
+                               <Clock className="h-2.5 w-2.5 mr-1 text-gray-500" />
+                               <span>{event.startTime} - {event.endTime}</span>
                              </div>
+                             
+                             {event.room && (
+                               <div className="flex items-center text-[9px] text-gray-600">
+                                 <MapPin className="h-2.5 w-2.5 mr-1 text-gray-500" />
+                                 <span>Salle {event.room}</span>
+                               </div>
+                             )}
+                             
+                             {event.instructor && (
+                               <div className="flex items-center text-[9px] text-gray-600">
+                                 <User className="h-2.5 w-2.5 mr-1 text-gray-500" />
+                                 <span>{event.instructor}</span>
+                               </div>
+                             )}
                            </div>
                         </div>
                       ))}
