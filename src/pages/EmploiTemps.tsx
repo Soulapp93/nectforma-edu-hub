@@ -202,90 +202,111 @@ const EmploiTemps = () => {
   };
 
   const renderWeekOrListView = () => (
-    <div className="container mx-auto px-6 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-purple-500 via-pink-500 to-purple-600 p-6">
       {viewMode === 'week' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-6">
-          {mockSchedule.map((day) => (
-            <Card
-              key={day.id}
-              className={`overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 ${
-                day.modules.length > 0 
-                  ? 'bg-card shadow-md hover:shadow-primary/10' 
-                  : 'bg-muted/30 shadow-sm opacity-70'
-              }`}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-lg font-bold text-foreground">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4 auto-rows-max">
+            {mockSchedule.map((day, index) => {
+              const isToday = new Date().toLocaleDateString('fr-FR', { weekday: 'long' }).toLowerCase() === day.day.toLowerCase();
+              
+              return (
+                <div 
+                  key={day.id}
+                  className={`bg-white/10 backdrop-blur-sm rounded-2xl p-4 animate-fade-in ${
+                    isToday ? 'ring-2 ring-white/30' : ''
+                  }`}
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  {/* Column Header */}
+                  <div className="mb-4 text-center">
+                    <h3 className="text-white font-semibold text-sm mb-1 capitalize">
                       {day.day}
-                    </CardTitle>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <span className="text-2xl font-bold text-primary">
-                        {day.date}
-                      </span>
-                      {day.modules.length > 0 && (
-                        <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
-                          {day.modules.length} cours
-                        </Badge>
-                      )}
+                    </h3>
+                    <div className={`text-2xl font-bold ${isToday ? 'text-white' : 'text-white/80'}`}>
+                      {day.date}
                     </div>
-                  </div>
-                  {day.modules.length === 0 && (
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <div className="text-white/60 text-xs">
+                      {format(new Date(2024, 9, parseInt(day.date)), 'MMM', { locale: fr })}
                     </div>
-                  )}
-                </div>
-              </CardHeader>
-
-              <CardContent className="space-y-3">
-                {day.modules.length === 0 ? (
-                  <p className="text-center text-muted-foreground text-sm py-4">
-                    Aucun cours
-                  </p>
-                ) : (
-                  day.modules.map((module, index) => (
-                     <div
-                       key={index}
-                       className="relative p-4 rounded-xl bg-gradient-to-r from-card to-muted/30 border border-border hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-pointer group"
-                       onClick={() => {
-                         const fullEvent = filteredEvents.find(e => 
-                           e.title === module.title && 
-                           e.instructor === module.instructor &&
-                           e.room === module.room
-                         );
-                         if (fullEvent) handleEventClick(fullEvent);
-                       }}
-                     >
-                      <div className={`absolute top-0 left-0 w-1 h-full ${module.color} rounded-l-xl`} />
-                      
-                      <div className="ml-3">
-                        <h4 className="font-semibold text-foreground text-sm mb-2 group-hover:text-primary transition-colors">
-                          {module.title}
-                        </h4>
-                        
-                        <div className="space-y-1">
-                          <div className="flex items-center text-xs text-muted-foreground">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {module.time}
-                          </div>
-                          <div className="flex items-center text-xs text-muted-foreground">
-                            <MapPin className="h-3 w-3 mr-1" />
-                            {module.room}
-                          </div>
-                          <div className="flex items-center text-xs text-muted-foreground">
-                            <User className="h-3 w-3 mr-1" />
-                            {module.instructor}
-                          </div>
-                        </div>
+                    {isToday && (
+                      <div className="mt-1">
+                        <span className="inline-block w-2 h-2 bg-white rounded-full animate-pulse"></span>
                       </div>
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                    )}
+                  </div>
+
+                  {/* Course Cards */}
+                  <div className="space-y-3 min-h-[200px]">
+                    {day.modules.length === 0 ? (
+                      <div className="rounded-xl p-4 text-center opacity-50 bg-white/5 backdrop-blur-sm border border-white/10">
+                        <Calendar className="h-8 w-8 text-white/30 mx-auto mb-2" />
+                        <p className="text-white/50 text-xs">Libre</p>
+                      </div>
+                    ) : (
+                      day.modules.map((module, moduleIndex) => {
+                        // Générer une couleur basée sur l'index du module
+                        const colors = [
+                          '#8B5CF6', // violet
+                          '#EC4899', // rose
+                          '#06B6D4', // cyan
+                          '#10B981', // emerald
+                          '#F59E0B', // amber
+                          '#EF4444', // rouge
+                          '#6366F1'  // indigo
+                        ];
+                        const moduleColor = colors[moduleIndex % colors.length];
+                        
+                        return (
+                          <div
+                            key={moduleIndex}
+                            className="rounded-xl p-4 cursor-pointer transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105"
+                            style={{ 
+                              backgroundColor: moduleColor,
+                              color: 'white',
+                              border: 'none',
+                              backgroundImage: `linear-gradient(135deg, ${moduleColor}, ${moduleColor}CC)`
+                            }}
+                            onClick={() => {
+                              const fullEvent = filteredEvents.find(e => 
+                                e.title === module.title && 
+                                e.instructor === module.instructor &&
+                                e.room === module.room
+                              );
+                              if (fullEvent) handleEventClick(fullEvent);
+                            }}
+                          >
+                            {/* Course title */}
+                            <h4 className="text-white font-semibold text-sm mb-2 line-clamp-2">
+                              {module.title}
+                            </h4>
+
+                            {/* Time */}
+                            <div className="flex items-center text-white/70 text-xs mb-2">
+                              <Clock className="h-3 w-3 mr-1" />
+                              <span>{module.time}</span>
+                            </div>
+
+                            {/* Room and Instructor */}
+                            <div className="space-y-1">
+                              <div className="flex items-center text-white/70 text-xs">
+                                <MapPin className="h-3 w-3 mr-1" />
+                                <span>{module.room}</span>
+                              </div>
+                              
+                              <div className="flex items-center text-white/70 text-xs">
+                                <User className="h-3 w-3 mr-1" />
+                                <span>{module.instructor}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       ) : (
         <div className="space-y-4">
