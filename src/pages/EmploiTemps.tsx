@@ -208,20 +208,48 @@ const EmploiTemps = () => {
         className="mb-6"
       />
 
-      {/* Header avec navigation */}
+      {/* Barre de navigation avec défilement des semaines */}
       <div className="bg-white rounded-lg shadow-sm mb-4 p-4">
-        <div className="flex items-center justify-between">
-          {/* Navigation de période */}
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" onClick={() => navigateDate('prev')}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <h2 className="text-lg font-medium text-gray-900 min-w-80 text-center">
-              {getCurrentPeriodLabel()}
-            </h2>
-            <Button variant="ghost" size="sm" onClick={() => navigateDate('next')}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+        <div className="flex items-center justify-between mb-4">
+          {/* Barre de défilement des semaines */}
+          <div className="flex-1 mr-6">
+            <div className="text-sm text-gray-600 mb-2">Navigation par semaines</div>
+            <div className="flex overflow-x-auto space-x-2 pb-2" style={{ scrollbarWidth: 'thin' }}>
+              {Array.from({ length: 52 }, (_, i) => {
+                const weekNumber = i + 1;
+                const year = new Date().getFullYear();
+                const firstDayOfYear = new Date(year, 0, 1);
+                const firstWeekStart = new Date(firstDayOfYear);
+                firstWeekStart.setDate(firstDayOfYear.getDate() - firstDayOfYear.getDay() + 1);
+                
+                const weekStart = new Date(firstWeekStart);
+                weekStart.setDate(firstWeekStart.getDate() + (weekNumber - 1) * 7);
+                
+                const currentWeekStart = new Date(selectedDate);
+                const currentDay = currentWeekStart.getDay();
+                const diff = currentWeekStart.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
+                currentWeekStart.setDate(diff);
+                
+                const isCurrentWeek = Math.abs(weekStart.getTime() - currentWeekStart.getTime()) < 7 * 24 * 60 * 60 * 1000;
+                
+                return (
+                  <button
+                    key={weekNumber}
+                    onClick={() => {
+                      setSelectedDate(new Date(weekStart));
+                      setCurrentView('week');
+                    }}
+                    className={`flex-shrink-0 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      isCurrentWeek 
+                        ? 'bg-blue-500 text-white' 
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {weekNumber}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Boutons de vue et mode d'affichage */}
@@ -285,6 +313,13 @@ const EmploiTemps = () => {
               Aujourd'hui
             </Button>
           </div>
+        </div>
+
+        {/* Affichage de la période actuelle */}
+        <div className="text-center">
+          <h2 className="text-lg font-medium text-gray-900">
+            {getCurrentPeriodLabel()}
+          </h2>
         </div>
       </div>
 
