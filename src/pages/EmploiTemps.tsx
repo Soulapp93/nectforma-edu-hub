@@ -298,12 +298,12 @@ const EmploiTemps = () => {
         ) : (
           <>
             {/* Vue Semaine - Mode Planning */}
-            {currentView === 'week' && displayMode === 'planning' && (
-              <div className="grid grid-cols-7 overflow-x-auto border border-gray-200 rounded-lg">
+{currentView === 'week' && displayMode === 'planning' && (
+              <div className="grid grid-cols-7 border border-gray-200 rounded-lg overflow-hidden">
                 {getWeekDates().map((date, index) => (
-                  <div key={index} className={`min-w-[160px] max-w-[200px] ${index < 6 ? 'border-r border-gray-200' : ''}`}>
+                  <div key={index} className={`flex-1 ${index < 6 ? 'border-r border-gray-200' : ''}`}>
                     {/* En-tête du jour */}
-                    <div className="text-center mb-2 pb-2 border-b border-gray-200 bg-gray-50 p-2">
+                    <div className="text-center pb-2 border-b border-gray-200 bg-gray-50 p-2">
                       <div className="text-xs font-medium text-gray-600 mb-1">
                         {weekDays[index]}
                       </div>
@@ -325,7 +325,7 @@ const EmploiTemps = () => {
                             backgroundColor: slot.color || (index % 2 === 0 ? '#8B5A8C' : '#5B9BD5'),
                           }}
                         >
-                          <div className="font-medium text-xs mb-1 leading-tight truncate">
+                          <div className="font-medium text-xs mb-1 leading-tight">
                             {slot.formation_modules?.title || 'Algorithmes'}
                           </div>
                           <div className="text-xs opacity-95">
