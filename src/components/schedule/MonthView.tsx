@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin, User } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -157,10 +157,9 @@ export const MonthView: React.FC<MonthViewProps> = ({
                        {dayEvents.slice(0, 3).map((event, index) => (
                           <div
                             key={event.id}
-                            className="text-xs p-3 rounded-xl border-2 bg-card shadow-md cursor-pointer hover:shadow-lg transition-all duration-300 floating-card"
+                            className="p-3 rounded-lg bg-white border-l-4 shadow-sm cursor-pointer hover:shadow-md transition-all duration-200"
                             style={{ 
-                              borderColor: event.color || 'hsl(var(--primary))',
-                              color: event.color || 'hsl(var(--primary))'
+                              borderLeftColor: event.color || 'hsl(var(--primary))'
                             }}
                            title={`${event.title} - ${event.startTime}`}
                            onClick={(e) => {
@@ -168,18 +167,29 @@ export const MonthView: React.FC<MonthViewProps> = ({
                              onEventClick?.(event);
                            }}
                          >
-                           <div className="flex items-center space-x-1">
-                             <Clock className="h-2 w-2 flex-shrink-0" />
-                             <span className="font-medium truncate">{event.title}</span>
-                           </div>
-                           <div className="text-[10px] opacity-75 mt-0.5">
-                             {event.startTime} - {event.endTime}
-                           </div>
-                           {event.room && (
-                             <div className="text-[10px] opacity-75">
-                               {event.room}
+                           <div className="space-y-1">
+                             <div className="font-bold text-gray-900 text-xs leading-tight">
+                               Module {event.title}
                              </div>
-                           )}
+                             <div className="text-[10px] text-gray-600">
+                               <div className="flex items-center mb-0.5">
+                                 <Clock className="h-2 w-2 mr-1 text-gray-400" />
+                                 {event.startTime} - {event.endTime}
+                               </div>
+                               {event.room && (
+                                 <div className="flex items-center">
+                                   <MapPin className="h-2 w-2 mr-1 text-gray-400" />
+                                   {event.room}
+                                 </div>
+                               )}
+                               {event.instructor && (
+                                 <div className="flex items-center mt-0.5">
+                                   <User className="h-2 w-2 mr-1 text-gray-400" />
+                                   {event.instructor}
+                                 </div>
+                               )}
+                             </div>
+                           </div>
                         </div>
                       ))}
                       
