@@ -155,6 +155,18 @@ const EmploiTemps = () => {
       if (direction === 'prev') setCurrentDate(subMonths(currentDate, 1));
       else if (direction === 'next') setCurrentDate(addMonths(currentDate, 1));
       else setCurrentDate(new Date());
+    } else if (viewMode === 'day') {
+      if (direction === 'prev') {
+        const newDate = new Date(currentDate);
+        newDate.setDate(newDate.getDate() - 1);
+        setCurrentDate(newDate);
+      } else if (direction === 'next') {
+        const newDate = new Date(currentDate);
+        newDate.setDate(newDate.getDate() + 1);
+        setCurrentDate(newDate);
+      } else {
+        setCurrentDate(new Date());
+      }
     } else {
       setCurrentDate(navigateWeek(currentDate, direction));
     }

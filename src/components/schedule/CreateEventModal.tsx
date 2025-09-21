@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Plus, Calendar as CalendarIcon, Clock, MapPin, User, Book } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -51,25 +51,41 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
   });
   const { toast } = useToast();
 
-  const instructors = ['M. Dubois', 'Mme Martin', 'M. Durand', 'Mme Bernard', 'M. Petit', 'Mme Leroy'];
-  const rooms = ['Salle A101', 'Salle B202', 'Salle C301', 'Salle D401', 'Atelier 1', 'Amphithéâtre'];
-  const formations = ['Formation Marketing', 'Formation Technique', 'Formation Créative', 'Formation Expert'];
+  const modules = [
+    'Sélectionner un module',
+    'Les absences',
+    'Marketing Digital',
+    'Développement Web',
+    'Gestion de Projet',
+    'Communication',
+    'Design UX/UI'
+  ];
+
+  const instructors = [
+    'Sélectionner un formateur',
+    'Formateur Demo',
+    'M. Dubois',
+    'Mme Martin', 
+    'M. Durand',
+    'Mme Bernard'
+  ];
+
+  const rooms = ['Salle A1', 'Salle B2', 'Salle C3', 'Amphithéâtre', 'Atelier'];
+
   const colors = [
-    { name: 'Bleu', value: 'bg-blue-500' },
-    { name: 'Violet', value: 'bg-purple-500' },
-    { name: 'Vert', value: 'bg-green-500' },
-    { name: 'Orange', value: 'bg-orange-500' },
-    { name: 'Rose', value: 'bg-pink-500' },
-    { name: 'Indigo', value: 'bg-indigo-500' },
-    { name: 'Teal', value: 'bg-teal-500' },
-    { name: 'Rouge', value: 'bg-red-500' },
+    '#3B82F6', // Bleu
+    '#10B981', // Vert
+    '#F59E0B', // Orange
+    '#EF4444', // Rouge
+    '#8B5CF6', // Violet
+    '#EC4899'  // Rose
   ];
 
   const timeSlots = [
     '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
     '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
     '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
-    '17:00', '17:30', '18:00', '18:30', '19:00', '19:30'
+    '17:00', '17:30', '18:00', '18:30', '19:00'
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -98,13 +114,12 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
     };
 
     onEventCreated(newEvent);
-    
+
     toast({
       title: "Cours créé",
       description: "Le nouveau cours a été ajouté avec succès.",
     });
 
-    // Reset form
     setEventData({
       title: '',
       date: undefined,
@@ -129,45 +144,54 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
         </Button>
       </DialogTrigger>
       
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Créer un nouveau cours</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-md p-0 bg-white rounded-xl">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b">
+          <DialogTitle className="text-lg font-semibold text-gray-900">
+            Ajouter un créneau
+          </DialogTitle>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setOpen(false)}
+            className="h-8 w-8 text-gray-400 hover:text-gray-600"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
         
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Titre du cours */}
-            <div className="md:col-span-2 space-y-2">
-              <Label htmlFor="title" className="flex items-center">
-                <Book className="h-4 w-4 mr-2" />
-                Titre du cours *
-              </Label>
-              <Input
-                id="title"
-                placeholder="Ex: Introduction au Marketing Digital"
-                value={eventData.title}
-                onChange={(e) => setEventData(prev => ({ ...prev, title: e.target.value }))}
-                required
-              />
-            </div>
+        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+          {/* Nom du module */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-gray-700">
+              Nom du module *
+            </Label>
+            <Select 
+              value={eventData.formation} 
+              onValueChange={(value) => setEventData(prev => ({ ...prev, formation: value, title: value }))}
+            >
+              <SelectTrigger className="w-full bg-purple-50 border-purple-200 text-purple-700 focus:border-purple-300">
+                <SelectValue placeholder="Sélectionner un module" />
+              </SelectTrigger>
+              <SelectContent>
+                {modules.slice(1).map((module) => (
+                  <SelectItem key={module} value={module}>{module}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-            {/* Date */}
+          {/* Date et Heures */}
+          <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
-              <Label className="flex items-center">
-                <CalendarIcon className="h-4 w-4 mr-2" />
-                Date *
-              </Label>
+              <Label className="text-sm font-medium text-gray-700">Date *</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !eventData.date && "text-muted-foreground"
-                    )}
+                    className="w-full justify-center text-xs px-2 py-2 h-auto"
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {eventData.date ? format(eventData.date, "PPP", { locale: fr }) : "Sélectionner une date"}
+                    {eventData.date ? format(eventData.date, "dd/MM/yyyy") : "Date"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -176,52 +200,19 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
                     selected={eventData.date}
                     onSelect={(date) => setEventData(prev => ({ ...prev, date }))}
                     initialFocus
-                    className="pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>
             </div>
 
-            {/* Couleur */}
             <div className="space-y-2">
-              <Label>Couleur</Label>
-              <Select 
-                value={eventData.color} 
-                onValueChange={(value) => setEventData(prev => ({ ...prev, color: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue>
-                    <div className="flex items-center">
-                      <div className={`w-4 h-4 rounded-full ${eventData.color} mr-2`} />
-                      {colors.find(c => c.value === eventData.color)?.name}
-                    </div>
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {colors.map((color) => (
-                    <SelectItem key={color.value} value={color.value}>
-                      <div className="flex items-center">
-                        <div className={`w-4 h-4 rounded-full ${color.value} mr-2`} />
-                        {color.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Heure de début */}
-            <div className="space-y-2">
-              <Label className="flex items-center">
-                <Clock className="h-4 w-4 mr-2" />
-                Heure de début *
-              </Label>
+              <Label className="text-sm font-medium text-gray-700">Heure début *</Label>
               <Select 
                 value={eventData.startTime} 
                 onValueChange={(value) => setEventData(prev => ({ ...prev, startTime: value }))}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner l'heure" />
+                <SelectTrigger className="w-full text-xs px-2 py-2 h-auto">
+                  <SelectValue placeholder="09:00" />
                 </SelectTrigger>
                 <SelectContent>
                   {timeSlots.map((time) => (
@@ -231,18 +222,14 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
               </Select>
             </div>
 
-            {/* Heure de fin */}
             <div className="space-y-2">
-              <Label className="flex items-center">
-                <Clock className="h-4 w-4 mr-2" />
-                Heure de fin *
-              </Label>
+              <Label className="text-sm font-medium text-gray-700">Heure fin *</Label>
               <Select 
                 value={eventData.endTime} 
                 onValueChange={(value) => setEventData(prev => ({ ...prev, endTime: value }))}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner l'heure" />
+                <SelectTrigger className="w-full text-xs px-2 py-2 h-auto">
+                  <SelectValue placeholder="09:00" />
                 </SelectTrigger>
                 <SelectContent>
                   {timeSlots.map((time) => (
@@ -251,86 +238,84 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
                 </SelectContent>
               </Select>
             </div>
+          </div>
 
-            {/* Formateur */}
+          {/* Salle et Formateur */}
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label className="flex items-center">
-                <User className="h-4 w-4 mr-2" />
-                Formateur
-              </Label>
+              <Label className="text-sm font-medium text-gray-700">Salle</Label>
+              <Input
+                placeholder="Salle A1"
+                value={eventData.room}
+                onChange={(e) => setEventData(prev => ({ ...prev, room: e.target.value }))}
+                className="text-sm"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">Formateur</Label>
               <Select 
                 value={eventData.instructor} 
                 onValueChange={(value) => setEventData(prev => ({ ...prev, instructor: value }))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full text-sm">
                   <SelectValue placeholder="Sélectionner un formateur" />
                 </SelectTrigger>
                 <SelectContent>
-                  {instructors.map((instructor) => (
+                  {instructors.slice(1).map((instructor) => (
                     <SelectItem key={instructor} value={instructor}>{instructor}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+          </div>
 
-            {/* Salle */}
-            <div className="space-y-2">
-              <Label className="flex items-center">
-                <MapPin className="h-4 w-4 mr-2" />
-                Salle
-              </Label>
-              <Select 
-                value={eventData.room} 
-                onValueChange={(value) => setEventData(prev => ({ ...prev, room: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une salle" />
-                </SelectTrigger>
-                <SelectContent>
-                  {rooms.map((room) => (
-                    <SelectItem key={room} value={room}>{room}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Formation */}
-            <div className="md:col-span-2 space-y-2">
-              <Label>Formation</Label>
-              <Select 
-                value={eventData.formation} 
-                onValueChange={(value) => setEventData(prev => ({ ...prev, formation: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner une formation" />
-                </SelectTrigger>
-                <SelectContent>
-                  {formations.map((formation) => (
-                    <SelectItem key={formation} value={formation}>{formation}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Description */}
-            <div className="md:col-span-2 space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Description du cours (optionnel)"
-                value={eventData.description}
-                onChange={(e) => setEventData(prev => ({ ...prev, description: e.target.value }))}
-                rows={3}
-              />
+          {/* Couleur du créneau */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-gray-700">Couleur du créneau</Label>
+            <div className="flex gap-2">
+              {colors.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  onClick={() => setEventData(prev => ({ ...prev, color: `bg-[${color}]` }))}
+                  className={cn(
+                    "w-8 h-8 rounded-full border-2 transition-all",
+                    eventData.color === `bg-[${color}]` ? "border-gray-900 scale-110" : "border-gray-200"
+                  )}
+                  style={{ backgroundColor: color }}
+                />
+              ))}
             </div>
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          {/* Notes */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-gray-700">Notes</Label>
+            <Textarea
+              placeholder="Notes complémentaires..."
+              value={eventData.description}
+              onChange={(e) => setEventData(prev => ({ ...prev, description: e.target.value }))}
+              rows={3}
+              className="text-sm resize-none"
+            />
+          </div>
+
+          {/* Boutons */}
+          <div className="flex gap-3 pt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setOpen(false)}
+              className="flex-1"
+            >
               Annuler
             </Button>
-            <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-              Créer le cours
+            <Button 
+              type="submit" 
+              className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              Ajouter le créneau
             </Button>
           </div>
         </form>
