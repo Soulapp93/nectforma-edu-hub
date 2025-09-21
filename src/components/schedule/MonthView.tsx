@@ -152,7 +152,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
                        {dayEvents.slice(0, 3).map((event, index) => (
                           <div
                             key={event.id}
-                            className="text-xs p-2 rounded border-2 bg-white dark:bg-slate-800 shadow-sm cursor-pointer hover:shadow-md transition-all"
+                            className="text-xs p-2 rounded border-2 bg-gray-50 dark:bg-slate-700 shadow-sm cursor-pointer hover:shadow-md transition-all"
                             style={{ 
                               borderColor: event.color || 'hsl(var(--primary))',
                               color: event.color || 'hsl(var(--primary))'
