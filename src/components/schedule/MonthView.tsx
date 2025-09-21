@@ -152,18 +152,29 @@ export const MonthView: React.FC<MonthViewProps> = ({
                        {dayEvents.slice(0, 3).map((event, index) => (
                           <div
                             key={event.id}
-                            className="text-xs p-1.5 rounded text-white truncate cursor-pointer hover:opacity-80 transition-opacity"
-                            style={{ backgroundColor: event.color || 'hsl(var(--primary))' }}
+                            className="text-xs p-2 rounded border-2 bg-white dark:bg-slate-800 shadow-sm cursor-pointer hover:shadow-md transition-all"
+                            style={{ 
+                              borderColor: event.color || 'hsl(var(--primary))',
+                              color: event.color || 'hsl(var(--primary))'
+                            }}
                            title={`${event.title} - ${event.startTime}`}
                            onClick={(e) => {
                              e.stopPropagation();
                              onEventClick?.(event);
                            }}
                          >
-                          <div className="flex items-center space-x-1">
-                            <Clock className="h-2 w-2 flex-shrink-0" />
-                            <span className="truncate">{event.title}</span>
-                          </div>
+                           <div className="flex items-center space-x-1">
+                             <Clock className="h-2 w-2 flex-shrink-0" />
+                             <span className="font-medium truncate">{event.title}</span>
+                           </div>
+                           <div className="text-[10px] opacity-75 mt-0.5">
+                             {event.startTime} - {event.endTime}
+                           </div>
+                           {event.room && (
+                             <div className="text-[10px] opacity-75">
+                               {event.room}
+                             </div>
+                           )}
                         </div>
                       ))}
                       

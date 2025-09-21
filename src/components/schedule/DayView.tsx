@@ -93,7 +93,7 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
                     <div className="flex-1 min-w-0 pb-2">
                       {event ? (
                         <div 
-                          className="p-4 rounded-lg border-2 bg-white dark:bg-slate-800 shadow-sm"
+                          className="p-4 rounded-lg border-2 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-shadow"
                           style={{ 
                             borderColor: event.color || 'hsl(var(--primary))'
                           }}
