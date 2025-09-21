@@ -299,33 +299,33 @@ const EmploiTemps = () => {
           <>
             {/* Vue Semaine - Mode Planning */}
             {currentView === 'week' && displayMode === 'planning' && (
-              <div className="grid grid-cols-7 gap-2 lg:gap-4">
+              <div className="grid grid-cols-7 gap-1 overflow-x-auto">
                 {getWeekDates().map((date, index) => (
-                  <div key={index} className="min-w-0">
+                  <div key={index} className="min-w-[160px] max-w-[200px]">
                     {/* En-tête du jour */}
-                    <div className="text-center mb-3 pb-2 border-b border-gray-100">
+                    <div className="text-center mb-2 pb-1 border-b border-gray-100">
                       <div className="text-xs font-medium text-gray-600 mb-1">
                         {weekDays[index].substring(0, 3)}
                       </div>
-                      <div className="text-lg lg:text-2xl font-bold text-gray-900 mb-1">
+                      <div className="text-xl font-bold text-gray-900 mb-1">
                         {date.getDate()}
                       </div>
-                      <div className="text-xs text-gray-500 hidden sm:block">
+                      <div className="text-xs text-gray-500">
                         {date.toLocaleDateString('fr-FR', { month: 'short' })}
                       </div>
                     </div>
                     
                     {/* Créneaux du jour */}
-                    <div className="space-y-2 min-h-[300px]">
+                    <div className="space-y-1 min-h-[280px]">
                       {getSlotsForDate(date).map((slot) => (
                         <div
                           key={slot.id}
-                          className="rounded-lg p-2 lg:p-3 text-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                          className="rounded p-2 text-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
                           style={{
                             backgroundColor: slot.color || (index % 2 === 0 ? '#8B5A8C' : '#5B9BD5'),
                           }}
                         >
-                          <div className="font-medium text-xs lg:text-sm mb-1 leading-tight truncate">
+                          <div className="font-medium text-xs mb-1 leading-tight truncate">
                             {slot.formation_modules?.title || 'Algorithmes'}
                           </div>
                           <div className="text-xs opacity-95">
@@ -335,9 +335,9 @@ const EmploiTemps = () => {
                       ))}
                       
                       {/* Bouton d'ajout */}
-                      <div className="pt-2">
-                        <button className="w-full h-8 lg:h-12 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 hover:border-gray-400 hover:text-gray-500 transition-colors">
-                          <span className="text-lg lg:text-2xl">+</span>
+                      <div className="pt-1">
+                        <button className="w-full h-8 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400 hover:border-gray-400 hover:text-gray-500 transition-colors">
+                          <span className="text-lg">+</span>
                         </button>
                       </div>
                     </div>
