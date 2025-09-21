@@ -95,7 +95,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({ schedules, selectedDate 
 
                         {/* Course title */}
                         <h4 className="text-white font-semibold text-sm mb-2 line-clamp-2">
-                          {slot.formation_modules?.title || 'Module non défini'}
+                          Module {slot.formation_modules?.title || 'Module non défini'}
                         </h4>
 
                         {/* Time */}
