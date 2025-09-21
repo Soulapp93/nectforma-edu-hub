@@ -300,63 +300,95 @@ const EmploiTemps = () => {
           <>
             {/* Weekly Schedule */}
             {currentView === 'week' && displayMode === 'planning' && (
-              <div className="p-6">
-                <div className="grid grid-cols-7 gap-3">
+              <div className="p-4">
+                {/* En-têtes des jours */}
+                <div className="grid grid-cols-7 gap-3 mb-4">
                   {getWeekDates().map((date, index) => (
-                    <div key={index} className="min-h-[500px]">
-                      <div className="text-center mb-4 p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border border-primary/10">
-                        <div className="font-semibold text-base text-primary">{weekDays[index]}</div>
-                        <div className="text-3xl font-bold mt-2 text-foreground">
-                          {date.getDate()}
-                        </div>
-                        <div className="text-sm text-muted-foreground mt-1">
-                          {date.toLocaleDateString('fr-FR', { month: 'short' })}
-                        </div>
+                    <div key={index} className="text-center p-3 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border border-primary/20">
+                      <div className="font-semibold text-sm text-primary mb-1">{weekDays[index]}</div>
+                      <div className="text-2xl font-bold text-foreground">
+                        {date.getDate()}
                       </div>
-                      
-                      <div className="space-y-3">
-                        {getSlotsForDate(date).map((slot) => (
-                          <div
-                            key={slot.id}
-                            className="p-4 rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 border border-white/20"
-                            style={{
-                              backgroundColor: slot.color || '#8B5CF6',
-                              color: 'white'
-                            }}
-                          >
-                            <div className="font-semibold text-sm leading-tight mb-2">
-                              {slot.formation_modules?.title || 'Module non défini'}
-                            </div>
-                            
-                            <div className="flex items-center text-xs opacity-95 mb-2">
-                              <Clock className="h-3 w-3 mr-2" />
-                              {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
-                            </div>
-                            
-                            <div className="flex items-center text-xs opacity-95 mb-2">
-                              <Calendar className="h-3 w-3 mr-2" />
-                              {slot.room || 'Salle non définie'}
-                            </div>
-                            
-                            <div className="flex items-center text-xs opacity-90">
-                              <div className="w-4 h-4 mr-2 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
-                                {slot.users ? 
-                                  `${slot.users.first_name[0]}${slot.users.last_name[0]}` : 
-                                  'F'
-                                }
-                              </div>
-                              <span className="truncate">
-                                {slot.users ? 
-                                  `${slot.users.first_name} ${slot.users.last_name}` : 
-                                  'Formateur'
-                                }
-                              </span>
-                            </div>
-                          </div>
-                        ))}
+                      <div className="text-xs text-muted-foreground">
+                        {date.toLocaleDateString('fr-FR', { month: 'short' })}
                       </div>
                     </div>
                   ))}
+                </div>
+
+                {/* Grille des créneaux */}
+                <div className="grid grid-cols-7 gap-3" style={{ minHeight: '600px' }}>
+                  {getWeekDates().map((date, dayIndex) => {
+                    const daySlots = getSlotsForDate(date);
+                    return (
+                      <div key={dayIndex} className="relative">
+                        {/* Ligne de séparation verticale */}
+                        {dayIndex < 6 && (
+                          <div className="absolute right-0 top-0 bottom-0 w-px bg-gray-200"></div>
+                        )}
+                        
+                        {/* Zone de dépôt vide */}
+                        {daySlots.length === 0 && (
+                          <div className="h-full min-h-[400px] bg-gray-50/50 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center">
+                            <div className="text-center text-gray-400">
+                              <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                              <span className="text-sm">Aucun cours</span>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Créneaux du jour */}
+                        <div className="space-y-2">
+                          {daySlots.map((slot) => (
+                            <div
+                              key={slot.id}
+                              className="p-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border-l-4 bg-white"
+                              style={{
+                                borderLeftColor: slot.color || '#8B5CF6'
+                              }}
+                            >
+                              {/* Titre du module */}
+                              <div className="font-semibold text-sm text-gray-900 mb-2 leading-tight">
+                                {slot.formation_modules?.title || 'Module non défini'}
+                              </div>
+                              
+                              {/* Horaire */}
+                              <div className="flex items-center text-xs text-gray-600 mb-1">
+                                <Clock className="h-3 w-3 mr-1.5" />
+                                <span className="font-medium">
+                                  {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                                </span>
+                              </div>
+                              
+                              {/* Salle */}
+                              <div className="flex items-center text-xs text-gray-600 mb-1">
+                                <MapPin className="h-3 w-3 mr-1.5" />
+                                <span>{slot.room || 'Salle A101'}</span>
+                              </div>
+                              
+                              {/* Formateur */}
+                              <div className="flex items-center text-xs text-gray-600">
+                                <User className="h-3 w-3 mr-1.5" />
+                                <span className="truncate">
+                                  {slot.users ? 
+                                    `${slot.users.first_name} ${slot.users.last_name}` : 
+                                    'Formateur'
+                                  }
+                                </span>
+                              </div>
+                              
+                              {/* Notes (si présentes) */}
+                              {slot.notes && (
+                                <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600">
+                                  {slot.notes}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
