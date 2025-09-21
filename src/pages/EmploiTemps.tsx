@@ -299,13 +299,13 @@ const EmploiTemps = () => {
           <>
             {/* Vue Semaine - Mode Planning */}
             {currentView === 'week' && displayMode === 'planning' && (
-              <div className="grid grid-cols-7 overflow-x-auto">
+              <div className="grid grid-cols-7 overflow-x-auto border border-gray-200 rounded-lg">
                 {getWeekDates().map((date, index) => (
-                  <div key={index} className="min-w-[160px] max-w-[200px]">
+                  <div key={index} className={`min-w-[160px] max-w-[200px] ${index < 6 ? 'border-r border-gray-200' : ''}`}>
                     {/* En-tête du jour */}
-                    <div className="text-center mb-2 pb-1 border-b border-gray-100">
+                    <div className="text-center mb-2 pb-2 border-b border-gray-200 bg-gray-50 p-2">
                       <div className="text-xs font-medium text-gray-600 mb-1">
-                        {weekDays[index].substring(0, 3)}
+                        {weekDays[index]}
                       </div>
                       <div className="text-xl font-bold text-gray-900 mb-1">
                         {date.getDate()}
@@ -316,7 +316,7 @@ const EmploiTemps = () => {
                     </div>
                     
                     {/* Créneaux du jour */}
-                    <div className="space-y-1 min-h-[280px]">
+                    <div className="p-2 space-y-1 min-h-[280px]">
                       {getSlotsForDate(date).map((slot) => (
                         <div
                           key={slot.id}
