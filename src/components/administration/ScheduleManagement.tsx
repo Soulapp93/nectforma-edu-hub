@@ -321,17 +321,114 @@ const ScheduleManagement = () => {
   });
 
   // Schedule detail view with same interface as main schedule
-  if (selectedSchedule && viewMode !== 'list') {
+  if (selectedSchedule && (viewMode === 'day' || viewMode === 'week' || viewMode === 'month')) {
     const events = convertSlotsToEvents(slots);
     
     // Render current view function
     const renderCurrentView = () => {
       switch (viewMode) {
+        case 'day':
+          return renderDayView();
         case 'week':
+          return renderWeekOrListView();
+        case 'month':
+          return renderMonthView();
         default:
           return renderWeekOrListView();
       }
     };
+
+    const renderDayView = () => (
+      <div className="container mx-auto px-6 py-8">
+        <Card className="overflow-hidden border-border/50 bg-card shadow-md">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-2xl font-bold text-foreground">
+                  {format(selectedDate, 'EEEE d MMMM yyyy', { locale: fr })}
+                </CardTitle>
+                <p className="text-muted-foreground mt-1">Emploi du temps de la journée</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {timeSlots.map((time) => {
+                const daySlots = slots.filter(slot => 
+                  new Date(slot.date).toDateString() === selectedDate.toDateString() &&
+                  slot.start_time === time
+                );
+                
+                return (
+                  <div key={time} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-sm font-medium text-muted-foreground">{time}</div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleAddSlot(selectedDate, time)}
+                        className="text-xs"
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Ajouter
+                      </Button>
+                    </div>
+                    {daySlots.map((slot) => (
+                      <div key={slot.id} className="ml-4 p-3 bg-card rounded border-l-4" style={{ borderLeftColor: slot.color }}>
+                        <h4 className="font-semibold">{slot.formation_modules?.title}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {slot.start_time} - {slot.end_time} • {slot.room} • {slot.users?.first_name} {slot.users?.last_name}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+
+    const renderMonthView = () => (
+      <div className="container mx-auto px-6 py-8">
+        <Card className="overflow-hidden border-border/50 bg-card shadow-md">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-foreground">
+              Vue mensuelle - {format(selectedDate, 'MMMM yyyy', { locale: fr })}
+            </CardTitle>
+            <p className="text-muted-foreground">Vue d'ensemble du mois</p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-7 gap-2">
+              {/* Grid mensuel simplifié */}
+              {Array.from({ length: 35 }, (_, index) => {
+                const dayDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), index - 6);
+                const daySlots = slots.filter(slot => 
+                  new Date(slot.date).toDateString() === dayDate.toDateString()
+                );
+                
+                return (
+                  <div key={index} className="min-h-[80px] p-2 border rounded hover:bg-muted/30 transition-colors">
+                    <div className="text-sm font-medium">{dayDate.getDate()}</div>
+                    <div className="space-y-1">
+                      {daySlots.slice(0, 2).map((slot) => (
+                        <div key={slot.id} className="text-xs p-1 rounded" style={{ backgroundColor: slot.color + '20', color: slot.color }}>
+                          {slot.formation_modules?.title?.substring(0, 10)}...
+                        </div>
+                      ))}
+                      {daySlots.length > 2 && (
+                        <div className="text-xs text-muted-foreground">+{daySlots.length - 2}</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
 
     const renderWeekOrListView = () => (
       <div className="container mx-auto px-6 py-8">
@@ -503,6 +600,15 @@ const ScheduleManagement = () => {
 
               <div className="flex items-center space-x-2 bg-muted/50 rounded-xl p-1 border">
                 <Button
+                  variant={viewMode === 'day' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('day')}
+                  className={`px-3 ${viewMode === 'day' ? 'bg-primary text-primary-foreground shadow-md' : 'hover:bg-primary/10'}`}
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Jour
+                </Button>
+                <Button
                   variant={viewMode === 'week' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('week')}
@@ -512,13 +618,13 @@ const ScheduleManagement = () => {
                   Semaine
                 </Button>
                 <Button
-                  variant="ghost"
+                  variant={viewMode === 'month' ? 'default' : 'ghost'}
                   size="sm"
-                  onClick={() => setViewMode('list')}
-                  className="px-3 hover:bg-primary/10"
+                  onClick={() => setViewMode('month')}
+                  className={`px-3 ${viewMode === 'month' ? 'bg-primary text-primary-foreground shadow-md' : 'hover:bg-primary/10'}`}
                 >
-                  <List className="h-4 w-4 mr-2" />
-                  Liste
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Mois
                 </Button>
               </div>
             </div>
