@@ -157,10 +157,9 @@ export const MonthView: React.FC<MonthViewProps> = ({
                        {dayEvents.slice(0, 3).map((event, index) => (
                           <div
                             key={event.id}
-                            className="px-2 py-2 rounded-md bg-white border shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 mb-1"
+                            className="px-2 py-2 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 mb-1 text-white"
                             style={{ 
-                              borderLeftColor: event.color || '#3B82F6',
-                              borderLeftWidth: '3px'
+                              backgroundColor: event.color || '#3B82F6'
                             }}
                            title={`${event.title} - ${event.startTime}`}
                            onClick={(e) => {
@@ -169,32 +168,32 @@ export const MonthView: React.FC<MonthViewProps> = ({
                            }}
                          >
                            <div className="space-y-0.5">
-                             <div className="font-semibold text-gray-900 text-[11px] leading-tight">
-                               Module {event.title}
-                             </div>
-                             
-                              <div className="flex items-center text-[9px] text-gray-600">
-                                <Clock className="h-2.5 w-2.5 mr-1 text-gray-500" />
-                                <span>{event.startTime}</span>
+                              <div className="font-semibold text-white text-[11px] leading-tight">
+                                Module {event.title}
                               </div>
-                              <div className="flex items-center text-[9px] text-gray-600">
-                                <Clock className="h-2.5 w-2.5 mr-1 text-gray-500" />
-                                <span>{event.endTime}</span>
-                              </div>
-                             
-                             {event.room && (
-                               <div className="flex items-center text-[9px] text-gray-600">
-                                 <MapPin className="h-2.5 w-2.5 mr-1 text-gray-500" />
-                                 <span>Salle {event.room}</span>
+                              
+                               <div className="flex items-center text-[9px] text-white/90">
+                                 <Clock className="h-2.5 w-2.5 mr-1 text-white/80" />
+                                 <span>{event.startTime}</span>
                                </div>
-                             )}
-                             
-                             {event.instructor && (
-                               <div className="flex items-center text-[9px] text-gray-600">
-                                 <User className="h-2.5 w-2.5 mr-1 text-gray-500" />
-                                 <span>{event.instructor}</span>
+                               <div className="flex items-center text-[9px] text-white/90">
+                                 <Clock className="h-2.5 w-2.5 mr-1 text-white/80" />
+                                 <span>{event.endTime}</span>
                                </div>
-                             )}
+                              
+                              {event.room && (
+                                <div className="flex items-center text-[9px] text-white/90">
+                                  <MapPin className="h-2.5 w-2.5 mr-1 text-white/80" />
+                                  <span>Salle {event.room}</span>
+                                </div>
+                              )}
+                              
+                              {event.instructor && (
+                                <div className="flex items-center text-[9px] text-white/90">
+                                  <User className="h-2.5 w-2.5 mr-1 text-white/80" />
+                                  <span>{event.instructor}</span>
+                                </div>
+                              )}
                            </div>
                         </div>
                       ))}

@@ -109,32 +109,32 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
                     <div className="flex-1 min-w-0 pb-2">
                       {event ? (
                         <div 
-                          className="px-3 py-2 rounded-md bg-white border-l-4 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+                          className="px-3 py-2 rounded-md shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer text-white"
                           style={{ 
-                            borderLeftColor: event.color || '#3B82F6'
+                            backgroundColor: event.color || '#3B82F6'
                           }}
                           onClick={() => onEventClick?.(event)}
                         >
                           <div className="space-y-1">
-                            <h4 className="font-semibold text-gray-900 text-sm leading-tight">
+                            <h4 className="font-semibold text-white text-sm leading-tight">
                               Module {event.title}
                             </h4>
                             
-                            <div className="flex items-center text-xs text-gray-600">
-                              <Clock className="h-3 w-3 mr-1.5 text-gray-500" />
+                            <div className="flex items-center text-xs text-white/90">
+                              <Clock className="h-3 w-3 mr-1.5 text-white/80" />
                               <span>{event.startTime} - {event.endTime}</span>
                             </div>
                             
                             {event.room && (
-                              <div className="flex items-center text-xs text-gray-600">
-                                <MapPin className="h-3 w-3 mr-1.5 text-gray-500" />
+                              <div className="flex items-center text-xs text-white/90">
+                                <MapPin className="h-3 w-3 mr-1.5 text-white/80" />
                                 <span>Salle {event.room}</span>
                               </div>
                             )}
                             
                             {event.instructor && (
-                              <div className="flex items-center text-xs text-gray-600">
-                                <User className="h-3 w-3 mr-1.5 text-gray-500" />
+                              <div className="flex items-center text-xs text-white/90">
+                                <User className="h-3 w-3 mr-1.5 text-white/80" />
                                 <span>{event.instructor}</span>
                               </div>
                             )}
@@ -165,41 +165,40 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
                 {dayEvents.map((event) => (
                    <div
                      key={event.id}
-                     className="bg-white rounded-lg shadow-sm border cursor-pointer hover:shadow-md transition-all duration-200"
+                     className="rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 text-white"
                      style={{ 
-                       borderLeftColor: event.color || '#3B82F6',
-                       borderLeftWidth: '4px'
+                       backgroundColor: event.color || '#3B82F6'
                      }}
                      onClick={() => onEventClick?.(event)}
                    >
                      <div className="p-4">
                        <div className="space-y-2">
-                         <div className="font-semibold text-gray-900 text-sm">
-                           Module {event.title}
-                         </div>
-                         
-                         <div className="flex items-center text-xs text-gray-600">
-                           <Clock className="h-3 w-3 mr-1.5 text-gray-500" />
-                           <span>{event.startTime}</span>
-                         </div>
-                         <div className="flex items-center text-xs text-gray-600">
-                           <Clock className="h-3 w-3 mr-1.5 text-gray-500" />
-                           <span>{event.endTime}</span>
-                         </div>
-                         
-                         {event.room && (
-                           <div className="flex items-center text-xs text-gray-600">
-                             <MapPin className="h-3 w-3 mr-1.5 text-gray-500" />
-                             <span>Salle {event.room}</span>
-                           </div>
-                         )}
-                         
-                         {event.instructor && (
-                           <div className="flex items-center text-xs text-gray-600">
-                             <User className="h-3 w-3 mr-1.5 text-gray-500" />
-                             <span>{event.instructor}</span>
-                           </div>
-                         )}
+                          <div className="font-semibold text-white text-sm">
+                            Module {event.title}
+                          </div>
+                          
+                          <div className="flex items-center text-xs text-white/90">
+                            <Clock className="h-3 w-3 mr-1.5 text-white/80" />
+                            <span>{event.startTime}</span>
+                          </div>
+                          <div className="flex items-center text-xs text-white/90">
+                            <Clock className="h-3 w-3 mr-1.5 text-white/80" />
+                            <span>{event.endTime}</span>
+                          </div>
+                          
+                          {event.room && (
+                            <div className="flex items-center text-xs text-white/90">
+                              <MapPin className="h-3 w-3 mr-1.5 text-white/80" />
+                              <span>Salle {event.room}</span>
+                            </div>
+                          )}
+                          
+                          {event.instructor && (
+                            <div className="flex items-center text-xs text-white/90">
+                              <User className="h-3 w-3 mr-1.5 text-white/80" />
+                              <span>{event.instructor}</span>
+                            </div>
+                          )}
                        </div>
                      </div>
                    </div>
