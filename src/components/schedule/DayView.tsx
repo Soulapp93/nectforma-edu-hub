@@ -109,31 +109,31 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
                     <div className="flex-1 min-w-0 pb-2">
                       {event ? (
                         <div 
-                          className="p-4 rounded-lg bg-white border-l-4 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+                          className="p-3 rounded-lg bg-white border-l-4 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
                           style={{ 
                             borderLeftColor: event.color || 'hsl(var(--primary))'
                           }}
                         >
                           <div className="space-y-2">
-                            <h4 className="font-bold text-gray-900 text-base leading-tight">
+                            <h4 className="font-bold text-gray-900 text-sm leading-tight">
                               Module {event.title}
                             </h4>
                             
-                            <div className="text-sm text-gray-600 space-y-1">
+                            <div className="text-xs text-gray-600 space-y-1">
                               <div className="flex items-center">
                                 <Clock className="h-3 w-3 mr-2 text-gray-400" />
-                                {event.startTime} - {event.endTime}
+                                <span>{event.startTime} - {event.endTime}</span>
                               </div>
                               {event.room && (
                                 <div className="flex items-center">
                                   <MapPin className="h-3 w-3 mr-2 text-gray-400" />
-                                  {event.room}
+                                  <span>Salle {event.room}</span>
                                 </div>
                               )}
                               {event.instructor && (
                                 <div className="flex items-center">
                                   <User className="h-3 w-3 mr-2 text-gray-400" />
-                                  {event.instructor}
+                                  <span>{event.instructor}</span>
                                 </div>
                               )}
                             </div>

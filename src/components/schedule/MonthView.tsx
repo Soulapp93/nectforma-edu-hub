@@ -157,7 +157,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
                        {dayEvents.slice(0, 3).map((event, index) => (
                           <div
                             key={event.id}
-                            className="p-3 rounded-lg bg-white border-l-4 shadow-sm cursor-pointer hover:shadow-md transition-all duration-200"
+                            className="p-2 rounded-lg bg-white border-l-4 shadow-sm cursor-pointer hover:shadow-md transition-all duration-200"
                             style={{ 
                               borderLeftColor: event.color || 'hsl(var(--primary))'
                             }}
@@ -171,21 +171,21 @@ export const MonthView: React.FC<MonthViewProps> = ({
                              <div className="font-bold text-gray-900 text-xs leading-tight">
                                Module {event.title}
                              </div>
-                             <div className="text-[10px] text-gray-600">
-                               <div className="flex items-center mb-0.5">
+                             <div className="text-[10px] text-gray-600 space-y-0.5">
+                               <div className="flex items-center">
                                  <Clock className="h-2 w-2 mr-1 text-gray-400" />
-                                 {event.startTime} - {event.endTime}
+                                 <span>{event.startTime} - {event.endTime}</span>
                                </div>
                                {event.room && (
                                  <div className="flex items-center">
                                    <MapPin className="h-2 w-2 mr-1 text-gray-400" />
-                                   {event.room}
+                                   <span>Salle {event.room}</span>
                                  </div>
                                )}
                                {event.instructor && (
-                                 <div className="flex items-center mt-0.5">
+                                 <div className="flex items-center">
                                    <User className="h-2 w-2 mr-1 text-gray-400" />
-                                   {event.instructor}
+                                   <span>{event.instructor}</span>
                                  </div>
                                )}
                              </div>
