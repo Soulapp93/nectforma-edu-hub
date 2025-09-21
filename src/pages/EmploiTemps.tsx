@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format, addWeeks, subWeeks, addMonths, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { WeekNavigator } from '@/components/schedule/WeekNavigator';
+import WeekNavigation from '@/components/ui/week-navigation';
 import { CreateEventModal, ScheduleEvent } from '@/components/schedule/CreateEventModal';
 import { EventDetailsModal } from '@/components/schedule/EventDetailsModal';
 import { DayView } from '@/components/schedule/DayView';
@@ -418,6 +419,21 @@ const EmploiTemps = () => {
                 Liste
               </Button>
             </div>
+          </div>
+
+          {/* Barre de navigation par semaine */}
+          <div className="mt-6">
+            <WeekNavigation
+              selectedDate={currentDate}
+              onDateChange={setCurrentDate}
+              onWeekSelect={(weekStartDate) => {
+                setCurrentDate(weekStartDate);
+                if (viewMode !== 'week') {
+                  setViewMode('week');
+                }
+              }}
+              className="bg-background/95 backdrop-blur-sm border-border"
+            />
           </div>
         </div>
       </div>
