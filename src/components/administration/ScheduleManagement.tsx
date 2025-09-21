@@ -931,6 +931,14 @@ const ScheduleManagement = () => {
               </div>
 
               <div className="flex items-center space-x-3">
+                <Button 
+                  onClick={() => setIsAddSlotModalOpen(true)}
+                  className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all hover:scale-105"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter un créneau
+                </Button>
+                
                 {selectedSchedule.status === 'Brouillon' && (
                   <Button 
                     onClick={handlePublishSchedule}
