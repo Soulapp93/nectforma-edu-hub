@@ -11,6 +11,7 @@ import EditSlotModal from '@/components/administration/EditSlotModal';
 import SlotActionMenu from '@/components/administration/SlotActionMenu';
 import ExcelImportModal from '@/components/administration/ExcelImportModal';
 import CreateScheduleModal from './CreateScheduleModal';
+import { ModernScheduleEditor } from './ModernScheduleEditor';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -106,65 +107,6 @@ const ScheduleManagement = () => {
     }
   };
 
-  // Week view helper functions
-  const getWeekDates = () => {
-    const monday = new Date(selectedDate);
-    const day = monday.getDay();
-    const diff = monday.getDate() - day + (day === 0 ? -6 : 1);
-    monday.setDate(diff);
-
-    return weekDays.map((_, index) => {
-      const date = new Date(monday);
-      date.setDate(monday.getDate() + index);
-      return date;
-    });
-  };
-
-  const formatDate = (date: Date) => {
-    return date.toISOString().split('T')[0];
-  };
-
-  const formatTime = (time: string) => {
-    return time.slice(0, 5);
-  };
-
-  const getSlotsForDate = (date: Date) => {
-    const dateStr = formatDate(date);
-    return slots.filter(slot => slot.date === dateStr).sort((a, b) => a.start_time.localeCompare(b.start_time));
-  };
-
-  const navigateDate = (direction: 'prev' | 'next') => {
-    const newDate = new Date(selectedDate);
-    
-    if (currentView === 'day') {
-      newDate.setDate(selectedDate.getDate() + (direction === 'next' ? 1 : -1));
-    } else if (currentView === 'week') {
-      newDate.setDate(selectedDate.getDate() + (direction === 'next' ? 7 : -7));
-    } else if (currentView === 'month') {
-      newDate.setMonth(selectedDate.getMonth() + (direction === 'next' ? 1 : -1));
-    }
-    
-    setSelectedDate(newDate);
-  };
-
-  const getCurrentPeriodLabel = () => {
-    if (currentView === 'day') {
-      return selectedDate.toLocaleDateString('fr-FR', { 
-        weekday: 'long', 
-        day: 'numeric', 
-        month: 'long', 
-        year: 'numeric' 
-      });
-    } else if (currentView === 'week') {
-      const weekDates = getWeekDates();
-      const start = weekDates[0];
-      const end = weekDates[6];
-      return `Semaine Du ${start.getDate()} Au ${end.getDate()} ${start.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`;
-    } else {
-      return selectedDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-    }
-  };
-
   // Slot management functions
   const handleAddSlot = (date: Date, time: string) => {
     setSelectedSlot({
@@ -172,6 +114,10 @@ const ScheduleManagement = () => {
       time
     });
     setIsAddSlotModalOpen(true);
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toISOString().split('T')[0];
   };
 
   const handleSlotAdded = () => {
@@ -358,124 +304,24 @@ const ScheduleManagement = () => {
         </div>
 
         <div className="container mx-auto px-6 py-6 space-y-6">
-          {/* Week Navigation */}
-          <WeekNavigation
+          <ModernScheduleEditor
+            scheduleTitle={selectedSchedule.title}
+            scheduleStatus={selectedSchedule.status}
+            slots={slots}
+            slotsLoading={slotsLoading}
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
-            className="mb-6"
+            currentView={currentView}
+            onViewChange={setCurrentView}
+            displayMode={displayMode}
+            onDisplayModeChange={setDisplayMode}
+            onAddSlot={handleAddSlot}
+            onEditSlot={handleEditSlot}
+            onDeleteSlot={handleDeleteSlot}
+            onDuplicateSlot={handleDuplicateSlot}
+            onExcelImport={() => setIsExcelImportModalOpen(true)}
+            onPublishSchedule={handlePublishSchedule}
           />
-
-          {/* Schedule Editor */}
-          <div className="bg-card/50 backdrop-blur-sm rounded-2xl shadow-lg border border-border/50">
-            {/* Controls */}
-            <div className="p-6 border-b border-border/50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="flex bg-muted/50 rounded-xl p-1 border border-border/30">
-                    <button
-                      onClick={() => setCurrentView('day')}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                        currentView === 'day' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      Jour
-                    </button>
-                    <button
-                      onClick={() => setCurrentView('week')}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                        currentView === 'week' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      Semaine
-                    </button>
-                    <button
-                      onClick={() => setCurrentView('month')}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                        currentView === 'month' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      Mois
-                    </button>
-                  </div>
-
-                  {(currentView === 'week' || currentView === 'day' || currentView === 'month') && (
-                    <div className="flex bg-muted/50 rounded-xl p-1 border border-border/30">
-                      <button
-                        onClick={() => setDisplayMode('planning')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                          displayMode === 'planning' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        Planning
-                      </button>
-                      <button
-                        onClick={() => setDisplayMode('list')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                          displayMode === 'list' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        Liste
-                      </button>
-                    </div>
-                  )}
-
-                  <div className="flex items-center space-x-2">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => navigateDate('prev')}
-                      className="hover:bg-primary/10"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <span className="text-sm font-medium min-w-60 text-center text-foreground">{getCurrentPeriodLabel()}</span>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => navigateDate('next')}
-                      className="hover:bg-primary/10"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedDate(new Date())}
-                    className="hover:bg-primary/10"
-                  >
-                    Aujourd'hui
-                  </Button>
-                </div>
-
-                <div className="flex space-x-2">
-                  <Button 
-                    variant="outline"
-                    onClick={() => setIsExcelImportModalOpen(true)}
-                    className="hover:bg-primary/10"
-                  >
-                    <FileSpreadsheet className="h-4 w-4 mr-2" />
-                    Import Excel
-                  </Button>
-                  <Button 
-                    onClick={() => handleAddSlot(new Date(), '09:00')}
-                    className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ajouter un créneau
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* Schedule content would continue here with modern styling... */}
-            <div className="p-6">
-              <div className="text-center py-8 text-muted-foreground">
-                Interface de planification moderne en cours de développement...
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     );
