@@ -300,13 +300,13 @@ const EmploiTemps = () => {
           <>
             {/* Weekly Schedule */}
             {currentView === 'week' && displayMode === 'planning' && (
-              <div className="p-4">
-                <div className="grid grid-cols-7 gap-1">
+              <div className="p-2">
+                <div className="grid grid-cols-7 gap-0.5">
                   {getWeekDates().map((date, index) => (
-                    <div key={index} className="min-h-[400px]">
-                      <div className="text-center mb-2 p-1.5 bg-gradient-to-br from-primary/10 to-primary/5 rounded border border-primary/10 w-full max-w-[90px] mx-auto">
+                    <div key={index} className="min-h-[350px]">
+                      <div className="text-center mb-1 p-1 bg-gradient-to-br from-primary/10 to-primary/5 rounded border border-primary/10 mx-auto">
                         <div className="font-semibold text-xs text-primary">{weekDays[index].substring(0, 3)}</div>
-                        <div className="text-sm font-bold mt-0.5 text-foreground">
+                        <div className="text-lg font-bold mt-0.5 text-foreground">
                           {date.getDate()}
                         </div>
                         <div className="text-xs text-muted-foreground">
@@ -318,52 +318,43 @@ const EmploiTemps = () => {
                          {getSlotsForDate(date).map((slot) => (
                            <div
                              key={slot.id}
-                             className="p-1.5 rounded shadow-sm hover:shadow-md transition-all duration-200 border border-white/20 group w-full max-w-[85px]"
+                             className="p-1 rounded shadow-sm hover:shadow-md transition-all duration-200 border border-white/20 group mx-auto"
                              style={{
                                backgroundColor: slot.color || '#8B5CF6',
                                color: 'white'
                              }}
                            >
-                             <div className="mb-0.5">
-                               <div className="font-semibold text-xs leading-tight truncate">
+                             <div className="mb-1">
+                               <div className="font-semibold text-xs leading-tight">
                                  {slot.formation_modules?.title || 'Module non défini'}
                                </div>
                              </div>
                              
-                             <div className="flex items-center text-xs opacity-95 mb-0.5">
+                             <div className="flex items-center text-xs opacity-95 mb-1">
                                <Clock className="h-2 w-2 mr-1" />
                                <span className="text-xs">
                                  {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
                                </span>
                              </div>
                              
-                             <div className="flex items-center text-xs opacity-95 mb-0.5">
+                             <div className="flex items-center text-xs opacity-95 mb-1">
                                <MapPin className="h-2 w-2 mr-1" />
-                               <span className="truncate text-xs">
-                                 {slot.room || 'Salle non définie'}
+                               <span className="text-xs">
+                                 {slot.room || 'Salle A101'}
                                </span>
                              </div>
                              
                              <div className="flex items-center text-xs opacity-90">
-                               <div className="w-2.5 h-2.5 mr-1 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
-                                 {slot.users ? 
-                                   `${slot.users.first_name[0]}${slot.users.last_name[0]}` : 
-                                   'F'
-                                 }
-                               </div>
-                               <span className="truncate text-xs">
-                                 {slot.users ? 
-                                   `${slot.users.first_name} ${slot.users.last_name}` : 
-                                   'Formateur'
-                                 }
+                               <User className="h-2 w-2 mr-1" />
+                               <span className="text-xs">
+                                 {slot.users ? 'Formateur' : 'Formateur'}
                                </span>
                              </div>
                            </div>
                          ))}
                         
                         {getSlotsForDate(date).length === 0 && (
-                          <div className="text-center py-4 text-muted-foreground">
-                            <Calendar className="h-4 w-4 mx-auto mb-1 opacity-50" />
+                          <div className="text-center py-8 text-muted-foreground">
                             <p className="text-xs">Aucun cours</p>
                           </div>
                         )}
