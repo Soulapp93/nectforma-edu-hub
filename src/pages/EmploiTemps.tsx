@@ -299,9 +299,9 @@ const EmploiTemps = () => {
           <>
             {/* Vue Semaine - Mode Planning */}
 {currentView === 'week' && displayMode === 'planning' && (
-              <div className="grid grid-cols-7 border border-gray-200 rounded-lg overflow-hidden">
+              <div className="grid grid-cols-7 border border-gray-200 rounded-lg overflow-hidden max-w-4xl">
                 {getWeekDates().map((date, index) => (
-                  <div key={index} className={`flex-1 ${index < 6 ? 'border-r border-gray-200' : ''}`}>
+                  <div key={index} className={`w-32 ${index < 6 ? 'border-r border-gray-200' : ''}`}>
                     {/* En-tête du jour */}
                     <div className="text-center pb-2 border-b border-gray-200 bg-gray-50 p-2">
                       <div className="text-xs font-medium text-gray-600 mb-1">
