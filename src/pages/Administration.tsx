@@ -4,7 +4,7 @@ import AdministrationTabs from '../components/administration/AdministrationTabs'
 import EnhancedUsersList from '../components/administration/EnhancedUsersList';
 import FormationsList from '../components/administration/FormationsList';
 import TextBooksList from '../components/administration/TextBooksList';
-import SimpleScheduleManagement from '../components/administration/SimpleScheduleManagement';
+import ScheduleManagement from '../components/administration/ScheduleManagement';
 import AttendanceManagement from '../components/administration/AttendanceManagement';
 
 const Administration = () => {
@@ -33,7 +33,7 @@ const Administration = () => {
 
       {activeTab === 'textbooks' && <TextBooksList />}
 
-      {activeTab === 'schedules' && <SimpleScheduleManagement />}
+      {activeTab === 'schedules' && <ScheduleManagement />}
 
       {activeTab === 'attendance' && <AttendanceManagement />}
 
