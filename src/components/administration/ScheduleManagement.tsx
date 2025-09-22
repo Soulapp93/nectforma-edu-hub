@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Calendar,
   Clock,
@@ -74,24 +74,26 @@ const ScheduleManagement = () => {
 
   // Load slots when a schedule is selected
   useEffect(() => {
-    if (selectedSchedule) {
+    if (selectedSchedule?.id) {
       fetchScheduleSlots();
     }
-  }, [selectedSchedule]);
+  }, [selectedSchedule?.id]);
 
-  const fetchScheduleSlots = async () => {
-    if (!selectedSchedule) return;
+  const fetchScheduleSlots = useCallback(async () => {
+    if (!selectedSchedule?.id) return;
     
     try {
       setSlotsLoading(true);
       const slotsData = await scheduleService.getScheduleSlots(selectedSchedule.id);
       setSlots(slotsData);
     } catch (error) {
+      console.error('Erreur lors du chargement des créneaux:', error);
       toast.error('Erreur lors du chargement des créneaux');
+      setSlots([]);
     } finally {
       setSlotsLoading(false);
     }
-  };
+  }, [selectedSchedule?.id]);
 
   const handleCreateSchedule = () => {
     setIsCreateModalOpen(true);
@@ -152,16 +154,20 @@ const ScheduleManagement = () => {
     return date.toISOString().split('T')[0];
   };
 
+  const handleEditSlot = (slot: ScheduleSlot) => {
+    if (selectedSchedule?.id) {
+      setSlotToEdit(slot);
+      setIsEditSlotModalOpen(true);
+    } else {
+      toast.error('Erreur: Aucun emploi du temps sélectionné');
+    }
+  };
+
   const handleSlotAdded = () => {
     fetchScheduleSlots();
     setIsAddSlotModalOpen(false);
     setSelectedSlot(null);
     toast.success('Créneau ajouté avec succès');
-  };
-
-  const handleEditSlot = (slot: ScheduleSlot) => {
-    setSlotToEdit(slot);
-    setIsEditSlotModalOpen(true);
   };
 
   const handleSlotEdited = () => {
@@ -237,10 +243,11 @@ const ScheduleManagement = () => {
   };
 
   const handleExcelImportSuccess = () => {
-    if (selectedSchedule) {
+    if (selectedSchedule?.id) {
       fetchScheduleSlots();
+      setIsExcelImportModalOpen(false);
+      toast.success('Import Excel terminé avec succès');
     }
-    setIsExcelImportModalOpen(false);
   };
 
   const handlePublishSchedule = async () => {
@@ -309,8 +316,8 @@ const ScheduleManagement = () => {
     }));
   };
 
-  const weekInfo = getWeekInfo(selectedDate);
-  const weekDays = getWeekDays(selectedDate);
+  const weekInfo = useMemo(() => getWeekInfo(selectedDate), [selectedDate]);
+  const weekDays = useMemo(() => getWeekDays(selectedDate), [selectedDate]);
   
   // Prepare week schedule data for week and list views
   const mockSchedule = weekDays.map((date, index) => {
@@ -835,15 +842,22 @@ const ScheduleManagement = () => {
                 {day.modules.length === 0 ? (
                   <div className="text-center py-4">
                     <p className="text-muted-foreground text-sm mb-2">Aucun cours</p>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleAddSlot(weekDays[parseInt(day.id) - 1], '09:00')}
-                      className="text-xs"
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Ajouter
-                    </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          if (selectedSchedule && selectedSchedule.id) {
+                            handleAddSlot(weekDays[parseInt(day.id) - 1], '09:00');
+                          } else {
+                            toast.error('Veuillez sélectionner un emploi du temps');
+                          }
+                        }}
+                        disabled={!selectedSchedule || !selectedSchedule.id}
+                        className="text-xs"
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Ajouter
+                      </Button>
                   </div>
                 ) : (
                   <>
@@ -962,11 +976,14 @@ const ScheduleManagement = () => {
               <div className="flex items-center space-x-3">
                 <Button 
                   onClick={() => {
-                    if (selectedSchedule) {
+                    console.log('selectedSchedule:', selectedSchedule);
+                    if (selectedSchedule && selectedSchedule.id) {
                       setIsAddSlotModalOpen(true);
+                    } else {
+                      toast.error('Veuillez sélectionner un emploi du temps');
                     }
                   }}
-                  disabled={!selectedSchedule}
+                  disabled={!selectedSchedule || !selectedSchedule.id}
                   className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all hover:scale-105"
                 >
                   <Plus className="h-4 w-4 mr-2" />
@@ -986,11 +1003,14 @@ const ScheduleManagement = () => {
                 
                 <Button 
                   onClick={() => {
-                    if (selectedSchedule) {
+                    console.log('selectedSchedule for Excel:', selectedSchedule);
+                    if (selectedSchedule && selectedSchedule.id) {
                       setIsExcelImportModalOpen(true);
+                    } else {
+                      toast.error('Veuillez sélectionner un emploi du temps');
                     }
                   }}
-                  disabled={!selectedSchedule}
+                  disabled={!selectedSchedule || !selectedSchedule.id}
                   variant="outline"
                   size="sm"
                 >
@@ -1295,29 +1315,33 @@ const ScheduleManagement = () => {
         onSuccess={handleCreateSuccess}
       />
 
-      <AddSlotModal
-        isOpen={isAddSlotModalOpen}
-        onClose={() => setIsAddSlotModalOpen(false)}
-        onSuccess={handleSlotAdded}
-        scheduleId={selectedSchedule?.id || ''}
-        formationId={selectedSchedule?.formation_id || ''}
-        selectedSlot={selectedSlot}
-      />
+      {selectedSchedule && (
+        <>
+          <AddSlotModal
+            isOpen={isAddSlotModalOpen}
+            onClose={() => setIsAddSlotModalOpen(false)}
+            onSuccess={handleSlotAdded}
+            scheduleId={selectedSchedule.id}
+            formationId={selectedSchedule.formation_id || ''}
+            selectedSlot={selectedSlot}
+          />
 
-      <EditSlotModal
-        isOpen={isEditSlotModalOpen}
-        onClose={() => setIsEditSlotModalOpen(false)}
-        onSuccess={handleSlotEdited}
-        formationId={selectedSchedule?.formation_id || ''}
-        slot={slotToEdit}
-      />
+          <EditSlotModal
+            isOpen={isEditSlotModalOpen}
+            onClose={() => setIsEditSlotModalOpen(false)}
+            onSuccess={handleSlotEdited}
+            formationId={selectedSchedule.formation_id || ''}
+            slot={slotToEdit}
+          />
 
-      <ExcelImportModal
-        isOpen={isExcelImportModalOpen}
-        onClose={() => setIsExcelImportModalOpen(false)}
-        onSuccess={handleExcelImportSuccess}
-        scheduleId={selectedSchedule?.id || ''}
-      />
+          <ExcelImportModal
+            isOpen={isExcelImportModalOpen}
+            onClose={() => setIsExcelImportModalOpen(false)}
+            onSuccess={handleExcelImportSuccess}
+            scheduleId={selectedSchedule.id}
+          />
+        </>
+      )}
     </div>
   );
 };
