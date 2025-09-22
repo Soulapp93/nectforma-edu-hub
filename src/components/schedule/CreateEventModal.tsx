@@ -26,6 +26,9 @@ import { useUsers } from '@/hooks/useUsers';
 interface CreateEventModalProps {
   onEventCreated?: (event: ScheduleEvent) => void;
   scheduleId?: string;
+  preselectedDate?: Date;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export interface ScheduleEvent {
@@ -41,23 +44,48 @@ export interface ScheduleEvent {
   color: string;
 }
 
-export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreated, scheduleId }) => {
-  const [open, setOpen] = useState(false);
+export const CreateEventModal: React.FC<CreateEventModalProps> = ({ 
+  onEventCreated, 
+  scheduleId, 
+  preselectedDate,
+  isOpen,
+  onOpenChange 
+}) => {
+  const [open, setOpen] = useState(isOpen || false);
   const [loading, setLoading] = useState(false);
   const [eventData, setEventData] = useState({
     title: '',
-    date: undefined as Date | undefined,
+    date: preselectedDate || undefined as Date | undefined,
     startTime: '',
     endTime: '',
     instructor: '',
     room: '',
     formation: '',
     description: '',
-    color: '#8B5CF6' // Couleur primaire de l'application par défaut
+    color: '#8B5CF6'
   });
+  
   const { toast } = useToast();
   const { formations } = useFormations();
   const { users } = useUsers();
+
+  // Effet pour synchroniser les props avec l'état local
+  useEffect(() => {
+    if (isOpen !== undefined) {
+      setOpen(isOpen);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (preselectedDate) {
+      setEventData(prev => ({ ...prev, date: preselectedDate }));
+    }
+  }, [preselectedDate]);
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    onOpenChange?.(newOpen);
+  };
 
   // Filtrer les formateurs
   const instructors = users?.filter(user => user.role === 'Formateur') || [];
@@ -83,11 +111,8 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('Form submitted with data:', eventData);
-    
     // Validation avec logs détaillés
     if (!eventData.formation) {
-      console.log('Formation missing');
       toast({
         title: "Erreur",
         description: "Veuillez sélectionner un module.",
@@ -97,7 +122,6 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
     }
     
     if (!eventData.date) {
-      console.log('Date missing');
       toast({
         title: "Erreur",
         description: "Veuillez sélectionner une date.",
@@ -107,7 +131,6 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
     }
     
     if (!eventData.startTime) {
-      console.log('Start time missing');
       toast({
         title: "Erreur",
         description: "Veuillez sélectionner une heure de début.",
@@ -117,7 +140,6 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
     }
     
     if (!eventData.endTime) {
-      console.log('End time missing');
       toast({
         title: "Erreur",
         description: "Veuillez sélectionner une heure de fin.",
@@ -133,7 +155,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
       if (scheduleId) {
         const slotData = {
           schedule_id: scheduleId,
-          module_id: null, // À adapter selon vos modules
+          module_id: null,
           instructor_id: eventData.instructor || null,
           date: format(eventData.date, 'yyyy-MM-dd'),
           start_time: eventData.startTime,
@@ -179,6 +201,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
       });
       
       setOpen(false);
+      onOpenChange?.(false);
     } catch (error) {
       console.error('Error creating schedule slot:', error);
       toast({
@@ -192,7 +215,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm" className="nect-gradient hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 hover:scale-105">
           <Plus className="h-4 w-4 mr-2" />
@@ -222,7 +245,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={() => setOpen(false)}
+              onClick={() => handleOpenChange(false)}
               className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/20 rounded-full"
             >
               <X className="h-4 w-4" />
@@ -293,10 +316,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
               </Label>
               <Select 
                 value={eventData.startTime} 
-                onValueChange={(value) => {
-                  console.log('Start time selected:', value);
-                  setEventData(prev => ({ ...prev, startTime: value }));
-                }}
+                onValueChange={(value) => setEventData(prev => ({ ...prev, startTime: value }))}
               >
                 <SelectTrigger className="w-full text-xs px-3 py-3 h-auto bg-gradient-to-r from-green-500/5 to-green-500/10 border-green-500/20 hover:border-green-500/30 transition-all duration-200">
                   <SelectValue placeholder="08:00" />
@@ -320,10 +340,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
               </Label>
               <Select 
                 value={eventData.endTime} 
-                onValueChange={(value) => {
-                  console.log('End time selected:', value);
-                  setEventData(prev => ({ ...prev, endTime: value }));
-                }}
+                onValueChange={(value) => setEventData(prev => ({ ...prev, endTime: value }))}
               >
                 <SelectTrigger className="w-full text-xs px-3 py-3 h-auto bg-gradient-to-r from-orange-500/5 to-orange-500/10 border-orange-500/20 hover:border-orange-500/30 transition-all duration-200">
                   <SelectValue placeholder="10:00" />
@@ -429,7 +446,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onEventCreat
             <Button 
               type="button" 
               variant="outline" 
-              onClick={() => setOpen(false)}
+              onClick={() => handleOpenChange(false)}
               className="flex-1 border-gray-300 text-gray-600 hover:bg-gray-50 transition-all duration-200"
               disabled={loading}
             >

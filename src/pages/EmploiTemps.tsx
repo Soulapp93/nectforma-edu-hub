@@ -1,27 +1,18 @@
 import React, { useState } from 'react';
-import { 
-  Calendar,
-  Clock,
-  MapPin,
-  User,
-  Book,
-  Grid3X3,
-  List,
-  Eye
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format, addWeeks, subWeeks, addMonths, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { WeekNavigator } from '@/components/schedule/WeekNavigator';
-import WeekNavigation from '@/components/ui/week-navigation';
+import { navigateWeek, getWeekInfo, getWeekDays } from '@/utils/calendarUtils';
+import { useToast } from '@/hooks/use-toast';
 import { CreateEventModal, ScheduleEvent } from '@/components/schedule/CreateEventModal';
 import { EventDetailsModal } from '@/components/schedule/EventDetailsModal';
 import { DayView } from '@/components/schedule/DayView';
 import { MonthView } from '@/components/schedule/MonthView';
-import { navigateWeek, getWeekInfo, getWeekDays } from '@/utils/calendarUtils';
-import { useToast } from '@/hooks/use-toast';
+import { ScheduleHeader } from '@/components/schedule/ScheduleHeader';
+import { ViewModeSelector } from '@/components/schedule/ViewModeSelector';
+import { ScheduleCalendarView } from '@/components/schedule/ScheduleCalendarView';
+import { ExcelImportModal } from '@/components/schedule/ExcelImportModal';
+import { WeekNavigator } from '@/components/schedule/WeekNavigator';
+import WeekNavigation from '@/components/ui/week-navigation';
 
 type ViewMode = 'day' | 'week' | 'month' | 'list';
 
@@ -43,6 +34,9 @@ const EmploiTemps = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
   const [isEventDetailsOpen, setIsEventDetailsOpen] = useState(false);
+  const [isExcelImportOpen, setIsExcelImportOpen] = useState(false);
+  const [isCreateEventModalOpen, setIsCreateEventModalOpen] = useState(false);
+  const [selectedDateForSlot, setSelectedDateForSlot] = useState<Date | undefined>(undefined);
   const [events, setEvents] = useState<ScheduleEvent[]>([
     {
       id: '1',
@@ -148,6 +142,38 @@ const EmploiTemps = () => {
     setEvents(prev => [...prev, event]);
   };
 
+  const handleImportExcel = () => {
+    setIsExcelImportOpen(true);
+  };
+
+  const handleExcelImport = (data: any[]) => {
+    const importedEvents: ScheduleEvent[] = data.map((row, index) => ({
+      id: `imported-${Date.now()}-${index}`,
+      title: row.module,
+      date: new Date(row.date),
+      startTime: row.startTime,
+      endTime: row.endTime,
+      instructor: row.instructor,
+      room: row.room,
+      formation: row.formation,
+      color: '#8B5CF6',
+      description: `Importé depuis Excel`
+    }));
+
+    setEvents(prev => [...prev, ...importedEvents]);
+    setIsExcelImportOpen(false);
+  };
+
+  const handleAddSlotToDate = (date: string) => {
+    // Créer une date à partir du jour sélectionné dans le mois courant
+    const selectedDate = new Date(currentDate);
+    selectedDate.setDate(parseInt(date));
+    
+    // Ouvrir le modal avec la date pré-sélectionnée
+    setSelectedDateForSlot(selectedDate);
+    setIsCreateEventModalOpen(true);
+  };
+
   // All events are displayed without filters
   const filteredEvents = events;
 
@@ -202,239 +228,107 @@ const EmploiTemps = () => {
     }
   };
 
-  const renderWeekOrListView = () => (
-    <div className="container mx-auto px-6 py-8">
-      {viewMode === 'week' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-6">
-          {mockSchedule.map((day) => (
-            <Card
-              key={day.id}
-              className={`overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 ${
-                day.modules.length > 0 
-                  ? 'bg-card shadow-md hover:shadow-primary/10' 
-                  : 'bg-muted/30 shadow-sm opacity-70'
-              }`}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-lg font-bold text-foreground">
-                      {day.day}
-                    </CardTitle>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <span className="text-2xl font-bold text-primary">
-                        {day.date}
-                      </span>
-                      {day.modules.length > 0 && (
-                        <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
-                          {day.modules.length} cours
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  {day.modules.length === 0 && (
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                  )}
-                </div>
-              </CardHeader>
-
-              <CardContent className="space-y-3">
-                {day.modules.length === 0 ? (
-                  <p className="text-center text-muted-foreground text-sm py-4">
-                    Aucun cours
-                  </p>
-                ) : (
-                  day.modules.map((module, index) => (
-                     <div
-                       key={index}
-                       className="relative p-4 rounded-xl bg-gradient-to-r from-card to-muted/30 border border-border hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-pointer group"
-                       onClick={() => {
-                         const fullEvent = filteredEvents.find(e => 
-                           e.title === module.title && 
-                           e.instructor === module.instructor &&
-                           e.room === module.room
-                         );
-                         if (fullEvent) handleEventClick(fullEvent);
-                       }}
-                     >
-                      <div className={`absolute top-0 left-0 w-1 h-full ${module.color} rounded-l-xl`} />
-                      
-                      <div className="ml-3">
-                        <h4 className="font-semibold text-foreground text-sm mb-2 group-hover:text-primary transition-colors">
-                          {module.title}
-                        </h4>
-                        
-                        <div className="space-y-1">
-                          <div className="flex items-center text-xs text-muted-foreground">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {module.time}
-                          </div>
-                          <div className="flex items-center text-xs text-muted-foreground">
-                            <MapPin className="h-3 w-3 mr-1" />
-                            {module.room}
-                          </div>
-                          <div className="flex items-center text-xs text-muted-foreground">
-                            <User className="h-3 w-3 mr-1" />
-                            {module.instructor}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {mockSchedule.filter(day => day.modules.length > 0).map((day) => (
-            <Card key={day.id} className="overflow-hidden border-0 shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-slate-800 dark:to-slate-700">
-                <CardTitle className="flex items-center space-x-3">
-                  <span className="text-xl font-bold text-slate-900 dark:text-white">
+  const renderWeekOrListView = () => {
+    if (viewMode === 'week') {
+      return (
+        <ScheduleCalendarView
+          schedule={mockSchedule}
+          filteredEvents={filteredEvents}
+          onEventClick={handleEventClick}
+          onAddSlotToDate={handleAddSlotToDate}
+        />
+      );
+    } else {
+      // Vue liste simplifiée
+      return (
+        <div className="container mx-auto px-6 py-8">
+          <div className="space-y-4">
+            {mockSchedule.filter(day => day.modules.length > 0).map((day) => (
+              <div key={day.id} className="bg-card rounded-xl p-6 shadow-lg border border-border">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-foreground">
                     {day.day} {day.date}
+                  </h3>
+                  <span className="text-sm text-muted-foreground">
+                    {day.modules.length} cours
                   </span>
-                  <Badge variant="outline">{day.modules.length} cours</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
+                </div>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {day.modules.map((module, index) => (
-                   <div
-                     key={index}
-                     className="p-4 rounded-xl border border-slate-200 dark:border-slate-600 hover:shadow-md transition-all duration-200 cursor-pointer"
-                     onClick={() => {
-                       const fullEvent = filteredEvents.find(e => 
-                         e.title === module.title && 
-                         e.instructor === module.instructor &&
-                         e.room === module.room
-                       );
-                       if (fullEvent) handleEventClick(fullEvent);
-                     }}
-                   >
+                    <div
+                      key={index}
+                      className="p-4 rounded-lg border border-border hover:shadow-md transition-all duration-200 cursor-pointer"
+                      onClick={() => {
+                        const fullEvent = filteredEvents.find(e => 
+                          e.title === module.title && 
+                          e.instructor === module.instructor &&
+                          e.room === module.room
+                        );
+                        if (fullEvent) handleEventClick(fullEvent);
+                      }}
+                    >
                       <div className="flex items-start space-x-3">
                         <div className={`w-3 h-3 ${module.color} rounded-full mt-1`} />
                         <div className="flex-1">
-                          <h4 className="font-semibold text-slate-900 dark:text-white mb-2">
+                          <h4 className="font-semibold text-foreground mb-2">
                             {module.title}
                           </h4>
-                          <div className="space-y-1 text-sm text-slate-600 dark:text-slate-300">
-                            <div className="flex items-center">
-                              <Clock className="h-3 w-3 mr-2" />
-                              {module.time}
-                            </div>
-                            <div className="flex items-center">
-                              <MapPin className="h-3 w-3 mr-2" />
-                              {module.room}
-                            </div>
-                            <div className="flex items-center">
-                              <User className="h-3 w-3 mr-2" />
-                              {module.instructor}
-                            </div>
+                          <div className="space-y-1 text-sm text-muted-foreground">
+                            <div>{module.time}</div>
+                            <div>{module.room}</div>
+                            <div>{module.instructor}</div>
                           </div>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+            ))}
+          </div>
         </div>
-      )}
-    </div>
-  );
+      );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
-      {/* Header moderne */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border shadow-sm">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
-                <Calendar className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">Emploi du Temps</h1>
-                <p className="text-muted-foreground">
-                  {viewMode === 'month' 
-                    ? format(currentDate, 'MMMM yyyy', { locale: fr })
-                    : `Semaine du ${weekInfo.start} au ${weekInfo.end}`
-                  }
-                </p>
-              </div>
-            </div>
+      {/* Header refactorisé */}
+      <ScheduleHeader
+        currentDate={currentDate}
+        weekInfo={weekInfo}
+        viewMode={viewMode}
+        onEventCreated={handleEventCreated}
+        onImportExcel={handleImportExcel}
+      />
 
-            <div className="flex items-center space-x-3">
-              <CreateEventModal onEventCreated={handleEventCreated} />
-            </div>
-          </div>
+      {/* Navigation et contrôles */}
+      <div className="container mx-auto px-6 py-4">
+        <div className="flex items-center justify-between">
+          <WeekNavigator 
+            currentDate={currentDate}
+            onNavigate={handleNavigate}
+          />
 
-          {/* Navigation et vues */}
-          <div className="flex items-center justify-between">
-            <WeekNavigator 
-              currentDate={currentDate}
-              onNavigate={handleNavigate}
-            />
+          <ViewModeSelector
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+          />
+        </div>
 
-            <div className="flex items-center space-x-2 bg-muted/50 rounded-xl p-1 border">
-              <Button
-                variant={viewMode === 'day' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('day')}
-                className={`px-3 ${viewMode === 'day' ? 'bg-primary text-primary-foreground shadow-md' : 'hover:bg-primary/10'}`}
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                Jour
-              </Button>
-              <Button
-                variant={viewMode === 'week' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('week')}
-                className={`px-3 ${viewMode === 'week' ? 'bg-primary text-primary-foreground shadow-md' : 'hover:bg-primary/10'}`}
-              >
-                <Grid3X3 className="h-4 w-4 mr-2" />
-                Semaine
-              </Button>
-              <Button
-                variant={viewMode === 'month' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('month')}
-                className={`px-3 ${viewMode === 'month' ? 'bg-primary text-primary-foreground shadow-md' : 'hover:bg-primary/10'}`}
-              >
-                <Calendar className="h-4 w-4 mr-2" />
-                Mois
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className={`px-3 ${viewMode === 'list' ? 'bg-primary text-primary-foreground shadow-md' : 'hover:bg-primary/10'}`}
-              >
-                <List className="h-4 w-4 mr-2" />
-                Liste
-              </Button>
-            </div>
-          </div>
-
-          {/* Barre de navigation par semaine */}
-          <div className="mt-6">
-            <WeekNavigation
-              selectedDate={currentDate}
-              onDateChange={setCurrentDate}
-              onWeekSelect={(weekStartDate) => {
-                setCurrentDate(weekStartDate);
-                if (viewMode !== 'week') {
-                  setViewMode('week');
-                }
-              }}
-              className="bg-background/95 backdrop-blur-sm border-border"
-            />
-          </div>
+        {/* Barre de navigation par semaine */}
+        <div className="mt-6">
+          <WeekNavigation
+            selectedDate={currentDate}
+            onDateChange={setCurrentDate}
+            onWeekSelect={(weekStartDate) => {
+              setCurrentDate(weekStartDate);
+              if (viewMode !== 'week') {
+                setViewMode('week');
+              }
+            }}
+            className="bg-background/95 backdrop-blur-sm border-border"
+          />
         </div>
       </div>
 
@@ -449,6 +343,19 @@ const EmploiTemps = () => {
         onEdit={handleEventEdit}
         onDelete={handleEventDelete}
         onDuplicate={handleEventDuplicate}
+      />
+
+      <ExcelImportModal
+        isOpen={isExcelImportOpen}
+        onOpenChange={setIsExcelImportOpen}
+        onImport={handleExcelImport}
+      />
+
+      <CreateEventModal
+        isOpen={isCreateEventModalOpen}
+        onOpenChange={setIsCreateEventModalOpen}
+        onEventCreated={handleEventCreated}
+        preselectedDate={selectedDateForSlot}
       />
     </div>
   );
