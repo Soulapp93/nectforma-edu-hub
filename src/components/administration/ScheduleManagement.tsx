@@ -1356,25 +1356,43 @@ const ScheduleManagement = () => {
         ) : (
           <div className="space-y-4">
             {schedules.map((schedule) => (
-              <Card key={schedule.id} className="overflow-hidden border-0 shadow-lg">
-                <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-slate-800 dark:to-slate-700">
+              <Card 
+                key={schedule.id} 
+                className="overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 bg-card shadow-md hover:shadow-primary/10 cursor-pointer"
+                onClick={() => handleViewSchedule(schedule)}
+              >
+                <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <CardTitle className="text-xl font-bold text-slate-900 dark:text-white">
-                        {schedule.title}
-                      </CardTitle>
-                      <Badge 
-                        variant="secondary" 
-                        className={getStatusColor(schedule.status)}
-                      >
-                        {schedule.status}
-                      </Badge>
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
+                        <Calendar className="h-6 w-6 text-primary-foreground" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-xl font-bold text-foreground">
+                          {schedule.title}
+                        </CardTitle>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
+                            {schedule.formations?.title || 'Formation'}
+                          </Badge>
+                          <Badge 
+                            variant="secondary" 
+                            className={`text-xs ${getStatusColor(schedule.status)}`}
+                          >
+                            {schedule.status}
+                          </Badge>
+                        </div>
+                      </div>
                     </div>
+                    
                     <div className="flex items-center space-x-2">
                       <Button 
                         size="sm" 
-                        onClick={() => handleViewSchedule(schedule)}
-                        className="bg-primary hover:bg-primary/90"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewSchedule(schedule);
+                        }}
+                        className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all"
                       >
                         <Eye className="h-4 w-4 mr-2" />
                         Voir
@@ -1382,34 +1400,65 @@ const ScheduleManagement = () => {
                       <Button 
                         size="sm" 
                         variant="outline"
-                        onClick={() => handleEditSchedule(schedule.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditSchedule(schedule.id);
+                        }}
+                        className="hover:bg-primary/10"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button 
                         size="sm" 
                         variant="outline"
-                        onClick={() => handleDeleteSchedule(schedule.id, schedule.title)}
-                        className="text-destructive hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteSchedule(schedule.id, schedule.title);
+                        }}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-6">
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Formation</p>
-                      <p className="font-medium">{schedule.formations?.title || 'Non définie'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Année académique</p>
-                      <p className="font-medium">{schedule.academic_year}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Créé le</p>
-                      <p className="font-medium">{new Date(schedule.created_at).toLocaleDateString('fr-FR')}</p>
+
+                <CardContent className="space-y-3">
+                  <div className="relative p-4 rounded-xl bg-gradient-to-r from-card to-muted/30 border border-border hover:shadow-md hover:border-primary/30 transition-all duration-200">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-primary rounded-l-xl" />
+                    
+                    <div className="ml-3">
+                      <div className="grid gap-3 md:grid-cols-3">
+                        <div className="space-y-1">
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <Book className="h-3 w-3 mr-1" />
+                            Formation
+                          </div>
+                          <p className="font-semibold text-foreground text-sm">
+                            {schedule.formations?.title || 'Non définie'}
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            Année académique
+                          </div>
+                          <p className="font-semibold text-foreground text-sm">
+                            {schedule.academic_year}
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3 mr-1" />
+                            Créé le
+                          </div>
+                          <p className="font-semibold text-foreground text-sm">
+                            {new Date(schedule.created_at).toLocaleDateString('fr-FR')}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
