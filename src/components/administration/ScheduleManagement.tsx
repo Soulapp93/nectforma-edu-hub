@@ -151,25 +151,28 @@ const ScheduleManagement = () => {
     }
   };
 
-  // Handlers pour les boutons principaux
-  const handleOpenAddSlotModal = () => {
+  // Handlers pour les boutons principaux - version simplifiée
+  const handleOpenAddSlotModal = useCallback(() => {
+    console.log('Bouton "Ajouter un créneau" cliqué', { selectedSchedule: selectedSchedule?.id });
     if (!selectedSchedule?.id) {
       toast.error('Veuillez sélectionner un emploi du temps');
       return;
     }
+    setSelectedSlot(null);
     setIsAddSlotModalOpen(true);
-  };
+  }, [selectedSchedule?.id]);
 
-  const handleOpenExcelImportModal = () => {
+  const handleOpenExcelImportModal = useCallback(() => {
+    console.log('Bouton "Import Excel" cliqué', { selectedSchedule: selectedSchedule?.id });
     if (!selectedSchedule?.id) {
       toast.error('Veuillez sélectionner un emploi du temps');
       return;
     }
     setIsExcelImportModalOpen(true);
-  };
+  }, [selectedSchedule?.id]);
 
-  // Slot management functions
-  const handleAddSlot = (date: Date, time: string) => {
+  const handleAddSlot = useCallback((date: Date, time: string) => {
+    console.log('Bouton "Ajouter" cliqué', { date, time, selectedSchedule: selectedSchedule?.id });
     if (!selectedSchedule?.id) {
       toast.error('Veuillez sélectionner un emploi du temps');
       return;
@@ -179,7 +182,7 @@ const ScheduleManagement = () => {
       time
     });
     setIsAddSlotModalOpen(true);
-  };
+  }, [selectedSchedule?.id]);
 
   const formatDate = (date: Date) => {
     return date.toISOString().split('T')[0];
@@ -910,12 +913,10 @@ const ScheduleManagement = () => {
                       <Button 
                         size="sm" 
                         variant="outline"
-                        onClick={() => {
-                          if (selectedSchedule?.id) {
-                            handleAddSlot(day.actualDate, '09:00');
-                          } else {
-                            toast.error('Veuillez sélectionner un emploi du temps');
-                          }
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleAddSlot(day.actualDate, '09:00');
                         }}
                         disabled={!selectedSchedule?.id}
                         className="text-xs"
@@ -995,7 +996,12 @@ const ScheduleManagement = () => {
                     <Button 
                       size="sm" 
                       variant="outline"
-                      onClick={() => handleAddSlot(day.actualDate, '09:00')}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleAddSlot(day.actualDate, '09:00');
+                      }}
+                      disabled={!selectedSchedule?.id}
                       className="w-full text-xs"
                     >
                       <Plus className="h-3 w-3 mr-1" />
@@ -1040,7 +1046,12 @@ const ScheduleManagement = () => {
 
               <div className="flex items-center space-x-3">
                 <Button 
-                  onClick={handleOpenAddSlotModal}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Clic sur bouton "Ajouter un créneau"');
+                    handleOpenAddSlotModal();
+                  }}
                   disabled={!selectedSchedule?.id}
                   className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all hover:scale-105"
                 >
@@ -1060,7 +1071,12 @@ const ScheduleManagement = () => {
                 )}
                 
                 <Button 
-                  onClick={handleOpenExcelImportModal}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Clic sur bouton "Import Excel"');
+                    handleOpenExcelImportModal();
+                  }}
                   disabled={!selectedSchedule?.id}
                   variant="outline"
                   size="sm"
