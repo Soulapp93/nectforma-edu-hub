@@ -72,13 +72,7 @@ const ScheduleManagement = () => {
     '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'
   ];
 
-  // Load slots when a schedule is selected
-  useEffect(() => {
-    if (selectedSchedule?.id) {
-      fetchScheduleSlots();
-    }
-  }, [selectedSchedule?.id]);
-
+  // Définir fetchScheduleSlots AVANT useEffect
   const fetchScheduleSlots = useCallback(async () => {
     if (!selectedSchedule?.id) return;
     
@@ -94,6 +88,17 @@ const ScheduleManagement = () => {
       setSlotsLoading(false);
     }
   }, [selectedSchedule?.id]);
+
+  // Load slots when a schedule is selected - APRÈS fetchScheduleSlots
+  useEffect(() => {
+    if (selectedSchedule?.id) {
+      fetchScheduleSlots();
+    }
+  }, [selectedSchedule?.id, fetchScheduleSlots]);
+
+  // Calculer les valeurs memoized
+  const weekInfo = useMemo(() => getWeekInfo(selectedDate), [selectedDate]);
+  const weekDays = useMemo(() => getWeekDays(selectedDate), [selectedDate]);
 
   const handleCreateSchedule = () => {
     setIsCreateModalOpen(true);
@@ -316,8 +321,41 @@ const ScheduleManagement = () => {
     }));
   };
 
-  const weekInfo = useMemo(() => getWeekInfo(selectedDate), [selectedDate]);
-  const weekDays = useMemo(() => getWeekDays(selectedDate), [selectedDate]);
+  const navigateDate = (direction: 'prev' | 'next') => {
+    const newDate = new Date(selectedDate);
+    
+    switch (viewMode) {
+      case 'day':
+        newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
+        break;
+      case 'week':
+        newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
+        break;
+      case 'month':
+        if (direction === 'next') {
+          setSelectedDate(addMonths(selectedDate, 1));
+          return;
+        } else {
+          setSelectedDate(subMonths(selectedDate, 1));
+          return;
+        }
+    }
+    
+    setSelectedDate(newDate);
+  };
+
+  const getCurrentPeriodLabel = () => {
+    switch (viewMode) {
+      case 'day':
+        return format(selectedDate, 'EEEE d MMMM yyyy', { locale: fr });
+      case 'week':
+        return `Semaine du ${weekInfo.start} au ${weekInfo.end}`;
+      case 'month':
+        return format(selectedDate, 'MMMM yyyy', { locale: fr });
+      default:
+        return '';
+    }
+  };
   
   // Prepare week schedule data for week and list views
   const mockSchedule = weekDays.map((date, index) => {
