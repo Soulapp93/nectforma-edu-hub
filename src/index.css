@@ -3,7 +3,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* NectForia Design System - Purple theme with modern gradients */
+/* NectForia Design System - Production-ready unified theme */
 
 @layer base {
   :root {
@@ -37,11 +37,39 @@
 
     --radius: 0.5rem;
 
-    /* Custom NectForia colors */
+    /* Enhanced Status Colors - Semantic tokens */
+    --success: 142 76% 36%;
+    --success-foreground: 210 40% 98%;
+    --success-muted: 142 76% 96%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 222.2 84% 4.9%;
+    --warning-muted: 38 92% 95%;
+    
+    --info: 217 91% 60%;
+    --info-foreground: 210 40% 98%;
+    --info-muted: 217 91% 95%;
+
+    /* Enhanced Custom NectForia colors */
     --nect-purple-from: 271 81% 56%;
     --nect-purple-to: 283 70% 60%;
+    --nect-purple-light: 271 81% 85%;
+    --nect-purple-dark: 271 81% 35%;
+    
     --nect-sidebar-bg: 271 81% 56%;
     --nect-card-bg: 0 0% 100%;
+    --nect-card-border: 214.3 31.8% 91.4%;
+    
+    /* Production gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--nect-purple-from)), hsl(var(--nect-purple-to)));
+    --gradient-card: linear-gradient(145deg, hsl(var(--card)), hsl(var(--muted)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    
+    /* Professional shadows */
+    --shadow-sm: 0 1px 3px rgba(124, 58, 237, 0.1);
+    --shadow-md: 0 4px 12px rgba(124, 58, 237, 0.15);
+    --shadow-lg: 0 10px 25px rgba(124, 58, 237, 0.2);
+    --shadow-xl: 0 20px 40px rgba(124, 58, 237, 0.25);
   }
 
   .dark {
@@ -51,6 +79,13 @@
     --card-foreground: 210 40% 98%;
     --primary: 271 81% 56%;
     --primary-foreground: 222.2 47.4% 11.2%;
+    
+    --success: 142 76% 45%;
+    --warning: 38 92% 60%;
+    --info: 217 91% 70%;
+    
+    --nect-card-bg: 222.2 84% 4.9%;
+    --nect-card-border: 217.2 32.6% 17.5%;
   }
 }
 
