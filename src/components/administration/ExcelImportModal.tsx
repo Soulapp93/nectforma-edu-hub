@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Upload, Download, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
+import { getModuleColor, extractModuleName } from '@/utils/moduleColors';
 import { scheduleService } from '@/services/scheduleService';
 
 interface ExcelImportModalProps {
@@ -22,22 +23,25 @@ const ExcelImportModal = ({ isOpen, onClose, onSuccess, scheduleId }: ExcelImpor
   const downloadTemplate = () => {
     const template = [
       {
-        'Date': '2024-09-05',
-        'FORMATION 09h30-12h30': 'GS1.1 Théorie de la modernisation RH - Nathalie Jeltout (Accord Service)',
-        'SALLE 09h30-12h30': 'Salle A',
-        'COULEUR 09h30-12h30': '#4CAF50',
-        'FORMATION 13h30-17h30': 'Communication RH - Jean IVANE',
-        'SALLE 13h30-17h30': 'Salle B',
-        'COULEUR 13h30-17h30': '#2196F3'
+        'Date': '2025-09-22',
+        'Horaire (Début - Fin)': '08:00-12:00',
+        'Module': 'Marketing Digital',
+        'Formateur': 'Dupont Jean',
+        'Classe': 'BTS1'
       },
       {
-        'Date': '2024-09-06',
-        'FORMATION 09h30-12h30': 'Gestion budgétaire des RH - Philippe Verneuil',
-        'SALLE 09h30-12h30': 'Salle C',
-        'COULEUR 09h30-12h30': '#FF9800',
-        'FORMATION 13h30-17h30': 'Gestion budgétaire des RH - Philippe Verneuil',
-        'SALLE 13h30-17h30': 'Salle C',
-        'COULEUR 13h30-17h30': '#FF9800'
+        'Date': '2025-09-22',
+        'Horaire (Début - Fin)': '13:00-17:00',
+        'Module': 'Gestion de Paie',
+        'Formateur': 'Martin Claire',
+        'Classe': 'BTS1'
+      },
+      {
+        'Date': '2025-09-23',
+        'Horaire (Début - Fin)': '08:00-12:00',
+        'Module': 'Gestion de Paie',
+        'Formateur': 'Martin Claire',
+        'Classe': 'BTS2'
       }
     ];
 
@@ -71,50 +75,37 @@ const ExcelImportModal = ({ isOpen, onClose, onSuccess, scheduleId }: ExcelImpor
 
       for (const row of jsonData as any[]) {
         const date = row['Date'];
-        if (!date) continue;
+        const horaire = row['Horaire (Début - Fin)'];
+        const module = row['Module'];
+        const formateur = row['Formateur'];
+        const classe = row['Classe'];
+        
+        if (!date || !horaire || !module) continue;
 
-        // Créneaux du matin (09h30-12h30)
-        const morningFormation = row['FORMATION 09h30-12h30'];
-        if (morningFormation && morningFormation.trim()) {
-          try {
-            const morningSlot = {
-              schedule_id: scheduleId,
-              date: date,
-              start_time: '09:30',
-              end_time: '12:30',
-              room: row['SALLE 09h30-12h30'] || '',
-              color: row['COULEUR 09h30-12h30'] || '#4CAF50',
-              notes: morningFormation
-            };
-
-            await scheduleService.createScheduleSlot(morningSlot);
-            successCount++;
-          } catch (error) {
-            console.error('Erreur lors de l\'import du créneau matin:', row, error);
+        try {
+          // Parser l'horaire (format: "08:00-12:00")
+          const [startTime, endTime] = horaire.split('-');
+          if (!startTime || !endTime) {
+            console.error('Format horaire invalide:', horaire);
             errorCount++;
+            continue;
           }
-        }
 
-        // Créneaux de l'après-midi (13h30-17h30)
-        const afternoonFormation = row['FORMATION 13h30-17h30'];
-        if (afternoonFormation && afternoonFormation.trim()) {
-          try {
-            const afternoonSlot = {
-              schedule_id: scheduleId,
-              date: date,
-              start_time: '13:30',
-              end_time: '17:30',
-              room: row['SALLE 13h30-17h30'] || '',
-              color: row['COULEUR 13h30-17h30'] || '#2196F3',
-              notes: afternoonFormation
-            };
+          const slot = {
+            schedule_id: scheduleId,
+            date: date,
+            start_time: startTime.trim(),
+            end_time: endTime.trim(),
+            room: classe || '',
+            color: getModuleColor(module),
+            notes: `${module}${formateur ? ` - ${formateur}` : ''}${classe ? ` (${classe})` : ''}`
+          };
 
-            await scheduleService.createScheduleSlot(afternoonSlot);
-            successCount++;
-          } catch (error) {
-            console.error('Erreur lors de l\'import du créneau après-midi:', row, error);
-            errorCount++;
-          }
+          await scheduleService.createScheduleSlot(slot);
+          successCount++;
+        } catch (error) {
+          console.error('Erreur lors de l\'import du créneau:', row, error);
+          errorCount++;
         }
       }
 
@@ -149,8 +140,10 @@ const ExcelImportModal = ({ isOpen, onClose, onSuccess, scheduleId }: ExcelImpor
             </h4>
             <ul className="text-sm text-muted-foreground space-y-1">
               <li>• Téléchargez d'abord le modèle Excel</li>
-              <li>• Format: Date | FORMATION 09h30-12h30 | SALLE 09h30-12h30 | COULEUR 09h30-12h30 | FORMATION 13h30-17h30 | SALLE 13h30-17h30 | COULEUR 13h30-17h30</li>
-              <li>• Chaque ligne = 1 jour avec créneaux matin et après-midi</li>
+              <li>• Format: Date | Horaire (Début - Fin) | Module | Formateur | Classe</li>
+              <li>• Horaire format: "08:00-12:00" ou "13:00-17:00"</li>
+              <li>• Chaque ligne = 1 créneau</li>
+              <li>• Les couleurs sont automatiquement attribuées par module</li>
               <li>• Importez le fichier complété</li>
             </ul>
           </div>

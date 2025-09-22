@@ -43,6 +43,7 @@ import EditSlotModal from '@/components/administration/EditSlotModal';
 import SlotActionMenu from '@/components/administration/SlotActionMenu';
 import ExcelImportModal from '@/components/administration/ExcelImportModal';
 import CreateScheduleModal from './CreateScheduleModal';
+import { getModuleColor, extractModuleName } from '@/utils/moduleColors';
 import { navigateWeek, getWeekInfo, getWeekDays } from '@/utils/calendarUtils';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -303,7 +304,7 @@ const ScheduleManagement = () => {
         : 'Instructeur non défini',
       room: slot.room || 'Salle non définie',
       formation: selectedSchedule?.formations?.title || 'Formation',
-      color: slot.color || 'bg-blue-500',
+      color: slot.notes ? getModuleColor(extractModuleName(slot.notes)) : '#3B82F6',
       description: slot.notes || ''
     }));
   };
@@ -328,7 +329,7 @@ const ScheduleManagement = () => {
           ? `${slot.users.first_name} ${slot.users.last_name}` 
           : 'Instructeur non défini',
         room: slot.room || 'Salle non définie',
-        color: slot.color || 'bg-blue-500'
+        color: slot.notes ? getModuleColor(extractModuleName(slot.notes)) : '#3B82F6'
       }))
     };
   });
@@ -461,7 +462,7 @@ const ScheduleManagement = () => {
                             <div 
                               className="px-3 py-2 rounded-md shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer text-white"
                               style={{ 
-                                backgroundColor: event.color || '#3B82F6'
+                                 backgroundColor: event.color
                               }}
                               onClick={() => handleEditSlot(daySlots.find(s => s.id === event.id)!)}
                             >
@@ -517,7 +518,7 @@ const ScheduleManagement = () => {
                          key={event.id}
                          className="rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 text-white"
                          style={{ 
-                           backgroundColor: event.color || '#3B82F6'
+                           backgroundColor: event.color
                          }}
                          onClick={() => handleEditSlot(daySlots.find(s => s.id === event.id)!)}
                        >
@@ -714,7 +715,7 @@ const ScheduleManagement = () => {
                                  key={event.id}
                                  className="px-2 py-2 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 mb-1 text-white"
                                  style={{ 
-                                   backgroundColor: event.color || '#3B82F6'
+                                   backgroundColor: event.color
                                  }}
                                 title={`${event.title} - ${event.startTime}`}
                                 onClick={(e) => {
@@ -851,7 +852,10 @@ const ScheduleManagement = () => {
                         key={index}
                         className="relative p-4 rounded-xl bg-gradient-to-r from-card to-muted/30 border border-border hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-pointer group"
                       >
-                        <div className={`absolute top-0 left-0 w-1 h-full ${module.color} rounded-l-xl`} />
+                         <div 
+                           className="absolute top-0 left-0 w-1 h-full rounded-l-xl"
+                           style={{ backgroundColor: getModuleColor(module.title) }}
+                         />
                         
                         <div className="ml-3">
                           <h4 className="font-semibold text-foreground text-sm mb-2 group-hover:text-primary transition-colors">
