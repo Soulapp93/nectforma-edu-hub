@@ -35,6 +35,7 @@ import {
 } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { WeekNavigator } from '@/components/schedule/WeekNavigator';
+import WeekNavigation from '@/components/ui/week-navigation';
 import { useSchedules } from '@/hooks/useSchedules';
 import { scheduleService, Schedule, ScheduleSlot } from '@/services/scheduleService';
 import AddSlotModal from '@/components/administration/AddSlotModal';
@@ -998,6 +999,21 @@ const ScheduleManagement = () => {
                 </Button>
               </div>
             </div>
+
+            {/* Barre de navigation par semaine */}
+            <div className="mt-6">
+              <WeekNavigation
+                selectedDate={selectedDate}
+                onDateChange={setSelectedDate}
+                onWeekSelect={(weekStartDate) => {
+                  setSelectedDate(weekStartDate);
+                  if (viewMode !== 'week') {
+                    setViewMode('week');
+                  }
+                }}
+                className="bg-background/95 backdrop-blur-sm border-border"
+              />
+            </div>
           </div>
         </div>
 
@@ -1064,6 +1080,15 @@ const ScheduleManagement = () => {
                 Liste
               </Button>
             </div>
+          </div>
+
+          {/* Barre de navigation par semaine */}
+          <div className="mt-6">
+            <WeekNavigation
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
+              className="bg-background/95 backdrop-blur-sm border-border"
+            />
           </div>
         </div>
       </div>
