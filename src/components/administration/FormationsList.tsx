@@ -1,6 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Filter } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
+import { LoadingState } from '@/components/ui/loading-state';
 import CreateFormationModal from './CreateFormationModal';
 import EditFormationModal from './EditFormationModal';
 import FormationCard from './FormationCard';
@@ -88,45 +91,43 @@ const FormationsList: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
-        <p className="text-gray-600 mt-2">Chargement des formations...</p>
-      </div>
+      <LoadingState message="Chargement des formations..." />
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        <div className="p-6 border-b border-gray-200">
+      <div className="glass-card rounded-xl">
+        <div className="p-6 border-b border-border">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Gestion des formations</h2>
-            <button 
+            <h2 className="text-xl font-semibold text-foreground">Gestion des formations</h2>
+            <Button 
               onClick={handleCreateFormation}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center"
+              className="flex items-center gap-2"
+              variant="premium"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4" />
               Nouvelle formation
-            </button>
+            </Button>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
                   placeholder="Rechercher une formation..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                 />
               </div>
             </div>
             <select 
               value={selectedLevel}
               onChange={(e) => setSelectedLevel(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
             >
               <option value="all">Tous les niveaux</option>
               <option value="BAC+1">BAC+1</option>
@@ -138,7 +139,7 @@ const FormationsList: React.FC = () => {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
             >
               <option value="all">Tous les statuts</option>
               <option value="Actif">Actif</option>
@@ -151,33 +152,20 @@ const FormationsList: React.FC = () => {
 
       {/* Cartes des formations */}
       {filteredFormations.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
-          <div className="max-w-md mx-auto">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Plus className="h-8 w-8 text-purple-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              {searchTerm || selectedLevel !== 'all' || selectedStatus !== 'all' 
-                ? 'Aucune formation trouvée' 
-                : 'Aucune formation'
-              }
-            </h3>
-            <p className="text-gray-600 mb-4">
-              {searchTerm || selectedLevel !== 'all' || selectedStatus !== 'all'
-                ? 'Essayez de modifier vos critères de recherche.'
-                : 'Créez votre première formation pour enrichir votre catalogue.'
-              }
-            </p>
-            {(!searchTerm && selectedLevel === 'all' && selectedStatus === 'all') && (
-              <button 
-                onClick={handleCreateFormation}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium"
-              >
-                Créer une formation
-              </button>
-            )}
-          </div>
-        </div>
+        <EmptyState
+          icon={Plus}
+          title={searchTerm || selectedLevel !== 'all' || selectedStatus !== 'all' 
+            ? 'Aucune formation trouvée' 
+            : 'Aucune formation'}
+          description={searchTerm || selectedLevel !== 'all' || selectedStatus !== 'all'
+            ? 'Essayez de modifier vos critères de recherche.'
+            : 'Créez votre première formation pour enrichir votre catalogue.'}
+          action={(!searchTerm && selectedLevel === 'all' && selectedStatus === 'all') ? {
+            label: 'Créer une formation',
+            onClick: handleCreateFormation,
+            variant: 'premium'
+          } : undefined}
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredFormations.map((formation) => (

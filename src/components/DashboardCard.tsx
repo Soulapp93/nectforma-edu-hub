@@ -26,31 +26,31 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
 }) => {
   return (
     <div 
-      className={`bg-white rounded-xl shadow-sm border border-gray-100 p-6 ${
-        clickable ? 'cursor-pointer hover:shadow-md hover:border-purple-200 transition-all duration-200' : ''
+      className={`glass-card rounded-xl p-6 transition-all duration-300 ${
+        clickable ? 'cursor-pointer floating-card hover:shadow-lg' : ''
       }`}
       onClick={onClick}
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 mb-1">{value}</p>
-          <p className="text-sm text-gray-500">{description}</p>
+          <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
+          <p className="text-2xl font-bold text-foreground mb-1">{value}</p>
+          <p className="text-sm text-muted-foreground">{description}</p>
           {trend && (
             <div className="flex items-center mt-2">
               {trend.isPositive ? (
-                <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                <TrendingUp className="h-4 w-4 text-success mr-1" />
               ) : (
-                <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
+                <TrendingDown className="h-4 w-4 text-destructive mr-1" />
               )}
-              <span className={`text-sm ${trend.isPositive ? 'text-green-600' : 'text-red-600'}`}>
+              <span className={`text-sm ${trend.isPositive ? 'text-success' : 'text-destructive'}`}>
                 {trend.value}%
               </span>
             </div>
           )}
         </div>
-        <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-          <Icon className="h-6 w-6 text-purple-600" />
+        <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+          <Icon className="h-6 w-6 text-primary" />
         </div>
       </div>
     </div>

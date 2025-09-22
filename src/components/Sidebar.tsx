@@ -129,21 +129,17 @@ const Sidebar = () => {
 
   return (
     <SidebarWrapper 
-      className={`${collapsed ? 'w-16' : 'w-64'} !bg-gradient-to-b !from-purple-600 !to-purple-800 text-white shadow-2xl transition-all duration-300`}
-      style={{
-        background: 'linear-gradient(180deg, #9333ea 0%, #7c3aed 100%)',
-        color: 'white'
-      }}
+      className={`${collapsed ? 'w-16' : 'w-64'} nect-gradient text-primary-foreground shadow-xl transition-all duration-300`}
       collapsible="icon"
     >
       <SidebarHeader className="p-6">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
-            <span className="text-purple-600 font-bold text-lg">NF</span>
+          <div className="w-10 h-10 bg-primary-foreground rounded-lg flex items-center justify-center flex-shrink-0">
+            <span className="text-primary font-bold text-lg">NF</span>
           </div>
           {!collapsed && (
             <div>
-              <h1 className="text-xl font-bold">NECTFORIA</h1>
+              <h1 className="text-xl font-bold text-primary-foreground">NECTFORIA</h1>
             </div>
           )}
         </div>
@@ -151,17 +147,17 @@ const Sidebar = () => {
 
       <SidebarContent>
         {/* User Profile */}
-        <div className="px-6 py-4 border-b border-white/20">
+        <div className="px-6 py-4 border-b border-primary-foreground/20">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-sm font-medium">{userDisplayInfo.initials}</span>
+            <div className="w-8 h-8 bg-primary-foreground/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-sm font-medium text-primary-foreground">{userDisplayInfo.initials}</span>
             </div>
             {!collapsed && (
               <div className="flex-1">
-                <p className="text-sm font-medium">{userDisplayInfo.name}</p>
-                <p className="text-xs text-white/70">{userDisplayInfo.role}</p>
+                <p className="text-sm font-medium text-primary-foreground">{userDisplayInfo.name}</p>
+                <p className="text-xs text-primary-foreground/70">{userDisplayInfo.role}</p>
                 {userDisplayInfo.relationInfo && (
-                  <div className="text-xs text-white/60 mt-1">
+                  <div className="text-xs text-primary-foreground/60 mt-1">
                     {userDisplayInfo.relationInfo.type === 'tutor' ? (
                       <span>🏢 Tuteur: {userDisplayInfo.relationInfo.name}</span>
                     ) : (
@@ -175,7 +171,7 @@ const Sidebar = () => {
         </div>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-white/70 px-4 py-2">
+          <SidebarGroupLabel className="text-primary-foreground/70 px-4 py-2">
             {!collapsed ? 'Navigation' : ''}
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -191,8 +187,8 @@ const Sidebar = () => {
                         className={({ isActive }) =>
                           `flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                             isActive
-                              ? 'bg-white/20 text-white'
-                              : 'text-white/80 hover:bg-white/10 hover:text-white'
+                              ? 'nect-glass text-primary-foreground'
+                              : 'text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground'
                           }`
                         }
                         title={collapsed ? item.name : undefined}
@@ -209,10 +205,10 @@ const Sidebar = () => {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-white/20">
+      <SidebarFooter className="p-4 border-t border-primary-foreground/20">
         <button 
           onClick={handleLogout}
-          className="flex items-center px-3 py-2 text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white rounded-lg transition-colors w-full"
+          className="flex items-center px-3 py-2 text-sm font-medium text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-lg transition-colors w-full"
           title={collapsed ? 'Déconnexion' : undefined}
         >
           <LogOut className={`${collapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0`} />

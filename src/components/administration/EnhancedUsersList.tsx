@@ -3,6 +3,9 @@ import { Plus, Search, Filter, Upload, Download, MoreVertical, Edit, Trash2, Mai
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { LoadingState } from '@/components/ui/loading-state';
+import { StatusBadge } from '@/components/ui/status-badge';
+import { RoleBadge } from '@/components/ui/role-badge';
 import { useUsers } from '@/hooks/useUsers';
 import { useUserFormations } from '@/hooks/useUserFormations';
 import { useUserTutors } from '@/hooks/useUserTutors';
@@ -120,70 +123,31 @@ const EnhancedUsersList: React.FC = () => {
     console.log(`Renvoyer l'invitation à ${email}`);
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusClasses = {
-      'Actif': 'bg-green-100 text-green-800 border-green-200',
-      'Inactif': 'bg-red-100 text-red-800 border-red-200',
-      'En attente': 'bg-yellow-100 text-yellow-800 border-yellow-200'
-    };
-
-    return (
-      <span className={`px-2 py-1 text-xs font-medium rounded-full border ${statusClasses[status as keyof typeof statusClasses] || 'bg-gray-100 text-gray-800 border-gray-200'}`}>
-        {status}
-      </span>
-    );
-  };
-
-  const getRoleBadge = (role: string) => {
-    const roleClasses = {
-      'Admin': 'bg-purple-100 text-purple-800 border-purple-200',
-      'Formateur': 'bg-blue-100 text-blue-800 border-blue-200',
-      'Étudiant': 'bg-gray-100 text-gray-800 border-gray-200'
-    };
-
-    return (
-      <span className={`px-2 py-1 text-xs font-medium rounded-full border ${roleClasses[role as keyof typeof roleClasses] || 'bg-gray-100 text-gray-800 border-gray-200'}`}>
-        {role}
-      </span>
-    );
-  };
-
   if (loading && users.length === 0) {
-    return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded mb-4"></div>
-          <div className="space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-12 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingState message="Chargement des utilisateurs..." />;
   }
 
   if (error) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+      <div className="glass-card rounded-xl p-8">
         <div className="text-center">
-          <div className="text-red-600 mb-2">Erreur</div>
-          <p className="text-gray-600">{error}</p>
+          <div className="text-destructive mb-2">Erreur</div>
+          <p className="text-muted-foreground">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+    <div className="glass-card rounded-xl">
       {/* En-tête */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-border">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-foreground">
               Gestion des utilisateurs
             </h2>
-            <p className="text-gray-600 mt-1">
+            <p className="text-muted-foreground mt-1">
               {filteredUsers.length} utilisateur{filteredUsers.length > 1 ? 's' : ''} trouvé{filteredUsers.length > 1 ? 's' : ''}
             </p>
           </div>
@@ -207,30 +171,31 @@ const EnhancedUsersList: React.FC = () => {
             </Button>
             <Button
               onClick={() => setIsStudentExcelImportOpen(true)}
-              variant="outline"
-              className="flex items-center gap-2 bg-green-50 text-green-600 border-green-200 hover:bg-green-100"
+              variant="success"
+              className="flex items-center gap-2"
             >
               <Upload className="h-4 w-4" />
               Importer Étudiants
             </Button>
             <Button
               onClick={handleCreateAdmin}
-              variant="outline"
-              className="flex items-center gap-2 bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-100"
+              variant="elegant"
+              className="flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
               Ajouter un Administrateur
             </Button>
             <Button
               onClick={handleCreateInstructor}
-              variant="outline"
-              className="flex items-center gap-2 bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
+              variant="info"
+              className="flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
               Ajouter un Formateur
             </Button>
             <Button
               onClick={handleCreateStudent}
+              variant="premium"
               className="flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
@@ -242,7 +207,7 @@ const EnhancedUsersList: React.FC = () => {
         {/* Filtres */}
         <div className="flex flex-col lg:flex-row gap-4 mt-6">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Rechercher par nom ou email..."
               value={searchTerm}
@@ -323,7 +288,7 @@ const EnhancedUsersList: React.FC = () => {
                     <div className="text-sm text-foreground">{user.email}</div>
                   </TableCell>
                   <TableCell>
-                    {getRoleBadge(user.role)}
+                    {<RoleBadge role={user.role} />}
                   </TableCell>
                   <TableCell>
                     <div className="max-w-xs">
@@ -370,7 +335,7 @@ const EnhancedUsersList: React.FC = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {getStatusBadge(user.status)}
+                    {<StatusBadge status={user.status} type="user" />}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
@@ -410,7 +375,7 @@ const EnhancedUsersList: React.FC = () => {
         
         {filteredUsers.length === 0 && (
           <div className="text-center py-8">
-            <div className="text-gray-500">Aucun utilisateur trouvé</div>
+            <div className="text-muted-foreground">Aucun utilisateur trouvé</div>
           </div>
         )}
       </div>

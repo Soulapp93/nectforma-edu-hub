@@ -24,7 +24,7 @@ const AdministrationTabs: React.FC<AdministrationTabsProps> = ({ activeTab, onTa
 
   return (
     <div className="mb-8">
-      <div className="border-b border-gray-200">
+      <div className="border-b border-border">
         <nav className="-mb-px flex space-x-8">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -32,10 +32,10 @@ const AdministrationTabs: React.FC<AdministrationTabsProps> = ({ activeTab, onTa
               <button
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
-                className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
+                className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
-                    ? 'border-purple-500 text-purple-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground'
                 }`}
               >
                 <Icon className="h-5 w-5 mr-2" />
