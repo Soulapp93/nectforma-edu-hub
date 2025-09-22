@@ -52,34 +52,45 @@ type ViewMode = 'day' | 'week' | 'month' | 'list';
 
 const ScheduleManagement = () => {
   const { schedules, loading, refetch } = useSchedules();
+  const navigate = useNavigate();
+  
+  // États principaux
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null);
   const [slots, setSlots] = useState<ScheduleSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
+  const [displayViewMode, setDisplayViewMode] = useState<'card' | 'list'>('card');
+  
+  // États pour les modales
   const [isAddSlotModalOpen, setIsAddSlotModalOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string } | null>(null);
   const [isEditSlotModalOpen, setIsEditSlotModalOpen] = useState(false);
   const [slotToEdit, setSlotToEdit] = useState<ScheduleSlot | null>(null);
   const [isExcelImportModalOpen, setIsExcelImportModalOpen] = useState(false);
   const [draggedSlot, setDraggedSlot] = useState<ScheduleSlot | null>(null);
-  const [displayViewMode, setDisplayViewMode] = useState<'card' | 'list'>('card');
-  const navigate = useNavigate();
 
   const timeSlots = [
     '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', 
     '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'
   ];
 
-  // Définir fetchScheduleSlots AVANT useEffect
+  // Calculer les valeurs memoized
+  const weekInfo = useMemo(() => getWeekInfo(selectedDate), [selectedDate]);
+  const weekDays = useMemo(() => getWeekDays(selectedDate), [selectedDate]);
+
+  // Fonction pour récupérer les créneaux
   const fetchScheduleSlots = useCallback(async () => {
-    if (!selectedSchedule?.id) return;
+    if (!selectedSchedule?.id) {
+      setSlots([]);
+      return;
+    }
     
     try {
       setSlotsLoading(true);
       const slotsData = await scheduleService.getScheduleSlots(selectedSchedule.id);
-      setSlots(slotsData);
+      setSlots(slotsData || []);
     } catch (error) {
       console.error('Erreur lors du chargement des créneaux:', error);
       toast.error('Erreur lors du chargement des créneaux');
@@ -89,16 +100,10 @@ const ScheduleManagement = () => {
     }
   }, [selectedSchedule?.id]);
 
-  // Load slots when a schedule is selected - APRÈS fetchScheduleSlots
+  // Charger les créneaux quand un emploi du temps est sélectionné
   useEffect(() => {
-    if (selectedSchedule?.id) {
-      fetchScheduleSlots();
-    }
-  }, [selectedSchedule?.id, fetchScheduleSlots]);
-
-  // Calculer les valeurs memoized
-  const weekInfo = useMemo(() => getWeekInfo(selectedDate), [selectedDate]);
-  const weekDays = useMemo(() => getWeekDays(selectedDate), [selectedDate]);
+    fetchScheduleSlots();
+  }, [fetchScheduleSlots]);
 
   const handleCreateSchedule = () => {
     setIsCreateModalOpen(true);
@@ -146,8 +151,29 @@ const ScheduleManagement = () => {
     }
   };
 
+  // Handlers pour les boutons principaux
+  const handleOpenAddSlotModal = () => {
+    if (!selectedSchedule?.id) {
+      toast.error('Veuillez sélectionner un emploi du temps');
+      return;
+    }
+    setIsAddSlotModalOpen(true);
+  };
+
+  const handleOpenExcelImportModal = () => {
+    if (!selectedSchedule?.id) {
+      toast.error('Veuillez sélectionner un emploi du temps');
+      return;
+    }
+    setIsExcelImportModalOpen(true);
+  };
+
   // Slot management functions
   const handleAddSlot = (date: Date, time: string) => {
+    if (!selectedSchedule?.id) {
+      toast.error('Veuillez sélectionner un emploi du temps');
+      return;
+    }
     setSelectedSlot({
       date: formatDate(date),
       time
@@ -357,7 +383,7 @@ const ScheduleManagement = () => {
     }
   };
   
-  // Prepare week schedule data for week and list views
+   // Prepare week schedule data for week and list views
   const mockSchedule = weekDays.map((date, index) => {
     const daySlots = slots.filter(slot => 
       new Date(slot.date).toDateString() === date.toDateString()
@@ -367,6 +393,7 @@ const ScheduleManagement = () => {
       id: (index + 1).toString(),
       day: format(date, 'EEEE', { locale: fr }),
       date: format(date, 'd'),
+      actualDate: date, // Ajouter la date réelle pour faciliter l'accès
       modules: daySlots.map(slot => ({
         title: slot.formation_modules?.title || 'Module non défini',
         time: `${slot.start_time} - ${slot.end_time}`,
@@ -884,13 +911,13 @@ const ScheduleManagement = () => {
                         size="sm" 
                         variant="outline"
                         onClick={() => {
-                          if (selectedSchedule && selectedSchedule.id) {
-                            handleAddSlot(weekDays[parseInt(day.id) - 1], '09:00');
+                          if (selectedSchedule?.id) {
+                            handleAddSlot(day.actualDate, '09:00');
                           } else {
                             toast.error('Veuillez sélectionner un emploi du temps');
                           }
                         }}
-                        disabled={!selectedSchedule || !selectedSchedule.id}
+                        disabled={!selectedSchedule?.id}
                         className="text-xs"
                       >
                         <Plus className="h-3 w-3 mr-1" />
@@ -935,14 +962,14 @@ const ScheduleManagement = () => {
                               size="sm" 
                               variant="ghost" 
                               className="h-6 w-6 p-0"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const slot = slots.find(s => 
-                                  s.formation_modules?.title === module.title &&
-                                  new Date(s.date).toDateString() === weekDays[parseInt(day.id) - 1].toDateString()
-                                );
-                                if (slot) handleEditSlot(slot);
-                              }}
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 const slot = slots.find(s => 
+                                   s.formation_modules?.title === module.title &&
+                                   new Date(s.date).toDateString() === day.actualDate.toDateString()
+                                 );
+                                 if (slot) handleEditSlot(slot);
+                               }}
                             >
                               <Edit className="h-3 w-3" />
                             </Button>
@@ -950,14 +977,14 @@ const ScheduleManagement = () => {
                               size="sm" 
                               variant="ghost" 
                               className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const slot = slots.find(s => 
-                                  s.formation_modules?.title === module.title &&
-                                  new Date(s.date).toDateString() === weekDays[parseInt(day.id) - 1].toDateString()
-                                );
-                                if (slot) handleDeleteSlot(slot);
-                              }}
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 const slot = slots.find(s => 
+                                   s.formation_modules?.title === module.title &&
+                                   new Date(s.date).toDateString() === day.actualDate.toDateString()
+                                 );
+                                 if (slot) handleDeleteSlot(slot);
+                               }}
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
@@ -968,7 +995,7 @@ const ScheduleManagement = () => {
                     <Button 
                       size="sm" 
                       variant="outline"
-                      onClick={() => handleAddSlot(weekDays[parseInt(day.id) - 1], '09:00')}
+                      onClick={() => handleAddSlot(day.actualDate, '09:00')}
                       className="w-full text-xs"
                     >
                       <Plus className="h-3 w-3 mr-1" />
@@ -1013,22 +1040,15 @@ const ScheduleManagement = () => {
 
               <div className="flex items-center space-x-3">
                 <Button 
-                  onClick={() => {
-                    console.log('selectedSchedule:', selectedSchedule);
-                    if (selectedSchedule && selectedSchedule.id) {
-                      setIsAddSlotModalOpen(true);
-                    } else {
-                      toast.error('Veuillez sélectionner un emploi du temps');
-                    }
-                  }}
-                  disabled={!selectedSchedule || !selectedSchedule.id}
+                  onClick={handleOpenAddSlotModal}
+                  disabled={!selectedSchedule?.id}
                   className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all hover:scale-105"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Ajouter un créneau
                 </Button>
                 
-                {selectedSchedule.status === 'Brouillon' && (
+                {selectedSchedule?.status === 'Brouillon' && (
                   <Button 
                     onClick={handlePublishSchedule}
                     disabled={slots.length === 0}
@@ -1040,15 +1060,8 @@ const ScheduleManagement = () => {
                 )}
                 
                 <Button 
-                  onClick={() => {
-                    console.log('selectedSchedule for Excel:', selectedSchedule);
-                    if (selectedSchedule && selectedSchedule.id) {
-                      setIsExcelImportModalOpen(true);
-                    } else {
-                      toast.error('Veuillez sélectionner un emploi du temps');
-                    }
-                  }}
-                  disabled={!selectedSchedule || !selectedSchedule.id}
+                  onClick={handleOpenExcelImportModal}
+                  disabled={!selectedSchedule?.id}
                   variant="outline"
                   size="sm"
                 >
