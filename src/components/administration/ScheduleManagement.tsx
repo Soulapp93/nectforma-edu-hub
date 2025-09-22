@@ -875,10 +875,34 @@ const ScheduleManagement = () => {
                           
                           {/* Admin actions */}
                           <div className="flex items-center space-x-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-6 w-6 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const slot = slots.find(s => 
+                                  s.formation_modules?.title === module.title &&
+                                  new Date(s.date).toDateString() === weekDays[parseInt(day.id) - 1].toDateString()
+                                );
+                                if (slot) handleEditSlot(slot);
+                              }}
+                            >
                               <Edit className="h-3 w-3" />
                             </Button>
-                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const slot = slots.find(s => 
+                                  s.formation_modules?.title === module.title &&
+                                  new Date(s.date).toDateString() === weekDays[parseInt(day.id) - 1].toDateString()
+                                );
+                                if (slot) handleDeleteSlot(slot);
+                              }}
+                            >
                               <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
@@ -933,7 +957,12 @@ const ScheduleManagement = () => {
 
               <div className="flex items-center space-x-3">
                 <Button 
-                  onClick={() => setIsAddSlotModalOpen(true)}
+                  onClick={() => {
+                    if (selectedSchedule) {
+                      setIsAddSlotModalOpen(true);
+                    }
+                  }}
+                  disabled={!selectedSchedule}
                   className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all hover:scale-105"
                 >
                   <Plus className="h-4 w-4 mr-2" />
@@ -952,7 +981,12 @@ const ScheduleManagement = () => {
                 )}
                 
                 <Button 
-                  onClick={() => setIsExcelImportModalOpen(true)}
+                  onClick={() => {
+                    if (selectedSchedule) {
+                      setIsExcelImportModalOpen(true);
+                    }
+                  }}
+                  disabled={!selectedSchedule}
                   variant="outline"
                   size="sm"
                 >
