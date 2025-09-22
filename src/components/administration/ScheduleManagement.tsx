@@ -151,24 +151,38 @@ const ScheduleManagement = () => {
     }
   };
 
-  // Handlers pour les boutons principaux - version simplifiée
-  const handleOpenAddSlotModal = useCallback(() => {
+  // Handlers pour les boutons principaux - version simplifiée et corrigée
+  const handleOpenAddSlotModal = useCallback((e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     console.log('Bouton "Ajouter un créneau" cliqué', { selectedSchedule: selectedSchedule?.id });
+    
     if (!selectedSchedule?.id) {
-      toast.error('Veuillez sélectionner un emploi du temps');
+      toast.error('Veuillez sélectionner un emploi du temps pour ajouter des créneaux');
       return;
     }
+    
     setSelectedSlot(null);
     setIsAddSlotModalOpen(true);
+    console.log('Modale AddSlot ouverte');
   }, [selectedSchedule?.id]);
 
-  const handleOpenExcelImportModal = useCallback(() => {
+  const handleOpenExcelImportModal = useCallback((e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     console.log('Bouton "Import Excel" cliqué', { selectedSchedule: selectedSchedule?.id });
+    
     if (!selectedSchedule?.id) {
-      toast.error('Veuillez sélectionner un emploi du temps');
+      toast.error('Veuillez sélectionner un emploi du temps pour importer des données');
       return;
     }
+    
     setIsExcelImportModalOpen(true);
+    console.log('Modale ExcelImport ouverte');
   }, [selectedSchedule?.id]);
 
   const handleAddSlot = useCallback((date: Date, time: string) => {
@@ -284,8 +298,18 @@ const ScheduleManagement = () => {
     }
   };
 
-  const handlePublishSchedule = async () => {
-    if (!selectedSchedule) return;
+  const handlePublishSchedule = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    if (!selectedSchedule) {
+      toast.error('Aucun emploi du temps sélectionné');
+      return;
+    }
+    
+    console.log('Bouton "Publier" cliqué', { selectedSchedule: selectedSchedule.id });
     
     try {
       await scheduleService.updateSchedule(selectedSchedule.id, { status: 'Publié' });
@@ -294,6 +318,7 @@ const ScheduleManagement = () => {
       // Update local state
       setSelectedSchedule({ ...selectedSchedule, status: 'Publié' });
     } catch (error) {
+      console.error('Erreur publication:', error);
       toast.error("Erreur lors de la publication");
     }
   };
@@ -1046,12 +1071,7 @@ const ScheduleManagement = () => {
 
               <div className="flex items-center space-x-3">
                 <Button 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Clic sur bouton "Ajouter un créneau"');
-                    handleOpenAddSlotModal();
-                  }}
+                  onClick={handleOpenAddSlotModal}
                   disabled={!selectedSchedule?.id}
                   className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all hover:scale-105"
                 >
@@ -1071,12 +1091,7 @@ const ScheduleManagement = () => {
                 )}
                 
                 <Button 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Clic sur bouton "Import Excel"');
-                    handleOpenExcelImportModal();
-                  }}
+                  onClick={handleOpenExcelImportModal}
                   disabled={!selectedSchedule?.id}
                   variant="outline"
                   size="sm"
