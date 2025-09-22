@@ -71,6 +71,14 @@ const ScheduleManagement = () => {
   const [isExcelImportModalOpen, setIsExcelImportModalOpen] = useState(false);
   const [draggedSlot, setDraggedSlot] = useState<ScheduleSlot | null>(null);
 
+  // Log des états pour debugging
+  console.log('États modales:', {
+    isAddSlotModalOpen,
+    isEditSlotModalOpen,
+    isExcelImportModalOpen,
+    selectedSchedule: selectedSchedule?.id
+  });
+
   const timeSlots = [
     '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', 
     '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'
@@ -157,7 +165,9 @@ const ScheduleManagement = () => {
       e.preventDefault();
       e.stopPropagation();
     }
-    console.log('Bouton "Ajouter un créneau" cliqué', { selectedSchedule: selectedSchedule?.id });
+    console.log('=== AVANT ouverture AddSlot ===');
+    console.log('selectedSchedule:', selectedSchedule?.id);
+    console.log('isAddSlotModalOpen AVANT:', isAddSlotModalOpen);
     
     if (!selectedSchedule?.id) {
       toast.error('Veuillez sélectionner un emploi du temps pour ajouter des créneaux');
@@ -166,15 +176,24 @@ const ScheduleManagement = () => {
     
     setSelectedSlot(null);
     setIsAddSlotModalOpen(true);
-    console.log('Modale AddSlot ouverte');
-  }, [selectedSchedule?.id]);
+    
+    console.log('=== APRÈS ouverture AddSlot ===');
+    console.log('setIsAddSlotModalOpen(true) appelé');
+    
+    // Force re-render
+    setTimeout(() => {
+      console.log('isAddSlotModalOpen APRÈS setTimeout:', isAddSlotModalOpen);
+    }, 100);
+  }, [selectedSchedule?.id, isAddSlotModalOpen]);
 
   const handleOpenExcelImportModal = useCallback((e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
-    console.log('Bouton "Import Excel" cliqué', { selectedSchedule: selectedSchedule?.id });
+    console.log('=== AVANT ouverture ExcelImport ===');
+    console.log('selectedSchedule:', selectedSchedule?.id);
+    console.log('isExcelImportModalOpen AVANT:', isExcelImportModalOpen);
     
     if (!selectedSchedule?.id) {
       toast.error('Veuillez sélectionner un emploi du temps pour importer des données');
@@ -182,8 +201,15 @@ const ScheduleManagement = () => {
     }
     
     setIsExcelImportModalOpen(true);
-    console.log('Modale ExcelImport ouverte');
-  }, [selectedSchedule?.id]);
+    
+    console.log('=== APRÈS ouverture ExcelImport ===');
+    console.log('setIsExcelImportModalOpen(true) appelé');
+    
+    // Force re-render
+    setTimeout(() => {
+      console.log('isExcelImportModalOpen APRÈS setTimeout:', isExcelImportModalOpen);
+    }, 100);
+  }, [selectedSchedule?.id, isExcelImportModalOpen]);
 
   const handleAddSlot = useCallback((date: Date, time: string) => {
     console.log('Bouton "Ajouter" cliqué', { date, time, selectedSchedule: selectedSchedule?.id });
@@ -1390,40 +1416,42 @@ const ScheduleManagement = () => {
         )}
       </div>
 
-      {/* Modals */}
+      {/* Modals - Rendu sans condition */}
       <CreateScheduleModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={handleCreateSuccess}
       />
 
-      {selectedSchedule && (
-        <>
-          <AddSlotModal
-            isOpen={isAddSlotModalOpen}
-            onClose={() => setIsAddSlotModalOpen(false)}
-            onSuccess={handleSlotAdded}
-            scheduleId={selectedSchedule.id}
-            formationId={selectedSchedule.formation_id || ''}
-            selectedSlot={selectedSlot}
-          />
+      <AddSlotModal
+        isOpen={isAddSlotModalOpen}
+        onClose={() => {
+          console.log('Fermeture AddSlotModal');
+          setIsAddSlotModalOpen(false);
+        }}
+        onSuccess={handleSlotAdded}
+        scheduleId={selectedSchedule?.id || ''}
+        formationId={selectedSchedule?.formation_id || ''}
+        selectedSlot={selectedSlot}
+      />
 
-          <EditSlotModal
-            isOpen={isEditSlotModalOpen}
-            onClose={() => setIsEditSlotModalOpen(false)}
-            onSuccess={handleSlotEdited}
-            formationId={selectedSchedule.formation_id || ''}
-            slot={slotToEdit}
-          />
+      <EditSlotModal
+        isOpen={isEditSlotModalOpen}
+        onClose={() => setIsEditSlotModalOpen(false)}
+        onSuccess={handleSlotEdited}
+        formationId={selectedSchedule?.formation_id || ''}
+        slot={slotToEdit}
+      />
 
-          <ExcelImportModal
-            isOpen={isExcelImportModalOpen}
-            onClose={() => setIsExcelImportModalOpen(false)}
-            onSuccess={handleExcelImportSuccess}
-            scheduleId={selectedSchedule.id}
-          />
-        </>
-      )}
+      <ExcelImportModal
+        isOpen={isExcelImportModalOpen}
+        onClose={() => {
+          console.log('Fermeture ExcelImportModal');
+          setIsExcelImportModalOpen(false);
+        }}
+        onSuccess={handleExcelImportSuccess}
+        scheduleId={selectedSchedule?.id || ''}
+      />
     </div>
   );
 };
