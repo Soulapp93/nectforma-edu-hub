@@ -8,10 +8,10 @@ import { ViewModeSelector } from '@/components/schedule/ViewModeSelector';
 import { WeekNavigator } from '@/components/schedule/WeekNavigator';
 import WeekNavigation from '@/components/ui/week-navigation';
 import { ScheduleManagementHeader } from '@/components/administration/ScheduleManagementHeader';
-import { ScheduleManagementCalendar } from '@/components/administration/ScheduleManagementCalendar';
-import { ScheduleDayView } from '@/components/administration/ScheduleDayView';
-import { ScheduleMonthView } from '@/components/administration/ScheduleMonthView';
-import { ScheduleListView } from '@/components/administration/ScheduleListView';
+import { ScheduleViewCalendar } from '@/components/schedule/ScheduleViewCalendar';
+import { DayView } from '@/components/schedule/DayView';
+import { MonthView } from '@/components/schedule/MonthView';
+import type { ScheduleEvent } from '@/components/schedule/CreateEventModal';
 import { scheduleService, Schedule, ScheduleSlot } from '@/services/scheduleService';
 import { navigateWeek, getWeekInfo, getWeekDays } from '@/utils/calendarUtils';
 import AddSlotModal from '@/components/administration/AddSlotModal';
@@ -238,7 +238,23 @@ const ModernScheduleEditor = () => {
     }
   };
 
-  // Convertir les slots pour le calendrier
+  // Convertir les slots en événements pour les composants de consultation
+  const convertSlotsToEvents = (): ScheduleEvent[] => {
+    return slots.map(slot => ({
+      id: slot.id,
+      title: slot.formation_modules?.title || 'Module non défini',
+      date: new Date(slot.date),
+      startTime: slot.start_time.slice(0, 5),
+      endTime: slot.end_time.slice(0, 5),
+      instructor: slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Non assigné',
+      room: slot.room || 'Salle non définie',
+      formation: schedule?.formations?.title || 'Formation non définie',
+      color: slot.color || schedule?.formations?.color || '#6B7280',
+      description: slot.notes || `Cours de ${slot.formation_modules?.title || 'formation'}`
+    }));
+  };
+
+  // Convertir les slots pour le calendrier semaine
   const convertSlotsToScheduleData = () => {
     const weekDays = getWeekDays(selectedDate);
     return weekDays.map((date, index) => {
@@ -250,69 +266,141 @@ const ModernScheduleEditor = () => {
         id: (index + 1).toString(),
         day: format(date, 'EEEE', { locale: fr }),
         date: format(date, 'd'),
-        dateObj: date,
         modules: daySlots.map(slot => ({
-          id: slot.id,
           title: slot.formation_modules?.title || 'Module non défini',
           time: `${slot.start_time.slice(0, 5)} - ${slot.end_time.slice(0, 5)}`,
           instructor: slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Non assigné',
           room: slot.room || 'Salle non définie',
-          color: slot.color || schedule?.formations?.color || '#6B7280',
-          formation: schedule?.formations?.title,
-          slot
+          color: slot.color || schedule?.formations?.color || '#6B7280'
         }))
       };
     });
   };
 
+  // Gestionnaire pour les clics sur événements - trouver le slot correspondant
+  const handleEventClick = (event: ScheduleEvent) => {
+    const slot = slots.find(s => s.id === event.id);
+    if (slot) {
+      handleEditSlot(slot);
+    }
+  };
+
   // Fonction pour afficher la vue appropriée selon le mode sélectionné
   const renderCurrentView = () => {
+    const events = convertSlotsToEvents();
+    
     switch (viewMode) {
       case 'day':
         return (
-          <ScheduleDayView
+          <DayView
             selectedDate={selectedDate}
-            slots={slots}
-            onEditSlot={handleEditSlot}
-            onDuplicateSlot={handleDuplicateSlot}
-            onDeleteSlot={handleDeleteSlot}
+            events={events}
+            onEventClick={handleEventClick}
           />
         );
       case 'month':
         return (
-          <ScheduleMonthView
+          <MonthView
             selectedDate={selectedDate}
-            slots={slots}
+            events={events}
             onDateSelect={setSelectedDate}
             onMonthChange={setSelectedDate}
-            onSlotClick={handleEditSlot}
+            onEventClick={handleEventClick}
           />
         );
       case 'list':
-        return (
-          <ScheduleListView
-            slots={slots}
-            onEditSlot={handleEditSlot}
-            onDuplicateSlot={handleDuplicateSlot}
-            onDeleteSlot={handleDeleteSlot}
-          />
-        );
+        return renderListView(events);
       case 'week':
       default:
         return (
-          <ScheduleManagementCalendar
+          <ScheduleViewCalendar
             schedule={scheduleData}
-            filteredSlots={slots}
-            onAddSlotToDate={handleAddSlotToDate}
-            onEditSlot={handleEditSlot}
-            onDuplicateSlot={handleDuplicateSlot}
-            onDeleteSlot={handleDeleteSlot}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
+            filteredEvents={events}
+            onEventClick={handleEventClick}
           />
         );
     }
+  };
+
+  // Vue liste avec le même style que EmploiTemps
+  const renderListView = (events: ScheduleEvent[]) => {
+    return (
+      <div className="container mx-auto px-6 py-8">
+        <div className="space-y-6">
+          {events.map((event) => {
+            const eventDate = format(event.date, 'dd/MM/yyyy', { locale: fr });
+            const eventDay = format(event.date, 'EEEE', { locale: fr });
+            
+            return (
+              <div
+                key={event.id}
+                className="rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
+                style={{ backgroundColor: event.color }}
+                onClick={() => handleEventClick(event)}
+              >
+                <div className="p-6">
+                  <div className="grid grid-cols-12 gap-4 items-center text-white">
+                    {/* Date */}
+                    <div className="col-span-2">
+                      <div className="flex items-center space-x-2">
+                        <div>
+                          <div className="font-medium text-white">
+                            {eventDate}
+                          </div>
+                          <div className="text-xs text-white/80">
+                            {eventDay}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Horaire */}
+                    <div className="col-span-2">
+                      <div className="bg-white/20 text-white border-white/30 rounded px-2 py-1 text-xs font-medium inline-block">
+                        {event.startTime} - {event.endTime}
+                      </div>
+                    </div>
+
+                    {/* Module */}
+                    <div className="col-span-3">
+                      <div className="font-medium text-white">
+                        {event.title}
+                      </div>
+                      {event.description && (
+                        <div className="text-xs text-white/80 mt-1 truncate">
+                          {event.description}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Formateur */}
+                    <div className="col-span-2">
+                      <span className="text-sm text-white/90">
+                        {event.instructor}
+                      </span>
+                    </div>
+
+                    {/* Salle */}
+                    <div className="col-span-2">
+                      <span className="text-sm text-white/90">{event.room}</span>
+                    </div>
+
+                    {/* Formation */}
+                    <div className="col-span-1">
+                      {event.formation && (
+                        <div className="bg-white/20 text-white border-white/30 rounded px-2 py-1 text-xs font-medium text-center">
+                          {event.formation}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   const weekInfo = getWeekInfo(selectedDate);
