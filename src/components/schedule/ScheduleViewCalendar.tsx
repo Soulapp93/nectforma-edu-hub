@@ -77,25 +77,24 @@ export const ScheduleViewCalendar: React.FC<ScheduleViewCalendarProps> = ({
                   );
                   
                   return (
-                     <div
+                    <div
                       key={index}
-                      className="relative p-3 rounded-lg border border-muted/20 bg-background/50 hover:bg-background/80 transition-all duration-200 cursor-pointer group shadow-sm hover:shadow-md"
+                      className="px-4 py-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer group text-white"
+                      style={{ 
+                        backgroundColor: module.color || '#3B82F6'
+                      }}
                       onClick={() => {
                         if (fullEvent) onEventClick(fullEvent);
                       }}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <div 
-                          className="w-3 h-3 rounded-full mr-2 flex-shrink-0"
-                          style={{ backgroundColor: module.color || '#3B82F6' }}
-                        />
-                        <h4 className="font-medium text-foreground text-sm group-hover:text-foreground/80 transition-colors flex-1">
+                        <h4 className="font-semibold text-white text-sm group-hover:text-white/90 transition-colors">
                           {module.title}
                         </h4>
                         {fullEvent?.formation && (
                           <Badge 
-                            variant="secondary" 
-                            className="text-xs ml-2"
+                            variant="outline" 
+                            className="text-xs ml-2 border-white/30 text-white/90 bg-white/10"
                           >
                             {fullEvent.formation}
                           </Badge>
@@ -103,15 +102,15 @@ export const ScheduleViewCalendar: React.FC<ScheduleViewCalendarProps> = ({
                       </div>
                       
                       <div className="space-y-1">
-                        <div className="flex items-center text-xs text-muted-foreground">
+                        <div className="flex items-center text-xs text-white/90">
                           <Clock className="h-3 w-3 mr-1" />
                           {module.time}
                         </div>
-                        <div className="flex items-center text-xs text-muted-foreground">
+                        <div className="flex items-center text-xs text-white/90">
                           <MapPin className="h-3 w-3 mr-1" />
                           {module.room}
                         </div>
-                        <div className="flex items-center text-xs text-muted-foreground">
+                        <div className="flex items-center text-xs text-white/90">
                           <User className="h-3 w-3 mr-1" />
                           {module.instructor}
                         </div>
