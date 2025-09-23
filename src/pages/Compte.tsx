@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { PageHeader } from '@/components/ui/page-header';
 import ProfileSettings from '../components/compte/ProfileSettings';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { userService } from '@/services/userService';
@@ -100,10 +101,10 @@ const Compte = () => {
 
   return (
     <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{pageTitle}</h1>
-        <p className="text-gray-600">{pageDescription}</p>
-      </div>
+      <PageHeader
+        title="Mon Profil"
+        description="Gérez vos informations personnelles et les paramètres de votre profil"
+      />
 
       <div className="max-w-4xl">
         <ProfileSettings

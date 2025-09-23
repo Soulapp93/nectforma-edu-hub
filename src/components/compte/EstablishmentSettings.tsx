@@ -53,21 +53,21 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+    <div className="glass-card rounded-xl p-8 floating-card">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
-          <Building className="h-6 w-6 mr-2 text-purple-600" />
+        <h2 className="text-2xl font-bold text-foreground mb-2 flex items-center">
+          <Building className="h-6 w-6 mr-2 text-primary" />
           Gestion de l'établissement
         </h2>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Gérez les informations de l'administrateur principal et de l'établissement
         </p>
       </div>
 
       {/* Informations personnelles de l'administrateur */}
       <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-          <User className="h-5 w-5 mr-2 text-blue-600" />
+        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
+          <User className="h-5 w-5 mr-2 text-info" />
           Informations personnelles de l'administrateur principal
         </h3>
         
@@ -95,7 +95,7 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
           <div>
             <Label htmlFor="adminEmail">Email</Label>
             <div className="relative mt-1">
-              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 id="adminEmail"
                 type="email"
@@ -110,7 +110,7 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
           <div>
             <Label htmlFor="adminPhone">Téléphone</Label>
             <div className="relative mt-1">
-              <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 id="adminPhone"
                 value={adminData.phone}
@@ -148,51 +148,27 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
 
       {/* Informations de l'établissement */}
       <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-          <Building className="h-5 w-5 mr-2 text-green-600" />
+        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
+          <Building className="h-5 w-5 mr-2 text-primary" />
           Informations de l'établissement
         </h3>
         
-        <div className="space-y-6">
-          {/* Logo de l'établissement */}
-          <div>
-            <Label>Logo de l'établissement</Label>
-            <div className="mt-2 flex items-center gap-4">
-              {establishmentData.logoUrl && (
-                <div className="flex-shrink-0">
-                  <img
-                    src={establishmentData.logoUrl}
-                    alt="Logo de l'établissement"
-                    className="h-16 w-16 object-contain rounded-md border border-gray-200"
-                  />
-                </div>
-              )}
-              <div className="flex-1">
-                <FileUpload
-                  onFileSelect={onLogoUpload}
-                  accept="image/*"
-                  maxSize={5}
-                  className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-purple-500 transition-colors"
-                />
-              </div>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="md:col-span-2">
+            <Label htmlFor="name">Nom de l'établissement</Label>
+            <Input
+              id="name"
+              value={establishmentData.name}
+              onChange={(e) => handleEstablishmentChange('name', e.target.value)}
+              className="mt-1"
+              placeholder="Ex: École Supérieure de Commerce"
+            />
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <Label htmlFor="establishmentName">Nom de l'établissement</Label>
-              <Input
-                id="establishmentName"
-                value={establishmentData.name}
-                onChange={(e) => handleEstablishmentChange('name', e.target.value)}
-                className="mt-1"
-              />
-            </div>
           
           <div>
             <Label htmlFor="establishmentPhone">Téléphone</Label>
             <div className="relative mt-1">
-              <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 id="establishmentPhone"
                 value={establishmentData.phone}
@@ -206,61 +182,70 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
           <div>
             <Label htmlFor="website">Site web</Label>
             <div className="relative mt-1">
-              <Globe className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Globe className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 id="website"
                 value={establishmentData.website}
                 onChange={(e) => handleEstablishmentChange('website', e.target.value)}
                 className="pl-10"
-                placeholder="www.exemple.com"
+                placeholder="https://www.exemple.com"
               />
             </div>
           </div>
           
-          <div>
-            <Label htmlFor="establishmentAddress">Adresse de l'établissement</Label>
+          <div className="md:col-span-2">
+            <Label htmlFor="address">Adresse complète</Label>
             <div className="relative mt-1">
-              <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                id="establishmentAddress"
+                id="address"
                 value={establishmentData.address}
                 onChange={(e) => handleEstablishmentChange('address', e.target.value)}
                 className="pl-10"
+                placeholder="123 Rue de l'Exemple, 75001 Paris, France"
               />
             </div>
           </div>
           
           <div>
-            <Label htmlFor="establishmentType">Type d'établissement</Label>
-            <Input
-              id="establishmentType"
+            <Label htmlFor="type">Type d'établissement</Label>
+            <select
+              id="type"
               value={establishmentData.type}
               onChange={(e) => handleEstablishmentChange('type', e.target.value)}
-              className="mt-1"
-              placeholder="Ex: École supérieure, Centre de formation..."
-            />
+              className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
+            >
+              <option value="">Sélectionnez un type</option>
+              <option value="école_supérieure">École Supérieure</option>
+              <option value="université">Université</option>
+              <option value="centre_formation">Centre de Formation</option>
+              <option value="lycée">Lycée</option>
+              <option value="collège">Collège</option>
+              <option value="organisme_privé">Organisme Privé</option>
+            </select>
           </div>
           
           <div>
-            <Label htmlFor="director">Directeur</Label>
+            <Label htmlFor="director">Directeur/Directrice</Label>
             <Input
               id="director"
               value={establishmentData.director}
               onChange={(e) => handleEstablishmentChange('director', e.target.value)}
               className="mt-1"
+              placeholder="Nom complet du directeur"
             />
           </div>
           
           <div>
             <Label htmlFor="siret">SIRET</Label>
             <div className="relative mt-1">
-              <FileText className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 id="siret"
                 value={establishmentData.siret}
                 onChange={(e) => handleEstablishmentChange('siret', e.target.value)}
                 className="pl-10"
-                placeholder="12345678901234"
+                placeholder="123 456 789 01234"
               />
             </div>
           </div>
@@ -268,24 +253,67 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
           <div>
             <Label htmlFor="numberOfUsers">Nombre d'utilisateurs</Label>
             <div className="relative mt-1">
-              <Users className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Users className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 id="numberOfUsers"
                 type="number"
-                value={establishmentData.numberOfUsers}
+                value={establishmentData.numberOfUsers.toString()}
                 onChange={(e) => handleEstablishmentChange('numberOfUsers', parseInt(e.target.value) || 0)}
                 className="pl-10"
-                min="1"
+                placeholder="0"
+                min="0"
               />
             </div>
-          </div>
           </div>
         </div>
       </div>
 
+      <Separator className="my-8" />
+
+      {/* Logo de l'établissement */}
+      <div className="mb-8">
+        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
+          <Upload className="h-5 w-5 mr-2 text-warning" />
+          Logo de l'établissement
+        </h3>
+        
+        <div className="flex items-center space-x-6">
+          <div className="w-24 h-24 bg-muted border-2 border-dashed border-muted-foreground/30 rounded-lg flex items-center justify-center overflow-hidden">
+            {establishmentData.logoUrl ? (
+              <img 
+                src={establishmentData.logoUrl} 
+                alt="Logo de l'établissement" 
+                className="max-w-full max-h-full object-contain"
+              />
+            ) : (
+              <Building className="h-8 w-8 text-muted-foreground" />
+            )}
+          </div>
+          
+          <div className="flex-1">
+            <FileUpload
+              onFileSelect={onLogoUpload}
+              accept="image/*"
+              multiple={false}
+              className="w-auto"
+            />
+            <p className="text-sm text-muted-foreground mt-2">
+              Formats acceptés: JPG, PNG, SVG (max 2MB)<br/>
+              Recommandations: 200x200px, fond transparent
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Bouton de sauvegarde */}
       <div className="flex justify-end">
-        <Button onClick={onSave} className="px-8">
-          Sauvegarder les modifications
+        <Button
+          onClick={onSave}
+          variant="premium"
+          size="lg"
+          className="px-8"
+        >
+          Enregistrer toutes les modifications
         </Button>
       </div>
     </div>

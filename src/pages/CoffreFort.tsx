@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { PageHeader } from '@/components/ui/page-header';
+import { LoadingState } from '@/components/ui/loading-state';
+import { Button } from '@/components/ui/button';
 import { FileText, Folder, Upload, Download, Trash2, Eye, Share, Plus, ArrowLeft, Filter, X } from 'lucide-react';
 import FoldersGrid from '../components/coffrefort/FoldersGrid';
 import FileUploadModal from '../components/coffrefort/FileUploadModal';
@@ -53,21 +56,21 @@ const CoffreFort = () => {
 
   const getFileTypeColor = (type: string) => {
     const colors = {
-      'PDF': 'bg-red-100 text-red-800',
-      'DOCX': 'bg-blue-100 text-blue-800',
-      'DOC': 'bg-blue-100 text-blue-800',
-      'XLSX': 'bg-green-100 text-green-800',
-      'XLS': 'bg-green-100 text-green-800',
-      'PPTX': 'bg-orange-100 text-orange-800',
-      'PPT': 'bg-orange-100 text-orange-800',
-      'JPG': 'bg-purple-100 text-purple-800',
-      'JPEG': 'bg-purple-100 text-purple-800',
-      'PNG': 'bg-purple-100 text-purple-800',
-      'GIF': 'bg-purple-100 text-purple-800',
-      'TXT': 'bg-gray-100 text-gray-800',
-      'MD': 'bg-gray-100 text-gray-800'
+      'PDF': 'bg-destructive/10 text-destructive',
+      'DOCX': 'bg-info/10 text-info',
+      'DOC': 'bg-info/10 text-info',
+      'XLSX': 'bg-success/10 text-success',
+      'XLS': 'bg-success/10 text-success',
+      'PPTX': 'bg-warning/10 text-warning',
+      'PPT': 'bg-warning/10 text-warning',
+      'JPG': 'bg-primary/10 text-primary',
+      'JPEG': 'bg-primary/10 text-primary',
+      'PNG': 'bg-primary/10 text-primary',
+      'GIF': 'bg-primary/10 text-primary',
+      'TXT': 'bg-muted text-muted-foreground',
+      'MD': 'bg-muted text-muted-foreground'
     };
-    return colors[type as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+    return colors[type as keyof typeof colors] || 'bg-muted text-muted-foreground';
   };
 
   const formatFileSize = (bytes: number) => {
@@ -138,13 +141,7 @@ const CoffreFort = () => {
   const uniqueFileTypes = [...new Set(files.map(file => getFileTypeFromName(file.original_name)))];
 
   if (loading) {
-    return (
-      <div className="p-8">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-gray-500">Chargement...</div>
-        </div>
-      </div>
-    );
+    return <LoadingState message="Chargement du coffre-fort..." />;
   }
 
   return (
@@ -153,22 +150,23 @@ const CoffreFort = () => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-4">
             {currentFolder && (
-              <button 
+              <Button
                 onClick={() => setCurrentFolder(null)}
-                className="flex items-center text-purple-600 hover:text-purple-700"
+                variant="ghost"
+                className="flex items-center gap-2"
               >
-                <ArrowLeft className="h-4 w-4 mr-1" />
+                <ArrowLeft className="h-4 w-4" />
                 Retour
-              </button>
+              </Button>
             )}
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl font-bold text-foreground mb-2">
                 {currentFolder && currentFolderData 
                   ? currentFolderData.name 
                   : 'Coffre-fort numérique'
                 }
               </h1>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 {currentFolder 
                   ? 'Contenu du dossier' 
                   : 'Stockage sécurisé de vos documents importants'
@@ -178,34 +176,36 @@ const CoffreFort = () => {
           </div>
           <div className="flex items-center space-x-3">
             {(activeTab === 'folders' || currentFolder) && !currentFolder && (
-              <button 
+              <Button 
                 onClick={() => setShowCreateFolderModal(true)}
-                className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                variant="outline"
+                className="flex items-center gap-2"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4" />
                 Nouveau dossier
-              </button>
+              </Button>
             )}
-            <button 
+            <Button 
               onClick={() => setShowUploadModal(true)}
-              className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+              variant="premium"
+              className="flex items-center gap-2"
             >
-              <Upload className="h-4 w-4 mr-2" />
+              <Upload className="h-4 w-4" />
               Importer des fichiers
-            </button>
+            </Button>
           </div>
         </div>
       </div>
 
       {!currentFolder && (
         <div className="mb-6">
-          <div className="flex items-center space-x-1 bg-gray-100 p-1 rounded-lg w-fit">
+          <div className="flex items-center space-x-1 bg-muted/50 p-1 rounded-lg w-fit border">
             <button
               onClick={() => setActiveTab('folders')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === 'folders'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <Folder className="h-4 w-4 inline mr-2" />
@@ -215,8 +215,8 @@ const CoffreFort = () => {
               onClick={() => setActiveTab('files')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === 'files'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <FileText className="h-4 w-4 inline mr-2" />
