@@ -191,71 +191,81 @@ const EmploiTemps = () => {
           />
         );
     } else {
-      // Vue liste simplifiée
+      // Vue liste avec cartes colorées complètes
       return (
         <div className="container mx-auto px-6 py-8">
-          <div className="space-y-4">
-            {mockSchedule.filter(day => day.modules.length > 0).map((day) => (
-              <div key={day.id} className="bg-card rounded-xl p-6 shadow-lg border border-border">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold text-foreground">
-                    {day.day} {day.date}
-                  </h3>
-                  <span className="text-sm text-muted-foreground">
-                    {day.modules.length} cours
-                  </span>
+          <div className="space-y-6">
+            {filteredEvents.map((event) => {
+              const eventDate = format(event.date, 'dd/MM/yyyy', { locale: fr });
+              const eventDay = format(event.date, 'EEEE', { locale: fr });
+              
+              return (
+                <div
+                  key={event.id}
+                  className="rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
+                  style={{ backgroundColor: event.color }}
+                  onClick={() => handleEventClick(event)}
+                >
+                  <div className="p-6">
+                    <div className="grid grid-cols-12 gap-4 items-center text-white">
+                      {/* Date */}
+                      <div className="col-span-2">
+                        <div className="flex items-center space-x-2">
+                          <div>
+                            <div className="font-medium text-white">
+                              {eventDate}
+                            </div>
+                            <div className="text-xs text-white/80">
+                              {eventDay}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Horaire */}
+                      <div className="col-span-2">
+                        <div className="bg-white/20 text-white border-white/30 rounded px-2 py-1 text-xs font-medium inline-block">
+                          {event.startTime} - {event.endTime}
+                        </div>
+                      </div>
+
+                      {/* Module */}
+                      <div className="col-span-3">
+                        <div className="font-medium text-white">
+                          {event.title}
+                        </div>
+                        {event.description && (
+                          <div className="text-xs text-white/80 mt-1 truncate">
+                            {event.description}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Formateur */}
+                      <div className="col-span-2">
+                        <span className="text-sm text-white/90">
+                          {event.instructor}
+                        </span>
+                      </div>
+
+                      {/* Salle */}
+                      <div className="col-span-2">
+                        <span className="text-sm text-white/90">{event.room}</span>
+                      </div>
+
+                      {/* Formation */}
+                      <div className="col-span-1">
+                        {event.formation && (
+                          <div className="bg-white/20 text-white border-white/30 rounded px-2 py-1 text-xs font-medium text-center">
+                            {event.formation}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                   {day.modules.map((module, index) => {
-                     const fullEvent = filteredEvents.find(e => 
-                       e.title === module.title && 
-                       e.instructor === module.instructor &&
-                       e.room === module.room
-                     );
-                     return (
-                       <div
-                         key={index}
-                         className="p-4 rounded-lg border border-border hover:shadow-md transition-all duration-200 cursor-pointer"
-                         onClick={() => {
-                           if (fullEvent) handleEventClick(fullEvent);
-                         }}
-                       >
-                         <div className="flex items-start space-x-3">
-                             <div 
-                             className="w-3 h-3 rounded-full mt-1" 
-                             style={{ backgroundColor: fullEvent?.color || '#6B7280' }}
-                           />
-                           <div className="flex-1">
-                             <div className="flex items-center justify-between mb-2">
-                               <h4 className="font-semibold text-foreground">
-                                 {module.title}
-                               </h4>
-                               {fullEvent?.formation && (
-                                 <Badge 
-                                   variant="outline" 
-                                   className="text-xs"
-                                   style={{ 
-                                     borderColor: fullEvent.color,
-                                     color: fullEvent.color 
-                                   }}
-                                 >
-                                   {fullEvent.formation}
-                                 </Badge>
-                               )}
-                             </div>
-                             <div className="space-y-1 text-sm text-muted-foreground">
-                               <div>{module.time}</div>
-                               <div>{module.room}</div>
-                               <div>{module.instructor}</div>
-                             </div>
-                           </div>
-                         </div>
-                       </div>
-                     );
-                   })}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       );
