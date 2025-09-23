@@ -353,6 +353,8 @@ const ModernScheduleEditor = () => {
         onClose={() => setIsAddSlotModalOpen(false)}
         onSuccess={handleSlotAdded}
         scheduleId={scheduleId!}
+        formationId={schedule?.formation_id || ''}
+        selectedSlot={selectedSlot}
       />
 
       <EditSlotModal
@@ -360,6 +362,7 @@ const ModernScheduleEditor = () => {
         isOpen={isEditSlotModalOpen}
         onClose={() => setIsEditSlotModalOpen(false)}
         onSuccess={handleSlotEdited}
+        formationId={schedule?.formation_id || ''}
       />
 
       <ExcelImportModal
