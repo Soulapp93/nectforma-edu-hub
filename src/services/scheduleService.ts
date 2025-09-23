@@ -102,6 +102,9 @@ export const scheduleService = {
     // Si l'emploi du temps est publié pour la première fois, notifier
     if (updates.status === 'Publié') {
       await this.notifySchedulePublication(data);
+    } else if (data.status === 'Publié') {
+      // Si l'emploi du temps est déjà publié et qu'il y a des modifications, notifier
+      await this.notifyScheduleUpdate(data);
     }
 
     return data;

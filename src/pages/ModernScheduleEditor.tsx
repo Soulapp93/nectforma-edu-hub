@@ -202,6 +202,20 @@ const ModernScheduleEditor = () => {
     }
   };
 
+  const handleSaveModifications = async () => {
+    try {
+      if (schedule && schedule.status === 'Publié') {
+        // Déclencher les notifications de modification pour l'emploi du temps publié
+        await scheduleService.updateSchedule(scheduleId!, { 
+          updated_at: new Date().toISOString() 
+        });
+        toast.success("Modifications enregistrées et notifications envoyées");
+      }
+    } catch (error) {
+      toast.error("Erreur lors de l'enregistrement des modifications");
+    }
+  };
+
   const handleBackToList = () => {
     navigate('/administration');
   };
@@ -441,7 +455,7 @@ const ModernScheduleEditor = () => {
         slotsCount={slots.length}
         onAddSlot={handleAddSlot}
         onImportExcel={handleImportExcel}
-        onPublishSchedule={schedule.status === 'Brouillon' ? handlePublishSchedule : undefined}
+        onPublishSchedule={schedule?.status === 'Brouillon' ? handlePublishSchedule : handleSaveModifications}
         onBackToList={handleBackToList}
       />
 

@@ -125,10 +125,27 @@ export const ScheduleManagementHeader: React.FC<ScheduleManagementHeaderProps> =
                 )}
 
                 {selectedSchedule.status === 'Publié' && (
-                  <div className="flex items-center gap-2 text-success">
-                    <CheckCircle className="h-4 w-4" />
-                    <span className="text-sm font-medium">Publié</span>
-                  </div>
+                  <>
+                    <Button 
+                      onClick={() => {
+                        // Forcer un rechargement des données et envoyer notifications
+                        if (selectedSchedule) {
+                          // Marquer comme modifié pour déclencher les notifications
+                          onPublishSchedule && onPublishSchedule();
+                        }
+                      }}
+                      size="sm"
+                      variant="outline"
+                      className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Enregistrer les modifications
+                    </Button>
+                    <div className="flex items-center gap-2 text-success">
+                      <CheckCircle className="h-4 w-4" />
+                      <span className="text-sm font-medium">Publié</span>
+                    </div>
+                  </>
                 )}
               </>
             )}

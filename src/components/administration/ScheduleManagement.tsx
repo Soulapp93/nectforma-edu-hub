@@ -1281,7 +1281,19 @@ const ScheduleManagement = () => {
                       className="flex-1 text-xs"
                     >
                       <Edit className="h-3 w-3 mr-1" />
-                      Éditer
+                      Modifier
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewSchedule(schedule);
+                      }}
+                      className="flex-1 text-xs"
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      Voir
                     </Button>
                     <Button 
                       size="sm" 
