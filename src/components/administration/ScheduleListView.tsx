@@ -183,9 +183,7 @@ export const ScheduleListView: React.FC<ScheduleListViewProps> = ({
         {filteredAndSortedSlots.map((slot) => (
           <Card key={slot.id} className="shadow-lg hover:shadow-xl transition-all duration-300 border-0"
                 style={{ 
-                  backgroundColor: slot.color || '#6B7280',
-                  backgroundImage: `linear-gradient(135deg, ${slot.color || '#6B7280'}, ${slot.color ? slot.color + '90' : '#6B7280BB'})`,
-                  color: 'white'
+                  backgroundColor: slot.color || '#3B82F6'
                 }}>
             <CardContent className="p-6">
               <div className="grid grid-cols-12 gap-4 items-center">

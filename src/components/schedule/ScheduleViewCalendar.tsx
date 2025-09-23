@@ -79,48 +79,40 @@ export const ScheduleViewCalendar: React.FC<ScheduleViewCalendarProps> = ({
                   return (
                     <div
                       key={index}
-                      className="relative p-4 rounded-xl bg-gradient-to-r from-card to-muted/30 border border-border hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-pointer group"
+                      className="relative p-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer group text-white"
+                      style={{ 
+                        backgroundColor: fullEvent?.color || '#3B82F6'
+                      }}
                       onClick={() => {
                         if (fullEvent) onEventClick(fullEvent);
                       }}
                     >
-                      <div 
-                        className="absolute top-0 left-0 w-1 h-full rounded-l-xl"
-                        style={{ backgroundColor: fullEvent?.color || '#6B7280' }}
-                      />
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold text-white text-sm group-hover:text-white/90 transition-colors">
+                          {module.title}
+                        </h4>
+                        {fullEvent?.formation && (
+                          <Badge 
+                            variant="outline" 
+                            className="text-xs ml-2 border-white/30 text-white/90 bg-white/10"
+                          >
+                            {fullEvent.formation}
+                          </Badge>
+                        )}
+                      </div>
                       
-                      <div className="ml-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">
-                            {module.title}
-                          </h4>
-                          {fullEvent?.formation && (
-                            <Badge 
-                              variant="outline" 
-                              className="text-xs ml-2"
-                              style={{ 
-                                borderColor: fullEvent.color,
-                                color: fullEvent.color 
-                              }}
-                            >
-                              {fullEvent.formation}
-                            </Badge>
-                          )}
+                      <div className="space-y-1">
+                        <div className="flex items-center text-xs text-white/90">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {module.time}
                         </div>
-                        
-                        <div className="space-y-1">
-                          <div className="flex items-center text-xs text-muted-foreground">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {module.time}
-                          </div>
-                          <div className="flex items-center text-xs text-muted-foreground">
-                            <MapPin className="h-3 w-3 mr-1" />
-                            {module.room}
-                          </div>
-                          <div className="flex items-center text-xs text-muted-foreground">
-                            <User className="h-3 w-3 mr-1" />
-                            {module.instructor}
-                          </div>
+                        <div className="flex items-center text-xs text-white/90">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          {module.room}
+                        </div>
+                        <div className="flex items-center text-xs text-white/90">
+                          <User className="h-3 w-3 mr-1" />
+                          {module.instructor}
                         </div>
                       </div>
                     </div>

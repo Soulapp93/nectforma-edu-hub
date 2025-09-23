@@ -66,111 +66,72 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
 
       {/* Timeline */}
       <div className="space-y-4">
-        {timeSlots.map((time, index) => {
-          const slot = getSlotForTimeSlot(time);
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="w-8 h-8 rounded-2xl nect-gradient flex items-center justify-center">
+            <Clock className="h-4 w-4 text-white" />
+          </div>
+          <h3 className="text-xl font-bold text-foreground">
+            Planning de la journée
+          </h3>
+        </div>
+        
+        <div className="relative">
+          <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-primary/50 to-transparent"></div>
           
-          return (
-            <div key={time} className="flex">
-              {/* Time column */}
-              <div className="w-20 flex-shrink-0 text-right pr-6 pt-2">
-                <span className="text-sm font-medium text-muted-foreground">
-                  {time}
-                </span>
-              </div>
-              
-              {/* Content column */}
-              <div className="flex-1 relative">
-                {index < timeSlots.length - 1 && (
-                  <div className="absolute left-0 top-0 bottom-0 w-px bg-border"></div>
-                )}
+          {timeSlots.map((time, index) => {
+            const slot = getSlotForTimeSlot(time);
+            
+            return (
+              <div key={time} className="relative flex items-start space-x-4 pb-6">
+                <div className="flex-shrink-0 w-12 text-center">
+                  <div className={`w-5 h-5 rounded-full border-3 ${
+                    slot ? 'timeline-dot pulse-dot' : 'bg-muted border-border'
+                  } relative z-10 transition-all duration-300`}></div>
+                  <div className="text-xs text-muted-foreground mt-2 font-medium">{time}</div>
+                </div>
                 
-                <div className="relative pl-6">
-                  <div className="absolute left-0 top-2 w-3 h-3 bg-background border-2 border-border rounded-full"></div>
-                  
+                <div className="flex-1 min-w-0 pb-2">
                   {slot ? (
-                    <Card className="mb-4 shadow-lg hover:shadow-xl transition-all duration-300 border-0"
-                          style={{ 
-                            backgroundColor: slot.color || '#6B7280',
-                            backgroundImage: `linear-gradient(135deg, ${slot.color || '#6B7280'}, ${slot.color ? slot.color + '90' : '#6B7280BB'})`,
-                            color: 'white'
-                          }}>
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3 mb-3">
-                              <Badge variant="secondary" className="text-xs font-medium bg-white/20 text-white border-white/30">
-                                {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
-                              </Badge>
-                            </div>
-                            
-                            <h3 className="font-bold text-lg mb-2 text-white">
-                              {slot.formation_modules?.title || 'Module non défini'}
-                            </h3>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                              <div className="flex items-center space-x-2 text-white/90">
-                                <User className="h-4 w-4" />
-                                <span>{slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Non assigné'}</span>
-                              </div>
-                              
-                              <div className="flex items-center space-x-2 text-white/90">
-                                <MapPin className="h-4 w-4" />
-                                <span>{slot.room || 'Salle non définie'}</span>
-                              </div>
-                            </div>
-                            
-                            {slot.notes && (
-                              <p className="text-sm text-white/80 mt-3 p-3 bg-white/10 rounded-lg">
-                                {slot.notes}
-                              </p>
-                            )}
-                          </div>
-                          
-                          <div className="flex flex-col space-y-2 ml-4">
-                            {onEditSlot && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => onEditSlot(slot)}
-                                className="h-8 w-8 p-0 text-white hover:bg-white/20"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            )}
-                            {onDuplicateSlot && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => onDuplicateSlot(slot)}
-                                className="h-8 w-8 p-0 text-white hover:bg-white/20"
-                              >
-                                <Copy className="h-4 w-4" />
-                              </Button>
-                            )}
-                            {onDeleteSlot && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => onDeleteSlot(slot)}
-                                className="h-8 w-8 p-0 text-white hover:bg-red-500/20"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
+                    <div 
+                      className="px-3 py-2 rounded-md shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer text-white"
+                      style={{ 
+                        backgroundColor: slot.color || '#3B82F6'
+                      }}
+                      onClick={() => onEditSlot?.(slot)}
+                    >
+                      <div className="space-y-1">
+                        <h4 className="font-semibold text-white text-sm leading-tight">
+                          {slot.formation_modules?.title || 'Module'}
+                        </h4>
+                        
+                        <div className="flex items-center text-xs text-white/90">
+                          <Clock className="h-3 w-3 mr-1.5 text-white/80" />
+                          <span>{slot.start_time} - {slot.end_time}</span>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <div className="h-16 flex items-center text-muted-foreground text-sm">
-                      Aucun créneau programmé
+                        
+                        {slot.room && (
+                          <div className="flex items-center text-xs text-white/90">
+                            <MapPin className="h-3 w-3 mr-1.5 text-white/80" />
+                            <span>{slot.room}</span>
+                          </div>
+                        )}
+                        
+                        {slot.users && (
+                          <div className="flex items-center text-xs text-white/90">
+                            <User className="h-3 w-3 mr-1.5 text-white/80" />
+                            <span>{slot.users.first_name} {slot.users.last_name}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
+                  ) : (
+                    <div className="text-muted-foreground text-sm italic opacity-60">Libre</div>
                   )}
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
