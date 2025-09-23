@@ -81,7 +81,7 @@ export const ScheduleViewCalendar: React.FC<ScheduleViewCalendarProps> = ({
                       key={index}
                       className="relative p-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer group text-white"
                       style={{ 
-                        backgroundColor: fullEvent?.color || '#3B82F6'
+                        backgroundColor: module.color || '#3B82F6'
                       }}
                       onClick={() => {
                         if (fullEvent) onEventClick(fullEvent);
