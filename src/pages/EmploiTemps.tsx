@@ -3,80 +3,76 @@ import { format, addWeeks, subWeeks, addMonths, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { navigateWeek, getWeekInfo, getWeekDays } from '@/utils/calendarUtils';
 import { useToast } from '@/hooks/use-toast';
-import { CreateEventModal, ScheduleEvent } from '@/components/schedule/CreateEventModal';
 import { EventDetailsModal } from '@/components/schedule/EventDetailsModal';
 import { DayView } from '@/components/schedule/DayView';
 import { MonthView } from '@/components/schedule/MonthView';
-import { ScheduleHeader } from '@/components/schedule/ScheduleHeader';
+import { ScheduleViewHeader } from '@/components/schedule/ScheduleViewHeader';
 import { ViewModeSelector } from '@/components/schedule/ViewModeSelector';
-import { ScheduleCalendarView } from '@/components/schedule/ScheduleCalendarView';
-import { ExcelImportModal } from '@/components/schedule/ExcelImportModal';
+import { ScheduleViewCalendar } from '@/components/schedule/ScheduleViewCalendar';
 import { WeekNavigator } from '@/components/schedule/WeekNavigator';
 import WeekNavigation from '@/components/ui/week-navigation';
+import { useUserSchedules } from '@/hooks/useUserSchedules';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { LoadingState } from '@/components/ui/loading-state';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Badge } from '@/components/ui/badge';
+import type { ScheduleEvent } from '@/components/schedule/CreateEventModal';
 
 type ViewMode = 'day' | 'week' | 'month' | 'list';
-
-interface ScheduleSettings {
-  theme: 'auto' | 'light' | 'dark';
-  defaultView: 'day' | 'week' | 'month' | 'list';
-  startHour: number;
-  endHour: number;
-  showWeekends: boolean;
-  showHours: boolean;
-  enableNotifications: boolean;
-  autoRefresh: boolean;
-  compactMode: boolean;
-  colorScheme: 'default' | 'modern' | 'pastel' | 'vibrant';
-}
 
 const EmploiTemps = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
   const [isEventDetailsOpen, setIsEventDetailsOpen] = useState(false);
-  const [isExcelImportOpen, setIsExcelImportOpen] = useState(false);
-  const [isCreateEventModalOpen, setIsCreateEventModalOpen] = useState(false);
-  const [selectedDateForSlot, setSelectedDateForSlot] = useState<Date | undefined>(undefined);
-  const [events, setEvents] = useState<ScheduleEvent[]>([
-    {
-      id: '1',
-      title: 'Module Introduction Marketing',
-      date: new Date(2024, 9, 21),
-      startTime: '09:00',
-      endTime: '11:00',
-      instructor: 'M. Dubois',
-      room: 'Salle A101',
-      formation: 'Formation Marketing',
-      color: 'bg-blue-500',
-      description: 'Introduction aux concepts fondamentaux du marketing digital'
-    },
-    {
-      id: '2',
-      title: 'Module Technique Avancé',
-      date: new Date(2024, 9, 22),
-      startTime: '10:00',
-      endTime: '12:00',
-      instructor: 'M. Durand',
-      room: 'Salle C301',
-      formation: 'Formation Technique',
-      color: 'bg-green-500',
-      description: 'Techniques avancées de développement'
-    },
-    {
-      id: '3',
-      title: 'Atelier Créatif',
-      date: new Date(2024, 9, 23),
-      startTime: '09:30',
-      endTime: '11:30',
-      instructor: 'M. Petit',
-      room: 'Atelier 1',
-      formation: 'Formation Créative',
-      color: 'bg-pink-500',
-      description: 'Développement de la créativité en équipe'
-    }
-  ]);
   
   const { toast } = useToast();
+  const { userRole } = useCurrentUser();
+  const { schedules, loading, error } = useUserSchedules();
+
+  // Convertir les données de Supabase en format d'événements
+  const convertToEvents = (scheduleSlots: any[]): ScheduleEvent[] => {
+    return scheduleSlots.map(slot => {
+      const formation = slot.schedules?.formations;
+      return {
+        id: slot.id,
+        title: slot.formation_modules?.title || 'Cours',
+        date: new Date(slot.date),
+        startTime: slot.start_time,
+        endTime: slot.end_time,
+        instructor: slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Non assigné',
+        room: slot.room || 'Salle non définie',
+        formation: formation?.title || 'Formation non définie',
+        color: slot.color || formation?.color || '#6B7280',
+        description: slot.notes || `Cours de ${slot.formation_modules?.title || 'formation'}`
+      };
+    });
+  };
+
+  const events = convertToEvents(schedules);
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
+        <LoadingState message="Chargement de votre emploi du temps..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
+        <EmptyState
+          title="Erreur de chargement"
+          description={error}
+          action={{
+            label: "Réessayer",
+            onClick: () => window.location.reload()
+          }}
+        />
+      </div>
+    );
+  }
 
   // Event handlers
   const handleEventClick = (event: ScheduleEvent) => {
@@ -85,32 +81,26 @@ const EmploiTemps = () => {
   };
 
   const handleEventEdit = (event: ScheduleEvent) => {
-    // TODO: Implémenter l'édition d'événement
     toast({
-      title: "Modification d'événement",
-      description: "Fonctionnalité en cours de développement",
+      title: "Information",
+      description: "Seuls les administrateurs peuvent modifier les emplois du temps via l'onglet Administration.",
+      variant: "default",
     });
   };
 
   const handleEventDelete = (eventId: string) => {
-    setEvents(prev => prev.filter(e => e.id !== eventId));
     toast({
-      title: "Événement supprimé",
-      description: "L'événement a été supprimé avec succès",
+      title: "Information",
+      description: "Seuls les administrateurs peuvent supprimer des créneaux via l'onglet Administration.",
+      variant: "default",
     });
   };
 
   const handleEventDuplicate = (event: ScheduleEvent) => {
-    const newEvent = {
-      ...event,
-      id: Date.now().toString(),
-      title: `${event.title} (Copie)`,
-      date: new Date(event.date.getTime() + 24 * 60 * 60 * 1000) // Jour suivant
-    };
-    setEvents(prev => [...prev, newEvent]);
     toast({
-      title: "Événement dupliqué",
-      description: "L'événement a été dupliqué pour le jour suivant",
+      title: "Information", 
+      description: "Seuls les administrateurs peuvent dupliquer des créneaux via l'onglet Administration.",
+      variant: "default",
     });
   };
 
@@ -137,44 +127,7 @@ const EmploiTemps = () => {
     }
   };
 
-  // Event handlers
-  const handleEventCreated = (event: ScheduleEvent) => {
-    setEvents(prev => [...prev, event]);
-  };
-
-  const handleImportExcel = () => {
-    setIsExcelImportOpen(true);
-  };
-
-  const handleExcelImport = (data: any[]) => {
-    const importedEvents: ScheduleEvent[] = data.map((row, index) => ({
-      id: `imported-${Date.now()}-${index}`,
-      title: row.module,
-      date: new Date(row.date),
-      startTime: row.startTime,
-      endTime: row.endTime,
-      instructor: row.instructor,
-      room: row.room,
-      formation: row.formation,
-      color: '#8B5CF6',
-      description: `Importé depuis Excel`
-    }));
-
-    setEvents(prev => [...prev, ...importedEvents]);
-    setIsExcelImportOpen(false);
-  };
-
-  const handleAddSlotToDate = (date: string) => {
-    // Créer une date à partir du jour sélectionné dans le mois courant
-    const selectedDate = new Date(currentDate);
-    selectedDate.setDate(parseInt(date));
-    
-    // Ouvrir le modal avec la date pré-sélectionnée
-    setSelectedDateForSlot(selectedDate);
-    setIsCreateEventModalOpen(true);
-  };
-
-  // All events are displayed without filters
+  // Filtrer les événements selon la période affichée
   const filteredEvents = events;
 
   // Prepare week schedule data for week and list views
@@ -230,14 +183,13 @@ const EmploiTemps = () => {
 
   const renderWeekOrListView = () => {
     if (viewMode === 'week') {
-      return (
-        <ScheduleCalendarView
-          schedule={mockSchedule}
-          filteredEvents={filteredEvents}
-          onEventClick={handleEventClick}
-          onAddSlotToDate={handleAddSlotToDate}
-        />
-      );
+        return (
+          <ScheduleViewCalendar
+            schedule={mockSchedule}
+            filteredEvents={filteredEvents}
+            onEventClick={handleEventClick}
+          />
+        );
     } else {
       // Vue liste simplifiée
       return (
@@ -253,35 +205,54 @@ const EmploiTemps = () => {
                     {day.modules.length} cours
                   </span>
                 </div>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {day.modules.map((module, index) => (
-                    <div
-                      key={index}
-                      className="p-4 rounded-lg border border-border hover:shadow-md transition-all duration-200 cursor-pointer"
-                      onClick={() => {
-                        const fullEvent = filteredEvents.find(e => 
-                          e.title === module.title && 
-                          e.instructor === module.instructor &&
-                          e.room === module.room
-                        );
-                        if (fullEvent) handleEventClick(fullEvent);
-                      }}
-                    >
-                      <div className="flex items-start space-x-3">
-                        <div className={`w-3 h-3 ${module.color} rounded-full mt-1`} />
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-foreground mb-2">
-                            {module.title}
-                          </h4>
-                          <div className="space-y-1 text-sm text-muted-foreground">
-                            <div>{module.time}</div>
-                            <div>{module.room}</div>
-                            <div>{module.instructor}</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                   {day.modules.map((module, index) => {
+                     const fullEvent = filteredEvents.find(e => 
+                       e.title === module.title && 
+                       e.instructor === module.instructor &&
+                       e.room === module.room
+                     );
+                     return (
+                       <div
+                         key={index}
+                         className="p-4 rounded-lg border border-border hover:shadow-md transition-all duration-200 cursor-pointer"
+                         onClick={() => {
+                           if (fullEvent) handleEventClick(fullEvent);
+                         }}
+                       >
+                         <div className="flex items-start space-x-3">
+                             <div 
+                             className="w-3 h-3 rounded-full mt-1" 
+                             style={{ backgroundColor: fullEvent?.color || '#6B7280' }}
+                           />
+                           <div className="flex-1">
+                             <div className="flex items-center justify-between mb-2">
+                               <h4 className="font-semibold text-foreground">
+                                 {module.title}
+                               </h4>
+                               {fullEvent?.formation && (
+                                 <Badge 
+                                   variant="outline" 
+                                   className="text-xs"
+                                   style={{ 
+                                     borderColor: fullEvent.color,
+                                     color: fullEvent.color 
+                                   }}
+                                 >
+                                   {fullEvent.formation}
+                                 </Badge>
+                               )}
+                             </div>
+                             <div className="space-y-1 text-sm text-muted-foreground">
+                               <div>{module.time}</div>
+                               <div>{module.room}</div>
+                               <div>{module.instructor}</div>
+                             </div>
+                           </div>
+                         </div>
+                       </div>
+                     );
+                   })}
                 </div>
               </div>
             ))}
@@ -291,15 +262,37 @@ const EmploiTemps = () => {
     }
   };
 
+  if (events.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
+        <ScheduleViewHeader
+          currentDate={currentDate}
+          weekInfo={weekInfo}
+          viewMode={viewMode}
+          schedulesCount={0}
+        />
+        <EmptyState
+          title="Aucun cours planifié"
+          description={
+            userRole === 'Étudiant' 
+              ? "Aucun cours n'est programmé pour vos formations actuellement."
+              : userRole === 'Formateur' || userRole === 'Tuteur'
+              ? "Vous n'avez aucun cours assigné actuellement."
+              : "Aucun emploi du temps publié pour le moment."
+          }
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
-      {/* Header refactorisé */}
-      <ScheduleHeader
+      {/* Header simplifié pour consultation */}
+      <ScheduleViewHeader
         currentDate={currentDate}
         weekInfo={weekInfo}
         viewMode={viewMode}
-        onEventCreated={handleEventCreated}
-        onImportExcel={handleImportExcel}
+        schedulesCount={events.length}
       />
 
       {/* Navigation et contrôles */}
@@ -335,7 +328,7 @@ const EmploiTemps = () => {
       {/* Contenu principal */}
       {renderCurrentView()}
 
-      {/* Modals */}
+      {/* Modal de détails seulement */}
       <EventDetailsModal
         event={selectedEvent}
         isOpen={isEventDetailsOpen}
@@ -343,19 +336,6 @@ const EmploiTemps = () => {
         onEdit={handleEventEdit}
         onDelete={handleEventDelete}
         onDuplicate={handleEventDuplicate}
-      />
-
-      <ExcelImportModal
-        isOpen={isExcelImportOpen}
-        onOpenChange={setIsExcelImportOpen}
-        onImport={handleExcelImport}
-      />
-
-      <CreateEventModal
-        isOpen={isCreateEventModalOpen}
-        onOpenChange={setIsCreateEventModalOpen}
-        onEventCreated={handleEventCreated}
-        preselectedDate={selectedDateForSlot}
       />
     </div>
   );

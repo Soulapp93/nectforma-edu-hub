@@ -11,23 +11,34 @@ export const useUserSchedules = () => {
   const { userId, userRole } = useCurrentUser();
   const { userFormations } = useUserFormations();
 
-  console.log('useUserSchedules - Current user:', { userId, userRole });
-  console.log('useUserSchedules - User formations:', userFormations);
-
   const fetchSchedules = async () => {
+    if (!userId || !userRole) {
+      setSchedules([]);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
 
       let data: ScheduleSlot[] = [];
 
-      console.log('fetchSchedules - Starting with:', { userId, userRole, userFormations });
-
-      // Pour les tests, on affiche tous les emplois du temps publiés
-      // En production, on devrait vérifier les formations assignées
-      data = await scheduleService.getAllPublishedSchedules();
-      
-      console.log('fetchSchedules - Data fetched:', data);
+      if (userRole === 'Étudiant') {
+        // Pour les étudiants : récupérer les emplois du temps des formations auxquelles ils sont inscrits
+        const formationIds = userFormations?.map(f => f.id) || [];
+        if (formationIds.length > 0) {
+          data = await scheduleService.getStudentSchedules(formationIds);
+        } else {
+          // Si pas de formations trouvées, afficher tous les emplois du temps publiés (fallback)
+          data = await scheduleService.getAllPublishedSchedules();
+        }
+      } else if (userRole === 'Formateur' || userRole === 'Tuteur') {
+        // Pour les formateurs/tuteurs : récupérer tous les cours auxquels ils sont assignés
+        data = await scheduleService.getInstructorSchedules(userId);
+      } else if (userRole === 'Admin' || userRole === 'AdminPrincipal') {
+        // Pour les administrateurs : voir tous les emplois du temps publiés
+        data = await scheduleService.getAllPublishedSchedules();
+      }
 
       setSchedules(data || []);
     } catch (err) {
@@ -39,8 +50,10 @@ export const useUserSchedules = () => {
   };
 
   useEffect(() => {
-    fetchSchedules();
-  }, []);
+    if (userId && userRole) {
+      fetchSchedules();
+    }
+  }, [userId, userRole, userFormations]);
 
   return {
     schedules,
