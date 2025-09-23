@@ -9,6 +9,9 @@ import { WeekNavigator } from '@/components/schedule/WeekNavigator';
 import WeekNavigation from '@/components/ui/week-navigation';
 import { ScheduleManagementHeader } from '@/components/administration/ScheduleManagementHeader';
 import { ScheduleManagementCalendar } from '@/components/administration/ScheduleManagementCalendar';
+import { ScheduleDayView } from '@/components/administration/ScheduleDayView';
+import { ScheduleMonthView } from '@/components/administration/ScheduleMonthView';
+import { ScheduleListView } from '@/components/administration/ScheduleListView';
 import { scheduleService, Schedule, ScheduleSlot } from '@/services/scheduleService';
 import { navigateWeek, getWeekInfo, getWeekDays } from '@/utils/calendarUtils';
 import AddSlotModal from '@/components/administration/AddSlotModal';
@@ -262,6 +265,56 @@ const ModernScheduleEditor = () => {
     });
   };
 
+  // Fonction pour afficher la vue appropriée selon le mode sélectionné
+  const renderCurrentView = () => {
+    switch (viewMode) {
+      case 'day':
+        return (
+          <ScheduleDayView
+            selectedDate={selectedDate}
+            slots={slots}
+            onEditSlot={handleEditSlot}
+            onDuplicateSlot={handleDuplicateSlot}
+            onDeleteSlot={handleDeleteSlot}
+          />
+        );
+      case 'month':
+        return (
+          <ScheduleMonthView
+            selectedDate={selectedDate}
+            slots={slots}
+            onDateSelect={setSelectedDate}
+            onMonthChange={setSelectedDate}
+            onSlotClick={handleEditSlot}
+          />
+        );
+      case 'list':
+        return (
+          <ScheduleListView
+            slots={slots}
+            onEditSlot={handleEditSlot}
+            onDuplicateSlot={handleDuplicateSlot}
+            onDeleteSlot={handleDeleteSlot}
+          />
+        );
+      case 'week':
+      default:
+        return (
+          <ScheduleManagementCalendar
+            schedule={scheduleData}
+            filteredSlots={slots}
+            onAddSlotToDate={handleAddSlotToDate}
+            onEditSlot={handleEditSlot}
+            onDuplicateSlot={handleDuplicateSlot}
+            onDeleteSlot={handleDeleteSlot}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+          />
+        );
+    }
+  };
+
   const weekInfo = getWeekInfo(selectedDate);
   const scheduleData = convertSlotsToScheduleData();
 
@@ -319,33 +372,25 @@ const ModernScheduleEditor = () => {
         </div>
 
         {/* Barre de navigation par semaine */}
-        <div className="mt-6">
-          <WeekNavigation
-            selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
-            onWeekSelect={(weekStartDate) => {
-              setSelectedDate(weekStartDate);
-              if (viewMode !== 'week') {
-                setViewMode('week');
-              }
-            }}
-            className="bg-background/95 backdrop-blur-sm border-border"
-          />
-        </div>
+        {viewMode === 'week' && (
+          <div className="mt-6">
+            <WeekNavigation
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
+              onWeekSelect={(weekStartDate) => {
+                setSelectedDate(weekStartDate);
+                if (viewMode !== 'week') {
+                  setViewMode('week');
+                }
+              }}
+              className="bg-background/95 backdrop-blur-sm border-border"
+            />
+          </div>
+        )}
       </div>
 
-      {/* Contenu principal - Vue semaine moderne */}
-      <ScheduleManagementCalendar
-        schedule={scheduleData}
-        filteredSlots={slots}
-        onAddSlotToDate={handleAddSlotToDate}
-        onEditSlot={handleEditSlot}
-        onDuplicateSlot={handleDuplicateSlot}
-        onDeleteSlot={handleDeleteSlot}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-      />
+      {/* Contenu principal - Vue dynamique selon le mode */}
+      {renderCurrentView()}
 
       {/* Modals */}
       <AddSlotModal
