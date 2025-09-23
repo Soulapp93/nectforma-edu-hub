@@ -1,10 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Filter, BookOpen, Users, Clock, Star } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { PageHeader } from '@/components/ui/page-header';
-import { LoadingState } from '@/components/ui/loading-state';
-import { EmptyState } from '@/components/ui/empty-state';
 import FormationCard from '../components/administration/FormationCard';
 import FormationModal from '../components/FormationModal';
 import { useFormations } from '@/hooks/useFormations';
@@ -98,57 +94,60 @@ const Formations = () => {
   const levels = ['BAC+1', 'BAC+2', 'BAC+3', 'BAC+4', 'BAC+5'];
 
   if (loading) {
-    return <LoadingState message="Chargement des formations..." />;
+    return (
+      <div className="p-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      </div>
+    );
   }
 
   if (error) {
     return (
       <div className="p-8">
-        <div className="glass-card rounded-xl p-8 text-center">
-          <div className="text-destructive mb-2">Erreur: {error}</div>
-          <Button onClick={refetch} variant="outline">
-            Réessayer
-          </Button>
-        </div>
+        <div className="text-red-600">Erreur: {error}</div>
+        <button onClick={refetch} className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg">
+          Réessayer
+        </button>
       </div>
     );
   }
 
   return (
     <div className="p-8 space-y-6">
-      <PageHeader
-        title="Formations"
-        description="Découvrez notre catalogue de formations"
-      >
-        <Button 
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Formations</h1>
+          <p className="text-gray-600">Découvrez notre catalogue de formations</p>
+        </div>
+        <button 
           onClick={handleCreateFormation}
-          variant="premium"
-          className="flex items-center gap-2"
+          className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center font-medium"
         >
-          <Plus className="h-5 w-5" />
+          <Plus className="h-5 w-5 mr-2" />
           Nouvelle formation
-        </Button>
-      </PageHeader>
+        </button>
+      </div>
 
       {/* Filters */}
-      <div className="glass-card rounded-xl p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Rechercher une formation..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
             </div>
           </div>
           <select 
             value={selectedLevel}
             onChange={(e) => setSelectedLevel(e.target.value)}
-            className="px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           >
             <option value="all">Tous les niveaux</option>
             {levels.map(level => (
@@ -158,7 +157,7 @@ const Formations = () => {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           >
             <option value="all">Tous les statuts</option>
             <option value="Actif">Actif</option>
@@ -168,22 +167,36 @@ const Formations = () => {
         </div>
       </div>
 
+
       {/* Formations Grid */}
       {filteredFormations.length === 0 ? (
-        <EmptyState
-          icon={BookOpen}
-          title={searchTerm || selectedLevel !== 'all' || selectedStatus !== 'all' 
-            ? 'Aucune formation trouvée' 
-            : 'Aucune formation'}
-          description={searchTerm || selectedLevel !== 'all' || selectedStatus !== 'all'
-            ? 'Essayez de modifier vos critères de recherche.'
-            : 'Créez votre première formation pour enrichir votre catalogue.'}
-          action={(!searchTerm && selectedLevel === 'all' && selectedStatus === 'all') ? {
-            label: 'Créer une formation',
-            onClick: handleCreateFormation,
-            variant: 'premium'
-          } : undefined}
-        />
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+          <div className="max-w-md mx-auto">
+            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <BookOpen className="h-8 w-8 text-purple-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              {searchTerm || selectedLevel !== 'all' || selectedStatus !== 'all' 
+                ? 'Aucune formation trouvée' 
+                : 'Aucune formation'
+              }
+            </h3>
+            <p className="text-gray-600 mb-4">
+              {searchTerm || selectedLevel !== 'all' || selectedStatus !== 'all'
+                ? 'Essayez de modifier vos critères de recherche.'
+                : 'Créez votre première formation pour enrichir votre catalogue.'
+              }
+            </p>
+            {(!searchTerm && selectedLevel === 'all' && selectedStatus === 'all') && (
+              <button 
+                onClick={handleCreateFormation}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium"
+              >
+                Créer une formation
+              </button>
+            )}
+          </div>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredFormations.map((formation) => (

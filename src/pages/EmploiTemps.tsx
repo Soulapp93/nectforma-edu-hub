@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { format, addWeeks, subWeeks, addMonths, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { PageHeader } from '@/components/ui/page-header';
 import { navigateWeek, getWeekInfo, getWeekDays } from '@/utils/calendarUtils';
 import { useToast } from '@/hooks/use-toast';
 import { CreateEventModal, ScheduleEvent } from '@/components/schedule/CreateEventModal';
@@ -245,7 +244,7 @@ const EmploiTemps = () => {
         <div className="container mx-auto px-6 py-8">
           <div className="space-y-4">
             {mockSchedule.filter(day => day.modules.length > 0).map((day) => (
-              <div key={day.id} className="glass-card rounded-xl p-6 shadow-lg floating-card">
+              <div key={day.id} className="bg-card rounded-xl p-6 shadow-lg border border-border">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-bold text-foreground">
                     {day.day} {day.date}
@@ -258,7 +257,7 @@ const EmploiTemps = () => {
                   {day.modules.map((module, index) => (
                     <div
                       key={index}
-                      className="p-4 rounded-lg border border-border hover:shadow-md transition-all duration-200 cursor-pointer glass-card"
+                      className="p-4 rounded-lg border border-border hover:shadow-md transition-all duration-200 cursor-pointer"
                       onClick={() => {
                         const fullEvent = filteredEvents.find(e => 
                           e.title === module.title && 
@@ -293,25 +292,18 @@ const EmploiTemps = () => {
   };
 
   return (
-    <div className="p-8">
-      <PageHeader
-        title="Emploi du temps"
-        description="Consultez et gérez votre planning de cours et formations"
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
+      {/* Header refactorisé */}
+      <ScheduleHeader
+        currentDate={currentDate}
+        weekInfo={weekInfo}
+        viewMode={viewMode}
+        onEventCreated={handleEventCreated}
+        onImportExcel={handleImportExcel}
       />
 
-      {/* Header refactorisé */}
-      <div className="mb-6">
-        <ScheduleHeader
-          currentDate={currentDate}
-          weekInfo={weekInfo}
-          viewMode={viewMode}
-          onEventCreated={handleEventCreated}
-          onImportExcel={handleImportExcel}
-        />
-      </div>
-
       {/* Navigation et contrôles */}
-      <div className="glass-card rounded-xl p-6 mb-6">
+      <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <WeekNavigator 
             currentDate={currentDate}

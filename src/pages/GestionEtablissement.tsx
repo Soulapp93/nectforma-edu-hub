@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { PageHeader } from '@/components/ui/page-header';
 import EstablishmentSettings from '../components/compte/EstablishmentSettings';
 import { toast } from 'sonner';
 
@@ -90,10 +89,10 @@ const GestionEtablissement = () => {
 
   return (
     <div className="p-8">
-      <PageHeader
-        title="Gestion de l'établissement"
-        description="Gérez les informations de l'établissement et les paramètres administrateur"
-      />
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestion de l'établissement</h1>
+        <p className="text-gray-600">Gérez les informations de l'établissement et les paramètres administrateur</p>
+      </div>
 
       <div className="max-w-4xl">
         <EstablishmentSettings
