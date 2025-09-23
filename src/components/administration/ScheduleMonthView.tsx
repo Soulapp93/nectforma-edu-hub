@@ -140,17 +140,21 @@ export const ScheduleMonthView: React.FC<ScheduleMonthViewProps> = ({
                     {daySlots.slice(0, 3).map((slot, slotIndex) => (
                       <div
                         key={slotIndex}
-                        className="text-xs p-1 rounded bg-gradient-to-r from-background to-muted/50 border-l-2 cursor-pointer hover:shadow-sm transition-all"
-                        style={{ borderLeftColor: slot.color || '#6B7280' }}
+                        className="text-xs p-2 rounded shadow-sm cursor-pointer hover:shadow-md transition-all"
+                        style={{ 
+                          backgroundColor: slot.color || '#6B7280',
+                          backgroundImage: `linear-gradient(135deg, ${slot.color || '#6B7280'}, ${slot.color ? slot.color + '90' : '#6B7280BB'})`,
+                          color: 'white'
+                        }}
                         onClick={(e) => {
                           e.stopPropagation();
                           onSlotClick?.(slot);
                         }}
                       >
-                        <div className="font-medium text-foreground truncate">
+                        <div className="font-medium text-white truncate mb-1">
                           {slot.formation_modules?.title || 'Module'}
                         </div>
-                        <div className="text-muted-foreground flex items-center space-x-1">
+                        <div className="text-white/80 flex items-center space-x-1">
                           <Clock className="h-3 w-3" />
                           <span>{slot.start_time.slice(0, 5)}</span>
                         </div>

@@ -230,37 +230,38 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 filteredSchedules.map((slot, index) => (
                   <div 
                     key={slot.id}
-                    className="floating-card glass-card rounded-xl p-6 animate-fade-in"
-                    style={{ animationDelay: `${index * 0.1}s` }}
+                    className="floating-card rounded-xl p-6 animate-fade-in shadow-lg"
+                    style={{ 
+                      animationDelay: `${index * 0.1}s`,
+                      backgroundColor: slot.color || '#8B5CF6',
+                      backgroundImage: `linear-gradient(135deg, ${slot.color || '#8B5CF6'}, ${slot.color ? slot.color + '90' : '#8B5CF6BB'})`,
+                      color: 'white'
+                    }}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center mb-2">
-                          <div 
-                            className="w-4 h-4 rounded-full mr-3"
-                            style={{ backgroundColor: slot.color || '#8B5CF6' }}
-                          ></div>
-                          <h3 className="text-lg font-semibold text-foreground">
+                          <h3 className="text-lg font-semibold text-white">
                             {slot.formation_modules?.title || 'Module non défini'}
                           </h3>
                         </div>
                         
-                        <p className="text-muted-foreground text-sm mb-4">
+                        <p className="text-white/80 text-sm mb-4">
                           Formation
                         </p>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div className="flex items-center text-sm text-muted-foreground">
+                          <div className="flex items-center text-sm text-white/90">
                             <Clock className="h-4 w-4 mr-2" />
                             <span>{formatTime(slot.start_time)} - {formatTime(slot.end_time)}</span>
                           </div>
                           
-                          <div className="flex items-center text-sm text-muted-foreground">
+                          <div className="flex items-center text-sm text-white/90">
                             <MapPin className="h-4 w-4 mr-2" />
                             <span>{slot.room || 'Salle A101'}</span>
                           </div>
                           
-                          <div className="flex items-center text-sm text-muted-foreground">
+                          <div className="flex items-center text-sm text-white/90">
                             <User className="h-4 w-4 mr-2" />
                             <span>
                               {slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Formateur'}
@@ -269,14 +270,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         </div>
 
                         {slot.notes && (
-                          <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                            <p className="text-sm text-muted-foreground">{slot.notes}</p>
+                          <div className="mt-4 p-3 bg-white/10 rounded-lg">
+                            <p className="text-sm text-white/90">{slot.notes}</p>
                           </div>
                         )}
                       </div>
                       
                       <div className="text-right">
-                        <p className="text-sm font-medium text-foreground">
+                        <p className="text-sm font-medium text-white">
                           {format(new Date(slot.date), 'dd MMM', { locale: fr })}
                         </p>
                       </div>

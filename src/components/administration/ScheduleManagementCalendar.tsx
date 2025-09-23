@@ -116,56 +116,50 @@ export const ScheduleManagementCalendar: React.FC<ScheduleManagementCalendarProp
                     key={module.id}
                     draggable={onDragStart ? true : false}
                     onDragStart={onDragStart ? (e) => onDragStart(e, module.slot) : undefined}
-                    className="relative p-4 rounded-xl bg-gradient-to-r from-card to-muted/30 border border-border hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-move group"
+                    className="relative p-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-move group"
+                    style={{ 
+                      backgroundColor: module.color || '#6B7280',
+                      backgroundImage: `linear-gradient(135deg, ${module.color || '#6B7280'}, ${module.color ? module.color + '90' : '#6B7280BB'})`,
+                      color: 'white'
+                    }}
                     onClick={() => onSlotClick?.(module.slot)}
                   >
-                    <div 
-                      className="absolute top-0 left-0 w-1 h-full rounded-l-xl"
-                      style={{ backgroundColor: module.color || '#6B7280' }}
-                    />
-                    
-                    <div className="ml-3">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors mb-1">
-                            {module.title}
-                          </h4>
-                          {module.formation && (
-                            <Badge 
-                              variant="outline" 
-                              className="text-xs mb-2"
-                              style={{ 
-                                borderColor: module.color,
-                                color: module.color 
-                              }}
-                            >
-                              {module.formation}
-                            </Badge>
-                          )}
-                        </div>
-                        
-                        {/* Menu d'actions pour chaque slot */}
-                        <SlotActionMenu
-                          slot={module.slot}
-                          onEdit={onEditSlot}
-                          onDuplicate={onDuplicateSlot}
-                          onDelete={onDeleteSlot}
-                        />
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-white text-sm mb-1">
+                          {module.title}
+                        </h4>
+                        {module.formation && (
+                          <Badge 
+                            variant="outline" 
+                            className="text-xs mb-2 border-white/30 text-white/90 bg-white/10"
+                          >
+                            {module.formation}
+                          </Badge>
+                        )}
                       </div>
                       
-                      <div className="space-y-1">
-                        <div className="flex items-center text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3 mr-2" />
-                          {module.time}
-                        </div>
-                        <div className="flex items-center text-xs text-muted-foreground">
-                          <MapPin className="h-3 w-3 mr-2" />
-                          {module.room}
-                        </div>
-                        <div className="flex items-center text-xs text-muted-foreground">
-                          <User className="h-3 w-3 mr-2" />
-                          {module.instructor}
-                        </div>
+                      {/* Menu d'actions pour chaque slot */}
+                      <SlotActionMenu
+                        slot={module.slot}
+                        onEdit={onEditSlot}
+                        onDuplicate={onDuplicateSlot}
+                        onDelete={onDeleteSlot}
+                      />
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <div className="flex items-center text-xs text-white/80">
+                        <Clock className="h-3 w-3 mr-2" />
+                        {module.time}
+                      </div>
+                      <div className="flex items-center text-xs text-white/80">
+                        <MapPin className="h-3 w-3 mr-2" />
+                        {module.room}
+                      </div>
+                      <div className="flex items-center text-xs text-white/80">
+                        <User className="h-3 w-3 mr-2" />
+                        {module.instructor}
                       </div>
                     </div>
                   </div>

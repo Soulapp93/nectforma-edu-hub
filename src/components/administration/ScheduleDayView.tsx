@@ -88,37 +88,39 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                   <div className="absolute left-0 top-2 w-3 h-3 bg-background border-2 border-border rounded-full"></div>
                   
                   {slot ? (
-                    <Card className="mb-4 shadow-lg hover:shadow-xl transition-all duration-300 border-l-4 bg-gradient-to-r from-background to-muted/30"
-                          style={{ borderLeftColor: slot.color || '#6B7280' }}>
+                    <Card className="mb-4 shadow-lg hover:shadow-xl transition-all duration-300 border-0"
+                          style={{ 
+                            backgroundColor: slot.color || '#6B7280',
+                            backgroundImage: `linear-gradient(135deg, ${slot.color || '#6B7280'}, ${slot.color ? slot.color + '90' : '#6B7280BB'})`,
+                            color: 'white'
+                          }}>
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center space-x-3 mb-3">
-                              <Badge variant="secondary" className="text-xs font-medium">
+                              <Badge variant="secondary" className="text-xs font-medium bg-white/20 text-white border-white/30">
                                 {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
                               </Badge>
-                              <div className="w-3 h-3 rounded-full" 
-                                   style={{ backgroundColor: slot.color || '#6B7280' }}></div>
                             </div>
                             
-                            <h3 className="font-bold text-lg mb-2 text-foreground">
+                            <h3 className="font-bold text-lg mb-2 text-white">
                               {slot.formation_modules?.title || 'Module non défini'}
                             </h3>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                              <div className="flex items-center space-x-2 text-muted-foreground">
+                              <div className="flex items-center space-x-2 text-white/90">
                                 <User className="h-4 w-4" />
                                 <span>{slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Non assigné'}</span>
                               </div>
                               
-                              <div className="flex items-center space-x-2 text-muted-foreground">
+                              <div className="flex items-center space-x-2 text-white/90">
                                 <MapPin className="h-4 w-4" />
                                 <span>{slot.room || 'Salle non définie'}</span>
                               </div>
                             </div>
                             
                             {slot.notes && (
-                              <p className="text-sm text-muted-foreground mt-3 p-3 bg-muted/50 rounded-lg">
+                              <p className="text-sm text-white/80 mt-3 p-3 bg-white/10 rounded-lg">
                                 {slot.notes}
                               </p>
                             )}
@@ -130,7 +132,7 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => onEditSlot(slot)}
-                                className="h-8 w-8 p-0 hover:bg-primary/10"
+                                className="h-8 w-8 p-0 text-white hover:bg-white/20"
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -140,7 +142,7 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => onDuplicateSlot(slot)}
-                                className="h-8 w-8 p-0 hover:bg-primary/10"
+                                className="h-8 w-8 p-0 text-white hover:bg-white/20"
                               >
                                 <Copy className="h-4 w-4" />
                               </Button>
@@ -150,7 +152,7 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => onDeleteSlot(slot)}
-                                className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                                className="h-8 w-8 p-0 text-white hover:bg-red-500/20"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>

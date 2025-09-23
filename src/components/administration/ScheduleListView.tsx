@@ -181,19 +181,23 @@ export const ScheduleListView: React.FC<ScheduleListViewProps> = ({
       {/* Liste des créneaux */}
       <div className="space-y-3">
         {filteredAndSortedSlots.map((slot) => (
-          <Card key={slot.id} className="shadow-lg hover:shadow-xl transition-all duration-300 border-l-4 bg-gradient-to-r from-background to-muted/30"
-                style={{ borderLeftColor: slot.color || '#6B7280' }}>
+          <Card key={slot.id} className="shadow-lg hover:shadow-xl transition-all duration-300 border-0"
+                style={{ 
+                  backgroundColor: slot.color || '#6B7280',
+                  backgroundImage: `linear-gradient(135deg, ${slot.color || '#6B7280'}, ${slot.color ? slot.color + '90' : '#6B7280BB'})`,
+                  color: 'white'
+                }}>
             <CardContent className="p-6">
               <div className="grid grid-cols-12 gap-4 items-center">
                 {/* Date */}
                 <div className="col-span-2">
                   <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <Calendar className="h-4 w-4 text-white/80" />
                     <div>
-                      <div className="font-medium">
+                      <div className="font-medium text-white">
                         {format(parseISO(slot.date), 'dd/MM/yyyy', { locale: fr })}
                       </div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-xs text-white/80">
                         {format(parseISO(slot.date), 'EEEE', { locale: fr })}
                       </div>
                     </div>
@@ -202,18 +206,18 @@ export const ScheduleListView: React.FC<ScheduleListViewProps> = ({
 
                 {/* Horaire */}
                 <div className="col-span-2">
-                  <Badge variant="secondary" className="text-xs font-medium">
+                  <Badge variant="secondary" className="text-xs font-medium bg-white/20 text-white border-white/30">
                     {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
                   </Badge>
                 </div>
 
                 {/* Module */}
                 <div className="col-span-3">
-                  <div className="font-medium text-foreground">
+                  <div className="font-medium text-white">
                     {slot.formation_modules?.title || 'Module non défini'}
                   </div>
                   {slot.notes && (
-                    <div className="text-xs text-muted-foreground mt-1 truncate">
+                    <div className="text-xs text-white/80 mt-1 truncate">
                       {slot.notes}
                     </div>
                   )}
@@ -222,8 +226,8 @@ export const ScheduleListView: React.FC<ScheduleListViewProps> = ({
                 {/* Formateur */}
                 <div className="col-span-2">
                   <div className="flex items-center space-x-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">
+                    <User className="h-4 w-4 text-white/80" />
+                    <span className="text-sm text-white/90">
                       {slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Non assigné'}
                     </span>
                   </div>
@@ -232,8 +236,8 @@ export const ScheduleListView: React.FC<ScheduleListViewProps> = ({
                 {/* Salle */}
                 <div className="col-span-2">
                   <div className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{slot.room || 'Non définie'}</span>
+                    <MapPin className="h-4 w-4 text-white/80" />
+                    <span className="text-sm text-white/90">{slot.room || 'Non définie'}</span>
                   </div>
                 </div>
 
@@ -245,7 +249,7 @@ export const ScheduleListView: React.FC<ScheduleListViewProps> = ({
                         variant="ghost"
                         size="sm"
                         onClick={() => onEditSlot(slot)}
-                        className="h-8 w-8 p-0 hover:bg-primary/10"
+                        className="h-8 w-8 p-0 text-white hover:bg-white/20"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -255,7 +259,7 @@ export const ScheduleListView: React.FC<ScheduleListViewProps> = ({
                         variant="ghost"
                         size="sm"
                         onClick={() => onDuplicateSlot(slot)}
-                        className="h-8 w-8 p-0 hover:bg-primary/10"
+                        className="h-8 w-8 p-0 text-white hover:bg-white/20"
                       >
                         <Copy className="h-4 w-4" />
                       </Button>
@@ -265,7 +269,7 @@ export const ScheduleListView: React.FC<ScheduleListViewProps> = ({
                         variant="ghost"
                         size="sm"
                         onClick={() => onDeleteSlot(slot)}
-                        className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                        className="h-8 w-8 p-0 text-white hover:bg-red-500/20"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
