@@ -302,6 +302,7 @@ const ModernScheduleEditor = () => {
   // Fonction pour afficher la vue appropriée selon le mode sélectionné
   const renderCurrentView = () => {
     const events = convertSlotsToEvents();
+    const scheduleData = convertSlotsToScheduleData();
     
     switch (viewMode) {
       case 'day':
