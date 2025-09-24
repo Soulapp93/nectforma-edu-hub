@@ -425,7 +425,7 @@ const ScheduleManagement = () => {
   });
 
   // Schedule detail view with same interface as main schedule
-  if (selectedSchedule && (viewMode === 'day' || viewMode === 'week' || viewMode === 'month')) {
+  if (selectedSchedule && (viewMode === 'day' || viewMode === 'week' || viewMode === 'month' || viewMode === 'list')) {
     const events = convertSlotsToEvents(slots);
     
     // Render current view function
@@ -437,6 +437,8 @@ const ScheduleManagement = () => {
           return renderWeekOrListView();
         case 'month':
           return renderMonthView();
+        case 'list':
+          return renderWeekOrListView();
         default:
           return renderWeekOrListView();
       }
