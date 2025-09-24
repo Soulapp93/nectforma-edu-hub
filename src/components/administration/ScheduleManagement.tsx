@@ -945,71 +945,69 @@ const ScheduleManagement = () => {
                 ) : (
                   <>
                     {day.modules.map((module, index) => (
-                      <div
-                        key={index}
-                        className="relative p-4 rounded-xl bg-gradient-to-r from-card to-muted/30 border border-border hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-pointer group"
-                      >
-                         <div 
-                           className="absolute top-0 left-0 w-1 h-full rounded-l-xl"
-                           style={{ backgroundColor: getModuleColor(module.title) }}
-                         />
-                        
-                        <div className="ml-3">
-                          <h4 className="font-semibold text-foreground text-sm mb-2 group-hover:text-primary transition-colors">
-                            {module.title}
-                          </h4>
-                          
-                          <div className="space-y-1">
-                            <div className="flex items-center text-xs text-muted-foreground">
-                              <Clock className="h-3 w-3 mr-1" />
-                              {module.time}
-                            </div>
-                            <div className="flex items-center text-xs text-muted-foreground">
-                              <MapPin className="h-3 w-3 mr-1" />
-                              {module.room}
-                            </div>
-                            <div className="flex items-center text-xs text-muted-foreground">
-                              <User className="h-3 w-3 mr-1" />
-                              {module.instructor}
-                            </div>
-                          </div>
-                          
-                          {/* Admin actions */}
-                          <div className="flex items-center space-x-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              className="h-6 w-6 p-0"
-                               onClick={(e) => {
-                                 e.stopPropagation();
-                                 const slot = slots.find(s => 
-                                   s.formation_modules?.title === module.title &&
-                                   new Date(s.date).toDateString() === day.actualDate.toDateString()
-                                 );
-                                 if (slot) handleEditSlot(slot);
-                               }}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                               onClick={(e) => {
-                                 e.stopPropagation();
-                                 const slot = slots.find(s => 
-                                   s.formation_modules?.title === module.title &&
-                                   new Date(s.date).toDateString() === day.actualDate.toDateString()
-                                 );
-                                 if (slot) handleDeleteSlot(slot);
-                               }}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                       <div
+                         key={index}
+                         className="relative p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 mb-2 text-white"
+                         style={{ 
+                           backgroundColor: getModuleColor(module.title)
+                         }}
+                       >
+                         <div>
+                           <h4 className="font-semibold text-white text-sm mb-2">
+                             {module.title}
+                           </h4>
+                           
+                           <div className="space-y-1">
+                             <div className="flex items-center text-xs text-white/90">
+                               <Clock className="h-3 w-3 mr-1 text-white/80" />
+                               {module.time}
+                             </div>
+                             <div className="flex items-center text-xs text-white/90">
+                               <MapPin className="h-3 w-3 mr-1 text-white/80" />
+                               {module.room}
+                             </div>
+                             <div className="flex items-center text-xs text-white/90">
+                               <User className="h-3 w-3 mr-1 text-white/80" />
+                               {module.instructor}
+                             </div>
+                           </div>
+                           
+                           {/* Admin actions */}
+                           <div className="flex items-center space-x-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                             <Button 
+                               size="sm" 
+                               variant="ghost" 
+                               className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const slot = slots.find(s => 
+                                    s.formation_modules?.title === module.title &&
+                                    new Date(s.date).toDateString() === day.actualDate.toDateString()
+                                  );
+                                  if (slot) handleEditSlot(slot);
+                                }}
+                             >
+                               <Edit className="h-3 w-3" />
+                             </Button>
+                             <Button 
+                               size="sm" 
+                               variant="ghost" 
+                               className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const slot = slots.find(s => 
+                                    s.formation_modules?.title === module.title &&
+                                    new Date(s.date).toDateString() === day.actualDate.toDateString()
+                                  );
+                                  if (slot) handleDeleteSlot(slot);
+                                }}
+                             >
+                               <Trash2 className="h-3 w-3" />
+                             </Button>
+                           </div>
+                         </div>
+                       </div>
+                     ))}
                     <Button 
                       size="sm" 
                       variant="outline"
