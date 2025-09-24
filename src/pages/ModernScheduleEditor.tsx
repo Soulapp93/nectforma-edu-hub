@@ -9,6 +9,7 @@ import { WeekNavigator } from '@/components/schedule/WeekNavigator';
 import WeekNavigation from '@/components/ui/week-navigation';
 import { ScheduleManagementHeader } from '@/components/administration/ScheduleManagementHeader';
 import { ScheduleViewCalendar } from '@/components/schedule/ScheduleViewCalendar';
+import { ScheduleListView } from '@/components/administration/ScheduleListView';
 import { DayView } from '@/components/schedule/DayView';
 import { MonthView } from '@/components/schedule/MonthView';
 import type { ScheduleEvent } from '@/components/schedule/CreateEventModal';
@@ -324,7 +325,14 @@ const ModernScheduleEditor = () => {
           />
         );
       case 'list':
-        return renderListView(events);
+        return (
+          <ScheduleListView
+            slots={slots}
+            onEditSlot={handleEditSlot}
+            onDuplicateSlot={handleDuplicateSlot}
+            onDeleteSlot={handleDeleteSlot}
+          />
+        );
       case 'week':
       default:
         return (
@@ -337,86 +345,6 @@ const ModernScheduleEditor = () => {
     }
   };
 
-  // Vue liste avec le même style que EmploiTemps
-  const renderListView = (events: ScheduleEvent[]) => {
-    return (
-      <div className="container mx-auto px-6 py-8">
-        <div className="space-y-6">
-          {events.map((event) => {
-            const eventDate = format(event.date, 'dd/MM/yyyy', { locale: fr });
-            const eventDay = format(event.date, 'EEEE', { locale: fr });
-            
-            return (
-              <div
-                key={event.id}
-                className="rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
-                style={{ backgroundColor: event.color }}
-                onClick={() => handleEventClick(event)}
-              >
-                <div className="p-6">
-                  <div className="grid grid-cols-12 gap-4 items-center text-white">
-                    {/* Date */}
-                    <div className="col-span-2">
-                      <div className="flex items-center space-x-2">
-                        <div>
-                          <div className="font-medium text-white">
-                            {eventDate}
-                          </div>
-                          <div className="text-xs text-white/80">
-                            {eventDay}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Horaire */}
-                    <div className="col-span-2">
-                      <div className="bg-white/20 text-white border-white/30 rounded px-2 py-1 text-xs font-medium inline-block">
-                        {event.startTime} - {event.endTime}
-                      </div>
-                    </div>
-
-                    {/* Module */}
-                    <div className="col-span-3">
-                      <div className="font-medium text-white">
-                        {event.title}
-                      </div>
-                      {event.description && (
-                        <div className="text-xs text-white/80 mt-1 truncate">
-                          {event.description}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Formateur */}
-                    <div className="col-span-2">
-                      <span className="text-sm text-white/90">
-                        {event.instructor}
-                      </span>
-                    </div>
-
-                    {/* Salle */}
-                    <div className="col-span-2">
-                      <span className="text-sm text-white/90">{event.room}</span>
-                    </div>
-
-                    {/* Formation */}
-                    <div className="col-span-1">
-                      {event.formation && (
-                        <div className="bg-white/20 text-white border-white/30 rounded px-2 py-1 text-xs font-medium text-center">
-                          {event.formation}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
 
   const weekInfo = getWeekInfo(selectedDate);
   const scheduleData = convertSlotsToScheduleData();
