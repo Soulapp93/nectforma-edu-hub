@@ -1104,35 +1104,10 @@ const ScheduleManagement = () => {
                 onNavigate={handleNavigate}
               />
 
-              <div className="flex items-center space-x-2 bg-muted/50 rounded-xl p-1 border">
-                <Button
-                  variant={viewMode === 'day' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('day')}
-                  className={`px-3 ${viewMode === 'day' ? 'bg-primary text-primary-foreground shadow-md' : 'hover:bg-primary/10'}`}
-                >
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Jour
-                </Button>
-                <Button
-                  variant={viewMode === 'week' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('week')}
-                  className={`px-3 ${viewMode === 'week' ? 'bg-primary text-primary-foreground shadow-md' : 'hover:bg-primary/10'}`}
-                >
-                  <Grid3X3 className="h-4 w-4 mr-2" />
-                  Semaine
-                </Button>
-                <Button
-                  variant={viewMode === 'month' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('month')}
-                  className={`px-3 ${viewMode === 'month' ? 'bg-primary text-primary-foreground shadow-md' : 'hover:bg-primary/10'}`}
-                >
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Mois
-                </Button>
-              </div>
+              <ViewModeSelector
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+              />
             </div>
 
             {/* Barre de navigation par semaine */}
