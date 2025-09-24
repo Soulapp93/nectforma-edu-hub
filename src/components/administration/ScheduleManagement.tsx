@@ -886,47 +886,272 @@ const ScheduleManagement = () => {
       );
     };
 
-    const renderWeekOrListView = () => (
-      <div className="container mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-6">
-          {mockSchedule.map((day) => (
-            <Card
-              key={day.id}
-              className={`overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 ${
-                day.modules.length > 0 
-                  ? 'bg-card shadow-md hover:shadow-primary/10' 
-                  : 'bg-muted/30 shadow-sm opacity-70'
-              }`}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-lg font-bold text-foreground">
-                      {day.day}
-                    </CardTitle>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <span className="text-2xl font-bold text-primary">
-                        {day.date}
-                      </span>
-                      {day.modules.length > 0 && (
-                        <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
-                          {day.modules.length} cours
-                        </Badge>
-                      )}
-                    </div>
+    const renderWeekOrListView = () => {
+      if (viewMode === 'list') {
+        // Vue liste tabulaire
+        const allSlots = slots.filter(slot => slot.formation_modules).sort((a, b) => {
+          const dateA = new Date(a.date);
+          const dateB = new Date(b.date);
+          if (dateA.getTime() !== dateB.getTime()) {
+            return dateA.getTime() - dateB.getTime();
+          }
+          return a.start_time.localeCompare(b.start_time);
+        });
+
+        return (
+          <div className="container mx-auto px-6 py-8">
+            <Card className="border-0 shadow-xl rounded-2xl overflow-hidden">
+              <CardHeader className="pb-4 bg-gradient-to-r from-primary/10 via-muted/50 to-accent/10">
+                <div className="grid grid-cols-6 gap-4 text-sm font-semibold text-muted-foreground">
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="h-4 w-4" />
+                    <span>Date</span>
                   </div>
-                  {day.modules.length === 0 && (
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                  )}
+                  <div className="flex items-center space-x-2">
+                    <Clock className="h-4 w-4" />
+                    <span>Horaire</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Book className="h-4 w-4" />
+                    <span>Module</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <User className="h-4 w-4" />
+                    <span>Formateur</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="h-4 w-4" />
+                    <span>Salle</span>
+                  </div>
+                  <div>Actions</div>
                 </div>
               </CardHeader>
+              <CardContent className="p-0">
+                <div className="space-y-2 p-4">
+                  {allSlots.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                        <Calendar className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-muted-foreground mb-2">Aucun créneau</h3>
+                      <p className="text-muted-foreground">Commencez par ajouter des créneaux à votre emploi du temps</p>
+                    </div>
+                  ) : (
+                    allSlots.map((slot) => (
+                      <div
+                        key={slot.id}
+                        className="grid grid-cols-6 gap-4 items-center p-4 rounded-lg cursor-pointer hover:shadow-md transition-all duration-200 text-white"
+                        style={{ 
+                          backgroundColor: slot.color || '#8B5CF6'
+                        }}
+                        onClick={() => handleEditSlot(slot)}
+                      >
+                        {/* Date */}
+                        <div>
+                          <div className="font-medium text-white text-sm">
+                            {format(new Date(slot.date), 'dd/MM/yyyy', { locale: fr })}
+                          </div>
+                          <div className="text-xs text-white/80">
+                            {format(new Date(slot.date), 'EEEE', { locale: fr })}
+                          </div>
+                        </div>
 
-              <CardContent className="space-y-3">
-                {day.modules.length === 0 ? (
-                  <div className="text-center py-4">
-                    <p className="text-muted-foreground text-sm mb-2">Aucun cours</p>
+                        {/* Horaire */}
+                        <div>
+                          <div className="bg-white/20 text-white border-white/30 rounded px-2 py-1 text-xs font-medium inline-block">
+                            {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
+                          </div>
+                        </div>
+
+                        {/* Module */}
+                        <div>
+                          <div className="font-medium text-white text-sm">
+                            {slot.formation_modules?.title || 'Module non défini'}
+                          </div>
+                          {slot.notes && (
+                            <div className="text-xs text-white/80 mt-1">
+                              {slot.notes}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Formateur */}
+                        <div>
+                          <span className="text-sm text-white">
+                            {slot.users?.first_name && slot.users?.last_name 
+                              ? `${slot.users.first_name} ${slot.users.last_name}`
+                              : 'Non assigné'
+                            }
+                          </span>
+                        </div>
+
+                        {/* Salle */}
+                        <div>
+                          <span className="text-sm text-white">
+                            {slot.room || 'Non définie'}
+                          </span>
+                        </div>
+
+                        {/* Actions */}
+                        <div>
+                          <div className="flex items-center space-x-1">
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-7 w-7 p-0 text-white/80 hover:text-white hover:bg-white/20"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditSlot(slot);
+                              }}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-7 w-7 p-0 text-white/80 hover:text-white hover:bg-white/20"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteSlot(slot);
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      }
+
+      // Vue semaine (grille)
+      return (
+        <div className="container mx-auto px-6 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-6">
+            {mockSchedule.map((day) => (
+              <Card
+                key={day.id}
+                className={`overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 ${
+                  day.modules.length > 0 
+                    ? 'bg-card shadow-md hover:shadow-primary/10' 
+                    : 'bg-muted/30 shadow-sm opacity-70'
+                }`}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-lg font-bold text-foreground">
+                        {day.day}
+                      </CardTitle>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className="text-2xl font-bold text-primary">
+                          {day.date}
+                        </span>
+                        {day.modules.length > 0 && (
+                          <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
+                            {day.modules.length} cours
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    {day.modules.length === 0 && (
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                </CardHeader>
+
+                <CardContent className="space-y-3">
+                  {day.modules.length === 0 ? (
+                    <div className="text-center py-4">
+                      <p className="text-muted-foreground text-sm mb-2">Aucun cours</p>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleAddSlot(day.actualDate, '09:00');
+                          }}
+                          disabled={!selectedSchedule?.id}
+                          className="text-xs"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Ajouter
+                        </Button>
+                    </div>
+                  ) : (
+                    <>
+                      {day.modules.map((module, index) => (
+                         <div
+                           key={index}
+                           className="relative p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 mb-2 text-white"
+                           style={{ 
+                             backgroundColor: getModuleColor(module.title)
+                           }}
+                         >
+                           <div>
+                             <h4 className="font-semibold text-white text-sm mb-2">
+                               {module.title}
+                             </h4>
+                             
+                             <div className="space-y-1">
+                               <div className="flex items-center text-xs text-white/90">
+                                 <Clock className="h-3 w-3 mr-1 text-white/80" />
+                                 {module.time}
+                               </div>
+                               <div className="flex items-center text-xs text-white/90">
+                                 <MapPin className="h-3 w-3 mr-1 text-white/80" />
+                                 {module.room}
+                               </div>
+                               <div className="flex items-center text-xs text-white/90">
+                                 <User className="h-3 w-3 mr-1 text-white/80" />
+                                 {module.instructor}
+                               </div>
+                             </div>
+                             
+                             {/* Admin actions */}
+                             <div className="flex items-center space-x-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                               <Button 
+                                 size="sm" 
+                                 variant="ghost" 
+                                 className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const slot = slots.find(s => 
+                                      s.formation_modules?.title === module.title &&
+                                      new Date(s.date).toDateString() === day.actualDate.toDateString()
+                                    );
+                                    if (slot) handleEditSlot(slot);
+                                  }}
+                               >
+                                 <Edit className="h-3 w-3" />
+                               </Button>
+                               <Button 
+                                 size="sm" 
+                                 variant="ghost" 
+                                 className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const slot = slots.find(s => 
+                                      s.formation_modules?.title === module.title &&
+                                      new Date(s.date).toDateString() === day.actualDate.toDateString()
+                                    );
+                                    if (slot) handleDeleteSlot(slot);
+                                  }}
+                               >
+                                 <Trash2 className="h-3 w-3" />
+                               </Button>
+                             </div>
+                           </div>
+                         </div>
+                       ))}
                       <Button 
                         size="sm" 
                         variant="outline"
@@ -936,100 +1161,20 @@ const ScheduleManagement = () => {
                           handleAddSlot(day.actualDate, '09:00');
                         }}
                         disabled={!selectedSchedule?.id}
-                        className="text-xs"
+                        className="w-full text-xs"
                       >
                         <Plus className="h-3 w-3 mr-1" />
-                        Ajouter
+                        Ajouter un cours
                       </Button>
-                  </div>
-                ) : (
-                  <>
-                    {day.modules.map((module, index) => (
-                       <div
-                         key={index}
-                         className="relative p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 mb-2 text-white"
-                         style={{ 
-                           backgroundColor: getModuleColor(module.title)
-                         }}
-                       >
-                         <div>
-                           <h4 className="font-semibold text-white text-sm mb-2">
-                             {module.title}
-                           </h4>
-                           
-                           <div className="space-y-1">
-                             <div className="flex items-center text-xs text-white/90">
-                               <Clock className="h-3 w-3 mr-1 text-white/80" />
-                               {module.time}
-                             </div>
-                             <div className="flex items-center text-xs text-white/90">
-                               <MapPin className="h-3 w-3 mr-1 text-white/80" />
-                               {module.room}
-                             </div>
-                             <div className="flex items-center text-xs text-white/90">
-                               <User className="h-3 w-3 mr-1 text-white/80" />
-                               {module.instructor}
-                             </div>
-                           </div>
-                           
-                           {/* Admin actions */}
-                           <div className="flex items-center space-x-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                             <Button 
-                               size="sm" 
-                               variant="ghost" 
-                               className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const slot = slots.find(s => 
-                                    s.formation_modules?.title === module.title &&
-                                    new Date(s.date).toDateString() === day.actualDate.toDateString()
-                                  );
-                                  if (slot) handleEditSlot(slot);
-                                }}
-                             >
-                               <Edit className="h-3 w-3" />
-                             </Button>
-                             <Button 
-                               size="sm" 
-                               variant="ghost" 
-                               className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const slot = slots.find(s => 
-                                    s.formation_modules?.title === module.title &&
-                                    new Date(s.date).toDateString() === day.actualDate.toDateString()
-                                  );
-                                  if (slot) handleDeleteSlot(slot);
-                                }}
-                             >
-                               <Trash2 className="h-3 w-3" />
-                             </Button>
-                           </div>
-                         </div>
-                       </div>
-                     ))}
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleAddSlot(day.actualDate, '09:00');
-                      }}
-                      disabled={!selectedSchedule?.id}
-                      className="w-full text-xs"
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Ajouter un cours
-                    </Button>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
-    );
+      );
+    };
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
