@@ -7,33 +7,33 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 240 12% 97%;
+    --foreground: 240 10% 15%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 240 12% 98%;
+    --card-foreground: 240 10% 15%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 240 12% 98%;
+    --popover-foreground: 240 10% 15%;
 
-    --primary: 271 81% 56%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 240 12% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 240 8% 94%;
+    --secondary-foreground: 240 10% 25%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 240 8% 94%;
+    --muted-foreground: 240 6% 55%;
 
-    --accent: 271 81% 56%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 262 83% 58%;
+    --accent-foreground: 240 12% 98%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 240 12% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 271 81% 56%;
+    --border: 240 8% 88%;
+    --input: 240 8% 88%;
+    --ring: 262 83% 58%;
 
     --radius: 0.5rem;
 
@@ -51,14 +51,14 @@
     --info-muted: 217 91% 95%;
 
     /* Enhanced Custom NectForia colors */
-    --nect-purple-from: 271 81% 56%;
-    --nect-purple-to: 283 70% 60%;
-    --nect-purple-light: 271 81% 85%;
-    --nect-purple-dark: 271 81% 35%;
+    --nect-purple-from: 262 83% 58%;
+    --nect-purple-to: 280 75% 65%;
+    --nect-purple-light: 262 83% 90%;
+    --nect-purple-dark: 262 83% 40%;
     
-    --nect-sidebar-bg: 271 81% 56%;
-    --nect-card-bg: 0 0% 100%;
-    --nect-card-border: 214.3 31.8% 91.4%;
+    --nect-sidebar-bg: 262 83% 58%;
+    --nect-card-bg: 240 12% 98%;
+    --nect-card-border: 240 8% 88%;
     
     /* Production gradients */
     --gradient-primary: linear-gradient(135deg, hsl(var(--nect-purple-from)), hsl(var(--nect-purple-to)));
@@ -73,19 +73,28 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --primary: 271 81% 56%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --background: 240 15% 8%;
+    --foreground: 240 12% 95%;
+    --card: 240 15% 10%;
+    --card-foreground: 240 12% 95%;
+    --primary: 262 83% 65%;
+    --primary-foreground: 240 15% 8%;
+    
+    --secondary: 240 12% 18%;
+    --secondary-foreground: 240 12% 85%;
+    
+    --muted: 240 12% 18%;
+    --muted-foreground: 240 8% 65%;
+    
+    --border: 240 12% 18%;
+    --input: 240 12% 18%;
     
     --success: 142 76% 45%;
     --warning: 38 92% 60%;
     --info: 217 91% 70%;
     
-    --nect-card-bg: 222.2 84% 4.9%;
-    --nect-card-border: 217.2 32.6% 17.5%;
+    --nect-card-bg: 240 15% 10%;
+    --nect-card-border: 240 12% 18%;
   }
 }
 
@@ -111,10 +120,10 @@
   }
 
   .glass-card {
-    background: rgba(255, 255, 255, 0.05);
+    background: hsl(var(--card));
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 2px 8px rgba(126, 34, 206, 0.08);
   }
 
   .floating-card {
@@ -124,7 +133,7 @@
 
   .floating-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(124, 58, 237, 0.2);
+    box-shadow: 0 8px 24px rgba(126, 34, 206, 0.15);
   }
 
   .timeline-dot {
