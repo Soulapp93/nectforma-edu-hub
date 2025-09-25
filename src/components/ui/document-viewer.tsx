@@ -121,16 +121,18 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     setZoom(100);
   };
 
-  const showHeader = !isFullscreen || !['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension);
+  const showHeader = !isFullscreen;
 
   return (
-    <div className={`fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50 ${
-      isFullscreen ? 'p-0' : 'p-4'
+    <div className={`fixed inset-0 z-50 ${
+      isFullscreen 
+        ? 'bg-black w-screen h-screen' 
+        : 'bg-black bg-opacity-95 flex items-center justify-center p-4'
     }`}>
-      <div className={`bg-white rounded-lg flex flex-col ${
+      <div className={`${
         isFullscreen 
-          ? 'w-full h-full rounded-none' 
-          : 'w-full h-full max-w-7xl max-h-[95vh]'
+          ? 'w-screen h-screen bg-white' 
+          : 'bg-white flex flex-col w-full h-full max-w-7xl max-h-[95vh] rounded-lg'
       }`}>
         {/* Header */}
         {showHeader && (
@@ -237,20 +239,26 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
         )}
 
         {/* Contenu du document */}
-        <div className="flex-1 overflow-hidden">
+        <div className={`${
+          isFullscreen 
+            ? 'absolute inset-0 w-full h-full' 
+            : 'flex-1 overflow-hidden'
+        }`}>
           {renderDocumentContent()}
         </div>
 
-        {/* Bouton de fermeture en plein écran pour Office */}
-        {isFullscreen && ['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension) && (
-          <Button 
-            size="sm" 
-            variant="ghost" 
-            onClick={onClose}
-            className="absolute top-4 right-4 bg-black/50 text-white hover:bg-black/70 z-10"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+        {/* Bouton de fermeture flottant en plein écran */}
+        {isFullscreen && (
+          <div className="absolute top-4 right-4 z-20">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={onClose}
+              className="bg-white/90 hover:bg-white border border-gray-300 shadow-lg"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         )}
       </div>
     </div>
