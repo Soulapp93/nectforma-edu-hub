@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, Maximize2, Minimize2 } from 'lucide-react';
+import { X, Maximize2, Minimize2, ChevronLeft, ChevronRight, ExternalLink, Download, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from './button';
 import BasicPDFViewer from './viewers/BasicPDFViewer';
 import ImageViewer from './viewers/ImageViewer';
@@ -22,6 +22,9 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   onClose
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [zoom, setZoom] = useState(100);
 
   if (!isOpen) return null;
 
@@ -81,6 +84,43 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     setIsFullscreen(!isFullscreen);
   };
 
+  const handleDownload = () => {
+    const link = document.createElement('a');
+    link.href = fileUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleOpenInNewTab = () => {
+    window.open(fileUrl, '_blank');
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleZoomIn = () => {
+    setZoom(Math.min(zoom + 25, 200));
+  };
+
+  const handleZoomOut = () => {
+    setZoom(Math.max(zoom - 25, 50));
+  };
+
+  const resetZoom = () => {
+    setZoom(100);
+  };
+
   const showHeader = !isFullscreen || !['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension);
 
   return (
@@ -94,30 +134,104 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
       }`}>
         {/* Header */}
         {showHeader && (
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white rounded-t-lg flex-shrink-0">
-            <div className="flex items-center space-x-3">
-              <h2 className="text-lg font-semibold text-gray-900 truncate">
-                {fileName}
-              </h2>
-              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                {fileExtension.toUpperCase()}
-              </span>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              {!['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension) && (
-                <Button size="sm" variant="ghost" onClick={toggleFullscreen}>
-                  {isFullscreen ? (
-                    <Minimize2 className="h-4 w-4" />
-                  ) : (
-                    <Maximize2 className="h-4 w-4" />
-                  )}
-                </Button>
-              )}
+          <div className="flex flex-col border-b border-gray-200 bg-white rounded-t-lg flex-shrink-0">
+            {/* Top bar - File info and close */}
+            <div className="flex items-center justify-between p-3 border-b border-gray-100">
+              <div className="flex items-center space-x-3">
+                <h2 className="text-sm font-semibold text-gray-900 truncate max-w-md">
+                  {fileName}
+                </h2>
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-medium">
+                  {fileExtension.toUpperCase()}
+                </span>
+              </div>
               
-              <Button size="sm" variant="ghost" onClick={onClose}>
+              <Button size="sm" variant="ghost" onClick={onClose} className="h-8 w-8 p-0">
                 <X className="h-4 w-4" />
               </Button>
+            </div>
+
+            {/* Toolbar - Navigation and actions */}
+            <div className="flex items-center justify-between p-2 bg-gray-50">
+              {/* Navigation controls */}
+              <div className="flex items-center space-x-2">
+                {(['pdf', 'ppt', 'pptx'].includes(fileExtension)) && (
+                  <>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      onClick={handlePrevPage}
+                      disabled={currentPage <= 1}
+                      className="h-8 px-2"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    
+                    <span className="text-xs text-gray-600 px-2 min-w-[80px] text-center">
+                      {['ppt', 'pptx'].includes(fileExtension) ? `Slide ${currentPage}` : `Page ${currentPage} / ${totalPages}`}
+                    </span>
+                    
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      onClick={handleNextPage}
+                      disabled={currentPage >= totalPages}
+                      className="h-8 px-2"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    
+                    <div className="h-4 w-px bg-gray-300 mx-2" />
+                  </>
+                )}
+
+                <span className="text-xs text-gray-500">
+                  Visualiseur: {['pdf'].includes(fileExtension) ? 'PDF' : 
+                              ['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension) ? 'Microsoft Office' :
+                              ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(fileExtension) ? 'Image' : 'Document'}
+                </span>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex items-center space-x-1">
+                {/* Zoom controls for images and PDFs */}
+                {(['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(fileExtension)) && (
+                  <>
+                    <Button size="sm" variant="ghost" onClick={handleZoomOut} className="h-8 px-2">
+                      <ZoomOut className="h-3 w-3" />
+                    </Button>
+                    <span className="text-xs text-gray-600 px-1 min-w-[45px] text-center">
+                      {zoom}%
+                    </span>
+                    <Button size="sm" variant="ghost" onClick={handleZoomIn} className="h-8 px-2">
+                      <ZoomIn className="h-3 w-3" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={resetZoom} className="h-8 px-2">
+                      <RotateCcw className="h-3 w-3" />
+                    </Button>
+                    <div className="h-4 w-px bg-gray-300 mx-1" />
+                  </>
+                )}
+
+                {/* Fullscreen toggle */}
+                <Button size="sm" variant="ghost" onClick={toggleFullscreen} className="h-8 px-2">
+                  {isFullscreen ? (
+                    <Minimize2 className="h-3 w-3" />
+                  ) : (
+                    <Maximize2 className="h-3 w-3" />
+                  )}
+                </Button>
+                
+                {/* External link */}
+                <Button size="sm" variant="ghost" onClick={handleOpenInNewTab} className="h-8 px-2">
+                  <ExternalLink className="h-3 w-3" />
+                </Button>
+                
+                {/* Download */}
+                <Button size="sm" variant="ghost" onClick={handleDownload} className="h-8 px-2">
+                  <Download className="h-3 w-3" />
+                </Button>
+              </div>
             </div>
           </div>
         )}
