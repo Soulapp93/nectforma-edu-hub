@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { moduleContentService, ModuleContent } from '@/services/moduleContentService';
+import { moduleDocumentService, ModuleDocument } from '@/services/moduleDocumentService';
 import { assignmentService } from '@/services/assignmentService';
 import { fileUploadService } from '@/services/fileUploadService';
 import FileUpload from '@/components/ui/file-upload';
@@ -12,7 +13,7 @@ interface CreateContentModalProps {
   onClose: () => void;
   moduleId: string;
   onSuccess: () => void;
-  editContent?: ModuleContent;
+  editContent?: ModuleContent | ModuleDocument;
 }
 
 const CreateContentModal: React.FC<CreateContentModalProps> = ({
@@ -35,10 +36,15 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
 
   useEffect(() => {
     if (editContent) {
+      // Déterminer le type d'objet en fonction des propriétés disponibles
+      const isDocument = 'document_type' in editContent;
+      
       setFormData({
         title: editContent.title,
         description: editContent.description || '',
-        content_type: editContent.content_type as 'cours' | 'support' | 'video' | 'document' | 'devoir' | 'evaluation',
+        content_type: isDocument 
+          ? (editContent as ModuleDocument).document_type as 'cours' | 'support' | 'video' | 'document' | 'devoir' | 'evaluation'
+          : (editContent as ModuleContent).content_type as 'cours' | 'support' | 'video' | 'document' | 'devoir' | 'evaluation',
         due_date: '',
         max_points: 100
       });
@@ -83,50 +89,106 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
           console.log('Assignment created successfully:', assignment);
         }
       } else {
-        // Traitement normal pour les autres types de contenu
-        if (editContent) {
-          // Mode édition
-          let fileUrl = editContent.file_url;
-          let fileName = editContent.file_name;
+        // Traitement pour les documents
+        if (formData.content_type === 'document') {
+          if (editContent) {
+            // Mode édition document
+            let fileUrl = editContent.file_url;
+            let fileName = editContent.file_name;
 
-          if (selectedFiles.length > 0) {
-            console.log('Uploading new file:', selectedFiles[0]);
-            fileUrl = await fileUploadService.uploadFile(selectedFiles[0]);
-            fileName = selectedFiles[0].name;
-            console.log('New file uploaded, URL:', fileUrl);
+            if (selectedFiles.length > 0) {
+              console.log('Uploading new file:', selectedFiles[0]);
+              fileUrl = await fileUploadService.uploadFile(selectedFiles[0]);
+              fileName = selectedFiles[0].name;
+              console.log('New file uploaded, URL:', fileUrl);
+            }
+
+            const documentData = {
+              title: formData.title,
+              description: formData.description,
+              document_type: formData.content_type,
+              file_url: fileUrl,
+              file_name: fileName
+            };
+
+            console.log('Updating document in database:', documentData);
+            await moduleDocumentService.updateDocument(editContent.id, documentData);
+            console.log('Document updated successfully');
+          } else {
+            // Mode création document
+            let fileUrl = null;
+            let fileName = null;
+
+            if (selectedFiles.length > 0) {
+              console.log('Uploading file:', selectedFiles[0]);
+              fileUrl = await fileUploadService.uploadFile(selectedFiles[0]);
+              fileName = selectedFiles[0].name;
+              console.log('File uploaded, URL:', fileUrl);
+            }
+
+            const documentData = {
+              title: formData.title,
+              description: formData.description,
+              document_type: formData.content_type,
+              module_id: moduleId,
+              file_url: fileUrl,
+              file_name: fileName
+            };
+
+            console.log('Creating document in database:', documentData);
+            await moduleDocumentService.createDocument(documentData);
+            console.log('Document created successfully');
           }
-
-          const contentData = {
-            ...formData,
-            file_url: fileUrl,
-            file_name: fileName
-          };
-
-          console.log('Updating content in database:', contentData);
-          await moduleContentService.updateContent(editContent.id, contentData);
-          console.log('Content updated successfully');
         } else {
-          // Mode création
-          let fileUrl = null;
-          let fileName = null;
+          // Traitement pour les autres types de contenu (cours, support, video)
+          if (editContent) {
+            // Mode édition contenu
+            let fileUrl = editContent.file_url;
+            let fileName = editContent.file_name;
 
-          if (selectedFiles.length > 0) {
-            console.log('Uploading file:', selectedFiles[0]);
-            fileUrl = await fileUploadService.uploadFile(selectedFiles[0]);
-            fileName = selectedFiles[0].name;
-            console.log('File uploaded, URL:', fileUrl);
+            if (selectedFiles.length > 0) {
+              console.log('Uploading new file:', selectedFiles[0]);
+              fileUrl = await fileUploadService.uploadFile(selectedFiles[0]);
+              fileName = selectedFiles[0].name;
+              console.log('New file uploaded, URL:', fileUrl);
+            }
+
+            const contentData = {
+              title: formData.title,
+              description: formData.description,
+              content_type: formData.content_type,
+              file_url: fileUrl,
+              file_name: fileName
+            };
+
+            console.log('Updating content in database:', contentData);
+            await moduleContentService.updateContent(editContent.id, contentData);
+            console.log('Content updated successfully');
+          } else {
+            // Mode création contenu
+            let fileUrl = null;
+            let fileName = null;
+
+            if (selectedFiles.length > 0) {
+              console.log('Uploading file:', selectedFiles[0]);
+              fileUrl = await fileUploadService.uploadFile(selectedFiles[0]);
+              fileName = selectedFiles[0].name;
+              console.log('File uploaded, URL:', fileUrl);
+            }
+
+            const contentData = {
+              title: formData.title,
+              description: formData.description,
+              content_type: formData.content_type,
+              module_id: moduleId,
+              file_url: fileUrl,
+              file_name: fileName
+            };
+
+            console.log('Creating content in database:', contentData);
+            await moduleContentService.createContent(contentData);
+            console.log('Content created successfully');
           }
-
-          const contentData = {
-            ...formData,
-            module_id: moduleId,
-            file_url: fileUrl,
-            file_name: fileName
-          };
-
-          console.log('Creating content in database:', contentData);
-          await moduleContentService.createContent(contentData);
-          console.log('Content created successfully');
         }
       }
 
