@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { X, Maximize2, Minimize2, ChevronLeft, ChevronRight, ExternalLink, Download, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from './button';
@@ -26,6 +25,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [zoom, setZoom] = useState(100);
+  const [useAdvancedPDF, setUseAdvancedPDF] = useState(true);
 
   if (!isOpen) return null;
 
@@ -35,7 +35,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
 
   const fileExtension = getFileExtension(fileName);
 
-  // Pour les PDFs, utiliser directement le visualiseur avancé
+  // Pour les PDFs, utiliser le visualiseur avancé avec fallback
   if (fileExtension === 'pdf') {
     return (
       <div className={`fixed inset-0 z-50 ${
@@ -48,13 +48,45 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
             ? 'w-screen h-screen' 
             : 'w-full h-full max-w-7xl max-h-[95vh] rounded-lg overflow-hidden'
         }`}>
-          <AdvancedPDFViewer 
-            fileUrl={fileUrl} 
-            fileName={fileName}
-            isFullscreen={isFullscreen}
-            onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
-            onClose={onClose}
-          />
+          {useAdvancedPDF ? (
+            <AdvancedPDFViewer 
+              fileUrl={fileUrl} 
+              fileName={fileName}
+              isFullscreen={isFullscreen}
+              onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
+              onClose={onClose}
+            />
+          ) : (
+            <div className="w-full h-full bg-white flex flex-col">
+              <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gray-50">
+                <h2 className="text-sm font-semibold text-gray-900">{fileName}</h2>
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={() => setUseAdvancedPDF(true)}
+                    className="h-8 px-2 text-xs"
+                  >
+                    Mode avancé
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={() => setIsFullscreen(!isFullscreen)}
+                    className="h-8 px-2"
+                  >
+                    {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={onClose} className="h-8 px-2">
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="flex-1">
+                <BasicPDFViewer fileUrl={fileUrl} fileName={fileName} />
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );

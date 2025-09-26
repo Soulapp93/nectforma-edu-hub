@@ -78,7 +78,11 @@ const AdvancedPDFViewer: React.FC<AdvancedPDFViewerProps> = ({
   };
 
   const handlePrint = () => {
-    window.open(fileUrl, '_blank');
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.print();
+    } else {
+      window.open(fileUrl, '_blank');
+    }
   };
 
   return (
@@ -273,14 +277,19 @@ const AdvancedPDFViewer: React.FC<AdvancedPDFViewerProps> = ({
           >
             <iframe
               ref={iframeRef}
-              src={`${fileUrl}#page=${currentPage}`}
+              src={fileUrl}
               className="w-full h-full border-0 bg-white shadow-lg"
               title={fileName}
               sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"
               allow="fullscreen"
               onLoad={() => {
-                // Simuler la récupération du nombre de pages
-                setTotalPages(20); // À remplacer par une vraie détection
+                console.log('PDF chargé:', fileName);
+                // Pour l'instant, on simule 10 pages - dans un vrai système, 
+                // on utiliserait une bibliothèque comme PDF.js pour détecter le nombre de pages
+                setTotalPages(10);
+              }}
+              onError={(e) => {
+                console.error('Erreur de chargement du PDF:', e);
               }}
             />
           </div>
