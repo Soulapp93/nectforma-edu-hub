@@ -162,9 +162,12 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
                 </span>
               </div>
               
-              <Button size="sm" variant="ghost" onClick={onClose} className="h-8 w-8 p-0">
+              <button 
+                onClick={onClose} 
+                className="inline-flex items-center justify-center h-8 w-8 p-0 hover:bg-accent hover:text-accent-foreground rounded-md"
+              >
                 <X className="h-4 w-4" />
-              </Button>
+              </button>
             </div>
 
             {/* Toolbar - Navigation and actions */}
@@ -213,40 +216,40 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
                 {/* Zoom controls for images and PDFs */}
                 {(['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(fileExtension)) && (
                   <>
-                    <Button size="sm" variant="ghost" onClick={handleZoomOut} className="h-8 px-2">
+                    <button className="inline-flex items-center justify-center h-8 px-2 hover:bg-accent hover:text-accent-foreground rounded-md" onClick={handleZoomOut}>
                       <ZoomOut className="h-3 w-3" />
-                    </Button>
+                    </button>
                     <span className="text-xs text-gray-600 px-1 min-w-[45px] text-center">
                       {zoom}%
                     </span>
-                    <Button size="sm" variant="ghost" onClick={handleZoomIn} className="h-8 px-2">
+                    <button className="inline-flex items-center justify-center h-8 px-2 hover:bg-accent hover:text-accent-foreground rounded-md" onClick={handleZoomIn}>
                       <ZoomIn className="h-3 w-3" />
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={resetZoom} className="h-8 px-2">
+                    </button>
+                    <button className="inline-flex items-center justify-center h-8 px-2 hover:bg-accent hover:text-accent-foreground rounded-md" onClick={resetZoom}>
                       <RotateCcw className="h-3 w-3" />
-                    </Button>
+                    </button>
                     <div className="h-4 w-px bg-gray-300 mx-1" />
                   </>
                 )}
 
                 {/* Fullscreen toggle */}
-                <Button size="sm" variant="ghost" onClick={toggleFullscreen} className="h-8 px-2">
+                <button className="inline-flex items-center justify-center h-8 px-2 hover:bg-accent hover:text-accent-foreground rounded-md" onClick={toggleFullscreen}>
                   {isFullscreen ? (
                     <Minimize2 className="h-3 w-3" />
                   ) : (
                     <Maximize2 className="h-3 w-3" />
                   )}
-                </Button>
+                </button>
                 
                 {/* External link */}
-                <Button size="sm" variant="ghost" onClick={handleOpenInNewTab} className="h-8 px-2">
+                <button className="inline-flex items-center justify-center h-8 px-2 hover:bg-accent hover:text-accent-foreground rounded-md" onClick={handleOpenInNewTab}>
                   <ExternalLink className="h-3 w-3" />
-                </Button>
+                </button>
                 
                 {/* Download */}
-                <Button size="sm" variant="ghost" onClick={handleDownload} className="h-8 px-2">
+                <button className="inline-flex items-center justify-center h-8 px-2 hover:bg-accent hover:text-accent-foreground rounded-md" onClick={handleDownload}>
                   <Download className="h-3 w-3" />
-                </Button>
+                </button>
               </div>
             </div>
           </div>
@@ -264,14 +267,12 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
         {/* Bouton de fermeture flottant en plein écran */}
         {isFullscreen && (
           <div className="absolute top-4 right-4 z-20">
-            <Button 
-              size="sm" 
-              variant="outline" 
+            <button 
+              className="inline-flex items-center justify-center h-8 w-8 p-0 bg-white/90 hover:bg-white border border-gray-300 shadow-lg rounded-md"
               onClick={onClose}
-              className="bg-white/90 hover:bg-white border border-gray-300 shadow-lg"
             >
               <X className="h-4 w-4" />
-            </Button>
+            </button>
           </div>
         )}
       </div>

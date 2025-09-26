@@ -215,52 +215,76 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
           {/* Navigation for PDFs */}
           {fileExtension === 'pdf' && (
             <>
-              <Button size="sm" variant="outline" onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}>
+              <button 
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-2"
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              >
                 <ChevronLeft className="h-4 w-4" />
-              </Button>
+              </button>
               <span className="text-sm px-2">Page {currentPage}</span>
-              <Button size="sm" variant="outline" onClick={() => setCurrentPage(currentPage + 1)}>
+              <button 
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-2"
+                onClick={() => setCurrentPage(currentPage + 1)}
+              >
                 <ChevronRight className="h-4 w-4" />
-              </Button>
+              </button>
               <div className="h-4 w-px bg-gray-300 mx-2" />
             </>
           )}
 
           {loadError && viewerOptions.length > 1 && (
-            <Button size="sm" variant="outline" onClick={handleRetry}>
+            <button 
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3"
+              onClick={handleRetry}
+            >
               <RefreshCw className="h-4 w-4 mr-1" />
               Réessayer
-            </Button>
+            </button>
           )}
           
-          <Button size="sm" variant="default" onClick={openInNewTab} className="bg-blue-600 hover:bg-blue-700">
+          <button 
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700 h-8 px-3"
+            onClick={openInNewTab}
+          >
             <ExternalLink className="h-4 w-4 mr-1" />
             Nouvel onglet
-          </Button>
+          </button>
           
-          <Button size="sm" variant="outline" onClick={handleDownload}>
+          <button 
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3"
+            onClick={handleDownload}
+          >
             <Download className="h-4 w-4 mr-1" />
             Télécharger
-          </Button>
+          </button>
 
           {onTogglePresentationMode && (
-            <Button size="sm" variant="outline" onClick={onTogglePresentationMode}>
+            <button 
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3"
+              onClick={onTogglePresentationMode}
+            >
               <Presentation className="h-4 w-4 mr-1" />
               Présentation
-            </Button>
+            </button>
           )}
           
           {onToggleFullscreen && (
-            <Button size="sm" variant="outline" onClick={onToggleFullscreen}>
+            <button 
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3"
+              onClick={onToggleFullscreen}
+            >
               <Maximize2 className="h-4 w-4 mr-1" />
               Plein écran
-            </Button>
+            </button>
           )}
           
           {onClose && (
-            <Button size="sm" variant="ghost" onClick={onClose}>
+            <button 
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8 p-0"
+              onClick={onClose}
+            >
               <X className="h-4 w-4" />
-            </Button>
+            </button>
           )}
         </div>
       </div>
@@ -330,26 +354,41 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/80 rounded-full px-4 py-2 flex items-center space-x-2 backdrop-blur-sm">
                 {fileExtension === 'pdf' && (
                   <>
-                    <Button size="sm" variant="ghost" onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} className="text-white hover:bg-white/20">
+                    <button 
+                      className="inline-flex items-center justify-center h-8 px-2 text-white hover:bg-white/20 rounded"
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    >
                       <ChevronLeft className="h-4 w-4" />
-                    </Button>
+                    </button>
                     <span className="text-white text-sm px-2">Page {currentPage}</span>
-                    <Button size="sm" variant="ghost" onClick={() => setCurrentPage(currentPage + 1)} className="text-white hover:bg-white/20">
+                    <button 
+                      className="inline-flex items-center justify-center h-8 px-2 text-white hover:bg-white/20 rounded"
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                    >
                       <ChevronRight className="h-4 w-4" />
-                    </Button>
+                    </button>
                     <div className="h-4 w-px bg-white/30 mx-2" />
                   </>
                 )}
-                <Button size="sm" variant="ghost" onClick={openInNewTab} className="text-white hover:bg-white/20">
+                <button 
+                  className="inline-flex items-center justify-center h-8 px-2 text-white hover:bg-white/20 rounded"
+                  onClick={openInNewTab}
+                >
                   <ExternalLink className="h-4 w-4" />
-                </Button>
-                <Button size="sm" variant="ghost" onClick={handleDownload} className="text-white hover:bg-white/20">
+                </button>
+                <button 
+                  className="inline-flex items-center justify-center h-8 px-2 text-white hover:bg-white/20 rounded"
+                  onClick={handleDownload}
+                >
                   <Download className="h-4 w-4" />
-                </Button>
+                </button>
                 {onClose && (
-                  <Button size="sm" variant="ghost" onClick={onClose} className="text-white hover:bg-white/20">
+                  <button 
+                    className="inline-flex items-center justify-center h-8 px-2 text-white hover:bg-white/20 rounded"
+                    onClick={onClose}
+                  >
                     <X className="h-4 w-4" />
-                  </Button>
+                  </button>
                 )}
               </div>
             )}
