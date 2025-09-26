@@ -3,8 +3,9 @@ import { X, Maximize2, Minimize2, ChevronLeft, ChevronRight, ExternalLink, Downl
 import { Button } from './button';
 import BasicPDFViewer from './viewers/BasicPDFViewer';
 import AdvancedPDFViewer from './viewers/AdvancedPDFViewer';
+import ImprovedPDFViewer from './viewers/ImprovedPDFViewer';
 import ImageViewer from './viewers/ImageViewer';
-import EnhancedOfficeViewer from './viewers/EnhancedOfficeViewer';
+import ImprovedOfficeViewer from './viewers/ImprovedOfficeViewer';
 import TextViewer from './viewers/TextViewer';
 import UnsupportedViewer from './viewers/UnsupportedViewer';
 
@@ -35,7 +36,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
 
   const fileExtension = getFileExtension(fileName);
 
-  // Pour les PDFs, utiliser le visualiseur avancé avec fallback
+  // Pour les PDFs, utiliser le visualiseur amélioré avec fallbacks
   if (fileExtension === 'pdf') {
     return (
       <div className={`fixed inset-0 z-50 ${
@@ -48,45 +49,13 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
             ? 'w-screen h-screen' 
             : 'w-full h-full max-w-7xl max-h-[95vh] rounded-lg overflow-hidden'
         }`}>
-          {useAdvancedPDF ? (
-            <AdvancedPDFViewer 
-              fileUrl={fileUrl} 
-              fileName={fileName}
-              isFullscreen={isFullscreen}
-              onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
-              onClose={onClose}
-            />
-          ) : (
-            <div className="w-full h-full bg-white flex flex-col">
-              <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gray-50">
-                <h2 className="text-sm font-semibold text-gray-900">{fileName}</h2>
-                <div className="flex items-center space-x-2">
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    onClick={() => setUseAdvancedPDF(true)}
-                    className="h-8 px-2 text-xs"
-                  >
-                    Mode avancé
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    onClick={() => setIsFullscreen(!isFullscreen)}
-                    className="h-8 px-2"
-                  >
-                    {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={onClose} className="h-8 px-2">
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              <div className="flex-1">
-                <BasicPDFViewer fileUrl={fileUrl} fileName={fileName} />
-              </div>
-            </div>
-          )}
+          <ImprovedPDFViewer 
+            fileUrl={fileUrl} 
+            fileName={fileName}
+            isFullscreen={isFullscreen}
+            onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
+            onClose={onClose}
+          />
         </div>
       </div>
     );
@@ -103,12 +72,13 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
     // Fichiers Office
     if (['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension)) {
       return (
-        <EnhancedOfficeViewer 
+        <ImprovedOfficeViewer 
           fileUrl={fileUrl} 
           fileName={fileName} 
           fileExtension={fileExtension}
           isFullscreen={isFullscreen}
           onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
+          onClose={onClose}
         />
       );
     }
