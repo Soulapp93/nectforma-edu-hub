@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Download, ExternalLink, RefreshCw, AlertCircle, Eye } from 'lucide-react';
+import { X, Download, ExternalLink, RefreshCw, AlertCircle, Eye, Maximize2, Presentation, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../button';
 import { toast } from 'sonner';
 
@@ -9,6 +9,8 @@ interface UniversalFileViewerProps {
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
   onClose?: () => void;
+  isPresentationMode?: boolean;
+  onTogglePresentationMode?: () => void;
 }
 
 const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
@@ -16,12 +18,17 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
   fileName,
   isFullscreen = false,
   onToggleFullscreen,
-  onClose
+  onClose,
+  isPresentationMode = false,
+  onTogglePresentationMode
 }) => {
   const [loadError, setLoadError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [viewerMethod, setViewerMethod] = useState(0);
   const [retryCount, setRetryCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [showControls, setShowControls] = useState(true);
 
   const getFileExtension = (filename: string) => {
     return filename.split('.').pop()?.toLowerCase() || '';
@@ -163,10 +170,32 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
     setRetryCount(0);
   }, [fileUrl]);
 
+  // Auto-hide controls in presentation mode
+  useEffect(() => {
+    if (isPresentationMode) {
+      const timer = setTimeout(() => setShowControls(false), 3000);
+      const handleMouseMove = () => {
+        setShowControls(true);
+        clearTimeout(timer);
+        setTimeout(() => setShowControls(false), 3000);
+      };
+      
+      document.addEventListener('mousemove', handleMouseMove);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        clearTimeout(timer);
+      };
+    } else {
+      setShowControls(true);
+    }
+  }, [isPresentationMode]);
+
   return (
-    <div className="h-full w-full flex flex-col bg-white">
+    <div className={`h-full w-full flex flex-col ${isPresentationMode ? 'bg-black' : 'bg-white'}`}>
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gray-50 flex-shrink-0">
+      <div className={`flex items-center justify-between p-3 border-b border-gray-200 bg-gray-50 flex-shrink-0 transition-opacity duration-300 ${
+        isPresentationMode && !showControls ? 'opacity-0 pointer-events-none' : 'opacity-100'
+      }`}>
         <div className="flex items-center space-x-3">
           <span className="text-2xl">{getFileIcon()}</span>
           <div>
@@ -183,6 +212,20 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
         </div>
         
         <div className="flex items-center space-x-2">
+          {/* Navigation for PDFs */}
+          {fileExtension === 'pdf' && (
+            <>
+              <Button size="sm" variant="outline" onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm px-2">Page {currentPage}</span>
+              <Button size="sm" variant="outline" onClick={() => setCurrentPage(currentPage + 1)}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <div className="h-4 w-px bg-gray-300 mx-2" />
+            </>
+          )}
+
           {loadError && viewerOptions.length > 1 && (
             <Button size="sm" variant="outline" onClick={handleRetry}>
               <RefreshCw className="h-4 w-4 mr-1" />
@@ -190,19 +233,27 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
             </Button>
           )}
           
-          <Button size="sm" variant="outline" onClick={openInNewTab}>
+          <Button size="sm" variant="default" onClick={openInNewTab} className="bg-blue-600 hover:bg-blue-700">
             <ExternalLink className="h-4 w-4 mr-1" />
-            Ouvrir
+            Nouvel onglet
           </Button>
           
           <Button size="sm" variant="outline" onClick={handleDownload}>
             <Download className="h-4 w-4 mr-1" />
             Télécharger
           </Button>
+
+          {onTogglePresentationMode && (
+            <Button size="sm" variant="outline" onClick={onTogglePresentationMode}>
+              <Presentation className="h-4 w-4 mr-1" />
+              Présentation
+            </Button>
+          )}
           
           {onToggleFullscreen && (
             <Button size="sm" variant="outline" onClick={onToggleFullscreen}>
-              <Eye className="h-4 w-4" />
+              <Maximize2 className="h-4 w-4 mr-1" />
+              Plein écran
             </Button>
           )}
           
@@ -215,7 +266,7 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
       </div>
 
       {/* Content */}
-      <div className="flex-1 relative bg-gray-100">
+      <div className={`flex-1 relative ${isPresentationMode ? 'bg-black' : 'bg-gray-100'}`}>
         {isLoading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-white bg-opacity-90 z-10">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
@@ -263,15 +314,46 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
             </div>
           </div>
         ) : (
-          <iframe
-            src={currentViewer.url}
-            className="w-full h-full border-0"
-            onLoad={handleIframeLoad}
-            onError={handleIframeError}
-            allow="fullscreen"
-            title={fileName}
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
-          />
+          <>
+            <iframe
+              src={currentViewer.url}
+              className="w-full h-full border-0"
+              onLoad={handleIframeLoad}
+              onError={handleIframeError}
+              allow="fullscreen"
+              title={fileName}
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
+            />
+            
+            {/* Floating controls for presentation mode */}
+            {isPresentationMode && showControls && (
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/80 rounded-full px-4 py-2 flex items-center space-x-2 backdrop-blur-sm">
+                {fileExtension === 'pdf' && (
+                  <>
+                    <Button size="sm" variant="ghost" onClick={() => setCurrentPage(Math.max(1, currentPage - 1))} className="text-white hover:bg-white/20">
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <span className="text-white text-sm px-2">Page {currentPage}</span>
+                    <Button size="sm" variant="ghost" onClick={() => setCurrentPage(currentPage + 1)} className="text-white hover:bg-white/20">
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    <div className="h-4 w-px bg-white/30 mx-2" />
+                  </>
+                )}
+                <Button size="sm" variant="ghost" onClick={openInNewTab} className="text-white hover:bg-white/20">
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={handleDownload} className="text-white hover:bg-white/20">
+                  <Download className="h-4 w-4" />
+                </Button>
+                {onClose && (
+                  <Button size="sm" variant="ghost" onClick={onClose} className="text-white hover:bg-white/20">
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

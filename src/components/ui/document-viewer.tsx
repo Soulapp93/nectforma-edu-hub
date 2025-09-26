@@ -20,6 +20,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   onClose
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isPresentationMode, setIsPresentationMode] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [zoom, setZoom] = useState(100);
@@ -37,12 +38,12 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   if (['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'].includes(fileExtension)) {
     return (
       <div className={`fixed inset-0 z-50 ${
-        isFullscreen 
-          ? 'bg-white w-screen h-screen' 
+        isPresentationMode || isFullscreen 
+          ? 'bg-black w-screen h-screen' 
           : 'bg-black bg-opacity-95 flex items-center justify-center p-4'
       }`}>
         <div className={`${
-          isFullscreen 
+          isPresentationMode || isFullscreen 
             ? 'w-screen h-screen' 
             : 'w-full h-full max-w-7xl max-h-[95vh] rounded-lg overflow-hidden bg-white'
         }`}>
@@ -50,7 +51,9 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
             fileUrl={fileUrl} 
             fileName={fileName}
             isFullscreen={isFullscreen}
+            isPresentationMode={isPresentationMode}
             onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
+            onTogglePresentationMode={() => setIsPresentationMode(!isPresentationMode)}
             onClose={onClose}
           />
         </div>
