@@ -11,7 +11,10 @@ import { Input } from '../input';
 import { Slider } from '../slider';
 
 // Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.js',
+  import.meta.url,
+).toString();
 
 interface ModernPDFViewerProps {
   fileUrl: string;
@@ -46,13 +49,16 @@ const ModernPDFViewer: React.FC<ModernPDFViewerProps> = ({
     setLoading(false);
     setError('');
     console.log('PDF loaded successfully:', numPages, 'pages');
-  }, []);
+    console.log('File URL:', fileUrl);
+  }, [fileUrl]);
 
   const onDocumentLoadError = useCallback((error: Error) => {
     console.error('PDF loading error:', error);
+    console.error('File URL:', fileUrl);
+    console.error('Error details:', error.message, error.stack);
     setError(`Erreur de chargement: ${error.message}`);
     setLoading(false);
-  }, []);
+  }, [fileUrl]);
 
   const onPageLoadSuccess = useCallback(() => {
     console.log('Page rendered successfully');
@@ -358,9 +364,14 @@ const ModernPDFViewer: React.FC<ModernPDFViewerProps> = ({
                   </div>
                 }
                 options={{
-                  cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
+                  cMapUrl: '/node_modules/pdfjs-dist/cmaps/',
                   cMapPacked: true,
-                  standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/',
+                  standardFontDataUrl: '/node_modules/pdfjs-dist/standard_fonts/',
+                  httpHeaders: {
+                    'Access-Control-Allow-Origin': '*',
+                  },
+                  withCredentials: false,
+                  verbosity: 1,
                 }}
               >
                 <Page

@@ -19,6 +19,10 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    include: ['pdfjs-dist'],
+  },
+  assetsInclude: ['**/*.pdf'],
   build: {
     minify: mode === 'production' ? 'terser' : false,
     sourcemap: mode === 'development',
@@ -28,6 +32,7 @@ export default defineConfig(({ mode }) => ({
           vendor: ['react', 'react-dom'],
           supabase: ['@supabase/supabase-js'],
           ui: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+          pdf: ['react-pdf', 'pdfjs-dist'],
         },
       },
     },
