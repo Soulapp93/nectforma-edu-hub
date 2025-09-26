@@ -148,13 +148,6 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
           ? 'bg-black w-screen h-screen' 
           : 'bg-black bg-opacity-95 flex items-center justify-center p-4'
       }`}
-      style={{
-        imageRendering: 'crisp-edges',
-        WebkitFontSmoothing: 'antialiased',
-        MozOsxFontSmoothing: 'grayscale',
-        backfaceVisibility: 'hidden',
-        transform: 'translateZ(0)'
-      }}
     >
       <div 
         className={`${
@@ -163,12 +156,8 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
             : 'bg-white flex flex-col w-full h-full max-w-7xl max-h-[95vh] rounded-lg'
         }`}
         style={{
-          imageRendering: 'crisp-edges',
-          WebkitFontSmoothing: 'antialiased',
-          MozOsxFontSmoothing: 'grayscale',
-          backfaceVisibility: 'hidden',
-          transform: 'translateZ(0)',
-          willChange: isFullscreen ? 'transform' : 'auto'
+          contain: 'layout style paint',
+          isolation: 'isolate'
         }}
       >
         {/* Header */}

@@ -102,12 +102,8 @@ const ImprovedPDFViewer: React.FC<ImprovedPDFViewerProps> = ({
         isFullscreen ? 'fixed inset-0 z-50 bg-white' : 'w-full h-full'
       } flex flex-col`}
       style={{
-        imageRendering: 'crisp-edges',
-        WebkitFontSmoothing: 'antialiased',
-        MozOsxFontSmoothing: 'grayscale',
-        backfaceVisibility: 'hidden',
-        transform: 'translateZ(0)',
-        willChange: isFullscreen ? 'transform' : 'auto'
+        contain: 'layout style paint',
+        isolation: 'isolate'
       }}
     >
       
@@ -200,14 +196,14 @@ const ImprovedPDFViewer: React.FC<ImprovedPDFViewerProps> = ({
               onLoad={handleIframeLoad}
               onError={handleIframeError}
               style={{
-                imageRendering: 'crisp-edges',
-                WebkitFontSmoothing: 'antialiased',
-                MozOsxFontSmoothing: 'grayscale',
-                backfaceVisibility: 'hidden',
-                transform: 'translateZ(0)',
-                willChange: isFullscreen ? 'transform' : 'auto',
-                minHeight: '100%',
-                minWidth: '100%'
+                display: 'block',
+                width: '100%',
+                height: '100%',
+                border: 'none',
+                outline: 'none',
+                background: 'white',
+                isolation: 'isolate',
+                contain: 'layout style paint'
               }}
             />
           </>
