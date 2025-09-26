@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Maximize2, Minimize2, ChevronLeft, ChevronRight, ExternalLink, Download, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from './button';
-import UniversalFileViewer from './viewers/UniversalFileViewer';
+import AdvancedFileViewer from './viewers/AdvancedFileViewer';
 import ImageViewer from './viewers/ImageViewer';
 import TextViewer from './viewers/TextViewer';
 import UnsupportedViewer from './viewers/UnsupportedViewer';
@@ -47,7 +47,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
             ? 'w-screen h-screen' 
             : 'w-full h-full max-w-7xl max-h-[95vh] rounded-lg overflow-hidden bg-white'
         }`}>
-          <UniversalFileViewer 
+          <AdvancedFileViewer 
             fileUrl={fileUrl} 
             fileName={fileName}
             isFullscreen={isFullscreen}
