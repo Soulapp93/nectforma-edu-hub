@@ -97,9 +97,19 @@ const ImprovedPDFViewer: React.FC<ImprovedPDFViewerProps> = ({
   };
 
   return (
-    <div className={`${
-      isFullscreen ? 'fixed inset-0 z-50 bg-white' : 'w-full h-full'
-    } flex flex-col`}>
+    <div 
+      className={`${
+        isFullscreen ? 'fixed inset-0 z-50 bg-white' : 'w-full h-full'
+      } flex flex-col`}
+      style={{
+        imageRendering: 'crisp-edges',
+        WebkitFontSmoothing: 'antialiased',
+        MozOsxFontSmoothing: 'grayscale',
+        backfaceVisibility: 'hidden',
+        transform: 'translateZ(0)',
+        willChange: isFullscreen ? 'transform' : 'auto'
+      }}
+    >
       
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-200 flex-shrink-0">
@@ -189,6 +199,16 @@ const ImprovedPDFViewer: React.FC<ImprovedPDFViewerProps> = ({
               allow="fullscreen"
               onLoad={handleIframeLoad}
               onError={handleIframeError}
+              style={{
+                imageRendering: 'crisp-edges',
+                WebkitFontSmoothing: 'antialiased',
+                MozOsxFontSmoothing: 'grayscale',
+                backfaceVisibility: 'hidden',
+                transform: 'translateZ(0)',
+                willChange: isFullscreen ? 'transform' : 'auto',
+                minHeight: '100%',
+                minWidth: '100%'
+              }}
             />
           </>
         )}

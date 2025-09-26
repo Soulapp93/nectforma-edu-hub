@@ -142,16 +142,35 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   const showHeader = !isFullscreen;
 
   return (
-    <div className={`fixed inset-0 z-50 ${
-      isFullscreen 
-        ? 'bg-black w-screen h-screen' 
-        : 'bg-black bg-opacity-95 flex items-center justify-center p-4'
-    }`}>
-      <div className={`${
+    <div 
+      className={`fixed inset-0 z-50 ${
         isFullscreen 
-          ? 'w-screen h-screen bg-white' 
-          : 'bg-white flex flex-col w-full h-full max-w-7xl max-h-[95vh] rounded-lg'
-      }`}>
+          ? 'bg-black w-screen h-screen' 
+          : 'bg-black bg-opacity-95 flex items-center justify-center p-4'
+      }`}
+      style={{
+        imageRendering: 'crisp-edges',
+        WebkitFontSmoothing: 'antialiased',
+        MozOsxFontSmoothing: 'grayscale',
+        backfaceVisibility: 'hidden',
+        transform: 'translateZ(0)'
+      }}
+    >
+      <div 
+        className={`${
+          isFullscreen 
+            ? 'w-screen h-screen bg-white' 
+            : 'bg-white flex flex-col w-full h-full max-w-7xl max-h-[95vh] rounded-lg'
+        }`}
+        style={{
+          imageRendering: 'crisp-edges',
+          WebkitFontSmoothing: 'antialiased',
+          MozOsxFontSmoothing: 'grayscale',
+          backfaceVisibility: 'hidden',
+          transform: 'translateZ(0)',
+          willChange: isFullscreen ? 'transform' : 'auto'
+        }}
+      >
         {/* Header */}
         {showHeader && (
           <div className="flex flex-col border-b border-gray-200 bg-white rounded-t-lg flex-shrink-0">
