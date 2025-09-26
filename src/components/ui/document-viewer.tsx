@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { X, Maximize2, Minimize2, ChevronLeft, ChevronRight, ExternalLink, Download, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from './button';
-import BasicPDFViewer from './viewers/BasicPDFViewer';
-import AdvancedPDFViewer from './viewers/AdvancedPDFViewer';
-import ImprovedPDFViewer from './viewers/ImprovedPDFViewer';
+import ModernPDFViewer from './viewers/ModernPDFViewer';
 import ImageViewer from './viewers/ImageViewer';
 import ImprovedOfficeViewer from './viewers/ImprovedOfficeViewer';
 import TextViewer from './viewers/TextViewer';
@@ -36,12 +34,12 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
 
   const fileExtension = getFileExtension(fileName);
 
-  // Pour les PDFs, utiliser le visualiseur amélioré avec fallbacks
+  // Pour les PDFs, utiliser le nouveau visualiseur moderne
   if (fileExtension === 'pdf') {
     return (
       <div className={`fixed inset-0 z-50 ${
         isFullscreen 
-          ? 'bg-black w-screen h-screen' 
+          ? 'bg-gray-900 w-screen h-screen' 
           : 'bg-black bg-opacity-95 flex items-center justify-center p-4'
       }`}>
         <div className={`${
@@ -49,7 +47,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
             ? 'w-screen h-screen' 
             : 'w-full h-full max-w-7xl max-h-[95vh] rounded-lg overflow-hidden'
         }`}>
-          <ImprovedPDFViewer 
+          <ModernPDFViewer 
             fileUrl={fileUrl} 
             fileName={fileName}
             isFullscreen={isFullscreen}
