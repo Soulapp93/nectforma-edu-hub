@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Maximize2, Minimize2, ChevronLeft, ChevronRight, ExternalLink, Download, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from './button';
-import ModernPDFViewer from './viewers/ModernPDFViewer';
+import SimplePDFViewer from './viewers/SimplePDFViewer';
 import ImageViewer from './viewers/ImageViewer';
 import ImprovedOfficeViewer from './viewers/ImprovedOfficeViewer';
 import TextViewer from './viewers/TextViewer';
@@ -34,7 +34,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
 
   const fileExtension = getFileExtension(fileName);
 
-  // Pour les PDFs, utiliser le nouveau visualiseur moderne
+  // Pour les PDFs, utiliser le nouveau visualiseur simplifié
   if (fileExtension === 'pdf') {
     return (
       <div className={`fixed inset-0 z-50 ${
@@ -47,7 +47,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
             ? 'w-screen h-screen' 
             : 'w-full h-full max-w-7xl max-h-[95vh] rounded-lg overflow-hidden'
         }`}>
-          <ModernPDFViewer 
+          <SimplePDFViewer 
             fileUrl={fileUrl} 
             fileName={fileName}
             isFullscreen={isFullscreen}

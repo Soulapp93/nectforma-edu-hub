@@ -10,11 +10,16 @@ import { Alert, AlertDescription } from '../alert';
 import { Input } from '../input';
 import { Slider } from '../slider';
 
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.js',
-  import.meta.url,
-).toString();
+// Configure PDF.js worker avec fallback
+try {
+  pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.min.js',
+    import.meta.url,
+  ).toString();
+} catch (error) {
+  console.warn('Fallback to CDN worker:', error);
+  pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+}
 
 interface ModernPDFViewerProps {
   fileUrl: string;
@@ -56,6 +61,8 @@ const ModernPDFViewer: React.FC<ModernPDFViewerProps> = ({
     console.error('PDF loading error:', error);
     console.error('File URL:', fileUrl);
     console.error('Error details:', error.message, error.stack);
+    console.error('PDF.js version:', pdfjs.version);
+    console.error('Worker src:', pdfjs.GlobalWorkerOptions.workerSrc);
     setError(`Erreur de chargement: ${error.message}`);
     setLoading(false);
   }, [fileUrl]);
