@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { X, Maximize2, Minimize2, ChevronLeft, ChevronRight, ExternalLink, Download, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from './button';
-import SimplePDFViewer from './viewers/SimplePDFViewer';
+import UniversalFileViewer from './viewers/UniversalFileViewer';
 import ImageViewer from './viewers/ImageViewer';
-import ImprovedOfficeViewer from './viewers/ImprovedOfficeViewer';
 import TextViewer from './viewers/TextViewer';
 import UnsupportedViewer from './viewers/UnsupportedViewer';
 
@@ -34,20 +33,20 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
 
   const fileExtension = getFileExtension(fileName);
 
-  // Pour les PDFs, utiliser le nouveau visualiseur simplifié
-  if (fileExtension === 'pdf') {
+  // Pour les PDFs et fichiers Office, utiliser le visualiseur universel
+  if (['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'].includes(fileExtension)) {
     return (
       <div className={`fixed inset-0 z-50 ${
         isFullscreen 
-          ? 'bg-gray-900 w-screen h-screen' 
+          ? 'bg-white w-screen h-screen' 
           : 'bg-black bg-opacity-95 flex items-center justify-center p-4'
       }`}>
         <div className={`${
           isFullscreen 
             ? 'w-screen h-screen' 
-            : 'w-full h-full max-w-7xl max-h-[95vh] rounded-lg overflow-hidden'
+            : 'w-full h-full max-w-7xl max-h-[95vh] rounded-lg overflow-hidden bg-white'
         }`}>
-          <SimplePDFViewer 
+          <UniversalFileViewer 
             fileUrl={fileUrl} 
             fileName={fileName}
             isFullscreen={isFullscreen}
@@ -67,19 +66,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
       return <ImageViewer fileUrl={fileUrl} fileName={fileName} />;
     }
 
-    // Fichiers Office
-    if (['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(fileExtension)) {
-      return (
-        <ImprovedOfficeViewer 
-          fileUrl={fileUrl} 
-          fileName={fileName} 
-          fileExtension={fileExtension}
-          isFullscreen={isFullscreen}
-          onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
-          onClose={onClose}
-        />
-      );
-    }
+    // Les fichiers Office sont maintenant gérés plus haut avec le UniversalFileViewer
 
     // Fichiers texte
     if (['txt', 'md', 'json', 'xml', 'csv', 'log'].includes(fileExtension)) {
