@@ -1,447 +1,234 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  BookOpen, 
-  Users, 
-  Calendar, 
-  MessageSquare, 
-  Shield, 
-  Zap, 
-  Check, 
-  ArrowRight,
-  Star,
-  PlayCircle,
-  BarChart3,
-  FileText,
-  Globe,
-  Smartphone,
-  Target,
-  Clock,
-  Award,
-  Lightbulb,
-  Menu,
-  X
-} from 'lucide-react';
-
-// Import illustrations
-import illustrationFormations from '@/assets/illustration-formations.png';
-import illustrationUsers from '@/assets/illustration-users.png';
-import illustrationPlanning from '@/assets/illustration-planning.png';
-import illustrationAnalytics from '@/assets/illustration-analytics.png';
-import illustrationEmargement from '@/assets/illustration-emargement.png';
-import illustrationElearning from '@/assets/illustration-elearning.png';
+import { BookOpen, Users, Calendar, MessageSquare, Shield, Zap, Check } from 'lucide-react';
 
 const Index = () => {
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-
   const features = [
     {
-      title: 'Toutes les fonctionnalités',
-      subtitle: 'Une plateforme complète pour la gestion éducative',
-      illustration: illustrationFormations,
-      color: 'from-purple-400 to-purple-600'
+      icon: BookOpen,
+      title: 'Gestion des Formations',
+      description: 'Créez et gérez vos formations avec des modules personnalisés'
     },
     {
-      title: 'Gestion des formations',
-      subtitle: 'Créez et organisez vos programmes éducatifs',
-      illustration: illustrationFormations,
-      color: 'from-emerald-400 to-teal-500'
+      icon: Users,
+      title: 'Gestion des Utilisateurs',
+      description: 'Administrez facilement vos formateurs et étudiants'
     },
     {
-      title: 'Gestion des utilisateurs',
-      subtitle: 'Administrez facilement votre équipe',
-      illustration: illustrationUsers,
-      color: 'from-rose-400 to-pink-500'
+      icon: Calendar,
+      title: 'Emploi du Temps',
+      description: 'Planifiez et organisez vos cours avec notre interface intuitive'
     },
     {
-      title: 'Planification intelligente',
-      subtitle: 'Organisez vos séances efficacement',
-      illustration: illustrationPlanning,
-      color: 'from-blue-400 to-cyan-500'
+      icon: MessageSquare,
+      title: 'Messagerie Intégrée',
+      description: 'Communiquez efficacement avec votre équipe'
     },
     {
-      title: 'Analyses et rapports',
-      subtitle: 'Suivez les performances en temps réel',
-      illustration: illustrationAnalytics,
-      color: 'from-indigo-400 to-purple-500'
+      icon: Shield,
+      title: 'Coffre-fort Numérique',
+      description: 'Stockez vos documents en toute sécurité'
     },
     {
-      title: 'Émargement numérique',
-      subtitle: 'Modernisez vos signatures électroniques',
-      illustration: illustrationEmargement,
-      color: 'from-teal-400 to-emerald-500'
-    },
-    {
-      title: 'Classes virtuelles',
-      subtitle: 'Animez vos formations à distance',
-      illustration: illustrationElearning,
-      color: 'from-orange-400 to-red-500'
-    },
-    {
-      title: 'Messagerie intégrée',
-      subtitle: 'Communiquez efficacement',
-      illustration: illustrationUsers,
-      color: 'from-violet-400 to-purple-500'
-    },
-    {
-      title: 'Coffre-fort numérique',
-      subtitle: 'Stockez en toute sécurité',
-      illustration: illustrationFormations,
-      color: 'from-green-400 to-teal-500'
+      icon: Zap,
+      title: 'Tableau de Bord',
+      description: 'Suivez vos indicateurs de performance en temps réel'
     }
   ];
 
-  const testimonials = [
+  const plans = [
     {
-      name: 'Marie Dubois',
-      role: 'Directrice de Formation',
-      company: 'Institut Supérieur Paris',
-      content: 'NectForma a révolutionné notre gestion pédagogique. Interface intuitive et gain de temps énorme !',
-      rating: 5,
-      avatar: 'MD'
+      name: 'Basic',
+      price: '24,99',
+      features: [
+        'Jusqu\'à 50 étudiants',
+        '3 Go de stockage',
+        'Gestion des formations',
+        'Emploi du temps basique',
+        'Support email'
+      ]
     },
     {
-      name: 'Jean-Pierre Martin',
-      role: 'Responsable RH',
-      company: 'TechCorp Solutions',
-      content: 'Fonctionnalités complètes et support exceptionnel. Exactement ce dont nous avions besoin.',
-      rating: 5,
-      avatar: 'JM'
+      name: 'Essentiel',
+      price: '49',
+      popular: true,
+      features: [
+        'Jusqu\'à 200 étudiants',
+        '10 Go de stockage',
+        'Messagerie intégrée',
+        'Émargement numérique',
+        'Support prioritaire'
+      ]
     },
     {
-      name: 'Sophie Laurent',
-      role: 'Formatrice',
-      company: 'Centre de Formation Pro',
-      content: 'Les outils e-learning sont fantastiques. Mes étudiants adorent les nouvelles fonctionnalités !',
-      rating: 5,
-      avatar: 'SL'
+      name: 'Premium',
+      price: '99',
+      features: [
+        'Étudiants illimités',
+        '100 Go de stockage',
+        'Toutes les fonctionnalités',
+        'API personnalisée',
+        'Support dédié'
+      ]
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-white/20 shadow-sm">
+      <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            {/* Logo */}
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-xl">NF</span>
+              <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">NF</span>
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                  NECTFORMA
-                </h1>
-                <p className="text-xs text-muted-foreground hidden sm:block">Plateforme éducative moderne</p>
+                <h1 className="text-2xl font-bold text-gray-900">NECTFORMA</h1>
+                <p className="text-sm text-gray-600">Plateforme de gestion éducative</p>
               </div>
             </div>
-
-            {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-8">
-              <a href="#solution" className="text-foreground/80 hover:text-emerald-600 transition-colors font-medium">
-                Solution
-              </a>
-              <a href="#fonctionnalites" className="text-foreground/80 hover:text-emerald-600 transition-colors font-medium">
-                Fonctionnalités
-              </a>
-              <a href="#tarifs" className="text-foreground/80 hover:text-emerald-600 transition-colors font-medium">
-                Tarifs  
-              </a>
-              <a href="#temoignages" className="text-foreground/80 hover:text-emerald-600 transition-colors font-medium">
-                Témoignages
-              </a>
-              <a href="#ressources" className="text-foreground/80 hover:text-emerald-600 transition-colors font-medium">
-                Ressources
-              </a>
-            </nav>
-
-            {/* CTA Buttons */}
-            <div className="hidden sm:flex items-center space-x-3">
+            <div className="flex space-x-4">
               <Link 
-                to="/auth" 
-                className="px-6 py-2.5 text-emerald-600 border border-emerald-200 rounded-xl hover:bg-emerald-50 transition-all duration-200 font-medium"
+                to="/dashboard" 
+                className="px-4 py-2 text-purple-600 hover:text-purple-700 font-medium"
               >
-                Se connecter
+                Connexion
               </Link>
               <Link 
-                to="/auth" 
-                className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-200 font-medium"
+                to="/register" 
+                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium"
               >
-                Essai gratuit
+                Commencer gratuitement
               </Link>
             </div>
-
-            {/* Mobile Menu Button */}
-            <button 
-              className="lg:hidden p-2"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
           </div>
-
-          {/* Mobile Menu */}
-          {isMenuOpen && (
-            <div className="lg:hidden py-4 border-t border-white/20">
-              <nav className="flex flex-col space-y-4">
-                <a href="#solution" className="text-foreground/80 hover:text-emerald-600 transition-colors font-medium">
-                  Solution
-                </a>
-                <a href="#fonctionnalites" className="text-foreground/80 hover:text-emerald-600 transition-colors font-medium">
-                  Fonctionnalités
-                </a>
-                <a href="#tarifs" className="text-foreground/80 hover:text-emerald-600 transition-colors font-medium">
-                  Tarifs
-                </a>
-                <div className="flex flex-col space-y-2 pt-4">
-                  <Link 
-                    to="/auth" 
-                    className="px-6 py-2.5 text-center text-emerald-600 border border-emerald-200 rounded-xl hover:bg-emerald-50 transition-all duration-200 font-medium"
-                  >
-                    Se connecter
-                  </Link>
-                  <Link 
-                    to="/auth" 
-                    className="px-6 py-2.5 text-center bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 font-medium"
-                  >
-                    Essai gratuit
-                  </Link>
-                </div>
-              </nav>
-            </div>
-          )}
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/30 via-teal-100/20 to-cyan-100/30"></div>
-        <div className="max-w-7xl mx-auto relative">
-          <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center space-x-2 bg-white/60 backdrop-blur-sm rounded-full px-6 py-3 mb-8 border border-white/30 shadow-sm">
-              <Lightbulb className="h-5 w-5 text-emerald-600" />
-              <span className="text-sm font-medium text-foreground/80">Nouvelle génération de gestion éducative</span>
-            </div>
-            
-            <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-8 leading-tight">
-              Révolutionnez votre
-              <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent block mt-2">
-                gestion de formation
-              </span>
-            </h1>
-            
-            <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
-              Rejoignez des milliers d'établissements qui font confiance à NectForma 
-              pour digitaliser leur gestion pédagogique et administrative.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6 mb-16">
-              <Link 
-                to="/auth" 
-                className="group px-10 py-5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 font-semibold text-lg flex items-center space-x-3 shadow-lg"
-              >
-                <span>Commencer gratuitement</span>
-                <ArrowRight className="h-6 w-6 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <button className="group px-10 py-5 bg-white/80 backdrop-blur-sm text-foreground rounded-2xl hover:bg-white transition-all duration-300 font-semibold text-lg flex items-center space-x-3 border border-white/30 shadow-lg">
-                <PlayCircle className="h-6 w-6 text-emerald-600" />
-                <span>Voir la démo</span>
-              </button>
-            </div>
-
-            <div className="text-center text-muted-foreground text-sm">
-              <p>Rejoignez plus de <span className="font-semibold text-emerald-600">10 000</span> utilisateurs actifs</p>
-            </div>
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto text-center">
+          <h1 className="text-5xl font-bold text-gray-900 mb-6">
+            Révolutionnez votre gestion de formation
+          </h1>
+          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+            NectForma est la plateforme SaaS complète pour digitaliser et automatiser 
+            la gestion pédagogique de votre établissement.
+          </p>
+          <div className="flex justify-center space-x-4">
+            <Link 
+              to="/register" 
+              className="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium text-lg"
+            >
+              Commencer gratuitement
+            </Link>
+            <button className="px-8 py-3 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 font-medium text-lg">
+              Voir la démo
+            </button>
           </div>
         </div>
       </section>
 
-      {/* Features Grid - Teetche Style */}
-      <section id="fonctionnalites" className="py-20 px-4 sm:px-6 lg:px-8 bg-white/30 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto">
+      {/* Features Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center space-x-2 bg-purple-100/80 rounded-full px-6 py-3 mb-6">
-              <Target className="h-5 w-5 text-purple-600" />
-              <span className="text-sm font-medium text-purple-800">Fonctionnalités</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              Toutes les fonctionnalités
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Tout ce dont vous avez besoin
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Une solution complète pour moderniser et optimiser votre gestion éducative
+            <p className="text-xl text-gray-600">
+              Une solution complète pour la gestion de votre établissement
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {features.map((feature, index) => (
-              <div 
-                key={index}
-                className="group bg-white/80 backdrop-blur-sm rounded-3xl p-8 hover:shadow-2xl transition-all duration-500 border border-white/30 hover:scale-105"
-              >
-                <div className="text-center">
-                  <div className="mb-6 relative">
-                    <img 
-                      src={feature.illustration} 
-                      alt={feature.title}
-                      className="w-full h-32 object-contain rounded-2xl"
-                    />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <div key={index} className="p-6 bg-gray-50 rounded-xl hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                    <Icon className="h-6 w-6 text-purple-600" />
                   </div>
-                  <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-emerald-600 transition-colors">
-                    {feature.title}
-                  </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {feature.subtitle}
-                  </p>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
+                  <p className="text-gray-600">{feature.description}</p>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section id="temoignages" className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+      {/* Pricing Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center space-x-2 bg-rose-100/80 rounded-full px-6 py-3 mb-6">
-              <Star className="h-5 w-5 text-rose-600" />
-              <span className="text-sm font-medium text-rose-800">Témoignages</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              Ils nous font confiance
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Choisissez votre plan
             </h2>
-            <p className="text-xl text-muted-foreground">
-              Découvrez l'expérience de nos utilisateurs satisfaits
+            <p className="text-xl text-gray-600">
+              Des tarifs adaptés à la taille de votre établissement
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {testimonials.map((testimonial, index) => (
-              <div 
-                key={index}
-                className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 hover:shadow-xl transition-all duration-300 border border-white/30"
-              >
-                <div className="flex items-center space-x-1 mb-6">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <p className="text-foreground/80 mb-6 italic leading-relaxed text-lg">
-                  "{testimonial.content}"
-                </p>
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">
-                      {testimonial.avatar}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {plans.map((plan, index) => (
+              <div key={index} className={`p-8 bg-white rounded-xl shadow-sm border ${
+                plan.popular ? 'border-purple-500 transform scale-105' : 'border-gray-200'
+              }`}>
+                {plan.popular && (
+                  <div className="text-center mb-4">
+                    <span className="bg-purple-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                      Le plus populaire
                     </span>
                   </div>
-                  <div>
-                    <div className="font-bold text-foreground">{testimonial.name}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {testimonial.role}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {testimonial.company}
-                    </div>
+                )}
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+                  <div className="text-4xl font-bold text-gray-900">
+                    {plan.price}€
+                    <span className="text-lg font-normal text-gray-600">/mois</span>
                   </div>
                 </div>
+                <ul className="space-y-3 mb-8">
+                  {plan.features.map((feature, featureIndex) => (
+                    <li key={featureIndex} className="flex items-center">
+                      <Check className="h-5 w-5 text-green-500 mr-3" />
+                      <span className="text-gray-700">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <button className={`w-full py-3 rounded-lg font-medium ${
+                  plan.popular 
+                    ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                    : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                }`}>
+                  Choisir ce plan
+                </button>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/90 to-teal-700/90"></div>
-        <div className="max-w-4xl mx-auto text-center relative">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-8">
-            Prêt à transformer votre gestion éducative ?
-          </h2>
-          <p className="text-xl text-emerald-100 mb-12 leading-relaxed">
-            Rejoignez des milliers d'établissements qui ont choisi NectForma pour moderniser leur approche pédagogique
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6">
-            <Link 
-              to="/auth" 
-              className="px-10 py-5 bg-white text-emerald-600 rounded-2xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 font-bold text-lg"
-            >
-              Commencer maintenant
-            </Link>
-            <button className="px-10 py-5 border-2 border-white/30 text-white rounded-2xl hover:bg-white/10 transition-all duration-300 font-bold text-lg">
-              Planifier une démo
-            </button>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-white py-16">
+      <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-            <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center">
-                  <span className="text-white font-bold text-xl">NF</span>
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold">NECTFORMA</h3>
-                  <p className="text-slate-400 text-sm">Plateforme éducative moderne</p>
-                </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">NF</span>
               </div>
-              <p className="text-slate-400 leading-relaxed max-w-md mb-6">
-                Révolutionnez votre gestion éducative avec notre plateforme intuitive 
-                et complète, conçue pour les établissements modernes.
-              </p>
-              <div className="flex space-x-4">
-                <span className="text-slate-400 text-sm">Suivez-nous:</span>
-                <div className="flex space-x-3">
-                  <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-emerald-600 transition-colors cursor-pointer">
-                    <Globe className="h-4 w-4" />
-                  </div>
-                  <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-emerald-600 transition-colors cursor-pointer">
-                    <MessageSquare className="h-4 w-4" />
-                  </div>
-                </div>
+              <div>
+                <h3 className="text-xl font-bold">NECTFORMA</h3>
+                <p className="text-gray-400 text-sm">© 2024 NectForma. Tous droits réservés.</p>
               </div>
             </div>
-
-            <div>
-              <h4 className="font-bold mb-6 text-lg">Produit</h4>
-              <ul className="space-y-3 text-slate-400">
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Fonctionnalités</a></li>
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Tarifs</a></li>
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Démo</a></li>
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Mises à jour</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-bold mb-6 text-lg">Support</h4>
-              <ul className="space-y-3 text-slate-400">
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Centre d'aide</a></li>
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Documentation</a></li>
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Contact</a></li>
-                <li><a href="#" className="hover:text-emerald-400 transition-colors">Status</a></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-slate-400 text-sm mb-4 md:mb-0">
-              © 2024 NectForma. Tous droits réservés.
-            </p>
-            <div className="flex flex-wrap justify-center space-x-6 text-sm">
-              <a href="#" className="text-slate-400 hover:text-emerald-400 transition-colors">
-                Politique de confidentialité
-              </a>
-              <a href="#" className="text-slate-400 hover:text-emerald-400 transition-colors">
-                Conditions d'utilisation
-              </a>
-              <a href="#" className="text-slate-400 hover:text-emerald-400 transition-colors">
-                Mentions légales
-              </a>
+            <div className="flex space-x-6">
+              <a href="#" className="text-gray-400 hover:text-white">Conditions d'utilisation</a>
+              <a href="#" className="text-gray-400 hover:text-white">Politique de confidentialité</a>
+              <a href="#" className="text-gray-400 hover:text-white">Support</a>
             </div>
           </div>
         </div>

@@ -26,7 +26,6 @@ import GestionEtablissement from './pages/GestionEtablissement';
 import Compte from './pages/Compte';
 import NotFound from './pages/NotFound';
 import Auth from './pages/Auth';
-import Index from './pages/Index';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,14 +43,11 @@ const queryClient = new QueryClient({
 const AppContent = () => {
   const location = useLocation();
   const isAuthPage = location.pathname === '/auth';
-  const isHomePage = location.pathname === '/';
 
-  // Show public pages without sidebar
-  if (isAuthPage || isHomePage) {
+  if (isAuthPage) {
     return (
       <div className="min-h-screen w-full">
         <Routes>
-          <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
         </Routes>
       </div>
@@ -71,7 +67,7 @@ const AppContent = () => {
           </header>
           <main className="flex-1 overflow-auto">
             <Routes>
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/administration" element={<ProtectedRoute><Administration /></ProtectedRoute>} />
               <Route path="/formations" element={<ProtectedRoute><Formations /></ProtectedRoute>} />
               <Route path="/formations/:formationId" element={<ProtectedRoute><FormationDetail /></ProtectedRoute>} />
