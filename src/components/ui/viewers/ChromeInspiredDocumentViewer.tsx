@@ -11,14 +11,7 @@ import { Button } from '../button';
 import { Input } from '../input';
 
 // Configure PDF.js worker
-try {
-  pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-    'pdfjs-dist/build/pdf.worker.min.js',
-    import.meta.url,
-  ).toString();
-} catch (error) {
-  pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
-}
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 interface ChromeInspiredDocumentViewerProps {
   fileUrl: string;
@@ -145,7 +138,8 @@ const ChromeInspiredDocumentViewer: React.FC<ChromeInspiredDocumentViewerProps> 
   };
 
   const onDocumentLoadError = (error: Error) => {
-    setError(`Erreur: ${error.message}`);
+    console.error('Erreur de chargement du document:', error);
+    setError(`Erreur de chargement: ${error.message || 'Impossible de charger le fichier'}`);
     setLoading(false);
   };
 
@@ -230,11 +224,20 @@ const ChromeInspiredDocumentViewer: React.FC<ChromeInspiredDocumentViewerProps> 
               onLoadSuccess={onDocumentLoadSuccess}
               onLoadError={onDocumentLoadError}
               loading={<div className="animate-pulse bg-gray-200 w-96 h-96 rounded" />}
+              options={{
+                cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
+                cMapPacked: true,
+                standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`
+              }}
             >
               <Page
                 pageNumber={currentPage}
                 className="shadow-lg border border-gray-200"
                 loading={<div className="animate-pulse bg-gray-200 w-96 h-96 rounded" />}
+                onLoadError={(error) => {
+                  console.error('Erreur de chargement de la page:', error);
+                  setError('Erreur lors du chargement de la page');
+                }}
               />
             </Document>
           </div>
@@ -242,6 +245,25 @@ const ChromeInspiredDocumentViewer: React.FC<ChromeInspiredDocumentViewerProps> 
       );
     }
 
+    // For other file types, use iframe or direct display
+    if (fileExtension === 'jpg' || fileExtension === 'jpeg' || fileExtension === 'png' || fileExtension === 'gif' || fileExtension === 'webp') {
+      return (
+        <div className="flex justify-center items-center h-full p-4">
+          <img
+            src={fileUrl}
+            alt={fileName}
+            className="max-w-full max-h-full object-contain shadow-lg border border-gray-200"
+            style={{
+              transform: `rotate(${rotation}deg) scale(${zoom / 100})`,
+              transformOrigin: 'center center'
+            }}
+            onError={() => setError('Erreur lors du chargement de l\'image')}
+            onLoad={() => setLoading(false)}
+          />
+        </div>
+      );
+    }
+    
     // For other file types, use iframe
     return (
       <iframe
@@ -252,6 +274,8 @@ const ChromeInspiredDocumentViewer: React.FC<ChromeInspiredDocumentViewerProps> 
           transform: `rotate(${rotation}deg) scale(${zoom / 100})`,
           transformOrigin: 'center center'
         }}
+        onError={() => setError('Erreur lors du chargement du fichier')}
+        onLoad={() => setLoading(false)}
       />
     );
   };
