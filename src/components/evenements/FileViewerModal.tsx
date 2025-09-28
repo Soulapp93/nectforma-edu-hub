@@ -1,5 +1,5 @@
 import React from 'react';
-import DocumentViewer from '@/components/ui/document-viewer';
+import ChromeInspiredDocumentViewer from '@/components/ui/viewers/ChromeInspiredDocumentViewer';
 
 interface FileViewerModalProps {
   isOpen: boolean;
@@ -14,11 +14,8 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({
   fileUrl,
   fileName
 }) => {
-  if (!isOpen) return null;
-
-  // Utiliser directement le DocumentViewer existant qui gère déjà tous les types de fichiers
   return (
-    <DocumentViewer
+    <ChromeInspiredDocumentViewer
       fileUrl={fileUrl}
       fileName={fileName}
       isOpen={isOpen}
