@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Clock, Users, Eye, Edit, FileText } from 'lucide-react';
 import { formationService, Formation } from '@/services/formationService';
 import { Button } from '@/components/ui/button';
@@ -17,12 +17,16 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 const FormationDetail = () => {
   const { formationId } = useParams<{ formationId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [formation, setFormation] = useState<Formation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const { userRole } = useCurrentUser();
+
+  // Get navigation context
+  const from = searchParams.get('from') || 'formations';
 
   useEffect(() => {
     const fetchFormation = async () => {
@@ -50,12 +54,28 @@ const FormationDetail = () => {
     );
   }
 
+  // Get appropriate back navigation
+  const getBackNavigation = () => {
+    if (from === 'administration') {
+      return {
+        path: '/administration?tab=formations',
+        label: 'Retour à l\'administration'
+      };
+    }
+    return {
+      path: '/formations',
+      label: 'Retour aux formations'
+    };
+  };
+
+  const backNav = getBackNavigation();
+
   if (error || !formation) {
     return (
       <div className="p-8">
         <div className="text-red-600">Erreur: {error || 'Formation non trouvée'}</div>
-        <Button onClick={() => navigate('/formations')} className="mt-4">
-          Retour aux formations
+        <Button onClick={() => navigate(backNav.path)} className="mt-4">
+          {backNav.label}
         </Button>
       </div>
     );
@@ -69,11 +89,11 @@ const FormationDetail = () => {
       <div className="bg-white border-b border-gray-200 px-8 py-4">
         <Button 
           variant="ghost" 
-          onClick={() => navigate('/formations')}
+          onClick={() => navigate(backNav.path)}
           className="flex items-center text-gray-600 hover:text-gray-900"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Retour aux formations
+          {backNav.label}
         </Button>
       </div>
 
@@ -119,7 +139,7 @@ const FormationDetail = () => {
               </Button>
               <Button 
                 variant="secondary" 
-                onClick={() => navigate(`/cahier-texte/formation/${formation.id}`)}
+                onClick={() => navigate(`/cahier-texte/formation/${formation.id}?from=formations&formationId=${formation.id}`)}
                 className="bg-white/20 border-white/30 text-white hover:bg-white/30"
               >
                 <BookOpen className="h-4 w-4 mr-2" />

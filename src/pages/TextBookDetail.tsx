@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -22,7 +22,12 @@ import { fr } from 'date-fns/locale';
 const TextBookDetail: React.FC = () => {
   const { textBookId } = useParams<{ textBookId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
+
+  // Get navigation context
+  const from = searchParams.get('from') || 'administration';
+  const formationId = searchParams.get('formationId');
 
   const [textBook, setTextBook] = useState<TextBook | null>(null);
   const [entries, setEntries] = useState<TextBookEntry[]>([]);
@@ -333,13 +338,29 @@ const TextBookDetail: React.FC = () => {
     );
   }
 
+  // Get appropriate back navigation
+  const getBackNavigation = () => {
+    if (from === 'formations' && formationId) {
+      return {
+        path: `/formations/${formationId}`,
+        label: 'Retour à la formation'
+      };
+    }
+    return {
+      path: '/administration?tab=textbooks',
+      label: 'Retour à l\'administration'
+    };
+  };
+
+  const backNav = getBackNavigation();
+
   if (!textBook) {
     return (
       <div className="text-center py-8">
         <h2 className="text-xl font-semibold mb-4">Cahier de texte non trouvé</h2>
-        <Button onClick={() => navigate('/administration')}>
+        <Button onClick={() => navigate(backNav.path)}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Retour à l'administration
+          {backNav.label}
         </Button>
       </div>
     );
@@ -352,11 +373,11 @@ const TextBookDetail: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <Button
             variant="outline"
-            onClick={() => navigate('/administration')}
+            onClick={() => navigate(backNav.path)}
             className="mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour à l'administration
+            {backNav.label}
           </Button>
           
           <Button onClick={() => setIsAddEntryModalOpen(true)}>

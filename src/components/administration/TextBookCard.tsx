@@ -32,7 +32,7 @@ const TextBookCard: React.FC<TextBookCardProps> = ({ textBook, onUpdate }) => {
   }, [textBook.id]);
 
   const handleOpenTextBook = () => {
-    navigate(`/cahier-texte/${textBook.id}`);
+    navigate(`/cahier-texte/${textBook.id}?from=administration`);
   };
 
   const handleExportPDF = async () => {

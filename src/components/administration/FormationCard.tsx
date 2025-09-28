@@ -76,7 +76,7 @@ const FormationCard: React.FC<FormationCardProps> = ({
   }, [] as Array<{ id: string; first_name: string; last_name: string; }>);
 
   const handleViewDetail = () => {
-    navigate(`/formations/${id}`);
+    navigate(`/formations/${id}?from=administration`);
   };
 
   const handleViewParticipants = () => {

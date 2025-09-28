@@ -27,8 +27,11 @@ const TextBookByFormation: React.FC = () => {
         const existingTextBook = textBooks?.find(tb => tb.formation_id === formationId);
         
         if (existingTextBook) {
-          // Redirect to existing text book
-          navigate(`/cahier-texte/${existingTextBook.id}`);
+          // Redirect to existing text book with context
+          const urlParams = new URLSearchParams(window.location.search);
+          const from = urlParams.get('from') || 'formations';
+          const contextFormationId = urlParams.get('formationId') || formationId;
+          navigate(`/cahier-texte/${existingTextBook.id}?from=${from}&formationId=${contextFormationId}`);
         } else {
           // Show message that no text book exists
           toast({
