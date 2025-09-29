@@ -44,12 +44,30 @@ const EmploiTemps = () => {
         room: slot.room || 'Salle non définie',
         formation: formation?.title || 'Formation non définie',
         color: slot.color || formation?.color || '#6B7280',
-        description: slot.notes || `Cours de ${slot.formation_modules?.title || 'formation'}`
+        description: slot.notes || `Cours de ${slot.formation_modules?.title || 'formation'}`,
+        formationId: slot.schedules?.formation_id
       };
     });
   };
 
   const events = convertToEvents(schedules);
+  
+  // Trier les événements par date et heure pour affichage chronologique
+  const sortedEvents = [...events].sort((a, b) => {
+    const dateCompare = a.date.getTime() - b.date.getTime();
+    if (dateCompare !== 0) return dateCompare;
+    return a.startTime.localeCompare(b.startTime);
+  });
+
+  // Catégoriser les événements pour les formateurs
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  const categorizedEvents = {
+    past: sortedEvents.filter(e => e.date < today),
+    today: sortedEvents.filter(e => e.date.toDateString() === today.toDateString()),
+    upcoming: sortedEvents.filter(e => e.date > today)
+  };
   
   if (loading) {
     return (
@@ -191,7 +209,174 @@ const EmploiTemps = () => {
           />
         );
     } else {
-      // Vue liste avec cartes colorées complètes
+      // Vue liste optimisée pour les formateurs - style tableau clair
+      const isInstructor = userRole === 'Formateur' || userRole === 'Tuteur';
+      
+      if (isInstructor) {
+        return (
+          <div className="container mx-auto px-6 py-8">
+            {/* En-tête de tableau */}
+            <div className="bg-card rounded-t-lg border border-border shadow-sm">
+              <div className="grid grid-cols-12 gap-4 px-6 py-4 font-semibold text-sm text-muted-foreground border-b border-border">
+                <div className="col-span-2">Date</div>
+                <div className="col-span-2">Horaire</div>
+                <div className="col-span-3">Formation</div>
+                <div className="col-span-3">Module</div>
+                <div className="col-span-2">Classe/Salle</div>
+              </div>
+            </div>
+
+            {/* Sections chronologiques */}
+            <div className="bg-card rounded-b-lg border-x border-b border-border shadow-sm">
+              {/* Cours du jour */}
+              {categorizedEvents.today.length > 0 && (
+                <div className="border-b border-border">
+                  <div className="px-6 py-3 bg-primary/5">
+                    <h3 className="font-semibold text-primary flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                      Aujourd'hui ({categorizedEvents.today.length})
+                    </h3>
+                  </div>
+                  {categorizedEvents.today.map((event) => (
+                    <div
+                      key={event.id}
+                      className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-muted/50 transition-colors cursor-pointer border-b border-border last:border-b-0 items-center"
+                      onClick={() => handleEventClick(event)}
+                    >
+                      <div className="col-span-2">
+                        <div className="font-medium">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
+                        <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
+                      </div>
+                      <div className="col-span-2">
+                        <Badge variant="outline" className="font-mono text-xs">
+                          {event.startTime} - {event.endTime}
+                        </Badge>
+                      </div>
+                      <div className="col-span-3">
+                        <div 
+                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-white"
+                          style={{ backgroundColor: event.color }}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-white/80"></span>
+                          {event.formation}
+                        </div>
+                      </div>
+                      <div className="col-span-3">
+                        <div className="font-medium">{event.title}</div>
+                        {event.description && (
+                          <div className="text-xs text-muted-foreground truncate">{event.description}</div>
+                        )}
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-sm">{event.room}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Cours à venir */}
+              {categorizedEvents.upcoming.length > 0 && (
+                <div className="border-b border-border">
+                  <div className="px-6 py-3 bg-muted/30">
+                    <h3 className="font-semibold text-foreground">
+                      À venir ({categorizedEvents.upcoming.length})
+                    </h3>
+                  </div>
+                  {categorizedEvents.upcoming.map((event) => (
+                    <div
+                      key={event.id}
+                      className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-muted/50 transition-colors cursor-pointer border-b border-border last:border-b-0 items-center"
+                      onClick={() => handleEventClick(event)}
+                    >
+                      <div className="col-span-2">
+                        <div className="font-medium">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
+                        <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
+                      </div>
+                      <div className="col-span-2">
+                        <Badge variant="outline" className="font-mono text-xs">
+                          {event.startTime} - {event.endTime}
+                        </Badge>
+                      </div>
+                      <div className="col-span-3">
+                        <div 
+                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-white"
+                          style={{ backgroundColor: event.color }}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-white/80"></span>
+                          {event.formation}
+                        </div>
+                      </div>
+                      <div className="col-span-3">
+                        <div className="font-medium">{event.title}</div>
+                        {event.description && (
+                          <div className="text-xs text-muted-foreground truncate">{event.description}</div>
+                        )}
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-sm">{event.room}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Cours passés */}
+              {categorizedEvents.past.length > 0 && (
+                <div>
+                  <div className="px-6 py-3 bg-muted/20">
+                    <h3 className="font-semibold text-muted-foreground">
+                      Passés ({categorizedEvents.past.length})
+                    </h3>
+                  </div>
+                  {categorizedEvents.past.slice(-10).reverse().map((event) => (
+                    <div
+                      key={event.id}
+                      className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border last:border-b-0 items-center opacity-60"
+                      onClick={() => handleEventClick(event)}
+                    >
+                      <div className="col-span-2">
+                        <div className="font-medium">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
+                        <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
+                      </div>
+                      <div className="col-span-2">
+                        <Badge variant="outline" className="font-mono text-xs">
+                          {event.startTime} - {event.endTime}
+                        </Badge>
+                      </div>
+                      <div className="col-span-3">
+                        <div 
+                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-white"
+                          style={{ backgroundColor: event.color }}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-white/80"></span>
+                          {event.formation}
+                        </div>
+                      </div>
+                      <div className="col-span-3">
+                        <div className="font-medium">{event.title}</div>
+                        {event.description && (
+                          <div className="text-xs text-muted-foreground truncate">{event.description}</div>
+                        )}
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-sm">{event.room}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Note informative */}
+            <div className="mt-4 text-center text-sm text-muted-foreground">
+              💡 Dans cette vue, vous consultez l'ensemble de vos cours de toutes formations confondues, dans l'ordre chronologique
+            </div>
+          </div>
+        );
+      }
+      
+      // Vue liste standard pour les étudiants
       return (
         <div className="container mx-auto px-6 py-8">
           <div className="space-y-6">
@@ -208,52 +393,31 @@ const EmploiTemps = () => {
                 >
                   <div className="p-6">
                     <div className="grid grid-cols-12 gap-4 items-center text-white">
-                      {/* Date */}
                       <div className="col-span-2">
                         <div className="flex items-center space-x-2">
                           <div>
-                            <div className="font-medium text-white">
-                              {eventDate}
-                            </div>
-                            <div className="text-xs text-white/80">
-                              {eventDay}
-                            </div>
+                            <div className="font-medium text-white">{eventDate}</div>
+                            <div className="text-xs text-white/80">{eventDay}</div>
                           </div>
                         </div>
                       </div>
-
-                      {/* Horaire */}
                       <div className="col-span-2">
                         <div className="bg-white/20 text-white border-white/30 rounded px-2 py-1 text-xs font-medium inline-block">
                           {event.startTime} - {event.endTime}
                         </div>
                       </div>
-
-                      {/* Module */}
                       <div className="col-span-3">
-                        <div className="font-medium text-white">
-                          {event.title}
-                        </div>
+                        <div className="font-medium text-white">{event.title}</div>
                         {event.description && (
-                          <div className="text-xs text-white/80 mt-1 truncate">
-                            {event.description}
-                          </div>
+                          <div className="text-xs text-white/80 mt-1 truncate">{event.description}</div>
                         )}
                       </div>
-
-                      {/* Formateur */}
                       <div className="col-span-2">
-                        <span className="text-sm text-white/90">
-                          {event.instructor}
-                        </span>
+                        <span className="text-sm text-white/90">{event.instructor}</span>
                       </div>
-
-                      {/* Salle */}
                       <div className="col-span-2">
                         <span className="text-sm text-white/90">{event.room}</span>
                       </div>
-
-                      {/* Formation */}
                       <div className="col-span-1">
                         {event.formation && (
                           <div className="bg-white/20 text-white border-white/30 rounded px-2 py-1 text-xs font-medium text-center">
