@@ -3,6 +3,8 @@ import { X, ZoomIn, ZoomOut, Download, Maximize2, Minimize2, RotateCw, Menu, Che
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
 
 // Configuration de PDF.js
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -22,13 +24,38 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
 }) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
-  const [scale, setScale] = useState<number>(1.0);
+  const [scale, setScale] = useState<number>(1.3);
   const [rotation, setRotation] = useState<number>(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showThumbnails, setShowThumbnails] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [pageWidth, setPageWidth] = useState<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Handle fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  // Calculate page width on mount and resize
+  useEffect(() => {
+    const updatePageWidth = () => {
+      if (contentRef.current) {
+        const width = contentRef.current.clientWidth;
+        setPageWidth(width - 100); // Padding
+      }
+    };
+
+    updatePageWidth();
+    window.addEventListener('resize', updatePageWidth);
+    return () => window.removeEventListener('resize', updatePageWidth);
+  }, [showThumbnails]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -37,7 +64,7 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
       switch(e.key) {
         case 'Escape':
           if (isFullscreen) {
-            setIsFullscreen(false);
+            exitFullscreen();
           } else {
             onClose();
           }
@@ -111,15 +138,39 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
   };
 
   const handlePrint = () => {
-    window.open(fileUrl, '_blank');
+    const printWindow = window.open(fileUrl, '_blank');
+    if (printWindow) {
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    }
   };
 
   const handleOpenNewTab = () => {
     window.open(fileUrl, '_blank');
   };
 
-  const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
+  const toggleFullscreen = async () => {
+    if (!document.fullscreenElement && containerRef.current) {
+      try {
+        await containerRef.current.requestFullscreen();
+      } catch (err) {
+        console.error('Erreur fullscreen:', err);
+        toast.error('Impossible de passer en plein écran');
+      }
+    } else {
+      exitFullscreen();
+    }
+  };
+
+  const exitFullscreen = async () => {
+    if (document.fullscreenElement) {
+      try {
+        await document.exitFullscreen();
+      } catch (err) {
+        console.error('Erreur sortie fullscreen:', err);
+      }
+    }
   };
 
   const getZoomPercentage = () => {
@@ -162,25 +213,34 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
 
         {/* Main content area */}
         <div className="flex-1 overflow-auto bg-[#525659]" ref={contentRef}>
-          <div className="flex items-center justify-center min-h-full p-4">
+          <div className="flex items-center justify-center min-h-full p-8">
             <Document
               file={fileUrl}
               onLoadSuccess={onDocumentLoadSuccess}
               onLoadError={onDocumentLoadError}
               loading={
                 <div className="flex items-center justify-center p-8">
-                  <div className="text-white">Chargement du document...</div>
+                  <div className="text-white text-lg">Chargement du document...</div>
+                </div>
+              }
+              error={
+                <div className="flex items-center justify-center p-8">
+                  <div className="text-red-400 text-lg">Erreur lors du chargement du PDF</div>
                 </div>
               }
             >
               <Page
                 pageNumber={pageNumber}
-                scale={scale}
+                width={pageWidth > 0 ? pageWidth * scale : undefined}
                 rotate={rotation}
                 renderTextLayer={true}
                 renderAnnotationLayer={true}
-                loading=""
-                className="shadow-2xl"
+                loading={
+                  <div className="flex items-center justify-center p-8">
+                    <div className="text-white">Chargement de la page...</div>
+                  </div>
+                }
+                className="shadow-2xl bg-white"
               />
             </Document>
           </div>
@@ -232,14 +292,11 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col ${
-        isFullscreen ? 'w-screen h-screen' : ''
-      }`}
-      style={{ backgroundColor: '#323639' }}
+      className="fixed inset-0 z-50 flex flex-col bg-[#323639]"
       ref={containerRef}
     >
       {/* Chrome-style toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 bg-[#323639] border-b border-gray-700">
+      <div className="flex items-center justify-between px-4 py-2 bg-[#323639] border-b border-gray-700 flex-shrink-0">
         {/* Left side - File name and navigation */}
         <div className="flex items-center space-x-4">
           <div className="text-sm text-gray-200 max-w-md truncate">
