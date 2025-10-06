@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Plus, Clock, Calendar, User, BookOpen, Upload, X, FileText, Edit2, Trash2, AlertCircle } from 'lucide-react';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
-import DocumentViewer from '@/components/ui/document-viewer';
+import ChromeStyleViewer from '@/components/ui/viewers/ChromeStyleViewer';
 import { textBookService, TextBook, TextBookEntry } from '@/services/textBookService';
 import { moduleService, FormationModule } from '@/services/moduleService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -822,7 +822,7 @@ const TextBookDetail: React.FC = () => {
 
       {/* Document Viewer */}
       {selectedFile && (
-        <DocumentViewer
+        <ChromeStyleViewer
           fileUrl={selectedFile.url}
           fileName={selectedFile.name}
           isOpen={isFileViewerOpen}

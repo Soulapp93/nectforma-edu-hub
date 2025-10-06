@@ -1,5 +1,5 @@
 import React from 'react';
-import ChromeInspiredDocumentViewer from '@/components/ui/viewers/ChromeInspiredDocumentViewer';
+import ChromeStyleViewer from '@/components/ui/viewers/ChromeStyleViewer';
 import { DigitalSafeFile } from '@/services/digitalSafeService';
 
 interface FileViewerModalProps {
@@ -16,7 +16,7 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({
   if (!file) return null;
 
   return (
-    <ChromeInspiredDocumentViewer
+    <ChromeStyleViewer
       fileUrl={file.file_url}
       fileName={file.original_name}
       isOpen={open}

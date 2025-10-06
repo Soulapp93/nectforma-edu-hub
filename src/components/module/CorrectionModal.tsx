@@ -4,7 +4,7 @@ import { X, Download, File, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { assignmentService, AssignmentSubmission } from '@/services/assignmentService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import DocumentViewer from '@/components/ui/document-viewer';
+import ChromeStyleViewer from '@/components/ui/viewers/ChromeStyleViewer';
 import { toast } from 'sonner';
 
 interface CorrectionModalProps {
@@ -283,7 +283,7 @@ const CorrectionModal: React.FC<CorrectionModalProps> = ({
 
       {/* Document Viewer */}
       {viewerFile && (
-        <DocumentViewer
+        <ChromeStyleViewer
           fileUrl={viewerFile.url}
           fileName={viewerFile.name}
           isOpen={true}
