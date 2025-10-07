@@ -22,12 +22,11 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
 }) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
-  const [scale, setScale] = useState<number>(1.3);
+  const [scale, setScale] = useState<number>(1.0);
   const [rotation, setRotation] = useState<number>(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showThumbnails, setShowThumbnails] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [pageWidth, setPageWidth] = useState<number>(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -41,19 +40,6 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  // Calculate page width on mount and resize
-  useEffect(() => {
-    const updatePageWidth = () => {
-      if (contentRef.current) {
-        const width = contentRef.current.clientWidth;
-        setPageWidth(width - 100); // Padding
-      }
-    };
-
-    updatePageWidth();
-    window.addEventListener('resize', updatePageWidth);
-    return () => window.removeEventListener('resize', updatePageWidth);
-  }, [showThumbnails]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -211,7 +197,14 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
 
         {/* Main content area */}
         <div className="flex-1 overflow-auto bg-[#525659]" ref={contentRef}>
-          <div className="flex items-center justify-center min-h-full p-8">
+          <div 
+            className="flex items-start justify-center min-h-full p-8"
+            style={{
+              transform: `scale(${scale})`,
+              transformOrigin: 'top center',
+              transition: 'transform 0.2s ease'
+            }}
+          >
             <Document
               file={fileUrl}
               onLoadSuccess={onDocumentLoadSuccess}
@@ -229,7 +222,7 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
             >
               <Page
                 pageNumber={pageNumber}
-                width={pageWidth > 0 ? pageWidth * scale : undefined}
+                width={800}
                 rotate={rotation}
                 renderTextLayer={true}
                 renderAnnotationLayer={true}
@@ -238,7 +231,7 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
                     <div className="text-white">Chargement de la page...</div>
                   </div>
                 }
-                className="shadow-2xl bg-white"
+                className="shadow-2xl"
               />
             </Document>
           </div>
