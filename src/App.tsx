@@ -26,6 +26,7 @@ import GestionEtablissement from './pages/GestionEtablissement';
 import Compte from './pages/Compte';
 import NotFound from './pages/NotFound';
 import Auth from './pages/Auth';
+import Index from './pages/Index';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,6 +55,16 @@ const AppContent = () => {
     );
   }
 
+  const isIndexPage = location.pathname === '/';
+  
+  if (isIndexPage) {
+    return (
+      <Routes>
+        <Route path="/" element={<Index />} />
+      </Routes>
+    );
+  }
+
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full bg-gray-50">
@@ -67,7 +78,7 @@ const AppContent = () => {
           </header>
           <main className="flex-1 overflow-auto">
             <Routes>
-              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/administration" element={<ProtectedRoute><Administration /></ProtectedRoute>} />
               <Route path="/formations" element={<ProtectedRoute><Formations /></ProtectedRoute>} />
               <Route path="/formations/:formationId" element={<ProtectedRoute><FormationDetail /></ProtectedRoute>} />
