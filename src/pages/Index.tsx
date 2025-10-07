@@ -91,13 +91,13 @@ const Index = () => {
             </div>
             <div className="flex space-x-4">
               <Link 
-                to="/dashboard" 
+                to="/auth" 
                 className="px-4 py-2 text-purple-600 hover:text-purple-700 font-medium"
               >
                 Connexion
               </Link>
               <Link 
-                to="/register" 
+                to="/auth" 
                 className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium"
               >
                 Commencer gratuitement
@@ -119,7 +119,7 @@ const Index = () => {
           </p>
           <div className="flex justify-center space-x-4">
             <Link 
-              to="/register" 
+              to="/auth" 
               className="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium text-lg"
             >
               Commencer gratuitement
