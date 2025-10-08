@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, ZoomIn, ZoomOut, Download, Maximize2, Minimize2, RotateCw, Menu, ChevronLeft, ChevronRight, Printer, ExternalLink } from 'lucide-react';
+import { X, ZoomIn, ZoomOut, Download, Maximize2, Minimize2, RotateCw, Menu, ChevronLeft, ChevronRight, Printer, ExternalLink, Loader2, FileWarning, Play, Pause, Volume2, VolumeX } from 'lucide-react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -27,8 +27,12 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showThumbnails, setShowThumbnails] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Handle fullscreen changes
   useEffect(() => {
@@ -37,9 +41,17 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+    
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+    };
   }, []);
-
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -72,6 +84,13 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
             handleZoomOut();
           }
           break;
+        case 'f':
+        case 'F':
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            toggleFullscreen();
+          }
+          break;
       }
     };
 
@@ -85,17 +104,32 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
     return filename.split('.').pop()?.toLowerCase() || '';
   };
 
+  const getFileType = (extension: string): 'pdf' | 'image' | 'video' | 'office' | 'other' => {
+    const imageFormats = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp', 'ico'];
+    const videoFormats = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'flv', 'wmv'];
+    const officeFormats = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods', 'odp'];
+
+    if (extension === 'pdf') return 'pdf';
+    if (imageFormats.includes(extension)) return 'image';
+    if (videoFormats.includes(extension)) return 'video';
+    if (officeFormats.includes(extension)) return 'office';
+    return 'other';
+  };
+
   const fileExtension = getFileExtension(fileName);
+  const fileType = getFileType(fileExtension);
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
     setLoading(false);
+    setError(null);
   };
 
   const onDocumentLoadError = (error: Error) => {
     console.error('Erreur de chargement du PDF:', error);
-    toast.error('Erreur lors du chargement du document');
+    setError('Impossible de charger le document PDF');
     setLoading(false);
+    toast.error('Erreur lors du chargement du document');
   };
 
   const handleZoomIn = () => {
@@ -122,11 +156,15 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
   };
 
   const handlePrint = () => {
-    const printWindow = window.open(fileUrl, '_blank');
-    if (printWindow) {
-      printWindow.onload = () => {
-        printWindow.print();
-      };
+    if (fileType === 'pdf' || fileType === 'image') {
+      const printWindow = window.open(fileUrl, '_blank');
+      if (printWindow) {
+        printWindow.onload = () => {
+          printWindow.print();
+        };
+      }
+    } else {
+      toast.info('Impression non disponible pour ce type de fichier');
     }
   };
 
@@ -135,30 +173,69 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
   };
 
   const toggleFullscreen = async () => {
-    if (!document.fullscreenElement && containerRef.current) {
-      try {
-        await containerRef.current.requestFullscreen();
-      } catch (err) {
-        console.error('Erreur fullscreen:', err);
-        toast.error('Impossible de passer en plein écran');
+    if (!containerRef.current) return;
+
+    try {
+      if (!document.fullscreenElement) {
+        // Request fullscreen with all browser prefixes
+        const elem = containerRef.current as any;
+        
+        if (elem.requestFullscreen) {
+          await elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+          await elem.webkitRequestFullscreen();
+        } else if (elem.mozRequestFullScreen) {
+          await elem.mozRequestFullScreen();
+        } else if (elem.msRequestFullscreen) {
+          await elem.msRequestFullscreen();
+        }
+      } else {
+        await exitFullscreen();
       }
-    } else {
-      exitFullscreen();
+    } catch (err) {
+      console.error('Erreur fullscreen:', err);
+      toast.error('Impossible de passer en plein écran');
     }
   };
 
   const exitFullscreen = async () => {
-    if (document.fullscreenElement) {
-      try {
-        await document.exitFullscreen();
-      } catch (err) {
-        console.error('Erreur sortie fullscreen:', err);
+    try {
+      const doc = document as any;
+      
+      if (doc.exitFullscreen) {
+        await doc.exitFullscreen();
+      } else if (doc.webkitExitFullscreen) {
+        await doc.webkitExitFullscreen();
+      } else if (doc.mozCancelFullScreen) {
+        await doc.mozCancelFullScreen();
+      } else if (doc.msExitFullscreen) {
+        await doc.msExitFullscreen();
       }
+    } catch (err) {
+      console.error('Erreur sortie fullscreen:', err);
     }
   };
 
   const getZoomPercentage = () => {
     return Math.round(scale * 100);
+  };
+
+  const toggleVideoPlayback = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+    }
   };
 
   const renderPDFViewer = () => {
@@ -205,35 +282,46 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
               transition: 'transform 0.2s ease'
             }}
           >
-            <Document
-              file={fileUrl}
-              onLoadSuccess={onDocumentLoadSuccess}
-              onLoadError={onDocumentLoadError}
-              loading={
-                <div className="flex items-center justify-center p-8">
-                  <div className="text-white text-lg">Chargement du document...</div>
-                </div>
-              }
-              error={
-                <div className="flex items-center justify-center p-8">
-                  <div className="text-red-400 text-lg">Erreur lors du chargement du PDF</div>
-                </div>
-              }
-            >
-              <Page
-                pageNumber={pageNumber}
-                width={800}
-                rotate={rotation}
-                renderTextLayer={true}
-                renderAnnotationLayer={true}
+            {error ? (
+              <div className="flex flex-col items-center justify-center p-8 text-white">
+                <FileWarning className="w-16 h-16 mb-4 text-red-400" />
+                <div className="text-xl mb-2">Erreur de chargement</div>
+                <div className="text-sm text-gray-400">{error}</div>
+              </div>
+            ) : (
+              <Document
+                file={fileUrl}
+                onLoadSuccess={onDocumentLoadSuccess}
+                onLoadError={onDocumentLoadError}
                 loading={
                   <div className="flex items-center justify-center p-8">
-                    <div className="text-white">Chargement de la page...</div>
+                    <Loader2 className="w-8 h-8 animate-spin text-white mr-3" />
+                    <div className="text-white text-lg">Chargement du document...</div>
                   </div>
                 }
-                className="shadow-2xl"
-              />
-            </Document>
+                error={
+                  <div className="flex flex-col items-center justify-center p-8">
+                    <FileWarning className="w-16 h-16 mb-4 text-red-400" />
+                    <div className="text-red-400 text-lg">Erreur lors du chargement du PDF</div>
+                  </div>
+                }
+              >
+                <Page
+                  pageNumber={pageNumber}
+                  width={800}
+                  rotate={rotation}
+                  renderTextLayer={true}
+                  renderAnnotationLayer={true}
+                  loading={
+                    <div className="flex items-center justify-center p-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-white mr-2" />
+                      <div className="text-white">Chargement de la page...</div>
+                    </div>
+                  }
+                  className="shadow-2xl"
+                />
+              </Document>
+            )}
           </div>
         </div>
       </div>
@@ -244,9 +332,20 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
     return (
       <div className="flex-1 overflow-auto bg-[#525659]">
         <div className="flex items-center justify-center min-h-full p-4">
+          {loading && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Loader2 className="w-8 h-8 animate-spin text-white" />
+            </div>
+          )}
           <img
             src={fileUrl}
             alt={fileName}
+            onLoad={() => setLoading(false)}
+            onError={() => {
+              setLoading(false);
+              setError('Impossible de charger l\'image');
+              toast.error('Erreur lors du chargement de l\'image');
+            }}
             style={{
               transform: `scale(${scale}) rotate(${rotation}deg)`,
               maxWidth: '100%',
@@ -260,30 +359,123 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
     );
   };
 
-  const renderContent = () => {
-    if (fileExtension === 'pdf') {
-      return renderPDFViewer();
-    }
-
-    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(fileExtension)) {
-      return renderImageViewer();
-    }
-
-    // For other file types, use iframe
+  const renderVideoViewer = () => {
     return (
-      <div className="flex-1 bg-[#525659]">
-        <iframe
-          src={fileUrl}
-          className="w-full h-full border-0"
-          title={fileName}
-        />
+      <div className="flex-1 flex items-center justify-center bg-[#525659] p-4">
+        <div className="relative w-full max-w-5xl">
+          {loading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
+              <Loader2 className="w-8 h-8 animate-spin text-white" />
+            </div>
+          )}
+          <video
+            ref={videoRef}
+            src={fileUrl}
+            className="w-full rounded-lg shadow-2xl"
+            controls
+            onLoadedData={() => setLoading(false)}
+            onError={() => {
+              setLoading(false);
+              setError('Impossible de charger la vidéo');
+              toast.error('Erreur lors du chargement de la vidéo');
+            }}
+            style={{
+              transform: `scale(${scale})`,
+              transition: 'transform 0.2s ease'
+            }}
+          >
+            Votre navigateur ne supporte pas la lecture de vidéos.
+          </video>
+        </div>
       </div>
     );
   };
 
+  const renderOfficeViewer = () => {
+    // Use Microsoft Office Online Viewer for Office files
+    const viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`;
+    
+    return (
+      <div className="flex-1 bg-[#525659] relative">
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-[#525659]">
+            <Loader2 className="w-8 h-8 animate-spin text-white mr-3" />
+            <div className="text-white text-lg">Chargement du document...</div>
+          </div>
+        )}
+        <iframe
+          src={viewerUrl}
+          className="w-full h-full border-0"
+          title={fileName}
+          onLoad={() => setLoading(false)}
+          onError={() => {
+            setLoading(false);
+            setError('Impossible de charger le document Office');
+          }}
+        />
+        {error && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#525659]">
+            <FileWarning className="w-16 h-16 mb-4 text-red-400" />
+            <div className="text-red-400 text-lg mb-4">{error}</div>
+            <Button onClick={handleOpenNewTab} variant="outline">
+              Ouvrir dans un nouvel onglet
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderOtherViewer = () => {
+    return (
+      <div className="flex-1 bg-[#525659] relative">
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-[#525659]">
+            <Loader2 className="w-8 h-8 animate-spin text-white mr-3" />
+            <div className="text-white text-lg">Chargement du fichier...</div>
+          </div>
+        )}
+        <iframe
+          src={fileUrl}
+          className="w-full h-full border-0"
+          title={fileName}
+          onLoad={() => setLoading(false)}
+          onError={() => {
+            setLoading(false);
+            setError('Impossible de charger ce type de fichier');
+          }}
+        />
+        {error && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#525659]">
+            <FileWarning className="w-16 h-16 mb-4 text-red-400" />
+            <div className="text-red-400 text-lg mb-4">{error}</div>
+            <Button onClick={handleOpenNewTab} variant="outline">
+              Ouvrir dans un nouvel onglet
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderContent = () => {
+    switch (fileType) {
+      case 'pdf':
+        return renderPDFViewer();
+      case 'image':
+        return renderImageViewer();
+      case 'video':
+        return renderVideoViewer();
+      case 'office':
+        return renderOfficeViewer();
+      default:
+        return renderOtherViewer();
+    }
+  };
+
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col bg-[#323639]"
+      className={`fixed inset-0 z-50 flex flex-col bg-[#323639] ${isFullscreen ? 'fullscreen-container' : ''}`}
       ref={containerRef}
     >
       {/* Chrome-style toolbar */}
@@ -294,7 +486,7 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
             {fileName}
           </div>
           
-          {fileExtension === 'pdf' && (
+          {fileType === 'pdf' && !loading && !error && (
             <>
               <div className="h-6 w-px bg-gray-600" />
               <div className="flex items-center space-x-2">
@@ -341,46 +533,52 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
 
         {/* Right side - Controls */}
         <div className="flex items-center space-x-2">
-          {/* Zoom controls */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleZoomOut}
-            className="h-8 w-8 p-0 text-gray-300 hover:text-white hover:bg-gray-700"
-            title="Zoom arrière"
-          >
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          
-          <div className="text-sm text-gray-300 min-w-[50px] text-center">
-            {getZoomPercentage()}%
-          </div>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleZoomIn}
-            className="h-8 w-8 p-0 text-gray-300 hover:text-white hover:bg-gray-700"
-            title="Zoom avant"
-          >
-            <ZoomIn className="h-4 w-4" />
-          </Button>
+          {/* Zoom controls - Only for PDF, images, and videos */}
+          {(fileType === 'pdf' || fileType === 'image' || fileType === 'video') && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleZoomOut}
+                className="h-8 w-8 p-0 text-gray-300 hover:text-white hover:bg-gray-700"
+                title="Zoom arrière"
+              >
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              
+              <div className="text-sm text-gray-300 min-w-[50px] text-center">
+                {getZoomPercentage()}%
+              </div>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleZoomIn}
+                className="h-8 w-8 p-0 text-gray-300 hover:text-white hover:bg-gray-700"
+                title="Zoom avant"
+              >
+                <ZoomIn className="h-4 w-4" />
+              </Button>
 
-          <div className="h-6 w-px bg-gray-600" />
+              <div className="h-6 w-px bg-gray-600" />
+            </>
+          )}
 
-          {/* Rotate */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleRotate}
-            className="h-8 w-8 p-0 text-gray-300 hover:text-white hover:bg-gray-700"
-            title="Rotation"
-          >
-            <RotateCw className="h-4 w-4" />
-          </Button>
+          {/* Rotate - Only for PDF and images */}
+          {(fileType === 'pdf' || fileType === 'image') && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRotate}
+              className="h-8 w-8 p-0 text-gray-300 hover:text-white hover:bg-gray-700"
+              title="Rotation"
+            >
+              <RotateCw className="h-4 w-4" />
+            </Button>
+          )}
 
           {/* Thumbnails toggle (PDF only) */}
-          {fileExtension === 'pdf' && (
+          {fileType === 'pdf' && !loading && !error && (
             <Button
               variant="ghost"
               size="sm"
@@ -435,7 +633,7 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
             size="sm"
             onClick={toggleFullscreen}
             className="h-8 w-8 p-0 text-gray-300 hover:text-white hover:bg-gray-700"
-            title="Plein écran"
+            title="Plein écran (F11 ou Ctrl+F)"
           >
             {isFullscreen ? (
               <Minimize2 className="h-4 w-4" />

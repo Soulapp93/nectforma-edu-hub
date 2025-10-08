@@ -165,6 +165,36 @@
   box-shadow: 0px 2px 10px rgba(255, 255, 0, 0.5);
 }
 
+/* Fullscreen styles for ChromeStyleViewer */
+.fullscreen-container {
+  width: 100vw !important;
+  height: 100vh !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  z-index: 9999 !important;
+}
+
+.fullscreen-container:-webkit-full-screen {
+  width: 100%;
+  height: 100%;
+}
+
+.fullscreen-container:-moz-full-screen {
+  width: 100%;
+  height: 100%;
+}
+
+.fullscreen-container:-ms-fullscreen {
+  width: 100%;
+  height: 100%;
+}
+
+.fullscreen-container:fullscreen {
+  width: 100%;
+  height: 100%;
+}
+
 @layer components {
   .nect-gradient {
     background: linear-gradient(135deg, hsl(var(--nect-purple-from)), hsl(var(--nect-purple-to)));
