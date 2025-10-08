@@ -144,6 +144,16 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
 
   // Fonction pour rendre le contenu selon le type de fichier
   const renderContent = () => {
+    const fullscreenStyle = isFullscreen ? {
+      width: '100%',
+      height: '100%',
+      position: 'absolute' as const,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0
+    } : {};
+
     // PDF - Iframe simple avec visionneuse native du navigateur
     if (fileExtension === 'pdf') {
       return (
@@ -153,7 +163,10 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
           title={fileName}
           onLoad={handleLoad}
           onError={handleError}
-          style={{ backgroundColor: '#525659' }}
+          style={{ 
+            backgroundColor: '#525659',
+            ...fullscreenStyle
+          }}
         />
       );
     }
@@ -168,7 +181,10 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
           title={fileName}
           onLoad={handleLoad}
           onError={handleError}
-          style={{ backgroundColor: '#525659' }}
+          style={{ 
+            backgroundColor: '#525659',
+            ...fullscreenStyle
+          }}
         />
       );
     }
@@ -176,7 +192,10 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
     // Vidéos - Balise HTML5 video
     if (['mp4', 'webm', 'ogg', 'mov', 'avi'].includes(fileExtension)) {
       return (
-        <div className="flex items-center justify-center w-full h-full bg-[#525659] p-4">
+        <div 
+          className="flex items-center justify-center w-full h-full bg-[#525659]"
+          style={isFullscreen ? { padding: '2rem' } : { padding: '1rem' }}
+        >
           <video
             src={fileUrl}
             controls
@@ -195,7 +214,10 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
     // Images - Balise HTML5 img
     if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(fileExtension)) {
       return (
-        <div className="flex items-center justify-center w-full h-full bg-[#525659] p-4">
+        <div 
+          className="flex items-center justify-center w-full h-full bg-[#525659]"
+          style={isFullscreen ? { padding: '2rem' } : { padding: '1rem' }}
+        >
           <img
             src={fileUrl}
             alt={fileName}
@@ -236,10 +258,24 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`fixed inset-0 z-50 flex flex-col bg-[#323639] ${isFullscreen ? 'fullscreen-container' : ''}`}
+      className="fixed inset-0 z-50 flex flex-col bg-[#323639]"
+      style={isFullscreen ? {
+        width: '100vw',
+        height: '100vh',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        margin: 0,
+        padding: 0
+      } : {}}
     >
       {/* Barre d'outils */}
-      <div className="flex items-center justify-between px-4 py-3 bg-[#323639] border-b border-gray-700 flex-shrink-0">
+      <div 
+        className="flex items-center justify-between px-4 py-2 bg-[#323639] border-b border-gray-700 flex-shrink-0"
+        style={isFullscreen ? { height: '48px' } : {}}
+      >
         <div className="flex items-center space-x-3">
           <h2 className="text-sm font-medium text-gray-200 truncate max-w-md">
             {fileName}
@@ -255,7 +291,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
             size="sm"
             onClick={toggleFullscreen}
             className="text-gray-300 hover:text-white hover:bg-gray-700"
-            title={isFullscreen ? 'Quitter le plein écran (F11)' : 'Plein écran (F11)'}
+            title={isFullscreen ? 'Quitter le plein écran (Échap)' : 'Plein écran (Ctrl+F)'}
           >
             {isFullscreen ? (
               <Minimize2 className="h-4 w-4" />
@@ -299,7 +335,18 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
       </div>
 
       {/* Zone de contenu */}
-      <div className="flex-1 relative overflow-hidden">
+      <div 
+        className="relative overflow-hidden"
+        style={isFullscreen ? {
+          flex: 1,
+          width: '100%',
+          height: 'calc(100vh - 48px)',
+          position: 'relative'
+        } : {
+          flex: 1,
+          position: 'relative'
+        }}
+      >
         {loading && !error && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#525659] z-10">
             <Loader2 className="w-12 h-12 animate-spin text-white mb-4" />
