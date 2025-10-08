@@ -165,34 +165,48 @@
   box-shadow: 0px 2px 10px rgba(255, 255, 0, 0.5);
 }
 
-/* Fullscreen styles for ChromeStyleViewer */
+/* Fullscreen styles for Chrome-style viewer - Enhanced for complete fullscreen */
 .fullscreen-container {
   width: 100vw !important;
   height: 100vh !important;
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
   z-index: 9999 !important;
+  background: #323639 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
-.fullscreen-container:-webkit-full-screen {
-  width: 100%;
-  height: 100%;
-}
-
-.fullscreen-container:-moz-full-screen {
-  width: 100%;
-  height: 100%;
-}
-
-.fullscreen-container:-ms-fullscreen {
-  width: 100%;
-  height: 100%;
-}
-
+/* Force fullscreen on all platforms */
+.fullscreen-container:-webkit-full-screen,
+.fullscreen-container:-moz-full-screen,
+.fullscreen-container:-ms-fullscreen,
 .fullscreen-container:fullscreen {
-  width: 100%;
-  height: 100%;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Hide scrollbars in fullscreen */
+.fullscreen-container::-webkit-scrollbar {
+  display: none !important;
+}
+
+.fullscreen-container {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* Ensure body doesn't interfere with fullscreen */
+body:has(.fullscreen-container) {
+  overflow: hidden !important;
 }
 
 @layer components {

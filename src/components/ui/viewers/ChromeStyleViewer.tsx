@@ -3,6 +3,7 @@ import { X, ZoomIn, ZoomOut, Download, Maximize2, Minimize2, RotateCw, Menu, Che
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import OfficeViewer from './OfficeViewer';
 
 // Configuration de PDF.js
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -392,36 +393,13 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
   };
 
   const renderOfficeViewer = () => {
-    // Use Microsoft Office Online Viewer for Office files
-    const viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`;
-    
     return (
-      <div className="flex-1 bg-[#525659] relative">
-        {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[#525659]">
-            <Loader2 className="w-8 h-8 animate-spin text-white mr-3" />
-            <div className="text-white text-lg">Chargement du document...</div>
-          </div>
-        )}
-        <iframe
-          src={viewerUrl}
-          className="w-full h-full border-0"
-          title={fileName}
-          onLoad={() => setLoading(false)}
-          onError={() => {
-            setLoading(false);
-            setError('Impossible de charger le document Office');
-          }}
+      <div className="flex-1 overflow-hidden">
+        <OfficeViewer
+          fileUrl={fileUrl}
+          fileName={fileName}
+          fileExtension={fileExtension}
         />
-        {error && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#525659]">
-            <FileWarning className="w-16 h-16 mb-4 text-red-400" />
-            <div className="text-red-400 text-lg mb-4">{error}</div>
-            <Button onClick={handleOpenNewTab} variant="outline">
-              Ouvrir dans un nouvel onglet
-            </Button>
-          </div>
-        )}
       </div>
     );
   };
