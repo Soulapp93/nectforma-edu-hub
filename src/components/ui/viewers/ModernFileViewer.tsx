@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Maximize2, Minimize2, Download, ExternalLink, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '../button';
 import { toast } from 'sonner';
-import ModernPDFViewer from './ModernPDFViewer';
 
 interface ModernFileViewerProps {
   fileUrl: string;
@@ -145,15 +144,15 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
 
   // Fonction pour rendre le contenu selon le type de fichier
   const renderContent = () => {
-    // PDF - Utiliser ModernPDFViewer
+    // PDF - Utiliser la visionneuse native du navigateur
     if (fileExtension === 'pdf') {
       return (
-        <ModernPDFViewer
-          fileUrl={fileUrl}
-          fileName={fileName}
-          isFullscreen={isFullscreen}
-          onToggleFullscreen={toggleFullscreen}
-          onClose={onClose}
+        <iframe
+          src={`${fileUrl}#toolbar=1&navpanes=1&scrollbar=1`}
+          className="w-full h-full border-0"
+          title={fileName}
+          onLoad={handleLoad}
+          onError={handleError}
         />
       );
     }
@@ -251,26 +250,6 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
       </div>
     );
   };
-
-  // Pour les PDFs, ne pas afficher le wrapper car ModernPDFViewer gère tout
-  if (fileExtension === 'pdf') {
-    return (
-      <div
-        ref={containerRef}
-        className="fixed inset-0 z-50"
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          margin: 0,
-          padding: 0
-        }}
-      >
-        {renderContent()}
-      </div>
-    );
-  }
 
   return (
     <div
