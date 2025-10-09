@@ -144,12 +144,13 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
 
   // Fonction pour rendre le contenu selon le type de fichier
   const renderContent = () => {
-    // PDF - Utiliser la visionneuse native du navigateur
+    // PDF - Utiliser la visionneuse native du navigateur avec embed
     if (fileExtension === 'pdf') {
       return (
-        <iframe
-          src={`${fileUrl}#toolbar=1&navpanes=1&scrollbar=1`}
-          className="w-full h-full border-0"
+        <embed
+          src={fileUrl}
+          type="application/pdf"
+          className="w-full h-full"
           title={fileName}
           onLoad={handleLoad}
           onError={handleError}
