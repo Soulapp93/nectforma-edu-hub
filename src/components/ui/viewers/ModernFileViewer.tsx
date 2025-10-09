@@ -144,28 +144,20 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
 
   // Fonction pour rendre le contenu selon le type de fichier
   const renderContent = () => {
-    const fullscreenStyle = isFullscreen ? {
-      width: '100%',
-      height: '100%',
-      position: 'absolute' as const,
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0
-    } : {};
-
     // PDF - Iframe simple avec visionneuse native du navigateur
     if (fileExtension === 'pdf') {
       return (
         <iframe
           src={fileUrl}
-          className="w-full h-full border-0"
+          className="border-0"
           title={fileName}
           onLoad={handleLoad}
           onError={handleError}
           style={{ 
             backgroundColor: '#525659',
-            ...fullscreenStyle
+            width: '100%',
+            height: '100%',
+            display: 'block'
           }}
         />
       );
@@ -177,13 +169,15 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
       return (
         <iframe
           src={officeViewerUrl}
-          className="w-full h-full border-0"
+          className="border-0"
           title={fileName}
           onLoad={handleLoad}
           onError={handleError}
           style={{ 
             backgroundColor: '#525659',
-            ...fullscreenStyle
+            width: '100%',
+            height: '100%',
+            display: 'block'
           }}
         />
       );
@@ -193,8 +187,12 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
     if (['mp4', 'webm', 'ogg', 'mov', 'avi'].includes(fileExtension)) {
       return (
         <div 
-          className="flex items-center justify-center w-full h-full bg-[#525659]"
-          style={isFullscreen ? { padding: '2rem' } : { padding: '1rem' }}
+          className="flex items-center justify-center bg-[#525659]"
+          style={{
+            width: '100%',
+            height: '100%',
+            padding: isFullscreen ? '2rem' : '1rem'
+          }}
         >
           <video
             src={fileUrl}
@@ -215,8 +213,12 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
     if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(fileExtension)) {
       return (
         <div 
-          className="flex items-center justify-center w-full h-full bg-[#525659]"
-          style={isFullscreen ? { padding: '2rem' } : { padding: '1rem' }}
+          className="flex items-center justify-center bg-[#525659]"
+          style={{
+            width: '100%',
+            height: '100%',
+            padding: isFullscreen ? '2rem' : '1rem'
+          }}
         >
           <img
             src={fileUrl}
@@ -336,15 +338,14 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
 
       {/* Zone de contenu */}
       <div 
-        className="relative overflow-hidden"
-        style={isFullscreen ? {
+        style={{
           flex: 1,
           width: '100%',
-          height: 'calc(100vh - 48px)',
-          position: 'relative'
-        } : {
-          flex: 1,
-          position: 'relative'
+          height: isFullscreen ? 'calc(100vh - 48px)' : 'calc(100vh - 48px)',
+          position: 'relative',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column'
         }}
       >
         {loading && !error && (
