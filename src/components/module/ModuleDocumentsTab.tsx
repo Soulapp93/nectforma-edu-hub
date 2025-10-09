@@ -3,6 +3,7 @@ import { Plus, FileText, Eye, Trash2, Download, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { moduleDocumentService, ModuleDocument } from '@/services/moduleDocumentService';
 import CreateDocumentModal from './CreateDocumentModal';
+import ChromeStyleDocumentViewer from '@/components/ui/viewers/ChromeStyleDocumentViewer';
 import { toast } from 'sonner';
 
 interface ModuleDocumentsTabProps {
@@ -14,6 +15,7 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState<ModuleDocument | null>(null);
+  const [viewerDocument, setViewerDocument] = useState<ModuleDocument | null>(null);
 
   const fetchDocuments = async () => {
     try {
@@ -57,7 +59,7 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
   };
 
   const handleViewDocument = (document: ModuleDocument) => {
-    window.open(document.file_url, '_blank');
+    setViewerDocument(document);
   };
 
   const handleDownloadDocument = async (fileUrl: string, fileName: string) => {
@@ -230,6 +232,15 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
           moduleId={moduleId}
           onSuccess={handleEditSuccess}
           editDocument={showEditModal}
+        />
+      )}
+
+      {viewerDocument && (
+        <ChromeStyleDocumentViewer
+          fileUrl={viewerDocument.file_url}
+          fileName={viewerDocument.file_name}
+          isOpen={!!viewerDocument}
+          onClose={() => setViewerDocument(null)}
         />
       )}
     </div>
