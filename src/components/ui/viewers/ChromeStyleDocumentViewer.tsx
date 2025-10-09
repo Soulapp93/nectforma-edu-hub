@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { X, Download, Printer, Maximize2, Minimize2 } from 'lucide-react';
+import { X, Download, Printer, Maximize2, Minimize2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import BasicPDFViewer from './BasicPDFViewer';
 
 interface ChromeStyleDocumentViewerProps {
   fileUrl: string;
@@ -17,6 +18,16 @@ const ChromeStyleDocumentViewer: React.FC<ChromeStyleDocumentViewerProps> = ({
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const getFileType = (fileName: string): string => {
+    const extension = fileName.split('.').pop()?.toLowerCase() || '';
+    if (['pdf'].includes(extension)) return 'pdf';
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(extension)) return 'image';
+    if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(extension)) return 'office';
+    return 'other';
+  };
+
+  const fileType = getFileType(fileName);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -40,26 +51,30 @@ const ChromeStyleDocumentViewer: React.FC<ChromeStyleDocumentViewerProps> = ({
     };
   }, [isOpen, isFullscreen, onClose]);
 
-  const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = fileName;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownload = async () => {
+    try {
+      const response = await fetch(fileUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Erreur lors du téléchargement:', error);
+      window.open(fileUrl, '_blank');
+    }
   };
 
   const handlePrint = () => {
-    const iframe = document.getElementById('document-iframe') as HTMLIFrameElement;
-    if (iframe && iframe.contentWindow) {
-      try {
-        iframe.contentWindow.print();
-      } catch (error) {
-        console.error('Erreur lors de l\'impression:', error);
-        window.open(fileUrl, '_blank');
-      }
-    }
+    window.print();
+  };
+
+  const handleOpenInNewTab = () => {
+    window.open(fileUrl, '_blank');
   };
 
   const toggleFullscreen = async () => {
@@ -117,13 +132,24 @@ const ChromeStyleDocumentViewer: React.FC<ChromeStyleDocumentViewerProps> = ({
             <Download className="h-4 w-4" />
           </Button>
 
+          {fileType !== 'other' && fileType !== 'office' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handlePrint}
+              title="Imprimer"
+            >
+              <Printer className="h-4 w-4" />
+            </Button>
+          )}
+
           <Button
             variant="ghost"
             size="sm"
-            onClick={handlePrint}
-            title="Imprimer"
+            onClick={handleOpenInNewTab}
+            title="Ouvrir dans un nouvel onglet"
           >
-            <Printer className="h-4 w-4" />
+            <ExternalLink className="h-4 w-4" />
           </Button>
 
           <Button
@@ -153,8 +179,8 @@ const ChromeStyleDocumentViewer: React.FC<ChromeStyleDocumentViewerProps> = ({
       </div>
 
       {/* Zone de visualisation */}
-      <div className="flex-1 relative bg-muted/30">
-        {loading && (
+      <div className="flex-1 relative bg-muted/30 overflow-auto">
+        {loading && fileType === 'pdf' && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
@@ -163,14 +189,46 @@ const ChromeStyleDocumentViewer: React.FC<ChromeStyleDocumentViewerProps> = ({
           </div>
         )}
 
-        <iframe
-          id="document-iframe"
-          src={fileUrl}
-          className="w-full h-full border-0"
-          title={fileName}
-          onLoad={() => setLoading(false)}
-          onError={() => setLoading(false)}
-        />
+        {fileType === 'pdf' && (
+          <BasicPDFViewer fileUrl={fileUrl} fileName={fileName} />
+        )}
+
+        {fileType === 'image' && (
+          <div className="flex items-center justify-center h-full p-4">
+            <img 
+              src={fileUrl} 
+              alt={fileName}
+              className="max-w-full max-h-full object-contain"
+              onLoad={() => setLoading(false)}
+            />
+          </div>
+        )}
+
+        {fileType === 'office' && (
+          <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+            <p className="text-lg font-medium mb-4">Fichier Office détecté</p>
+            <p className="text-muted-foreground mb-6">
+              Ce type de fichier doit être ouvert dans un nouvel onglet pour être visualisé correctement.
+            </p>
+            <Button onClick={handleOpenInNewTab}>
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Ouvrir dans un nouvel onglet
+            </Button>
+          </div>
+        )}
+
+        {fileType === 'other' && (
+          <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+            <p className="text-lg font-medium mb-4">Aperçu non disponible</p>
+            <p className="text-muted-foreground mb-6">
+              Ce type de fichier ne peut pas être visualisé directement. Vous pouvez le télécharger.
+            </p>
+            <Button onClick={handleDownload}>
+              <Download className="h-4 w-4 mr-2" />
+              Télécharger le fichier
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
