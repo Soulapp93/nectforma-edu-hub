@@ -45,27 +45,56 @@ const ModernPDFViewer: React.FC<ModernPDFViewerProps> = ({
   const [searchText, setSearchText] = useState<string>('');
   const [showThumbnails, setShowThumbnails] = useState<boolean>(false);
   const [renderMode, setRenderMode] = useState<'single' | 'continuous'>('single');
+  const [useFallback, setUseFallback] = useState<boolean>(false);
+  const [loadAttempts, setLoadAttempts] = useState<number>(0);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
+
+  // Timeout pour détecter un chargement bloqué
+  useEffect(() => {
+    if (loading && !useFallback && loadAttempts < 2) {
+      console.log('PDF loading timeout started');
+      const timeout = setTimeout(() => {
+        console.warn('PDF loading timeout - switching to fallback iframe');
+        setUseFallback(true);
+        setLoading(false);
+        setError('');
+      }, 8000); // 8 secondes de timeout
+
+      return () => clearTimeout(timeout);
+    }
+  }, [loading, useFallback, loadAttempts]);
 
   const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
     setLoading(false);
     setError('');
-    console.log('PDF loaded successfully:', numPages, 'pages');
+    setLoadAttempts(prev => prev + 1);
+    console.log('✓ PDF loaded successfully:', numPages, 'pages');
     console.log('File URL:', fileUrl);
   }, [fileUrl]);
 
   const onDocumentLoadError = useCallback((error: Error) => {
-    console.error('PDF loading error:', error);
+    console.error('✗ PDF loading error:', error);
     console.error('File URL:', fileUrl);
     console.error('Error details:', error.message, error.stack);
     console.error('PDF.js version:', pdfjs.version);
     console.error('Worker src:', pdfjs.GlobalWorkerOptions.workerSrc);
-    setError(`Erreur de chargement: ${error.message}`);
-    setLoading(false);
-  }, [fileUrl]);
+    
+    setLoadAttempts(prev => prev + 1);
+    
+    // Basculer vers le fallback iframe après la première erreur
+    if (loadAttempts === 0) {
+      console.warn('Switching to iframe fallback after first error');
+      setUseFallback(true);
+      setLoading(false);
+      setError('');
+    } else {
+      setError(`Erreur de chargement: ${error.message}`);
+      setLoading(false);
+    }
+  }, [fileUrl, loadAttempts]);
 
   const onPageLoadSuccess = useCallback(() => {
     console.log('Page rendered successfully');
@@ -345,7 +374,7 @@ const ModernPDFViewer: React.FC<ModernPDFViewerProps> = ({
           </div>
         )}
 
-        {!loading && !error && (
+        {!loading && !error && !useFallback && (
           <div className="flex justify-center p-4">
             <div 
               ref={pageRef}
@@ -371,14 +400,10 @@ const ModernPDFViewer: React.FC<ModernPDFViewerProps> = ({
                   </div>
                 }
                 options={{
-                  cMapUrl: '/node_modules/pdfjs-dist/cmaps/',
+                  cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
                   cMapPacked: true,
-                  standardFontDataUrl: '/node_modules/pdfjs-dist/standard_fonts/',
-                  httpHeaders: {
-                    'Access-Control-Allow-Origin': '*',
-                  },
+                  standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
                   withCredentials: false,
-                  verbosity: 1,
                 }}
               >
                 <Page
@@ -401,6 +426,27 @@ const ModernPDFViewer: React.FC<ModernPDFViewerProps> = ({
                   className="max-w-full"
                 />
               </Document>
+            </div>
+          </div>
+        )}
+
+        {/* Fallback iframe pour les PDFs qui ne chargent pas avec react-pdf */}
+        {!loading && !error && useFallback && (
+          <div className="w-full h-full flex items-center justify-center p-4">
+            <div className="w-full h-full max-w-[1200px] shadow-2xl bg-white rounded-lg overflow-hidden">
+              <iframe
+                src={`${fileUrl}#toolbar=1&navpanes=1&scrollbar=1&page=${pageNumber}&zoom=${Math.round(scale * 100)}`}
+                className="w-full h-full border-0"
+                title={fileName}
+                onLoad={() => {
+                  console.log('✓ PDF loaded successfully via iframe fallback');
+                  setLoading(false);
+                }}
+                onError={() => {
+                  console.error('✗ Iframe also failed to load PDF');
+                  setError('Impossible de charger le PDF');
+                }}
+              />
             </div>
           </div>
         )}
