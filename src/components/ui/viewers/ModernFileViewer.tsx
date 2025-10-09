@@ -260,23 +260,23 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-50 flex flex-col bg-[#323639]"
-      style={isFullscreen ? {
-        width: '100vw',
-        height: '100vh',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+      className="fixed inset-0 z-50 bg-[#323639]"
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
         margin: 0,
         padding: 0
-      } : {}}
+      }}
     >
       {/* Barre d'outils */}
       <div 
-        className="flex items-center justify-between px-4 py-2 bg-[#323639] border-b border-gray-700 flex-shrink-0"
-        style={isFullscreen ? { height: '48px' } : {}}
+        className="flex items-center justify-between px-4 py-2 bg-[#323639] border-b border-gray-700"
+        style={{
+          height: '48px',
+          flexShrink: 0
+        }}
       >
         <div className="flex items-center space-x-3">
           <h2 className="text-sm font-medium text-gray-200 truncate max-w-md">
@@ -341,11 +341,8 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
         style={{
           flex: 1,
           width: '100%',
-          height: isFullscreen ? 'calc(100vh - 48px)' : 'calc(100vh - 48px)',
           position: 'relative',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column'
+          overflow: 'hidden'
         }}
       >
         {loading && !error && (
