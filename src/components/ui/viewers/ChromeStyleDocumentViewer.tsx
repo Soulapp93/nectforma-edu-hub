@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, Download, Printer, Maximize2, Minimize2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import BasicPDFViewer from './BasicPDFViewer';
 
 interface ChromeStyleDocumentViewerProps {
   fileUrl: string;
@@ -179,18 +178,14 @@ const ChromeStyleDocumentViewer: React.FC<ChromeStyleDocumentViewerProps> = ({
       </div>
 
       {/* Zone de visualisation */}
-      <div className="flex-1 relative bg-muted/30 overflow-auto">
-        {loading && fileType === 'pdf' && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-sm text-muted-foreground">Chargement du document...</p>
-            </div>
-          </div>
-        )}
-
+      <div className="flex-1 relative bg-muted/30 overflow-hidden">
         {fileType === 'pdf' && (
-          <BasicPDFViewer fileUrl={fileUrl} fileName={fileName} />
+          <iframe
+            src={fileUrl}
+            className="w-full h-full border-0"
+            title={fileName}
+            style={{ width: '100%', height: '100%', border: 'none' }}
+          />
         )}
 
         {fileType === 'image' && (
