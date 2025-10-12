@@ -3,7 +3,7 @@ import { Plus, FileText, Eye, Trash2, Download, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { moduleDocumentService, ModuleDocument } from '@/services/moduleDocumentService';
 import CreateDocumentModal from './CreateDocumentModal';
-import ChromeStyleDocumentViewer from '@/components/ui/viewers/ChromeStyleDocumentViewer';
+import EdgeStyleViewer from '@/components/ui/viewers/EdgeStyleViewer';
 import { toast } from 'sonner';
 
 interface ModuleDocumentsTabProps {
@@ -236,7 +236,7 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
       )}
 
       {viewerDocument && (
-        <ChromeStyleDocumentViewer
+        <EdgeStyleViewer
           fileUrl={viewerDocument.file_url}
           fileName={viewerDocument.file_name}
           isOpen={!!viewerDocument}
