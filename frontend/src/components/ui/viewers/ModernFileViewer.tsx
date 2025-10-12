@@ -539,32 +539,73 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
     );
   };
 
-  const renderImageViewer = () => (
-    <div className="flex-1 overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800">
-      <div className="flex items-center justify-center h-full p-4">
-        <img
-          src={fileUrl}
-          alt={fileName}
-          style={{
-            transform: `scale(${imageScale}) rotate(${imageRotation}deg)`,
+  const renderImageViewer = () => {
+    const getImageStyle = () => {
+      const baseStyle = {
+        transform: `scale(${imageScale}) rotate(${imageRotation}deg)`,
+        objectFit: 'contain' as const,
+        transition: 'transform 0.3s ease'
+      };
+
+      switch (fitMode) {
+        case 'width':
+          return {
+            ...baseStyle,
+            width: '100%',
+            height: 'auto',
+            maxWidth: '100%',
+            maxHeight: 'none'
+          };
+        case 'height':
+          return {
+            ...baseStyle,
+            width: 'auto',
+            height: '100%',
+            maxWidth: 'none',
+            maxHeight: '100%'
+          };
+        case 'page':
+          return {
+            ...baseStyle,
+            width: '100%',
+            height: '100%',
+            maxWidth: '100%',
+            maxHeight: '100%'
+          };
+        case 'auto':
+        default:
+          return {
+            ...baseStyle,
             maxWidth: '90%',
-            maxHeight: '90%',
-            objectFit: 'contain',
-            transition: 'transform 0.3s ease'
-          }}
-          className="shadow-2xl rounded-lg"
-          onLoad={() => {
-            setIsLoading(false);
-            setLoadError(null);
-          }}
-          onError={() => {
-            setLoadError('Impossible de charger l\'image');
-            setIsLoading(false);
-          }}
-        />
+            maxHeight: '90%'
+          };
+      }
+    };
+
+    return (
+      <div className={cn(
+        "flex-1 overflow-hidden",
+        isFullscreen ? "bg-black" : "bg-gradient-to-br from-gray-900 to-gray-800"
+      )}>
+        <div className="flex items-center justify-center h-full p-4">
+          <img
+            src={fileUrl}
+            alt={fileName}
+            style={getImageStyle()}
+            className="shadow-2xl rounded-lg"
+            onLoad={() => {
+              setIsLoading(false);
+              setLoadError(null);
+            }}
+            onError={() => {
+              setLoadError('Impossible de charger l\'image');
+              setIsLoading(false);
+            }}
+          />
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderVideoViewer = () => (
     <div className="flex-1 flex flex-col bg-black">
