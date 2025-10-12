@@ -668,22 +668,24 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
                 renderAnnotationLayer={true}
                 loading={
                   <div className={cn(
-                    "flex items-center justify-center rounded-lg",
-                    isFullscreen ? "bg-gray-800 text-white p-4" : "bg-white text-gray-700 p-8 shadow-lg"
+                    "flex items-center justify-center",
+                    isFullscreen ? "bg-transparent text-white p-2" : "bg-white text-gray-700 p-8 shadow-lg rounded-lg"
                   )}>
                     <Loader2 className="h-6 w-6 animate-spin mr-2" />
                     <span>Chargement de la page...</span>
                   </div>
                 }
                 className={cn(
-                  "bg-white",
-                  isFullscreen ? "" : "shadow-xl rounded-lg"
+                  isFullscreen ? "bg-white" : "bg-white shadow-xl rounded-lg"
                 )}
                 style={isFullscreen ? {
                   display: 'block',
-                  margin: '0 auto',
+                  margin: '0',
+                  padding: '0',
                   border: 'none',
-                  borderRadius: 0
+                  borderRadius: '0',
+                  boxShadow: 'none',
+                  outline: 'none'
                 } : {}}
               />
             </Document>
