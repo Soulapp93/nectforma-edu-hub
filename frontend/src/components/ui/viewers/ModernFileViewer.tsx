@@ -706,7 +706,10 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col bg-white"
+      className={cn(
+        "fixed inset-0 z-50 flex flex-col",
+        isFullscreen ? "bg-black" : "bg-white"
+      )}
       ref={containerRef}
     >
       {/* Modern Chrome-style toolbar */}
