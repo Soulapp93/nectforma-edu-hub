@@ -264,12 +264,13 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
         />
       )}
 
-      {viewerDocument && (
-        <ChromeStyleViewer
-          fileUrl={viewerDocument.file_url}
-          fileName={viewerDocument.file_name || 'Document'}
-          isOpen={!!viewerDocument}
-          onClose={() => setViewerDocument(null)}
+      {isOpen && currentFile && (
+        <ModernFileViewer
+          fileUrl={currentFile.url}
+          fileName={currentFile.name}
+          mimeType={currentFile.mimeType}
+          isOpen={isOpen}
+          onClose={closeViewer}
         />
       )}
     </div>
