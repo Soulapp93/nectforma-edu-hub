@@ -906,20 +906,30 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
       <div 
         className="flex-1 flex flex-col bg-black"
         style={isFullscreen ? {
+          position: 'absolute',
+          top: '0',
+          left: '0',
+          right: '0',
+          bottom: '0',
           width: '100vw',
           height: '100vh',
-          margin: 0,
-          padding: 0
+          margin: '0',
+          padding: '0',
+          border: 'none'
         } : {}}
       >
         <div 
           className="flex-1 flex items-center justify-center" 
           style={isFullscreen ? {
-            minHeight: 0,
+            position: 'absolute',
+            top: showToolbar ? '60px' : '0',
+            left: '0',
+            right: '0',
+            bottom: '60px', // Espace pour les contrôles vidéo
             width: '100%',
-            height: '100%',
-            margin: 0,
-            padding: 0
+            height: showToolbar ? 'calc(100vh - 120px)' : 'calc(100vh - 60px)',
+            margin: '0',
+            padding: '0'
           } : { minHeight: 0 }}
         >
           <video
