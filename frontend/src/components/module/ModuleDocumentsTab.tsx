@@ -150,7 +150,9 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
-                    <span className="text-2xl">{getFileIcon(document.file_name)}</span>
+                    <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-lg">
+                      <FileIcon fileName={document.file_name} size="lg" />
+                    </div>
                     <div>
                       <h3 className="font-medium text-gray-900">{document.title}</h3>
                       <div className="flex items-center space-x-2 mt-1">
