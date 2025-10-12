@@ -226,8 +226,17 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
   // Fullscreen handling
   useEffect(() => {
     const handleFullscreenChange = () => {
-      const isNowFullscreen = !!document.fullscreenElement;
-      setIsFullscreen(isNowFullscreen);
+      const isNowFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).msFullscreenElement
+      );
+      
+      // Ne mettre à jour que si ce n'est pas déjà en mode simulé
+      if (!isFullscreen || isNowFullscreen) {
+        setIsFullscreen(isNowFullscreen);
+      }
       
       // Auto-hide toolbar in fullscreen, show when not fullscreen
       if (isNowFullscreen) {
@@ -237,14 +246,24 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
           setShowToolbar(false);
         }, 3000);
         return () => clearTimeout(timer);
-      } else {
+      } else if (!isFullscreen) {
         setShowToolbar(true);
       }
     };
 
+    // Écouter tous les événements de fullscreen
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+    
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+    };
+  }, [isFullscreen]);
 
   // Mouse movement handler for fullscreen
   useEffect(() => {
