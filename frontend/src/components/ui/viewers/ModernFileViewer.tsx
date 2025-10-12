@@ -851,8 +851,25 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
     };
 
     return (
-      <div className="flex-1 flex flex-col bg-black">
-        <div className="flex-1 flex items-center justify-center" style={{ minHeight: 0 }}>
+      <div 
+        className="flex-1 flex flex-col bg-black"
+        style={isFullscreen ? {
+          width: '100vw',
+          height: '100vh',
+          margin: 0,
+          padding: 0
+        } : {}}
+      >
+        <div 
+          className="flex-1 flex items-center justify-center" 
+          style={isFullscreen ? {
+            minHeight: 0,
+            width: '100%',
+            height: '100%',
+            margin: 0,
+            padding: 0
+          } : { minHeight: 0 }}
+        >
           <video
             ref={videoRef}
             src={fileUrl}
