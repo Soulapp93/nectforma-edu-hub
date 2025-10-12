@@ -658,38 +658,76 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
         transition: 'transform 0.3s ease'
       };
 
-      switch (fitMode) {
-        case 'width':
-          return {
-            ...baseStyle,
-            width: '100%',
-            height: 'auto',
-            maxWidth: '100%',
-            maxHeight: 'none'
-          };
-        case 'height':
-          return {
-            ...baseStyle,
-            width: 'auto',
-            height: '100%',
-            maxWidth: 'none',
-            maxHeight: '100%'
-          };
-        case 'page':
-          return {
-            ...baseStyle,
-            width: '100%',
-            height: '100%',
-            maxWidth: '100%',
-            maxHeight: '100%'
-          };
-        case 'auto':
-        default:
-          return {
-            ...baseStyle,
-            maxWidth: '90%',
-            maxHeight: '90%'
-          };
+      // En mode plein écran, utiliser TOUT l'espace disponible
+      if (isFullscreen) {
+        switch (fitMode) {
+          case 'width':
+            return {
+              ...baseStyle,
+              width: '100vw',
+              height: 'auto',
+              maxWidth: '100vw',
+              maxHeight: '100vh'
+            };
+          case 'height':
+            return {
+              ...baseStyle,
+              width: 'auto',
+              height: '100vh',
+              maxWidth: '100vw',
+              maxHeight: '100vh'
+            };
+          case 'page':
+            return {
+              ...baseStyle,
+              width: '100vw',
+              height: '100vh',
+              maxWidth: '100vw',
+              maxHeight: '100vh'
+            };
+          case 'auto':
+          default:
+            return {
+              ...baseStyle,
+              maxWidth: '100vw',
+              maxHeight: '100vh'
+            };
+        }
+      } else {
+        // Mode normal (non plein écran)
+        switch (fitMode) {
+          case 'width':
+            return {
+              ...baseStyle,
+              width: '100%',
+              height: 'auto',
+              maxWidth: '100%',
+              maxHeight: 'none'
+            };
+          case 'height':
+            return {
+              ...baseStyle,
+              width: 'auto',
+              height: '100%',
+              maxWidth: 'none',
+              maxHeight: '100%'
+            };
+          case 'page':
+            return {
+              ...baseStyle,
+              width: '100%',
+              height: '100%',
+              maxWidth: '100%',
+              maxHeight: '100%'
+            };
+          case 'auto':
+          default:
+            return {
+              ...baseStyle,
+              maxWidth: '90%',
+              maxHeight: '90%'
+            };
+        }
       }
     };
 
