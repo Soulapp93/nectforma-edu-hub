@@ -429,26 +429,31 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
   };
 
   const exitFullscreen = async () => {
-    if (document.fullscreenElement) {
-      try {
-        const doc = document as any;
-        
-        if (doc.exitFullscreen) {
-          await doc.exitFullscreen();
-        } else if (doc.mozCancelFullScreen) {
-          await doc.mozCancelFullScreen();
-        } else if (doc.webkitExitFullscreen) {
-          await doc.webkitExitFullscreen();
-        } else if (doc.msExitFullscreen) {
-          await doc.msExitFullscreen();
-        }
-      } catch (err) {
-        console.error('Erreur sortie fullscreen:', err);
-      }
-    } else if (isFullscreen) {
-      // Sortir du mode plein écran simulé
+    if (isFullscreen) {
+      // Toujours sortir du mode simulé
       setIsFullscreen(false);
       setShowToolbar(true);
+      
+      // Restaurer les styles normaux
+      if (containerRef.current) {
+        const element = containerRef.current;
+        element.style.position = '';
+        element.style.top = '';
+        element.style.left = '';
+        element.style.width = '';
+        element.style.height = '';
+        element.style.zIndex = '';
+        element.style.margin = '';
+        element.style.padding = '';
+        element.style.border = '';
+        element.style.outline = '';
+        element.style.overflow = '';
+      }
+      
+      // Restaurer le body
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      
       toast.success('Mode plein écran désactivé');
     }
   };
