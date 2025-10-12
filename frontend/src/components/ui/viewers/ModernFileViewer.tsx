@@ -735,8 +735,26 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
       <div className={cn(
         "flex-1 overflow-hidden",
         isFullscreen ? "bg-black" : "bg-gradient-to-br from-gray-900 to-gray-800"
-      )}>
-        <div className="flex items-center justify-center h-full p-4">
+      )}
+      style={isFullscreen ? {
+        width: '100vw',
+        height: '100vh',
+        margin: 0,
+        padding: 0
+      } : {}}
+      >
+        <div 
+          className={cn(
+            "flex items-center justify-center h-full",
+            isFullscreen ? "p-0" : "p-4"
+          )}
+          style={isFullscreen ? {
+            width: '100%',
+            height: '100%',
+            margin: 0,
+            padding: 0
+          } : {}}
+        >
           <img
             src={fileUrl}
             alt={fileName}
