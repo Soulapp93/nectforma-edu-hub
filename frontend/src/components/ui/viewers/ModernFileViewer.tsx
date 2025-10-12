@@ -4,7 +4,8 @@ import {
   ChevronLeft, ChevronRight, Printer, ExternalLink, RefreshCw,
   Menu, Grid3X3, Play, Pause, VolumeX, Volume2, SkipBack, SkipForward,
   FileText, Image, Video, File, AlertCircle, Loader2, Search,
-  Settings, Share2, Bookmark, MoreVertical
+  Settings, Share2, Bookmark, MoreVertical, Monitor, Smartphone,
+  Tablet, SquareEqual
 } from 'lucide-react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Button } from '@/components/ui/button';
