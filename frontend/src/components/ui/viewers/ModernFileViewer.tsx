@@ -662,88 +662,160 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
     );
   };
 
-  const renderVideoViewer = () => (
-    <div className="flex-1 flex flex-col bg-black">
-      <div className="flex-1 flex items-center justify-center p-4">
-        <video
-          ref={videoRef}
-          src={fileUrl}
-          controls={false}
-          className="max-w-full max-h-full shadow-2xl rounded-lg"
-          onLoadedMetadata={() => {
-            if (videoRef.current) {
-              setDuration(videoRef.current.duration);
+  const renderVideoViewer = () => {
+    const getVideoStyle = () => {
+      // Style YouTube-like : prend toute la largeur disponible
+      switch (fitMode) {
+        case 'width':
+          return {
+            width: '100%',
+            height: 'auto',
+            maxWidth: '100%',
+            maxHeight: '100%'
+          };
+        case 'height':
+          return {
+            width: 'auto',
+            height: '100%',
+            maxWidth: '100%',
+            maxHeight: '100%'
+          };
+        case 'page':
+          return {
+            width: '100%',
+            height: '100%',
+            maxWidth: '100%',
+            maxHeight: '100%',
+            objectFit: 'contain' as const
+          };
+        case 'auto':
+        default:
+          return {
+            width: '100%',
+            height: 'auto',
+            maxWidth: '100%',
+            maxHeight: '80vh'
+          };
+      }
+    };
+
+    return (
+      <div className="flex-1 flex flex-col bg-black">
+        <div className="flex-1 flex items-center justify-center" style={{ minHeight: 0 }}>
+          <video
+            ref={videoRef}
+            src={fileUrl}
+            controls={false}
+            style={getVideoStyle()}
+            className="shadow-2xl"
+            onLoadedMetadata={() => {
+              if (videoRef.current) {
+                setDuration(videoRef.current.duration);
+                setIsLoading(false);
+                setLoadError(null);
+              }
+            }}
+            onTimeUpdate={() => {
+              if (videoRef.current) {
+                setCurrentTime(videoRef.current.currentTime);
+              }
+            }}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            onVolumeChange={() => {
+              if (videoRef.current) {
+                setVolume(videoRef.current.volume);
+                setIsMuted(videoRef.current.muted);
+              }
+            }}
+            onError={(e) => {
+              console.error('Erreur vidéo:', e);
+              setLoadError('Impossible de lire la vidéo. Format non supporté ou fichier corrompu.');
               setIsLoading(false);
-            }
-          }}
-          onTimeUpdate={() => {
-            if (videoRef.current) {
-              setCurrentTime(videoRef.current.currentTime);
-            }
-          }}
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-          onVolumeChange={() => {
-            if (videoRef.current) {
-              setVolume(videoRef.current.volume);
-              setIsMuted(videoRef.current.muted);
-            }
-          }}
-          onError={() => {
-            setLoadError('Impossible de lire la vidéo');
-            setIsLoading(false);
-          }}
-        />
-      </div>
-      
-      {/* Custom video controls */}
-      <div className={cn(
-        "backdrop-blur-sm p-4 border-t",
-        isFullscreen ? "bg-black/80 border-gray-700" : "bg-gray-900/90 border-gray-700"
-      )}>
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={togglePlayPause}
-            className="text-white hover:bg-gray-700"
-          >
-            {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-          </Button>
-          
-          <div className="flex items-center space-x-2 text-white text-sm flex-1">
-            <span>{formatTime(currentTime)}</span>
-            <div className="flex-1 h-2 bg-gray-600 rounded-full overflow-hidden cursor-pointer min-w-[200px]">
+            }}
+            onCanPlay={() => {
+              console.log('Vidéo prête à être lue');
+              setIsLoading(false);
+            }}
+            preload="metadata"
+          />
+        </div>
+        
+        {/* Custom video controls - YouTube style */}
+        <div className={cn(
+          "backdrop-blur-sm p-4 border-t",
+          isFullscreen ? "bg-black/80 border-gray-700" : "bg-gray-900/90 border-gray-700"
+        )}>
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={togglePlayPause}
+              className="text-white hover:bg-gray-700"
+            >
+              {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+            </Button>
+            
+            <div className="flex items-center space-x-2 text-white text-sm flex-1">
+              <span className="text-xs">{formatTime(currentTime)}</span>
               <div 
-                className="h-full bg-blue-500 rounded-full"
-                style={{ width: `${(currentTime / duration) * 100}%` }}
+                className="flex-1 h-1 bg-gray-600 rounded-full overflow-hidden cursor-pointer hover:h-2 transition-all"
                 onClick={(e) => {
                   const rect = e.currentTarget.getBoundingClientRect();
                   const percent = (e.clientX - rect.left) / rect.width;
                   handleSeek(percent * duration);
                 }}
+              >
+                <div 
+                  className="h-full bg-red-600 rounded-full transition-all"
+                  style={{ width: `${(currentTime / duration) * 100}%` }}
+                />
+              </div>
+              <span className="text-xs">{formatTime(duration)}</span>
+            </div>
+            
+            <div className="flex items-center space-x-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (videoRef.current) {
+                    videoRef.current.muted = !isMuted;
+                    setIsMuted(!isMuted);
+                  }
+                }}
+                className="text-white hover:bg-gray-700 h-8 w-8 p-0"
+              >
+                {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              </Button>
+              
+              {/* Volume slider */}
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={isMuted ? 0 : volume}
+                onChange={(e) => {
+                  const newVolume = parseFloat(e.target.value);
+                  if (videoRef.current) {
+                    videoRef.current.volume = newVolume;
+                    videoRef.current.muted = newVolume === 0;
+                    setVolume(newVolume);
+                    setIsMuted(newVolume === 0);
+                  }
+                }}
+                className="w-16 h-1 bg-gray-600 rounded-full appearance-none cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, #ef4444 0%, #ef4444 ${(isMuted ? 0 : volume) * 100}%, #4b5563 ${(isMuted ? 0 : volume) * 100}%, #4b5563 100%)`
+                }}
               />
             </div>
-            <span>{formatTime(duration)}</span>
           </div>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              if (videoRef.current) {
-                videoRef.current.muted = !isMuted;
-                setIsMuted(!isMuted);
-              }
-            }}
-            className="text-white hover:bg-gray-700"
-          >
-            {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-          </Button>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderOfficeViewer = () => {
     const officeViewerUrls = [
