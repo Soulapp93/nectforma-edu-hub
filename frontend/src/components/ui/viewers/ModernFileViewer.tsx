@@ -355,36 +355,32 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
   };
 
   const toggleFullscreen = async () => {
-    if (!document.fullscreenElement && containerRef.current) {
-      try {
-        // Essayer différentes méthodes de fullscreen selon le navigateur
-        const element = containerRef.current as any;
-        
-        if (element.requestFullscreen) {
-          await element.requestFullscreen();
-        } else if (element.mozRequestFullScreen) {
-          await element.mozRequestFullScreen();
-        } else if (element.webkitRequestFullscreen) {
-          await element.webkitRequestFullscreen();
-        } else if (element.msRequestFullscreen) {
-          await element.msRequestFullscreen();
-        } else {
-          // Fallback: Mode plein écran simulé
-          setIsFullscreen(true);
-          setShowToolbar(false);
-          toast.success('Mode plein écran simulé activé');
-          return;
-        }
-        
-        setShowToolbar(false);
-        toast.success('Mode plein écran activé');
-      } catch (err) {
-        console.error('Erreur fullscreen:', err);
-        // Fallback en cas d'erreur
-        setIsFullscreen(true);
-        setShowToolbar(false);
-        toast.success('Mode plein écran simulé activé (Appuyez sur Échap pour quitter)');
+    if (!isFullscreen) {
+      // TOUJOURS utiliser le mode plein écran simulé pour un contrôle total
+      setIsFullscreen(true);
+      setShowToolbar(false);
+      
+      // Forcer les styles CSS pour un vrai plein écran
+      if (containerRef.current) {
+        const element = containerRef.current;
+        element.style.position = 'fixed';
+        element.style.top = '0';
+        element.style.left = '0';
+        element.style.width = '100vw';
+        element.style.height = '100vh';
+        element.style.zIndex = '999999';
+        element.style.margin = '0';
+        element.style.padding = '0';
+        element.style.border = 'none';
+        element.style.outline = 'none';
+        element.style.overflow = 'hidden';
       }
+      
+      // Masquer complètement la page derrière
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      
+      toast.success('Mode plein écran activé');
     } else {
       exitFullscreen();
     }
