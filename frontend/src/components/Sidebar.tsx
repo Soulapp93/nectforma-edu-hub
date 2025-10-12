@@ -88,7 +88,7 @@ const Sidebar = () => {
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
     { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
     { name: 'Coffre-fort', href: '/coffre-fort', icon: FileText },
-    { name: 'Gestion du compte', href: '/gestion-etablissement', icon: Building },
+    { name: 'Gestion du compte', href: '/gestion-etablissement', icon: Building2 },
     { name: '🔥 Demo Viewer', href: '/demo-viewer', icon: Eye },
     { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
