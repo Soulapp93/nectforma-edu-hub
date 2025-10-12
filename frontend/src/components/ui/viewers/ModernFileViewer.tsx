@@ -788,13 +788,13 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={handleZoomOut}
-                className="h-8 w-8 p-0"
+                className={cn("h-8 w-8 p-0", isFullscreen && "text-white hover:text-gray-300")}
                 title="Zoom arrière"
               >
                 <ZoomOut className="h-4 w-4" />
               </Button>
               
-              <div className="text-sm text-gray-600 min-w-[50px] text-center">
+              <div className={cn("text-sm min-w-[50px] text-center", isFullscreen ? "text-white" : "text-gray-600")}>
                 {Math.round((currentFileType?.type === 'pdf' ? pdfScale : imageScale) * 100)}%
               </div>
               
@@ -802,13 +802,57 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={handleZoomIn}
-                className="h-8 w-8 p-0"
+                className={cn("h-8 w-8 p-0", isFullscreen && "text-white hover:text-gray-300")}
                 title="Zoom avant"
               >
                 <ZoomIn className="h-4 w-4" />
               </Button>
+
+              {/* Fit Mode Selector - Chrome style */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn("h-8 w-8 p-0", isFullscreen && "text-white hover:text-gray-300")}
+                    title="Ajuster à la page"
+                  >
+                    <SquareEqual className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem 
+                    onClick={() => handleFitModeChange('auto')}
+                    className={fitMode === 'auto' ? 'bg-blue-50 text-blue-700' : ''}
+                  >
+                    <Monitor className="h-4 w-4 mr-2" />
+                    Taille automatique
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => handleFitModeChange('width')}
+                    className={fitMode === 'width' ? 'bg-blue-50 text-blue-700' : ''}
+                  >
+                    <Smartphone className="h-4 w-4 mr-2 rotate-90" />
+                    Ajuster à la largeur
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => handleFitModeChange('height')}
+                    className={fitMode === 'height' ? 'bg-blue-50 text-blue-700' : ''}
+                  >
+                    <Tablet className="h-4 w-4 mr-2" />
+                    Ajuster à la hauteur
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => handleFitModeChange('page')}
+                    className={fitMode === 'page' ? 'bg-blue-50 text-blue-700' : ''}
+                  >
+                    <Monitor className="h-4 w-4 mr-2" />
+                    Page entière
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               
-              <div className="h-6 w-px bg-gray-300 mx-2" />
+              <div className={cn("h-6 w-px mx-2", isFullscreen ? "bg-gray-600" : "bg-gray-300")} />
             </>
           )}
 
