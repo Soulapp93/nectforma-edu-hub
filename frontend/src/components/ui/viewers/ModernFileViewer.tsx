@@ -642,7 +642,10 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
       </div>
       
       {/* Custom video controls */}
-      <div className="bg-gray-900/90 backdrop-blur-sm p-4 border-t border-gray-700">
+      <div className={cn(
+        "backdrop-blur-sm p-4 border-t",
+        isFullscreen ? "bg-black/80 border-gray-700" : "bg-gray-900/90 border-gray-700"
+      )}>
         <div className="flex items-center space-x-4">
           <Button
             variant="ghost"
@@ -653,7 +656,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
             {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
           </Button>
           
-          <div className="flex items-center space-x-2 text-white text-sm">
+          <div className="flex items-center space-x-2 text-white text-sm flex-1">
             <span>{formatTime(currentTime)}</span>
             <div className="flex-1 h-2 bg-gray-600 rounded-full overflow-hidden cursor-pointer min-w-[200px]">
               <div 
