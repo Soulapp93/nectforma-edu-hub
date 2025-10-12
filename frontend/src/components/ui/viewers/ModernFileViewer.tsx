@@ -782,22 +782,29 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
         isFullscreen ? "bg-black" : "bg-gradient-to-br from-gray-900 to-gray-800"
       )}
       style={isFullscreen ? {
+        position: 'absolute',
+        top: showToolbar ? '60px' : '0',
+        left: '0',
+        right: '0',
+        bottom: '0',
         width: '100vw',
-        height: '100vh',
-        margin: 0,
-        padding: 0
+        height: showToolbar ? 'calc(100vh - 60px)' : '100vh',
+        margin: '0',
+        padding: '0',
+        border: 'none',
+        overflow: 'hidden'
       } : {}}
       >
         <div 
           className={cn(
             "flex items-center justify-center h-full",
-            isFullscreen ? "p-0" : "p-4"
+            isFullscreen ? "p-0 m-0" : "p-4"
           )}
           style={isFullscreen ? {
             width: '100%',
             height: '100%',
-            margin: 0,
-            padding: 0
+            margin: '0',
+            padding: '0'
           } : {}}
         >
           <img
