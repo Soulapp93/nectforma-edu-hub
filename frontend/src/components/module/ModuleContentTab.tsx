@@ -173,7 +173,9 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
                     {content.file_name && (
-                      <span className="text-2xl">{getFileIcon(content.file_name)}</span>
+                      <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-lg">
+                        <FileIcon fileName={content.file_name} size="lg" />
+                      </div>
                     )}
                     <div>
                       <h3 className="font-medium text-gray-900">{content.title}</h3>
