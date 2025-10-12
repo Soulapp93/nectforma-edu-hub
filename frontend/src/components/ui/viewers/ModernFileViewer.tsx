@@ -304,12 +304,33 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
   const toggleFullscreen = async () => {
     if (!document.fullscreenElement && containerRef.current) {
       try {
-        // Use the container element for true fullscreen
-        await containerRef.current.requestFullscreen();
+        // Essayer différentes méthodes de fullscreen selon le navigateur
+        const element = containerRef.current as any;
+        
+        if (element.requestFullscreen) {
+          await element.requestFullscreen();
+        } else if (element.mozRequestFullScreen) {
+          await element.mozRequestFullScreen();
+        } else if (element.webkitRequestFullscreen) {
+          await element.webkitRequestFullscreen();
+        } else if (element.msRequestFullscreen) {
+          await element.msRequestFullscreen();
+        } else {
+          // Fallback: Mode plein écran simulé
+          setIsFullscreen(true);
+          setShowToolbar(false);
+          toast.success('Mode plein écran simulé activé');
+          return;
+        }
+        
         setShowToolbar(false);
+        toast.success('Mode plein écran activé');
       } catch (err) {
         console.error('Erreur fullscreen:', err);
-        toast.error('Impossible de passer en plein écran');
+        // Fallback en cas d'erreur
+        setIsFullscreen(true);
+        setShowToolbar(false);
+        toast.success('Mode plein écran simulé activé (Appuyez sur Échap pour quitter)');
       }
     } else {
       exitFullscreen();
