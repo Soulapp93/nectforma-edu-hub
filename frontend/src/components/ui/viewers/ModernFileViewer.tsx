@@ -128,12 +128,20 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
     const mimeMap: Record<string, string> = {
       'pdf': 'application/pdf',
       'jpg': 'image/jpeg', 'jpeg': 'image/jpeg',
-      'png': 'image/png', 'gif': 'image/gif',
-      'mp4': 'video/mp4', 'webm': 'video/webm',
-      'mp3': 'audio/mpeg', 'wav': 'audio/wav',
+      'png': 'image/png', 'gif': 'image/gif', 'webp': 'image/webp',
+      'svg': 'image/svg+xml', 'bmp': 'image/bmp', 'tiff': 'image/tiff',
+      'mp4': 'video/mp4', 'webm': 'video/webm', 'ogg': 'video/ogg',
+      'avi': 'video/x-msvideo', 'mov': 'video/quicktime', 'wmv': 'video/x-ms-wmv',
+      'mp3': 'audio/mpeg', 'wav': 'audio/wav', 'flac': 'audio/flac',
+      'aac': 'audio/aac', 'm4a': 'audio/x-m4a', 'wma': 'audio/x-ms-wma',
       'doc': 'application/msword',
       'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'txt': 'text/plain'
+      'xls': 'application/vnd.ms-excel',
+      'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'ppt': 'application/vnd.ms-powerpoint',
+      'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'txt': 'text/plain', 'md': 'text/markdown', 'csv': 'text/csv',
+      'json': 'application/json', 'xml': 'application/xml'
     };
     return mimeMap[extension] || 'application/octet-stream';
   }, []);
