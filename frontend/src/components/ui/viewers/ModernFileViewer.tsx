@@ -395,98 +395,149 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
   };
 
   // Render functions for different file types
-  const renderPDFViewer = () => (
-    <div className="flex h-full bg-gradient-to-br from-gray-50 to-gray-100">
-      {showThumbnails && (
-        <div className="w-64 bg-white border-r border-gray-200 overflow-y-auto shadow-lg">
-          <div className="p-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Pages</h3>
-            <div className="space-y-3">
-              {Array.from(new Array(numPages), (el, index) => (
-                <div
-                  key={`thumb_${index + 1}`}
-                  onClick={() => setPageNumber(index + 1)}
-                  className={cn(
-                    "cursor-pointer p-2 rounded-lg border-2 transition-all hover:shadow-md",
-                    pageNumber === index + 1
-                      ? "border-blue-500 bg-blue-50 shadow-md"
-                      : "border-gray-200 hover:border-gray-300"
-                  )}
-                >
-                  <Document file={fileUrl} loading="">
-                    <Page
-                      pageNumber={index + 1}
-                      width={180}
-                      renderTextLayer={false}
-                      renderAnnotationLayer={false}
-                    />
-                  </Document>
-                  <div className="text-center text-xs text-gray-500 mt-2">
-                    Page {index + 1}
+  const renderPDFViewer = () => {
+    const getPageWidth = () => {
+      if (!contentRef.current) return 900;
+      
+      const containerWidth = contentRef.current.clientWidth;
+      const containerHeight = contentRef.current.clientHeight;
+      
+      switch (fitMode) {
+        case 'width':
+          return containerWidth - (showThumbnails ? 320 : 64);
+        case 'height':
+          return Math.min(900, (containerHeight - 32) * 0.7);
+        case 'page':
+          return Math.min(
+            containerWidth - (showThumbnails ? 320 : 64),
+            (containerHeight - 32) * 0.7
+          );
+        case 'auto':
+        default:
+          return Math.min(900, containerWidth - (showThumbnails ? 320 : 64));
+      }
+    };
+
+    return (
+      <div className={cn(
+        "flex h-full",
+        isFullscreen ? "bg-black" : "bg-gradient-to-br from-gray-50 to-gray-100"
+      )}>
+        {showThumbnails && (
+          <div className={cn(
+            "w-64 border-r overflow-y-auto shadow-lg",
+            isFullscreen ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+          )}>
+            <div className="p-4">
+              <h3 className={cn(
+                "text-sm font-semibold mb-3",
+                isFullscreen ? "text-gray-200" : "text-gray-700"
+              )}>Pages</h3>
+              <div className="space-y-3">
+                {Array.from(new Array(numPages), (el, index) => (
+                  <div
+                    key={`thumb_${index + 1}`}
+                    onClick={() => setPageNumber(index + 1)}
+                    className={cn(
+                      "cursor-pointer p-2 rounded-lg border-2 transition-all hover:shadow-md",
+                      pageNumber === index + 1 && !isFullscreen && "border-blue-500 bg-blue-50 shadow-md",
+                      pageNumber === index + 1 && isFullscreen && "border-blue-400 bg-blue-900 shadow-md",
+                      pageNumber !== index + 1 && !isFullscreen && "border-gray-200 hover:border-gray-300",
+                      pageNumber !== index + 1 && isFullscreen && "border-gray-600 hover:border-gray-500"
+                    )}
+                  >
+                    <Document file={fileUrl} loading="">
+                      <Page
+                        pageNumber={index + 1}
+                        width={180}
+                        renderTextLayer={false}
+                        renderAnnotationLayer={false}
+                      />
+                    </Document>
+                    <div className={cn(
+                      "text-center text-xs mt-2",
+                      isFullscreen ? "text-gray-300" : "text-gray-500"
+                    )}>
+                      Page {index + 1}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <div className="flex-1 overflow-auto" ref={contentRef}>
-        <div 
-          className="flex items-center justify-center min-h-full p-8"
-          style={{
-            transform: `scale(${pdfScale})`,
-            transformOrigin: 'top center',
-            transition: 'transform 0.2s ease'
-          }}
-        >
-          <Document
-            file={fileUrl}
-            onLoadSuccess={({ numPages }) => {
-              setNumPages(numPages);
-              setIsLoading(false);
-              setLoadError(null);
+        <div className="flex-1 overflow-auto" ref={contentRef}>
+          <div 
+            className="flex items-center justify-center min-h-full p-8"
+            style={{
+              transform: `scale(${pdfScale})`,
+              transformOrigin: fitMode === 'width' || fitMode === 'page' ? 'top center' : 'center',
+              transition: 'transform 0.2s ease'
             }}
-            onLoadError={(error) => {
-              console.error('Erreur PDF:', error);
-              setLoadError('Impossible de charger le document PDF');
-              setIsLoading(false);
-            }}
-            loading={
-              <div className="flex flex-col items-center justify-center p-12 text-gray-600">
-                <Loader2 className="h-8 w-8 animate-spin mb-4" />
-                <div className="text-lg">Chargement du document...</div>
-              </div>
-            }
-            error={
-              <div className="flex flex-col items-center justify-center p-12 text-red-600">
-                <AlertCircle className="h-12 w-12 mb-4" />
-                <div className="text-lg">Erreur lors du chargement</div>
-                <Button onClick={() => window.location.reload()} className="mt-4">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Réessayer
-                </Button>
-              </div>
-            }
           >
-            <Page
-              pageNumber={pageNumber}
-              width={Math.min(900, window.innerWidth - 400)}
-              renderTextLayer={true}
-              renderAnnotationLayer={true}
+            <Document
+              file={fileUrl}
+              onLoadSuccess={({ numPages }) => {
+                setNumPages(numPages);
+                setIsLoading(false);
+                setLoadError(null);
+                // Auto-apply fit mode on load
+                setTimeout(() => handleFitModeChange(fitMode), 100);
+              }}
+              onLoadError={(error) => {
+                console.error('Erreur PDF:', error);
+                setLoadError('Impossible de charger le document PDF');
+                setIsLoading(false);
+              }}
               loading={
-                <div className="flex items-center justify-center p-8 bg-white rounded-lg shadow-lg">
-                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                  <span>Chargement de la page...</span>
+                <div className={cn(
+                  "flex flex-col items-center justify-center p-12",
+                  isFullscreen ? "text-white" : "text-gray-600"
+                )}>
+                  <Loader2 className="h-8 w-8 animate-spin mb-4" />
+                  <div className="text-lg">Chargement du document...</div>
                 </div>
               }
-              className="shadow-xl rounded-lg bg-white"
-            />
-          </Document>
+              error={
+                <div className={cn(
+                  "flex flex-col items-center justify-center p-12",
+                  isFullscreen ? "text-red-400" : "text-red-600"
+                )}>
+                  <AlertCircle className="h-12 w-12 mb-4" />
+                  <div className="text-lg">Erreur lors du chargement</div>
+                  <Button onClick={() => window.location.reload()} className="mt-4">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Réessayer
+                  </Button>
+                </div>
+              }
+            >
+              <Page
+                pageNumber={pageNumber}
+                width={getPageWidth()}
+                renderTextLayer={true}
+                renderAnnotationLayer={true}
+                loading={
+                  <div className={cn(
+                    "flex items-center justify-center p-8 rounded-lg shadow-lg",
+                    isFullscreen ? "bg-gray-800 text-white" : "bg-white text-gray-700"
+                  )}>
+                    <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                    <span>Chargement de la page...</span>
+                  </div>
+                }
+                className={cn(
+                  "shadow-xl rounded-lg",
+                  isFullscreen ? "bg-white" : "bg-white"
+                )}
+              />
+            </Document>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderImageViewer = () => (
     <div className="flex-1 overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800">
