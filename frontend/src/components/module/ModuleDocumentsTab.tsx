@@ -127,29 +127,7 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
     return (size / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
-  const getFileIcon = (fileName: string) => {
-    const extension = fileName.split('.').pop()?.toLowerCase();
-    switch (extension) {
-      case 'pdf':
-        return '📄';
-      case 'doc':
-      case 'docx':
-        return '📝';
-      case 'ppt':
-      case 'pptx':
-        return '📊';
-      case 'xls':
-      case 'xlsx':
-        return '📈';
-      case 'jpg':
-      case 'jpeg':
-      case 'png':
-      case 'gif':
-        return '🖼️';
-      default:
-        return '📎';
-    }
-  };
+  // Fonction supprimée - remplacée par FileIcon component
 
   if (loading) {
     return <div className="text-center py-8">Chargement...</div>;
