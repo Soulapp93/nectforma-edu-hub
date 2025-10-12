@@ -986,7 +986,13 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
 
       {/* Content area */}
       {!isLoading && !loadError && (
-        <div className="flex-1 overflow-hidden">
+        <div 
+          className={cn(
+            "flex-1 overflow-hidden",
+            isFullscreen && "relative"
+          )}
+          onMouseMove={isFullscreen ? () => setShowToolbar(true) : undefined}
+        >
           {currentFileType?.type === 'pdf' && renderPDFViewer()}
           {currentFileType?.type === 'image' && renderImageViewer()}
           {currentFileType?.type === 'video' && renderVideoViewer()}
