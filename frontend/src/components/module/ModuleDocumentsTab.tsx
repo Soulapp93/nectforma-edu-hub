@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { moduleDocumentService, ModuleDocument } from '@/services/moduleDocumentService';
 import CreateDocumentModal from './CreateDocumentModal';
 import ModernFileViewer from '@/components/ui/viewers/ModernFileViewer';
+import FileIcon from '@/components/ui/FileIcon';
 import { useFileViewer } from '@/hooks/useFileViewer';
 import { toast } from 'sonner';
 
