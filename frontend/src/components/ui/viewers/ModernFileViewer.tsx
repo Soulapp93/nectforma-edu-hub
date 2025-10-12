@@ -776,38 +776,77 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
 
   const renderVideoViewer = () => {
     const getVideoStyle = () => {
-      // Style YouTube-like : prend toute la largeur disponible
-      switch (fitMode) {
-        case 'width':
-          return {
-            width: '100%',
-            height: 'auto',
-            maxWidth: '100%',
-            maxHeight: '100%'
-          };
-        case 'height':
-          return {
-            width: 'auto',
-            height: '100%',
-            maxWidth: '100%',
-            maxHeight: '100%'
-          };
-        case 'page':
-          return {
-            width: '100%',
-            height: '100%',
-            maxWidth: '100%',
-            maxHeight: '100%',
-            objectFit: 'contain' as const
-          };
-        case 'auto':
-        default:
-          return {
-            width: '100%',
-            height: 'auto',
-            maxWidth: '100%',
-            maxHeight: '80vh'
-          };
+      // En mode plein écran, utiliser TOUT l'espace comme YouTube
+      if (isFullscreen) {
+        switch (fitMode) {
+          case 'width':
+            return {
+              width: '100vw',
+              height: 'auto',
+              maxWidth: '100vw',
+              maxHeight: '100vh',
+              objectFit: 'contain' as const
+            };
+          case 'height':
+            return {
+              width: 'auto',
+              height: '100vh',
+              maxWidth: '100vw',
+              maxHeight: '100vh',
+              objectFit: 'contain' as const
+            };
+          case 'page':
+            return {
+              width: '100vw',
+              height: '100vh',
+              maxWidth: '100vw',
+              maxHeight: '100vh',
+              objectFit: 'contain' as const
+            };
+          case 'auto':
+          default:
+            return {
+              width: '100vw',
+              height: 'auto',
+              maxWidth: '100vw',
+              maxHeight: '100vh',
+              objectFit: 'contain' as const
+            };
+        }
+      } else {
+        // Mode normal (non plein écran)
+        switch (fitMode) {
+          case 'width':
+            return {
+              width: '100%',
+              height: 'auto',
+              maxWidth: '100%',
+              maxHeight: '100%'
+            };
+          case 'height':
+            return {
+              width: 'auto',
+              height: '100%',
+              maxWidth: '100%',
+              maxHeight: '100%'
+            };
+          case 'page':
+            return {
+              width: '100%',
+              height: '100%',
+              maxWidth: '100%',
+              maxHeight: '100%',
+              objectFit: 'contain' as const
+            };
+          case 'auto':
+          default:
+            return {
+              width: '100%',
+              height: 'auto',
+              maxWidth: '100%',
+              maxHeight: '80vh'
+            };
+        }
       }
     };
 
