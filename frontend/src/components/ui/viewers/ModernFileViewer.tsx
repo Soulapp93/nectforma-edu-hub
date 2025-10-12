@@ -589,23 +589,39 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
           className="flex-1 overflow-auto" 
           ref={contentRef}
           style={isFullscreen ? {
-            width: '100%',
-            height: '100%',
-            margin: 0,
-            padding: 0
+            position: 'absolute',
+            top: showToolbar ? '60px' : '0',
+            left: showThumbnails ? '300px' : '0',
+            right: '0',
+            bottom: '0',
+            width: showThumbnails ? 'calc(100vw - 300px)' : '100vw',
+            height: showToolbar ? 'calc(100vh - 60px)' : '100vh',
+            margin: '0',
+            padding: '0',
+            border: 'none',
+            overflow: 'auto'
           } : {}}
         >
           <div 
             className={cn(
-              "flex items-center justify-center min-h-full",
-              isFullscreen ? "p-0" : "p-8"
+              "flex items-center justify-center",
+              isFullscreen ? "h-full w-full p-0 m-0" : "min-h-full p-8"
             )}
-            style={{
+            style={isFullscreen ? {
+              transform: `scale(${pdfScale})`,
+              transformOrigin: 'center center',
+              transition: 'transform 0.2s ease',
+              width: '100%',
+              height: '100%',
+              margin: '0',
+              padding: '0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            } : {
               transform: `scale(${pdfScale})`,
               transformOrigin: fitMode === 'width' || fitMode === 'page' ? 'top center' : 'center',
-              transition: 'transform 0.2s ease',
-              width: isFullscreen ? '100%' : 'auto',
-              height: isFullscreen ? '100%' : 'auto'
+              transition: 'transform 0.2s ease'
             }}
           >
             <Document
