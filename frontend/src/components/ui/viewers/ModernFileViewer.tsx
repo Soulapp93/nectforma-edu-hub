@@ -744,7 +744,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
                   size="sm"
                   onClick={() => setPageNumber(Math.max(1, pageNumber - 1))}
                   disabled={pageNumber <= 1}
-                  className="h-8 w-8 p-0"
+                  className={cn("h-8 w-8 p-0", isFullscreen && "text-white hover:text-gray-300")}
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -758,19 +758,22 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
                       setPageNumber(page);
                     }
                   }}
-                  className="w-16 h-8 text-center text-sm"
+                  className={cn(
+                    "w-16 h-8 text-center text-sm",
+                    isFullscreen && "bg-black/50 border-gray-600 text-white"
+                  )}
                   min={1}
                   max={numPages}
                 />
                 
-                <span className="text-sm text-gray-500">/ {numPages}</span>
+                <span className={cn("text-sm", isFullscreen ? "text-gray-300" : "text-gray-500")}>/ {numPages}</span>
                 
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setPageNumber(Math.min(numPages, pageNumber + 1))}
                   disabled={pageNumber >= numPages}
-                  className="h-8 w-8 p-0"
+                  className={cn("h-8 w-8 p-0", isFullscreen && "text-white hover:text-gray-300")}
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
