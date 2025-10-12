@@ -862,7 +862,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
               variant="ghost"
               size="sm"
               onClick={handleRotate}
-              className="h-8 w-8 p-0"
+              className={cn("h-8 w-8 p-0", isFullscreen && "text-white hover:text-gray-300")}
               title="Rotation"
             >
               <RotateCw className="h-4 w-4" />
@@ -877,7 +877,9 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
               onClick={() => setShowThumbnails(!showThumbnails)}
               className={cn(
                 "h-8 w-8 p-0",
-                showThumbnails ? "bg-blue-100 text-blue-600" : ""
+                showThumbnails && !isFullscreen && "bg-blue-100 text-blue-600",
+                showThumbnails && isFullscreen && "bg-blue-600 text-white",
+                isFullscreen && "text-white hover:text-gray-300"
               )}
               title="Miniatures"
             >
@@ -885,14 +887,14 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
             </Button>
           )}
 
-          <div className="h-6 w-px bg-gray-300 mx-2" />
+          <div className={cn("h-6 w-px mx-2", isFullscreen ? "bg-gray-600" : "bg-gray-300")} />
 
           {/* Download */}
           <Button
             variant="ghost"
             size="sm"
             onClick={handleDownload}
-            className="h-8 w-8 p-0"
+            className={cn("h-8 w-8 p-0", isFullscreen && "text-white hover:text-gray-300")}
             title="Télécharger"
           >
             <Download className="h-4 w-4" />
@@ -903,7 +905,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
             variant="ghost"
             size="sm"
             onClick={handlePrint}
-            className="h-8 w-8 p-0"
+            className={cn("h-8 w-8 p-0", isFullscreen && "text-white hover:text-gray-300")}
             title="Imprimer"
           >
             <Printer className="h-4 w-4" />
@@ -914,7 +916,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
             variant="ghost"
             size="sm"
             onClick={() => window.open(fileUrl, '_blank')}
-            className="h-8 w-8 p-0"
+            className={cn("h-8 w-8 p-0", isFullscreen && "text-white hover:text-gray-300")}
             title="Ouvrir dans un nouvel onglet"
           >
             <ExternalLink className="h-4 w-4" />
@@ -925,7 +927,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
             variant="ghost"
             size="sm"
             onClick={toggleFullscreen}
-            className="h-8 w-8 p-0"
+            className={cn("h-8 w-8 p-0", isFullscreen && "text-white hover:text-gray-300")}
             title={isFullscreen ? "Quitter le plein écran" : "Plein écran"}
           >
             {isFullscreen ? (
@@ -935,14 +937,14 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
             )}
           </Button>
 
-          <div className="h-6 w-px bg-gray-300 mx-2" />
+          <div className={cn("h-6 w-px mx-2", isFullscreen ? "bg-gray-600" : "bg-gray-300")} />
 
           {/* Close */}
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="h-8 w-8 p-0"
+            className={cn("h-8 w-8 p-0", isFullscreen && "text-white hover:text-gray-300")}
             title="Fermer"
           >
             <X className="h-4 w-4" />
