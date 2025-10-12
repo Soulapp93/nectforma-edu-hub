@@ -96,6 +96,7 @@ const AppContent = () => {
               <Route path="/coffre-fort" element={<ProtectedRoute><CoffreFort /></ProtectedRoute>} />
               <Route path="/gestion-etablissement" element={<ProtectedRoute><GestionEtablissement /></ProtectedRoute>} />
               <Route path="/compte" element={<ProtectedRoute><Compte /></ProtectedRoute>} />
+              <Route path="/demo-viewer" element={<ProtectedRoute><FileViewerDemo /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
