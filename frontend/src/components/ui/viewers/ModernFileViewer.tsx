@@ -291,6 +291,31 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
     return () => document.removeEventListener('mousemove', handleMouseMove);
   }, [isFullscreen]);
 
+  // Manage body overflow in fullscreen
+  useEffect(() => {
+    if (isFullscreen) {
+      // Hide body scroll and prevent scrolling
+      document.body.style.overflow = 'hidden';
+      document.body.style.margin = '0';
+      document.body.style.padding = '0';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      // Restore body scroll
+      document.body.style.overflow = 'unset';
+      document.body.style.margin = '';
+      document.body.style.padding = '';
+      document.documentElement.style.overflow = 'unset';
+    }
+
+    return () => {
+      // Cleanup on unmount
+      document.body.style.overflow = 'unset';
+      document.body.style.margin = '';
+      document.body.style.padding = '';
+      document.documentElement.style.overflow = 'unset';
+    };
+  }, [isFullscreen]);
+
   // Control functions
   const handleZoomIn = () => {
     if (currentFileType?.type === 'pdf') {
