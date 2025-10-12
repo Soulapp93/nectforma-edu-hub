@@ -19,15 +19,22 @@ const ViewerTestPage: React.FC = () => {
       color: "#ef4444"
     },
     {
+      name: "Fichier Excel (.xlsx)",
+      url: "https://file-examples.com/storage/fef363408b1b66edd78abdc/2017/10/file_example_XLSX_10.xlsx",
+      mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      icon: FileText,
+      color: "#10b981"
+    },
+    {
       name: "Image de test",
       url: "https://picsum.photos/1200/800?random=1",
       mimeType: "image/jpeg",
       icon: Image,
-      color: "#10b981"
+      color: "#6366f1"
     },
     {
-      name: "Vidéo de test",
-      url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      name: "Vidéo de test (MP4)",
+      url: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
       mimeType: "video/mp4",
       icon: Video,
       color: "#8b5cf6"
