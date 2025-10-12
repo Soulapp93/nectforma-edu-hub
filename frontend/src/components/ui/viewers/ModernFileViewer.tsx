@@ -297,12 +297,57 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
   const toggleFullscreen = async () => {
     if (!document.fullscreenElement && containerRef.current) {
       try {
+        // Use the container element for true fullscreen
         await containerRef.current.requestFullscreen();
+        setShowToolbar(false);
       } catch (err) {
+        console.error('Erreur fullscreen:', err);
         toast.error('Impossible de passer en plein écran');
       }
     } else {
       exitFullscreen();
+    }
+  };
+
+  // Fit mode handlers
+  const handleFitModeChange = (mode: 'auto' | 'width' | 'height' | 'page') => {
+    setFitMode(mode);
+    
+    if (currentFileType?.type === 'pdf') {
+      const contentElement = contentRef.current;
+      if (!contentElement) return;
+      
+      const containerWidth = contentElement.clientWidth;
+      const containerHeight = contentElement.clientHeight;
+      
+      switch (mode) {
+        case 'width':
+          setPdfScale(containerWidth / 800); // 800 is base PDF width
+          break;
+        case 'height':
+          setPdfScale(containerHeight / 1000); // Estimate for height
+          break;
+        case 'page':
+          setPdfScale(Math.min(containerWidth / 800, containerHeight / 1000));
+          break;
+        case 'auto':
+        default:
+          setPdfScale(1.0);
+          break;
+      }
+    } else if (currentFileType?.type === 'image') {
+      switch (mode) {
+        case 'width':
+          setImageScale(1.0);
+          break;
+        case 'page':
+          setImageScale(0.8);
+          break;
+        case 'auto':
+        default:
+          setImageScale(1.0);
+          break;
+      }
     }
   };
 
