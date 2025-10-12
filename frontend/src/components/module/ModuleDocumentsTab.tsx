@@ -16,7 +16,7 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState<ModuleDocument | null>(null);
-  const [viewerDocument, setViewerDocument] = useState<ModuleDocument | null>(null);
+  const { isOpen, currentFile, openFile, closeViewer } = useFileViewer();
 
   const fetchDocuments = async () => {
     try {
