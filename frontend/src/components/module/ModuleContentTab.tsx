@@ -16,7 +16,7 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState<ModuleContent | null>(null);
-  const [viewerDocument, setViewerDocument] = useState<ModuleContent | null>(null);
+  const { isOpen, currentFile, openFile, closeViewer } = useFileViewer();
 
   const fetchContents = async () => {
     try {
