@@ -189,6 +189,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
       
       switch(e.key) {
         case 'Escape':
+          e.preventDefault();
           if (isFullscreen) {
             exitFullscreen();
           } else {
