@@ -10,7 +10,8 @@ import {
   Settings,
   LogOut,
   ClipboardCheck,
-  Building
+  Building,
+  Eye
 } from 'lucide-react';
 import {
   Sidebar as SidebarWrapper,
