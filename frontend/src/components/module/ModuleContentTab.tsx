@@ -60,8 +60,33 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
   };
 
   const handleViewDocument = (content: ModuleContent) => {
-    console.log('Ouverture du document:', content);
-    setViewerDocument(content);
+    if (content.file_url && content.file_name) {
+      console.log('Ouverture du document:', content);
+      // Détecter le type MIME basé sur l'extension
+      const extension = content.file_name.split('.').pop()?.toLowerCase();
+      let mimeType = '';
+      
+      const mimeMap: Record<string, string> = {
+        'pdf': 'application/pdf',
+        'jpg': 'image/jpeg', 'jpeg': 'image/jpeg',
+        'png': 'image/png', 'gif': 'image/gif',
+        'mp4': 'video/mp4', 'webm': 'video/webm',
+        'mp3': 'audio/mpeg', 'wav': 'audio/wav',
+        'doc': 'application/msword',
+        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'ppt': 'application/vnd.ms-powerpoint',
+        'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'xls': 'application/vnd.ms-excel',
+        'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'txt': 'text/plain'
+      };
+      
+      if (extension) {
+        mimeType = mimeMap[extension] || '';
+      }
+      
+      openFile(content.file_url, content.file_name, mimeType);
+    }
   };
 
   const handleDownloadFile = async (fileUrl: string, fileName: string) => {
