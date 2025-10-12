@@ -98,6 +98,7 @@ const AppContent = () => {
               <Route path="/gestion-etablissement" element={<ProtectedRoute><GestionEtablissement /></ProtectedRoute>} />
               <Route path="/compte" element={<ProtectedRoute><Compte /></ProtectedRoute>} />
               <Route path="/demo-viewer" element={<ProtectedRoute><FileViewerDemo /></ProtectedRoute>} />
+              <Route path="/test-viewer" element={<ViewerTestPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
