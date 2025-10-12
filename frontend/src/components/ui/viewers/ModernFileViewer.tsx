@@ -89,6 +89,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
   const [pdfScale, setPdfScale] = useState<number>(1.0);
   const [searchText, setSearchText] = useState('');
   const [showThumbnails, setShowThumbnails] = useState(false);
+  const [fitMode, setFitMode] = useState<'auto' | 'width' | 'height' | 'page'>('auto');
   
   // Image specific states
   const [imageScale, setImageScale] = useState<number>(1.0);
