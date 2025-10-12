@@ -25,6 +25,7 @@ import CoffreFort from './pages/CoffreFort';
 import GestionEtablissement from './pages/GestionEtablissement';
 import Compte from './pages/Compte';
 import FileViewerDemo from './pages/FileViewerDemo';
+import ViewerTestPage from './pages/ViewerTestPage';
 import NotFound from './pages/NotFound';
 import Auth from './pages/Auth';
 import Index from './pages/Index';
