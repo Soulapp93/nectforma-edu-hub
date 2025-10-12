@@ -487,37 +487,38 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
   // Render functions for different file types
   const renderPDFViewer = () => {
     const getPageWidth = () => {
-      if (!contentRef.current) {
-        // Valeurs par défaut selon le mode
-        if (isFullscreen) {
-          return fitMode === 'width' ? window.innerWidth - (showThumbnails ? 320 : 0) : 900;
-        }
-        return 900;
-      }
-      
-      const containerWidth = contentRef.current.clientWidth;
-      const containerHeight = contentRef.current.clientHeight;
-      
-      // En mode plein écran, utiliser TOUTE la largeur/hauteur disponible
+      // En mode plein écran ABSOLU, utiliser la taille COMPLÈTE de l'écran
       if (isFullscreen) {
-        const availableWidth = window.innerWidth - (showThumbnails ? 320 : 0);
-        const availableHeight = window.innerHeight - (showToolbar ? 80 : 20);
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
+        const thumbnailWidth = showThumbnails ? 300 : 0;
+        const toolbarHeight = showToolbar ? 60 : 0;
+        
+        const availableWidth = screenWidth - thumbnailWidth;
+        const availableHeight = screenHeight - toolbarHeight;
         
         switch (fitMode) {
           case 'width':
+            // Utiliser TOUTE la largeur disponible
             return availableWidth;
           case 'height':
-            // Calculer la largeur basée sur la hauteur et le ratio standard PDF (A4 = 0.707)
+            // Calculer selon la hauteur disponible (ratio A4)
             return Math.min(availableWidth, availableHeight * 0.707);
           case 'page':
-            // Utiliser le maximum possible tout en gardant les proportions
+            // Optimiser pour que la page entière soit visible
             return Math.min(availableWidth, availableHeight * 0.707);
           case 'auto':
           default:
-            return Math.min(availableWidth, 1200);
+            // Par défaut, utiliser le maximum possible
+            return availableWidth * 0.95; // 95% pour un léger padding
         }
       } else {
-        // Mode normal (non plein écran)
+        // Mode normal (fenêtré)
+        if (!contentRef.current) return 900;
+        
+        const containerWidth = contentRef.current.clientWidth;
+        const containerHeight = contentRef.current.clientHeight;
+        
         switch (fitMode) {
           case 'width':
             return containerWidth - (showThumbnails ? 320 : 64);
