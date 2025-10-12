@@ -382,10 +382,25 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
   const exitFullscreen = async () => {
     if (document.fullscreenElement) {
       try {
-        await document.exitFullscreen();
+        const doc = document as any;
+        
+        if (doc.exitFullscreen) {
+          await doc.exitFullscreen();
+        } else if (doc.mozCancelFullScreen) {
+          await doc.mozCancelFullScreen();
+        } else if (doc.webkitExitFullscreen) {
+          await doc.webkitExitFullscreen();
+        } else if (doc.msExitFullscreen) {
+          await doc.msExitFullscreen();
+        }
       } catch (err) {
         console.error('Erreur sortie fullscreen:', err);
       }
+    } else if (isFullscreen) {
+      // Sortir du mode plein écran simulé
+      setIsFullscreen(false);
+      setShowToolbar(true);
+      toast.success('Mode plein écran désactivé');
     }
   };
 
