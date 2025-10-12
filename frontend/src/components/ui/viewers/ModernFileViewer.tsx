@@ -219,12 +219,42 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
   // Fullscreen handling
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      const isNowFullscreen = !!document.fullscreenElement;
+      setIsFullscreen(isNowFullscreen);
+      
+      // Auto-hide toolbar in fullscreen, show when not fullscreen
+      if (isNowFullscreen) {
+        setShowToolbar(false);
+        // Auto-hide toolbar after 3 seconds in fullscreen
+        const timer = setTimeout(() => {
+          setShowToolbar(false);
+        }, 3000);
+        return () => clearTimeout(timer);
+      } else {
+        setShowToolbar(true);
+      }
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
+
+  // Mouse movement handler for fullscreen
+  useEffect(() => {
+    if (!isFullscreen) return;
+
+    const handleMouseMove = () => {
+      setShowToolbar(true);
+      // Auto-hide after 3 seconds of no movement
+      const timer = setTimeout(() => {
+        if (isFullscreen) setShowToolbar(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => document.removeEventListener('mousemove', handleMouseMove);
+  }, [isFullscreen]);
 
   // Control functions
   const handleZoomIn = () => {
