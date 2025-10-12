@@ -81,6 +81,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showToolbar, setShowToolbar] = useState(true);
   
   // PDF specific states
   const [numPages, setNumPages] = useState<number>(0);
