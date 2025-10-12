@@ -826,37 +826,124 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
   };
 
   const renderOfficeViewer = () => {
-    const officeViewerUrls = [
-      `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`,
-      `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`
-    ];
+    const extension = getFileExtension(fileName);
+    const isExcel = ['xls', 'xlsx'].includes(extension);
+    const isPowerPoint = ['ppt', 'pptx'].includes(extension);
+    const isWord = ['doc', 'docx'].includes(extension);
     
+    // URLs spécialisées selon le type de document
+    const getOfficeViewerUrls = () => {
+      const baseUrl = fileUrl;
+      const encodedUrl = encodeURIComponent(baseUrl);
+      
+      if (isExcel) {
+        return [
+          `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}&action=embedview&wdHideGridlines=True&wdDownloadButton=True`,
+          `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true`,
+          `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}`
+        ];
+      } else if (isPowerPoint) {
+        return [
+          `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}&action=embedview&wdAr=1.777777777777777`,
+          `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true`,
+          baseUrl // Fallback direct
+        ];
+      } else {
+        return [
+          `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}`,
+          `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true`
+        ];
+      }
+    };
+    
+    const officeViewerUrls = getOfficeViewerUrls();
     const currentUrl = officeViewerUrls[officeViewerMethod];
 
     return (
-      <div className="flex-1 bg-gray-100">
+      <div className={cn(
+        "flex-1 relative",
+        isFullscreen ? "bg-black" : "bg-gray-100"
+      )}>
+        {isLoading && (
+          <div className={cn(
+            "absolute inset-0 flex items-center justify-center z-10",
+            isFullscreen ? "bg-black/80 text-white" : "bg-white/80 text-gray-700"
+          )}>
+            <div className="text-center">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+              <div className="text-lg">Chargement du document {isExcel ? 'Excel' : isPowerPoint ? 'PowerPoint' : 'Word'}...</div>
+              <div className="text-sm opacity-70 mt-2">
+                {retryCount > 0 ? 'Tentative avec un visualiseur alternatif...' : 'Veuillez patienter'}
+              </div>
+            </div>
+          </div>
+        )}
+        
         <iframe
           src={currentUrl}
           className="w-full h-full border-0"
           title={fileName}
+          sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
           onLoad={() => {
-            setIsLoading(false);
-            setLoadError(null);
+            setTimeout(() => {
+              setIsLoading(false);
+              setLoadError(null);
+            }, 2000); // Délai pour s'assurer que le contenu est chargé
           }}
           onError={() => {
+            console.error(`Erreur avec ${currentUrl}, tentative ${retryCount + 1}`);
             if (officeViewerMethod < officeViewerUrls.length - 1) {
               setOfficeViewerMethod(officeViewerMethod + 1);
               setRetryCount(retryCount + 1);
+              setIsLoading(true);
             } else {
-              setLoadError('Impossible de charger le document Office');
+              setLoadError(`Impossible de charger le document ${isExcel ? 'Excel' : isPowerPoint ? 'PowerPoint' : 'Word'}. Le fichier peut être corrompu ou le format non supporté.`);
               setIsLoading(false);
             }
           }}
         />
-        {retryCount > 0 && (
-          <div className="absolute top-4 right-4 bg-yellow-100 border border-yellow-300 rounded-lg p-3">
-            <div className="text-sm text-yellow-800">
-              Utilisation d'un visualiseur alternatif...
+        
+        {retryCount > 0 && !isLoading && (
+          <div className={cn(
+            "absolute top-4 right-4 border rounded-lg p-3 shadow-lg",
+            isFullscreen ? "bg-gray-800 border-gray-600 text-yellow-400" : "bg-yellow-100 border-yellow-300 text-yellow-800"
+          )}>
+            <div className="text-sm">
+              📋 Visualiseur alternatif utilisé ({retryCount + 1}/{officeViewerUrls.length})
+            </div>
+          </div>
+        )}
+
+        {loadError && (
+          <div className={cn(
+            "absolute inset-0 flex items-center justify-center",
+            isFullscreen ? "bg-black text-white" : "bg-gray-50 text-gray-700"
+          )}>
+            <div className="text-center p-8 max-w-md">
+              <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-500" />
+              <div className="text-lg font-medium mb-2">Erreur de chargement</div>
+              <div className="text-sm mb-4">{loadError}</div>
+              <div className="space-y-2">
+                <Button 
+                  onClick={handleDownload}
+                  className="mr-2"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Télécharger le fichier
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    setRetryCount(0);
+                    setOfficeViewerMethod(0);
+                    setIsLoading(true);
+                    setLoadError(null);
+                  }}
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Réessayer
+                </Button>
+              </div>
             </div>
           </div>
         )}
