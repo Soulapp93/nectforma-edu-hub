@@ -3,7 +3,8 @@ import { Plus, FileText, Eye, Trash2, Download, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { moduleDocumentService, ModuleDocument } from '@/services/moduleDocumentService';
 import CreateDocumentModal from './CreateDocumentModal';
-import ChromeStyleViewer from '@/components/ui/viewers/ChromeStyleViewer';
+import ModernFileViewer from '@/components/ui/viewers/ModernFileViewer';
+import { useFileViewer } from '@/hooks/useFileViewer';
 import { toast } from 'sonner';
 
 interface ModuleDocumentsTabProps {
