@@ -1029,13 +1029,17 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
         isFullscreen ? "z-[9999] bg-black" : "z-50 bg-white"
       )}
       ref={containerRef}
-      style={isFullscreen && !document.fullscreenElement ? {
+      style={isFullscreen ? {
         position: 'fixed',
         top: 0,
         left: 0,
         width: '100vw',
         height: '100vh',
-        zIndex: 99999
+        zIndex: 99999,
+        margin: 0,
+        padding: 0,
+        border: 'none',
+        overflow: 'hidden'
       } : {}}
     >
       {/* Modern Chrome-style toolbar */}
