@@ -461,24 +461,51 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
   // Render functions for different file types
   const renderPDFViewer = () => {
     const getPageWidth = () => {
-      if (!contentRef.current) return 900;
+      if (!contentRef.current) {
+        // Valeurs par défaut selon le mode
+        if (isFullscreen) {
+          return fitMode === 'width' ? window.innerWidth - (showThumbnails ? 320 : 0) : 900;
+        }
+        return 900;
+      }
       
       const containerWidth = contentRef.current.clientWidth;
       const containerHeight = contentRef.current.clientHeight;
       
-      switch (fitMode) {
-        case 'width':
-          return containerWidth - (showThumbnails ? 320 : 64);
-        case 'height':
-          return Math.min(900, (containerHeight - 32) * 0.7);
-        case 'page':
-          return Math.min(
-            containerWidth - (showThumbnails ? 320 : 64),
-            (containerHeight - 32) * 0.7
-          );
-        case 'auto':
-        default:
-          return Math.min(900, containerWidth - (showThumbnails ? 320 : 64));
+      // En mode plein écran, utiliser TOUTE la largeur/hauteur disponible
+      if (isFullscreen) {
+        const availableWidth = window.innerWidth - (showThumbnails ? 320 : 0);
+        const availableHeight = window.innerHeight - (showToolbar ? 80 : 20);
+        
+        switch (fitMode) {
+          case 'width':
+            return availableWidth;
+          case 'height':
+            // Calculer la largeur basée sur la hauteur et le ratio standard PDF (A4 = 0.707)
+            return Math.min(availableWidth, availableHeight * 0.707);
+          case 'page':
+            // Utiliser le maximum possible tout en gardant les proportions
+            return Math.min(availableWidth, availableHeight * 0.707);
+          case 'auto':
+          default:
+            return Math.min(availableWidth, 1200);
+        }
+      } else {
+        // Mode normal (non plein écran)
+        switch (fitMode) {
+          case 'width':
+            return containerWidth - (showThumbnails ? 320 : 64);
+          case 'height':
+            return Math.min(900, (containerHeight - 32) * 0.7);
+          case 'page':
+            return Math.min(
+              containerWidth - (showThumbnails ? 320 : 64),
+              (containerHeight - 32) * 0.7
+            );
+          case 'auto':
+          default:
+            return Math.min(900, containerWidth - (showThumbnails ? 320 : 64));
+        }
       }
     };
 
