@@ -20,14 +20,14 @@ const ViewerTestPage: React.FC = () => {
     },
     {
       name: "Présentation PowerPoint (.pptx)",
-      url: "https://scholar.harvard.edu/files/torman_personal/files/samplepptx.pptx",
+      url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", // Temporaire pour test
       mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
       icon: FileText,
       color: "#d97706"
     },
     {
       name: "Fichier Excel (.xlsx)",
-      url: "https://file-examples.com/storage/fef363408b1b66edd78abdc/2017/10/file_example_XLSX_10.xlsx",
+      url: "https://sample-videos.com/zip/10/xlsx/SampleXLSXFile_6000kb.xlsx",
       mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       icon: FileText,
       color: "#10b981"
@@ -47,11 +47,11 @@ const ViewerTestPage: React.FC = () => {
       color: "#8b5cf6"
     },
     {
-      name: "Fichier audio (MP3)",
-      url: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
-      mimeType: "audio/mpeg",
-      icon: Volume2,
-      color: "#ec4899"
+      name: "Document PowerPoint RÉEL",
+      url: "https://calibre-ebook.com/downloads/demos/demo.docx", // Temporaire pour test Office
+      mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      icon: FileText,
+      color: "#f59e0b"
     }
   ];
 
