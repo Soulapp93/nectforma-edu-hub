@@ -1986,7 +1986,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
         {/* Right section - Controls */}
         <div className="flex items-center space-x-1">
           {/* Zoom controls for zoomable content */}
-          {(['pdf', 'image'].includes(currentFileType?.type || '')) && (
+          {(['pdf', 'image', 'office'].includes(currentFileType?.type || '')) && (
             <>
               <Button
                 variant="ghost"
@@ -1999,7 +1999,11 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
               </Button>
               
               <div className={cn("text-sm min-w-[50px] text-center", isFullscreen ? "text-white" : "text-gray-600")}>
-                {Math.round((currentFileType?.type === 'pdf' ? pdfScale : imageScale) * 100)}%
+                {Math.round((
+                  currentFileType?.type === 'pdf' ? pdfScale : 
+                  currentFileType?.type === 'image' ? imageScale :
+                  officeScale
+                ) * 100)}%
               </div>
               
               <Button
