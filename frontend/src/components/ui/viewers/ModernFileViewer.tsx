@@ -608,14 +608,26 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
         <div 
           className="flex-1 overflow-auto" 
           ref={contentRef}
-          style={isFullscreen ? {
+          style={isFullscreen && !showToolbar ? {
             position: 'absolute',
-            top: showToolbar ? '60px' : '0',
+            top: '0',
             left: showThumbnails ? '300px' : '0',
             right: '0',
             bottom: '0',
             width: showThumbnails ? 'calc(100vw - 300px)' : '100vw',
-            height: showToolbar ? 'calc(100vh - 60px)' : '100vh',
+            height: '100vh',
+            margin: '0',
+            padding: '0',
+            border: 'none',
+            overflow: 'auto'
+          } : isFullscreen && showToolbar ? {
+            position: 'absolute',
+            top: '60px',
+            left: showThumbnails ? '300px' : '0',
+            right: '0',
+            bottom: '0',
+            width: showThumbnails ? 'calc(100vw - 300px)' : '100vw',
+            height: 'calc(100vh - 60px)',
             margin: '0',
             padding: '0',
             border: 'none',
