@@ -1211,9 +1211,6 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
 
   const renderPowerPointViewer = () => {
     // Rendu PowerPoint similaire au PDF avec navigation par slides
-    const [currentSlide, setCurrentSlide] = useState(1);
-    const [totalSlides, setTotalSlides] = useState(0);
-    const [slides, setSlides] = useState<string[]>([]);
 
     // URLs optimisées pour PowerPoint avec rendu haute qualité
     const getPowerPointUrls = () => {
