@@ -444,6 +444,49 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
   };
 
   // Fit mode handlers
+  // Optimisation spéciale PowerPoint
+  const optimizePowerPointDisplay = useCallback((mode: string) => {
+    const iframe = document.querySelector('iframe[title*="PowerPoint"]') as HTMLIFrameElement;
+    if (!iframe) return;
+
+    const container = contentRef.current;
+    if (!container) return;
+
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+
+    let scale = 1.0;
+    let transformOrigin = 'center center';
+
+    switch (mode) {
+      case 'width':
+        scale = Math.min(containerWidth / 800, 1.5); // Utiliser toute la largeur
+        transformOrigin = 'top center';
+        break;
+      case 'height':
+        scale = Math.min(containerHeight / 600, 1.5); // Optimiser pour la hauteur
+        transformOrigin = 'center center';
+        break;
+      case 'page':
+        scale = Math.min(containerWidth / 800, containerHeight / 600, 1.8); // Page complète
+        transformOrigin = 'center center';
+        break;
+      case 'auto':
+      default:
+        scale = isFullscreen ? 1.4 : 1.2; // Agrandissement par défaut
+        transformOrigin = 'center center';
+        break;
+    }
+
+    // Appliquer la transformation
+    iframe.style.transform = `scale(${scale})`;
+    iframe.style.transformOrigin = transformOrigin;
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+
+    console.log(`🎯 PowerPoint optimisé: mode=${mode}, scale=${scale}`);
+  }, [isFullscreen]);
+
   const handleFitModeChange = (mode: 'auto' | 'width' | 'height' | 'page') => {
     setFitMode(mode);
     
@@ -456,10 +499,10 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
       
       switch (mode) {
         case 'width':
-          setPdfScale(containerWidth / 800); // 800 is base PDF width
+          setPdfScale(containerWidth / 800);
           break;
         case 'height':
-          setPdfScale(containerHeight / 1000); // Estimate for height
+          setPdfScale(containerHeight / 1000);
           break;
         case 'page':
           setPdfScale(Math.min(containerWidth / 800, containerHeight / 1000));
@@ -483,21 +526,13 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
           break;
       }
     } else if (currentFileType?.type === 'office') {
-      // Pour PowerPoint et autres documents Office
-      // Déclencher un redimensionnement de l'iframe si nécessaire
+      // Optimisation spéciale PowerPoint
       console.log(`📊 Mode d'ajustement PowerPoint: ${mode}`);
       
-      // Force iframe refresh pour optimiser l'affichage
+      // Appliquer l'optimisation PowerPoint
       setTimeout(() => {
-        const iframe = document.querySelector('iframe[title*="PowerPoint"]') as HTMLIFrameElement;
-        if (iframe) {
-          const src = iframe.src;
-          iframe.src = '';
-          setTimeout(() => {
-            iframe.src = src;
-          }, 100);
-        }
-      }, 200);
+        optimizePowerPointDisplay(mode);
+      }, 300);
     }
   };
 
