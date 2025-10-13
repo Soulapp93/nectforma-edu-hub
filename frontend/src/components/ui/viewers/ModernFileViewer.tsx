@@ -954,10 +954,10 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
           className="flex-1 flex items-center justify-center" 
           style={isFullscreen ? {
             position: 'absolute',
-            top: showToolbar ? '60px' : '0',
+            top: '0',
             left: '0',
             right: '0',
-            bottom: '60px', // Espace pour les contrôles vidéo
+            bottom: showToolbar ? '60px' : '60px', // Toujours espace pour contrôles vidéo
             width: '100%',
             height: showToolbar ? 'calc(100vh - 120px)' : 'calc(100vh - 60px)',
             margin: '0',
