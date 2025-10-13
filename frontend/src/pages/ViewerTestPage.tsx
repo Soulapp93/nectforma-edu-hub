@@ -19,15 +19,22 @@ const ViewerTestPage: React.FC = () => {
       color: "#ef4444"
     },
     {
-      name: "Présentation PowerPoint (.pptx)",
-      url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", // Temporaire pour test
+      name: "Présentation PowerPoint #1",
+      url: "https://scholar.harvard.edu/files/torman_personal/files/samplepptx.pptx",
       mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
       icon: FileText,
       color: "#d97706"
     },
     {
+      name: "Présentation PowerPoint #2",
+      url: "https://file-examples.com/storage/fe7e65188bad66fd168bfe8/2017/08/file_example_PPT_250kB.ppt",
+      mimeType: "application/vnd.ms-powerpoint",
+      icon: FileText,
+      color: "#f97316"
+    },
+    {
       name: "Fichier Excel (.xlsx)",
-      url: "https://sample-videos.com/zip/10/xlsx/SampleXLSXFile_6000kb.xlsx",
+      url: "https://file-examples.com/storage/fe7e65188bad66fd168bfe8/2017/02/file_example_XLSX_10.xlsx",
       mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       icon: FileText,
       color: "#10b981"
@@ -45,13 +52,6 @@ const ViewerTestPage: React.FC = () => {
       mimeType: "video/mp4",
       icon: Video,
       color: "#8b5cf6"
-    },
-    {
-      name: "Document PowerPoint RÉEL",
-      url: "https://calibre-ebook.com/downloads/demos/demo.docx", // Temporaire pour test Office
-      mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-      icon: FileText,
-      color: "#f59e0b"
     }
   ];
 
