@@ -5,7 +5,7 @@ import {
   Menu, Grid3X3, Play, Pause, VolumeX, Volume2, SkipBack, SkipForward,
   FileText, Image, Video, File, AlertCircle, Loader2, Search,
   Settings, Share2, Bookmark, MoreVertical, Monitor, Smartphone,
-  Tablet, SquareEqual
+  Tablet, SquareEqual, Presentation
 } from 'lucide-react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Button } from '@/components/ui/button';
