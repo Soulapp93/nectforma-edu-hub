@@ -1282,9 +1282,9 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
           </div>
         )}
 
-        {/* Zone de contenu principale */}
+        {/* Zone de contenu principale - PowerPoint PLEIN ÉCRAN */}
         <div 
-          className="flex-1 overflow-auto" 
+          className="flex-1 overflow-hidden bg-white" 
           ref={contentRef}
           style={isFullscreen && !showToolbar ? {
             position: 'absolute',
@@ -1297,7 +1297,8 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
             margin: '0',
             padding: '0',
             border: 'none',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            background: 'white'
           } : isFullscreen && showToolbar ? {
             position: 'absolute',
             top: '60px',
@@ -1309,8 +1310,12 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
             margin: '0',
             padding: '0',
             border: 'none',
-            overflow: 'hidden'
-          } : {}}
+            overflow: 'hidden',
+            background: 'white'
+          } : {
+            background: 'white',
+            minHeight: '80vh'
+          }}
         >
           {/* Indicateurs de chargement */}
           {isLoading && (
