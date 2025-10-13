@@ -955,40 +955,46 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
 
   const renderVideoViewer = () => {
     const getVideoStyle = () => {
-      // Style optimisé selon le mode d'affichage
+      // Style optimisé selon le mode d'affichage - Style YouTube-like
       if (isFullscreen) {
+        // En mode plein écran, calculer selon la toolbar
+        const availableHeight = showToolbar ? 'calc(100vh - 60px)' : '100vh';
+        
         switch (fitMode) {
           case 'width':
+            // Largeur maximale comme YouTube
             return {
               width: '100vw',
-              height: 'auto',
+              height: availableHeight,
               maxWidth: '100vw',
-              maxHeight: 'calc(100vh - 60px)',
+              maxHeight: availableHeight,
               objectFit: 'contain' as const
             };
           case 'height':
             return {
               width: 'auto',
-              height: 'calc(100vh - 60px)',
+              height: availableHeight,
               maxWidth: '100vw',
-              maxHeight: 'calc(100vh - 60px)',
+              maxHeight: availableHeight,
               objectFit: 'contain' as const
             };
           case 'page':
+            // Mode page = couverture complète comme YouTube
             return {
               width: '100vw',
-              height: 'calc(100vh - 60px)',
+              height: availableHeight,
               maxWidth: '100vw',
-              maxHeight: 'calc(100vh - 60px)',
-              objectFit: 'contain' as const
+              maxHeight: availableHeight,
+              objectFit: 'cover' as const // Cover pour remplir complètement
             };
           case 'auto':
           default:
+            // Par défaut en plein écran, maximiser l'utilisation de l'espace
             return {
-              width: '100%',
-              height: 'auto',
+              width: '100vw',
+              height: availableHeight,
               maxWidth: '100vw',
-              maxHeight: 'calc(100vh - 60px)',
+              maxHeight: availableHeight,
               objectFit: 'contain' as const
             };
         }
@@ -1017,7 +1023,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
               height: '100%',
               maxWidth: '100%',
               maxHeight: '100%',
-              objectFit: 'contain' as const
+              objectFit: 'cover' as const // Cover pour remplir le conteneur
             };
           case 'auto':
           default:
