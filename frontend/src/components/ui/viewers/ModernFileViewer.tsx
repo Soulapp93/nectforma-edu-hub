@@ -1283,14 +1283,14 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
         overflow: 'hidden'
       } : {}}
     >
-      {/* Modern Chrome-style toolbar */}
-      <div 
-        className={cn(
-          "flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 shadow-sm flex-shrink-0 transition-all duration-300",
-          isFullscreen && !showToolbar && "opacity-0 -translate-y-full pointer-events-none",
-          isFullscreen && showToolbar && "absolute top-0 left-0 right-0 z-50 bg-black/90 text-white border-gray-700"
-        )}
-      >
+      {/* Modern Chrome-style toolbar - MASQUÉE en mode plein écran natif */}
+      {(!isFullscreen || (isFullscreen && showToolbar)) && (
+        <div 
+          className={cn(
+            "flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 shadow-sm flex-shrink-0 transition-all duration-300",
+            isFullscreen && showToolbar && "absolute top-0 left-0 right-0 z-50 bg-black/90 text-white border-gray-700"
+          )}
+        >
         {/* Left section - File info and navigation */}
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-3">
