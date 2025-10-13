@@ -232,7 +232,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, pageNumber, numPages, currentFileType, isFullscreen, onClose]);
 
-  // Fullscreen handling
+  // Fullscreen handling - Détecter les changements de l'API native
   useEffect(() => {
     const handleFullscreenChange = () => {
       const isNowFullscreen = !!(
@@ -242,25 +242,30 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
         (document as any).msFullscreenElement
       );
       
-      // Ne mettre à jour que si ce n'est pas déjà en mode simulé
-      if (!isFullscreen || isNowFullscreen) {
-        setIsFullscreen(isNowFullscreen);
-      }
+      console.log('🔄 Fullscreen change détecté:', isNowFullscreen);
       
-      // Auto-hide toolbar in fullscreen, show when not fullscreen
+      setIsFullscreen(isNowFullscreen);
+      
       if (isNowFullscreen) {
+        // En mode plein écran NATIF : cacher complètement la toolbar
         setShowToolbar(false);
-        // Auto-hide toolbar after 3 seconds in fullscreen
-        const timer = setTimeout(() => {
-          setShowToolbar(false);
-        }, 3000);
-        return () => clearTimeout(timer);
-      } else if (!isFullscreen) {
+        console.log('🔒 Mode plein écran NATIF activé - toolbar cachée');
+        
+        // Masquer le body scroll
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
+      } else {
+        // Sortie du mode plein écran natif
         setShowToolbar(true);
+        console.log('🔓 Sortie mode plein écran NATIF - toolbar visible');
+        
+        // Restaurer le scroll
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
       }
     };
 
-    // Écouter tous les événements de fullscreen
+    // Écouter TOUS les événements de fullscreen
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('mozfullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
@@ -272,7 +277,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
       document.removeEventListener('msfullscreenchange', handleFullscreenChange);
     };
-  }, [isFullscreen]);
+  }, []);
 
   // Mouse movement handler for fullscreen
   useEffect(() => {
