@@ -438,6 +438,22 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
           setImageScale(1.0);
           break;
       }
+    } else if (currentFileType?.type === 'office') {
+      // Pour PowerPoint et autres documents Office
+      // Déclencher un redimensionnement de l'iframe si nécessaire
+      console.log(`📊 Mode d'ajustement PowerPoint: ${mode}`);
+      
+      // Force iframe refresh pour optimiser l'affichage
+      setTimeout(() => {
+        const iframe = document.querySelector('iframe[title*="PowerPoint"]') as HTMLIFrameElement;
+        if (iframe) {
+          const src = iframe.src;
+          iframe.src = '';
+          setTimeout(() => {
+            iframe.src = src;
+          }, 100);
+        }
+      }, 200);
     }
   };
 
