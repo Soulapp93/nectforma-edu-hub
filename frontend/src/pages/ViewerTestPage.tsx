@@ -79,7 +79,7 @@ const ViewerTestPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3 mb-8">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
           {testFiles.map((file, index) => {
             const IconComponent = file.icon;
             return (
