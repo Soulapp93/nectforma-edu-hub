@@ -1335,25 +1335,35 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
             </div>
           )}
 
-          {/* Iframe PowerPoint optimisée */}
+          {/* Iframe PowerPoint plein écran */}
           <div className={cn(
-            "w-full h-full relative",
+            "w-full h-full relative overflow-hidden",
             isFullscreen ? "bg-black" : "bg-white"
           )}>
             <iframe
               src={currentUrl}
-              className="w-full h-full border-0 bg-white"
+              className="w-full h-full border-0"
               style={isFullscreen ? {
-                width: '100%',
-                height: '100%',
-                margin: 0,
-                padding: 0,
+                width: '100vw',
+                height: '100vh',
+                margin: '0',
+                padding: '0',
                 border: 'none',
-                borderRadius: 0,
-                outline: 'none'
+                borderRadius: '0',
+                outline: 'none',
+                transform: 'scale(1.0)',
+                transformOrigin: 'top left',
+                position: 'absolute',
+                top: '0',
+                left: '0'
               } : {
                 width: '100%',
-                height: '100%'
+                height: '100%',
+                margin: '0',
+                padding: '0',
+                border: 'none',
+                transform: 'scale(1.2)', // Agrandissement pour remplir l'espace
+                transformOrigin: 'center center'
               }}
               title={`PowerPoint: ${fileName}`}
               sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-downloads allow-presentation"
@@ -1363,8 +1373,50 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
                 setTimeout(() => {
                   setIsLoading(false);
                   setLoadError(null);
-                  setTotalSlides(8); // Valeur par défaut, peut être détectée dynamiquement
-                  console.log('✅ PowerPoint chargé avec rendu optimisé');
+                  setTotalSlides(8);
+                  console.log('✅ PowerPoint chargé avec rendu PLEIN ÉCRAN');
+                  
+                  // Injection CSS pour maximiser l'affichage PowerPoint
+                  const iframe = document.querySelector(`iframe[title="PowerPoint: ${fileName}"]`) as HTMLIFrameElement;
+                  if (iframe) {
+                    try {
+                      iframe.onload = () => {
+                        try {
+                          const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+                          if (iframeDoc) {
+                            // CSS pour maximiser l'affichage Office Online
+                            const style = iframeDoc.createElement('style');
+                            style.textContent = `
+                              body, html {
+                                margin: 0 !important;
+                                padding: 0 !important;
+                                width: 100vw !important;
+                                height: 100vh !important;
+                                overflow: hidden !important;
+                              }
+                              .WACViewPanel_1, .WACViewPanel {
+                                width: 100% !important;
+                                height: 100% !important;
+                                margin: 0 !important;
+                                padding: 0 !important;
+                              }
+                              .PowerPointFrame, .Office-App, .App-host {
+                                width: 100% !important;
+                                height: 100% !important;
+                                transform: scale(1.5) !important;
+                                transform-origin: center center !important;
+                              }
+                            `;
+                            iframeDoc.head.appendChild(style);
+                          }
+                        } catch (e) {
+                          console.log('Cross-origin iframe, CSS injection impossible');
+                        }
+                      };
+                    } catch (e) {
+                      console.log('Impossible d\'accéder au contenu de l\'iframe');
+                    }
+                  }
                 }, 2000);
               }}
               onError={(e) => {
