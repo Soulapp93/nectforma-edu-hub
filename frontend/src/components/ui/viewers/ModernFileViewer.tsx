@@ -356,31 +356,39 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
 
   const toggleFullscreen = async () => {
     if (!isFullscreen) {
-      // TOUJOURS utiliser le mode plein écran simulé pour un contrôle total
-      setIsFullscreen(true);
-      setShowToolbar(false);
-      
-      // Forcer les styles CSS pour un vrai plein écran
-      if (containerRef.current) {
-        const element = containerRef.current;
-        element.style.position = 'fixed';
-        element.style.top = '0';
-        element.style.left = '0';
-        element.style.width = '100vw';
-        element.style.height = '100vh';
-        element.style.zIndex = '999999';
-        element.style.margin = '0';
-        element.style.padding = '0';
-        element.style.border = 'none';
-        element.style.outline = 'none';
-        element.style.overflow = 'hidden';
+      try {
+        // Utiliser l'API NATIVE du navigateur pour un VRAI plein écran
+        if (containerRef.current) {
+          await containerRef.current.requestFullscreen();
+          console.log('✅ API Fullscreen native activée');
+        }
+      } catch (error) {
+        console.error('❌ Erreur API fullscreen native:', error);
+        
+        // Fallback: Mode plein écran forcé
+        setIsFullscreen(true);
+        setShowToolbar(false);
+        
+        if (containerRef.current) {
+          const element = containerRef.current;
+          element.style.position = 'fixed';
+          element.style.top = '0';
+          element.style.left = '0';
+          element.style.width = '100vw';
+          element.style.height = '100vh';
+          element.style.zIndex = '999999';
+          element.style.margin = '0';
+          element.style.padding = '0';
+          element.style.border = 'none';
+          element.style.overflow = 'hidden';
+        }
+        
+        // Masquer tout le reste
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
+        
+        toast.success('Mode plein écran activé (fallback)');
       }
-      
-      // Masquer complètement la page derrière
-      document.body.style.overflow = 'hidden';
-      document.documentElement.style.overflow = 'hidden';
-      
-      toast.success('Mode plein écran activé');
     } else {
       exitFullscreen();
     }
