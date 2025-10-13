@@ -1528,6 +1528,18 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
           </Button>
         </div>
       </div>
+      )}
+
+      {/* Bouton de fermeture SEUL en mode plein écran natif */}
+      {isFullscreen && !showToolbar && (
+        <button
+          onClick={onClose}
+          className="fixed top-4 right-4 z-[999999] w-10 h-10 rounded-full bg-black/70 hover:bg-black/90 text-white flex items-center justify-center transition-all duration-200 backdrop-blur-sm"
+          title="Fermer (Échap)"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      )}
 
       {/* Loading state */}
       {isLoading && (
