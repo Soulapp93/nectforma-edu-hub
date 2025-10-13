@@ -19,6 +19,13 @@ const ViewerTestPage: React.FC = () => {
       color: "#ef4444"
     },
     {
+      name: "Présentation PowerPoint (.pptx)",
+      url: "https://scholar.harvard.edu/files/torman_personal/files/samplepptx.pptx",
+      mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      icon: FileText,
+      color: "#d97706"
+    },
+    {
       name: "Fichier Excel (.xlsx)",
       url: "https://file-examples.com/storage/fef363408b1b66edd78abdc/2017/10/file_example_XLSX_10.xlsx",
       mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -26,18 +33,25 @@ const ViewerTestPage: React.FC = () => {
       color: "#10b981"
     },
     {
-      name: "Image de test",
-      url: "https://picsum.photos/1200/800?random=1",
+      name: "Image haute résolution",
+      url: "https://picsum.photos/1920/1080?random=5",
       mimeType: "image/jpeg",
       icon: Image,
       color: "#6366f1"
     },
     {
-      name: "Vidéo de test (MP4)",
-      url: "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4",
+      name: "Vidéo HD (MP4)",
+      url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
       mimeType: "video/mp4",
       icon: Video,
       color: "#8b5cf6"
+    },
+    {
+      name: "Fichier audio (MP3)",
+      url: "https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3",
+      mimeType: "audio/mpeg",
+      icon: Volume2,
+      color: "#ec4899"
     }
   ];
 
