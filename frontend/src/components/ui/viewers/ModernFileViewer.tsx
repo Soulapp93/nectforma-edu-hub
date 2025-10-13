@@ -1494,37 +1494,8 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
               }}
             />
 
-            {/* Overlay de navigation si besoin */}
-            {!isLoading && !loadError && (
-              <div className="absolute inset-0 pointer-events-none">
-                {/* Zone de navigation invisible pour slides */}
-                <div 
-                  className="absolute left-0 top-0 w-16 h-full pointer-events-auto cursor-pointer hover:bg-black/10 transition-colors flex items-center justify-center"
-                  onClick={() => {
-                    if (currentSlide > 1) {
-                      setCurrentSlide(currentSlide - 1);
-                    }
-                  }}
-                >
-                  {currentSlide > 1 && (
-                    <ChevronLeft className="h-8 w-8 text-black/50 hover:text-black/80" />
-                  )}
-                </div>
-                
-                <div 
-                  className="absolute right-0 top-0 w-16 h-full pointer-events-auto cursor-pointer hover:bg-black/10 transition-colors flex items-center justify-center"
-                  onClick={() => {
-                    if (currentSlide < (totalSlides || 8)) {
-                      setCurrentSlide(currentSlide + 1);
-                    }
-                  }}
-                >
-                  {currentSlide < (totalSlides || 8) && (
-                    <ChevronRight className="h-8 w-8 text-black/50 hover:text-black/80" />
-                  )}
-                </div>
-              </div>
-            )}
+            {/* Note: Les overlays de navigation sont désactivés pour PowerPoint
+                car Office Online Viewer gère sa propre navigation intégrée */}
           </div>
 
           {/* Gestion d'erreur */}
