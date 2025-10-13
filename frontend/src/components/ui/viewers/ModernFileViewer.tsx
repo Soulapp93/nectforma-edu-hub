@@ -300,7 +300,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
     return () => document.removeEventListener('mousemove', handleMouseMove);
   }, [isFullscreen]);
 
-  // Manage body overflow in fullscreen
+  // Manage body overflow in fullscreen and PowerPoint CSS optimization
   useEffect(() => {
     if (isFullscreen) {
       // Hide body scroll and prevent scrolling
@@ -308,12 +308,47 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
       document.body.style.margin = '0';
       document.body.style.padding = '0';
       document.documentElement.style.overflow = 'hidden';
+      
+      // CSS spécialement pour maximiser PowerPoint
+      const powerPointCSS = `
+        iframe[title*="PowerPoint"] {
+          width: 100% !important;
+          height: 100% !important;
+          border: none !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        
+        /* Forcer Office Online à utiliser tout l'espace */
+        .office-frame, .WACViewPanel, .PowerPointFrame {
+          width: 100% !important;
+          height: 100% !important;
+          transform: scale(1.3) !important;
+          transform-origin: center center !important;
+        }
+      `;
+      
+      // Ajouter le CSS au document
+      let styleElement = document.getElementById('powerpoint-fullscreen-css');
+      if (!styleElement) {
+        styleElement = document.createElement('style');
+        styleElement.id = 'powerpoint-fullscreen-css';
+        document.head.appendChild(styleElement);
+      }
+      styleElement.textContent = powerPointCSS;
+      
     } else {
       // Restore body scroll
       document.body.style.overflow = 'unset';
       document.body.style.margin = '';
       document.body.style.padding = '';
       document.documentElement.style.overflow = 'unset';
+      
+      // Supprimer le CSS PowerPoint
+      const styleElement = document.getElementById('powerpoint-fullscreen-css');
+      if (styleElement) {
+        styleElement.remove();
+      }
     }
 
     return () => {
@@ -322,6 +357,11 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
       document.body.style.margin = '';
       document.body.style.padding = '';
       document.documentElement.style.overflow = 'unset';
+      
+      const styleElement = document.getElementById('powerpoint-fullscreen-css');
+      if (styleElement) {
+        styleElement.remove();
+      }
     };
   }, [isFullscreen]);
 
