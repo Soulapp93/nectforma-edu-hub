@@ -1881,52 +1881,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
             </>
           )}
 
-          {/* PowerPoint Navigation */}
-          {currentFileType?.type === 'office' && getFileExtension(fileName).match(/^(ppt|pptx)$/) && totalSlides > 0 && (
-            <>
-              <div className="h-8 w-px bg-gray-300" />
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setCurrentSlide(Math.max(1, currentSlide - 1))}
-                  disabled={currentSlide <= 1}
-                  className={cn("h-8 w-8 p-0", isFullscreen && "text-white hover:text-gray-300")}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                
-                <Input
-                  type="number"
-                  value={currentSlide}
-                  onChange={(e) => {
-                    const slide = parseInt(e.target.value);
-                    if (slide >= 1 && slide <= totalSlides) {
-                      setCurrentSlide(slide);
-                    }
-                  }}
-                  className={cn(
-                    "w-16 h-8 text-center text-sm",
-                    isFullscreen && "bg-black/50 border-gray-600 text-white"
-                  )}
-                  min={1}
-                  max={totalSlides}
-                />
-                
-                <span className={cn("text-sm", isFullscreen ? "text-gray-300" : "text-gray-500")}>/ {totalSlides}</span>
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setCurrentSlide(Math.min(totalSlides, currentSlide + 1))}
-                  disabled={currentSlide >= totalSlides}
-                  className={cn("h-8 w-8 p-0", isFullscreen && "text-white hover:text-gray-300")}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </>
-          )}
+          {/* PowerPoint Navigation - Désactivée car Office Online Viewer gère sa propre navigation */}
         </div>
 
         {/* Right section - Controls */}
