@@ -112,6 +112,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
   // Office document states
   const [officeViewerMethod, setOfficeViewerMethod] = useState(0);
   const [retryCount, setRetryCount] = useState(0);
+  const [officeScale, setOfficeScale] = useState<number>(1.0); // Zoom pour Office
   
   // PowerPoint specific states
   const [currentSlide, setCurrentSlide] = useState(1);
