@@ -1335,49 +1335,8 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
         "flex h-full",
         isFullscreen ? "bg-black" : "bg-gradient-to-br from-gray-50 to-gray-100"
       )}>
-        {/* Miniatures comme pour PDF */}
-        {showThumbnails && (
-          <div className={cn(
-            "w-64 border-r overflow-y-auto shadow-lg",
-            isFullscreen ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
-          )}>
-            <div className="p-4">
-              <h3 className={cn(
-                "text-sm font-semibold mb-3",
-                isFullscreen ? "text-gray-200" : "text-gray-700"
-              )}>Slides</h3>
-              <div className="space-y-3">
-                {/* Simuler des miniatures pour PowerPoint */}
-                {Array.from(new Array(totalSlides || 8), (el, index) => (
-                  <div
-                    key={`slide_${index + 1}`}
-                    onClick={() => setCurrentSlide(index + 1)}
-                    className={cn(
-                      "cursor-pointer p-3 rounded-lg border-2 transition-all hover:shadow-md aspect-video",
-                      currentSlide === index + 1 && !isFullscreen && "border-orange-500 bg-orange-50 shadow-md",
-                      currentSlide === index + 1 && isFullscreen && "border-orange-400 bg-orange-900 shadow-md",
-                      currentSlide !== index + 1 && !isFullscreen && "border-gray-200 hover:border-gray-300",
-                      currentSlide !== index + 1 && isFullscreen && "border-gray-600 hover:border-gray-500"
-                    )}
-                  >
-                    <div className={cn(
-                      "w-full h-full bg-gradient-to-br from-orange-100 to-orange-200 rounded flex items-center justify-center text-xs font-medium",
-                      isFullscreen && "from-orange-800 to-orange-900 text-orange-200"
-                    )}>
-                      📋 {index + 1}
-                    </div>
-                    <div className={cn(
-                      "text-center text-xs mt-2",
-                      isFullscreen ? "text-gray-300" : "text-gray-500"
-                    )}>
-                      Slide {index + 1}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Note: La barre latérale de miniatures est désactivée pour PowerPoint 
+            car Office Online Viewer gère sa propre navigation */}
 
         {/* Zone de contenu principale - PowerPoint PLEIN ÉCRAN */}
         <div 
