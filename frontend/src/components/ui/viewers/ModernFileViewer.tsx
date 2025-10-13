@@ -2095,6 +2095,24 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
             </Button>
           )}
 
+          {/* PowerPoint Slides Thumbnails */}
+          {currentFileType?.type === 'office' && getFileExtension(fileName).match(/^(ppt|pptx)$/) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowThumbnails(!showThumbnails)}
+              className={cn(
+                "h-8 w-8 p-0",
+                showThumbnails && !isFullscreen && "bg-orange-100 text-orange-600",
+                showThumbnails && isFullscreen && "bg-orange-600 text-white",
+                isFullscreen && "text-white hover:text-gray-300"
+              )}
+              title="Miniatures des slides"
+            >
+              <Grid3X3 className="h-4 w-4" />
+            </Button>
+          )}
+
           <div className={cn("h-6 w-px mx-2", isFullscreen ? "bg-gray-600" : "bg-gray-300")} />
 
           {/* Download */}
