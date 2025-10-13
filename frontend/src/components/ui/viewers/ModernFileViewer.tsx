@@ -860,7 +860,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
 
   const renderVideoViewer = () => {
     const getVideoStyle = () => {
-      // En mode plein écran, utiliser TOUT l'espace comme YouTube
+      // Style optimisé selon le mode d'affichage
       if (isFullscreen) {
         switch (fitMode) {
           case 'width':
@@ -868,51 +868,53 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
               width: '100vw',
               height: 'auto',
               maxWidth: '100vw',
-              maxHeight: '100vh',
+              maxHeight: 'calc(100vh - 60px)',
               objectFit: 'contain' as const
             };
           case 'height':
             return {
               width: 'auto',
-              height: '100vh',
+              height: 'calc(100vh - 60px)',
               maxWidth: '100vw',
-              maxHeight: '100vh',
+              maxHeight: 'calc(100vh - 60px)',
               objectFit: 'contain' as const
             };
           case 'page':
             return {
               width: '100vw',
-              height: '100vh',
+              height: 'calc(100vh - 60px)',
               maxWidth: '100vw',
-              maxHeight: '100vh',
+              maxHeight: 'calc(100vh - 60px)',
               objectFit: 'contain' as const
             };
           case 'auto':
           default:
             return {
-              width: '100vw',
+              width: '100%',
               height: 'auto',
               maxWidth: '100vw',
-              maxHeight: '100vh',
+              maxHeight: 'calc(100vh - 60px)',
               objectFit: 'contain' as const
             };
         }
       } else {
-        // Mode normal (non plein écran)
+        // Mode normal avec contrôles similaires au PDF
         switch (fitMode) {
           case 'width':
             return {
               width: '100%',
               height: 'auto',
               maxWidth: '100%',
-              maxHeight: '100%'
+              maxHeight: '100%',
+              objectFit: 'contain' as const
             };
           case 'height':
             return {
               width: 'auto',
               height: '100%',
               maxWidth: '100%',
-              maxHeight: '100%'
+              maxHeight: '100%',
+              objectFit: 'contain' as const
             };
           case 'page':
             return {
@@ -928,7 +930,8 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
               width: '100%',
               height: 'auto',
               maxWidth: '100%',
-              maxHeight: '80vh'
+              maxHeight: '70vh',
+              objectFit: 'contain' as const
             };
         }
       }
@@ -936,7 +939,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
 
     return (
       <div 
-        className="flex-1 flex flex-col bg-black"
+        className="flex-1 flex flex-col bg-black overflow-hidden"
         style={isFullscreen ? {
           position: 'absolute',
           top: '0',
@@ -950,40 +953,103 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
           border: 'none'
         } : {}}
       >
+        {/* Zone de la vidéo */}
         <div 
-          className="flex-1 flex items-center justify-center" 
+          className="flex-1 flex items-center justify-center bg-black relative"
           style={isFullscreen ? {
             position: 'absolute',
             top: '0',
             left: '0',
             right: '0',
-            bottom: showToolbar ? '60px' : '60px', // Toujours espace pour contrôles vidéo
+            bottom: '60px',
             width: '100%',
-            height: showToolbar ? 'calc(100vh - 120px)' : 'calc(100vh - 60px)',
+            height: 'calc(100vh - 60px)',
             margin: '0',
             padding: '0'
-          } : { minHeight: 0 }}
+          } : { 
+            minHeight: '400px'
+          }}
         >
+          {/* Indicateur de chargement vidéo */}
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+              <div className="text-center text-white">
+                <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4" />
+                <div className="text-lg font-medium">Chargement de la vidéo...</div>
+                <div className="text-sm opacity-70 mt-2">Préparation du lecteur</div>
+              </div>
+            </div>
+          )}
+
+          {/* Erreur de chargement */}
+          {loadError && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black text-white">
+              <div className="text-center p-8">
+                <Video className="h-16 w-16 mx-auto mb-4 text-red-500" />
+                <div className="text-xl font-semibold mb-2">Impossible de lire la vidéo</div>
+                <div className="text-sm opacity-70 mb-6">{loadError}</div>
+                <div className="space-x-3">
+                  <Button onClick={handleDownload} variant="outline" className="text-white border-white">
+                    <Download className="h-4 w-4 mr-2" />
+                    Télécharger
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      setLoadError(null);
+                      setIsLoading(true);
+                      if (videoRef.current) {
+                        videoRef.current.load();
+                      }
+                    }}
+                    variant="outline" 
+                    className="text-white border-white"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Réessayer
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Élément vidéo principal */}
           <video
             ref={videoRef}
             src={fileUrl}
             controls={false}
             style={getVideoStyle()}
-            className="shadow-2xl"
+            className={cn(
+              "transition-all duration-300",
+              isFullscreen ? "" : "rounded-lg shadow-2xl"
+            )}
+            onLoadStart={() => {
+              console.log('🎬 Début de chargement vidéo');
+              setIsLoading(true);
+            }}
             onLoadedMetadata={() => {
               if (videoRef.current) {
                 setDuration(videoRef.current.duration);
-                setIsLoading(false);
-                setLoadError(null);
+                console.log('📹 Métadonnées vidéo chargées, durée:', videoRef.current.duration);
               }
+            }}
+            onCanPlay={() => {
+              console.log('▶️ Vidéo prête à être lue');
+              setIsLoading(false);
+              setLoadError(null);
             }}
             onTimeUpdate={() => {
               if (videoRef.current) {
                 setCurrentTime(videoRef.current.currentTime);
               }
             }}
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
+            onPlay={() => {
+              setIsPlaying(true);
+              console.log('▶️ Lecture démarrée');
+            }}
+            onPause={() => {
+              setIsPlaying(false);
+              console.log('⏸️ Lecture en pause');
+            }}
             onVolumeChange={() => {
               if (videoRef.current) {
                 setVolume(videoRef.current.volume);
@@ -991,72 +1057,109 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
               }
             }}
             onError={(e) => {
-              console.error('Erreur vidéo:', e);
-              setLoadError('Impossible de lire la vidéo. Format non supporté ou fichier corrompu.');
+              console.error('❌ Erreur vidéo:', e);
+              const target = e.target as HTMLVideoElement;
+              let errorMessage = 'Format vidéo non supporté ou fichier corrompu';
+              
+              if (target.error) {
+                switch (target.error.code) {
+                  case 1: errorMessage = 'Chargement vidéo interrompu par l\'utilisateur'; break;
+                  case 2: errorMessage = 'Erreur réseau lors du chargement'; break;
+                  case 3: errorMessage = 'Format vidéo non supporté'; break;
+                  case 4: errorMessage = 'Fichier vidéo non trouvé ou inaccessible'; break;
+                  default: errorMessage = 'Erreur inconnue lors de la lecture';
+                }
+              }
+              
+              setLoadError(errorMessage);
               setIsLoading(false);
             }}
-            onCanPlay={() => {
-              console.log('Vidéo prête à être lue');
-              setIsLoading(false);
-            }}
+            onAbort={() => console.log('⚠️ Chargement vidéo interrompu')}
+            onStalled={() => console.log('⏳ Vidéo en attente de données')}
             preload="metadata"
+            playsInline={true}
           />
         </div>
         
-        {/* Custom video controls - YouTube style */}
-        <div className={cn(
-          "backdrop-blur-sm p-4 border-t",
-          isFullscreen ? "bg-black/80 border-gray-700" : "bg-gray-900/90 border-gray-700"
-        )}>
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={togglePlayPause}
-              className="text-white hover:bg-gray-700"
-            >
-              {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-            </Button>
+        {/* Contrôles vidéo avancés - Style YouTube/Netflix */}
+        <div 
+          className={cn(
+            "flex items-center space-x-4 px-6 py-3 backdrop-blur-sm border-t",
+            isFullscreen ? "bg-black/90 border-gray-700 absolute bottom-0 left-0 right-0" : "bg-gray-900/95 border-gray-700"
+          )}
+          style={isFullscreen ? {
+            zIndex: 10
+          } : {}}
+        >
+          {/* Bouton Play/Pause */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={togglePlayPause}
+            className="text-white hover:bg-white/20 h-10 w-10 p-0 rounded-full"
+            disabled={isLoading || !!loadError}
+          >
+            {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+          </Button>
+          
+          {/* Barre de progression */}
+          <div className="flex items-center space-x-3 text-white text-sm flex-1">
+            <span className="text-xs font-mono min-w-[40px]">
+              {formatTime(currentTime)}
+            </span>
             
-            <div className="flex items-center space-x-2 text-white text-sm flex-1">
-              <span className="text-xs">{formatTime(currentTime)}</span>
-              <div 
-                className="flex-1 h-1 bg-gray-600 rounded-full overflow-hidden cursor-pointer hover:h-2 transition-all"
-                onClick={(e) => {
+            <div 
+              className="flex-1 h-2 bg-gray-600/50 rounded-full overflow-hidden cursor-pointer hover:h-3 transition-all group"
+              onClick={(e) => {
+                if (duration > 0) {
                   const rect = e.currentTarget.getBoundingClientRect();
                   const percent = (e.clientX - rect.left) / rect.width;
                   handleSeek(percent * duration);
-                }}
-              >
+                }
+              }}
+            >
+              {/* Barre de progression */}
+              <div className="relative h-full">
                 <div 
-                  className="h-full bg-red-600 rounded-full transition-all"
-                  style={{ width: `${(currentTime / duration) * 100}%` }}
+                  className="h-full bg-red-600 rounded-full transition-all group-hover:bg-red-500"
+                  style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
+                />
+                {/* Indicateur de position au hover */}
+                <div 
+                  className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-red-600 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                  style={{ left: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`, marginLeft: '-6px' }}
                 />
               </div>
-              <span className="text-xs">{formatTime(duration)}</span>
             </div>
             
-            <div className="flex items-center space-x-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  if (videoRef.current) {
-                    videoRef.current.muted = !isMuted;
-                    setIsMuted(!isMuted);
-                  }
-                }}
-                className="text-white hover:bg-gray-700 h-8 w-8 p-0"
-              >
-                {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-              </Button>
-              
-              {/* Volume slider */}
+            <span className="text-xs font-mono min-w-[40px]">
+              {formatTime(duration)}
+            </span>
+          </div>
+          
+          {/* Contrôles volume */}
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                if (videoRef.current) {
+                  videoRef.current.muted = !isMuted;
+                  setIsMuted(!isMuted);
+                }
+              }}
+              className="text-white hover:bg-white/20 h-8 w-8 p-0"
+            >
+              {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </Button>
+            
+            {/* Slider de volume amélioré */}
+            <div className="relative group">
               <input
                 type="range"
                 min="0"
                 max="1"
-                step="0.1"
+                step="0.05"
                 value={isMuted ? 0 : volume}
                 onChange={(e) => {
                   const newVolume = parseFloat(e.target.value);
@@ -1067,13 +1170,20 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
                     setIsMuted(newVolume === 0);
                   }
                 }}
-                className="w-16 h-1 bg-gray-600 rounded-full appearance-none cursor-pointer"
+                className="w-20 h-2 bg-gray-600/50 rounded-full appearance-none cursor-pointer slider"
                 style={{
                   background: `linear-gradient(to right, #ef4444 0%, #ef4444 ${(isMuted ? 0 : volume) * 100}%, #4b5563 ${(isMuted ? 0 : volume) * 100}%, #4b5563 100%)`
                 }}
               />
             </div>
           </div>
+          
+          {/* Infos techniques (si pas en plein écran) */}
+          {!isFullscreen && videoRef.current && (
+            <div className="text-xs text-gray-400 hidden lg:block">
+              {videoRef.current.videoWidth}×{videoRef.current.videoHeight}
+            </div>
+          )}
         </div>
       </div>
     );
