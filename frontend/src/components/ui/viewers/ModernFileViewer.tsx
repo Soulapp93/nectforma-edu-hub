@@ -1442,8 +1442,8 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
                 border: 'none',
                 borderRadius: '0',
                 outline: 'none',
-                transform: 'scale(1.0)',
-                transformOrigin: 'top left',
+                transform: `scale(${officeScale})`,
+                transformOrigin: 'center center',
                 position: 'absolute',
                 top: '0',
                 left: '0'
@@ -1453,9 +1453,9 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
                 margin: '0',
                 padding: '0',
                 border: 'none',
-                transform: 'scale(1.2)', // Agrandissement pour remplir l'espace
+                transform: `scale(${officeScale})`,
                 transformOrigin: 'center center'
-              }}
+              }}}
               title={`PowerPoint: ${fileName}`}
               sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-downloads allow-presentation"
               allowFullScreen={true}
