@@ -1214,14 +1214,19 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
 
     // URLs optimisées pour PowerPoint avec rendu haute qualité
     const getPowerPointUrls = () => {
-      const encodedUrl = encodeURIComponent(fileUrl);
+      // S'assurer que l'URL est accessible publiquement
+      const cleanUrl = fileUrl.trim();
+      const encodedUrl = encodeURIComponent(cleanUrl);
+      
       return [
-        // Google Slides avec rendu propre
-        `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true&chrome=false&dov=1&rm=minimal`,
-        // Office Online avec paramètres optimisés
-        `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}&action=embedview&AllowTyping=False&ActiveCell='A1'&wdHideHeaders=true&wdDownloadButton=false&wdInConfigurator=true&wdbiPreview=true`,
-        // Fallback iframe simple
-        fileUrl
+        // Method 1: Office Online Viewer (le plus fiable pour PowerPoint)
+        `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}`,
+        // Method 2: Office Online avec paramètres avancés
+        `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}&action=embedview&wdAr=1.777777777777777&wdHideHeaders=false&wdHideGridlines=true&wdHideNavigation=false&wdDownloadButton=true&wdInConfigurator=false&wdbiPreview=false`,
+        // Method 3: Google Docs Viewer (backup)
+        `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true`,
+        // Method 4: Tentative directe
+        cleanUrl
       ];
     };
 
