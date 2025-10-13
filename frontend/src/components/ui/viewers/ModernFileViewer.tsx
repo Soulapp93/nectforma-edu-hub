@@ -531,13 +531,24 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
           break;
       }
     } else if (currentFileType?.type === 'office') {
-      // Optimisation spéciale PowerPoint
-      console.log(`📊 Mode d'ajustement PowerPoint: ${mode}`);
+      // Optimisation spéciale Office/PowerPoint
+      console.log(`📊 Mode d'ajustement Office: ${mode}`);
       
-      // Appliquer l'optimisation PowerPoint
-      setTimeout(() => {
-        optimizePowerPointDisplay(mode);
-      }, 300);
+      switch (mode) {
+        case 'width':
+          setOfficeScale(1.3); // Largeur maximale
+          break;
+        case 'height':
+          setOfficeScale(1.2); // Optimiser pour la hauteur
+          break;
+        case 'page':
+          setOfficeScale(1.5); // Page complète - plus grand
+          break;
+        case 'auto':
+        default:
+          setOfficeScale(1.0); // Par défaut
+          break;
+      }
     }
   };
 
