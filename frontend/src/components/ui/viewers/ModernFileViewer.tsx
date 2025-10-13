@@ -815,12 +815,12 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
       )}
       style={isFullscreen ? {
         position: 'absolute',
-        top: showToolbar ? '60px' : '0',
+        top: '0',
         left: '0',
         right: '0',
         bottom: '0',
         width: '100vw',
-        height: showToolbar ? 'calc(100vh - 60px)' : '100vh',
+        height: '100vh',
         margin: '0',
         padding: '0',
         border: 'none',
