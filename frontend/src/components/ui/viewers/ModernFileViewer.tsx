@@ -1705,8 +1705,13 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
             margin: 0,
             padding: 0,
             border: 'none',
-            borderRadius: 0
-          } : {}}
+            borderRadius: 0,
+            transform: `scale(${officeScale})`,
+            transformOrigin: 'center center'
+          } : {
+            transform: `scale(${officeScale})`,
+            transformOrigin: 'center center'
+          }}
           title={fileName}
           sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-downloads"
           allowFullScreen={true}
