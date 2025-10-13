@@ -1085,27 +1085,27 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
     const isPowerPoint = ['ppt', 'pptx'].includes(extension);
     const isWord = ['doc', 'docx'].includes(extension);
     
-    // URLs spécialisées selon le type de document
+    // URLs optimisées avec paramètres spécialisés pour chaque type
     const getOfficeViewerUrls = () => {
       const baseUrl = fileUrl;
       const encodedUrl = encodeURIComponent(baseUrl);
       
       if (isExcel) {
         return [
-          `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}&action=embedview&wdHideGridlines=True&wdDownloadButton=True`,
-          `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true`,
-          `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}`
+          `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}&action=embedview&wdHideHeaders=true&wdHideGridlines=false&wdDownloadButton=false&wdInConfigurator=true&wdInConfigurator=true`,
+          `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true&chrome=false&dov=1`,
+          `https://view.officeapps.live.com/op/view.aspx?src=${encodedUrl}`
         ];
       } else if (isPowerPoint) {
         return [
-          `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}&action=embedview&wdAr=1.777777777777777`,
-          `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true`,
-          baseUrl // Fallback direct
+          `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}&action=embedview&wdAr=1.7777777777777777&wdHideHeaders=true&wdDownloadButton=false&wdInConfigurator=true`,
+          `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true&chrome=false&dov=1`,
+          `https://view.officeapps.live.com/op/view.aspx?src=${encodedUrl}`
         ];
       } else {
         return [
-          `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}`,
-          `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true`
+          `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}&action=embedview&wdHideHeaders=true&wdDownloadButton=false&wdInConfigurator=true`,
+          `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true&chrome=false&dov=1`
         ];
       }
     };
@@ -1114,20 +1114,41 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
     const currentUrl = officeViewerUrls[officeViewerMethod];
 
     return (
-      <div className={cn(
-        "flex-1 relative",
-        isFullscreen ? "bg-black" : "bg-gray-100"
-      )}>
+      <div 
+        className={cn(
+          "flex-1 relative overflow-hidden",
+          isFullscreen ? "bg-black" : "bg-white"
+        )}
+        style={isFullscreen ? {
+          position: 'absolute',
+          top: '0',
+          left: '0',
+          right: '0',
+          bottom: '0',
+          width: '100vw',
+          height: '100vh',
+          margin: '0',
+          padding: '0',
+          border: 'none'
+        } : {}}
+      >
         {isLoading && (
           <div className={cn(
             "absolute inset-0 flex items-center justify-center z-10",
-            isFullscreen ? "bg-black/80 text-white" : "bg-white/80 text-gray-700"
+            isFullscreen ? "bg-black/90 text-white" : "bg-white/90 text-gray-700"
           )}>
-            <div className="text-center">
-              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-              <div className="text-lg">Chargement du document {isExcel ? 'Excel' : isPowerPoint ? 'PowerPoint' : 'Word'}...</div>
-              <div className="text-sm opacity-70 mt-2">
-                {retryCount > 0 ? 'Tentative avec un visualiseur alternatif...' : 'Veuillez patienter'}
+            <div className="text-center p-8">
+              <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-blue-600" />
+              <div className="text-xl font-medium mb-2">
+                Chargement {isExcel ? 'Excel' : isPowerPoint ? 'PowerPoint' : 'Word'}
+              </div>
+              <div className="text-sm opacity-70">
+                {retryCount > 0 ? `Tentative ${retryCount + 1}/${officeViewerUrls.length}` : 'Optimisation de l\'affichage...'}
+              </div>
+              <div className="mt-4">
+                <div className="w-64 h-1 bg-gray-300 rounded-full mx-auto overflow-hidden">
+                  <div className="h-full bg-blue-600 rounded-full animate-pulse" style={{width: '70%'}}></div>
+                </div>
               </div>
             </div>
           </div>
@@ -1135,55 +1156,76 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
         
         <iframe
           src={currentUrl}
-          className="w-full h-full border-0"
+          className={cn(
+            "w-full h-full border-0 bg-white",
+            isFullscreen ? "absolute inset-0" : ""
+          )}
+          style={isFullscreen ? {
+            width: '100vw',
+            height: '100vh',
+            margin: 0,
+            padding: 0,
+            border: 'none',
+            borderRadius: 0
+          } : {}}
           title={fileName}
-          sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+          sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-downloads"
+          allowFullScreen={true}
           onLoad={() => {
+            // Délai plus court pour une meilleure UX
             setTimeout(() => {
               setIsLoading(false);
               setLoadError(null);
-            }, 2000); // Délai pour s'assurer que le contenu est chargé
+              console.log(`✅ Document ${isExcel ? 'Excel' : isPowerPoint ? 'PowerPoint' : 'Word'} chargé avec succès`);
+            }, 1500);
           }}
-          onError={() => {
-            console.error(`Erreur avec ${currentUrl}, tentative ${retryCount + 1}`);
+          onError={(e) => {
+            console.error(`❌ Erreur avec ${currentUrl}:`, e);
             if (officeViewerMethod < officeViewerUrls.length - 1) {
+              console.log(`🔄 Tentative avec visualiseur alternatif ${officeViewerMethod + 1}`);
               setOfficeViewerMethod(officeViewerMethod + 1);
               setRetryCount(retryCount + 1);
               setIsLoading(true);
             } else {
-              setLoadError(`Impossible de charger le document ${isExcel ? 'Excel' : isPowerPoint ? 'PowerPoint' : 'Word'}. Le fichier peut être corrompu ou le format non supporté.`);
+              setLoadError(`Impossible de charger le document ${isExcel ? 'Excel' : isPowerPoint ? 'PowerPoint' : 'Word'}. Vérifiez que le fichier est accessible publiquement.`);
               setIsLoading(false);
             }
           }}
         />
         
-        {retryCount > 0 && !isLoading && (
+        {/* Indicateur de méthode alternative */}
+        {retryCount > 0 && !isLoading && !loadError && (
           <div className={cn(
-            "absolute top-4 right-4 border rounded-lg p-3 shadow-lg",
-            isFullscreen ? "bg-gray-800 border-gray-600 text-yellow-400" : "bg-yellow-100 border-yellow-300 text-yellow-800"
+            "absolute top-4 right-4 px-3 py-2 rounded-lg shadow-lg text-xs font-medium",
+            isFullscreen ? "bg-gray-800/90 text-yellow-400 border border-gray-600" : "bg-blue-100 text-blue-800 border border-blue-200"
           )}>
-            <div className="text-sm">
-              📋 Visualiseur alternatif utilisé ({retryCount + 1}/{officeViewerUrls.length})
-            </div>
+            📊 Visualiseur optimisé ({retryCount + 1}/{officeViewerUrls.length})
           </div>
         )}
 
+        {/* Gestion d'erreur améliorée */}
         {loadError && (
           <div className={cn(
-            "absolute inset-0 flex items-center justify-center",
+            "absolute inset-0 flex items-center justify-center p-8",
             isFullscreen ? "bg-black text-white" : "bg-gray-50 text-gray-700"
           )}>
-            <div className="text-center p-8 max-w-md">
-              <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-500" />
-              <div className="text-lg font-medium mb-2">Erreur de chargement</div>
-              <div className="text-sm mb-4">{loadError}</div>
-              <div className="space-y-2">
+            <div className="text-center max-w-md">
+              <div className={cn(
+                "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6",
+                isExcel ? "bg-green-100" : isPowerPoint ? "bg-orange-100" : "bg-blue-100"
+              )}>
+                {isExcel ? "📊" : isPowerPoint ? "📋" : "📄"}
+              </div>
+              <div className="text-xl font-semibold mb-3">Document non accessible</div>
+              <div className="text-sm mb-6 opacity-80">{loadError}</div>
+              
+              <div className="space-x-3">
                 <Button 
                   onClick={handleDownload}
-                  className="mr-2"
+                  className="bg-blue-600 hover:bg-blue-700"
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  Télécharger le fichier
+                  Télécharger
                 </Button>
                 <Button 
                   variant="outline"
