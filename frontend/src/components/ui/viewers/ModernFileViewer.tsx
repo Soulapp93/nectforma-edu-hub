@@ -372,6 +372,8 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
       setPdfScale(prev => Math.min(prev + 0.25, 3.0));
     } else if (currentFileType?.type === 'image') {
       setImageScale(prev => Math.min(prev + 0.25, 5.0));
+    } else if (currentFileType?.type === 'office') {
+      setOfficeScale(prev => Math.min(prev + 0.15, 2.0));
     }
   };
 
@@ -380,6 +382,8 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
       setPdfScale(prev => Math.max(prev - 0.25, 0.25));
     } else if (currentFileType?.type === 'image') {
       setImageScale(prev => Math.max(prev - 0.25, 0.1));
+    } else if (currentFileType?.type === 'office') {
+      setOfficeScale(prev => Math.max(prev - 0.15, 0.5));
     }
   };
 
