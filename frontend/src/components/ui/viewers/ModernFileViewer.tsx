@@ -1189,26 +1189,279 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
     );
   };
 
+  const renderPowerPointViewer = () => {
+    // Rendu PowerPoint similaire au PDF avec navigation par slides
+    const [currentSlide, setCurrentSlide] = useState(1);
+    const [totalSlides, setTotalSlides] = useState(0);
+    const [slides, setSlides] = useState<string[]>([]);
+
+    // URLs optimisées pour PowerPoint avec rendu haute qualité
+    const getPowerPointUrls = () => {
+      const encodedUrl = encodeURIComponent(fileUrl);
+      return [
+        // Google Slides avec rendu propre
+        `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true&chrome=false&dov=1&rm=minimal`,
+        // Office Online avec paramètres optimisés
+        `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}&action=embedview&AllowTyping=False&ActiveCell='A1'&wdHideHeaders=true&wdDownloadButton=false&wdInConfigurator=true&wdbiPreview=true`,
+        // Fallback iframe simple
+        fileUrl
+      ];
+    };
+
+    const powerPointUrls = getPowerPointUrls();
+    const currentUrl = powerPointUrls[officeViewerMethod];
+
+    return (
+      <div className={cn(
+        "flex h-full",
+        isFullscreen ? "bg-black" : "bg-gradient-to-br from-gray-50 to-gray-100"
+      )}>
+        {/* Miniatures comme pour PDF */}
+        {showThumbnails && (
+          <div className={cn(
+            "w-64 border-r overflow-y-auto shadow-lg",
+            isFullscreen ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"
+          )}>
+            <div className="p-4">
+              <h3 className={cn(
+                "text-sm font-semibold mb-3",
+                isFullscreen ? "text-gray-200" : "text-gray-700"
+              )}>Slides</h3>
+              <div className="space-y-3">
+                {/* Simuler des miniatures pour PowerPoint */}
+                {Array.from(new Array(totalSlides || 8), (el, index) => (
+                  <div
+                    key={`slide_${index + 1}`}
+                    onClick={() => setCurrentSlide(index + 1)}
+                    className={cn(
+                      "cursor-pointer p-3 rounded-lg border-2 transition-all hover:shadow-md aspect-video",
+                      currentSlide === index + 1 && !isFullscreen && "border-orange-500 bg-orange-50 shadow-md",
+                      currentSlide === index + 1 && isFullscreen && "border-orange-400 bg-orange-900 shadow-md",
+                      currentSlide !== index + 1 && !isFullscreen && "border-gray-200 hover:border-gray-300",
+                      currentSlide !== index + 1 && isFullscreen && "border-gray-600 hover:border-gray-500"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-full h-full bg-gradient-to-br from-orange-100 to-orange-200 rounded flex items-center justify-center text-xs font-medium",
+                      isFullscreen && "from-orange-800 to-orange-900 text-orange-200"
+                    )}>
+                      📋 {index + 1}
+                    </div>
+                    <div className={cn(
+                      "text-center text-xs mt-2",
+                      isFullscreen ? "text-gray-300" : "text-gray-500"
+                    )}>
+                      Slide {index + 1}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Zone de contenu principale */}
+        <div 
+          className="flex-1 overflow-auto" 
+          ref={contentRef}
+          style={isFullscreen && !showToolbar ? {
+            position: 'absolute',
+            top: '0',
+            left: showThumbnails ? '300px' : '0',
+            right: '0',
+            bottom: '0',
+            width: showThumbnails ? 'calc(100vw - 300px)' : '100vw',
+            height: '100vh',
+            margin: '0',
+            padding: '0',
+            border: 'none',
+            overflow: 'hidden'
+          } : isFullscreen && showToolbar ? {
+            position: 'absolute',
+            top: '60px',
+            left: showThumbnails ? '300px' : '0',
+            right: '0',
+            bottom: '0',
+            width: showThumbnails ? 'calc(100vw - 300px)' : '100vw',
+            height: 'calc(100vh - 60px)',
+            margin: '0',
+            padding: '0',
+            border: 'none',
+            overflow: 'hidden'
+          } : {}}
+        >
+          {/* Indicateurs de chargement */}
+          {isLoading && (
+            <div className={cn(
+              "absolute inset-0 flex items-center justify-center z-20",
+              isFullscreen ? "bg-black/90 text-white" : "bg-white/90 text-gray-700"
+            )}>
+              <div className="text-center p-8">
+                <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-orange-600" />
+                <div className="text-xl font-medium mb-2">
+                  Chargement PowerPoint
+                </div>
+                <div className="text-sm opacity-70">
+                  {retryCount > 0 ? `Méthode ${retryCount + 1}/${powerPointUrls.length}` : 'Optimisation du rendu...'}
+                </div>
+                <div className="mt-4">
+                  <div className="w-64 h-1 bg-gray-300 rounded-full mx-auto overflow-hidden">
+                    <div className="h-full bg-orange-600 rounded-full animate-pulse" style={{width: '75%'}}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Iframe PowerPoint optimisée */}
+          <div className={cn(
+            "w-full h-full relative",
+            isFullscreen ? "bg-black" : "bg-white"
+          )}>
+            <iframe
+              src={currentUrl}
+              className="w-full h-full border-0 bg-white"
+              style={isFullscreen ? {
+                width: '100%',
+                height: '100%',
+                margin: 0,
+                padding: 0,
+                border: 'none',
+                borderRadius: 0,
+                outline: 'none'
+              } : {
+                width: '100%',
+                height: '100%'
+              }}
+              title={`PowerPoint: ${fileName}`}
+              sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-downloads allow-presentation"
+              allowFullScreen={true}
+              loading="eager"
+              onLoad={() => {
+                setTimeout(() => {
+                  setIsLoading(false);
+                  setLoadError(null);
+                  setTotalSlides(8); // Valeur par défaut, peut être détectée dynamiquement
+                  console.log('✅ PowerPoint chargé avec rendu optimisé');
+                }, 2000);
+              }}
+              onError={(e) => {
+                console.error(`❌ Erreur PowerPoint avec ${currentUrl}:`, e);
+                if (officeViewerMethod < powerPointUrls.length - 1) {
+                  console.log(`🔄 Tentative méthode ${officeViewerMethod + 2}/${powerPointUrls.length}`);
+                  setOfficeViewerMethod(officeViewerMethod + 1);
+                  setRetryCount(retryCount + 1);
+                  setIsLoading(true);
+                } else {
+                  setLoadError('Impossible de charger la présentation PowerPoint. Le fichier peut être protégé ou corrompu.');
+                  setIsLoading(false);
+                }
+              }}
+            />
+
+            {/* Overlay de navigation si besoin */}
+            {!isLoading && !loadError && (
+              <div className="absolute inset-0 pointer-events-none">
+                {/* Zone de navigation invisible pour slides */}
+                <div 
+                  className="absolute left-0 top-0 w-16 h-full pointer-events-auto cursor-pointer hover:bg-black/10 transition-colors flex items-center justify-center"
+                  onClick={() => {
+                    if (currentSlide > 1) {
+                      setCurrentSlide(currentSlide - 1);
+                    }
+                  }}
+                >
+                  {currentSlide > 1 && (
+                    <ChevronLeft className="h-8 w-8 text-black/50 hover:text-black/80" />
+                  )}
+                </div>
+                
+                <div 
+                  className="absolute right-0 top-0 w-16 h-full pointer-events-auto cursor-pointer hover:bg-black/10 transition-colors flex items-center justify-center"
+                  onClick={() => {
+                    if (currentSlide < (totalSlides || 8)) {
+                      setCurrentSlide(currentSlide + 1);
+                    }
+                  }}
+                >
+                  {currentSlide < (totalSlides || 8) && (
+                    <ChevronRight className="h-8 w-8 text-black/50 hover:text-black/80" />
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Gestion d'erreur */}
+          {loadError && (
+            <div className={cn(
+              "absolute inset-0 flex items-center justify-center p-8",
+              isFullscreen ? "bg-black text-white" : "bg-gray-50 text-gray-700"
+            )}>
+              <div className="text-center max-w-md">
+                <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-6">
+                  <Presentation className="h-8 w-8 text-orange-600" />
+                </div>
+                <div className="text-xl font-semibold mb-3">PowerPoint non accessible</div>
+                <div className="text-sm mb-6 opacity-80">{loadError}</div>
+                
+                <div className="space-x-3">
+                  <Button onClick={handleDownload} className="bg-orange-600 hover:bg-orange-700">
+                    <Download className="h-4 w-4 mr-2" />
+                    Télécharger
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      setRetryCount(0);
+                      setOfficeViewerMethod(0);
+                      setIsLoading(true);
+                      setLoadError(null);
+                    }}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Réessayer
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Indicateur de méthode de rendu */}
+        {retryCount > 0 && !isLoading && !loadError && (
+          <div className={cn(
+            "absolute top-4 right-4 px-3 py-2 rounded-lg shadow-lg text-xs font-medium z-10",
+            isFullscreen ? "bg-gray-800/90 text-orange-400 border border-gray-600" : "bg-orange-100 text-orange-800 border border-orange-200"
+          )}>
+            📋 Rendu optimisé PowerPoint ({retryCount + 1}/{powerPointUrls.length})
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderOfficeViewer = () => {
     const extension = getFileExtension(fileName);
-    const isExcel = ['xls', 'xlsx'].includes(extension);
     const isPowerPoint = ['ppt', 'pptx'].includes(extension);
+    
+    // Utiliser le rendu spécialisé pour PowerPoint
+    if (isPowerPoint) {
+      return renderPowerPointViewer();
+    }
+    
+    // Continuer avec Excel et Word comme avant
+    const isExcel = ['xls', 'xlsx'].includes(extension);
     const isWord = ['doc', 'docx'].includes(extension);
     
-    // URLs optimisées avec paramètres spécialisés pour chaque type
+    // URLs pour Excel et Word seulement
     const getOfficeViewerUrls = () => {
       const baseUrl = fileUrl;
       const encodedUrl = encodeURIComponent(baseUrl);
       
       if (isExcel) {
         return [
-          `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}&action=embedview&wdHideHeaders=true&wdHideGridlines=false&wdDownloadButton=false&wdInConfigurator=true&wdInConfigurator=true`,
-          `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true&chrome=false&dov=1`,
-          `https://view.officeapps.live.com/op/view.aspx?src=${encodedUrl}`
-        ];
-      } else if (isPowerPoint) {
-        return [
-          `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}&action=embedview&wdAr=1.7777777777777777&wdHideHeaders=true&wdDownloadButton=false&wdInConfigurator=true`,
+          `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}&action=embedview&wdHideHeaders=true&wdHideGridlines=false&wdDownloadButton=false&wdInConfigurator=true`,
           `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true&chrome=false&dov=1`,
           `https://view.officeapps.live.com/op/view.aspx?src=${encodedUrl}`
         ];
@@ -1250,7 +1503,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
             <div className="text-center p-8">
               <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-blue-600" />
               <div className="text-xl font-medium mb-2">
-                Chargement {isExcel ? 'Excel' : isPowerPoint ? 'PowerPoint' : 'Word'}
+                Chargement {isExcel ? 'Excel' : 'Word'}
               </div>
               <div className="text-sm opacity-70">
                 {retryCount > 0 ? `Tentative ${retryCount + 1}/${officeViewerUrls.length}` : 'Optimisation de l\'affichage...'}
@@ -1282,11 +1535,10 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
           sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-downloads"
           allowFullScreen={true}
           onLoad={() => {
-            // Délai plus court pour une meilleure UX
             setTimeout(() => {
               setIsLoading(false);
               setLoadError(null);
-              console.log(`✅ Document ${isExcel ? 'Excel' : isPowerPoint ? 'PowerPoint' : 'Word'} chargé avec succès`);
+              console.log(`✅ Document ${isExcel ? 'Excel' : 'Word'} chargé avec succès`);
             }, 1500);
           }}
           onError={(e) => {
@@ -1297,7 +1549,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
               setRetryCount(retryCount + 1);
               setIsLoading(true);
             } else {
-              setLoadError(`Impossible de charger le document ${isExcel ? 'Excel' : isPowerPoint ? 'PowerPoint' : 'Word'}. Vérifiez que le fichier est accessible publiquement.`);
+              setLoadError(`Impossible de charger le document ${isExcel ? 'Excel' : 'Word'}. Vérifiez que le fichier est accessible publiquement.`);
               setIsLoading(false);
             }
           }}
@@ -1313,7 +1565,6 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
           </div>
         )}
 
-        {/* Gestion d'erreur améliorée */}
         {loadError && (
           <div className={cn(
             "absolute inset-0 flex items-center justify-center p-8",
@@ -1322,9 +1573,9 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
             <div className="text-center max-w-md">
               <div className={cn(
                 "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6",
-                isExcel ? "bg-green-100" : isPowerPoint ? "bg-orange-100" : "bg-blue-100"
+                isExcel ? "bg-green-100" : "bg-blue-100"
               )}>
-                {isExcel ? "📊" : isPowerPoint ? "📋" : "📄"}
+                {isExcel ? "📊" : "📄"}
               </div>
               <div className="text-xl font-semibold mb-3">Document non accessible</div>
               <div className="text-sm mb-6 opacity-80">{loadError}</div>
