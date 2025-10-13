@@ -113,6 +113,10 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
   const [officeViewerMethod, setOfficeViewerMethod] = useState(0);
   const [retryCount, setRetryCount] = useState(0);
   
+  // PowerPoint specific states
+  const [currentSlide, setCurrentSlide] = useState(1);
+  const [totalSlides, setTotalSlides] = useState(0);
+  
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
