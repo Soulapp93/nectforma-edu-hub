@@ -437,33 +437,40 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
   };
 
   const exitFullscreen = async () => {
-    if (isFullscreen) {
-      // Toujours sortir du mode simulé
-      setIsFullscreen(false);
-      setShowToolbar(true);
-      
-      // Restaurer les styles normaux
-      if (containerRef.current) {
-        const element = containerRef.current;
-        element.style.position = '';
-        element.style.top = '';
-        element.style.left = '';
-        element.style.width = '';
-        element.style.height = '';
-        element.style.zIndex = '';
-        element.style.margin = '';
-        element.style.padding = '';
-        element.style.border = '';
-        element.style.outline = '';
-        element.style.overflow = '';
+    try {
+      // D'abord essayer de sortir du vrai fullscreen
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        console.log('✅ Sortie API fullscreen native');
       }
-      
-      // Restaurer le body
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-      
-      toast.success('Mode plein écran désactivé');
+    } catch (error) {
+      console.error('❌ Erreur sortie fullscreen:', error);
     }
+    
+    // Dans tous les cas, nettoyer notre état
+    setIsFullscreen(false);
+    setShowToolbar(true);
+    
+    // Restaurer les styles
+    if (containerRef.current) {
+      const element = containerRef.current;
+      element.style.position = '';
+      element.style.top = '';
+      element.style.left = '';
+      element.style.width = '';
+      element.style.height = '';
+      element.style.zIndex = '';
+      element.style.margin = '';
+      element.style.padding = '';
+      element.style.border = '';
+      element.style.overflow = '';
+    }
+    
+    // Restaurer le body
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+    
+    toast.success('Mode plein écran désactivé');
   };
 
   const togglePlayPause = () => {
