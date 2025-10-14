@@ -88,6 +88,17 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
     setShowEditModal(content);
   };
 
+  const handleOpenLink = (url: string) => {
+    // S'assurer que l'URL a un protocole
+    let formattedUrl = url.trim();
+    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
+      formattedUrl = 'https://' + formattedUrl;
+    }
+    
+    // Ouvrir dans un nouvel onglet
+    window.open(formattedUrl, '_blank', 'noopener,noreferrer');
+  };
+
   const getContentTypeColor = (type: string) => {
     switch (type) {
       case 'cours': return 'bg-blue-100 text-blue-800';
@@ -163,15 +174,13 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
                     <p className="text-gray-600 text-sm mb-3 ml-11">{content.description}</p>
                   )}
                   {content.content_type === 'lien' && content.file_url && (
-                    <a 
-                      href={content.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center text-sm text-blue-600 hover:text-blue-800 hover:underline ml-11"
+                    <button
+                      onClick={() => handleOpenLink(content.file_url)}
+                      className="flex items-center text-sm text-blue-600 hover:text-blue-800 hover:underline ml-11 cursor-pointer"
                     >
                       <ExternalLink className="h-3 w-3 mr-1" />
                       {content.file_url}
-                    </a>
+                    </button>
                   )}
                   {content.content_type !== 'lien' && content.file_name && (
                     <div className="flex items-center text-sm text-gray-500 ml-11">
@@ -186,7 +195,7 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
                     <Button 
                       size="sm" 
                       variant="default"
-                      onClick={() => window.open(content.file_url, '_blank', 'noopener,noreferrer')}
+                      onClick={() => handleOpenLink(content.file_url)}
                     >
                       <ExternalLink className="h-4 w-4 mr-1" />
                       Accéder
