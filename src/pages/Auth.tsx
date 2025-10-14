@@ -92,7 +92,7 @@ const Auth = () => {
       toast.success(`Connexion réussie en tant que ${roleMessages[role as keyof typeof roleMessages]}`);
       
       // Forcer le rechargement de la page pour que useCurrentUser détecte la nouvelle session
-      window.location.href = '/';
+      window.location.href = '/dashboard';
     } catch (error) {
       toast.error('Erreur lors de la connexion démo');
       console.error('Demo login error:', error);
