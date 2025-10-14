@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { moduleContentService, ModuleContent } from '@/services/moduleContentService';
 import CreateContentModal from './CreateContentModal';
 import ModuleFileViewerModal from './ModuleFileViewerModal';
+import LinkViewerModal from './LinkViewerModal';
 import { toast } from 'sonner';
 
 interface ModuleContentTabProps {
@@ -16,6 +17,7 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState<ModuleContent | null>(null);
   const [viewerFile, setViewerFile] = useState<{ url: string; name: string } | null>(null);
+  const [viewerLink, setViewerLink] = useState<{ url: string; title: string } | null>(null);
 
   const fetchContents = async () => {
     try {
@@ -88,15 +90,9 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
     setShowEditModal(content);
   };
 
-  const handleOpenLink = (url: string) => {
-    // S'assurer que l'URL a un protocole
-    let formattedUrl = url.trim();
-    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
-      formattedUrl = 'https://' + formattedUrl;
-    }
-    
-    // Ouvrir dans un nouvel onglet
-    window.open(formattedUrl, '_blank', 'noopener,noreferrer');
+  const handleOpenLink = (url: string, title: string) => {
+    // Ouvrir le visualiseur de lien
+    setViewerLink({ url, title });
   };
 
   const getContentTypeColor = (type: string) => {
@@ -175,7 +171,7 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
                   )}
                   {content.content_type === 'lien' && content.file_url && (
                     <button
-                      onClick={() => handleOpenLink(content.file_url)}
+                      onClick={() => handleOpenLink(content.file_url, content.title)}
                       className="flex items-center text-sm text-blue-600 hover:text-blue-800 hover:underline ml-11 cursor-pointer"
                     >
                       <ExternalLink className="h-3 w-3 mr-1" />
@@ -195,7 +191,7 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
                     <Button 
                       size="sm" 
                       variant="default"
-                      onClick={() => handleOpenLink(content.file_url)}
+                      onClick={() => handleOpenLink(content.file_url, content.title)}
                     >
                       <ExternalLink className="h-4 w-4 mr-1" />
                       Accéder
@@ -275,6 +271,15 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
           onClose={() => setViewerFile(null)}
           fileUrl={viewerFile.url}
           fileName={viewerFile.name}
+        />
+      )}
+
+      {viewerLink && (
+        <LinkViewerModal
+          isOpen={!!viewerLink}
+          onClose={() => setViewerLink(null)}
+          url={viewerLink.url}
+          title={viewerLink.title}
         />
       )}
     </div>
