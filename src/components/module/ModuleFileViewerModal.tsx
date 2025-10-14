@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import ChromeStylePDFViewer from '@/components/ui/viewers/ChromeStylePDFViewer';
 import EnhancedMediaViewer from '@/components/ui/viewers/EnhancedMediaViewer';
+import ExcelViewer from '@/components/ui/viewers/ExcelViewer';
 import UniversalFileViewer from '@/components/ui/viewers/UniversalFileViewer';
 
 interface ModuleFileViewerModalProps {
@@ -24,11 +25,13 @@ const ModuleFileViewerModal: React.FC<ModuleFileViewerModalProps> = ({
     const videoExtensions = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'flv', 'wmv'];
     const audioExtensions = ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac', 'wma'];
     const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'];
+    const excelExtensions = ['xlsx', 'xls', 'csv', 'xlsm', 'xlsb'];
 
     if (fileExtension === 'pdf') return 'pdf';
     if (videoExtensions.includes(fileExtension)) return 'video';
     if (audioExtensions.includes(fileExtension)) return 'audio';
     if (imageExtensions.includes(fileExtension)) return 'image';
+    if (excelExtensions.includes(fileExtension)) return 'excel';
     return 'other';
   }, [fileExtension]);
 
@@ -52,6 +55,17 @@ const ModuleFileViewerModal: React.FC<ModuleFileViewerModalProps> = ({
         fileUrl={fileUrl}
         fileName={fileName}
         fileType={fileType}
+        onClose={onClose}
+      />
+    );
+  }
+
+  // Use Excel viewer for spreadsheet files
+  if (fileType === 'excel') {
+    return (
+      <ExcelViewer
+        fileUrl={fileUrl}
+        fileName={fileName}
         onClose={onClose}
       />
     );
