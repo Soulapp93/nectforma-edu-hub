@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, FileText, ExternalLink, Edit, Trash2, Download } from 'lucide-react';
+import { Plus, FileText, Eye, Edit, Trash2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { moduleContentService, ModuleContent } from '@/services/moduleContentService';
 import CreateContentModal from './CreateContentModal';
+import ModuleFileViewerModal from './ModuleFileViewerModal';
 import { toast } from 'sonner';
 
 interface ModuleContentTabProps {
@@ -14,6 +15,7 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState<ModuleContent | null>(null);
+  const [viewerFile, setViewerFile] = useState<{ url: string; name: string } | null>(null);
 
   const fetchContents = async () => {
     try {
@@ -57,45 +59,8 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
   };
 
   const handleOpenFile = (fileUrl: string, fileName: string) => {
-    try {
-      const extension = fileName.split('.').pop()?.toLowerCase();
-      
-      // Détecter si c'est un lien YouTube
-      if (fileUrl.includes('youtube.com') || fileUrl.includes('youtu.be')) {
-        window.open(fileUrl, '_blank', 'noopener,noreferrer');
-        toast.success('Ouverture de la vidéo YouTube');
-        return;
-      }
-      
-      // Pour les fichiers Office, utiliser Office Online Viewer
-      if (extension === 'docx' || extension === 'doc') {
-        const officeUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileUrl)}`;
-        window.open(officeUrl, '_blank', 'noopener,noreferrer');
-        toast.success('Ouverture dans Word Online');
-        return;
-      }
-      
-      if (extension === 'xlsx' || extension === 'xls' || extension === 'csv') {
-        const officeUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileUrl)}`;
-        window.open(officeUrl, '_blank', 'noopener,noreferrer');
-        toast.success('Ouverture dans Excel Online');
-        return;
-      }
-      
-      if (extension === 'pptx' || extension === 'ppt') {
-        const officeUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileUrl)}`;
-        window.open(officeUrl, '_blank', 'noopener,noreferrer');
-        toast.success('Ouverture dans PowerPoint Online');
-        return;
-      }
-      
-      // Pour tous les autres fichiers (PDF, images, vidéos, audio), ouvrir directement dans le navigateur
-      window.open(fileUrl, '_blank', 'noopener,noreferrer');
-      toast.success('Ouverture du fichier');
-    } catch (error) {
-      console.error('Erreur lors de l\'ouverture du fichier:', error);
-      toast.error('Erreur lors de l\'ouverture du fichier');
-    }
+    // Ouvrir le visualiseur intégré pour éviter les blocages Chrome
+    setViewerFile({ url: fileUrl, name: fileName });
   };
 
   const handleDownloadFile = async (fileUrl: string, fileName: string) => {
@@ -208,11 +173,11 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
                     <>
                       <Button 
                         size="sm" 
-                        variant="outline"
+                        variant="default"
                         onClick={() => handleOpenFile(content.file_url, content.file_name || 'fichier')}
                       >
-                        <ExternalLink className="h-4 w-4 mr-1" />
-                        Ouvrir
+                        <Eye className="h-4 w-4 mr-1" />
+                        Visualiser
                       </Button>
                       <Button 
                         size="sm" 
@@ -270,6 +235,15 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
           moduleId={moduleId}
           onSuccess={handleEditSuccess}
           editContent={showEditModal}
+        />
+      )}
+
+      {viewerFile && (
+        <ModuleFileViewerModal
+          isOpen={!!viewerFile}
+          onClose={() => setViewerFile(null)}
+          fileUrl={viewerFile.url}
+          fileName={viewerFile.name}
         />
       )}
     </div>
