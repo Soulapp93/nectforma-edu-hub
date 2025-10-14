@@ -26,7 +26,8 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    content_type: 'cours' as 'cours' | 'support' | 'video' | 'document' | 'devoir' | 'evaluation',
+    content_type: 'cours' as 'cours' | 'support' | 'video' | 'document' | 'devoir' | 'evaluation' | 'lien',
+    link_url: '',
     due_date: '',
     max_points: 100
   });
@@ -43,8 +44,9 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
         title: editContent.title,
         description: editContent.description || '',
         content_type: isDocument 
-          ? (editContent as ModuleDocument).document_type as 'cours' | 'support' | 'video' | 'document' | 'devoir' | 'evaluation'
-          : (editContent as ModuleContent).content_type as 'cours' | 'support' | 'video' | 'document' | 'devoir' | 'evaluation',
+          ? (editContent as ModuleDocument).document_type as 'cours' | 'support' | 'video' | 'document' | 'devoir' | 'evaluation' | 'lien'
+          : (editContent as ModuleContent).content_type as 'cours' | 'support' | 'video' | 'document' | 'devoir' | 'evaluation' | 'lien',
+        link_url: editContent.file_url && editContent.file_url.startsWith('http') ? editContent.file_url : '',
         due_date: '',
         max_points: 100
       });
@@ -87,6 +89,36 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
             }
           }
           console.log('Assignment created successfully:', assignment);
+        }
+      } else if (formData.content_type === 'lien') {
+        // Traitement pour les liens
+        if (editContent) {
+          // Mode édition lien
+          const contentData = {
+            title: formData.title,
+            description: formData.description,
+            content_type: formData.content_type,
+            file_url: formData.link_url,
+            file_name: formData.title
+          };
+
+          console.log('Updating link in database:', contentData);
+          await moduleContentService.updateContent(editContent.id, contentData);
+          console.log('Link updated successfully');
+        } else {
+          // Mode création lien
+          const contentData = {
+            title: formData.title,
+            description: formData.description,
+            content_type: formData.content_type,
+            module_id: moduleId,
+            file_url: formData.link_url,
+            file_name: formData.title
+          };
+
+          console.log('Creating link in database:', contentData);
+          await moduleContentService.createContent(contentData);
+          console.log('Link created successfully');
         }
       } else {
         // Traitement pour les documents
@@ -198,6 +230,7 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
         title: '',
         description: '',
         content_type: 'cours',
+        link_url: '',
         due_date: '',
         max_points: 100
       });
@@ -257,6 +290,7 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
               <option value="support">Support</option>
               <option value="video">Vidéo</option>
               <option value="document">Document</option>
+              <option value="lien">Lien</option>
               <option value="devoir">Devoir</option>
               <option value="evaluation">Évaluation</option>
             </select>
@@ -273,6 +307,23 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
+
+          {/* Champ spécifique aux liens */}
+          {formData.content_type === 'lien' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                URL du lien *
+              </label>
+              <input
+                type="url"
+                value={formData.link_url}
+                onChange={(e) => setFormData({ ...formData, link_url: e.target.value })}
+                placeholder="https://exemple.com"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+          )}
 
           {/* Champs spécifiques aux devoirs et évaluations */}
           {(formData.content_type === 'devoir' || formData.content_type === 'evaluation') && (
@@ -303,24 +354,27 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
             </div>
           )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {editContent ? 'Nouveau fichier (optionnel)' : 'Fichier (optionnel)'}
-            </label>
-            <FileUpload
-              onFileSelect={setSelectedFiles}
-              maxSize={50}
-              multiple={formData.content_type === 'devoir' || formData.content_type === 'evaluation'}
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Tous types de fichiers acceptés (PDF, Word, Excel, PowerPoint, images, vidéos, audio, etc.)
-            </p>
-            {editContent?.file_name && selectedFiles.length === 0 && (
-              <p className="text-sm text-gray-500 mt-1">
-                Fichier actuel: {editContent.file_name}
+          {/* Zone de fichiers - cachée pour les liens */}
+          {formData.content_type !== 'lien' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {editContent ? 'Nouveau fichier (optionnel)' : 'Fichier (optionnel)'}
+              </label>
+              <FileUpload
+                onFileSelect={setSelectedFiles}
+                maxSize={50}
+                multiple={formData.content_type === 'devoir' || formData.content_type === 'evaluation'}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Tous types de fichiers acceptés (PDF, Word, Excel, PowerPoint, images, vidéos, audio, etc.)
               </p>
-            )}
-          </div>
+              {editContent?.file_name && selectedFiles.length === 0 && (
+                <p className="text-sm text-gray-500 mt-1">
+                  Fichier actuel: {editContent.file_name}
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="flex justify-end space-x-3 pt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={loading}>

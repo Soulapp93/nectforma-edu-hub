@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, FileText, Eye, Edit, Trash2, Download } from 'lucide-react';
+import { Plus, FileText, Eye, Edit, Trash2, Download, Link as LinkIcon, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { moduleContentService, ModuleContent } from '@/services/moduleContentService';
 import CreateContentModal from './CreateContentModal';
@@ -94,13 +94,17 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
       case 'support': return 'bg-green-100 text-green-800';
       case 'video': return 'bg-purple-100 text-purple-800';
       case 'document': return 'bg-orange-100 text-orange-800';
+      case 'lien': return 'bg-teal-100 text-teal-800';
       case 'devoir': return 'bg-red-100 text-red-800';
       case 'evaluation': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getFileIcon = (fileName: string) => {
+  const getFileIcon = (fileName: string, contentType?: string) => {
+    if (contentType === 'lien') {
+      return <LinkIcon className="h-5 w-5 text-teal-600" />;
+    }
     const extension = fileName?.split('.').pop()?.toLowerCase();
     switch (extension) {
       case 'pdf':
@@ -145,9 +149,7 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
-                    {content.file_name && (
-                      <span className="text-2xl">{getFileIcon(content.file_name)}</span>
-                    )}
+                    <span className="text-2xl">{getFileIcon(content.file_name, content.content_type)}</span>
                     <div>
                       <h3 className="font-medium text-gray-900">{content.title}</h3>
                       <div className="flex items-center space-x-2 mt-1">
@@ -160,7 +162,18 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
                   {content.description && (
                     <p className="text-gray-600 text-sm mb-3 ml-11">{content.description}</p>
                   )}
-                  {content.file_name && (
+                  {content.content_type === 'lien' && content.file_url && (
+                    <a 
+                      href={content.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center text-sm text-blue-600 hover:text-blue-800 hover:underline ml-11"
+                    >
+                      <ExternalLink className="h-3 w-3 mr-1" />
+                      {content.file_url}
+                    </a>
+                  )}
+                  {content.content_type !== 'lien' && content.file_name && (
                     <div className="flex items-center text-sm text-gray-500 ml-11">
                       <FileText className="h-4 w-4 mr-1" />
                       <span>{content.file_name}</span>
@@ -169,7 +182,16 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
                 </div>
                 
                 <div className="flex items-center space-x-2">
-                  {content.file_url && (
+                  {content.content_type === 'lien' && content.file_url ? (
+                    <Button 
+                      size="sm" 
+                      variant="default"
+                      onClick={() => window.open(content.file_url, '_blank', 'noopener,noreferrer')}
+                    >
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      Accéder
+                    </Button>
+                  ) : content.file_url ? (
                     <>
                       <Button 
                         size="sm" 
@@ -188,7 +210,7 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
                         Télécharger
                       </Button>
                     </>
-                  )}
+                  ) : null}
                   
                   <Button 
                     size="sm" 
