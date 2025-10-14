@@ -309,10 +309,12 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
             </label>
             <FileUpload
               onFileSelect={setSelectedFiles}
-              accept=".pdf,.doc,.docx,.ppt,.pptx,.mp4,.avi,.mov,.jpg,.jpeg,.png"
               maxSize={50}
               multiple={formData.content_type === 'devoir' || formData.content_type === 'evaluation'}
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Tous types de fichiers acceptés (PDF, Word, Excel, PowerPoint, images, vidéos, audio, etc.)
+            </p>
             {editContent?.file_name && selectedFiles.length === 0 && (
               <p className="text-sm text-gray-500 mt-1">
                 Fichier actuel: {editContent.file_name}

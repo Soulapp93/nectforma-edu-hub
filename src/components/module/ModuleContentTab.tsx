@@ -62,35 +62,65 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
       
       // Détecter si c'est un lien YouTube
       if (fileUrl.includes('youtube.com') || fileUrl.includes('youtu.be')) {
-        window.open(fileUrl, '_blank', 'noopener,noreferrer');
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
         toast.success('Ouverture de la vidéo YouTube');
         return;
       }
       
       // Pour les fichiers Office, utiliser Office Online Viewer
       if (extension === 'docx' || extension === 'doc') {
-        const officeUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`;
-        window.open(officeUrl, '_blank', 'noopener,noreferrer');
+        const officeUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileUrl)}`;
+        const link = document.createElement('a');
+        link.href = officeUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
         toast.success('Ouverture dans Word Online');
         return;
       }
       
       if (extension === 'xlsx' || extension === 'xls') {
-        const officeUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`;
-        window.open(officeUrl, '_blank', 'noopener,noreferrer');
+        const officeUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileUrl)}`;
+        const link = document.createElement('a');
+        link.href = officeUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
         toast.success('Ouverture dans Excel Online');
         return;
       }
       
       if (extension === 'pptx' || extension === 'ppt') {
-        const officeUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`;
-        window.open(officeUrl, '_blank', 'noopener,noreferrer');
+        const officeUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileUrl)}`;
+        const link = document.createElement('a');
+        link.href = officeUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
         toast.success('Ouverture dans PowerPoint Online');
         return;
       }
       
       // Pour tous les autres fichiers (PDF, images, vidéos, audio), ouvrir directement dans le navigateur
-      window.open(fileUrl, '_blank', 'noopener,noreferrer');
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       toast.success('Ouverture du fichier');
     } catch (error) {
       console.error('Erreur lors de l\'ouverture du fichier:', error);

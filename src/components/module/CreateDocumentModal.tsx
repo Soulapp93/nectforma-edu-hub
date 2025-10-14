@@ -182,9 +182,11 @@ const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
             </label>
             <FileUpload
               onFileSelect={setSelectedFiles}
-              accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.txt"
               maxSize={50}
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Tous types de fichiers acceptés (PDF, Word, Excel, PowerPoint, images, vidéos, audio, etc.)
+            </p>
             {editDocument?.file_name && selectedFiles.length === 0 && (
               <p className="text-sm text-gray-500 mt-1">
                 Fichier actuel: {editDocument.file_name}
