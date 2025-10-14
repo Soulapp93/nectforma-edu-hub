@@ -80,21 +80,22 @@ const Auth = () => {
       // Simuler une connexion en créant une session côté client
       sessionStorage.setItem('demo_user', JSON.stringify(demoUserData));
       
-      // Messages personnalisés selon le rôle pour confirmer les nouveaux accès
+      // Messages personnalisés selon le rôle
       const roleMessages = {
         'AdminPrincipal': 'Admin Principal - Accès complet à la gestion du compte établissement',
-        'Admin': 'Admin - Accès à la gestion du profil personnel uniquement',
+        'Admin': 'Administrateur - Accès à la gestion du profil personnel uniquement',
         'Formateur': 'Formateur - Accès à la gestion du profil personnel',
         'Étudiant': 'Étudiant - Accès à la gestion du profil personnel',
         'Tuteur': 'Tuteur - Accès aux formations de l\'apprenti et au profil personnel'
       };
       
       toast.success(`Connexion réussie en tant que ${roleMessages[role as keyof typeof roleMessages]}`);
-      navigate('/');
+      
+      // Forcer le rechargement de la page pour que useCurrentUser détecte la nouvelle session
+      window.location.href = '/';
     } catch (error) {
       toast.error('Erreur lors de la connexion démo');
       console.error('Demo login error:', error);
-    } finally {
       setLoading(false);
     }
   };
