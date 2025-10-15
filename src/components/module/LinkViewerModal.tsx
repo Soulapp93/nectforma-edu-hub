@@ -97,18 +97,18 @@ const LinkViewerModal: React.FC<LinkViewerModalProps> = ({
           )}
 
           {/* Alert informatif */}
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="text-sm">
+          <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
+            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <AlertDescription className="text-sm text-amber-800 dark:text-amber-200">
               {isYouTube ? (
                 <>
-                  <strong>Cette vidéo YouTube a des restrictions.</strong><br />
-                  Le propriétaire a désactivé la lecture intégrée. Utilisez les options ci-dessous pour accéder au contenu.
+                  <strong>⚠️ Vidéo YouTube protégée</strong><br />
+                  Cette vidéo ne peut pas être lue directement dans l'application. Vous devez la visionner sur YouTube.
                 </>
               ) : (
                 <>
-                  <strong>Lien externe</strong><br />
-                  Utilisez les options ci-dessous pour accéder au contenu.
+                  <strong>🔗 Lien externe</strong><br />
+                  Ce contenu doit être ouvert dans votre navigateur.
                 </>
               )}
             </AlertDescription>
@@ -152,23 +152,41 @@ const LinkViewerModal: React.FC<LinkViewerModalProps> = ({
             </Button>
           </div>
 
-          {/* Instructions */}
-          <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 p-4 rounded-lg">
-            <h4 className="font-semibold text-sm mb-2 text-blue-900 dark:text-blue-100">
-              💡 Comment accéder au contenu :
+          {/* Instructions - Plus visibles */}
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-2 border-blue-300 dark:border-blue-700 p-5 rounded-xl shadow-sm">
+            <h4 className="font-bold text-base mb-3 text-blue-900 dark:text-blue-100 flex items-center gap-2">
+              <span className="text-2xl">👆</span>
+              Marche à suivre :
             </h4>
-            <ol className="text-sm text-blue-800 dark:text-blue-200 space-y-1.5 list-decimal list-inside">
-              <li>Cliquez sur "Copier le lien" ci-dessus</li>
-              <li>Ouvrez un nouvel onglet dans votre navigateur</li>
-              <li>Collez le lien dans la barre d'adresse (Ctrl+V ou Cmd+V)</li>
-              <li>Appuyez sur Entrée pour accéder au contenu</li>
+            <ol className="text-sm text-blue-900 dark:text-blue-100 space-y-2.5">
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold">1</span>
+                <span className="pt-0.5">Cliquez sur le bouton violet <strong>"Copier le lien"</strong> ci-dessus</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold">2</span>
+                <span className="pt-0.5">Ouvrez un <strong>nouvel onglet</strong> dans votre navigateur</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold">3</span>
+                <span className="pt-0.5">Collez le lien dans la barre d'adresse (<kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 rounded border">Ctrl+V</kbd> ou <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 rounded border">Cmd+V</kbd>)</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold">4</span>
+                <span className="pt-0.5">Appuyez sur <kbd className="px-1.5 py-0.5 bg-white dark:bg-gray-800 rounded border">Entrée</kbd> pour accéder au contenu</span>
+              </li>
             </ol>
           </div>
 
           {isYouTube && (
-            <p className="text-xs text-muted-foreground text-center">
-              Cette restriction est imposée par le propriétaire de la vidéo YouTube, pas par cette plateforme.
-            </p>
+            <div className="text-center space-y-2">
+              <p className="text-xs text-muted-foreground">
+                Cette restriction est imposée par le propriétaire de la vidéo YouTube, pas par cette plateforme.
+              </p>
+              <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                ℹ️ Le bouton "Ouvrir le lien" peut ne pas fonctionner à cause des protections du navigateur. Utilisez la méthode de copie ci-dessus.
+              </p>
+            </div>
           )}
         </div>
       </DialogContent>
