@@ -143,7 +143,7 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
 
   const openInNewTab = async () => {
     try {
-      // Utiliser fetch pour télécharger et ouvrir dans un nouvel onglet
+      // Utiliser fetch pour télécharger et ouvrir dans un nouvel onglet via un lien <a>
       const response = await fetch(fileUrl);
       
       if (!response.ok) {
@@ -152,17 +152,17 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
       
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       
-      if (!newWindow) {
-        toast.error('Popup bloquée - Téléchargez le fichier à la place');
-        // Fallback: télécharger le fichier
-        handleDownload();
-      } else {
-        toast.success('Fichier ouvert dans un nouvel onglet');
-        // Nettoyer l'URL après un délai pour permettre au navigateur de charger
-        setTimeout(() => window.URL.revokeObjectURL(url), 60000);
-      }
+      toast.success('Fichier ouvert dans un nouvel onglet');
+      // Nettoyer l'URL après un délai pour permettre au navigateur de charger
+      setTimeout(() => window.URL.revokeObjectURL(url), 60000);
     } catch (error) {
       console.error('Erreur d\'ouverture:', error);
       toast.error('Impossible d\'ouvrir le fichier - Essayez de le télécharger');
