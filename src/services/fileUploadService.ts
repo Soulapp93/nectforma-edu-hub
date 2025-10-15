@@ -20,7 +20,8 @@ export const fileUploadService = {
         .from(bucket)
         .upload(fileName, file, {
           cacheControl: '3600',
-          upsert: bucket === 'avatars' // Permettre l'écrasement pour les avatars
+          upsert: bucket === 'avatars', // Permettre l'écrasement pour les avatars
+          contentType: file.type
         });
 
       if (error) {

@@ -116,20 +116,57 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
     }
   };
 
-  const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = fileName;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success('Téléchargement démarré');
+  const handleDownload = async () => {
+    try {
+      // Télécharger le fichier via fetch pour éviter les problèmes CORS
+      const response = await fetch(fileUrl);
+      
+      if (!response.ok) {
+        throw new Error('Erreur lors du téléchargement');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success('Téléchargement démarré');
+    } catch (error) {
+      console.error('Erreur de téléchargement:', error);
+      toast.error('Impossible de télécharger le fichier');
+    }
   };
 
-  const openInNewTab = () => {
-    window.open(fileUrl, '_blank', 'noopener,noreferrer');
+  const openInNewTab = async () => {
+    try {
+      // Utiliser fetch pour télécharger et ouvrir dans un nouvel onglet
+      const response = await fetch(fileUrl);
+      
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'ouverture');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+      
+      if (!newWindow) {
+        toast.error('Popup bloquée - Téléchargez le fichier à la place');
+        // Fallback: télécharger le fichier
+        handleDownload();
+      } else {
+        toast.success('Fichier ouvert dans un nouvel onglet');
+        // Nettoyer l'URL après un délai pour permettre au navigateur de charger
+        setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+      }
+    } catch (error) {
+      console.error('Erreur d\'ouverture:', error);
+      toast.error('Impossible d\'ouvrir le fichier - Essayez de le télécharger');
+    }
   };
 
   const getFileTypeColor = () => {
