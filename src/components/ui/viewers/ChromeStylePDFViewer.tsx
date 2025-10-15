@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Download, ZoomIn, ZoomOut, RotateCw, Maximize2, Minimize2, ChevronLeft, ChevronRight, Sidebar, AlignHorizontalJustifyCenter, FileText } from 'lucide-react';
+import { X, Download, ZoomIn, ZoomOut, RotateCw, Maximize2, Minimize2, ChevronLeft, ChevronRight, Sidebar, AlignHorizontalJustifyCenter, FileText, ExternalLink } from 'lucide-react';
 import { Button } from '../button';
 import { toast } from 'sonner';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -167,14 +167,48 @@ const ChromeStylePDFViewer: React.FC<ChromeStylePDFViewerProps> = ({
     setRotation((prev) => (prev + 90) % 360);
   };
 
-  const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success('Téléchargement démarré');
+  const handleDownload = async () => {
+    try {
+      const response = await fetch(fileUrl);
+      if (!response.ok) throw new Error('Erreur lors du téléchargement');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success('Téléchargement démarré');
+    } catch (error) {
+      console.error('Erreur de téléchargement:', error);
+      toast.error('Impossible de télécharger le fichier');
+    }
+  };
+
+  const openInNewTab = async () => {
+    try {
+      const response = await fetch(fileUrl);
+      if (!response.ok) throw new Error('Erreur lors de l\'ouverture');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success('Fichier ouvert dans un nouvel onglet');
+      setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+    } catch (error) {
+      console.error('Erreur d\'ouverture:', error);
+      toast.error('Impossible d\'ouvrir le fichier');
+    }
   };
 
   const toggleFullscreen = async () => {
@@ -332,6 +366,16 @@ const ChromeStylePDFViewer: React.FC<ChromeStylePDFViewerProps> = ({
             title="Rotation"
           >
             <RotateCw className="h-4 w-4" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={openInNewTab}
+            className="text-gray-300 hover:text-white hover:bg-gray-700"
+            title="Ouvrir dans un nouvel onglet"
+          >
+            <ExternalLink className="h-4 w-4" />
           </Button>
 
           <Button
