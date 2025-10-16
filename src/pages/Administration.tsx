@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import AdministrationTabs from '../components/administration/AdministrationTabs';
 import EnhancedUsersList from '../components/administration/EnhancedUsersList';
 import FormationsList from '../components/administration/FormationsList';
 import TextBooksList from '../components/administration/TextBooksList';
@@ -25,7 +24,7 @@ const Administration = () => {
         <p className="text-muted-foreground">Gérez les utilisateurs, formations, rôles et emplois du temps de la plateforme.</p>
       </div>
 
-      <AdministrationTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      
 
       {activeTab === 'users' && <EnhancedUsersList />}
 
