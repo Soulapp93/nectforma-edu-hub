@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import ChromeStylePDFViewer from '@/components/ui/viewers/ChromeStylePDFViewer';
 import EnhancedMediaViewer from '@/components/ui/viewers/EnhancedMediaViewer';
 import ExcelViewer from '@/components/ui/viewers/ExcelViewer';
-import SecureOfficeViewer from '@/components/ui/viewers/SecureOfficeViewer';
 import UniversalFileViewer from '@/components/ui/viewers/UniversalFileViewer';
 import { DigitalSafeFile } from '@/services/digitalSafeService';
 
@@ -27,14 +26,12 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({
     const audioExtensions = ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac', 'wma'];
     const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'];
     const excelExtensions = ['xlsx', 'xls', 'csv', 'xlsm', 'xlsb'];
-    const officeExtensions = ['doc', 'docx', 'ppt', 'pptx'];
 
     if (fileExtension === 'pdf') return 'pdf';
     if (videoExtensions.includes(fileExtension)) return 'video';
     if (audioExtensions.includes(fileExtension)) return 'audio';
     if (imageExtensions.includes(fileExtension)) return 'image';
     if (excelExtensions.includes(fileExtension)) return 'excel';
-    if (officeExtensions.includes(fileExtension)) return 'office';
     return 'other';
   }, [fileExtension]);
 
@@ -76,18 +73,7 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({
     );
   }
 
-  // Use secure Office viewer for Word, PowerPoint files
-  if (fileType === 'office') {
-    return (
-      <SecureOfficeViewer
-        fileUrl={file.file_url}
-        fileName={file.original_name}
-        onClose={handleClose}
-      />
-    );
-  }
-
-  // Fallback to universal viewer for other file types
+  // Fallback to universal viewer for other file types (including Office files)
   return (
     <div className="fixed inset-0 z-50">
       <UniversalFileViewer

@@ -187,21 +187,19 @@ export const digitalSafeService = {
       throw new Error(`Erreur lors de la récupération des fichiers: ${error.message}`);
     }
 
-    // Générer des URLs signées pour chaque fichier (valides 1 heure)
+    // Générer des URLs publiques pour chaque fichier (le bucket est maintenant public)
     if (data && data.length > 0) {
-      const filesWithSignedUrls = await Promise.all(
-        data.map(async (file) => {
-          const { data: signedUrlData } = await supabase.storage
-            .from('coffre-fort-files')
-            .createSignedUrl(file.file_path, 3600); // 1 heure
+      const filesWithPublicUrls = data.map((file) => {
+        const { data: { publicUrl } } = supabase.storage
+          .from('coffre-fort-files')
+          .getPublicUrl(file.file_path);
 
-          return {
-            ...file,
-            file_url: signedUrlData?.signedUrl || file.file_url
-          };
-        })
-      );
-      return filesWithSignedUrls;
+        return {
+          ...file,
+          file_url: publicUrl
+        };
+      });
+      return filesWithPublicUrls;
     }
 
     return data;
@@ -261,10 +259,10 @@ export const digitalSafeService = {
           throw new Error(`Erreur upload: ${uploadError.message}`);
         }
 
-        // Générer une URL signée pour le fichier
-        const { data: signedUrlData } = await supabase.storage
+        // Obtenir l'URL publique du fichier
+        const { data: { publicUrl } } = supabase.storage
           .from('coffre-fort-files')
-          .createSignedUrl(filePath, 3600); // URL valide 1 heure
+          .getPublicUrl(filePath);
 
         // Sauvegarder les métadonnées en base
         const { data: fileData, error: dbError } = await supabase
@@ -273,7 +271,7 @@ export const digitalSafeService = {
             name: fileName,
             original_name: file.name,
             file_path: filePath,
-            file_url: signedUrlData?.signedUrl || '',
+            file_url: publicUrl,
             file_size: file.size,
             content_type: file.type || 'application/octet-stream',
             folder_id: folderId || null,
