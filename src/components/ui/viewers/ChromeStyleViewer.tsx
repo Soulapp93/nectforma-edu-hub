@@ -169,8 +169,28 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
     }
   };
 
-  const handleOpenNewTab = () => {
-    window.open(fileUrl, '_blank');
+  const handleOpenNewTab = async () => {
+    try {
+      toast.info('Ouverture du fichier...');
+      const response = await fetch(fileUrl);
+      if (!response.ok) throw new Error('Erreur lors du téléchargement');
+      
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setTimeout(() => URL.revokeObjectURL(url), 100);
+      toast.success('Fichier ouvert dans un nouvel onglet');
+    } catch (error) {
+      console.error('Erreur ouverture:', error);
+      toast.error('Erreur lors de l\'ouverture du fichier');
+    }
   };
 
   const toggleFullscreen = async () => {
