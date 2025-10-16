@@ -84,7 +84,6 @@ const Sidebar = () => {
     { name: 'Formation', href: '/formations', icon: BookOpen },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
     { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
-    { name: 'Coffre-fort', href: '/coffre-fort', icon: FileText },
     { name: 'Gestion du compte', href: '/gestion-etablissement', icon: Building },
     { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
@@ -96,7 +95,6 @@ const Sidebar = () => {
     { name: 'Formation', href: '/formations', icon: BookOpen },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
     { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
-    { name: 'Coffre-fort', href: '/coffre-fort', icon: FileText },
     { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
 
@@ -113,7 +111,6 @@ const Sidebar = () => {
     { name: 'Formation', href: '/formations', icon: BookOpen },
     { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
-    { name: 'Coffre-fort', href: '/coffre-fort', icon: FileText },
     { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
     { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
