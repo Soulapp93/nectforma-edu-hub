@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Folder, Upload, Download, Trash2, Eye, Share, Plus, ArrowLeft, Filter, X } from 'lucide-react';
+import { FileText, Folder, Upload, Download, Trash2, Eye, Share, Plus, ArrowLeft, Filter, X, RefreshCw } from 'lucide-react';
 import FoldersGrid from '../components/coffrefort/FoldersGrid';
 import FileUploadModal from '../components/coffrefort/FileUploadModal';
 import CreateFolderModal from '../components/coffrefort/CreateFolderModal';
@@ -8,6 +8,8 @@ import { useDigitalSafe } from '@/hooks/useDigitalSafe';
 import { DigitalSafeFile } from '@/services/digitalSafeService';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { regenerateCoffreFortUrls } from '@/utils/regenerateCoffreFortUrls';
+import { toast } from 'sonner';
 
 const CoffreFort = () => {
   const {
@@ -33,6 +35,33 @@ const CoffreFort = () => {
   const [fileTypeFilter, setFileTypeFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [sizeFilter, setSizeFilter] = useState('');
+  const [isRegenerating, setIsRegenerating] = useState(false);
+
+  const handleRegenerateUrls = async () => {
+    if (!confirm('Voulez-vous régénérer les URLs de tous les fichiers ? Cette opération peut prendre quelques instants.')) {
+      return;
+    }
+
+    setIsRegenerating(true);
+    toast.info('Régénération des URLs en cours...');
+
+    try {
+      const result = await regenerateCoffreFortUrls();
+      
+      if (result.success) {
+        toast.success(`✅ ${result.updated} fichier(s) mis à jour avec succès !`);
+        // Recharger les données
+        await loadData();
+      } else {
+        toast.warning(`⚠️ ${result.updated} fichier(s) mis à jour, ${result.errors} erreur(s)`);
+      }
+    } catch (error) {
+      console.error('Erreur régénération:', error);
+      toast.error('Erreur lors de la régénération des URLs');
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
 
   const handleSelectFile = (fileId: string) => {
     setSelectedFiles(prev => 
@@ -184,6 +213,17 @@ const CoffreFort = () => {
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Nouveau dossier
+              </button>
+            )}
+            {!currentFolder && files.length > 0 && (
+              <button 
+                onClick={handleRegenerateUrls}
+                disabled={isRegenerating}
+                className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Régénérer les URLs des anciens fichiers"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isRegenerating ? 'animate-spin' : ''}`} />
+                {isRegenerating ? 'Mise à jour...' : 'Réparer URLs'}
               </button>
             )}
             <button 
