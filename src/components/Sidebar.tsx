@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
@@ -10,7 +10,10 @@ import {
   Settings,
   LogOut,
   ClipboardCheck,
-  Building
+  Building,
+  ChevronDown,
+  ChevronRight,
+  Clock
 } from 'lucide-react';
 import {
   Sidebar as SidebarWrapper,
@@ -28,11 +31,20 @@ import {
 import { useCurrentUser, useUserWithRelations } from '@/hooks/useCurrentUser';
 import { supabase } from '@/integrations/supabase/client';
 
+interface NavigationItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<any>;
+  subItems?: NavigationItem[];
+}
+
 const Sidebar = () => {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const { userRole, userId } = useCurrentUser();
   const { userInfo, relationInfo } = useUserWithRelations();
+  const location = useLocation();
+  const [adminExpanded, setAdminExpanded] = useState(location.pathname === '/administration');
 
   const handleLogout = async () => {
     // Nettoyer la session démo
@@ -77,10 +89,19 @@ const Sidebar = () => {
 
   const userDisplayInfo = getUserDisplayInfo();
   
+  // Sous-onglets de l'administration
+  const administrationSubItems = [
+    { name: 'Gestion des utilisateurs', href: '/administration?tab=users', icon: Users },
+    { name: 'Gestion des formations', href: '/administration?tab=formations', icon: BookOpen },
+    { name: 'Gestion des Cahiers de Texte', href: '/administration?tab=textbooks', icon: FileText },
+    { name: 'Gestion des Emplois du Temps', href: '/administration?tab=schedules', icon: Clock },
+    { name: 'Feuilles d\'émargement', href: '/administration?tab=attendance', icon: ClipboardCheck },
+  ];
+  
   // Navigation pour AdminPrincipal uniquement (avec gestion établissement et profil séparés)
-  const principalAdminNavigation = [
+  const principalAdminNavigation: NavigationItem[] = [
     { name: 'Tableau de bord', href: '/', icon: LayoutDashboard },
-    { name: 'Administration', href: '/administration', icon: Users },
+    { name: 'Administration', href: '/administration', icon: Users, subItems: administrationSubItems },
     { name: 'Formation', href: '/formations', icon: BookOpen },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
     { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
@@ -89,9 +110,9 @@ const Sidebar = () => {
   ];
 
   // Navigation pour Admin (avec profil au lieu de gestion du compte - sans suivi émargement)
-  const adminNavigation = [
+  const adminNavigation: NavigationItem[] = [
     { name: 'Tableau de bord', href: '/', icon: LayoutDashboard },
-    { name: 'Administration', href: '/administration', icon: Users },
+    { name: 'Administration', href: '/administration', icon: Users, subItems: administrationSubItems },
     { name: 'Formation', href: '/formations', icon: BookOpen },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
     { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
@@ -99,7 +120,7 @@ const Sidebar = () => {
   ];
 
   // Navigation pour tuteurs (limitée)
-  const tutorNavigation = [
+  const tutorNavigation: NavigationItem[] = [
     { name: 'Formation', href: '/formations', icon: BookOpen },
     { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
@@ -107,7 +128,7 @@ const Sidebar = () => {
   ];
 
   // Navigation pour les formateurs et étudiants (avec profil)
-  const limitedNavigation = [
+  const limitedNavigation: NavigationItem[] = [
     { name: 'Formation', href: '/formations', icon: BookOpen },
     { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
@@ -175,6 +196,64 @@ const Sidebar = () => {
             <SidebarMenu className="px-4 space-y-1">
               {navigation.map((item) => {
                 const Icon = item.icon;
+                const hasSubItems = item.subItems && item.subItems.length > 0;
+                const isAdminRoute = location.pathname === '/administration';
+                
+                if (hasSubItems) {
+                  return (
+                    <SidebarMenuItem key={item.name}>
+                      <div>
+                        <button
+                          onClick={() => setAdminExpanded(!adminExpanded)}
+                          className={`flex items-center justify-between w-full px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                            isAdminRoute
+                              ? 'nect-glass text-primary-foreground'
+                              : 'text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground'
+                          }`}
+                          title={collapsed ? item.name : undefined}
+                        >
+                          <div className="flex items-center">
+                            <Icon className={`${collapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0`} />
+                            {!collapsed && <span>{item.name}</span>}
+                          </div>
+                          {!collapsed && (
+                            adminExpanded ? 
+                              <ChevronDown className="h-4 w-4" /> : 
+                              <ChevronRight className="h-4 w-4" />
+                          )}
+                        </button>
+                        
+                        {!collapsed && adminExpanded && (
+                          <div className="ml-6 mt-1 space-y-1">
+                            {item.subItems.map((subItem) => {
+                              const SubIcon = subItem.icon;
+                              const searchParams = new URLSearchParams(subItem.href.split('?')[1]);
+                              const tabParam = searchParams.get('tab');
+                              const currentTab = new URLSearchParams(location.search).get('tab');
+                              const isSubActive = isAdminRoute && currentTab === tabParam;
+                              
+                              return (
+                                <NavLink
+                                  key={subItem.name}
+                                  to={subItem.href}
+                                  className={`flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
+                                    isSubActive
+                                      ? 'bg-primary-foreground/20 text-primary-foreground font-medium'
+                                      : 'text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-primary-foreground'
+                                  }`}
+                                >
+                                  <SubIcon className="mr-3 h-4 w-4 flex-shrink-0" />
+                                  <span className="text-xs">{subItem.name}</span>
+                                </NavLink>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </SidebarMenuItem>
+                  );
+                }
+                
                 return (
                   <SidebarMenuItem key={item.name}>
                     <SidebarMenuButton asChild>
