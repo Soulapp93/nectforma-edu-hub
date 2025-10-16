@@ -1953,6 +1953,10 @@ export type Database = {
       }
     }
     Functions: {
+      can_access_file: {
+        Args: { _file_id: string; _user_id: string }
+        Returns: boolean
+      }
       generate_attendance_qr_code: {
         Args: { attendance_sheet_id_param: string }
         Returns: string
