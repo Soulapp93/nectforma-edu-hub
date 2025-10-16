@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Plus, Search, Filter, Upload, Download, MoreVertical, Edit, Trash2, Mail } from 'lucide-react';
+import { Plus, Search, Filter, Upload, Download, MoreVertical, Edit, Trash2, Mail, X, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { LoadingState } from '@/components/ui/loading-state';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { RoleBadge } from '@/components/ui/role-badge';
@@ -14,6 +16,7 @@ import SimplifiedUserModal from './SimplifiedUserModal';
 import UserDetailModal from './UserDetailModal';
 import ExcelImport from './ExcelImport';
 import * as XLSX from 'xlsx';
+import { toast } from 'sonner';
 
 const EnhancedUsersList: React.FC = () => {
   const { users, loading, error, createUser, updateUser, deleteUser, bulkCreateUsers } = useUsers();
@@ -30,6 +33,8 @@ const EnhancedUsersList: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [preselectedRole, setPreselectedRole] = useState<'Admin' | 'Formateur' | 'Étudiant' | null>(null);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [bulkAction, setBulkAction] = useState<string>('');
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = 
@@ -123,6 +128,100 @@ const EnhancedUsersList: React.FC = () => {
     console.log(`Renvoyer l'invitation à ${email}`);
   };
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedUsers(filteredUsers.map(user => user.id!));
+    } else {
+      setSelectedUsers([]);
+    }
+  };
+
+  const handleSelectUser = (userId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedUsers(prev => [...prev, userId]);
+    } else {
+      setSelectedUsers(prev => prev.filter(id => id !== userId));
+    }
+  };
+
+  const handleCancelSelection = () => {
+    setSelectedUsers([]);
+    setBulkAction('');
+  };
+
+  const handleApplyBulkAction = async () => {
+    if (!bulkAction) {
+      toast.error('Veuillez choisir une action');
+      return;
+    }
+
+    const selectedUserData = users.filter(user => selectedUsers.includes(user.id!));
+
+    switch (bulkAction) {
+      case 'activate':
+        // Logique pour activer les utilisateurs
+        for (const user of selectedUserData) {
+          await updateUser(user.id!, { ...user, status: 'Actif' as any });
+        }
+        toast.success(`${selectedUsers.length} utilisateur(s) activé(s)`);
+        break;
+      
+      case 'deactivate':
+        // Logique pour désactiver les utilisateurs
+        for (const user of selectedUserData) {
+          await updateUser(user.id!, { ...user, status: 'Inactif' as any });
+        }
+        toast.success(`${selectedUsers.length} utilisateur(s) désactivé(s)`);
+        break;
+      
+      case 'change-role':
+        toast.info('Fonctionnalité de modification de rôle en cours de développement');
+        break;
+      
+      case 'send-email':
+        toast.info('Fonctionnalité d\'envoi d\'email en cours de développement');
+        break;
+      
+      case 'export':
+        const exportData = selectedUserData.map(user => {
+          const userFormations = getUserFormations(user.id!);
+          const formationsText = userFormations.map(assignment => 
+            `${assignment.formation.title} (${assignment.formation.level})`
+          ).join(', ');
+
+          return {
+            'Prénom': user.first_name,
+            'Nom': user.last_name,
+            'Email': user.email,
+            'Rôle': user.role,
+            'Formations': formationsText,
+            'Statut': user.status,
+            'Date de création': user.created_at ? new Date(user.created_at).toLocaleDateString('fr-FR') : ''
+          };
+        });
+
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Utilisateurs sélectionnés');
+        
+        const filename = `selection_utilisateurs_${new Date().toISOString().split('T')[0]}.xlsx`;
+        XLSX.writeFile(wb, filename);
+        toast.success('Export réalisé avec succès');
+        break;
+      
+      case 'delete':
+        if (confirm(`Êtes-vous sûr de vouloir supprimer ${selectedUsers.length} utilisateur(s) ?`)) {
+          for (const userId of selectedUsers) {
+            await deleteUser(userId);
+          }
+          toast.success(`${selectedUsers.length} utilisateur(s) supprimé(s)`);
+        }
+        break;
+    }
+
+    handleCancelSelection();
+  };
+
   if (loading && users.length === 0) {
     return <LoadingState message="Chargement des utilisateurs..." />;
   }
@@ -138,8 +237,83 @@ const EnhancedUsersList: React.FC = () => {
     );
   }
 
+  const isAllSelected = filteredUsers.length > 0 && selectedUsers.length === filteredUsers.length;
+  const isSomeSelected = selectedUsers.length > 0 && selectedUsers.length < filteredUsers.length;
+
   return (
     <div className="glass-card rounded-xl">
+      {/* Bandeau de sélection */}
+      {selectedUsers.length > 0 && (
+        <div className="bg-primary/10 border-b border-primary/20 px-6 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center">
+                <Checkbox 
+                  checked={true}
+                  className="border-white data-[state=checked]:bg-white data-[state=checked]:text-primary"
+                />
+              </div>
+              <div>
+                <div className="font-semibold text-foreground">
+                  {selectedUsers.length} utilisateur{selectedUsers.length > 1 ? 's' : ''} sélectionné{selectedUsers.length > 1 ? 's' : ''}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Choisissez une action à appliquer à la sélection
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="min-w-[200px] justify-between">
+                    {bulkAction === 'activate' && 'Activer les utilisateurs'}
+                    {bulkAction === 'deactivate' && 'Désactiver les utilisateurs'}
+                    {bulkAction === 'change-role' && 'Modifier le rôle'}
+                    {bulkAction === 'send-email' && 'Envoyer un email'}
+                    {bulkAction === 'export' && 'Exporter la sélection'}
+                    {bulkAction === 'delete' && 'Supprimer les utilisateurs'}
+                    {!bulkAction && 'Choisir une action'}
+                    <ChevronDown className="h-4 w-4 ml-2" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[200px]">
+                  <DropdownMenuItem onClick={() => setBulkAction('activate')}>
+                    Activer les utilisateurs
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setBulkAction('deactivate')}>
+                    Désactiver les utilisateurs
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setBulkAction('change-role')}>
+                    Modifier le rôle
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setBulkAction('send-email')}>
+                    Envoyer un email
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setBulkAction('export')}>
+                    Exporter la sélection
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setBulkAction('delete')}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    Supprimer les utilisateurs
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              <Button onClick={handleApplyBulkAction} variant="default">
+                Appliquer
+              </Button>
+              
+              <Button onClick={handleCancelSelection} variant="ghost" size="icon">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* En-tête */}
       <div className="p-6 border-b border-border">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -247,6 +421,14 @@ const EnhancedUsersList: React.FC = () => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <Checkbox 
+                  checked={isAllSelected}
+                  onCheckedChange={handleSelectAll}
+                  aria-label="Sélectionner tous les utilisateurs"
+                  className={isSomeSelected ? "data-[state=checked]:bg-primary/50" : ""}
+                />
+              </TableHead>
               <TableHead>Nom & Prénom</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Rôle</TableHead>
@@ -260,9 +442,18 @@ const EnhancedUsersList: React.FC = () => {
           {filteredUsers.map((user) => {
               const userFormations = getUserFormations(user.id!);
               const userTutorsList = getUserTutors(user.id!);
+              const isSelected = selectedUsers.includes(user.id!);
+              
               return (
-                <TableRow key={user.id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleViewUser(user)}>
-                  <TableCell>
+                <TableRow key={user.id} className="cursor-pointer hover:bg-muted/50">
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Checkbox 
+                      checked={isSelected}
+                      onCheckedChange={(checked) => handleSelectUser(user.id!, checked as boolean)}
+                      aria-label={`Sélectionner ${user.first_name} ${user.last_name}`}
+                    />
+                  </TableCell>
+                  <TableCell onClick={() => handleViewUser(user)}>
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center overflow-hidden">
                         {user.profile_photo_url ? (
@@ -284,13 +475,13 @@ const EnhancedUsersList: React.FC = () => {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell onClick={() => handleViewUser(user)}>
                     <div className="text-sm text-foreground">{user.email}</div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell onClick={() => handleViewUser(user)}>
                     {<RoleBadge role={user.role} />}
                   </TableCell>
-                  <TableCell>
+                  <TableCell onClick={() => handleViewUser(user)}>
                     <div className="max-w-xs">
                       {user.role === 'Admin' ? (
                         <span className="text-xs text-muted-foreground">-</span>
@@ -312,7 +503,7 @@ const EnhancedUsersList: React.FC = () => {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell onClick={() => handleViewUser(user)}>
                     <div className="max-w-xs">
                       {user.role === 'Étudiant' && userTutorsList.length > 0 ? (
                         <div className="space-y-1">
@@ -334,10 +525,10 @@ const EnhancedUsersList: React.FC = () => {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell onClick={() => handleViewUser(user)}>
                     {<StatusBadge status={user.status} type="user" />}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                       {user.status === 'En attente' && (
                         <Button
