@@ -216,13 +216,22 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
                           <div className="space-y-1 text-xs">
                             <div className="flex items-center text-white/90">
                               <Clock className="h-3 w-3 mr-1.5 flex-shrink-0" />
-                              <span>{event.startTime}</span>
+                              <span>
+                                {event.startTime.split(':').slice(0, 2).join(':')} - {event.endTime.split(':').slice(0, 2).join(':')}
+                              </span>
                             </div>
                             
                             {event.room && (
                               <div className="flex items-center text-white/90">
                                 <MapPin className="h-3 w-3 mr-1.5 flex-shrink-0" />
                                 <span className="truncate">{event.room}</span>
+                              </div>
+                            )}
+                            
+                            {event.instructor && (
+                              <div className="flex items-center text-white/90">
+                                <User className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                                <span className="truncate">{event.instructor}</span>
                               </div>
                             )}
                           </div>
