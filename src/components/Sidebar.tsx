@@ -147,8 +147,9 @@ const Sidebar = () => {
 
   return (
     <SidebarWrapper 
-      className={`${collapsed ? 'w-16' : 'w-64'} nect-gradient text-primary-foreground shadow-xl transition-all duration-300`}
+      className={`${collapsed ? 'w-16' : 'w-64'} nect-gradient text-primary-foreground shadow-xl transition-all duration-300 bg-opacity-100`}
       collapsible="icon"
+      style={{ backgroundColor: 'hsl(var(--nect-purple-from))' }}
     >
       <SidebarHeader className="p-6">
         <div className="flex items-center space-x-3">

@@ -7,6 +7,7 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import Sidebar from './components/Sidebar';
+import BottomNavigation from './components/BottomNavigation';
 import NotificationBell from './components/NotificationBell';
 import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
@@ -69,15 +70,34 @@ const AppContent = () => {
   return (
     <SidebarProvider defaultOpen={!isMobile}>
       <div className="flex h-screen w-full bg-gray-50">
-        <Sidebar />
+        {/* Desktop Sidebar - hidden on mobile */}
+        <div className="hidden md:block">
+          <Sidebar />
+        </div>
+        
         <div className="flex flex-col flex-1 w-full">
-          <header className="h-14 sm:h-16 flex items-center justify-between border-b bg-white px-4 sm:px-6 sticky top-0 z-40 shadow-sm">
+          {/* Header - hidden on mobile, shown on desktop */}
+          <header className="hidden md:flex h-14 sm:h-16 items-center justify-between border-b bg-white px-4 sm:px-6 sticky top-0 z-40 shadow-sm">
             <SidebarTrigger className="h-9 w-9" />
             <div className="flex items-center space-x-3 sm:space-x-4">
               <NotificationBell />
             </div>
           </header>
-          <main className="flex-1 overflow-auto bg-gray-50">
+          
+          {/* Mobile Header - shown only on mobile */}
+          <header className="md:hidden h-14 flex items-center justify-center border-b bg-white px-4 sticky top-0 z-40 shadow-sm">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-sm">NF</span>
+              </div>
+              <h1 className="text-lg font-bold text-primary">NECTFORIA</h1>
+            </div>
+            <div className="absolute right-4">
+              <NotificationBell />
+            </div>
+          </header>
+          
+          <main className="flex-1 overflow-auto bg-gray-50 pb-20 md:pb-0">
             <Routes>
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/administration" element={<ProtectedRoute><Administration /></ProtectedRoute>} />
@@ -99,6 +119,9 @@ const AppContent = () => {
             </Routes>
           </main>
         </div>
+        
+        {/* Bottom Navigation - shown only on mobile */}
+        <BottomNavigation />
       </div>
       <Toaster />
     </SidebarProvider>
