@@ -23,6 +23,7 @@ const NewMessageModal = ({ isOpen, onClose }: NewMessageModalProps) => {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [scheduleDelivery, setScheduleDelivery] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
   const [selectedFormations, setSelectedFormations] = useState<string[]>([]);
   const [selectedInstructors, setSelectedInstructors] = useState<string[]>([]);
@@ -57,6 +58,7 @@ const NewMessageModal = ({ isOpen, onClose }: NewMessageModalProps) => {
     setSubject('');
     setMessage('');
     setScheduleDelivery(false);
+    setScheduledDate('');
     setAttachments([]);
     setSelectedFormations([]);
     setSelectedInstructors([]);
@@ -74,6 +76,11 @@ const NewMessageModal = ({ isOpen, onClose }: NewMessageModalProps) => {
   const handleSend = async (isDraft = false) => {
     if (!subject || !message) {
       toast.error('Veuillez remplir l\'objet et le message');
+      return;
+    }
+
+    if (scheduleDelivery && !scheduledDate) {
+      toast.error('Veuillez sélectionner une date et heure pour la programmation');
       return;
     }
 
@@ -116,7 +123,7 @@ const NewMessageModal = ({ isOpen, onClose }: NewMessageModalProps) => {
       await sendMessage({
         subject,
         content: message,
-        scheduled_for: scheduleDelivery ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() : undefined,
+        scheduled_for: scheduleDelivery && scheduledDate ? new Date(scheduledDate).toISOString() : undefined,
         is_draft: isDraft,
         recipients,
         attachments
@@ -356,19 +363,47 @@ const NewMessageModal = ({ isOpen, onClose }: NewMessageModalProps) => {
               placeholder="Votre message..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="mt-1 min-h-[120px]"
+              className="mt-1 min-h-[250px] resize-y text-base leading-relaxed p-4"
+              rows={10}
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              {message.length} caractères
+            </p>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="schedule"
-              checked={scheduleDelivery}
-              onCheckedChange={(checked) => setScheduleDelivery(checked as boolean)}
-            />
-            <Label htmlFor="schedule" className="text-sm">
-              Programmer l'envoi
-            </Label>
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="schedule"
+                checked={scheduleDelivery}
+                onCheckedChange={(checked) => {
+                  setScheduleDelivery(checked as boolean);
+                  if (!checked) setScheduledDate('');
+                }}
+              />
+              <Label htmlFor="schedule" className="text-sm font-medium cursor-pointer">
+                Programmer l'envoi
+              </Label>
+            </div>
+
+            {scheduleDelivery && (
+              <div className="ml-6 space-y-2 p-4 bg-muted/50 rounded-lg border border-border">
+                <Label htmlFor="scheduled-date" className="text-sm font-medium">
+                  Date et heure d'envoi
+                </Label>
+                <Input
+                  id="scheduled-date"
+                  type="datetime-local"
+                  value={scheduledDate}
+                  onChange={(e) => setScheduledDate(e.target.value)}
+                  min={new Date().toISOString().slice(0, 16)}
+                  className="mt-1"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Le message sera envoyé automatiquement à la date et l'heure sélectionnées
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
