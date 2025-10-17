@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { format, addWeeks, subWeeks, addMonths, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { LoadingState } from '@/components/ui/loading-state';
@@ -25,6 +25,10 @@ type ViewMode = 'day' | 'week' | 'month' | 'list';
 const ModernScheduleEditor = () => {
   const { scheduleId } = useParams<{ scheduleId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Déterminer le mode (edit ou view)
+  const isReadOnly = location.pathname.includes('/view/');
   
   // États principaux
   const [schedule, setSchedule] = useState<Schedule | null>(null);
@@ -90,6 +94,8 @@ const ModernScheduleEditor = () => {
 
   // Handlers des créneaux
   const handleAddSlot = () => {
+    if (isReadOnly) return;
+    
     if (!schedule?.id) {
       toast.error('Erreur lors de l\'ouverture du modal d\'ajout');
       return;
@@ -99,6 +105,8 @@ const ModernScheduleEditor = () => {
   };
 
   const handleAddSlotToDate = (date: Date) => {
+    if (isReadOnly) return;
+    
     if (!schedule?.id) {
       toast.error('Erreur lors de l\'ouverture du modal d\'ajout');
       return;
@@ -193,27 +201,25 @@ const ModernScheduleEditor = () => {
     toast.success('Import Excel réussi');
   };
 
-  const handlePublishSchedule = async () => {
+  const handleSaveAndPublish = async () => {
     try {
-      await scheduleService.updateSchedule(scheduleId!, { status: 'Publié' });
-      toast.success("Emploi du temps publié avec succès");
+      await scheduleService.updateSchedule(scheduleId!, { 
+        status: 'Publié',
+        updated_at: new Date().toISOString() 
+      });
+      
+      // Notifier les utilisateurs
+      if (schedule) {
+        await scheduleService.notifyScheduleUpdate(schedule);
+        toast.success("Emploi du temps enregistré, publié et notifications envoyées");
+      } else {
+        toast.success("Emploi du temps enregistré et publié avec succès");
+      }
+      
       fetchScheduleData();
     } catch (error) {
-      toast.error("Erreur lors de la publication");
-    }
-  };
-
-  const handleSaveModifications = async () => {
-    try {
-      if (schedule && schedule.status === 'Publié') {
-        // Déclencher les notifications de modification pour l'emploi du temps publié
-        await scheduleService.updateSchedule(scheduleId!, { 
-          updated_at: new Date().toISOString() 
-        });
-        toast.success("Modifications enregistrées et notifications envoyées");
-      }
-    } catch (error) {
-      toast.error("Erreur lors de l'enregistrement des modifications");
+      console.error('Erreur lors de l\'enregistrement et publication:', error);
+      toast.error("Erreur lors de l'enregistrement et publication");
     }
   };
 
@@ -294,6 +300,9 @@ const ModernScheduleEditor = () => {
 
   // Gestionnaire pour les clics sur événements - trouver le slot correspondant
   const handleEventClick = (event: ScheduleEvent) => {
+    // Ne pas permettre l'édition en mode lecture seule
+    if (isReadOnly) return;
+    
     const slot = slots.find(s => s.id === event.id);
     if (slot) {
       handleEditSlot(slot);
@@ -328,9 +337,9 @@ const ModernScheduleEditor = () => {
         return (
           <ScheduleListView
             slots={slots}
-            onEditSlot={handleEditSlot}
-            onDuplicateSlot={handleDuplicateSlot}
-            onDeleteSlot={handleDeleteSlot}
+            onEditSlot={isReadOnly ? undefined : handleEditSlot}
+            onDuplicateSlot={isReadOnly ? undefined : handleDuplicateSlot}
+            onDeleteSlot={isReadOnly ? undefined : handleDeleteSlot}
           />
         );
       case 'week':
@@ -384,8 +393,9 @@ const ModernScheduleEditor = () => {
         slotsCount={slots.length}
         onAddSlot={handleAddSlot}
         onImportExcel={handleImportExcel}
-        onPublishSchedule={schedule?.status === 'Brouillon' ? handlePublishSchedule : handleSaveModifications}
+        onPublishSchedule={handleSaveAndPublish}
         onBackToList={handleBackToList}
+        readOnly={isReadOnly}
       />
 
       {/* Navigation et contrôles */}

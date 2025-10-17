@@ -187,9 +187,8 @@ const ScheduleManagement = () => {
     navigate(`/emploi-temps/edit/${scheduleId}`);
   };
 
-  const handleViewSchedule = (schedule: Schedule) => {
-    setSelectedSchedule(schedule);
-    setViewMode('week');
+  const handleViewSchedule = (scheduleId: string) => {
+    navigate(`/emploi-temps/view/${scheduleId}`);
   };
 
   const handleEditSlot = (slot: ScheduleSlot) => {
@@ -1354,7 +1353,7 @@ const ScheduleManagement = () => {
               <Card
                 key={schedule.id}
                 className={`overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 bg-card shadow-md hover:shadow-primary/10 cursor-pointer`}
-                onClick={() => handleViewSchedule(schedule)}
+                onClick={() => handleViewSchedule(schedule.id)}
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
@@ -1408,7 +1407,7 @@ const ScheduleManagement = () => {
                       variant="outline"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleViewSchedule(schedule);
+                        handleViewSchedule(schedule.id);
                       }}
                       className="flex-1 text-xs"
                     >

@@ -17,6 +17,7 @@ interface ScheduleManagementHeaderProps {
   onImportExcel: () => void;
   onPublishSchedule?: () => void;
   onBackToList: () => void;
+  readOnly?: boolean;
 }
 
 export const ScheduleManagementHeader: React.FC<ScheduleManagementHeaderProps> = ({
@@ -29,7 +30,8 @@ export const ScheduleManagementHeader: React.FC<ScheduleManagementHeaderProps> =
   onAddSlot,
   onImportExcel,
   onPublishSchedule,
-  onBackToList
+  onBackToList,
+  readOnly = false
 }) => {
   const getTitle = () => {
     if (selectedSchedule) {
@@ -92,59 +94,39 @@ export const ScheduleManagementHeader: React.FC<ScheduleManagementHeaderProps> =
                   Retour à la liste
                 </Button>
 
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={onImportExcel}
-                  className="hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
-                >
-                  <FileSpreadsheet className="h-4 w-4 mr-2" />
-                  Import Excel
-                </Button>
-
-                <Button 
-                  onClick={onAddSlot}
-                  size="sm"
-                  className="bg-primary hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Ajouter un créneau
-                </Button>
-
-                {selectedSchedule.status === 'Brouillon' && onPublishSchedule && (
-                  <Button 
-                    onClick={onPublishSchedule}
-                    size="sm"
-                    disabled={slotsCount === 0}
-                    variant="default"
-                    className="bg-success hover:bg-success/90 hover:shadow-lg hover:shadow-success/25 transition-all duration-300"
-                  >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Publier
-                  </Button>
-                )}
-
-                {selectedSchedule.status === 'Publié' && (
+                {!readOnly && (
                   <>
                     <Button 
-                      onClick={() => {
-                        // Forcer un rechargement des données et envoyer notifications
-                        if (selectedSchedule) {
-                          // Marquer comme modifié pour déclencher les notifications
-                          onPublishSchedule && onPublishSchedule();
-                        }
-                      }}
+                      variant="outline" 
                       size="sm"
-                      variant="outline"
-                      className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
+                      onClick={onImportExcel}
+                      className="hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
                     >
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Enregistrer les modifications
+                      <FileSpreadsheet className="h-4 w-4 mr-2" />
+                      Import Excel
                     </Button>
-                    <div className="flex items-center gap-2 text-success">
-                      <CheckCircle className="h-4 w-4" />
-                      <span className="text-sm font-medium">Publié</span>
-                    </div>
+
+                    <Button 
+                      onClick={onAddSlot}
+                      size="sm"
+                      className="bg-primary hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Ajouter un créneau
+                    </Button>
+
+                    {onPublishSchedule && (
+                      <Button 
+                        onClick={onPublishSchedule}
+                        size="sm"
+                        disabled={slotsCount === 0}
+                        variant="default"
+                        className="bg-success hover:bg-success/90 hover:shadow-lg hover:shadow-success/25 transition-all duration-300"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Enregistrer les modifications et publier
+                      </Button>
+                    )}
                   </>
                 )}
               </>
