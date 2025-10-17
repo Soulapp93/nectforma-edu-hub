@@ -41,12 +41,16 @@ interface EventDetailsModalProps {
   onEdit?: (event: ScheduleEvent) => void;
   onDelete?: (eventId: string) => void;
   onDuplicate?: (event: ScheduleEvent) => void;
+  canEdit?: boolean;
 }
 
 export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
   event,
   isOpen,
   onClose,
+  onEdit,
+  onDelete,
+  canEdit = false,
 }) => {
   if (!event) return null;
 
@@ -141,6 +145,43 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
               <div>
                 <h3 className="text-sm font-semibold text-foreground mb-2">Description</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{event.description}</p>
+              </div>
+            </>
+          )}
+
+          {/* Actions pour l'administration */}
+          {canEdit && (onEdit || onDelete) && (
+            <>
+              <Separator />
+              <div className="flex gap-2 pt-2">
+                {onEdit && (
+                  <Button
+                    onClick={() => {
+                      onEdit(event);
+                      onClose();
+                    }}
+                    className="flex-1"
+                    variant="default"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Modifier
+                  </Button>
+                )}
+                {onDelete && (
+                  <Button
+                    onClick={() => {
+                      if (window.confirm('Êtes-vous sûr de vouloir supprimer ce créneau ?')) {
+                        onDelete(event.id);
+                        onClose();
+                      }
+                    }}
+                    variant="destructive"
+                    className="flex-1"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Supprimer
+                  </Button>
+                )}
               </div>
             </>
           )}

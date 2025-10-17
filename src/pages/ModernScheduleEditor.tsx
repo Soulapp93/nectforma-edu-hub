@@ -467,11 +467,20 @@ const ModernScheduleEditor = () => {
         scheduleId={scheduleId!}
       />
 
-      {/* Modal de détails en consultation (mode lecture seule) */}
+      {/* Modal de détails */}
       <EventDetailsModal
         event={selectedEvent}
         isOpen={isEventDetailsOpen}
         onClose={() => setIsEventDetailsOpen(false)}
+        canEdit={!isReadOnly}
+        onEdit={(event) => {
+          const slot = slots.find(s => s.id === event.id);
+          if (slot) handleEditSlot(slot);
+        }}
+        onDelete={(eventId) => {
+          const slot = slots.find(s => s.id === eventId);
+          if (slot) handleDeleteSlot(slot);
+        }}
       />
     </div>
   );
