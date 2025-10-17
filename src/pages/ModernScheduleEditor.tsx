@@ -12,6 +12,7 @@ import { ScheduleViewCalendar } from '@/components/schedule/ScheduleViewCalendar
 import { ScheduleListView } from '@/components/administration/ScheduleListView';
 import { DayView } from '@/components/schedule/DayView';
 import { MonthView } from '@/components/schedule/MonthView';
+import { EventDetailsModal } from '@/components/schedule/EventDetailsModal';
 import type { ScheduleEvent } from '@/components/schedule/CreateEventModal';
 import { scheduleService, Schedule, ScheduleSlot } from '@/services/scheduleService';
 import { navigateWeek, getWeekInfo, getWeekDays } from '@/utils/calendarUtils';
@@ -44,6 +45,8 @@ const ModernScheduleEditor = () => {
   const [slotToEdit, setSlotToEdit] = useState<ScheduleSlot | null>(null);
   const [isExcelImportModalOpen, setIsExcelImportModalOpen] = useState(false);
   const [draggedSlot, setDraggedSlot] = useState<ScheduleSlot | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
+  const [isEventDetailsOpen, setIsEventDetailsOpen] = useState(false);
 
   useEffect(() => {
     if (scheduleId) {
@@ -298,14 +301,20 @@ const ModernScheduleEditor = () => {
     });
   };
 
-  // Gestionnaire pour les clics sur événements - trouver le slot correspondant
+  // Gestionnaire pour les clics sur événements
   const handleEventClick = (event: ScheduleEvent) => {
-    // Ne pas permettre l'édition en mode lecture seule
-    if (isReadOnly) return;
+    console.log('Clic sur événement dans ModernScheduleEditor:', event);
     
-    const slot = slots.find(s => s.id === event.id);
-    if (slot) {
-      handleEditSlot(slot);
+    if (isReadOnly) {
+      // En mode lecture seule, afficher les détails en consultation
+      setSelectedEvent(event);
+      setIsEventDetailsOpen(true);
+    } else {
+      // En mode édition, ouvrir le modal d'édition
+      const slot = slots.find(s => s.id === event.id);
+      if (slot) {
+        handleEditSlot(slot);
+      }
     }
   };
 
@@ -456,6 +465,13 @@ const ModernScheduleEditor = () => {
         onClose={() => setIsExcelImportModalOpen(false)}
         onSuccess={handleExcelImportSuccess}
         scheduleId={scheduleId!}
+      />
+
+      {/* Modal de détails en consultation (mode lecture seule) */}
+      <EventDetailsModal
+        event={selectedEvent}
+        isOpen={isEventDetailsOpen}
+        onClose={() => setIsEventDetailsOpen(false)}
       />
     </div>
   );
