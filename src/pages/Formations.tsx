@@ -113,18 +113,18 @@ const Formations = () => {
   }
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Formations</h1>
-          <p className="text-gray-600">Découvrez notre catalogue de formations</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Formations</h1>
+          <p className="text-sm sm:text-base text-gray-600">Découvrez notre catalogue de formations</p>
         </div>
         <button 
           onClick={handleCreateFormation}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center font-medium"
+          className="bg-purple-600 hover:bg-purple-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg flex items-center font-medium text-sm sm:text-base w-full sm:w-auto justify-center"
         >
-          <Plus className="h-5 w-5 mr-2" />
+          <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
           Nouvelle formation
         </button>
       </div>
@@ -198,7 +198,7 @@ const Formations = () => {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredFormations.map((formation) => (
             <FormationCard
               key={formation.id}

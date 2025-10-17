@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { format, addWeeks, subWeeks, addMonths, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Users, Calendar } from 'lucide-react';
 import { navigateWeek, getWeekInfo, getWeekDays } from '@/utils/calendarUtils';
 import { useToast } from '@/hooks/use-toast';
 import { EventDetailsModal } from '@/components/schedule/EventDetailsModal';
@@ -214,9 +215,9 @@ const EmploiTemps = () => {
       
       if (isInstructor) {
         return (
-          <div className="container mx-auto px-6 py-8">
-            {/* En-tête de tableau */}
-            <div className="bg-card rounded-t-lg border border-border shadow-sm">
+          <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-8">
+            {/* En-tête de tableau - Desktop only */}
+            <div className="hidden md:block bg-card rounded-t-lg border border-border shadow-sm">
               <div className="grid grid-cols-12 gap-4 px-6 py-4 font-semibold text-sm text-muted-foreground border-b border-border">
                 <div className="col-span-2">Date</div>
                 <div className="col-span-2">Horaire</div>
@@ -227,12 +228,12 @@ const EmploiTemps = () => {
             </div>
 
             {/* Sections chronologiques */}
-            <div className="bg-card rounded-b-lg border-x border-b border-border shadow-sm">
+            <div className="bg-card md:rounded-b-lg rounded-lg border border-border shadow-sm">
               {/* Cours du jour */}
               {categorizedEvents.today.length > 0 && (
                 <div className="border-b border-border">
-                  <div className="px-6 py-3 bg-primary/5">
-                    <h3 className="font-semibold text-primary flex items-center gap-2">
+                  <div className="px-3 sm:px-6 py-3 bg-primary/5">
+                    <h3 className="text-sm sm:text-base font-semibold text-primary flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
                       Aujourd'hui ({categorizedEvents.today.length})
                     </h3>
@@ -240,35 +241,65 @@ const EmploiTemps = () => {
                   {categorizedEvents.today.map((event) => (
                     <div
                       key={event.id}
-                      className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-muted/50 transition-colors cursor-pointer border-b border-border last:border-b-0 items-center"
+                      className="md:grid md:grid-cols-12 md:gap-4 px-3 sm:px-6 py-4 hover:bg-muted/50 transition-colors cursor-pointer border-b border-border last:border-b-0 md:items-center space-y-2 md:space-y-0"
                       onClick={() => handleEventClick(event)}
                     >
-                      <div className="col-span-2">
-                        <div className="font-medium">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
-                        <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
-                      </div>
-                      <div className="col-span-2">
-                        <Badge variant="outline" className="font-mono text-xs">
-                          {event.startTime} - {event.endTime}
-                        </Badge>
-                      </div>
-                      <div className="col-span-3">
+                      {/* Mobile Layout */}
+                      <div className="md:hidden space-y-2">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="font-medium text-sm">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
+                            <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
+                          </div>
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {event.startTime} - {event.endTime}
+                          </Badge>
+                        </div>
                         <div 
-                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-white"
+                          className="inline-flex items-center gap-2 px-2 py-1 rounded-md text-xs font-medium text-white"
                           style={{ backgroundColor: event.color }}
                         >
-                          <span className="w-1.5 h-1.5 rounded-full bg-white/80"></span>
+                          <span className="w-1 h-1 rounded-full bg-white/80"></span>
                           {event.formation}
                         </div>
+                        <div>
+                          <div className="font-medium text-sm">{event.title}</div>
+                          {event.description && (
+                            <div className="text-xs text-muted-foreground truncate">{event.description}</div>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground">{event.room}</div>
                       </div>
-                      <div className="col-span-3">
-                        <div className="font-medium">{event.title}</div>
-                        {event.description && (
-                          <div className="text-xs text-muted-foreground truncate">{event.description}</div>
-                        )}
-                      </div>
-                      <div className="col-span-2">
-                        <span className="text-sm">{event.room}</span>
+                      
+                      {/* Desktop Layout */}
+                      <div className="hidden md:contents">
+                        <div className="col-span-2">
+                          <div className="font-medium">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
+                          <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
+                        </div>
+                        <div className="col-span-2">
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {event.startTime} - {event.endTime}
+                          </Badge>
+                        </div>
+                        <div className="col-span-3">
+                          <div 
+                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-white"
+                            style={{ backgroundColor: event.color }}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-white/80"></span>
+                            {event.formation}
+                          </div>
+                        </div>
+                        <div className="col-span-3">
+                          <div className="font-medium">{event.title}</div>
+                          {event.description && (
+                            <div className="text-xs text-muted-foreground truncate">{event.description}</div>
+                          )}
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-sm">{event.room}</span>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -278,43 +309,73 @@ const EmploiTemps = () => {
               {/* Cours à venir */}
               {categorizedEvents.upcoming.length > 0 && (
                 <div className="border-b border-border">
-                  <div className="px-6 py-3 bg-muted/30">
-                    <h3 className="font-semibold text-foreground">
+                  <div className="px-3 sm:px-6 py-3 bg-muted/30">
+                    <h3 className="text-sm sm:text-base font-semibold text-foreground">
                       À venir ({categorizedEvents.upcoming.length})
                     </h3>
                   </div>
                   {categorizedEvents.upcoming.map((event) => (
                     <div
                       key={event.id}
-                      className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-muted/50 transition-colors cursor-pointer border-b border-border last:border-b-0 items-center"
+                      className="md:grid md:grid-cols-12 md:gap-4 px-3 sm:px-6 py-4 hover:bg-muted/50 transition-colors cursor-pointer border-b border-border last:border-b-0 md:items-center space-y-2 md:space-y-0"
                       onClick={() => handleEventClick(event)}
                     >
-                      <div className="col-span-2">
-                        <div className="font-medium">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
-                        <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
-                      </div>
-                      <div className="col-span-2">
-                        <Badge variant="outline" className="font-mono text-xs">
-                          {event.startTime} - {event.endTime}
-                        </Badge>
-                      </div>
-                      <div className="col-span-3">
+                      {/* Mobile Layout */}
+                      <div className="md:hidden space-y-2">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="font-medium text-sm">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
+                            <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
+                          </div>
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {event.startTime} - {event.endTime}
+                          </Badge>
+                        </div>
                         <div 
-                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-white"
+                          className="inline-flex items-center gap-2 px-2 py-1 rounded-md text-xs font-medium text-white"
                           style={{ backgroundColor: event.color }}
                         >
-                          <span className="w-1.5 h-1.5 rounded-full bg-white/80"></span>
+                          <span className="w-1 h-1 rounded-full bg-white/80"></span>
                           {event.formation}
                         </div>
+                        <div>
+                          <div className="font-medium text-sm">{event.title}</div>
+                          {event.description && (
+                            <div className="text-xs text-muted-foreground truncate">{event.description}</div>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground">{event.room}</div>
                       </div>
-                      <div className="col-span-3">
-                        <div className="font-medium">{event.title}</div>
-                        {event.description && (
-                          <div className="text-xs text-muted-foreground truncate">{event.description}</div>
-                        )}
-                      </div>
-                      <div className="col-span-2">
-                        <span className="text-sm">{event.room}</span>
+                      
+                      {/* Desktop Layout */}
+                      <div className="hidden md:contents">
+                        <div className="col-span-2">
+                          <div className="font-medium">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
+                          <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
+                        </div>
+                        <div className="col-span-2">
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {event.startTime} - {event.endTime}
+                          </Badge>
+                        </div>
+                        <div className="col-span-3">
+                          <div 
+                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-white"
+                            style={{ backgroundColor: event.color }}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-white/80"></span>
+                            {event.formation}
+                          </div>
+                        </div>
+                        <div className="col-span-3">
+                          <div className="font-medium">{event.title}</div>
+                          {event.description && (
+                            <div className="text-xs text-muted-foreground truncate">{event.description}</div>
+                          )}
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-sm">{event.room}</span>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -324,43 +385,73 @@ const EmploiTemps = () => {
               {/* Cours passés */}
               {categorizedEvents.past.length > 0 && (
                 <div>
-                  <div className="px-6 py-3 bg-muted/20">
-                    <h3 className="font-semibold text-muted-foreground">
+                  <div className="px-3 sm:px-6 py-3 bg-muted/20">
+                    <h3 className="text-sm sm:text-base font-semibold text-muted-foreground">
                       Passés ({categorizedEvents.past.length})
                     </h3>
                   </div>
                   {categorizedEvents.past.slice(-10).reverse().map((event) => (
                     <div
                       key={event.id}
-                      className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border last:border-b-0 items-center opacity-60"
+                      className="md:grid md:grid-cols-12 md:gap-4 px-3 sm:px-6 py-4 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border last:border-b-0 md:items-center opacity-60 space-y-2 md:space-y-0"
                       onClick={() => handleEventClick(event)}
                     >
-                      <div className="col-span-2">
-                        <div className="font-medium">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
-                        <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
-                      </div>
-                      <div className="col-span-2">
-                        <Badge variant="outline" className="font-mono text-xs">
-                          {event.startTime} - {event.endTime}
-                        </Badge>
-                      </div>
-                      <div className="col-span-3">
+                      {/* Mobile Layout */}
+                      <div className="md:hidden space-y-2">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="font-medium text-sm">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
+                            <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
+                          </div>
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {event.startTime} - {event.endTime}
+                          </Badge>
+                        </div>
                         <div 
-                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-white"
+                          className="inline-flex items-center gap-2 px-2 py-1 rounded-md text-xs font-medium text-white"
                           style={{ backgroundColor: event.color }}
                         >
-                          <span className="w-1.5 h-1.5 rounded-full bg-white/80"></span>
+                          <span className="w-1 h-1 rounded-full bg-white/80"></span>
                           {event.formation}
                         </div>
+                        <div>
+                          <div className="font-medium text-sm">{event.title}</div>
+                          {event.description && (
+                            <div className="text-xs text-muted-foreground truncate">{event.description}</div>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground">{event.room}</div>
                       </div>
-                      <div className="col-span-3">
-                        <div className="font-medium">{event.title}</div>
-                        {event.description && (
-                          <div className="text-xs text-muted-foreground truncate">{event.description}</div>
-                        )}
-                      </div>
-                      <div className="col-span-2">
-                        <span className="text-sm">{event.room}</span>
+                      
+                      {/* Desktop Layout */}
+                      <div className="hidden md:contents">
+                        <div className="col-span-2">
+                          <div className="font-medium">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
+                          <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
+                        </div>
+                        <div className="col-span-2">
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {event.startTime} - {event.endTime}
+                          </Badge>
+                        </div>
+                        <div className="col-span-3">
+                          <div 
+                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-white"
+                            style={{ backgroundColor: event.color }}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-white/80"></span>
+                            {event.formation}
+                          </div>
+                        </div>
+                        <div className="col-span-3">
+                          <div className="font-medium">{event.title}</div>
+                          {event.description && (
+                            <div className="text-xs text-muted-foreground truncate">{event.description}</div>
+                          )}
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-sm">{event.room}</span>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -369,7 +460,7 @@ const EmploiTemps = () => {
             </div>
 
             {/* Note informative */}
-            <div className="mt-4 text-center text-sm text-muted-foreground">
+            <div className="mt-4 text-center text-xs sm:text-sm text-muted-foreground px-2">
               💡 Dans cette vue, vous consultez l'ensemble de vos cours de toutes formations confondues, dans l'ordre chronologique
             </div>
           </div>
@@ -378,8 +469,8 @@ const EmploiTemps = () => {
       
       // Vue liste standard pour les étudiants
       return (
-        <div className="container mx-auto px-6 py-8">
-          <div className="space-y-6">
+        <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-8">
+          <div className="space-y-4 sm:space-y-6">
             {filteredEvents.map((event) => {
               const eventDate = format(event.date, 'dd/MM/yyyy', { locale: fr });
               const eventDay = format(event.date, 'EEEE', { locale: fr });
@@ -391,8 +482,38 @@ const EmploiTemps = () => {
                   style={{ backgroundColor: event.color }}
                   onClick={() => handleEventClick(event)}
                 >
-                  <div className="p-6">
-                    <div className="grid grid-cols-12 gap-4 items-center text-white">
+                  <div className="p-4 sm:p-6">
+                    {/* Mobile Layout */}
+                    <div className="md:hidden space-y-3 text-white">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="font-medium text-white">{eventDate}</div>
+                          <div className="text-xs text-white/80 capitalize">{eventDay}</div>
+                        </div>
+                        <div className="bg-white/20 text-white rounded px-2 py-1 text-xs font-medium">
+                          {event.startTime} - {event.endTime}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-white text-base">{event.title}</div>
+                        {event.description && (
+                          <div className="text-sm text-white/80 mt-1">{event.description}</div>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-4 text-sm">
+                        <div className="flex items-center space-x-1">
+                          <Users className="h-4 w-4" />
+                          <span>{event.instructor}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Calendar className="h-4 w-4" />
+                          <span>{event.room}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Desktop Layout */}
+                    <div className="hidden md:grid md:grid-cols-12 gap-4 items-center text-white">
                       <div className="col-span-2">
                         <div className="flex items-center space-x-2">
                           <div>

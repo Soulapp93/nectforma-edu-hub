@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { useIsMobile } from '@/hooks/use-mobile';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import Sidebar from './components/Sidebar';
 import NotificationBell from './components/NotificationBell';
@@ -43,6 +44,7 @@ const queryClient = new QueryClient({
 const AppContent = () => {
   const location = useLocation();
   const isAuthPage = location.pathname === '/auth';
+  const isMobile = useIsMobile();
 
   if (isAuthPage) {
     return (
@@ -65,11 +67,11 @@ const AppContent = () => {
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={!isMobile}>
       <div className="flex h-screen w-full bg-gray-50">
         <Sidebar />
-        <div className="flex flex-col flex-1">
-          <header className="h-12 flex items-center justify-between border-b bg-white px-4">
+        <div className="flex flex-col flex-1 w-full">
+          <header className="h-12 flex items-center justify-between border-b bg-white px-2 sm:px-4 sticky top-0 z-40">
             <SidebarTrigger />
             <div className="flex items-center space-x-2">
               <NotificationBell />

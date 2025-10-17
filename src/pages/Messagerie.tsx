@@ -25,17 +25,17 @@ const Messagerie = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-6 px-4">
+      <div className="container mx-auto py-4 sm:py-6 px-2 sm:px-4">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Messagerie</h1>
-              <p className="text-muted-foreground">Communiquez avec les formateurs, étudiants et l'administration</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Messagerie</h1>
+              <p className="text-sm text-muted-foreground hidden sm:block">Communiquez avec les formateurs, étudiants et l'administration</p>
             </div>
             <Button 
               onClick={() => setIsNewMessageModalOpen(true)}
-              className="bg-primary hover:bg-primary/90"
+              className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
             >
               <Plus className="h-4 w-4 mr-2" />
               Nouveau message
@@ -43,8 +43,8 @@ const Messagerie = () => {
           </div>
 
           {/* Search and Refresh */}
-          <div className="flex items-center space-x-4">
-            <div className="relative flex-1 max-w-md">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:space-x-4">
+            <div className="relative flex-1 sm:max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
@@ -54,15 +54,15 @@ const Messagerie = () => {
                 className="w-full pl-10 pr-4 py-2 border border-input bg-background rounded-md focus:ring-2 focus:ring-ring focus:border-transparent"
               />
             </div>
-            <Button variant="outline" onClick={handleRefresh}>
+            <Button variant="outline" onClick={handleRefresh} className="w-full sm:w-auto">
               Actualiser
             </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
           {/* Sidebar */}
-          <div className="col-span-1">
+          <div className="lg:col-span-1">
             <div className="bg-card rounded-lg border p-4">
               <nav className="space-y-2">
                 {folders.map((folder) => {
@@ -98,8 +98,8 @@ const Messagerie = () => {
           </div>
 
           {/* Main Content */}
-          <div className="col-span-3">
-            <div className="bg-card rounded-lg border min-h-[500px]">
+          <div className="lg:col-span-3">
+            <div className="bg-card rounded-lg border min-h-[400px] sm:min-h-[500px]">
               {/* Folder Header */}
               <div className="p-4 border-b">
                 <h2 className="text-lg font-semibold text-foreground">

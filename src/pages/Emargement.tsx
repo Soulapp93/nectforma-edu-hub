@@ -379,14 +379,14 @@ const Emargement = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white py-8 px-8">
+      <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white py-4 sm:py-8 px-4 sm:px-8">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-bold mb-2">Gestion des Émargements</h1>
-          <p className="text-purple-100">Suivez, signez et analysez les présences.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Gestion des Émargements</h1>
+          <p className="text-sm sm:text-base text-purple-100">Suivez, signez et analysez les présences.</p>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6">
         {/* Badge Mon Pointage */}
         <div className="mb-6">
           <Badge className="bg-purple-600 text-white px-4 py-2 text-sm font-medium rounded-full">
@@ -394,36 +394,37 @@ const Emargement = () => {
           </Badge>
         </div>
 
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
+        <div className="space-y-4 sm:space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-semibold text-gray-900">Mon Pointage</h2>
-              <p className="text-gray-600">mercredi 23 juillet 2025</p>
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Mon Pointage</h2>
+              <p className="text-sm sm:text-base text-gray-600">mercredi 23 juillet 2025</p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
               <Button
                 onClick={() => setShowSignatureModal(true)}
-                className="bg-purple-600 hover:bg-purple-700 text-white"
+                className="bg-purple-600 hover:bg-purple-700 text-white flex-1 sm:flex-none text-sm"
               >
                 <PenTool className="h-4 w-4 mr-2" />
-                Enregistrement signature
+                <span className="hidden sm:inline">Enregistrement signature</span>
+                <span className="sm:hidden">Signature</span>
               </Button>
               <Button 
                 variant="outline" 
-                className="bg-purple-600 text-white hover:bg-purple-700 border-purple-600"
+                className="bg-purple-600 text-white hover:bg-purple-700 border-purple-600 text-sm"
               >
                 📅 Aujourd'hui
               </Button>
               <Button 
                 variant="outline"
-                className="border-gray-300"
+                className="border-gray-300 text-sm"
                 onClick={() => setShowHistory(true)}
               >
-                🕒 Historique
+                🕒 <span className="hidden sm:inline">Historique</span>
               </Button>
               <Button 
                 variant="outline"
-                className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                className="border-blue-300 text-blue-700 hover:bg-blue-50 text-sm hidden sm:flex"
                 onClick={() => window.location.href = '/emargement/ameliorations'}
               >
                 💡 Améliorations
@@ -436,28 +437,29 @@ const Emargement = () => {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
             </div>
           ) : attendanceSheets.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {attendanceSheets.map((sheet) => {
                 const isSigned = checkIfSigned(sheet);
                 
                 return (
                   <Card key={sheet.id} className="overflow-hidden hover:shadow-lg transition-all border border-gray-200">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900">[DEMO] {sheet.formations?.title}</h3>
-                          <p className="text-sm text-gray-600 flex items-center mt-1">
-                            <FileText className="h-4 w-4 mr-1" />
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
+                        <div className="flex-1">
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-900">[DEMO] {sheet.formations?.title}</h3>
+                          <p className="text-xs sm:text-sm text-gray-600 flex items-center mt-1">
+                            <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                             {sheet.formations?.level}
                           </p>
-                          <p className="text-sm text-gray-600 flex items-center mt-1">
-                            <Users className="h-4 w-4 mr-1" />
-                            Formateur: {sheet.instructor?.first_name} {sheet.instructor?.last_name}
+                          <p className="text-xs sm:text-sm text-gray-600 flex items-center mt-1">
+                            <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                            <span className="hidden sm:inline">Formateur: </span>
+                            {sheet.instructor?.first_name} {sheet.instructor?.last_name}
                           </p>
                         </div>
-                        <div className="text-right text-sm text-gray-500">
-                          <div className="flex items-center justify-end mb-1">
-                            <Clock className="h-4 w-4 mr-1" />
+                        <div className="text-left sm:text-right text-xs sm:text-sm text-gray-500">
+                          <div className="flex items-center sm:justify-end mb-1">
+                            <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                             {sheet.start_time} - {sheet.end_time}
                           </div>
                         </div>
@@ -467,18 +469,24 @@ const Emargement = () => {
                         {!isSigned && isAttendanceOpen(sheet) ? (
                           <Button
                             onClick={() => handleSignAttendance(sheet)}
-                            className="bg-green-600 hover:bg-green-700 text-white w-full"
+                            className="bg-green-600 hover:bg-green-700 text-white w-full text-sm sm:text-base"
                           >
                             <CheckCircle2 className="h-4 w-4 mr-2" />
-                            {userRole === 'Formateur' ? 'Signer en tant que formateur' : 'Signer ma présence'}
+                            <span className="hidden sm:inline">
+                              {userRole === 'Formateur' ? 'Signer en tant que formateur' : 'Signer ma présence'}
+                            </span>
+                            <span className="sm:hidden">Signer</span>
                           </Button>
                         ) : isSigned ? (
-                          <Button variant="outline" disabled className="bg-green-50 w-full">
+                          <Button variant="outline" disabled className="bg-green-50 w-full text-sm sm:text-base">
                             <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" />
-                            {userRole === 'Formateur' ? 'Cours validé' : 'Présence confirmée'}
+                            <span className="hidden sm:inline">
+                              {userRole === 'Formateur' ? 'Cours validé' : 'Présence confirmée'}
+                            </span>
+                            <span className="sm:hidden">Signé</span>
                           </Button>
                         ) : !isAttendanceOpen(sheet) ? (
-                          <Button variant="outline" disabled className="w-full">
+                          <Button variant="outline" disabled className="w-full text-sm sm:text-base">
                             <Clock className="h-4 w-4 mr-2" />
                             Émargement fermé
                           </Button>
