@@ -6,6 +6,7 @@ import FormationModal from '../components/FormationModal';
 import { useFormations } from '@/hooks/useFormations';
 import { formationService } from '@/services/formationService';
 import { toast } from 'sonner';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const Formations = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,6 +18,9 @@ const Formations = () => {
   const [formationsWithParticipants, setFormationsWithParticipants] = useState<any[]>([]);
   
   const { formations, loading, error, refetch } = useFormations();
+  const { userRole } = useCurrentUser();
+  
+  const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
 
   // Récupérer le nombre de participants pour chaque formation
   useEffect(() => {
@@ -120,13 +124,15 @@ const Formations = () => {
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-3">Formations</h1>
           <p className="text-base sm:text-lg text-gray-600">Découvrez notre catalogue de formations</p>
         </div>
-        <button 
-          onClick={handleCreateFormation}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl flex items-center font-medium text-base shadow-md hover:shadow-lg transition-all w-full sm:w-auto justify-center"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Nouvelle formation
-        </button>
+        {isAdmin && (
+          <button 
+            onClick={handleCreateFormation}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl flex items-center font-medium text-base shadow-md hover:shadow-lg transition-all w-full sm:w-auto justify-center"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Nouvelle formation
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -187,7 +193,7 @@ const Formations = () => {
                 : 'Créez votre première formation pour enrichir votre catalogue.'
               }
             </p>
-            {(!searchTerm && selectedLevel === 'all' && selectedStatus === 'all') && (
+            {isAdmin && (!searchTerm && selectedLevel === 'all' && selectedStatus === 'all') && (
               <button 
                 onClick={handleCreateFormation}
                 className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-xl font-medium text-base shadow-md hover:shadow-lg transition-all"
@@ -204,8 +210,9 @@ const Formations = () => {
               key={formation.id}
               {...formation}
               modules={formation.formation_modules || []}
-              onEdit={() => handleEditFormation(formation)}
-              onDelete={() => handleDeleteFormation(formation.id)}
+              onEdit={isAdmin ? () => handleEditFormation(formation) : undefined}
+              onDelete={isAdmin ? () => handleDeleteFormation(formation.id) : undefined}
+              isAdmin={isAdmin}
             />
           ))}
         </div>

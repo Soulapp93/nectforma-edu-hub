@@ -15,6 +15,7 @@ interface FormationCardProps {
   description?: string;
   duration?: string;
   maxStudents?: string;
+  isAdmin?: boolean;
 }
 
 const FormationCard: React.FC<FormationCardProps> = ({
@@ -27,7 +28,8 @@ const FormationCard: React.FC<FormationCardProps> = ({
   color,
   description,
   duration,
-  maxStudents
+  maxStudents,
+  isAdmin = false
 }) => {
   return (
     <div className="course-card rounded-xl overflow-hidden floating-card shadow-sm hover:shadow-md transition-all">
@@ -71,14 +73,16 @@ const FormationCard: React.FC<FormationCardProps> = ({
           <button className="text-primary hover:text-primary/80 text-sm sm:text-base font-medium transition-colors text-left">
             Voir détails
           </button>
-          <div className="flex gap-2 sm:gap-3">
-            <button className="flex-1 sm:flex-none px-4 py-2 text-sm border border-border rounded-lg hover:bg-muted transition-colors">
-              Modifier
-            </button>
-            <button className="flex-1 sm:flex-none px-4 py-2 text-sm bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
-              Gérer
-            </button>
-          </div>
+          {isAdmin && (
+            <div className="flex gap-2 sm:gap-3">
+              <button className="flex-1 sm:flex-none px-4 py-2 text-sm border border-border rounded-lg hover:bg-muted transition-colors">
+                Modifier
+              </button>
+              <button className="flex-1 sm:flex-none px-4 py-2 text-sm bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+                Gérer
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

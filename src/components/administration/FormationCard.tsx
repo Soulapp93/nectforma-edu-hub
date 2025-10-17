@@ -20,6 +20,7 @@ interface FormationCardProps extends Formation {
   participantsCount?: number;
   onEdit?: () => void;
   onDelete?: () => void;
+  isAdmin?: boolean;
 }
 
 const FormationCard: React.FC<FormationCardProps> = ({
@@ -37,7 +38,8 @@ const FormationCard: React.FC<FormationCardProps> = ({
   modules = [],
   participantsCount = 0,
   onEdit,
-  onDelete
+  onDelete,
+  isAdmin = true
 }) => {
   const navigate = useNavigate();
   const [isParticipantsModalOpen, setIsParticipantsModalOpen] = useState(false);
@@ -110,24 +112,26 @@ const FormationCard: React.FC<FormationCardProps> = ({
               )}
             </div>
             
-            <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              {onEdit && (
-                <button
-                  onClick={onEdit}
-                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                >
-                  <Edit className="h-4 w-4" />
-                </button>
-              )}
-              {onDelete && (
-                <button
-                  onClick={onDelete}
-                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              )}
-            </div>
+            {isAdmin && (
+              <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                {onEdit && (
+                  <button
+                    onClick={onEdit}
+                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    onClick={onDelete}
+                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Informations principales */}

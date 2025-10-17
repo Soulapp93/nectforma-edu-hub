@@ -9,6 +9,7 @@ import EditFormationModal from './EditFormationModal';
 import FormationCard from './FormationCard';
 import { formationService } from '@/services/formationService';
 import { toast } from 'sonner';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const FormationsList: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -19,6 +20,9 @@ const FormationsList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  
+  const { userRole } = useCurrentUser();
+  const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
 
   const fetchFormations = async () => {
     try {
@@ -101,14 +105,16 @@ const FormationsList: React.FC = () => {
         <div className="p-6 border-b border-border">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-foreground">Gestion des formations</h2>
-            <Button 
-              onClick={handleCreateFormation}
-              className="flex items-center gap-2"
-              variant="premium"
-            >
-              <Plus className="h-4 w-4" />
-              Nouvelle formation
-            </Button>
+            {isAdmin && (
+              <Button 
+                onClick={handleCreateFormation}
+                className="flex items-center gap-2"
+                variant="premium"
+              >
+                <Plus className="h-4 w-4" />
+                Nouvelle formation
+              </Button>
+            )}
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4">
@@ -160,7 +166,7 @@ const FormationsList: React.FC = () => {
           description={searchTerm || selectedLevel !== 'all' || selectedStatus !== 'all'
             ? 'Essayez de modifier vos critères de recherche.'
             : 'Créez votre première formation pour enrichir votre catalogue.'}
-          action={(!searchTerm && selectedLevel === 'all' && selectedStatus === 'all') ? {
+          action={(isAdmin && !searchTerm && selectedLevel === 'all' && selectedStatus === 'all') ? {
             label: 'Créer une formation',
             onClick: handleCreateFormation,
             variant: 'premium'
@@ -173,8 +179,9 @@ const FormationsList: React.FC = () => {
               key={formation.id}
               {...formation}
               modules={formation.formation_modules || []}
-              onEdit={() => handleEditFormation(formation.id)}
-              onDelete={() => handleDeleteFormation(formation.id)}
+              onEdit={isAdmin ? () => handleEditFormation(formation.id) : undefined}
+              onDelete={isAdmin ? () => handleDeleteFormation(formation.id) : undefined}
+              isAdmin={isAdmin}
             />
           ))}
         </div>
