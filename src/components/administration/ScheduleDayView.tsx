@@ -28,15 +28,26 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
 
   const timeSlots = [
     '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
-    '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'
+    '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
   ];
 
-  const getSlotForTimeSlot = (time: string) => {
-    return daySlots.find(slot => {
-      const slotStart = slot.start_time.slice(0, 5);
-      const nextHour = String(parseInt(time.split(':')[0]) + 1).padStart(2, '0') + ':00';
-      return slotStart >= time && slotStart < nextHour;
-    });
+  // Convertir le temps en minutes depuis minuit
+  const timeToMinutes = (time: string): number => {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+
+  // Calculer la position et hauteur d'un créneau
+  const getSlotPosition = (slot: ScheduleSlot) => {
+    const startMinutes = timeToMinutes(slot.start_time);
+    const endMinutes = timeToMinutes(slot.end_time);
+    const baseMinutes = timeToMinutes('08:00'); // Début de la journée
+    
+    const HOUR_HEIGHT = 80; // Hauteur d'une heure en pixels
+    const top = ((startMinutes - baseMinutes) / 60) * HOUR_HEIGHT;
+    const height = ((endMinutes - startMinutes) / 60) * HOUR_HEIGHT - 8; // -8 pour un petit espacement
+    
+    return { top, height };
   };
 
   return (
@@ -75,62 +86,73 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
           </h3>
         </div>
         
-        <div className="relative">
-          <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-primary/50 to-transparent"></div>
-          
-          {timeSlots.map((time, index) => {
-            const slot = getSlotForTimeSlot(time);
-            
-            return (
-              <div key={time} className="relative flex items-start space-x-4 pb-6">
-                <div className="flex-shrink-0 w-12 text-center">
-                  <div className={`w-5 h-5 rounded-full border-3 ${
-                    slot ? 'timeline-dot pulse-dot' : 'bg-muted border-border'
-                  } relative z-10 transition-all duration-300`}></div>
-                  <div className="text-xs text-muted-foreground mt-2 font-medium">{time}</div>
-                </div>
-                
-                <div className="flex-1 min-w-0 pb-2">
-                  {slot ? (
-                    <div 
-                      className="px-3 py-2 rounded-md shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer text-white"
-                      style={{ 
-                        backgroundColor: slot.color || '#3B82F6'
-                      }}
-                      onClick={() => onEditSlot?.(slot)}
-                    >
-                      <div className="space-y-1">
-                        <h4 className="font-semibold text-white text-sm leading-tight">
-                          {slot.formation_modules?.title || 'Module'}
-                        </h4>
-                        
-                        <div className="flex items-center text-xs text-white/90">
-                          <Clock className="h-3 w-3 mr-1.5 text-white/80" />
-                          <span>{slot.start_time} - {slot.end_time}</span>
-                        </div>
-                        
-                        {slot.room && (
-                          <div className="flex items-center text-xs text-white/90">
-                            <MapPin className="h-3 w-3 mr-1.5 text-white/80" />
-                            <span>{slot.room}</span>
-                          </div>
-                        )}
-                        
-                        {slot.users && (
-                          <div className="flex items-center text-xs text-white/90">
-                            <User className="h-3 w-3 mr-1.5 text-white/80" />
-                            <span>{slot.users.first_name} {slot.users.last_name}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-muted-foreground text-sm italic opacity-60">Libre</div>
-                  )}
-                </div>
+        <div className="flex">
+          {/* Colonne des heures */}
+          <div className="flex-shrink-0 w-20 pt-2">
+            {timeSlots.map((time) => (
+              <div key={time} className="h-20 flex items-start justify-end pr-3">
+                <span className="text-sm text-muted-foreground font-medium">{time}</span>
               </div>
-            );
-          })}
+            ))}
+          </div>
+          
+          {/* Zone des cours */}
+          <div className="flex-1 relative border-l border-border/50">
+            {/* Lignes de grille horizontales */}
+            {timeSlots.map((time, index) => (
+              <div 
+                key={time} 
+                className="h-20 border-b border-border/30"
+                style={{ position: 'relative' }}
+              />
+            ))}
+            
+            {/* Créneaux de cours positionnés absolument */}
+            {daySlots.map((slot, index) => {
+              const { top, height } = getSlotPosition(slot);
+              
+              return (
+                <div
+                  key={slot.id || index}
+                  className="absolute left-2 right-2 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
+                  style={{ 
+                    top: `${top}px`,
+                    height: `${height}px`,
+                    backgroundColor: slot.color || '#3B82F6',
+                    minHeight: '60px'
+                  }}
+                  onClick={() => onEditSlot?.(slot)}
+                >
+                  <div className="h-full p-3 flex flex-col text-white relative z-10">
+                    <h4 className="font-bold text-sm leading-tight mb-2">
+                      {slot.formation_modules?.title || 'Module'}
+                    </h4>
+                    
+                    <div className="space-y-1 text-xs">
+                      <div className="flex items-center text-white/90">
+                        <Clock className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                        <span className="font-medium">{slot.start_time} - {slot.end_time}</span>
+                      </div>
+                      
+                      {slot.room && (
+                        <div className="flex items-center text-white/90">
+                          <MapPin className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                          <span>{slot.room}</span>
+                        </div>
+                      )}
+                      
+                      {slot.users && (
+                        <div className="flex items-center text-white/90">
+                          <User className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                          <span>{slot.users.first_name} {slot.users.last_name}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
