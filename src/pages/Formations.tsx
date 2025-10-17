@@ -113,41 +113,41 @@ const Formations = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 min-h-screen">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Formations</h1>
-          <p className="text-sm sm:text-base text-gray-600">Découvrez notre catalogue de formations</p>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-3">Formations</h1>
+          <p className="text-base sm:text-lg text-gray-600">Découvrez notre catalogue de formations</p>
         </div>
         <button 
           onClick={handleCreateFormation}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg flex items-center font-medium text-sm sm:text-base w-full sm:w-auto justify-center"
+          className="bg-purple-600 hover:bg-purple-700 text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl flex items-center font-medium text-base shadow-md hover:shadow-lg transition-all w-full sm:w-auto justify-center"
         >
-          <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+          <Plus className="h-5 w-5 mr-2" />
           Nouvelle formation
         </button>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sm:p-6 lg:p-8">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
                 type="text"
                 placeholder="Rechercher une formation..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full pl-12 pr-4 py-3 text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
               />
             </div>
           </div>
           <select 
             value={selectedLevel}
             onChange={(e) => setSelectedLevel(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="px-4 py-3 text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
           >
             <option value="all">Tous les niveaux</option>
             {levels.map(level => (
@@ -157,7 +157,7 @@ const Formations = () => {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="px-4 py-3 text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
           >
             <option value="all">Tous les statuts</option>
             <option value="Actif">Actif</option>
@@ -170,18 +170,18 @@ const Formations = () => {
 
       {/* Formations Grid */}
       {filteredFormations.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 sm:p-10 lg:p-12 text-center">
           <div className="max-w-md mx-auto">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <BookOpen className="h-8 w-8 text-purple-600" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <BookOpen className="h-8 w-8 sm:h-10 sm:w-10 text-purple-600" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">
               {searchTerm || selectedLevel !== 'all' || selectedStatus !== 'all' 
                 ? 'Aucune formation trouvée' 
                 : 'Aucune formation'
               }
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-base sm:text-lg text-gray-600 mb-6">
               {searchTerm || selectedLevel !== 'all' || selectedStatus !== 'all'
                 ? 'Essayez de modifier vos critères de recherche.'
                 : 'Créez votre première formation pour enrichir votre catalogue.'
@@ -190,7 +190,7 @@ const Formations = () => {
             {(!searchTerm && selectedLevel === 'all' && selectedStatus === 'all') && (
               <button 
                 onClick={handleCreateFormation}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium"
+                className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-xl font-medium text-base shadow-md hover:shadow-lg transition-all"
               >
                 Créer une formation
               </button>
@@ -198,7 +198,7 @@ const Formations = () => {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
           {filteredFormations.map((formation) => (
             <FormationCard
               key={formation.id}

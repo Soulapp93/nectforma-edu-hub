@@ -18,10 +18,10 @@ const Administration = () => {
   }, [searchParams]);
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Administration</h1>
-        <p className="text-muted-foreground">Gérez les utilisateurs, formations, rôles et emplois du temps de la plateforme.</p>
+    <div className="p-4 sm:p-6 lg:p-8 min-h-screen">
+      <div className="mb-6 sm:mb-8 lg:mb-10">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2 sm:mb-3">Administration</h1>
+        <p className="text-base sm:text-lg text-muted-foreground">Gérez les utilisateurs, formations, rôles et emplois du temps de la plateforme.</p>
       </div>
 
       

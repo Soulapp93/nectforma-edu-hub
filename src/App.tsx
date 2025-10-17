@@ -71,13 +71,13 @@ const AppContent = () => {
       <div className="flex h-screen w-full bg-gray-50">
         <Sidebar />
         <div className="flex flex-col flex-1 w-full">
-          <header className="h-12 flex items-center justify-between border-b bg-white px-2 sm:px-4 sticky top-0 z-40">
-            <SidebarTrigger />
-            <div className="flex items-center space-x-2">
+          <header className="h-14 sm:h-16 flex items-center justify-between border-b bg-white px-4 sm:px-6 sticky top-0 z-40 shadow-sm">
+            <SidebarTrigger className="h-9 w-9" />
+            <div className="flex items-center space-x-3 sm:space-x-4">
               <NotificationBell />
             </div>
           </header>
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto bg-gray-50">
             <Routes>
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/administration" element={<ProtectedRoute><Administration /></ProtectedRoute>} />
