@@ -17,196 +17,287 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
     event.date.toDateString() === selectedDate.toDateString()
   ).sort((a, b) => a.startTime.localeCompare(b.startTime));
 
-  const timeSlots = [
-    '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
-    '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'
-  ];
+  // Convertir le temps en minutes depuis minuit (supporte HH:MM et HH:MM:SS)
+  const timeToMinutes = (time: string): number => {
+    const parts = time.split(':');
+    const hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+    return hours * 60 + minutes;
+  };
 
-  const getEventForTimeSlot = (time: string) => {
-    return dayEvents.find(event => {
-      const eventStart = event.startTime;
-      const nextHour = String(parseInt(time.split(':')[0]) + 1).padStart(2, '0') + ':00';
-      return eventStart >= time && eventStart < nextHour;
+  // Calculer la durée d'un événement en format lisible
+  const formatDuration = (event: ScheduleEvent): string => {
+    const startMinutes = timeToMinutes(event.startTime);
+    const endMinutes = timeToMinutes(event.endTime);
+    const durationMinutes = endMinutes - startMinutes;
+    
+    const hours = Math.floor(durationMinutes / 60);
+    const minutes = durationMinutes % 60;
+    
+    if (hours === 0) return `${minutes}min`;
+    if (minutes === 0) return `${hours}h`;
+    return `${hours}h ${minutes}min`;
+  };
+
+  // Plage horaire étendue: 7h à 22h
+  const START_HOUR = 7;
+  const END_HOUR = 22;
+  
+  // Générer les créneaux horaires
+  const timeSlots = Array.from(
+    { length: END_HOUR - START_HOUR + 1 },
+    (_, i) => {
+      const hour = START_HOUR + i;
+      return `${hour.toString().padStart(2, '0')}:00`;
+    }
+  );
+
+  // Détecter les chevauchements entre événements
+  const detectOverlaps = (events: ScheduleEvent[]) => {
+    const overlapMap = new Map<string, { column: number; totalColumns: number }>();
+    const sortedEvents = [...events].sort((a, b) => a.startTime.localeCompare(b.startTime));
+    
+    const columns: ScheduleEvent[][] = [];
+    
+    sortedEvents.forEach(event => {
+      const eventStart = timeToMinutes(event.startTime);
+      const eventEnd = timeToMinutes(event.endTime);
+      
+      // Trouver une colonne libre pour cet événement
+      let placedInColumn = -1;
+      for (let i = 0; i < columns.length; i++) {
+        const columnEvents = columns[i];
+        const hasOverlap = columnEvents.some(existingEvent => {
+          const existingStart = timeToMinutes(existingEvent.startTime);
+          const existingEnd = timeToMinutes(existingEvent.endTime);
+          return eventStart < existingEnd && eventEnd > existingStart;
+        });
+        
+        if (!hasOverlap) {
+          columns[i].push(event);
+          placedInColumn = i;
+          break;
+        }
+      }
+      
+      // Si aucune colonne libre, créer une nouvelle colonne
+      if (placedInColumn === -1) {
+        columns.push([event]);
+        placedInColumn = columns.length - 1;
+      }
+      
+      // Calculer le nombre total de colonnes nécessaires pour cet événement
+      const totalColumns = columns.filter(col => 
+        col.some(e => {
+          const eStart = timeToMinutes(e.startTime);
+          const eEnd = timeToMinutes(e.endTime);
+          return eventStart < eEnd && eventEnd > eStart;
+        })
+      ).length;
+      
+      overlapMap.set(event.id, { column: placedInColumn, totalColumns });
     });
+    
+    return overlapMap;
+  };
+
+  const overlapMap = detectOverlaps(dayEvents);
+
+  // Calculer la position et hauteur d'un événement
+  const getEventPosition = (event: ScheduleEvent) => {
+    const startMinutes = timeToMinutes(event.startTime);
+    const endMinutes = timeToMinutes(event.endTime);
+    const baseMinutes = START_HOUR * 60;
+    
+    const HOUR_HEIGHT = 80; // Hauteur d'une heure en pixels
+    
+    // Limiter l'affichage à la plage horaire visible
+    const visibleStartMinutes = Math.max(startMinutes, baseMinutes);
+    const visibleEndMinutes = Math.min(endMinutes, END_HOUR * 60);
+    
+    const top = ((visibleStartMinutes - baseMinutes) / 60) * HOUR_HEIGHT;
+    const height = ((visibleEndMinutes - visibleStartMinutes) / 60) * HOUR_HEIGHT;
+    
+    // Log pour déboggage
+    if (startMinutes < baseMinutes || endMinutes > END_HOUR * 60) {
+      console.log(`Cours partiellement hors grille: ${event.startTime}-${event.endTime}`, event);
+    }
+    
+    return { top, height: Math.max(height, 60) }; // Hauteur minimum 60px
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto p-6">
       {/* Header */}
-      <Card className="mb-8 border-0 shadow-xl overflow-hidden bg-gradient-to-br from-background via-muted/30 to-primary/5 backdrop-blur-sm">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-accent/10"></div>
-        <CardHeader className="relative">
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-14 h-14 rounded-3xl nect-gradient flex items-center justify-center shadow-lg relative overflow-hidden">
-                <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-                <Calendar className="h-7 w-7 text-white relative z-10" />
-              </div>
-              <div>
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
-                  {format(selectedDate, 'EEEE d MMMM yyyy', { locale: fr })}
-                </h2>
-                <p className="text-muted-foreground font-medium mt-1">
-                  {dayEvents.length} cours programmé{dayEvents.length > 1 ? 's' : ''}
-                </p>
-              </div>
-            </div>
-            
-            <Badge 
-              variant="secondary" 
-              className="text-base px-6 py-3 bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20 text-primary font-semibold rounded-full"
-            >
-              Vue journalière
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-      </Card>
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <Calendar className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">
+              {format(selectedDate, 'EEEE d MMMM yyyy', { locale: fr })}
+            </h2>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {dayEvents.length} cours programmé{dayEvents.length > 1 ? 's' : ''}
+            </p>
+          </div>
+        </div>
+      </div>
 
-      {dayEvents.length === 0 ? (
-        <Card className="border-0 shadow-2xl glass-card rounded-3xl overflow-hidden">
-          <CardContent className="p-16 text-center relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5"></div>
-            <div className="relative">
-              <div className="w-20 h-20 rounded-full nect-gradient flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <Calendar className="h-10 w-10 text-white" />
+      {/* Layout principal: Timeline (70%) + Liste (30%) */}
+      <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
+        {/* Timeline - 7/10 de l'espace */}
+        <div className="lg:col-span-7">
+          <Card className="shadow-sm border-border/50">
+            <CardHeader className="pb-3 border-b border-border/50">
+              <div className="flex items-center space-x-2">
+                <Clock className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg font-semibold text-foreground">
+                  Planning de la journée
+                </CardTitle>
               </div>
-              <h3 className="text-2xl font-bold text-foreground mb-3">
-                Aucun cours aujourd'hui
-              </h3>
-              <p className="text-muted-foreground text-lg">
-                Profitez de cette journée libre ! 🌟
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Timeline */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-8 h-8 rounded-2xl nect-gradient flex items-center justify-center">
-                <Clock className="h-4 w-4 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-foreground">
-                Planning de la journée
-              </h3>
-            </div>
-            <div className="relative">
-              <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-primary/50 to-transparent"></div>
-              
-              {timeSlots.map((time) => {
-                const event = getEventForTimeSlot(time);
-                
-                return (
-                  <div key={time} className="relative flex items-start space-x-4 pb-6">
-                    <div className="flex-shrink-0 w-12 text-center">
-                      <div className={`w-5 h-5 rounded-full border-3 ${
-                        event ? 'timeline-dot pulse-dot' : 'bg-muted border-border'
-                      } relative z-10 transition-all duration-300`}></div>
-                      <div className="text-xs text-muted-foreground mt-2 font-medium">{time}</div>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="flex">
+                {/* Colonne des heures */}
+                <div className="flex-shrink-0 w-14 pr-2">
+                  {timeSlots.map((time) => (
+                    <div key={time} className="h-20 flex items-start justify-end">
+                      <span className="text-xs text-muted-foreground font-medium">{time}</span>
                     </div>
+                  ))}
+                </div>
+                
+                {/* Zone des cours */}
+                <div className="flex-1 relative border-l border-border/30">
+                  {/* Lignes de grille horizontales */}
+                  {timeSlots.map((time) => (
+                    <div 
+                      key={time} 
+                      className="h-20 border-b border-border/10"
+                      style={{ position: 'relative' }}
+                    />
+                  ))}
+                  
+                  {/* Événements positionnés absolument avec gestion des chevauchements */}
+                  {dayEvents.map((event) => {
+                    const { top, height } = getEventPosition(event);
+                    const duration = formatDuration(event);
                     
-                    <div className="flex-1 min-w-0 pb-2">
-                      {event ? (
-                        <div 
-                          className="px-3 py-2 rounded-md shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer text-white"
-                          style={{ 
-                            backgroundColor: event.color || '#3B82F6'
-                          }}
-                          onClick={() => onEventClick?.(event)}
-                        >
-                          <div className="space-y-1">
-                            <h4 className="font-semibold text-white text-sm leading-tight">
-                              Module {event.title}
-                            </h4>
-                            
-                            <div className="flex items-center text-xs text-white/90">
-                              <Clock className="h-3 w-3 mr-1.5 text-white/80" />
-                              <span>{event.startTime} - {event.endTime}</span>
+                    // Récupérer les infos de chevauchement
+                    const overlapInfo = overlapMap.get(event.id);
+                    const column = overlapInfo?.column ?? 0;
+                    const totalColumns = overlapInfo?.totalColumns ?? 1;
+                    
+                    // Calculer la largeur et la position en fonction des chevauchements
+                    const widthPercent = 100 / totalColumns;
+                    const leftPercent = (column * 100) / totalColumns;
+                    
+                    return (
+                      <div
+                        key={event.id}
+                        className="absolute rounded-lg shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden"
+                        style={{ 
+                          top: `${top}px`,
+                          height: `${height}px`,
+                          left: `calc(${leftPercent}% + 8px)`,
+                          width: `calc(${widthPercent}% - ${totalColumns > 1 ? '12px' : '16px'})`,
+                          backgroundColor: event.color || '#3B82F6',
+                          minHeight: '60px'
+                        }}
+                        onClick={() => onEventClick?.(event)}
+                      >
+                        <div className="h-full p-3 flex flex-col text-white">
+                          <h4 className="font-semibold text-sm leading-tight mb-1">
+                            {event.title}
+                          </h4>
+                          
+                          <div className="space-y-1 text-xs">
+                            <div className="flex items-center text-white/90">
+                              <Clock className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                              <span>{event.startTime}</span>
                             </div>
                             
                             {event.room && (
-                              <div className="flex items-center text-xs text-white/90">
-                                <MapPin className="h-3 w-3 mr-1.5 text-white/80" />
-                                <span>Salle {event.room}</span>
-                              </div>
-                            )}
-                            
-                            {event.instructor && (
-                              <div className="flex items-center text-xs text-white/90">
-                                <User className="h-3 w-3 mr-1.5 text-white/80" />
-                                <span>{event.instructor}</span>
+                              <div className="flex items-center text-white/90">
+                                <MapPin className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                                <span className="truncate">{event.room}</span>
                               </div>
                             )}
                           </div>
                         </div>
-                      ) : (
-                        <div className="text-muted-foreground text-sm italic opacity-60">Libre</div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Détails des cours */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-8 h-8 rounded-2xl nect-gradient flex items-center justify-center">
-                <Book className="h-4 w-4 text-white" />
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-foreground">
-                Détails des cours
-              </h3>
-            </div>
-            
-            <div className="space-y-3">
-                {dayEvents.map((event) => (
-                   <div
-                     key={event.id}
-                     className="rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 text-white"
-                     style={{ 
-                       backgroundColor: event.color || '#3B82F6'
-                     }}
-                     onClick={() => onEventClick?.(event)}
-                   >
-                     <div className="p-4">
-                       <div className="space-y-2">
-                          <div className="font-semibold text-white text-sm">
-                            Module {event.title}
-                          </div>
-                          
-                          <div className="flex items-center text-xs text-white/90">
-                            <Clock className="h-3 w-3 mr-1.5 text-white/80" />
-                            <span>{event.startTime}</span>
-                          </div>
-                          <div className="flex items-center text-xs text-white/90">
-                            <Clock className="h-3 w-3 mr-1.5 text-white/80" />
-                            <span>{event.endTime}</span>
-                          </div>
-                          
-                          {event.room && (
-                            <div className="flex items-center text-xs text-white/90">
-                              <MapPin className="h-3 w-3 mr-1.5 text-white/80" />
-                              <span>Salle {event.room}</span>
-                            </div>
-                          )}
-                          
-                          {event.instructor && (
-                            <div className="flex items-center text-xs text-white/90">
-                              <User className="h-3 w-3 mr-1.5 text-white/80" />
-                              <span>{event.instructor}</span>
-                            </div>
-                          )}
-                       </div>
-                     </div>
-                   </div>
-                ))}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
-      )}
+
+        {/* Liste des cours - 3/10 de l'espace */}
+        <div className="lg:col-span-3">
+          <Card className="shadow-sm border-border/50 sticky top-6">
+            <CardHeader className="pb-3 border-b border-border/50">
+              <div className="flex items-center space-x-2">
+                <Book className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg font-semibold text-foreground">
+                  Liste des cours
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 space-y-3">
+              {dayEvents.length === 0 ? (
+                <p className="text-muted-foreground text-sm text-center py-8">
+                  Aucun cours programmé
+                </p>
+              ) : (
+                dayEvents.map((event, index) => (
+                  <Card 
+                    key={event.id}
+                    className="overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 border-l-4"
+                    style={{ borderLeftColor: event.color || '#3B82F6' }}
+                    onClick={() => onEventClick?.(event)}
+                  >
+                    <CardContent className="p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-semibold text-sm text-foreground leading-tight">
+                          {event.title}
+                        </h5>
+                        <div 
+                          className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ml-2"
+                          style={{ backgroundColor: event.color || '#3B82F6' }}
+                        >
+                          <span className="text-white text-xs font-bold">{index + 1}</span>
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <div className="flex items-center text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                          <span>{event.startTime} - {event.endTime}</span>
+                        </div>
+                        {event.room && (
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <MapPin className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                            <span className="truncate">{event.room}</span>
+                          </div>
+                        )}
+                        {event.instructor && (
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <User className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                            <span className="truncate">{event.instructor}</span>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };
