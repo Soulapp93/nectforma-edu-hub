@@ -197,16 +197,21 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
                     return (
                       <div
                         key={event.id}
-                        className="absolute rounded-lg shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden"
+                        className="absolute rounded-lg shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden hover:scale-[1.02]"
                         style={{ 
                           top: `${top}px`,
                           height: `${height}px`,
                           left: `calc(${leftPercent}% + 8px)`,
                           width: `calc(${widthPercent}% - ${totalColumns > 1 ? '12px' : '16px'})`,
                           backgroundColor: event.color || '#3B82F6',
-                          minHeight: '60px'
+                          minHeight: '60px',
+                          zIndex: 10
                         }}
-                        onClick={() => onEventClick?.(event)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Clic sur événement:', event);
+                          onEventClick?.(event);
+                        }}
                       >
                         <div className="h-full p-3 flex flex-col text-white">
                           <h4 className="font-semibold text-sm leading-tight mb-1">
@@ -267,7 +272,11 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
                     key={event.id}
                     className="overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 border-l-4"
                     style={{ borderLeftColor: event.color || '#3B82F6' }}
-                    onClick={() => onEventClick?.(event)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('Clic sur événement liste:', event);
+                      onEventClick?.(event);
+                    }}
                   >
                     <CardContent className="p-3">
                       <div className="flex items-start justify-between mb-2">
