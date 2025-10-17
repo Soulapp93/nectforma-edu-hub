@@ -26,26 +26,53 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
     new Date(slot.date).toDateString() === selectedDate.toDateString()
   ).sort((a, b) => a.start_time.localeCompare(b.start_time));
 
-  const timeSlots = [
-    '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
-    '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
-  ];
-
   // Convertir le temps en minutes depuis minuit
   const timeToMinutes = (time: string): number => {
     const [hours, minutes] = time.split(':').map(Number);
     return hours * 60 + minutes;
   };
 
+  // Calculer dynamiquement les heures de début et fin en fonction des créneaux
+  const getTimeRange = () => {
+    if (daySlots.length === 0) {
+      return { startHour: 8, endHour: 20 };
+    }
+    
+    const times = daySlots.flatMap(slot => [
+      timeToMinutes(slot.start_time),
+      timeToMinutes(slot.end_time)
+    ]);
+    
+    const minMinutes = Math.min(...times);
+    const maxMinutes = Math.max(...times);
+    
+    // Arrondir au début de l'heure précédente et à la fin de l'heure suivante
+    const startHour = Math.floor(minMinutes / 60);
+    const endHour = Math.ceil(maxMinutes / 60);
+    
+    return { startHour, endHour };
+  };
+
+  const { startHour, endHour } = getTimeRange();
+  
+  // Générer les créneaux horaires dynamiquement
+  const timeSlots = Array.from(
+    { length: endHour - startHour + 1 },
+    (_, i) => {
+      const hour = startHour + i;
+      return `${hour.toString().padStart(2, '0')}:00`;
+    }
+  );
+
   // Calculer la position et hauteur d'un créneau
   const getSlotPosition = (slot: ScheduleSlot) => {
     const startMinutes = timeToMinutes(slot.start_time);
     const endMinutes = timeToMinutes(slot.end_time);
-    const baseMinutes = timeToMinutes('08:00'); // Début de la journée
+    const baseMinutes = startHour * 60; // Début de la journée
     
     const HOUR_HEIGHT = 80; // Hauteur d'une heure en pixels
     const top = ((startMinutes - baseMinutes) / 60) * HOUR_HEIGHT;
-    const height = ((endMinutes - startMinutes) / 60) * HOUR_HEIGHT - 8; // -8 pour un petit espacement
+    const height = ((endMinutes - startMinutes) / 60) * HOUR_HEIGHT;
     
     return { top, height };
   };
