@@ -139,61 +139,53 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
   return (
     <div className="max-w-7xl mx-auto p-6">
       {/* Header */}
-      <Card className="mb-8 border-0 shadow-xl overflow-hidden bg-gradient-to-br from-background via-muted/30 to-primary/5 backdrop-blur-sm">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-accent/10"></div>
-        <CardHeader className="relative">
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-14 h-14 rounded-3xl bg-gradient-to-br from-primary to-primary-foreground flex items-center justify-center shadow-lg relative overflow-hidden">
-                <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-                <Calendar className="h-7 w-7 text-white relative z-10" />
-              </div>
-              <div>
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
-                  {format(selectedDate, 'EEEE d MMMM yyyy', { locale: fr })}
-                </h2>
-                <p className="text-muted-foreground font-medium mt-1">
-                  {daySlots.length} créneau{daySlots.length > 1 ? 'x' : ''} programmé{daySlots.length > 1 ? 's' : ''}
-                </p>
-              </div>
-            </div>
-          </CardTitle>
-        </CardHeader>
-      </Card>
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <Calendar className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">
+              {format(selectedDate, 'EEEE d MMMM yyyy', { locale: fr })}
+            </h2>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {daySlots.length} cours programmé{daySlots.length > 1 ? 's' : ''}
+            </p>
+          </div>
+        </div>
+      </div>
 
-      {/* Layout principal: Timeline (66%) + Liste (33%) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Timeline - 2/3 de l'espace */}
-        <div className="lg:col-span-2">
-          <Card className="shadow-lg">
-            <CardHeader className="pb-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-white" />
-                </div>
-                <CardTitle className="text-xl font-bold text-foreground">
+      {/* Layout principal: Timeline (70%) + Liste (30%) */}
+      <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
+        {/* Timeline - 7/10 de l'espace */}
+        <div className="lg:col-span-7">
+          <Card className="shadow-sm border-border/50">
+            <CardHeader className="pb-3 border-b border-border/50">
+              <div className="flex items-center space-x-2">
+                <Clock className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg font-semibold text-foreground">
                   Planning de la journée
                 </CardTitle>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4">
               <div className="flex">
                 {/* Colonne des heures */}
-                <div className="flex-shrink-0 w-16 pt-2 bg-muted/20 rounded-l-lg">
+                <div className="flex-shrink-0 w-14 pr-2">
                   {timeSlots.map((time) => (
-                    <div key={time} className="h-20 flex items-start justify-end pr-3">
-                      <span className="text-sm text-muted-foreground font-semibold">{time}</span>
+                    <div key={time} className="h-20 flex items-start justify-end">
+                      <span className="text-xs text-muted-foreground font-medium">{time}</span>
                     </div>
                   ))}
                 </div>
                 
                 {/* Zone des cours */}
-                <div className="flex-1 relative border-l-2 border-border/50">
+                <div className="flex-1 relative border-l border-border/30">
                   {/* Lignes de grille horizontales */}
                   {timeSlots.map((time, index) => (
                     <div 
                       key={time} 
-                      className="h-20 border-b border-border/20"
+                      className="h-20 border-b border-border/10"
                       style={{ position: 'relative' }}
                     />
                   ))}
@@ -202,7 +194,6 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                   {daySlots.map((slot, index) => {
                     const { top, height } = getSlotPosition(slot);
                     const duration = formatDuration(slot);
-                    const durationMinutes = timeToMinutes(slot.end_time) - timeToMinutes(slot.start_time);
                     
                     // Récupérer les infos de chevauchement
                     const overlapInfo = overlapMap.get(slot.id);
@@ -216,23 +207,20 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                     return (
                       <div
                         key={slot.id || index}
-                        className="absolute rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden group"
+                        className="absolute rounded-lg shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden"
                         style={{ 
                           top: `${top}px`,
                           height: `${height}px`,
-                          left: `calc(${leftPercent}% + 12px)`,
-                          width: `calc(${widthPercent}% - ${totalColumns > 1 ? '16px' : '24px'})`,
+                          left: `calc(${leftPercent}% + 8px)`,
+                          width: `calc(${widthPercent}% - ${totalColumns > 1 ? '12px' : '16px'})`,
                           backgroundColor: slot.color || '#3B82F6',
                           minHeight: '60px'
                         }}
                         onClick={() => onEditSlot?.(slot)}
                       >
-                        {/* Effet de brillance au survol */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        
-                        <div className="h-full p-4 flex flex-col text-white relative z-10">
-                          <div className="flex items-start justify-between mb-2">
-                            <h4 className="font-bold text-base leading-tight flex-1">
+                        <div className="h-full p-3 flex flex-col text-white">
+                          <div className="flex items-start justify-between mb-1">
+                            <h4 className="font-semibold text-sm leading-tight flex-1">
                               {slot.formation_modules?.title || 'Module'}
                             </h4>
                             {onEditSlot && onDuplicateSlot && onDeleteSlot && (
@@ -245,26 +233,16 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                             )}
                           </div>
                           
-                          <div className="space-y-1.5 text-sm">
-                            <div className="flex items-center text-white/95 font-medium">
-                              <Clock className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
-                              <span>{slot.start_time} - {slot.end_time}</span>
-                              <Badge className="ml-2 bg-white/20 text-white border-0 text-xs">
-                                {duration}
-                              </Badge>
+                          <div className="space-y-1 text-xs">
+                            <div className="flex items-center text-white/90">
+                              <Clock className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                              <span>{slot.start_time}</span>
                             </div>
                             
-                            {slot.room && durationMinutes >= 60 && (
+                            {slot.room && (
                               <div className="flex items-center text-white/90">
-                                <MapPin className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
-                                <span>{slot.room}</span>
-                              </div>
-                            )}
-                            
-                            {slot.users && durationMinutes >= 90 && (
-                              <div className="flex items-center text-white/90">
-                                <User className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
-                                <span>{slot.users.first_name} {slot.users.last_name}</span>
+                                <MapPin className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                                <span className="truncate">{slot.room}</span>
                               </div>
                             )}
                           </div>
@@ -278,20 +256,18 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
           </Card>
         </div>
 
-        {/* Liste des cours - 1/3 de l'espace */}
-        <div className="lg:col-span-1">
-          <Card className="shadow-lg sticky top-6">
-            <CardHeader className="pb-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center">
-                  <List className="h-5 w-5 text-white" />
-                </div>
-                <CardTitle className="text-xl font-bold text-foreground">
+        {/* Liste des cours - 3/10 de l'espace */}
+        <div className="lg:col-span-3">
+          <Card className="shadow-sm border-border/50 sticky top-6">
+            <CardHeader className="pb-3 border-b border-border/50">
+              <div className="flex items-center space-x-2">
+                <List className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg font-semibold text-foreground">
                   Liste des cours
                 </CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="p-4 space-y-3">
               {daySlots.length === 0 ? (
                 <p className="text-muted-foreground text-sm text-center py-8">
                   Aucun cours programmé
@@ -304,35 +280,35 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                     style={{ borderLeftColor: slot.color || '#3B82F6' }}
                     onClick={() => onEditSlot?.(slot)}
                   >
-                    <CardContent className="p-4">
-                      <div className="flex items-start space-x-3">
+                    <CardContent className="p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-semibold text-sm text-foreground leading-tight">
+                          {slot.formation_modules?.title || 'Module'}
+                        </h5>
                         <div 
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                          className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ml-2"
                           style={{ backgroundColor: slot.color || '#3B82F6' }}
                         >
-                          {index + 1}
+                          <span className="text-white text-xs font-bold">{index + 1}</span>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h5 className="font-semibold text-sm text-foreground leading-tight mb-1 truncate">
-                            {slot.formation_modules?.title || 'Module'}
-                          </h5>
-                          <div className="flex items-center text-xs text-muted-foreground mb-1">
-                            <Clock className="h-3 w-3 mr-1" />
-                            <span>{slot.start_time} - {slot.end_time}</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        <div className="flex items-center text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                          <span>{slot.start_time} - {slot.end_time}</span>
+                        </div>
+                        {slot.room && (
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <MapPin className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                            <span className="truncate">{slot.room}</span>
                           </div>
-                          {slot.room && (
-                            <div className="flex items-center text-xs text-muted-foreground mb-1">
-                              <MapPin className="h-3 w-3 mr-1" />
-                              <span className="truncate">{slot.room}</span>
-                            </div>
-                          )}
-                          {slot.users && (
-                            <div className="flex items-center text-xs text-muted-foreground">
-                              <User className="h-3 w-3 mr-1" />
-                              <span className="truncate">{slot.users.first_name} {slot.users.last_name}</span>
-                            </div>
-                          )}
-                        </div>
+                        )}
+                        {slot.users && (
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <User className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                            <span className="truncate">{slot.users.first_name} {slot.users.last_name}</span>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
