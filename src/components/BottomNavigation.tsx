@@ -26,37 +26,37 @@ const BottomNavigation = () => {
 
   // Navigation pour AdminPrincipal
   const principalAdminNavigation: NavItem[] = [
-    { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard, label: 'Accueil' },
-    { name: 'Administration', href: '/administration', icon: Users, label: 'Admin' },
+    { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard, label: 'Tableau de bord' },
+    { name: 'Administration', href: '/administration', icon: Users, label: 'Administration' },
     { name: 'Formation', href: '/formations', icon: BookOpen, label: 'Formation' },
-    { name: 'Messagerie', href: '/messagerie', icon: MessageSquare, label: 'Messages' },
-    { name: 'Mon Profil', href: '/compte', icon: Settings, label: 'Compte' },
+    { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar, label: 'Emploi du temps' },
+    { name: 'Messagerie', href: '/messagerie', icon: MessageSquare, label: 'Messagerie' },
   ];
 
   // Navigation pour Admin
   const adminNavigation: NavItem[] = [
-    { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard, label: 'Accueil' },
-    { name: 'Administration', href: '/administration', icon: Users, label: 'Admin' },
+    { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard, label: 'Tableau de bord' },
+    { name: 'Administration', href: '/administration', icon: Users, label: 'Administration' },
     { name: 'Formation', href: '/formations', icon: BookOpen, label: 'Formation' },
-    { name: 'Messagerie', href: '/messagerie', icon: MessageSquare, label: 'Messages' },
-    { name: 'Mon Profil', href: '/compte', icon: Settings, label: 'Compte' },
+    { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar, label: 'Emploi du temps' },
+    { name: 'Messagerie', href: '/messagerie', icon: MessageSquare, label: 'Messagerie' },
   ];
 
   // Navigation pour tuteurs
   const tutorNavigation: NavItem[] = [
     { name: 'Formation', href: '/formations', icon: BookOpen, label: 'Formation' },
-    { name: 'Suivi', href: '/suivi-emargement', icon: ClipboardCheck, label: 'Suivi' },
-    { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar, label: 'Planning' },
+    { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck, label: 'Suivi' },
+    { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar, label: 'Emploi du temps' },
     { name: 'Mon Profil', href: '/compte', icon: Settings, label: 'Compte' },
   ];
 
   // Navigation pour formateurs et étudiants
   const limitedNavigation: NavItem[] = [
     { name: 'Formation', href: '/formations', icon: BookOpen, label: 'Formation' },
-    { name: 'Suivi', href: '/suivi-emargement', icon: ClipboardCheck, label: 'Suivi' },
-    { name: 'Planning', href: '/emploi-temps', icon: Calendar, label: 'Planning' },
-    { name: 'Messages', href: '/messagerie', icon: MessageSquare, label: 'Messages' },
-    { name: 'Compte', href: '/compte', icon: Settings, label: 'Compte' },
+    { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck, label: 'Suivi' },
+    { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar, label: 'Emploi du temps' },
+    { name: 'Messagerie', href: '/messagerie', icon: MessageSquare, label: 'Messages' },
+    { name: 'Mon Profil', href: '/compte', icon: Settings, label: 'Compte' },
   ];
 
   // Sélectionner la navigation selon le rôle
