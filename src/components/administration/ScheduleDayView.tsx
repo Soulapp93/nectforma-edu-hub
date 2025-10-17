@@ -26,9 +26,12 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
     new Date(slot.date).toDateString() === selectedDate.toDateString()
   ).sort((a, b) => a.start_time.localeCompare(b.start_time));
 
-  // Convertir le temps en minutes depuis minuit
+  // Convertir le temps en minutes depuis minuit (supporte HH:MM et HH:MM:SS)
   const timeToMinutes = (time: string): number => {
-    const [hours, minutes] = time.split(':').map(Number);
+    const parts = time.split(':');
+    const hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+    // Ignore les secondes si présentes
     return hours * 60 + minutes;
   };
 
@@ -46,49 +49,91 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
     return `${hours}h ${minutes}min`;
   };
 
-  // Calculer dynamiquement les heures de début et fin en fonction des créneaux
-  const getTimeRange = () => {
-    if (daySlots.length === 0) {
-      return { startHour: 8, endHour: 20 };
-    }
-    
-    const times = daySlots.flatMap(slot => [
-      timeToMinutes(slot.start_time),
-      timeToMinutes(slot.end_time)
-    ]);
-    
-    const minMinutes = Math.min(...times);
-    const maxMinutes = Math.max(...times);
-    
-    // Arrondir au début de l'heure précédente et à la fin de l'heure suivante
-    const startHour = Math.floor(minMinutes / 60);
-    const endHour = Math.ceil(maxMinutes / 60);
-    
-    return { startHour, endHour };
-  };
-
-  const { startHour, endHour } = getTimeRange();
+  // Plage horaire étendue: 7h à 22h (au lieu de 8h-20h)
+  const START_HOUR = 7;
+  const END_HOUR = 22;
   
-  // Générer les créneaux horaires dynamiquement
+  // Générer les créneaux horaires
   const timeSlots = Array.from(
-    { length: endHour - startHour + 1 },
+    { length: END_HOUR - START_HOUR + 1 },
     (_, i) => {
-      const hour = startHour + i;
+      const hour = START_HOUR + i;
       return `${hour.toString().padStart(2, '0')}:00`;
     }
   );
+
+  // Détecter les chevauchements entre créneaux
+  const detectOverlaps = (slots: ScheduleSlot[]) => {
+    const overlapMap = new Map<string, { column: number; totalColumns: number }>();
+    const sortedSlots = [...slots].sort((a, b) => a.start_time.localeCompare(b.start_time));
+    
+    const columns: ScheduleSlot[][] = [];
+    
+    sortedSlots.forEach(slot => {
+      const slotStart = timeToMinutes(slot.start_time);
+      const slotEnd = timeToMinutes(slot.end_time);
+      
+      // Trouver une colonne libre pour ce slot
+      let placedInColumn = -1;
+      for (let i = 0; i < columns.length; i++) {
+        const columnSlots = columns[i];
+        const hasOverlap = columnSlots.some(existingSlot => {
+          const existingStart = timeToMinutes(existingSlot.start_time);
+          const existingEnd = timeToMinutes(existingSlot.end_time);
+          return slotStart < existingEnd && slotEnd > existingStart;
+        });
+        
+        if (!hasOverlap) {
+          columns[i].push(slot);
+          placedInColumn = i;
+          break;
+        }
+      }
+      
+      // Si aucune colonne libre, créer une nouvelle colonne
+      if (placedInColumn === -1) {
+        columns.push([slot]);
+        placedInColumn = columns.length - 1;
+      }
+      
+      // Calculer le nombre total de colonnes nécessaires pour ce slot
+      const totalColumns = columns.filter(col => 
+        col.some(s => {
+          const sStart = timeToMinutes(s.start_time);
+          const sEnd = timeToMinutes(s.end_time);
+          return slotStart < sEnd && slotEnd > sStart;
+        })
+      ).length;
+      
+      overlapMap.set(slot.id, { column: placedInColumn, totalColumns });
+    });
+    
+    return overlapMap;
+  };
+
+  const overlapMap = detectOverlaps(daySlots);
 
   // Calculer la position et hauteur d'un créneau
   const getSlotPosition = (slot: ScheduleSlot) => {
     const startMinutes = timeToMinutes(slot.start_time);
     const endMinutes = timeToMinutes(slot.end_time);
-    const baseMinutes = startHour * 60; // Début de la journée
+    const baseMinutes = START_HOUR * 60; // Début de la journée à 7h
     
     const HOUR_HEIGHT = 80; // Hauteur d'une heure en pixels
-    const top = ((startMinutes - baseMinutes) / 60) * HOUR_HEIGHT;
-    const height = ((endMinutes - startMinutes) / 60) * HOUR_HEIGHT;
     
-    return { top, height };
+    // Limiter l'affichage à la plage horaire visible
+    const visibleStartMinutes = Math.max(startMinutes, baseMinutes);
+    const visibleEndMinutes = Math.min(endMinutes, END_HOUR * 60);
+    
+    const top = ((visibleStartMinutes - baseMinutes) / 60) * HOUR_HEIGHT;
+    const height = ((visibleEndMinutes - visibleStartMinutes) / 60) * HOUR_HEIGHT;
+    
+    // Log pour déboggage
+    if (startMinutes < baseMinutes || endMinutes > END_HOUR * 60) {
+      console.log(`Cours partiellement hors grille: ${slot.start_time}-${slot.end_time}`, slot);
+    }
+    
+    return { top, height: Math.max(height, 60) }; // Hauteur minimum 60px
   };
 
   return (
@@ -153,19 +198,30 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                     />
                   ))}
                   
-                  {/* Créneaux de cours positionnés absolument */}
+                  {/* Créneaux de cours positionnés absolument avec gestion des chevauchements */}
                   {daySlots.map((slot, index) => {
                     const { top, height } = getSlotPosition(slot);
                     const duration = formatDuration(slot);
                     const durationMinutes = timeToMinutes(slot.end_time) - timeToMinutes(slot.start_time);
                     
+                    // Récupérer les infos de chevauchement
+                    const overlapInfo = overlapMap.get(slot.id);
+                    const column = overlapInfo?.column ?? 0;
+                    const totalColumns = overlapInfo?.totalColumns ?? 1;
+                    
+                    // Calculer la largeur et la position en fonction des chevauchements
+                    const widthPercent = 100 / totalColumns;
+                    const leftPercent = (column * 100) / totalColumns;
+                    
                     return (
                       <div
                         key={slot.id || index}
-                        className="absolute left-3 right-3 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden group"
+                        className="absolute rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden group"
                         style={{ 
                           top: `${top}px`,
                           height: `${height}px`,
+                          left: `calc(${leftPercent}% + 12px)`,
+                          width: `calc(${widthPercent}% - ${totalColumns > 1 ? '16px' : '24px'})`,
                           backgroundColor: slot.color || '#3B82F6',
                           minHeight: '60px'
                         }}
