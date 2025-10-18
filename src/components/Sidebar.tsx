@@ -154,11 +154,11 @@ const Sidebar = () => {
       <SidebarHeader className="p-6">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-primary-foreground rounded-lg flex items-center justify-center flex-shrink-0">
-            <span className="text-primary font-bold text-lg">NF</span>
+            <span className="text-primary font-bold text-lg">N</span>
           </div>
           {!collapsed && (
             <div>
-              <h1 className="text-xl font-bold text-primary-foreground">NECTFORIA</h1>
+              <h1 className="text-xl font-bold text-primary-foreground">NECTFY</h1>
             </div>
           )}
         </div>

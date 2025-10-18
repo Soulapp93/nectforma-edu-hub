@@ -3,7 +3,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* NectForia Design System - Production-ready unified theme */
+/* NECTFY Design System - Production-ready unified theme */
 
 @layer base {
   :root {
@@ -50,7 +50,7 @@
     --info-foreground: 210 40% 98%;
     --info-muted: 217 91% 95%;
 
-    /* Enhanced Custom NectForia colors */
+    /* Enhanced Custom NECTFY colors */
     --nect-purple-from: 262 83% 58%;
     --nect-purple-to: 280 75% 65%;
     --nect-purple-light: 262 83% 90%;
