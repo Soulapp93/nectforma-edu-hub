@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Search, Filter, Upload, Download, MoreVertical, Edit, Trash2, Mail, X, ChevronDown } from 'lucide-react';
+import { Plus, Search, Filter, Upload, Download, MoreVertical, Edit, Trash2, Mail, X, ChevronDown, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -17,6 +17,7 @@ import UserDetailModal from './UserDetailModal';
 import ExcelImport from './ExcelImport';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const EnhancedUsersList: React.FC = () => {
   const { users, loading, error, createUser, updateUser, deleteUser, bulkCreateUsers } = useUsers();
@@ -128,6 +129,21 @@ const EnhancedUsersList: React.FC = () => {
     console.log(`Renvoyer l'invitation à ${email}`);
   };
 
+  const handleResetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+      
+      if (error) throw error;
+      
+      toast.success(`Lien de réinitialisation envoyé à ${email}`);
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi du lien:', error);
+      toast.error('Erreur lors de l\'envoi du lien de réinitialisation');
+    }
+  };
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedUsers(filteredUsers.map(user => user.id!));
@@ -180,6 +196,13 @@ const EnhancedUsersList: React.FC = () => {
       
       case 'send-email':
         toast.info('Fonctionnalité d\'envoi d\'email en cours de développement');
+        break;
+      
+      case 'reset-password':
+        for (const user of selectedUserData) {
+          await handleResetPassword(user.email);
+        }
+        toast.success(`Lien de réinitialisation envoyé à ${selectedUsers.length} utilisateur(s)`);
         break;
       
       case 'export':
@@ -271,13 +294,14 @@ const EnhancedUsersList: React.FC = () => {
                     {bulkAction === 'deactivate' && 'Désactiver les utilisateurs'}
                     {bulkAction === 'change-role' && 'Modifier le rôle'}
                     {bulkAction === 'send-email' && 'Envoyer un email'}
+                    {bulkAction === 'reset-password' && 'Réinitialiser mot de passe'}
                     {bulkAction === 'export' && 'Exporter la sélection'}
                     {bulkAction === 'delete' && 'Supprimer les utilisateurs'}
                     {!bulkAction && 'Choisir une action'}
                     <ChevronDown className="h-4 w-4 ml-2" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[200px]">
+                <DropdownMenuContent align="end" className="w-[240px]">
                   <DropdownMenuItem onClick={() => setBulkAction('activate')}>
                     Activer les utilisateurs
                   </DropdownMenuItem>
@@ -289,6 +313,9 @@ const EnhancedUsersList: React.FC = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setBulkAction('send-email')}>
                     Envoyer un email
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setBulkAction('reset-password')}>
+                    Réinitialiser mot de passe
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setBulkAction('export')}>
                     Exporter la sélection
@@ -536,6 +563,7 @@ const EnhancedUsersList: React.FC = () => {
                           variant="outline"
                           onClick={() => sendInvitation(user.email)}
                           className="h-8 w-8 p-0"
+                          title="Renvoyer l'invitation"
                         >
                           <Mail className="h-4 w-4" />
                         </Button>
@@ -543,8 +571,18 @@ const EnhancedUsersList: React.FC = () => {
                       <Button
                         size="sm"
                         variant="outline"
+                        onClick={() => handleResetPassword(user.email)}
+                        className="h-8 w-8 p-0"
+                        title="Réinitialiser le mot de passe"
+                      >
+                        <KeyRound className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
                         onClick={() => handleEditUser(user)}
                         className="h-8 w-8 p-0"
+                        title="Modifier l'utilisateur"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
