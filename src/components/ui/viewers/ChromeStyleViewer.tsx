@@ -3,7 +3,6 @@ import { X, ZoomIn, ZoomOut, Download, Maximize2, Minimize2, RotateCw, Menu, Che
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import OfficeViewer from './OfficeViewer';
 
 // Configuration de PDF.js
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -105,15 +104,13 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
     return filename.split('.').pop()?.toLowerCase() || '';
   };
 
-  const getFileType = (extension: string): 'pdf' | 'image' | 'video' | 'office' | 'other' => {
+  const getFileType = (extension: string): 'pdf' | 'image' | 'video' | 'other' => {
     const imageFormats = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp', 'ico'];
     const videoFormats = ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'flv', 'wmv'];
-    const officeFormats = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods', 'odp'];
 
     if (extension === 'pdf') return 'pdf';
     if (imageFormats.includes(extension)) return 'image';
     if (videoFormats.includes(extension)) return 'video';
-    if (officeFormats.includes(extension)) return 'office';
     return 'other';
   };
 
@@ -393,18 +390,6 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
     );
   };
 
-  const renderOfficeViewer = () => {
-    return (
-      <div className="flex-1 overflow-hidden">
-        <OfficeViewer
-          fileUrl={fileUrl}
-          fileName={fileName}
-          fileExtension={fileExtension}
-        />
-      </div>
-    );
-  };
-
   const renderOtherViewer = () => {
     return (
       <div className="flex-1 bg-[#525659] relative">
@@ -445,8 +430,6 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
         return renderImageViewer();
       case 'video':
         return renderVideoViewer();
-      case 'office':
-        return renderOfficeViewer();
       default:
         return renderOtherViewer();
     }

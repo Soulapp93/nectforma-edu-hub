@@ -19,11 +19,9 @@ import TextBookDetail from './pages/TextBookDetail';
 import TextBookByFormation from './pages/TextBookByFormation';
 import SuiviEmargement from './pages/SuiviEmargement';
 import EmploiTemps from './pages/EmploiTemps';
-import ScheduleEditor from './pages/ScheduleEditor';
 import Messagerie from './pages/Messagerie';
 import Emargement from './pages/Emargement';
 import EmargementQR from './pages/EmargementQR';
-import AttendanceImprovements from './pages/AttendanceImprovements';
 import GestionEtablissement from './pages/GestionEtablissement';
 import Compte from './pages/Compte';
 import NotFound from './pages/NotFound';
@@ -123,12 +121,9 @@ const AppContent = () => {
               <Route path="/cahier-texte/formation/:formationId" element={<ProtectedRoute><TextBookByFormation /></ProtectedRoute>} />
               <Route path="/suivi-emargement" element={<ProtectedRoute><SuiviEmargement /></ProtectedRoute>} />
               <Route path="/emploi-temps" element={<ProtectedRoute><EmploiTemps /></ProtectedRoute>} />
-              <Route path="/emploi-temps/edit/:scheduleId" element={<ProtectedRoute><ScheduleEditor /></ProtectedRoute>} />
-              <Route path="/emploi-temps/view/:scheduleId" element={<ProtectedRoute><ScheduleEditor /></ProtectedRoute>} />
               <Route path="/messagerie" element={<ProtectedRoute><Messagerie /></ProtectedRoute>} />
               <Route path="/emargement" element={<ProtectedRoute><Emargement /></ProtectedRoute>} />
               <Route path="/emargement-qr" element={<ProtectedRoute><EmargementQR /></ProtectedRoute>} />
-              <Route path="/emargement/ameliorations" element={<ProtectedRoute><AttendanceImprovements /></ProtectedRoute>} />
               <Route path="/gestion-etablissement" element={<ProtectedRoute><GestionEtablissement /></ProtectedRoute>} />
               <Route path="/compte" element={<ProtectedRoute><Compte /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />

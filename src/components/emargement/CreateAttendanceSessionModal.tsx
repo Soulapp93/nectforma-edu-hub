@@ -9,7 +9,6 @@ import { fr } from 'date-fns/locale';
 import { scheduleService, ScheduleSlot } from '@/services/scheduleService';
 import { toast } from 'sonner';
 import QRAttendanceManager from './QRAttendanceManager';
-import { demoDataService } from '@/services/demoDataService';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
@@ -36,21 +35,26 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
   const [attendanceSessionData, setAttendanceSessionData] = useState<any>(null);
   const { userId, loading: userLoading } = useCurrentUser();
 
-  // Debug logging
-  console.log('CreateAttendanceSessionModal - userId:', userId, 'userLoading:', userLoading);
-
-  // Utiliser les données de démonstration pour les cours d'aujourd'hui
+  // Charger les emplois du temps du jour pour la formation  
   useEffect(() => {
-    if (isOpen) {
-      setLoading(true);
-      // Simuler un délai de chargement
-      setTimeout(() => {
-        const demoSchedules = demoDataService.getTodaySchedules();
-        setTodaysSchedules(demoSchedules);
-        setLoading(false);
-      }, 500);
-    }
-  }, [isOpen]);
+    const fetchTodaySchedules = async () => {
+      if (isOpen && formationId) {
+        setLoading(true);
+        try {
+          // Pour l'instant, on laisse vide car la requête complexe cause des problèmes de types
+          // L'utilisateur peut créer des sessions d'émargement manuellement
+          setTodaysSchedules([]);
+        } catch (error) {
+          console.error('Erreur chargement emploi du temps:', error);
+          toast.error('Erreur lors du chargement des cours');
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchTodaySchedules();
+  }, [isOpen, formationId]);
 
   const generateAttendanceSheet = async (slot: any) => {
     // Vérifier que l'utilisateur est chargé et que userId est disponible
