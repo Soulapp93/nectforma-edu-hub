@@ -75,6 +75,58 @@ export const moduleService = {
     return module;
   },
 
+  async updateModule(moduleId: string, moduleData: { title: string; description?: string; order_index: number }, instructorIds: string[]) {
+    // Mettre à jour le module
+    const { error: moduleError } = await supabase
+      .from('formation_modules')
+      .update({
+        title: moduleData.title,
+        description: moduleData.description,
+        order_index: moduleData.order_index
+      })
+      .eq('id', moduleId);
+
+    if (moduleError) throw moduleError;
+
+    // Supprimer les anciennes assignations de formateurs
+    const { error: deleteError } = await supabase
+      .from('module_instructors')
+      .delete()
+      .eq('module_id', moduleId);
+
+    if (deleteError) throw deleteError;
+
+    // Ajouter les nouvelles assignations de formateurs
+    if (instructorIds.length > 0) {
+      const assignments = instructorIds.map(instructorId => ({
+        module_id: moduleId,
+        instructor_id: instructorId
+      }));
+
+      const { error: assignmentError } = await supabase
+        .from('module_instructors')
+        .insert(assignments);
+
+      if (assignmentError) throw assignmentError;
+    }
+  },
+
+  async deleteModule(moduleId: string) {
+    // Supprimer d'abord les assignations de formateurs
+    await supabase
+      .from('module_instructors')
+      .delete()
+      .eq('module_id', moduleId);
+
+    // Supprimer le module
+    const { error } = await supabase
+      .from('formation_modules')
+      .delete()
+      .eq('id', moduleId);
+
+    if (error) throw error;
+  },
+
   async getInstructors() {
     const { data, error } = await supabase
       .from('users')

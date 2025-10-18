@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, BookOpen, Calendar, Save } from 'lucide-react';
+import { X, BookOpen, Calendar, Save, Plus } from 'lucide-react';
 import ColorPalette from './ColorPalette';
+import ModuleForm, { ModuleFormData } from './ModuleForm';
 import { formationService, Formation } from '@/services/formationService';
+import { moduleService } from '@/services/moduleService';
+import { toast } from 'sonner';
 
 interface EditFormationModalProps {
   isOpen: boolean;
@@ -38,6 +41,8 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
     duration: 0
   });
 
+  const [modules, setModules] = useState<ModuleFormData[]>([]);
+  const [existingModules, setExistingModules] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(false);
@@ -66,6 +71,18 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
         color: formation.color || '#8B5CF6',
         duration: formation.duration
       });
+
+      // Charger les modules existants
+      const formationModules = await moduleService.getFormationModules(formationId);
+      setExistingModules(formationModules || []);
+      
+      // Convertir en format ModuleFormData pour l'édition
+      const modulesData = formationModules.map((mod: any) => ({
+        title: mod.title,
+        description: mod.description || '',
+        instructorIds: mod.module_instructors?.map((mi: any) => mi.instructor_id) || []
+      }));
+      setModules(modulesData);
     } catch (error) {
       console.error('Erreur lors du chargement de la formation:', error);
       setError('Erreur lors du chargement de la formation');
@@ -91,6 +108,22 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
     if (error) setError(null);
   };
 
+  const addModule = () => {
+    setModules(prev => [...prev, {
+      title: '',
+      description: '',
+      instructorIds: []
+    }]);
+  };
+
+  const updateModule = (index: number, moduleData: ModuleFormData) => {
+    setModules(prev => prev.map((module, i) => i === index ? moduleData : module));
+  };
+
+  const removeModule = (index: number) => {
+    setModules(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formationId) return;
@@ -106,7 +139,42 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
       }
 
       await formationService.updateFormation(formationId, formData);
-      
+
+      // Supprimer les modules existants qui ne sont plus dans la liste
+      for (const existingModule of existingModules) {
+        const stillExists = modules.some((_, idx) => existingModules[idx]?.id === existingModule.id);
+        if (!stillExists) {
+          await moduleService.deleteModule(existingModule.id);
+        }
+      }
+
+      // Créer ou mettre à jour les modules
+      for (let i = 0; i < modules.length; i++) {
+        const module = modules[i];
+        if (module.title.trim()) {
+          const existingModule = existingModules[i];
+          
+          if (existingModule) {
+            // Mettre à jour le module existant
+            await moduleService.updateModule(existingModule.id, {
+              title: module.title,
+              description: module.description,
+              order_index: i
+            }, module.instructorIds);
+          } else {
+            // Créer un nouveau module
+            await moduleService.createModule({
+              formation_id: formationId,
+              title: module.title,
+              description: module.description,
+              duration_hours: 0,
+              order_index: i
+            }, module.instructorIds);
+          }
+        }
+      }
+
+      toast.success('Formation et modules mis à jour avec succès');
       onSuccess();
       onClose();
       
@@ -258,6 +326,43 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Modules */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Modules de formation ({modules.length})
+                </h3>
+                <button
+                  type="button"
+                  onClick={addModule}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center text-sm"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Ajouter un module
+                </button>
+              </div>
+
+              {modules.length === 0 ? (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                  <BookOpen className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-500">Aucun module ajouté</p>
+                  <p className="text-sm text-gray-400">Les modules peuvent être ajoutés maintenant ou plus tard</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {modules.map((module, index) => (
+                    <ModuleForm
+                      key={index}
+                      moduleIndex={index}
+                      initialData={module}
+                      onAdd={(moduleData) => updateModule(index, moduleData)}
+                      onRemove={() => removeModule(index)}
+                    />
+                  ))}
+                </div>
+              )}  
             </div>
 
             <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">

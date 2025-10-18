@@ -13,15 +13,25 @@ interface ModuleFormProps {
   onAdd: (module: ModuleFormData) => void;
   onRemove: () => void;
   moduleIndex: number;
+  initialData?: ModuleFormData;
 }
 
-const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex }) => {
+const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex, initialData }) => {
   const { instructors } = useInstructors();
-  const [formData, setFormData] = useState<ModuleFormData>({
-    title: '',
-    description: '',
-    instructorIds: []
-  });
+  const [formData, setFormData] = useState<ModuleFormData>(
+    initialData || {
+      title: '',
+      description: '',
+      instructorIds: []
+    }
+  );
+
+  // Mettre à jour le formData si initialData change (pour l'édition)
+  React.useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+    }
+  }, [initialData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
