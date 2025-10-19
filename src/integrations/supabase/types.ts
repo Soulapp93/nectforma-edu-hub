@@ -1998,6 +1998,10 @@ export type Database = {
         Args: { sheet_date: string; start_time: string }
         Returns: boolean
       }
+      is_current_user_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       validate_qr_code: {
         Args: { code_param: string }
         Returns: {
