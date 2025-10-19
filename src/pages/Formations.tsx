@@ -124,15 +124,6 @@ const Formations = () => {
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-3">Formations</h1>
           <p className="text-base sm:text-lg text-gray-600">Découvrez notre catalogue de formations</p>
         </div>
-        {isAdmin && (
-          <button 
-            onClick={handleCreateFormation}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl flex items-center font-medium text-base shadow-md hover:shadow-lg transition-all w-full sm:w-auto justify-center"
-          >
-            <Plus className="h-5 w-5 mr-2" />
-            Nouvelle formation
-          </button>
-        )}
       </div>
 
       {/* Filters */}
@@ -190,17 +181,9 @@ const Formations = () => {
             <p className="text-base sm:text-lg text-gray-600 mb-6">
               {searchTerm || selectedLevel !== 'all' || selectedStatus !== 'all'
                 ? 'Essayez de modifier vos critères de recherche.'
-                : 'Créez votre première formation pour enrichir votre catalogue.'
+                : 'Aucune formation disponible pour le moment.'
               }
             </p>
-            {isAdmin && (!searchTerm && selectedLevel === 'all' && selectedStatus === 'all') && (
-              <button 
-                onClick={handleCreateFormation}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-xl font-medium text-base shadow-md hover:shadow-lg transition-all"
-              >
-                Créer une formation
-              </button>
-            )}
           </div>
         </div>
       ) : (
