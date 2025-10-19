@@ -27,6 +27,11 @@ import Compte from './pages/Compte';
 import NotFound from './pages/NotFound';
 import Auth from './pages/Auth';
 import Index from './pages/Index';
+import Solutions from './pages/Solutions';
+import Fonctionnalites from './pages/Fonctionnalites';
+import PourquoiNous from './pages/PourquoiNous';
+import CGU from './pages/CGU';
+import PolitiqueConfidentialite from './pages/PolitiqueConfidentialite';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -128,6 +133,11 @@ const AppContent = () => {
               <Route path="/emargement-qr" element={<ProtectedRoute><EmargementQR /></ProtectedRoute>} />
               <Route path="/gestion-etablissement" element={<ProtectedRoute><GestionEtablissement /></ProtectedRoute>} />
               <Route path="/compte" element={<ProtectedRoute><Compte /></ProtectedRoute>} />
+              <Route path="/solutions" element={<ProtectedRoute><Solutions /></ProtectedRoute>} />
+              <Route path="/fonctionnalites" element={<ProtectedRoute><Fonctionnalites /></ProtectedRoute>} />
+              <Route path="/pourquoi-nous" element={<ProtectedRoute><PourquoiNous /></ProtectedRoute>} />
+              <Route path="/cgu" element={<ProtectedRoute><CGU /></ProtectedRoute>} />
+              <Route path="/politique-confidentialite" element={<ProtectedRoute><PolitiqueConfidentialite /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
