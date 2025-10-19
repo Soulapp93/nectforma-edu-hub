@@ -15,6 +15,7 @@ import { User, CreateUserData } from '@/services/userService';
 import SimplifiedUserModal from './SimplifiedUserModal';
 import UserDetailModal from './UserDetailModal';
 import ExcelImport from './ExcelImport';
+import { SeedUsersButton } from './SeedUsersButton';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -378,6 +379,7 @@ const EnhancedUsersList: React.FC = () => {
               <Upload className="h-4 w-4" />
               Importer Étudiants
             </Button>
+            <SeedUsersButton onUsersCreated={() => window.location.reload()} />
             <Button
               onClick={handleCreateAdmin}
               variant="elegant"
