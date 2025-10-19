@@ -7,6 +7,7 @@ export interface ModuleFormData {
   title: string;
   description: string;
   instructorIds: string[];
+  duration_hours: number;
 }
 
 interface ModuleFormProps {
@@ -22,7 +23,8 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex, i
     initialData || {
       title: '',
       description: '',
-      instructorIds: []
+      instructorIds: [],
+      duration_hours: 0
     }
   );
 
@@ -90,6 +92,20 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex, i
             value={formData.description}
             onChange={handleChange}
             rows={2}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Durée du module (nombre d'heures)
+          </label>
+          <input
+            type="number"
+            name="duration_hours"
+            value={formData.duration_hours}
+            onChange={handleChange}
+            min="0"
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
         </div>

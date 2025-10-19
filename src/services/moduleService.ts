@@ -75,14 +75,15 @@ export const moduleService = {
     return module;
   },
 
-  async updateModule(moduleId: string, moduleData: { title: string; description?: string; order_index: number }, instructorIds: string[]) {
+  async updateModule(moduleId: string, moduleData: { title: string; description?: string; order_index: number; duration_hours?: number }, instructorIds: string[]) {
     // Mettre à jour le module
     const { error: moduleError } = await supabase
       .from('formation_modules')
       .update({
         title: moduleData.title,
         description: moduleData.description,
-        order_index: moduleData.order_index
+        order_index: moduleData.order_index,
+        duration_hours: moduleData.duration_hours
       })
       .eq('id', moduleId);
 

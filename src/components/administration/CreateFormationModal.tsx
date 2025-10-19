@@ -21,6 +21,7 @@ interface FormationFormData {
   end_date: string;
   status: string;
   color: string;
+  duration: number;
 }
 
 const CreateFormationModal: React.FC<CreateFormationModalProps> = ({ 
@@ -35,7 +36,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
     start_date: '',
     end_date: '',
     status: 'Actif',
-    color: '#8B5CF6'
+    color: '#8B5CF6',
+    duration: 0
   });
 
   const [modules, setModules] = useState<ModuleFormData[]>([]);
@@ -63,7 +65,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
     setModules(prev => [...prev, {
       title: '',
       description: '',
-      instructorIds: []
+      instructorIds: [],
+      duration_hours: 0
     }]);
   };
 
@@ -99,7 +102,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         ...formData,
         start_date: formData.start_date || defaultStartDate.toISOString().split('T')[0],
         end_date: formData.end_date || defaultEndDate.toISOString().split('T')[0],
-        duration: 0,
+        duration: formData.duration || 0,
         max_students: 25,
         price: 0,
         establishment_id: establishment.id
@@ -118,7 +121,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
             formation_id: formation.id,
             title: module.title,
             description: module.description,
-            duration_hours: 0,
+            duration_hours: module.duration_hours || 0,
             order_index: i
           }, module.instructorIds);
         }
@@ -136,7 +139,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         start_date: '',
         end_date: '',
         status: 'Actif',
-        color: '#8B5CF6'
+        color: '#8B5CF6',
+        duration: 0
       });
       setModules([]);
       
@@ -261,6 +265,20 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
                 <p className="text-xs text-gray-500 mt-1">Si vide, une date dans un an sera utilisée</p>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Durée de la formation (nombre d'heures)
+                </label>
+                <input
+                  type="number"
+                  name="duration"
+                  value={formData.duration}
+                  onChange={handleChange}
+                  min="0"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
               </div>
 
               <div className="md:col-span-2">

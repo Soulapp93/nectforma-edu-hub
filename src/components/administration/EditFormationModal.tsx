@@ -80,7 +80,8 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
       const modulesData = formationModules.map((mod: any) => ({
         title: mod.title,
         description: mod.description || '',
-        instructorIds: mod.module_instructors?.map((mi: any) => mi.instructor_id) || []
+        instructorIds: mod.module_instructors?.map((mi: any) => mi.instructor_id) || [],
+        duration_hours: mod.duration_hours || 0
       }));
       setModules(modulesData);
     } catch (error) {
@@ -112,7 +113,8 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
     setModules(prev => [...prev, {
       title: '',
       description: '',
-      instructorIds: []
+      instructorIds: [],
+      duration_hours: 0
     }]);
   };
 
@@ -159,7 +161,8 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
             await moduleService.updateModule(existingModule.id, {
               title: module.title,
               description: module.description,
-              order_index: i
+              order_index: i,
+              duration_hours: module.duration_hours || 0
             }, module.instructorIds);
           } else {
             // Créer un nouveau module
@@ -167,7 +170,7 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
               formation_id: formationId,
               title: module.title,
               description: module.description,
-              duration_hours: 0,
+              duration_hours: module.duration_hours || 0,
               order_index: i
             }, module.instructorIds);
           }
