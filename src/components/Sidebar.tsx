@@ -13,7 +13,8 @@ import {
   Building,
   ChevronDown,
   ChevronRight,
-  Clock
+  Clock,
+  UsersRound
 } from 'lucide-react';
 import {
   Sidebar as SidebarWrapper,
@@ -105,6 +106,7 @@ const Sidebar = () => {
     { name: 'Formation', href: '/formations', icon: BookOpen },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
     { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
+    { name: 'Groupes', href: '/groupes', icon: UsersRound },
     { name: 'Gestion du compte', href: '/gestion-etablissement', icon: Building },
     { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
@@ -116,6 +118,7 @@ const Sidebar = () => {
     { name: 'Formation', href: '/formations', icon: BookOpen },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
     { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
+    { name: 'Groupes', href: '/groupes', icon: UsersRound },
     { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
 
@@ -133,6 +136,7 @@ const Sidebar = () => {
     { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
     { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
+    { name: 'Groupes', href: '/groupes', icon: UsersRound },
     { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
 

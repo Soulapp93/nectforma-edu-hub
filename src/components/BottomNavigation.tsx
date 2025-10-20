@@ -10,7 +10,8 @@ import {
   Settings,
   ClipboardCheck,
   Building,
-  Clock
+  Clock,
+  UsersRound
 } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
@@ -63,8 +64,8 @@ const BottomNavigation = () => {
   const limitedNavigation: NavItem[] = [
     { name: 'Formation', href: '/formations', icon: BookOpen, label: 'Formation' },
     { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck, label: 'Suivi' },
-    { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar, label: 'Emploi du temps' },
-    { name: 'Messagerie', href: '/messagerie', icon: MessageSquare, label: 'Messages' },
+    { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar, label: 'EDT' },
+    { name: 'Groupes', href: '/groupes', icon: UsersRound, label: 'Groupes' },
     { name: 'Mon Profil', href: '/compte', icon: Settings, label: 'Compte' },
   ];
 

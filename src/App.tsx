@@ -21,6 +21,7 @@ import TextBookByFormation from './pages/TextBookByFormation';
 import SuiviEmargement from './pages/SuiviEmargement';
 import EmploiTemps from './pages/EmploiTemps';
 import Messagerie from './pages/Messagerie';
+import Groupes from './pages/Groupes';
 import Emargement from './pages/Emargement';
 import EmargementQR from './pages/EmargementQR';
 import GestionEtablissement from './pages/GestionEtablissement';
@@ -130,6 +131,7 @@ const AppContent = () => {
               <Route path="/emploi-temps/view/:scheduleId" element={<ProtectedRoute><EmploiTemps /></ProtectedRoute>} />
               <Route path="/emploi-temps/edit/:scheduleId" element={<ProtectedRoute><EmploiTemps /></ProtectedRoute>} />
               <Route path="/messagerie" element={<ProtectedRoute><Messagerie /></ProtectedRoute>} />
+              <Route path="/groupes" element={<ProtectedRoute><Groupes /></ProtectedRoute>} />
               <Route path="/emargement" element={<ProtectedRoute><Emargement /></ProtectedRoute>} />
               <Route path="/emargement-qr" element={<ProtectedRoute><EmargementQR /></ProtectedRoute>} />
               <Route path="/gestion-etablissement" element={<ProtectedRoute><GestionEtablissement /></ProtectedRoute>} />
