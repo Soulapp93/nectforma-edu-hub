@@ -11,6 +11,7 @@ import Sidebar from './components/Sidebar';
 import BottomNavigation from './components/BottomNavigation';
 import NotificationBell from './components/NotificationBell';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
 import Dashboard from './pages/Dashboard';
 import Administration from './pages/Administration';
 import Formations from './pages/Formations';
@@ -53,7 +54,7 @@ const AppContent = () => {
   const isMobile = useIsMobile();
   
   // Déterminer si on peut revenir en arrière
-  const canGoBack = location.pathname !== '/dashboard' && location.pathname !== '/';
+  const canGoBack = location.pathname !== '/dashboard' && location.pathname !== '/' && location.pathname !== '/formations';
 
   if (isAuthPage) {
     return (
@@ -118,7 +119,7 @@ const AppContent = () => {
           
           <main className="flex-1 overflow-auto bg-gray-50 pb-20 md:pb-0">
             <Routes>
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><AdminRoute><Dashboard /></AdminRoute></ProtectedRoute>} />
               <Route path="/administration" element={<ProtectedRoute><Administration /></ProtectedRoute>} />
               <Route path="/formations" element={<ProtectedRoute><Formations /></ProtectedRoute>} />
               <Route path="/formations/:formationId" element={<ProtectedRoute><FormationDetail /></ProtectedRoute>} />

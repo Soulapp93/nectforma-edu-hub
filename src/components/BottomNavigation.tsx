@@ -24,6 +24,15 @@ interface NavItem {
 const BottomNavigation = () => {
   const { userRole } = useCurrentUser();
 
+  // Vérifier s'il y a un utilisateur démo
+  const demoUser = sessionStorage.getItem('demo_user');
+  let effectiveRole = userRole;
+
+  if (demoUser) {
+    const userData = JSON.parse(demoUser);
+    effectiveRole = userData.role;
+  }
+
   // Navigation pour AdminPrincipal
   const principalAdminNavigation: NavItem[] = [
     { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard, label: 'Tableau de bord' },
@@ -60,11 +69,11 @@ const BottomNavigation = () => {
   ];
 
   // Sélectionner la navigation selon le rôle
-  const navigation = userRole === 'AdminPrincipal' 
+  const navigation = effectiveRole === 'AdminPrincipal' 
     ? principalAdminNavigation 
-    : userRole === 'Admin' 
+    : effectiveRole === 'Admin' 
     ? adminNavigation 
-    : userRole === 'Tuteur'
+    : effectiveRole === 'Tuteur'
     ? tutorNavigation
     : limitedNavigation;
 

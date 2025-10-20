@@ -100,7 +100,7 @@ const Sidebar = () => {
   
   // Navigation pour AdminPrincipal uniquement (avec gestion établissement et profil séparés)
   const principalAdminNavigation: NavigationItem[] = [
-    { name: 'Tableau de bord', href: '/', icon: LayoutDashboard },
+    { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Administration', href: '/administration', icon: Users, subItems: administrationSubItems },
     { name: 'Formation', href: '/formations', icon: BookOpen },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
@@ -111,7 +111,7 @@ const Sidebar = () => {
 
   // Navigation pour Admin (avec profil au lieu de gestion du compte - sans suivi émargement)
   const adminNavigation: NavigationItem[] = [
-    { name: 'Tableau de bord', href: '/', icon: LayoutDashboard },
+    { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Administration', href: '/administration', icon: Users, subItems: administrationSubItems },
     { name: 'Formation', href: '/formations', icon: BookOpen },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
@@ -260,7 +260,7 @@ const Sidebar = () => {
                     <SidebarMenuButton asChild>
                       <NavLink
                         to={item.href}
-                        end={item.href === '/'}
+                        end={item.href === '/' || item.href === '/dashboard'}
                         className={({ isActive }) =>
                           `flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                             isActive
