@@ -51,12 +51,27 @@ const Groupes = () => {
               Communiquez avec vos collègues et étudiants
             </p>
           </div>
-          {userRole === 'Étudiant' && (
-            <Button onClick={() => setIsCreateModalOpen(true)} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Créer un groupe
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => {
+                const establishmentGroup = groups.find(g => g.group_type === 'establishment');
+                if (establishmentGroup) {
+                  setSelectedGroupId(establishmentGroup.id);
+                }
+              }}
+              variant="outline"
+              className="gap-2"
+            >
+              <UsersIcon className="h-4 w-4" />
+              Groupe établissement
             </Button>
-          )}
+            {(userRole === 'Étudiant' || userRole === 'Formateur') && (
+              <Button onClick={() => setIsCreateModalOpen(true)} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Créer un groupe privé
+              </Button>
+            )}
+          </div>
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
