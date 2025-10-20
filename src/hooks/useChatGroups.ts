@@ -1,0 +1,152 @@
+import { useState, useEffect } from 'react';
+import { chatService, ChatGroup, ChatMessage } from '@/services/chatService';
+import { useToast } from './use-toast';
+
+export const useChatGroups = () => {
+  const [groups, setGroups] = useState<ChatGroup[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const fetchGroups = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await chatService.getUserGroups();
+      setGroups(data);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erreur lors du chargement des groupes';
+      setError(message);
+      toast({
+        title: "Erreur",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchGroups();
+  }, []);
+
+  const createGroup = async (groupData: {
+    name: string;
+    description?: string;
+    formation_id?: string;
+    member_ids: string[];
+  }) => {
+    try {
+      const newGroup = await chatService.createGroup(groupData);
+      await fetchGroups();
+      toast({
+        title: "Succès",
+        description: "Groupe créé avec succès",
+      });
+      return newGroup;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erreur lors de la création du groupe';
+      toast({
+        title: "Erreur",
+        description: message,
+        variant: "destructive",
+      });
+      throw err;
+    }
+  };
+
+  const leaveGroup = async (groupId: string) => {
+    try {
+      await chatService.leaveGroup(groupId);
+      await fetchGroups();
+      toast({
+        title: "Succès",
+        description: "Vous avez quitté le groupe",
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erreur lors de la sortie du groupe';
+      toast({
+        title: "Erreur",
+        description: message,
+        variant: "destructive",
+      });
+      throw err;
+    }
+  };
+
+  return {
+    groups,
+    loading,
+    error,
+    refetch: fetchGroups,
+    createGroup,
+    leaveGroup,
+  };
+};
+
+export const useChatMessages = (groupId: string | null) => {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (!groupId) {
+      setMessages([]);
+      return;
+    }
+
+    const fetchMessages = async () => {
+      try {
+        setLoading(true);
+        const data = await chatService.getGroupMessages(groupId);
+        setMessages(data);
+        // Mark as read
+        await chatService.updateLastRead(groupId);
+      } catch (err) {
+        console.error('Error loading messages:', err);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les messages",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMessages();
+
+    // Subscribe to new messages
+    const channel = chatService.subscribeToMessages(groupId, (newMessage) => {
+      setMessages(prev => [...prev, newMessage]);
+      // Mark as read if user is viewing this chat
+      chatService.updateLastRead(groupId);
+    });
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [groupId]);
+
+  const sendMessage = async (content: string) => {
+    if (!groupId || !content.trim()) return;
+
+    try {
+      await chatService.sendMessage(groupId, content);
+    } catch (err) {
+      console.error('Error sending message:', err);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'envoyer le message",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return {
+    messages,
+    loading,
+    sendMessage,
+  };
+};
