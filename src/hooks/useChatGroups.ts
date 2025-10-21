@@ -132,11 +132,11 @@ export const useChatMessages = (groupId: string | null) => {
     };
   }, [groupId]);
 
-  const sendMessage = async (content: string) => {
+  const sendMessage = async (content: string, repliedToMessageId?: string | null) => {
     if (!groupId || !content.trim()) return;
 
     try {
-      await chatService.sendMessage(groupId, content);
+      await chatService.sendMessage(groupId, content, repliedToMessageId);
     } catch (err) {
       console.error('Error sending message:', err);
       toast({
@@ -147,9 +147,33 @@ export const useChatMessages = (groupId: string | null) => {
     }
   };
 
+  const deleteMessage = async (messageId: string) => {
+    try {
+      await chatService.deleteMessage(messageId);
+      // Update messages list locally
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, is_deleted: true, content: 'Message supprimé' }
+          : msg
+      ));
+      toast({
+        title: "Succès",
+        description: "Message supprimé",
+      });
+    } catch (err) {
+      console.error('Error deleting message:', err);
+      toast({
+        title: "Erreur",
+        description: err instanceof Error ? err.message : "Impossible de supprimer le message",
+        variant: "destructive",
+      });
+    }
+  };
+
   return {
     messages,
     loading,
     sendMessage,
+    deleteMessage,
   };
 };

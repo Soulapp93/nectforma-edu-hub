@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, X, FileText, Image as ImageIcon, File } from 'lucide-react';
+import { Send, Paperclip, X, FileText, Image as ImageIcon, File, Reply, Trash2, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useChatMessages } from '@/hooks/useChatGroups';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { formatDistanceToNow } from 'date-fns';
@@ -11,6 +12,7 @@ import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { chatService } from '@/services/chatService';
 import { useToast } from '@/hooks/use-toast';
+import type { ChatMessage } from '@/services/chatService';
 
 interface ChatRoomProps {
   groupId: string;
@@ -21,7 +23,8 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
   const [messageText, setMessageText] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
-  const { messages, loading, sendMessage } = useChatMessages(groupId);
+  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
+  const { messages, loading, sendMessage, deleteMessage } = useChatMessages(groupId);
   const { userId } = useCurrentUser();
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -48,9 +51,13 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
     try {
       setUploading(true);
       
-      // Send the text message first
+      // Send the text message with optional reply
       if (messageText.trim()) {
-        const message = await chatService.sendMessage(groupId, messageText);
+        const message = await chatService.sendMessage(
+          groupId, 
+          messageText,
+          replyingTo?.id || null
+        );
         
         // Upload attachments if any
         if (selectedFiles.length > 0) {
@@ -62,6 +69,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
       
       setMessageText('');
       setSelectedFiles([]);
+      setReplyingTo(null);
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -71,6 +79,17 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
       });
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleReply = (message: ChatMessage) => {
+    setReplyingTo(message);
+    textareaRef.current?.focus();
+  };
+
+  const handleDelete = async (messageId: string) => {
+    if (deleteMessage) {
+      await deleteMessage(messageId);
     }
   };
 
@@ -136,7 +155,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
                 <div
                   key={message.id}
                   className={cn(
-                    'flex gap-3 animate-fade-in',
+                    'flex gap-3 animate-fade-in group',
                     isOwnMessage && 'flex-row-reverse'
                   )}
                 >
@@ -147,7 +166,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
 
                   <div
                     className={cn(
-                      'flex flex-col max-w-[75%]',
+                      'flex flex-col max-w-[75%] relative',
                       isOwnMessage && 'items-end'
                     )}
                   >
@@ -163,18 +182,64 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
                       </span>
                     </div>
 
-                    <div className="flex flex-col gap-2">
-                      <div
-                        className={cn(
-                          'rounded-2xl px-4 py-2.5 shadow-sm',
-                          isOwnMessage
-                            ? 'bg-primary text-primary-foreground rounded-tr-sm'
-                            : 'bg-card text-foreground border border-border/50 rounded-tl-sm'
-                        )}
-                      >
-                        <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
-                          {message.content}
-                        </p>
+                    <div className="flex flex-col gap-2 relative">
+                      {/* Reply Preview */}
+                      {message.replied_to_message && (
+                        <div className={cn(
+                          "text-xs px-3 py-1.5 rounded-lg border-l-2 bg-muted/50",
+                          isOwnMessage ? "border-primary-foreground/30" : "border-primary/30"
+                        )}>
+                          <p className="font-medium text-muted-foreground">
+                            {message.replied_to_message.sender?.first_name || 'Utilisateur'}
+                          </p>
+                          <p className="text-muted-foreground/80 truncate">
+                            {message.replied_to_message.content.substring(0, 50)}
+                            {message.replied_to_message.content.length > 50 && '...'}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="flex items-start gap-2">
+                        <div
+                          className={cn(
+                            'rounded-2xl px-4 py-2.5 shadow-sm flex-1',
+                            isOwnMessage
+                              ? 'bg-primary text-primary-foreground rounded-tr-sm'
+                              : 'bg-card text-foreground border border-border/50 rounded-tl-sm'
+                          )}
+                        >
+                          <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
+                            {message.content}
+                          </p>
+                        </div>
+
+                        {/* Message Actions */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align={isOwnMessage ? "end" : "start"}>
+                            <DropdownMenuItem onClick={() => handleReply(message)}>
+                              <Reply className="h-4 w-4 mr-2" />
+                              Répondre
+                            </DropdownMenuItem>
+                            {isOwnMessage && (
+                              <DropdownMenuItem 
+                                onClick={() => handleDelete(message.id)}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Supprimer
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
 
                       {/* Attachments */}
@@ -217,6 +282,29 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
 
       {/* Input */}
       <div className="border-t border-border/50 p-4 bg-card/50 backdrop-blur-sm">
+        {/* Reply Preview */}
+        {replyingTo && (
+          <div className="mb-3 flex items-start gap-2 bg-muted/50 px-3 py-2 rounded-lg border-l-2 border-primary">
+            <Reply className="h-4 w-4 mt-0.5 text-primary" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-foreground">
+                Répondre à {replyingTo.sender?.first_name || 'Utilisateur'}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {replyingTo.content}
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => setReplyingTo(null)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+
         {/* Selected Files Preview */}
         {selectedFiles.length > 0 && (
           <div className="mb-3 flex flex-wrap gap-2">

@@ -78,6 +78,7 @@ export interface ChatMessage {
   created_at: string;
   updated_at: string;
   is_deleted: boolean;
+  replied_to_message_id?: string | null;
   sender?: {
     id: string;
     first_name: string;
@@ -86,6 +87,15 @@ export interface ChatMessage {
     role: string;
   };
   attachments?: ChatMessageAttachment[];
+  replied_to_message?: {
+    id: string;
+    content: string;
+    sender?: {
+      id: string;
+      first_name: string;
+      last_name: string;
+    };
+  };
 }
 
 export interface ChatMessageAttachment {
@@ -227,8 +237,13 @@ export const chatService = {
       .from('chat_messages')
       .select(`
         *,
-        sender:users(id, first_name, last_name, profile_photo_url, role),
-        attachments:chat_message_attachments(*)
+        sender:users!chat_messages_sender_id_fkey(id, first_name, last_name, profile_photo_url, role),
+        attachments:chat_message_attachments(*),
+        replied_to_message:chat_messages!chat_messages_replied_to_message_id_fkey(
+          id,
+          content,
+          sender:users!chat_messages_sender_id_fkey(id, first_name, last_name)
+        )
       `)
       .eq('group_id', groupId)
       .eq('is_deleted', false)
@@ -236,11 +251,18 @@ export const chatService = {
       .limit(limit);
 
     if (error) throw error;
-    return ((data || []) as ChatMessage[]).reverse();
+    
+    // Transform data to match interface
+    const transformedData = (data || []).map((msg: any) => ({
+      ...msg,
+      replied_to_message: msg.replied_to_message?.[0] || null,
+    }));
+    
+    return transformedData.reverse();
   },
 
   // Send a message
-  async sendMessage(groupId: string, content: string): Promise<ChatMessage> {
+  async sendMessage(groupId: string, content: string, repliedToMessageId?: string | null): Promise<ChatMessage> {
     const userId = await getCurrentUserId();
 
     const { data, error } = await supabase
@@ -250,10 +272,16 @@ export const chatService = {
         sender_id: userId,
         content,
         message_type: 'text' as const,
+        replied_to_message_id: repliedToMessageId,
       })
       .select(`
         *,
-        sender:users(id, first_name, last_name, profile_photo_url, role)
+        sender:users!chat_messages_sender_id_fkey(id, first_name, last_name, profile_photo_url, role),
+        replied_to_message:chat_messages!chat_messages_replied_to_message_id_fkey(
+          id,
+          content,
+          sender:users!chat_messages_sender_id_fkey(id, first_name, last_name)
+        )
       `)
       .single();
 
@@ -265,7 +293,36 @@ export const chatService = {
       .update({ updated_at: new Date().toISOString() })
       .eq('id', groupId);
 
-    return data as ChatMessage;
+    // Transform data to match interface
+    const transformedData = {
+      ...data,
+      replied_to_message: (data as any).replied_to_message?.[0] || null,
+    };
+
+    return transformedData as ChatMessage;
+  },
+
+  // Delete a message
+  async deleteMessage(messageId: string): Promise<void> {
+    const userId = await getCurrentUserId();
+
+    // Verify the user owns this message
+    const { data: message } = await supabase
+      .from('chat_messages')
+      .select('sender_id')
+      .eq('id', messageId)
+      .single();
+
+    if (!message || message.sender_id !== userId) {
+      throw new Error('Vous ne pouvez supprimer que vos propres messages');
+    }
+
+    const { error } = await supabase
+      .from('chat_messages')
+      .update({ is_deleted: true, content: 'Message supprimé' })
+      .eq('id', messageId);
+
+    if (error) throw error;
   },
 
   // Upload attachment
@@ -335,14 +392,57 @@ export const chatService = {
             .from('chat_messages')
             .select(`
               *,
-              sender:users(id, first_name, last_name, profile_photo_url, role),
-              attachments:chat_message_attachments(*)
+              sender:users!chat_messages_sender_id_fkey(id, first_name, last_name, profile_photo_url, role),
+              attachments:chat_message_attachments(*),
+              replied_to_message:chat_messages!chat_messages_replied_to_message_id_fkey(
+                id,
+                content,
+                sender:users!chat_messages_sender_id_fkey(id, first_name, last_name)
+              )
             `)
             .eq('id', payload.new.id)
             .single();
 
           if (data) {
-            callback(data as ChatMessage);
+            const transformedData = {
+              ...data,
+              replied_to_message: (data as any).replied_to_message?.[0] || null,
+            };
+            callback(transformedData as ChatMessage);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'chat_messages',
+          filter: `group_id=eq.${groupId}`,
+        },
+        async (payload) => {
+          // Fetch the updated message
+          const { data } = await supabase
+            .from('chat_messages')
+            .select(`
+              *,
+              sender:users!chat_messages_sender_id_fkey(id, first_name, last_name, profile_photo_url, role),
+              attachments:chat_message_attachments(*),
+              replied_to_message:chat_messages!chat_messages_replied_to_message_id_fkey(
+                id,
+                content,
+                sender:users!chat_messages_sender_id_fkey(id, first_name, last_name)
+              )
+            `)
+            .eq('id', payload.new.id)
+            .single();
+
+          if (data) {
+            const transformedData = {
+              ...data,
+              replied_to_message: (data as any).replied_to_message?.[0] || null,
+            };
+            callback(transformedData as ChatMessage);
           }
         }
       )

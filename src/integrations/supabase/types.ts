@@ -501,6 +501,7 @@ export type Database = {
           id: string
           is_deleted: boolean | null
           message_type: string
+          replied_to_message_id: string | null
           sender_id: string
           updated_at: string | null
         }
@@ -511,6 +512,7 @@ export type Database = {
           id?: string
           is_deleted?: boolean | null
           message_type?: string
+          replied_to_message_id?: string | null
           sender_id: string
           updated_at?: string | null
         }
@@ -521,6 +523,7 @@ export type Database = {
           id?: string
           is_deleted?: boolean | null
           message_type?: string
+          replied_to_message_id?: string | null
           sender_id?: string
           updated_at?: string | null
         }
@@ -530,6 +533,13 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "chat_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_replied_to_message_id_fkey"
+            columns: ["replied_to_message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
             referencedColumns: ["id"]
           },
           {
