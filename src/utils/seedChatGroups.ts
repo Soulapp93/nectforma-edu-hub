@@ -23,13 +23,6 @@ export const seedChatGroups = async () => {
 
     if (!allUsers || allUsers.length === 0) throw new Error('No users found');
 
-    // Get formations
-    const { data: formations } = await supabase
-      .from('formations')
-      .select('id, title')
-      .eq('establishment_id', currentUser.establishment_id)
-      .limit(3);
-
     // Create establishment group if it doesn't exist
     const { data: existingEstablishmentGroup } = await supabase
       .from('chat_groups')
@@ -65,111 +58,15 @@ export const seedChatGroups = async () => {
       }));
 
       await supabase.from('chat_group_members').insert(establishmentMembers);
+    } else {
+      // Delete existing messages to reseed
+      await supabase
+        .from('chat_messages')
+        .delete()
+        .eq('group_id', establishmentGroupId);
     }
 
-    // Create formation groups
-    if (formations && formations.length > 0) {
-      for (const formation of formations) {
-        const { data: existingFormationGroup } = await supabase
-          .from('chat_groups')
-          .select('id')
-          .eq('formation_id', formation.id)
-          .eq('group_type', 'formation')
-          .single();
-
-        if (!existingFormationGroup) {
-          const { data: formationGroup, error: formationGroupError } = await supabase
-            .from('chat_groups')
-            .insert({
-              name: `Groupe ${formation.title}`,
-              description: `Discussion pour la formation ${formation.title}`,
-              group_type: 'formation',
-              formation_id: formation.id,
-              establishment_id: currentUser.establishment_id,
-              created_by: currentUser.id,
-              is_active: true,
-            })
-            .select()
-            .single();
-
-          if (formationGroupError) throw formationGroupError;
-
-          // Get students in this formation
-          const { data: formationStudents } = await supabase
-            .from('user_formation_assignments')
-            .select('user_id')
-            .eq('formation_id', formation.id);
-
-          if (formationStudents && formationStudents.length > 0) {
-            const formationMembers = formationStudents.map(fs => ({
-              group_id: formationGroup.id,
-              user_id: fs.user_id,
-              role: 'member',
-            }));
-
-            await supabase.from('chat_group_members').insert(formationMembers);
-          }
-        }
-      }
-    }
-
-    // Create private groups
-    const privateGroupsData = [
-      {
-        name: 'Équipe Projet A',
-        description: 'Discussion pour le projet A',
-        members: allUsers.slice(0, Math.min(4, allUsers.length)),
-      },
-      {
-        name: 'Groupe d\'étude',
-        description: 'Entraide pour les devoirs',
-        members: allUsers.slice(0, Math.min(5, allUsers.length)),
-      },
-    ];
-
-    for (const groupData of privateGroupsData) {
-      const { data: privateGroup, error: privateGroupError } = await supabase
-        .from('chat_groups')
-        .insert({
-          name: groupData.name,
-          description: groupData.description,
-          group_type: 'private',
-          establishment_id: currentUser.establishment_id,
-          created_by: currentUser.id,
-          is_active: true,
-        })
-        .select()
-        .single();
-
-      if (privateGroupError) throw privateGroupError;
-
-      const privateMembers = groupData.members.map(member => ({
-        group_id: privateGroup.id,
-        user_id: member.id,
-        role: member.id === currentUser.id ? 'admin' : 'member',
-      }));
-
-      await supabase.from('chat_group_members').insert(privateMembers);
-
-      // Add sample messages
-      const sampleMessages = [
-        { content: 'Bonjour à tous ! 👋', sender_id: groupData.members[0].id },
-        { content: 'Salut ! Comment allez-vous ?', sender_id: groupData.members[1]?.id || currentUser.id },
-        { content: 'Très bien merci ! On commence quand ?', sender_id: groupData.members[2]?.id || currentUser.id },
-        { content: 'Je propose demain matin', sender_id: currentUser.id },
-      ];
-
-      for (const msg of sampleMessages) {
-        await supabase.from('chat_messages').insert({
-          group_id: privateGroup.id,
-          sender_id: msg.sender_id,
-          content: msg.content,
-          message_type: 'text',
-        });
-      }
-    }
-
-    // Add messages to establishment group
+    // Add messages to establishment group with realistic timestamps
     const establishmentMessages = [
       { content: 'Bonjour à tous ! 👋 Bienvenue dans notre groupe d\'établissement', sender_id: currentUser.id, delay: 0 },
       { content: 'Salut ! Super d\'avoir ce groupe pour communiquer ensemble', sender_id: allUsers[1]?.id || currentUser.id, delay: 120000 },
@@ -207,7 +104,7 @@ export const seedChatGroups = async () => {
       });
     }
 
-    console.log('✅ Chat groups seeded successfully');
+    console.log('✅ Groupe établissement créé avec succès');
     return { success: true };
   } catch (error) {
     console.error('❌ Error seeding chat groups:', error);
