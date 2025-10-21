@@ -2222,6 +2222,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_group_member: {
+        Args: { _group_id: string; _user_id: string }
+        Returns: boolean
+      }
       validate_qr_code: {
         Args: { code_param: string }
         Returns: {
