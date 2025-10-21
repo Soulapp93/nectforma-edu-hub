@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { MessageCircle, Users as UsersIcon } from 'lucide-react';
 import { useChatGroups } from '@/hooks/useChatGroups';
 import ChatRoom from '@/components/chat/ChatRoom';
-import SeedGroupsButton from '@/components/chat/SeedGroupsButton';
 
 const Groupes = () => {
   const { groups, loading } = useChatGroups();
@@ -50,10 +49,9 @@ const Groupes = () => {
               <h3 className="text-xl font-semibold mb-2">
                 Aucun groupe établissement
               </h3>
-              <p className="text-muted-foreground mb-4">
+              <p className="text-muted-foreground">
                 Le groupe établissement n'a pas encore été créé
               </p>
-              <SeedGroupsButton />
             </div>
           </div>
         )}
