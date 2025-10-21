@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, X, FileText, Image as ImageIcon, File, Reply, Trash2, MoreVertical } from 'lucide-react';
+import { Send, Paperclip, X, FileText, Image as ImageIcon, File, Reply, Trash2, MoreVertical, Download, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { chatService } from '@/services/chatService';
 import { useToast } from '@/hooks/use-toast';
 import type { ChatMessage } from '@/services/chatService';
+import FileViewerModal from './FileViewerModal';
 
 interface ChatRoomProps {
   groupId: string;
@@ -24,6 +25,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
+  const [viewerFile, setViewerFile] = useState<{ url: string; name: string } | null>(null);
   const { messages, loading, sendMessage, deleteMessage } = useChatMessages(groupId);
   const { userId } = useCurrentUser();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -51,43 +53,41 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
     try {
       setUploading(true);
       
-      // If only files without text
-      if (!messageText.trim() && selectedFiles.length > 0) {
+      // Determine message content
+      let content = messageText.trim();
+      if (!content && selectedFiles.length > 0) {
+        // If only files, create a descriptive message
         const fileNames = selectedFiles.map(f => f.name).join(', ');
-        const message = await chatService.sendMessage(
-          groupId, 
-          `📎 ${fileNames}`,
-          replyingTo?.id || null
+        content = `📎 ${fileNames}`;
+      }
+      
+      // Send the message
+      const message = await chatService.sendMessage(
+        groupId, 
+        content,
+        replyingTo?.id || null
+      );
+      
+      // Upload all attachments
+      if (selectedFiles.length > 0) {
+        await Promise.all(
+          selectedFiles.map(file => chatService.uploadAttachment(message.id, file))
         );
-        
-        // Upload attachments
-        for (const file of selectedFiles) {
-          await chatService.uploadAttachment(message.id, file);
-        }
-      } else {
-        // Send the text message with optional reply
-        const message = await chatService.sendMessage(
-          groupId, 
-          messageText,
-          replyingTo?.id || null
-        );
-        
-        // Upload attachments if any
-        if (selectedFiles.length > 0) {
-          for (const file of selectedFiles) {
-            await chatService.uploadAttachment(message.id, file);
-          }
-        }
       }
       
       setMessageText('');
       setSelectedFiles([]);
       setReplyingTo(null);
+      
+      toast({
+        title: "Message envoyé",
+        description: selectedFiles.length > 0 ? `${selectedFiles.length} fichier(s) joint(s)` : undefined,
+      });
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
         title: "Erreur",
-        description: "Impossible d'envoyer le message",
+        description: error instanceof Error ? error.message : "Impossible d'envoyer le message",
         variant: "destructive",
       });
     } finally {
@@ -123,6 +123,36 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
 
   const isImage = (contentType: string) => contentType.startsWith('image/');
   const isPDF = (contentType: string) => contentType.includes('pdf');
+  
+  const handleDownloadFile = async (fileUrl: string, fileName: string) => {
+    try {
+      const response = await fetch(fileUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast({
+        title: "Téléchargement démarré",
+        description: fileName,
+      });
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de télécharger le fichier",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleViewFile = (fileUrl: string, fileName: string) => {
+    setViewerFile({ url: fileUrl, name: fileName });
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -271,38 +301,50 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
                             // Image preview
                             if (isImage(contentType)) {
                               return (
-                                <a
+                                <div
                                   key={attachment.id}
-                                  href={attachment.file_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="relative group rounded-xl overflow-hidden max-w-[300px] cursor-pointer"
+                                  className="relative group rounded-xl overflow-hidden max-w-[300px]"
                                 >
                                   <img 
                                     src={attachment.file_url} 
                                     alt={attachment.file_name}
-                                    className="w-full h-auto rounded-xl shadow-md hover:opacity-95 transition-opacity"
+                                    className="w-full h-auto rounded-xl shadow-md"
                                     loading="lazy"
                                   />
-                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-xl" />
-                                </a>
+                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors rounded-xl flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                                    <Button
+                                      size="sm"
+                                      variant="secondary"
+                                      className="h-8 w-8 p-0 rounded-full"
+                                      onClick={() => handleViewFile(attachment.file_url, attachment.file_name)}
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="secondary"
+                                      className="h-8 w-8 p-0 rounded-full"
+                                      onClick={() => handleDownloadFile(attachment.file_url, attachment.file_name)}
+                                    >
+                                      <Download className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
                               );
                             }
                             
                             // PDF preview
                             if (isPDF(contentType)) {
                               return (
-                                <a
+                                <div
                                   key={attachment.id}
-                                  href={attachment.file_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
                                   className={cn(
-                                    'flex items-center gap-3 px-4 py-3 rounded-xl hover:opacity-90 transition-all shadow-sm border-l-4',
+                                    'flex items-center gap-3 px-4 py-3 rounded-xl transition-all shadow-sm border-l-4 cursor-pointer group',
                                     isOwnMessage
-                                      ? 'bg-primary/80 text-primary-foreground border-primary-foreground/30'
-                                      : 'bg-card text-foreground border-primary/50'
+                                      ? 'bg-primary/80 text-primary-foreground border-primary-foreground/30 hover:bg-primary/90'
+                                      : 'bg-card text-foreground border-primary/50 hover:bg-card/80'
                                   )}
+                                  onClick={() => handleViewFile(attachment.file_url, attachment.file_name)}
                                 >
                                   <div className={cn(
                                     "p-2 rounded-lg",
@@ -320,23 +362,32 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
                                       </p>
                                     )}
                                   </div>
-                                </a>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDownloadFile(attachment.file_url, attachment.file_name);
+                                    }}
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               );
                             }
                             
                             // Other files
                             return (
-                              <a
+                              <div
                                 key={attachment.id}
-                                href={attachment.file_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
                                 className={cn(
-                                  'flex items-center gap-3 px-4 py-3 rounded-xl hover:opacity-90 transition-all shadow-sm',
+                                  'flex items-center gap-3 px-4 py-3 rounded-xl transition-all shadow-sm cursor-pointer group',
                                   isOwnMessage
-                                    ? 'bg-primary/80 text-primary-foreground'
-                                    : 'bg-card/80 text-foreground border border-border/50'
+                                    ? 'bg-primary/80 text-primary-foreground hover:bg-primary/90'
+                                    : 'bg-card/80 text-foreground border border-border/50 hover:bg-card'
                                 )}
+                                onClick={() => handleViewFile(attachment.file_url, attachment.file_name)}
                               >
                                 <div className={cn(
                                   "p-2 rounded-lg",
@@ -354,7 +405,18 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
                                     </p>
                                   )}
                                 </div>
-                              </a>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDownloadFile(attachment.file_url, attachment.file_name);
+                                  }}
+                                >
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                              </div>
                             );
                           })}
                         </div>
@@ -481,6 +543,16 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
           </Button>
         </div>
       </div>
+
+      {/* File Viewer Modal */}
+      {viewerFile && (
+        <FileViewerModal
+          isOpen={!!viewerFile}
+          onClose={() => setViewerFile(null)}
+          fileUrl={viewerFile.url}
+          fileName={viewerFile.name}
+        />
+      )}
     </div>
   );
 };
