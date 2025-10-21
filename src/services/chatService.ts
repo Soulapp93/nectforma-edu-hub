@@ -1,5 +1,32 @@
 import { supabase } from '@/integrations/supabase/client';
 
+// Helper function to get current user ID (supports demo mode)
+const getCurrentUserId = async (): Promise<string> => {
+  // Check for demo user first
+  const demoUser = sessionStorage.getItem('demo_user');
+  
+  if (demoUser) {
+    const userData = JSON.parse(demoUser);
+    let userId = userData.id;
+    // Convert demo IDs to valid UUIDs
+    if (userId === 'demo-adminprincipal') {
+      userId = '00000000-0000-4000-8000-000000000001';
+    } else if (userId === 'demo-student') {
+      userId = '00000000-0000-4000-8000-000000000002';
+    } else if (userId === 'demo-formateur' || userId === 'demo-instructor') {
+      userId = '00000000-0000-4000-8000-000000000003';
+    }
+    return userId;
+  }
+  
+  // Otherwise use Supabase auth
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+  return user.id;
+};
+
 export interface ChatGroup {
   id: string;
   establishment_id: string;
@@ -66,19 +93,14 @@ export interface ChatMessageAttachment {
 export const chatService = {
   // Get all groups for current user
   async getUserGroups(): Promise<ChatGroup[]> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.log('❌ User not authenticated');
-      throw new Error('User not authenticated');
-    }
-
-    console.log('✅ User authenticated:', user.id);
+    const userId = await getCurrentUserId();
+    console.log('✅ Getting groups for user:', userId);
 
     // First, get the group IDs the user is a member of
     const { data: memberData, error: memberError } = await supabase
       .from('chat_group_members')
       .select('group_id')
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (memberError) {
       console.error('❌ Error fetching memberships:', memberError);
@@ -145,14 +167,13 @@ export const chatService = {
     formation_id?: string;
     member_ids: string[];
   }): Promise<ChatGroup> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    const userId = await getCurrentUserId();
 
     // Get user's establishment
     const { data: userData } = await supabase
       .from('users')
       .select('establishment_id')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single();
 
     if (!userData) throw new Error('User data not found');
@@ -166,7 +187,7 @@ export const chatService = {
         name: groupData.name,
         description: groupData.description || null,
         group_type: 'private',
-        created_by: user.id,
+        created_by: userId,
       })
       .select()
       .single();
@@ -175,7 +196,7 @@ export const chatService = {
 
     // Add members including creator as admin
     const members = [
-      { group_id: group.id, user_id: user.id, role: 'admin' as const },
+      { group_id: group.id, user_id: userId, role: 'admin' as const },
       ...groupData.member_ids.map(userId => ({
         group_id: group.id,
         user_id: userId,
@@ -212,14 +233,13 @@ export const chatService = {
 
   // Send a message
   async sendMessage(groupId: string, content: string): Promise<ChatMessage> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    const userId = await getCurrentUserId();
 
     const { data, error } = await supabase
       .from('chat_messages')
       .insert({
         group_id: groupId,
-        sender_id: user.id,
+        sender_id: userId,
         content,
         message_type: 'text' as const,
       })
@@ -273,16 +293,20 @@ export const chatService = {
 
   // Update last read timestamp
   async updateLastRead(groupId: string): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    try {
+      const userId = await getCurrentUserId();
+      
+      const { error } = await supabase
+        .from('chat_group_members')
+        .update({ last_read_at: new Date().toISOString() })
+        .eq('group_id', groupId)
+        .eq('user_id', userId);
 
-    const { error } = await supabase
-      .from('chat_group_members')
-      .update({ last_read_at: new Date().toISOString() })
-      .eq('group_id', groupId)
-      .eq('user_id', user.id);
-
-    if (error) throw error;
+      if (error) throw error;
+    } catch (error) {
+      // Silently fail if user is not authenticated
+      console.warn('Could not update last read:', error);
+    }
   },
 
   // Subscribe to new messages
@@ -321,14 +345,13 @@ export const chatService = {
 
   // Leave group
   async leaveGroup(groupId: string): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    const userId = await getCurrentUserId();
 
     const { error } = await supabase
       .from('chat_group_members')
       .delete()
       .eq('group_id', groupId)
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (error) throw error;
   },
