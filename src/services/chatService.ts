@@ -237,13 +237,8 @@ export const chatService = {
       .from('chat_messages')
       .select(`
         *,
-        sender:users!chat_messages_sender_id_fkey(id, first_name, last_name, profile_photo_url, role),
-        attachments:chat_message_attachments(*),
-        replied_to_message:chat_messages!chat_messages_replied_to_message_id_fkey(
-          id,
-          content,
-          sender:users!chat_messages_sender_id_fkey(id, first_name, last_name)
-        )
+        sender:users(id, first_name, last_name, profile_photo_url, role),
+        attachments:chat_message_attachments(*)
       `)
       .eq('group_id', groupId)
       .eq('is_deleted', false)
@@ -252,13 +247,30 @@ export const chatService = {
 
     if (error) throw error;
     
-    // Transform data to match interface
-    const transformedData = (data || []).map((msg: any) => ({
-      ...msg,
-      replied_to_message: msg.replied_to_message?.[0] || null,
-    }));
+    // Fetch replied messages separately if needed
+    const messagesWithReplies = await Promise.all(
+      (data || []).map(async (msg: any) => {
+        if (msg.replied_to_message_id) {
+          const { data: repliedMsg } = await supabase
+            .from('chat_messages')
+            .select(`
+              id,
+              content,
+              sender:users(id, first_name, last_name)
+            `)
+            .eq('id', msg.replied_to_message_id)
+            .single();
+          
+          return {
+            ...msg,
+            replied_to_message: repliedMsg || null,
+          };
+        }
+        return msg;
+      })
+    );
     
-    return transformedData.reverse();
+    return messagesWithReplies.reverse();
   },
 
   // Send a message
@@ -276,16 +288,27 @@ export const chatService = {
       })
       .select(`
         *,
-        sender:users!chat_messages_sender_id_fkey(id, first_name, last_name, profile_photo_url, role),
-        replied_to_message:chat_messages!chat_messages_replied_to_message_id_fkey(
-          id,
-          content,
-          sender:users!chat_messages_sender_id_fkey(id, first_name, last_name)
-        )
+        sender:users(id, first_name, last_name, profile_photo_url, role)
       `)
       .single();
 
     if (error) throw error;
+
+    // Fetch replied message if exists
+    let repliedMessage = null;
+    if (repliedToMessageId) {
+      const { data: repliedMsg } = await supabase
+        .from('chat_messages')
+        .select(`
+          id,
+          content,
+          sender:users(id, first_name, last_name)
+        `)
+        .eq('id', repliedToMessageId)
+        .single();
+      
+      repliedMessage = repliedMsg;
+    }
 
     // Update group updated_at
     await supabase
@@ -293,13 +316,10 @@ export const chatService = {
       .update({ updated_at: new Date().toISOString() })
       .eq('id', groupId);
 
-    // Transform data to match interface
-    const transformedData = {
+    return {
       ...data,
-      replied_to_message: (data as any).replied_to_message?.[0] || null,
-    };
-
-    return transformedData as ChatMessage;
+      replied_to_message: repliedMessage,
+    } as ChatMessage;
   },
 
   // Delete a message
@@ -392,23 +412,33 @@ export const chatService = {
             .from('chat_messages')
             .select(`
               *,
-              sender:users!chat_messages_sender_id_fkey(id, first_name, last_name, profile_photo_url, role),
-              attachments:chat_message_attachments(*),
-              replied_to_message:chat_messages!chat_messages_replied_to_message_id_fkey(
-                id,
-                content,
-                sender:users!chat_messages_sender_id_fkey(id, first_name, last_name)
-              )
+              sender:users(id, first_name, last_name, profile_photo_url, role),
+              attachments:chat_message_attachments(*)
             `)
             .eq('id', payload.new.id)
             .single();
 
           if (data) {
-            const transformedData = {
+            // Fetch replied message if exists
+            let repliedMessage = null;
+            if ((data as any).replied_to_message_id) {
+              const { data: repliedMsg } = await supabase
+                .from('chat_messages')
+                .select(`
+                  id,
+                  content,
+                  sender:users(id, first_name, last_name)
+                `)
+                .eq('id', (data as any).replied_to_message_id)
+                .single();
+              
+              repliedMessage = repliedMsg;
+            }
+
+            callback({
               ...data,
-              replied_to_message: (data as any).replied_to_message?.[0] || null,
-            };
-            callback(transformedData as ChatMessage);
+              replied_to_message: repliedMessage,
+            } as ChatMessage);
           }
         }
       )
@@ -426,23 +456,33 @@ export const chatService = {
             .from('chat_messages')
             .select(`
               *,
-              sender:users!chat_messages_sender_id_fkey(id, first_name, last_name, profile_photo_url, role),
-              attachments:chat_message_attachments(*),
-              replied_to_message:chat_messages!chat_messages_replied_to_message_id_fkey(
-                id,
-                content,
-                sender:users!chat_messages_sender_id_fkey(id, first_name, last_name)
-              )
+              sender:users(id, first_name, last_name, profile_photo_url, role),
+              attachments:chat_message_attachments(*)
             `)
             .eq('id', payload.new.id)
             .single();
 
           if (data) {
-            const transformedData = {
+            // Fetch replied message if exists
+            let repliedMessage = null;
+            if ((data as any).replied_to_message_id) {
+              const { data: repliedMsg } = await supabase
+                .from('chat_messages')
+                .select(`
+                  id,
+                  content,
+                  sender:users(id, first_name, last_name)
+                `)
+                .eq('id', (data as any).replied_to_message_id)
+                .single();
+              
+              repliedMessage = repliedMsg;
+            }
+
+            callback({
               ...data,
-              replied_to_message: (data as any).replied_to_message?.[0] || null,
-            };
-            callback(transformedData as ChatMessage);
+              replied_to_message: repliedMessage,
+            } as ChatMessage);
           }
         }
       )
