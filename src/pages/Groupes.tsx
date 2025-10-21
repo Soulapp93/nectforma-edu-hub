@@ -6,6 +6,7 @@ import { useChatGroups } from '@/hooks/useChatGroups';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import ChatRoom from '@/components/chat/ChatRoom';
 import CreateGroupModal from '@/components/chat/CreateGroupModal';
+import SeedGroupsButton from '@/components/chat/SeedGroupsButton';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
@@ -51,7 +52,8 @@ const Groupes = () => {
               Communiquez avec vos collègues et étudiants
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <SeedGroupsButton />
             <Button 
               onClick={() => {
                 const establishmentGroup = groups.find(g => g.group_type === 'establishment');
