@@ -7,10 +7,12 @@ const Groupes = () => {
   const { groups, loading } = useChatGroups();
   const establishmentGroup = groups.find(g => g.group_type === 'establishment');
 
+  console.log('📍 Groupes page - loading:', loading, 'groups:', groups.length, 'establishment group:', establishmentGroup);
+
   // Sélectionner automatiquement le groupe établissement quand il est disponible
   useEffect(() => {
     if (establishmentGroup && !loading) {
-      // Le groupe est automatiquement affiché
+      console.log('✅ Establishment group found:', establishmentGroup);
     }
   }, [establishmentGroup, loading]);
 

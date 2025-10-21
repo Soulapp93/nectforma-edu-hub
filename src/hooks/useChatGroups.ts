@@ -10,12 +10,15 @@ export const useChatGroups = () => {
 
   const fetchGroups = async () => {
     try {
+      console.log('🔄 Fetching chat groups...');
       setLoading(true);
       setError(null);
       const data = await chatService.getUserGroups();
+      console.log('✅ Chat groups fetched:', data.length, 'groups');
       setGroups(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur lors du chargement des groupes';
+      console.error('❌ Error fetching chat groups:', err);
       setError(message);
       toast({
         title: "Erreur",
