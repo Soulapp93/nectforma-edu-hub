@@ -203,9 +203,11 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
                         <div
                           className={cn(
                             'rounded-2xl px-4 py-2.5 shadow-sm flex-1',
-                            isOwnMessage
-                              ? 'bg-primary text-primary-foreground rounded-tr-sm'
-                              : 'bg-card text-foreground border border-border/50 rounded-tl-sm'
+                            message.is_deleted 
+                              ? 'bg-muted text-muted-foreground italic'
+                              : isOwnMessage
+                                ? 'bg-primary text-primary-foreground rounded-tr-sm'
+                                : 'bg-card text-foreground border border-border/50 rounded-tl-sm'
                           )}
                         >
                           <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
@@ -214,32 +216,34 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
                         </div>
 
                         {/* Message Actions */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align={isOwnMessage ? "end" : "start"}>
-                            <DropdownMenuItem onClick={() => handleReply(message)}>
-                              <Reply className="h-4 w-4 mr-2" />
-                              Répondre
-                            </DropdownMenuItem>
-                            {isOwnMessage && (
-                              <DropdownMenuItem 
-                                onClick={() => handleDelete(message.id)}
-                                className="text-destructive"
+                        {!message.is_deleted && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
                               >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Supprimer
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align={isOwnMessage ? "end" : "start"}>
+                              <DropdownMenuItem onClick={() => handleReply(message)}>
+                                <Reply className="h-4 w-4 mr-2" />
+                                Répondre
                               </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                              {isOwnMessage && (
+                                <DropdownMenuItem 
+                                  onClick={() => handleDelete(message.id)}
+                                  className="text-destructive focus:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Supprimer
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </div>
 
                       {/* Attachments */}

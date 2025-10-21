@@ -122,7 +122,16 @@ export const useChatMessages = (groupId: string | null) => {
 
     // Subscribe to new messages
     const channel = chatService.subscribeToMessages(groupId, (newMessage) => {
-      setMessages(prev => [...prev, newMessage]);
+      setMessages(prev => {
+        // Check if message already exists
+        const exists = prev.some(msg => msg.id === newMessage.id);
+        if (exists) {
+          // Update existing message (for deletions)
+          return prev.map(msg => msg.id === newMessage.id ? newMessage : msg);
+        }
+        // Add new message
+        return [...prev, newMessage];
+      });
       // Mark as read if user is viewing this chat
       chatService.updateLastRead(groupId);
     });
@@ -148,14 +157,10 @@ export const useChatMessages = (groupId: string | null) => {
   };
 
   const deleteMessage = async (messageId: string) => {
+    if (!groupId) return;
+    
     try {
       await chatService.deleteMessage(messageId);
-      // Update messages list locally
-      setMessages(prev => prev.map(msg => 
-        msg.id === messageId 
-          ? { ...msg, is_deleted: true, content: 'Message supprimé' }
-          : msg
-      ));
       toast({
         title: "Succès",
         description: "Message supprimé",
