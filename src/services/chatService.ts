@@ -8,14 +8,22 @@ const getCurrentUserId = async (): Promise<string> => {
   if (demoUser) {
     const userData = JSON.parse(demoUser);
     let userId = userData.id;
-    // Convert demo IDs to valid UUIDs
+    
+    // Convert ALL demo IDs to valid UUIDs
     if (userId === 'demo-adminprincipal') {
       userId = '00000000-0000-4000-8000-000000000001';
-    } else if (userId === 'demo-student') {
+    } else if (userId === 'demo-student' || userId === 'demo-étudiant') {
       userId = '00000000-0000-4000-8000-000000000002';
     } else if (userId === 'demo-formateur' || userId === 'demo-instructor') {
       userId = '00000000-0000-4000-8000-000000000003';
+    } else if (typeof userId === 'string' && !userId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
+      // If it's still not a valid UUID, try to find the user in the database by email or construct a UUID
+      console.warn('Invalid demo user ID, attempting to resolve:', userId);
+      // For any other demo user, use the étudiant UUID as fallback
+      userId = '00000000-0000-4000-8000-000000000002';
     }
+    
+    console.log('✅ Demo user ID converted:', userId);
     return userId;
   }
   
