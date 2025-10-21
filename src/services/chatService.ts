@@ -67,19 +67,47 @@ export const chatService = {
   // Get all groups for current user
   async getUserGroups(): Promise<ChatGroup[]> {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    if (!user) {
+      console.log('❌ User not authenticated');
+      throw new Error('User not authenticated');
+    }
 
+    console.log('✅ User authenticated:', user.id);
+
+    // First, get the group IDs the user is a member of
+    const { data: memberData, error: memberError } = await supabase
+      .from('chat_group_members')
+      .select('group_id')
+      .eq('user_id', user.id);
+
+    if (memberError) {
+      console.error('❌ Error fetching memberships:', memberError);
+      throw memberError;
+    }
+
+    console.log('✅ User memberships:', memberData);
+
+    if (!memberData || memberData.length === 0) {
+      console.log('⚠️ No group memberships found');
+      return [];
+    }
+
+    const groupIds = memberData.map(m => m.group_id);
+
+    // Then fetch the groups
     const { data, error } = await supabase
       .from('chat_groups')
-      .select(`
-        *,
-        chat_group_members!inner(user_id)
-      `)
-      .eq('chat_group_members.user_id', user.id)
+      .select('*')
+      .in('id', groupIds)
       .eq('is_active', true)
       .order('updated_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Error fetching groups:', error);
+      throw error;
+    }
+
+    console.log('✅ Groups fetched:', data);
     return (data || []) as ChatGroup[];
   },
 
