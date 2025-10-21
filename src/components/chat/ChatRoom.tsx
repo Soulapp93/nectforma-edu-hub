@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, X, FileText, Image as ImageIcon, File } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useChatMessages } from '@/hooks/useChatGroups';
@@ -25,7 +25,16 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
   const { userId } = useCurrentUser();
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
+    }
+  }, [messageText]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -88,14 +97,22 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-gradient-to-b from-background to-muted/20">
       {/* Header */}
-      <div className="border-b border-border p-4">
-        <h2 className="text-xl font-semibold text-foreground">{groupName}</h2>
+      <div className="border-b border-border/50 p-4 bg-card/50 backdrop-blur-sm">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <span className="text-lg font-bold text-primary">{groupName[0]}</span>
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">{groupName}</h2>
+            <p className="text-xs text-muted-foreground">{messages.length} messages</p>
+          </div>
+        </div>
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+      <ScrollArea className="flex-1 p-4 bg-transparent" ref={scrollRef}>
         {loading && messages.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">
             Chargement des messages...
@@ -119,26 +136,26 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
                 <div
                   key={message.id}
                   className={cn(
-                    'flex gap-3',
+                    'flex gap-3 animate-fade-in',
                     isOwnMessage && 'flex-row-reverse'
                   )}
                 >
-                  <Avatar className="h-8 w-8">
+                  <Avatar className="h-8 w-8 border-2 border-background shadow-sm">
                     <AvatarImage src={message.sender?.profile_photo_url || ''} />
-                    <AvatarFallback>{initials}</AvatarFallback>
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">{initials}</AvatarFallback>
                   </Avatar>
 
                   <div
                     className={cn(
-                      'flex flex-col max-w-[70%]',
+                      'flex flex-col max-w-[75%]',
                       isOwnMessage && 'items-end'
                     )}
                   >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium text-foreground">
+                    <div className="flex items-center gap-2 mb-1 px-1">
+                      <span className="text-xs font-medium text-foreground">
                         {isOwnMessage ? 'Vous' : senderName}
                       </span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-[10px] text-muted-foreground">
                         {formatDistanceToNow(new Date(message.created_at), {
                           addSuffix: true,
                           locale: fr,
@@ -149,13 +166,13 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
                     <div className="flex flex-col gap-2">
                       <div
                         className={cn(
-                          'rounded-lg px-4 py-2',
+                          'rounded-2xl px-4 py-2.5 shadow-sm',
                           isOwnMessage
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-foreground'
+                            ? 'bg-primary text-primary-foreground rounded-tr-sm'
+                            : 'bg-card text-foreground border border-border/50 rounded-tl-sm'
                         )}
                       >
-                        <p className="text-sm whitespace-pre-wrap break-words">
+                        <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
                           {message.content}
                         </p>
                       </div>
@@ -170,10 +187,10 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
                               target="_blank"
                               rel="noopener noreferrer"
                               className={cn(
-                                'flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:opacity-80 transition-opacity',
+                                'flex items-center gap-2 px-3 py-2 rounded-xl text-sm hover:opacity-80 transition-all hover:scale-[1.02] shadow-sm',
                                 isOwnMessage
                                   ? 'bg-primary/80 text-primary-foreground'
-                                  : 'bg-muted/80 text-foreground'
+                                  : 'bg-card/80 text-foreground border border-border/50'
                               )}
                             >
                               {getFileIcon(attachment.content_type || '')}
@@ -199,14 +216,14 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
       </ScrollArea>
 
       {/* Input */}
-      <div className="border-t border-border p-4">
+      <div className="border-t border-border/50 p-4 bg-card/50 backdrop-blur-sm">
         {/* Selected Files Preview */}
         {selectedFiles.length > 0 && (
           <div className="mb-3 flex flex-wrap gap-2">
             {selectedFiles.map((file, index) => (
               <div
                 key={index}
-                className="flex items-center gap-2 bg-muted px-3 py-2 rounded-lg text-sm"
+                className="flex items-center gap-2 bg-muted/80 px-3 py-2 rounded-xl text-sm shadow-sm border border-border/50"
               >
                 {getFileIcon(file.type)}
                 <span className="truncate max-w-[150px]">{file.name}</span>
@@ -221,7 +238,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
           </div>
         )}
 
-        <div className="flex gap-2">
+        <div className="flex items-end gap-2">
           <input
             ref={fileInputRef}
             type="file"
@@ -232,24 +249,34 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
           <Button
             variant="ghost"
             size="icon"
-            className="shrink-0"
+            className="shrink-0 h-10 w-10 rounded-full hover:bg-primary/10"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
           >
             <Paperclip className="h-5 w-5" />
           </Button>
-          <Input
-            placeholder="Écrivez votre message..."
-            value={messageText}
-            onChange={(e) => setMessageText(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="flex-1"
-            disabled={uploading}
-          />
+          <div className="flex-1 bg-background border border-border/50 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-ring/20 transition-all">
+            <Textarea
+              ref={textareaRef}
+              placeholder="Écrivez votre message..."
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              className="min-h-[44px] max-h-[120px] resize-none border-0 bg-transparent px-4 py-3 focus-visible:ring-0 focus-visible:ring-offset-0"
+              disabled={uploading}
+              rows={1}
+            />
+          </div>
           <Button
             onClick={handleSend}
             disabled={(!messageText.trim() && selectedFiles.length === 0) || uploading}
-            className="shrink-0"
+            className="shrink-0 h-10 w-10 rounded-full p-0"
+            size="icon"
           >
             <Send className="h-5 w-5" />
           </Button>

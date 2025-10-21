@@ -17,15 +17,20 @@ const Groupes = () => {
   }, [establishmentGroup, loading]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)]">
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-gradient-to-br from-background via-background to-muted/30">
       {/* Header */}
-      <div className="p-4 sm:p-6 border-b border-border bg-card">
+      <div className="p-4 sm:p-6 border-b border-border/50 bg-card/80 backdrop-blur-md shadow-sm">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Groupe Établissement</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              Communiquez avec tous les membres de l'établissement
-            </p>
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg">
+              <UsersIcon className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Groupe Établissement</h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-0.5">
+                Communiquez avec tous les membres de l'établissement
+              </p>
+            </div>
           </div>
         </div>
       </div>
