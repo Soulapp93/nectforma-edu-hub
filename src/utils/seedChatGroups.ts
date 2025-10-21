@@ -171,17 +171,39 @@ export const seedChatGroups = async () => {
 
     // Add messages to establishment group
     const establishmentMessages = [
-      { content: 'Bienvenue dans le groupe établissement ! 🎉', sender_id: currentUser.id },
-      { content: 'Merci ! Heureux d\'être ici', sender_id: allUsers[1]?.id || currentUser.id },
-      { content: 'N\'hésitez pas à partager vos questions', sender_id: allUsers[2]?.id || currentUser.id },
+      { content: 'Bonjour à tous ! 👋 Bienvenue dans notre groupe d\'établissement', sender_id: currentUser.id, delay: 0 },
+      { content: 'Salut ! Super d\'avoir ce groupe pour communiquer ensemble', sender_id: allUsers[1]?.id || currentUser.id, delay: 120000 },
+      { content: 'Est-ce que quelqu\'un aurait le planning de cette semaine ?', sender_id: allUsers[2]?.id || currentUser.id, delay: 240000 },
+      { content: 'Oui, je vais le partager dans quelques minutes !', sender_id: allUsers[3]?.id || currentUser.id, delay: 300000 },
+      { content: 'N\'oubliez pas la réunion de demain à 14h en salle 204 📅', sender_id: currentUser.id, delay: 420000 },
+      { content: 'Merci pour le rappel ! Je serai présent', sender_id: allUsers[4]?.id || currentUser.id, delay: 480000 },
+      { content: 'Quelqu\'un sait où trouver les documents de formation ?', sender_id: allUsers[5]?.id || currentUser.id, delay: 600000 },
+      { content: 'Ils sont dans l\'espace documentaire, section "Formations"', sender_id: allUsers[1]?.id || currentUser.id, delay: 660000 },
+      { content: 'Parfait, merci beaucoup ! 👍', sender_id: allUsers[5]?.id || currentUser.id, delay: 700000 },
+      { content: 'Bon weekend à tous ! On se retrouve lundi 🎉', sender_id: allUsers[2]?.id || currentUser.id, delay: 800000 },
+      { content: 'Excellente journée à vous aussi !', sender_id: allUsers[3]?.id || currentUser.id, delay: 840000 },
+      { content: 'Des volontaires pour le projet du mois prochain ?', sender_id: currentUser.id, delay: 1000000 },
+      { content: 'Moi je suis intéressé ! Plus d\'infos ?', sender_id: allUsers[4]?.id || currentUser.id, delay: 1050000 },
+      { content: 'Je vous envoie les détails par mail ce soir 📧', sender_id: currentUser.id, delay: 1100000 },
+      { content: 'Quelqu\'un a des nouvelles du planning des examens ?', sender_id: allUsers[1]?.id || currentUser.id, delay: 1300000 },
+      { content: 'Il sera disponible la semaine prochaine normalement', sender_id: allUsers[2]?.id || currentUser.id, delay: 1350000 },
+      { content: 'Super, merci pour l\'info !', sender_id: allUsers[1]?.id || currentUser.id, delay: 1400000 },
+      { content: 'Bonne soirée tout le monde ! 🌙', sender_id: allUsers[5]?.id || currentUser.id, delay: 1600000 },
     ];
 
+    // Insert messages with realistic timestamps
+    const baseTime = new Date();
+    baseTime.setHours(baseTime.getHours() - 3); // Start from 3 hours ago
+
     for (const msg of establishmentMessages) {
+      const messageTime = new Date(baseTime.getTime() + msg.delay);
       await supabase.from('chat_messages').insert({
         group_id: establishmentGroupId!,
         sender_id: msg.sender_id,
         content: msg.content,
         message_type: 'text',
+        created_at: messageTime.toISOString(),
+        updated_at: messageTime.toISOString(),
       });
     }
 

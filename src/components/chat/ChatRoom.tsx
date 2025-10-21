@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip } from 'lucide-react';
+import { Send, Paperclip, X, FileText, Image as ImageIcon, File } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -9,6 +9,8 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { chatService } from '@/services/chatService';
+import { useToast } from '@/hooks/use-toast';
 
 interface ChatRoomProps {
   groupId: string;
@@ -17,9 +19,13 @@ interface ChatRoomProps {
 
 const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
   const [messageText, setMessageText] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
   const { messages, loading, sendMessage } = useChatMessages(groupId);
   const { userId } = useCurrentUser();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -28,10 +34,50 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!messageText.trim()) return;
+    if (!messageText.trim() && selectedFiles.length === 0) return;
     
-    await sendMessage(messageText);
-    setMessageText('');
+    try {
+      setUploading(true);
+      
+      // Send the text message first
+      if (messageText.trim()) {
+        const message = await chatService.sendMessage(groupId, messageText);
+        
+        // Upload attachments if any
+        if (selectedFiles.length > 0) {
+          for (const file of selectedFiles) {
+            await chatService.uploadAttachment(message.id, file);
+          }
+        }
+      }
+      
+      setMessageText('');
+      setSelectedFiles([]);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'envoyer le message",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setSelectedFiles(prev => [...prev, ...files]);
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const getFileIcon = (contentType: string) => {
+    if (contentType.startsWith('image/')) return <ImageIcon className="h-4 w-4" />;
+    if (contentType.includes('pdf')) return <FileText className="h-4 w-4" />;
+    return <File className="h-4 w-4" />;
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -100,17 +146,49 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
                       </span>
                     </div>
 
-                    <div
-                      className={cn(
-                        'rounded-lg px-4 py-2',
-                        isOwnMessage
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-foreground'
+                    <div className="flex flex-col gap-2">
+                      <div
+                        className={cn(
+                          'rounded-lg px-4 py-2',
+                          isOwnMessage
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-foreground'
+                        )}
+                      >
+                        <p className="text-sm whitespace-pre-wrap break-words">
+                          {message.content}
+                        </p>
+                      </div>
+
+                      {/* Attachments */}
+                      {message.attachments && message.attachments.length > 0 && (
+                        <div className="flex flex-col gap-1">
+                          {message.attachments.map((attachment) => (
+                            <a
+                              key={attachment.id}
+                              href={attachment.file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={cn(
+                                'flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:opacity-80 transition-opacity',
+                                isOwnMessage
+                                  ? 'bg-primary/80 text-primary-foreground'
+                                  : 'bg-muted/80 text-foreground'
+                              )}
+                            >
+                              {getFileIcon(attachment.content_type || '')}
+                              <span className="truncate max-w-[200px]">
+                                {attachment.file_name}
+                              </span>
+                              {attachment.file_size && (
+                                <span className="text-xs opacity-70">
+                                  ({Math.round(attachment.file_size / 1024)} KB)
+                                </span>
+                              )}
+                            </a>
+                          ))}
+                        </div>
                       )}
-                    >
-                      <p className="text-sm whitespace-pre-wrap break-words">
-                        {message.content}
-                      </p>
                     </div>
                   </div>
                 </div>
@@ -122,12 +200,41 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
 
       {/* Input */}
       <div className="border-t border-border p-4">
+        {/* Selected Files Preview */}
+        {selectedFiles.length > 0 && (
+          <div className="mb-3 flex flex-wrap gap-2">
+            {selectedFiles.map((file, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-2 bg-muted px-3 py-2 rounded-lg text-sm"
+              >
+                {getFileIcon(file.type)}
+                <span className="truncate max-w-[150px]">{file.name}</span>
+                <button
+                  onClick={() => removeFile(index)}
+                  className="ml-1 hover:text-destructive transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="flex gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            className="hidden"
+            onChange={handleFileSelect}
+          />
           <Button
             variant="ghost"
             size="icon"
             className="shrink-0"
-            disabled
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
           >
             <Paperclip className="h-5 w-5" />
           </Button>
@@ -137,10 +244,11 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
             onChange={(e) => setMessageText(e.target.value)}
             onKeyPress={handleKeyPress}
             className="flex-1"
+            disabled={uploading}
           />
           <Button
             onClick={handleSend}
-            disabled={!messageText.trim()}
+            disabled={(!messageText.trim() && selectedFiles.length === 0) || uploading}
             className="shrink-0"
           >
             <Send className="h-5 w-5" />
