@@ -51,8 +51,21 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
     try {
       setUploading(true);
       
-      // Send the text message with optional reply
-      if (messageText.trim()) {
+      // If only files without text
+      if (!messageText.trim() && selectedFiles.length > 0) {
+        const fileNames = selectedFiles.map(f => f.name).join(', ');
+        const message = await chatService.sendMessage(
+          groupId, 
+          `📎 ${fileNames}`,
+          replyingTo?.id || null
+        );
+        
+        // Upload attachments
+        for (const file of selectedFiles) {
+          await chatService.uploadAttachment(message.id, file);
+        }
+      } else {
+        // Send the text message with optional reply
         const message = await chatService.sendMessage(
           groupId, 
           messageText,
@@ -107,6 +120,9 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
     if (contentType.includes('pdf')) return <FileText className="h-4 w-4" />;
     return <File className="h-4 w-4" />;
   };
+
+  const isImage = (contentType: string) => contentType.startsWith('image/');
+  const isPDF = (contentType: string) => contentType.includes('pdf');
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -248,31 +264,99 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
 
                       {/* Attachments */}
                       {message.attachments && message.attachments.length > 0 && (
-                        <div className="flex flex-col gap-1">
-                          {message.attachments.map((attachment) => (
-                            <a
-                              key={attachment.id}
-                              href={attachment.file_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={cn(
-                                'flex items-center gap-2 px-3 py-2 rounded-xl text-sm hover:opacity-80 transition-all hover:scale-[1.02] shadow-sm',
-                                isOwnMessage
-                                  ? 'bg-primary/80 text-primary-foreground'
-                                  : 'bg-card/80 text-foreground border border-border/50'
-                              )}
-                            >
-                              {getFileIcon(attachment.content_type || '')}
-                              <span className="truncate max-w-[200px]">
-                                {attachment.file_name}
-                              </span>
-                              {attachment.file_size && (
-                                <span className="text-xs opacity-70">
-                                  ({Math.round(attachment.file_size / 1024)} KB)
-                                </span>
-                              )}
-                            </a>
-                          ))}
+                        <div className="flex flex-col gap-2 mt-2">
+                          {message.attachments.map((attachment) => {
+                            const contentType = attachment.content_type || '';
+                            
+                            // Image preview
+                            if (isImage(contentType)) {
+                              return (
+                                <a
+                                  key={attachment.id}
+                                  href={attachment.file_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="relative group rounded-xl overflow-hidden max-w-[300px] cursor-pointer"
+                                >
+                                  <img 
+                                    src={attachment.file_url} 
+                                    alt={attachment.file_name}
+                                    className="w-full h-auto rounded-xl shadow-md hover:opacity-95 transition-opacity"
+                                    loading="lazy"
+                                  />
+                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-xl" />
+                                </a>
+                              );
+                            }
+                            
+                            // PDF preview
+                            if (isPDF(contentType)) {
+                              return (
+                                <a
+                                  key={attachment.id}
+                                  href={attachment.file_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={cn(
+                                    'flex items-center gap-3 px-4 py-3 rounded-xl hover:opacity-90 transition-all shadow-sm border-l-4',
+                                    isOwnMessage
+                                      ? 'bg-primary/80 text-primary-foreground border-primary-foreground/30'
+                                      : 'bg-card text-foreground border-primary/50'
+                                  )}
+                                >
+                                  <div className={cn(
+                                    "p-2 rounded-lg",
+                                    isOwnMessage ? "bg-primary-foreground/20" : "bg-primary/10"
+                                  )}>
+                                    <FileText className="h-6 w-6" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium truncate">
+                                      {attachment.file_name}
+                                    </p>
+                                    {attachment.file_size && (
+                                      <p className="text-xs opacity-70">
+                                        PDF • {Math.round(attachment.file_size / 1024)} KB
+                                      </p>
+                                    )}
+                                  </div>
+                                </a>
+                              );
+                            }
+                            
+                            // Other files
+                            return (
+                              <a
+                                key={attachment.id}
+                                href={attachment.file_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={cn(
+                                  'flex items-center gap-3 px-4 py-3 rounded-xl hover:opacity-90 transition-all shadow-sm',
+                                  isOwnMessage
+                                    ? 'bg-primary/80 text-primary-foreground'
+                                    : 'bg-card/80 text-foreground border border-border/50'
+                                )}
+                              >
+                                <div className={cn(
+                                  "p-2 rounded-lg",
+                                  isOwnMessage ? "bg-primary-foreground/20" : "bg-muted"
+                                )}>
+                                  {getFileIcon(contentType)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium truncate text-sm">
+                                    {attachment.file_name}
+                                  </p>
+                                  {attachment.file_size && (
+                                    <p className="text-xs opacity-70">
+                                      {Math.round(attachment.file_size / 1024)} KB
+                                    </p>
+                                  )}
+                                </div>
+                              </a>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -311,22 +395,45 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
 
         {/* Selected Files Preview */}
         {selectedFiles.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-2">
-            {selectedFiles.map((file, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-2 bg-muted/80 px-3 py-2 rounded-xl text-sm shadow-sm border border-border/50"
-              >
-                {getFileIcon(file.type)}
-                <span className="truncate max-w-[150px]">{file.name}</span>
-                <button
-                  onClick={() => removeFile(index)}
-                  className="ml-1 hover:text-destructive transition-colors"
+          <div className="mb-3 flex flex-wrap gap-3">
+            {selectedFiles.map((file, index) => {
+              const isImageFile = file.type.startsWith('image/');
+              const preview = isImageFile ? URL.createObjectURL(file) : null;
+              
+              return (
+                <div
+                  key={index}
+                  className="relative group"
                 >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
+                  {isImageFile && preview ? (
+                    <div className="relative">
+                      <img 
+                        src={preview} 
+                        alt={file.name}
+                        className="h-20 w-20 object-cover rounded-lg border border-border/50 shadow-sm"
+                      />
+                      <button
+                        onClick={() => removeFile(index)}
+                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors flex items-center justify-center shadow-md"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 bg-muted/80 px-3 py-2 rounded-xl text-sm shadow-sm border border-border/50">
+                      {getFileIcon(file.type)}
+                      <span className="truncate max-w-[150px]">{file.name}</span>
+                      <button
+                        onClick={() => removeFile(index)}
+                        className="ml-1 hover:text-destructive transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
