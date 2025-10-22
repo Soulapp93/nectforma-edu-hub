@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, CheckCircle2, XCircle, Edit3, FileText, Eye, ArrowLeft, ChevronRight, PenTool, Download, Send } from 'lucide-react';
+import { Calendar, Clock, Users, CheckCircle2, XCircle, Edit3, FileText, Eye, ArrowLeft, ChevronRight, PenTool, Download, Send, Link } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,7 @@ import AdminValidationModal from './AdminValidationModal';
 import AdminAttendanceValidation from '../emargement/AdminAttendanceValidation';
 import SignatureManagementModal from '../ui/signature-management-modal';
 import SendSignatureLinkModal from './SendSignatureLinkModal';
+import SendAttendanceLinkModal from './SendAttendanceLinkModal';
 import { pdfExportService } from '@/services/pdfExportService';
 
 const AttendanceManagement = () => {
@@ -31,6 +32,7 @@ const AttendanceManagement = () => {
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [showSendLinkModal, setShowSendLinkModal] = useState(false);
+  const [showSendAttendanceLinkModal, setShowSendAttendanceLinkModal] = useState(false);
   const [selectedSignature, setSelectedSignature] = useState<any>(null);
   const [adminSignature, setAdminSignature] = useState<string | null>(null);
   const [view, setView] = useState<'formations' | 'sheets'>('formations');
@@ -379,13 +381,22 @@ const AttendanceManagement = () => {
               )}
             </CardTitle>
             {view === 'formations' && (
-              <Button
-                onClick={() => setShowSignatureModal(true)}
-                className="bg-purple-600 hover:bg-purple-700 text-white"
-              >
-                <PenTool className="h-4 w-4 mr-2" />
-                Enregistrement signature
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setShowSendAttendanceLinkModal(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Link className="h-4 w-4 mr-2" />
+                  Envoyer lien d'émargement
+                </Button>
+                <Button
+                  onClick={() => setShowSignatureModal(true)}
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  <PenTool className="h-4 w-4 mr-2" />
+                  Enregistrement signature
+                </Button>
+              </div>
             )}
           </div>
         </CardHeader>
@@ -597,6 +608,17 @@ const AttendanceManagement = () => {
           }}
         />
       )}
+
+      <SendAttendanceLinkModal
+        isOpen={showSendAttendanceLinkModal}
+        onClose={() => setShowSendAttendanceLinkModal(false)}
+        onSuccess={() => {
+          fetchData();
+          if (selectedFormationId) {
+            fetchFormationSheets(selectedFormationId);
+          }
+        }}
+      />
     </div>
   );
 };
