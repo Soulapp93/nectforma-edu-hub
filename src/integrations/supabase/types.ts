@@ -177,6 +177,10 @@ export type Database = {
           qr_code: string | null
           room: string | null
           schedule_slot_id: string
+          session_type: string | null
+          signature_link_expires_at: string | null
+          signature_link_sent_at: string | null
+          signature_link_token: string | null
           start_time: string
           status: string
           title: string
@@ -198,6 +202,10 @@ export type Database = {
           qr_code?: string | null
           room?: string | null
           schedule_slot_id: string
+          session_type?: string | null
+          signature_link_expires_at?: string | null
+          signature_link_sent_at?: string | null
+          signature_link_token?: string | null
           start_time: string
           status?: string
           title: string
@@ -219,6 +227,10 @@ export type Database = {
           qr_code?: string | null
           room?: string | null
           schedule_slot_id?: string
+          session_type?: string | null
+          signature_link_expires_at?: string | null
+          signature_link_sent_at?: string | null
+          signature_link_token?: string | null
           start_time?: string
           status?: string
           title?: string
@@ -2191,6 +2203,7 @@ export type Database = {
         Args: { attendance_sheet_id_param: string }
         Returns: string
       }
+      generate_signature_token: { Args: never; Returns: string }
       get_attendance_stats: {
         Args: { sheet_id: string }
         Returns: {
@@ -2205,14 +2218,8 @@ export type Database = {
         Args: { current_status: string; sheet_date: string; start_time: string }
         Returns: string
       }
-      get_current_user_establishment: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_current_user_establishment: { Args: never; Returns: string }
+      get_current_user_role: { Args: never; Returns: string }
       get_event_stats: {
         Args: { event_id_param: string }
         Returns: {
@@ -2228,10 +2235,7 @@ export type Database = {
         Args: { sheet_date: string; start_time: string }
         Returns: boolean
       }
-      is_current_user_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_current_user_admin: { Args: never; Returns: boolean }
       is_group_member: {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
@@ -2243,6 +2247,20 @@ export type Database = {
           end_time: string
           formation_title: string
           is_valid: boolean
+          sheet_id: string
+          start_time: string
+        }[]
+      }
+      validate_signature_token: {
+        Args: { token_param: string }
+        Returns: {
+          date: string
+          end_time: string
+          expires_at: string
+          formation_id: string
+          formation_title: string
+          is_valid: boolean
+          session_type: string
           sheet_id: string
           start_time: string
         }[]

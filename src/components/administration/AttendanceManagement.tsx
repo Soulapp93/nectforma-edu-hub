@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, CheckCircle2, XCircle, Edit3, FileText, Eye, ArrowLeft, ChevronRight, PenTool, Download } from 'lucide-react';
+import { Calendar, Clock, Users, CheckCircle2, XCircle, Edit3, FileText, Eye, ArrowLeft, ChevronRight, PenTool, Download, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,7 @@ import AbsenceReasonModal from './AbsenceReasonModal';
 import AdminValidationModal from './AdminValidationModal';
 import AdminAttendanceValidation from '../emargement/AdminAttendanceValidation';
 import SignatureManagementModal from '../ui/signature-management-modal';
+import SendSignatureLinkModal from './SendSignatureLinkModal';
 import { pdfExportService } from '@/services/pdfExportService';
 
 const AttendanceManagement = () => {
@@ -29,6 +30,7 @@ const AttendanceManagement = () => {
   const [showReasonModal, setShowReasonModal] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const [showSendLinkModal, setShowSendLinkModal] = useState(false);
   const [selectedSignature, setSelectedSignature] = useState<any>(null);
   const [adminSignature, setAdminSignature] = useState<string | null>(null);
   const [view, setView] = useState<'formations' | 'sheets'>('formations');
@@ -487,6 +489,20 @@ const AttendanceManagement = () => {
                         </TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()}>
                           <div className="flex gap-2">
+                            {/* Bouton pour envoyer le lien d'émargement en autonomie */}
+                            {sheet.session_type === 'autonomie' && sheet.status === 'En attente' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedSheet(sheet);
+                                  setShowSendLinkModal(true);
+                                }}
+                              >
+                                <Send className="h-4 w-4 mr-1" />
+                                Envoyer lien
+                              </Button>
+                            )}
                             <Button
                               variant="outline"
                               size="sm"
@@ -564,6 +580,23 @@ const AttendanceManagement = () => {
         onSave={handleSaveAdminSignature}
         title="Gestion de la signature administrative"
       />
+
+      {selectedSheet && showSendLinkModal && (
+        <SendSignatureLinkModal
+          isOpen={showSendLinkModal}
+          onClose={() => {
+            setShowSendLinkModal(false);
+            setSelectedSheet(null);
+          }}
+          attendanceSheet={selectedSheet}
+          onSuccess={() => {
+            fetchData();
+            if (selectedFormationId) {
+              fetchFormationSheets(selectedFormationId);
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

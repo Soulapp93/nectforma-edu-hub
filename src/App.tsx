@@ -19,6 +19,7 @@ import FormationDetail from './pages/FormationDetail';
 import TextBookDetail from './pages/TextBookDetail';
 import TextBookByFormation from './pages/TextBookByFormation';
 import SuiviEmargement from './pages/SuiviEmargement';
+import SignaturePublique from './pages/SignaturePublique';
 import EmploiTemps from './pages/EmploiTemps';
 import Messagerie from './pages/Messagerie';
 import Groupes from './pages/Groupes';
@@ -120,6 +121,7 @@ const AppContent = () => {
           
           <main className="flex-1 overflow-auto bg-gray-50 pb-20 md:pb-0">
             <Routes>
+              <Route path="/emargement/signer/:token" element={<SignaturePublique />} />
               <Route path="/dashboard" element={<ProtectedRoute><AdminRoute><Dashboard /></AdminRoute></ProtectedRoute>} />
               <Route path="/administration" element={<ProtectedRoute><Administration /></ProtectedRoute>} />
               <Route path="/formations" element={<ProtectedRoute><Formations /></ProtectedRoute>} />

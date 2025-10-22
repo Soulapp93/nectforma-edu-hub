@@ -11,6 +11,10 @@ export interface AttendanceSheet {
   instructor_id?: string;
   room?: string;
   status: string;
+  session_type?: 'presentiel' | 'autonomie' | 'distanciel';
+  signature_link_token?: string;
+  signature_link_expires_at?: string;
+  signature_link_sent_at?: string;
   is_open_for_signing?: boolean;
   opened_at?: string;
   closed_at?: string;
@@ -486,6 +490,95 @@ export const attendanceService = {
       return (data as any) || [];
     } catch (error) {
       console.error('Error fetching pending validation sheets:', error);
+      throw error;
+    }
+  },
+
+  // Générer un token de signature pour une feuille d'émargement
+  async generateSignatureToken(attendanceSheetId: string): Promise<{ token: string; expiresAt: string }> {
+    try {
+      // Générer le token via la fonction SQL
+      const { data: tokenData, error: tokenError } = await supabase
+        .rpc('generate_signature_token');
+
+      if (tokenError) throw tokenError;
+
+      const token = tokenData as string;
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 24); // Expire dans 24h
+
+      // Mettre à jour la feuille avec le token
+      const { error: updateError } = await supabase
+        .from('attendance_sheets')
+        .update({
+          signature_link_token: token,
+          signature_link_expires_at: expiresAt.toISOString(),
+          signature_link_sent_at: new Date().toISOString()
+        })
+        .eq('id', attendanceSheetId);
+
+      if (updateError) throw updateError;
+
+      return { token, expiresAt: expiresAt.toISOString() };
+    } catch (error) {
+      console.error('Error generating signature token:', error);
+      throw error;
+    }
+  },
+
+  // Valider un token de signature
+  async validateSignatureToken(token: string) {
+    try {
+      const { data, error } = await supabase
+        .rpc('validate_signature_token', { token_param: token });
+
+      if (error) throw error;
+      return data && data.length > 0 ? data[0] : null;
+    } catch (error) {
+      console.error('Error validating signature token:', error);
+      throw error;
+    }
+  },
+
+  // Envoyer le lien de signature aux étudiants
+  async sendSignatureLink(attendanceSheetId: string, studentIds: string[]): Promise<void> {
+    try {
+      // Appeler l'edge function pour envoyer les notifications
+      const { error } = await supabase.functions.invoke('send-signature-link', {
+        body: {
+          attendanceSheetId,
+          studentIds
+        }
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error sending signature link:', error);
+      throw error;
+    }
+  },
+
+  // Récupérer une feuille d'émargement par token
+  async getAttendanceSheetByToken(token: string) {
+    try {
+      const { data, error } = await supabase
+        .from('attendance_sheets')
+        .select(`
+          *,
+          formations(title, level),
+          users:instructor_id(first_name, last_name),
+          attendance_signatures(
+            *,
+            users(first_name, last_name, email)
+          )
+        `)
+        .eq('signature_link_token', token)
+        .single();
+
+      if (error) throw error;
+      return data as any;
+    } catch (error) {
+      console.error('Error fetching attendance sheet by token:', error);
       throw error;
     }
   }
