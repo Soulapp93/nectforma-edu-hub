@@ -262,7 +262,7 @@ export const ModernScheduleEditor: React.FC<ModernScheduleEditorProps> = ({
                 Import Excel
               </Button>
               <Button 
-                onClick={() => onAddSlot(new Date(), '09:00')}
+                onClick={() => onAddSlot(selectedDate, '09:00')}
                 className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all"
               >
                 <Plus className="h-4 w-4 mr-2" />
