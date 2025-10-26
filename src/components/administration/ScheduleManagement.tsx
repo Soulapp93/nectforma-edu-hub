@@ -184,11 +184,19 @@ const ScheduleManagement = () => {
   };
 
   const handleEditSchedule = (scheduleId: string) => {
-    navigate(`/emploi-temps/edit/${scheduleId}`);
+    const schedule = schedules.find(s => s.id === scheduleId);
+    if (schedule) {
+      setSelectedSchedule(schedule);
+      setViewMode('week');
+    }
   };
 
   const handleViewSchedule = (scheduleId: string) => {
-    navigate(`/emploi-temps/view/${scheduleId}`);
+    const schedule = schedules.find(s => s.id === scheduleId);
+    if (schedule) {
+      setSelectedSchedule(schedule);
+      setViewMode('week');
+    }
   };
 
   const handleEditSlot = (slot: ScheduleSlot) => {
