@@ -66,6 +66,7 @@ const ScheduleManagement = () => {
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null);
   const [slots, setSlots] = useState<ScheduleSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   
   // États pour les modales
   const [isAddSlotModalOpen, setIsAddSlotModalOpen] = useState(false);
@@ -187,6 +188,7 @@ const ScheduleManagement = () => {
     const schedule = schedules.find(s => s.id === scheduleId);
     if (schedule) {
       setSelectedSchedule(schedule);
+      setIsEditMode(true);
       setViewMode('week');
     }
   };
@@ -195,11 +197,16 @@ const ScheduleManagement = () => {
     const schedule = schedules.find(s => s.id === scheduleId);
     if (schedule) {
       setSelectedSchedule(schedule);
+      setIsEditMode(false);
       setViewMode('week');
     }
   };
 
   const handleEditSlot = (slot: ScheduleSlot) => {
+    if (!isEditMode) {
+      toast.info('Passez en mode édition pour modifier les créneaux');
+      return;
+    }
     if (selectedSchedule?.id) {
       setSlotToEdit(slot);
       setIsEditSlotModalOpen(true);
@@ -223,6 +230,10 @@ const ScheduleManagement = () => {
   };
 
   const handleDuplicateSlot = async (slot: ScheduleSlot) => {
+    if (!isEditMode) {
+      toast.info('Passez en mode édition pour dupliquer les créneaux');
+      return;
+    }
     try {
       const duplicatedSlot = {
         schedule_id: slot.schedule_id,
@@ -245,6 +256,10 @@ const ScheduleManagement = () => {
   };
 
   const handleDeleteSlot = async (slot: ScheduleSlot) => {
+    if (!isEditMode) {
+      toast.info('Passez en mode édition pour supprimer les créneaux');
+      return;
+    }
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce créneau ?')) {
       try {
         await scheduleService.deleteScheduleSlot(slot.id);
@@ -1000,32 +1015,34 @@ const ScheduleManagement = () => {
                         </div>
 
                         {/* Actions */}
-                        <div>
-                          <div className="flex items-center space-x-1">
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              className="h-7 w-7 p-0 text-white/80 hover:text-white hover:bg-white/20"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditSlot(slot);
-                              }}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              className="h-7 w-7 p-0 text-white/80 hover:text-white hover:bg-white/20"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteSlot(slot);
-                              }}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
+                        {isEditMode && (
+                          <div>
+                            <div className="flex items-center space-x-1">
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-7 w-7 p-0 text-white/80 hover:text-white hover:bg-white/20"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditSlot(slot);
+                                }}
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-7 w-7 p-0 text-white/80 hover:text-white hover:bg-white/20"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteSlot(slot);
+                                }}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     ))
                   )}
@@ -1123,56 +1140,60 @@ const ScheduleManagement = () => {
                                </div>
                              </div>
                              
-                             {/* Admin actions */}
-                             <div className="flex items-center space-x-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                               <Button 
-                                 size="sm" 
-                                 variant="ghost" 
-                                 className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const slot = slots.find(s => 
-                                      s.formation_modules?.title === module.title &&
-                                      new Date(s.date).toDateString() === day.actualDate.toDateString()
-                                    );
-                                    if (slot) handleEditSlot(slot);
-                                  }}
-                               >
-                                 <Edit className="h-3 w-3" />
-                               </Button>
-                               <Button 
-                                 size="sm" 
-                                 variant="ghost" 
-                                 className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const slot = slots.find(s => 
-                                      s.formation_modules?.title === module.title &&
-                                      new Date(s.date).toDateString() === day.actualDate.toDateString()
-                                    );
-                                    if (slot) handleDeleteSlot(slot);
-                                  }}
-                               >
-                                 <Trash2 className="h-3 w-3" />
-                               </Button>
-                             </div>
+                              {/* Admin actions */}
+                              {isEditMode && (
+                                <div className="flex items-center space-x-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20"
+                                     onClick={(e) => {
+                                       e.stopPropagation();
+                                       const slot = slots.find(s => 
+                                         s.formation_modules?.title === module.title &&
+                                         new Date(s.date).toDateString() === day.actualDate.toDateString()
+                                       );
+                                       if (slot) handleEditSlot(slot);
+                                     }}
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20"
+                                     onClick={(e) => {
+                                       e.stopPropagation();
+                                       const slot = slots.find(s => 
+                                         s.formation_modules?.title === module.title &&
+                                         new Date(s.date).toDateString() === day.actualDate.toDateString()
+                                       );
+                                       if (slot) handleDeleteSlot(slot);
+                                     }}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              )}
                            </div>
                          </div>
                        ))}
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleAddSlot(day.actualDate, '09:00');
-                        }}
-                        disabled={!selectedSchedule?.id}
-                        className="w-full text-xs"
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        Ajouter un cours
-                      </Button>
+                       {isEditMode && (
+                         <Button 
+                           size="sm" 
+                           variant="outline"
+                           onClick={(e) => {
+                             e.preventDefault();
+                             e.stopPropagation();
+                             handleAddSlot(day.actualDate, '09:00');
+                           }}
+                           disabled={!selectedSchedule?.id}
+                           className="w-full text-xs"
+                         >
+                           <Plus className="h-3 w-3 mr-1" />
+                           Ajouter un cours
+                         </Button>
+                       )}
                     </>
                   )}
                 </CardContent>
@@ -1194,6 +1215,7 @@ const ScheduleManagement = () => {
                   variant="ghost"
                   onClick={() => {
                     setSelectedSchedule(null);
+                    setIsEditMode(false);
                     setViewMode('list');
                   }}
                   className="p-2 hover:bg-primary/10"
@@ -1212,38 +1234,51 @@ const ScheduleManagement = () => {
               </div>
 
               <div className="flex items-center space-x-3">
-                <Button 
-                  onClick={handleOpenAddSlotModal}
-                  disabled={!selectedSchedule?.id}
-                  variant="premium"
-                  className="shadow-lg hover:shadow-xl transition-all"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Ajouter un créneau
-                </Button>
-                
-                {selectedSchedule?.status === 'Brouillon' && (
+                {isEditMode ? (
+                  <>
+                    <Button 
+                      onClick={handleOpenAddSlotModal}
+                      disabled={!selectedSchedule?.id}
+                      variant="premium"
+                      className="shadow-lg hover:shadow-xl transition-all"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Ajouter un créneau
+                    </Button>
+                    
+                    {selectedSchedule?.status === 'Brouillon' && (
+                      <Button 
+                        onClick={handlePublishSchedule}
+                        disabled={slots.length === 0}
+                        variant="success"
+                        className="shadow-lg hover:shadow-xl transition-all"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Publier
+                      </Button>
+                    )}
+                    
+                    <Button 
+                      onClick={handleOpenExcelImportModal}
+                      disabled={!selectedSchedule?.id}
+                      variant="elegant"
+                      size="sm"
+                      className="shadow-md hover:shadow-lg transition-all"
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      Import Excel
+                    </Button>
+                  </>
+                ) : (
                   <Button 
-                    onClick={handlePublishSchedule}
-                    disabled={slots.length === 0}
-                    variant="success"
+                    onClick={() => setIsEditMode(true)}
+                    variant="premium"
                     className="shadow-lg hover:shadow-xl transition-all"
                   >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Publier
+                    <Edit className="h-4 w-4 mr-2" />
+                    Modifier l'emploi du temps
                   </Button>
                 )}
-                
-                <Button 
-                  onClick={handleOpenExcelImportModal}
-                  disabled={!selectedSchedule?.id}
-                  variant="elegant"
-                  size="sm"
-                  className="shadow-md hover:shadow-lg transition-all"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Import Excel
-                </Button>
               </div>
             </div>
 
