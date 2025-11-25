@@ -112,7 +112,11 @@ const AddSlotModal: React.FC<AddSlotModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) {
+        onClose();
+      }
+    }}>
       <DialogContent className="sm:max-w-lg overflow-hidden p-0">
         {/* En-tête moderne avec gradient violet */}
         <div className="bg-gradient-to-r from-violet-500 to-purple-600 text-white p-6 rounded-t-lg">
