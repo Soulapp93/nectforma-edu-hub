@@ -327,6 +327,30 @@ const ScheduleManagement = () => {
     }
   };
 
+  const handleSaveModifications = async () => {
+    if (!selectedSchedule) {
+      toast.error('Aucun emploi du temps sélectionné');
+      return;
+    }
+
+    try {
+      // Met à jour l'emploi du temps et déclenche les notifications
+      await scheduleService.updateSchedule(selectedSchedule.id, { 
+        updated_at: new Date().toISOString() 
+      });
+      
+      toast.success("Modifications enregistrées avec succès");
+      toast.info("Tous les utilisateurs ont été notifiés");
+      
+      // Quitter le mode édition après sauvegarde
+      setIsEditMode(false);
+      refetch();
+    } catch (error) {
+      console.error('Erreur sauvegarde:', error);
+      toast.error("Erreur lors de l'enregistrement des modifications");
+    }
+  };
+
   const handleExcelImportSuccess = () => {
     if (selectedSchedule?.id) {
       fetchScheduleSlots();
@@ -1095,6 +1119,7 @@ const ScheduleManagement = () => {
                   {day.modules.length === 0 ? (
                     <div className="text-center py-4">
                       <p className="text-muted-foreground text-sm mb-2">Aucun cours</p>
+                      {isEditMode && (
                         <Button 
                           size="sm" 
                           variant="outline"
@@ -1109,6 +1134,7 @@ const ScheduleManagement = () => {
                           <Plus className="h-3 w-3 mr-1" />
                           Ajouter
                         </Button>
+                      )}
                     </div>
                   ) : (
                     <>
@@ -1267,6 +1293,15 @@ const ScheduleManagement = () => {
                     >
                       <Upload className="h-4 w-4 mr-2" />
                       Import Excel
+                    </Button>
+
+                    <Button 
+                      onClick={handleSaveModifications}
+                      variant="success"
+                      className="shadow-lg hover:shadow-xl transition-all"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Enregistrer les modifications
                     </Button>
                   </>
                 ) : (
@@ -1435,18 +1470,6 @@ const ScheduleManagement = () => {
                   <div className="flex items-center space-x-1 pt-2 border-t border-border/50">
                     <Button 
                       size="sm" 
-                      variant="ghost"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditSchedule(schedule.id);
-                      }}
-                      className="flex-1 text-xs"
-                    >
-                      <Edit className="h-3 w-3 mr-1" />
-                      Modifier
-                    </Button>
-                    <Button 
-                      size="sm" 
                       variant="outline"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1455,7 +1478,7 @@ const ScheduleManagement = () => {
                       className="flex-1 text-xs"
                     >
                       <Eye className="h-3 w-3 mr-1" />
-                      Voir
+                      Consulter
                     </Button>
                     <Button 
                       size="sm" 
