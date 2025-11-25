@@ -177,13 +177,13 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                 </div>
                 
                 {/* Zone des cours */}
-                <div className="flex-1 relative">
+                <div className="flex-1 relative" style={{ height: `${(END_HOUR - START_HOUR) * 80}px` }}>
                   {/* Lignes de grille horizontales avec séparateurs clairs */}
                   {timeSlots.map((time, index) => (
                     <div 
                       key={time} 
-                      className="h-20 border-b border-border/30"
-                      style={{ position: 'relative' }}
+                      className="absolute w-full border-b border-border/30"
+                      style={{ top: `${index * 80}px`, height: '80px' }}
                     />
                   ))}
                   
