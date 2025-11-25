@@ -49,9 +49,9 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
     return `${hours}h ${minutes}min`;
   };
 
-  // Plage horaire étendue: 7h à 22h (au lieu de 8h-20h)
-  const START_HOUR = 7;
-  const END_HOUR = 22;
+  // Grille horaire continue de 8h00 à 00h00 (minuit)
+  const START_HOUR = 8;
+  const END_HOUR = 24;
   
   // Générer les créneaux horaires
   const timeSlots = Array.from(
@@ -113,27 +113,24 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
 
   const overlapMap = detectOverlaps(daySlots);
 
-  // Calculer la position et hauteur d'un créneau
+  // Calculer la position et hauteur d'un créneau avec précision à la minute près
   const getSlotPosition = (slot: ScheduleSlot) => {
     const startMinutes = timeToMinutes(slot.start_time);
     const endMinutes = timeToMinutes(slot.end_time);
-    const baseMinutes = START_HOUR * 60; // Début de la journée à 7h
+    const baseMinutes = START_HOUR * 60; // Début de la journée à 8h
     
-    const HOUR_HEIGHT = 80; // Hauteur d'une heure en pixels
+    const HOUR_HEIGHT = 80; // Hauteur d'une heure en pixels (1h = 80px)
     
     // Limiter l'affichage à la plage horaire visible
     const visibleStartMinutes = Math.max(startMinutes, baseMinutes);
     const visibleEndMinutes = Math.min(endMinutes, END_HOUR * 60);
     
+    // Position exacte à la minute près
     const top = ((visibleStartMinutes - baseMinutes) / 60) * HOUR_HEIGHT;
+    // Hauteur proportionnelle à la durée (1h = 80px, 2h = 160px, etc.)
     const height = ((visibleEndMinutes - visibleStartMinutes) / 60) * HOUR_HEIGHT;
     
-    // Log pour déboggage
-    if (startMinutes < baseMinutes || endMinutes > END_HOUR * 60) {
-      console.log(`Cours partiellement hors grille: ${slot.start_time}-${slot.end_time}`, slot);
-    }
-    
-    return { top, height: Math.max(height, 60) }; // Hauteur minimum 60px
+    return { top, height: Math.max(height, 60) }; // Hauteur minimum 60px pour lisibilité
   };
 
   return (
@@ -155,10 +152,10 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
         </div>
       </div>
 
-      {/* Layout principal: Timeline (70%) + Liste (30%) */}
-      <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
-        {/* Timeline - 7/10 de l'espace */}
-        <div className="lg:col-span-7">
+      {/* Layout principal: Timeline (66%) + Liste (33%) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Timeline - 2/3 de l'espace */}
+        <div className="lg:col-span-2">
           <Card className="shadow-sm border-border/50">
             <CardHeader className="pb-3 border-b border-border/50">
               <div className="flex items-center space-x-2">
@@ -168,24 +165,24 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                 </CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="p-4">
+            <CardContent className="p-0">
               <div className="flex">
-                {/* Colonne des heures */}
-                <div className="flex-shrink-0 w-14 pr-2">
+                {/* Colonne des heures avec fond coloré */}
+                <div className="flex-shrink-0 w-16 bg-muted/30 border-r border-border">
                   {timeSlots.map((time) => (
-                    <div key={time} className="h-20 flex items-start justify-end">
-                      <span className="text-xs text-muted-foreground font-medium">{time}</span>
+                    <div key={time} className="h-20 flex items-start justify-center pt-1 border-b border-border/20">
+                      <span className="text-xs text-muted-foreground font-semibold">{time}</span>
                     </div>
                   ))}
                 </div>
                 
                 {/* Zone des cours */}
-                <div className="flex-1 relative border-l border-border/30">
-                  {/* Lignes de grille horizontales */}
+                <div className="flex-1 relative">
+                  {/* Lignes de grille horizontales avec séparateurs clairs */}
                   {timeSlots.map((time, index) => (
                     <div 
                       key={time} 
-                      className="h-20 border-b border-border/10"
+                      className="h-20 border-b border-border/30"
                       style={{ position: 'relative' }}
                     />
                   ))}
@@ -194,6 +191,7 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                   {daySlots.map((slot, index) => {
                     const { top, height } = getSlotPosition(slot);
                     const duration = formatDuration(slot);
+                    const durationMinutes = timeToMinutes(slot.end_time) - timeToMinutes(slot.start_time);
                     
                     // Récupérer les infos de chevauchement
                     const overlapInfo = overlapMap.get(slot.id);
@@ -204,10 +202,14 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                     const widthPercent = 100 / totalColumns;
                     const leftPercent = (column * 100) / totalColumns;
                     
+                    // Affichage adaptatif selon la durée
+                    const showInstructor = durationMinutes >= 60; // >= 1h
+                    const showFullInfo = durationMinutes >= 120; // >= 2h
+                    
                     return (
                       <div
                         key={slot.id || index}
-                        className="absolute rounded-lg shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden"
+                        className="absolute rounded-lg shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden group"
                         style={{ 
                           top: `${top}px`,
                           height: `${height}px`,
@@ -218,11 +220,23 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                         }}
                         onClick={() => onEditSlot?.(slot)}
                       >
-                        <div className="h-full p-3 flex flex-col text-white">
+                        {/* Animation de brillance au survol */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                        
+                        <div className="relative h-full p-3 flex flex-col text-white">
                           <div className="flex items-start justify-between mb-1">
-                            <h4 className="font-semibold text-sm leading-tight flex-1">
-                              {slot.formation_modules?.title || 'Module'}
-                            </h4>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-semibold text-sm leading-tight truncate">
+                                {slot.formation_modules?.title || 'Module'}
+                              </h4>
+                              {/* Badge de durée */}
+                              <Badge 
+                                variant="secondary" 
+                                className="mt-1 text-xs px-1.5 py-0 h-5 bg-white/20 text-white border-0 hover:bg-white/30"
+                              >
+                                {duration}
+                              </Badge>
+                            </div>
                             {onEditSlot && onDuplicateSlot && onDeleteSlot && (
                               <SlotActionMenu 
                                 slot={slot}
@@ -233,16 +247,33 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                             )}
                           </div>
                           
-                          <div className="space-y-1 text-xs">
+                          <div className="space-y-1 text-xs mt-auto">
                             <div className="flex items-center text-white/90">
                               <Clock className="h-3 w-3 mr-1.5 flex-shrink-0" />
-                              <span>{slot.start_time}</span>
+                              <span>{slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}</span>
                             </div>
                             
                             {slot.room && (
                               <div className="flex items-center text-white/90">
                                 <MapPin className="h-3 w-3 mr-1.5 flex-shrink-0" />
                                 <span className="truncate">{slot.room}</span>
+                              </div>
+                            )}
+                            
+                            {/* Afficher instructeur si durée >= 1h */}
+                            {showInstructor && slot.users && (
+                              <div className="flex items-center text-white/90">
+                                <User className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                                <span className="truncate">{slot.users.first_name} {slot.users.last_name}</span>
+                              </div>
+                            )}
+                            
+                            {/* Afficher formation complète si durée >= 2h */}
+                            {showFullInfo && (
+                              <div className="mt-1 pt-1 border-t border-white/20">
+                                <p className="text-xs text-white/80 truncate">
+                                  Formation
+                                </p>
                               </div>
                             )}
                           </div>
@@ -256,8 +287,8 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
           </Card>
         </div>
 
-        {/* Liste des cours - 3/10 de l'espace */}
-        <div className="lg:col-span-3">
+        {/* Liste résumée - 1/3 de l'espace */}
+        <div className="lg:col-span-1">
           <Card className="shadow-sm border-border/50 sticky top-6">
             <CardHeader className="pb-3 border-b border-border/50">
               <div className="flex items-center space-x-2">
@@ -273,46 +304,66 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                   Aucun cours programmé
                 </p>
               ) : (
-                daySlots.map((slot, index) => (
-                  <Card 
-                    key={slot.id || index}
-                    className="overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 border-l-4"
-                    style={{ borderLeftColor: slot.color || '#3B82F6' }}
-                    onClick={() => onEditSlot?.(slot)}
-                  >
-                    <CardContent className="p-3">
-                      <div className="flex items-start justify-between mb-2">
-                        <h5 className="font-semibold text-sm text-foreground leading-tight">
-                          {slot.formation_modules?.title || 'Module'}
-                        </h5>
-                        <div 
-                          className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ml-2"
-                          style={{ backgroundColor: slot.color || '#3B82F6' }}
-                        >
-                          <span className="text-white text-xs font-bold">{index + 1}</span>
-                        </div>
-                      </div>
-                      <div className="space-y-1.5">
-                        <div className="flex items-center text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3 mr-1.5 flex-shrink-0" />
-                          <span>{slot.start_time} - {slot.end_time}</span>
-                        </div>
-                        {slot.room && (
-                          <div className="flex items-center text-xs text-muted-foreground">
-                            <MapPin className="h-3 w-3 mr-1.5 flex-shrink-0" />
-                            <span className="truncate">{slot.room}</span>
+                daySlots.map((slot, index) => {
+                  const duration = formatDuration(slot);
+                  return (
+                    <Card 
+                      key={slot.id || index}
+                      className="overflow-hidden cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all duration-200 border-l-4"
+                      style={{ borderLeftColor: slot.color || '#3B82F6' }}
+                      onClick={() => onEditSlot?.(slot)}
+                    >
+                      <CardContent className="p-3">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1 min-w-0">
+                            <h5 className="font-semibold text-sm text-foreground leading-tight truncate">
+                              {slot.formation_modules?.title || 'Module'}
+                            </h5>
+                            {/* Badge formation avec couleur assortie */}
+                            <Badge 
+                              variant="secondary" 
+                              className="mt-1 text-xs"
+                              style={{ 
+                                backgroundColor: `${slot.color || '#3B82F6'}15`,
+                                color: slot.color || '#3B82F6',
+                                borderColor: slot.color || '#3B82F6'
+                              }}
+                            >
+                              Formation
+                            </Badge>
                           </div>
-                        )}
-                        {slot.users && (
-                          <div className="flex items-center text-xs text-muted-foreground">
-                            <User className="h-3 w-3 mr-1.5 flex-shrink-0" />
-                            <span className="truncate">{slot.users.first_name} {slot.users.last_name}</span>
+                          {/* Numéro de cours dans un cercle coloré */}
+                          <div 
+                            className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ml-2 shadow-sm"
+                            style={{ backgroundColor: slot.color || '#3B82F6' }}
+                          >
+                            <span className="text-white text-xs font-bold">{index + 1}</span>
                           </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                        </div>
+                        <div className="space-y-1.5">
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                            <span className="font-medium">{slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}</span>
+                            <span className="ml-1 text-muted-foreground/70">({duration})</span>
+                          </div>
+                          {slot.room && (
+                            <div className="flex items-center text-xs text-muted-foreground">
+                              <MapPin className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                              <span className="truncate">{slot.room}</span>
+                            </div>
+                          )}
+                          {slot.users && (
+                            <div className="flex items-center text-xs text-muted-foreground">
+                              <User className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                              <span className="truncate">{slot.users.first_name} {slot.users.last_name}</span>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              
               )}
             </CardContent>
           </Card>
