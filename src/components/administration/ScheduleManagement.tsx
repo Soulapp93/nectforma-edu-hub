@@ -11,6 +11,8 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Upload,
   FileSpreadsheet,
   CheckCircle,
@@ -21,6 +23,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { EventDetailsModal, ScheduleEvent } from '@/components/schedule/EventDetailsModal';
 import { 
   format, 
@@ -69,6 +73,8 @@ const ScheduleManagement = () => {
   const [slots, setSlots] = useState<ScheduleSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [scheduleListViewMode, setScheduleListViewMode] = useState<'grid' | 'list'>('grid');
+  const [isWeekNavigationOpen, setIsWeekNavigationOpen] = useState(true);
   
   // États pour les modales
   const [isAddSlotModalOpen, setIsAddSlotModalOpen] = useState(false);
@@ -1407,20 +1413,34 @@ const ScheduleManagement = () => {
               />
             </div>
 
-            {/* Barre de navigation par semaine */}
-            <div className="mt-6">
-              <WeekNavigation
-                selectedDate={selectedDate}
-                onDateChange={setSelectedDate}
-                onWeekSelect={(weekStartDate) => {
-                  setSelectedDate(weekStartDate);
-                  if (viewMode !== 'week') {
-                    setViewMode('week');
-                  }
-                }}
-                className="bg-background/95 backdrop-blur-sm border-border"
-              />
-            </div>
+            {/* Barre de navigation par semaine - Collapsible */}
+            <Collapsible open={isWeekNavigationOpen} onOpenChange={setIsWeekNavigationOpen} className="mt-6">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium text-muted-foreground">Navigation par semaines</h3>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    {isWeekNavigationOpen ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
+              <CollapsibleContent>
+                <WeekNavigation
+                  selectedDate={selectedDate}
+                  onDateChange={setSelectedDate}
+                  onWeekSelect={(weekStartDate) => {
+                    setSelectedDate(weekStartDate);
+                    if (viewMode !== 'week') {
+                      setViewMode('week');
+                    }
+                  }}
+                  className="bg-background/95 backdrop-blur-sm border-border"
+                />
+              </CollapsibleContent>
+            </Collapsible>
           </div>
         </div>
 
@@ -1512,18 +1532,42 @@ const ScheduleManagement = () => {
             />
 
             <div className="flex items-center space-x-2">
-              {/* Pas besoin de sélecteur de vue - toujours en mode cartes */}
+              {/* Toggle vue liste/cartes */}
+              <Tabs value={scheduleListViewMode} onValueChange={(value) => setScheduleListViewMode(value as 'grid' | 'list')} className="w-auto">
+                <TabsList>
+                  <TabsTrigger value="grid" className="px-3">
+                    <Grid3X3 className="h-4 w-4" />
+                  </TabsTrigger>
+                  <TabsTrigger value="list" className="px-3">
+                    <List className="h-4 w-4" />
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
           </div>
 
-          {/* Barre de navigation par semaine */}
-          <div className="mt-6">
-            <WeekNavigation
-              selectedDate={selectedDate}
-              onDateChange={setSelectedDate}
-              className="bg-background/95 backdrop-blur-sm border-border"
-            />
-          </div>
+          {/* Barre de navigation par semaine - Collapsible */}
+          <Collapsible open={isWeekNavigationOpen} onOpenChange={setIsWeekNavigationOpen} className="mt-6">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-medium text-muted-foreground">Navigation par semaines</h3>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  {isWeekNavigationOpen ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+            </div>
+            <CollapsibleContent>
+              <WeekNavigation
+                selectedDate={selectedDate}
+                onDateChange={setSelectedDate}
+                className="bg-background/95 backdrop-blur-sm border-border"
+              />
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </div>
 
@@ -1546,7 +1590,7 @@ const ScheduleManagement = () => {
               </Button>
             </CardContent>
           </Card>
-        ) : (
+        ) : scheduleListViewMode === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {schedules.map((schedule) => (
               <Card
@@ -1612,6 +1656,76 @@ const ScheduleManagement = () => {
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {schedules.map((schedule) => (
+              <Card
+                key={schedule.id}
+                className="overflow-hidden transition-all duration-200 hover:shadow-lg border-border/50 bg-card shadow-sm hover:shadow-primary/10 cursor-pointer"
+                onClick={() => handleViewSchedule(schedule.id)}
+              >
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4 flex-1">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                        <Calendar className="h-6 w-6 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3">
+                          <h3 className="text-lg font-bold text-foreground">
+                            {schedule.title}
+                          </h3>
+                          <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
+                            {schedule.formations?.title || 'Formation'}
+                          </Badge>
+                          <Badge 
+                            variant="secondary" 
+                            className={`text-xs ${getStatusColor(schedule.status)}`}
+                          >
+                            {schedule.status}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center space-x-4 mt-2">
+                          <div className="flex items-center text-sm text-muted-foreground">
+                            <Book className="h-4 w-4 mr-1" />
+                            {schedule.academic_year}
+                          </div>
+                          <div className="flex items-center text-sm text-muted-foreground">
+                            <Calendar className="h-4 w-4 mr-1" />
+                            {new Date(schedule.created_at).toLocaleDateString('fr-FR')}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewSchedule(schedule.id);
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Consulter
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteSchedule(schedule.id, schedule.title);
+                        }}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
