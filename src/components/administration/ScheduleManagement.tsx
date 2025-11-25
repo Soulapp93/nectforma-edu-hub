@@ -1426,6 +1426,50 @@ const ScheduleManagement = () => {
 
         {/* Contenu principal */}
         {renderCurrentView()}
+
+        {/* Modals - toujours montées pour éviter les problèmes d'ouverture */}
+        <AddSlotModal
+          isOpen={isAddSlotModalOpen}
+          onClose={() => setIsAddSlotModalOpen(false)}
+          onSuccess={handleSlotAdded}
+          scheduleId={selectedSchedule?.id || ''}
+          formationId={selectedSchedule?.formation_id || ''}
+          selectedSlot={selectedSlot}
+        />
+
+        <EditSlotModal
+          isOpen={isEditSlotModalOpen}
+          onClose={() => setIsEditSlotModalOpen(false)}
+          onSuccess={handleSlotEdited}
+          formationId={selectedSchedule?.formation_id || ''}
+          slot={slotToEdit}
+        />
+
+        <ExcelImportModal
+          isOpen={isExcelImportModalOpen}
+          onClose={() => setIsExcelImportModalOpen(false)}
+          onSuccess={handleExcelImportSuccess}
+          scheduleId={selectedSchedule?.id || ''}
+        />
+
+        <EventDetailsModal
+          event={detailsEvent}
+          isOpen={isDetailsModalOpen}
+          onClose={() => setIsDetailsModalOpen(false)}
+          onEdit={isEditMode ? (event) => {
+            const slot = slots.find(s => s.id === event.id);
+            if (slot) {
+              handleEditSlot(slot);
+            }
+          } : undefined}
+          onDelete={isEditMode ? (eventId) => {
+            const slot = slots.find(s => s.id === eventId);
+            if (slot) {
+              handleDeleteSlot(slot);
+            }
+          } : undefined}
+          canEdit={isEditMode}
+        />
       </div>
     );
   }
