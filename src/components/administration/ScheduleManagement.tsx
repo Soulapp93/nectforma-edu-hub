@@ -20,6 +20,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { EventDetailsModal, ScheduleEvent } from '@/components/schedule/EventDetailsModal';
 import { 
   format, 
   addWeeks, 
@@ -75,6 +77,8 @@ const ScheduleManagement = () => {
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string } | null>(null);
   const [slotToEdit, setSlotToEdit] = useState<ScheduleSlot | null>(null);
   const [draggedSlot, setDraggedSlot] = useState<ScheduleSlot | null>(null);
+  const [detailsEvent, setDetailsEvent] = useState<ScheduleEvent | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   // Handlers pour les boutons principaux - Simplifiés
   const handleOpenAddSlotModal = useCallback(() => {
@@ -95,6 +99,31 @@ const ScheduleManagement = () => {
     }
     setIsExcelImportModalOpen(true);
   }, [selectedSchedule?.id]);
+
+  // Fonction pour convertir ScheduleSlot en ScheduleEvent pour le modal de détails
+  const convertSlotToEvent = useCallback((slot: ScheduleSlot): ScheduleEvent => {
+    return {
+      id: slot.id,
+      title: slot.formation_modules?.title || 'Module non défini',
+      date: new Date(slot.date),
+      startTime: slot.start_time,
+      endTime: slot.end_time,
+      instructor: slot.users?.first_name && slot.users?.last_name 
+        ? `${slot.users.first_name} ${slot.users.last_name}`
+        : 'Non assigné',
+      room: slot.room || 'Non définie',
+      formation: selectedSchedule?.formations?.title || '',
+      color: slot.color || 'hsl(var(--primary))',
+      description: slot.notes || undefined
+    };
+  }, [selectedSchedule]);
+
+  // Handler pour ouvrir le modal de détails
+  const handleSlotClick = useCallback((slot: ScheduleSlot) => {
+    const event = convertSlotToEvent(slot);
+    setDetailsEvent(event);
+    setIsDetailsModalOpen(true);
+  }, [convertSlotToEvent]);
 
   const handleAddSlot = useCallback((date: Date, time: string) => {
     console.log('Ouverture modale Ajouter avec slot spécifique', { date, time, selectedSchedule: selectedSchedule?.id });
@@ -849,18 +878,20 @@ const ScheduleManagement = () => {
                            {slotsAsEvents.slice(0, 3).map((event, index) => {
                              const originalSlot = daySlots.find(s => s.id === event.id);
                              return (
-                               <div
-                                 key={event.id}
-                                 className="px-2 py-2 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 mb-1 text-white"
-                                 style={{ 
-                                   backgroundColor: event.color
-                                 }}
-                                title={`${event.title} - ${event.startTime}`}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (originalSlot) handleEditSlot(originalSlot);
-                                }}
-                              >
+                               <TooltipProvider>
+                                 <Tooltip>
+                                   <TooltipTrigger asChild>
+                                     <div
+                                       key={event.id}
+                                       className="px-2 py-2 rounded-md shadow-sm cursor-pointer hover:shadow-md hover:scale-105 transition-all duration-200 mb-1 text-white"
+                                       style={{ 
+                                         backgroundColor: event.color
+                                       }}
+                                       onClick={(e) => {
+                                         e.stopPropagation();
+                                         if (originalSlot) handleSlotClick(originalSlot);
+                                       }}
+                                     >
                                 <div className="space-y-0.5">
                                    <div className="font-semibold text-white text-[11px] leading-tight">
                                      Module {event.title}
@@ -888,10 +919,21 @@ const ScheduleManagement = () => {
                                        <span>{event.instructor}</span>
                                      </div>
                                    )}
-                                </div>
-                             </div>
-                           );
-                           })}
+                                 </div>
+                                     </div>
+                                   </TooltipTrigger>
+                                   <TooltipContent side="right" className="max-w-xs">
+                                     <div className="space-y-1">
+                                       <p className="font-semibold">{event.title}</p>
+                                       <p className="text-xs">{event.startTime} - {event.endTime}</p>
+                                       <p className="text-xs">{event.instructor}</p>
+                                       <p className="text-xs">Salle: {event.room}</p>
+                                     </div>
+                                   </TooltipContent>
+                                 </Tooltip>
+                               </TooltipProvider>
+                            );
+                            })}
                            
                             {slotsAsEvents.length > 3 && (
                               <div className="text-xs text-muted-foreground text-center py-2 font-medium opacity-75">
@@ -984,90 +1026,103 @@ const ScheduleManagement = () => {
                     </div>
                   ) : (
                     allSlots.map((slot) => (
-                      <div
-                        key={slot.id}
-                        className="grid grid-cols-6 gap-4 items-center p-4 rounded-lg cursor-pointer hover:shadow-md transition-all duration-200 text-white"
-                        style={{ 
-                          backgroundColor: slot.color || '#8B5CF6'
-                        }}
-                        onClick={() => handleEditSlot(slot)}
-                      >
-                        {/* Date */}
-                        <div>
-                          <div className="font-medium text-white text-sm">
-                            {format(new Date(slot.date), 'dd/MM/yyyy', { locale: fr })}
-                          </div>
-                          <div className="text-xs text-white/80">
-                            {format(new Date(slot.date), 'EEEE', { locale: fr })}
-                          </div>
-                        </div>
+                      <TooltipProvider key={slot.id}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div
+                              className="grid grid-cols-6 gap-4 items-center p-4 rounded-lg cursor-pointer hover:shadow-md hover:scale-[1.01] transition-all duration-200 text-white"
+                              style={{ 
+                                backgroundColor: slot.color || '#8B5CF6'
+                              }}
+                              onClick={() => handleSlotClick(slot)}
+                            >
+                              {/* Date */}
+                              <div>
+                                <div className="font-medium text-white text-sm">
+                                  {format(new Date(slot.date), 'dd/MM/yyyy', { locale: fr })}
+                                </div>
+                                <div className="text-xs text-white/80">
+                                  {format(new Date(slot.date), 'EEEE', { locale: fr })}
+                                </div>
+                              </div>
 
-                        {/* Horaire */}
-                        <div>
-                          <div className="bg-white/20 text-white border-white/30 rounded px-2 py-1 text-xs font-medium inline-block">
-                            {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
-                          </div>
-                        </div>
+                              {/* Horaire */}
+                              <div>
+                                <div className="bg-white/20 text-white border-white/30 rounded px-2 py-1 text-xs font-medium inline-block">
+                                  {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
+                                </div>
+                              </div>
 
-                        {/* Module */}
-                        <div>
-                          <div className="font-medium text-white text-sm">
-                            {slot.formation_modules?.title || 'Module non défini'}
-                          </div>
-                          {slot.notes && (
-                            <div className="text-xs text-white/80 mt-1">
-                              {slot.notes}
+                              {/* Module */}
+                              <div>
+                                <div className="font-medium text-white text-sm">
+                                  {slot.formation_modules?.title || 'Module non défini'}
+                                </div>
+                                {slot.notes && (
+                                  <div className="text-xs text-white/80 mt-1">
+                                    {slot.notes}
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Formateur */}
+                              <div>
+                                <span className="text-sm text-white">
+                                  {slot.users?.first_name && slot.users?.last_name 
+                                    ? `${slot.users.first_name} ${slot.users.last_name}`
+                                    : 'Non assigné'
+                                  }
+                                </span>
+                              </div>
+
+                              {/* Salle */}
+                              <div>
+                                <span className="text-sm text-white">
+                                  {slot.room || 'Non définie'}
+                                </span>
+                              </div>
+
+                              {/* Actions */}
+                              {isEditMode && (
+                                <div>
+                                  <div className="flex items-center space-x-1">
+                                    <Button 
+                                      size="sm" 
+                                      variant="ghost" 
+                                      className="h-7 w-7 p-0 text-white/80 hover:text-white hover:bg-white/20"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleEditSlot(slot);
+                                      }}
+                                    >
+                                      <Edit className="h-3 w-3" />
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="ghost" 
+                                      className="h-7 w-7 p-0 text-white/80 hover:text-white hover:bg-white/20"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteSlot(slot);
+                                      }}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-
-                        {/* Formateur */}
-                        <div>
-                          <span className="text-sm text-white">
-                            {slot.users?.first_name && slot.users?.last_name 
-                              ? `${slot.users.first_name} ${slot.users.last_name}`
-                              : 'Non assigné'
-                            }
-                          </span>
-                        </div>
-
-                        {/* Salle */}
-                        <div>
-                          <span className="text-sm text-white">
-                            {slot.room || 'Non définie'}
-                          </span>
-                        </div>
-
-                        {/* Actions */}
-                        {isEditMode && (
-                          <div>
-                            <div className="flex items-center space-x-1">
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                className="h-7 w-7 p-0 text-white/80 hover:text-white hover:bg-white/20"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditSlot(slot);
-                                }}
-                              >
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                className="h-7 w-7 p-0 text-white/80 hover:text-white hover:bg-white/20"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteSlot(slot);
-                                }}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="right" className="max-w-xs">
+                            <div className="space-y-1">
+                              <p className="font-semibold">{slot.formation_modules?.title || 'Module non défini'}</p>
+                              <p className="text-xs">{slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}</p>
+                              <p className="text-xs">{slot.users?.first_name} {slot.users?.last_name}</p>
+                              <p className="text-xs">Salle: {slot.room}</p>
                             </div>
-                          </div>
-                        )}
-                      </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     ))
                   )}
                 </div>
@@ -1138,14 +1193,22 @@ const ScheduleManagement = () => {
                     </div>
                   ) : (
                     <>
-                      {day.modules.map((module, index) => (
-                         <div
-                           key={index}
-                           className="relative p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 mb-2 text-white"
-                           style={{ 
-                             backgroundColor: getModuleColor(module.title)
-                           }}
-                         >
+                      {day.modules.map((module, index) => {
+                        const slot = slots.find(s => 
+                          s.formation_modules?.title === module.title &&
+                          new Date(s.date).toDateString() === day.actualDate.toDateString()
+                        );
+                        return (
+                          <TooltipProvider key={index}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div
+                                  className="relative p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all duration-200 mb-2 text-white group"
+                                  style={{ 
+                                    backgroundColor: getModuleColor(module.title)
+                                  }}
+                                  onClick={() => slot && handleSlotClick(slot)}
+                                >
                            <div>
                              <h4 className="font-semibold text-white text-sm mb-2">
                                {module.title}
@@ -1167,43 +1230,55 @@ const ScheduleManagement = () => {
                              </div>
                              
                               {/* Admin actions */}
-                              {isEditMode && (
-                                <div className="flex items-center space-x-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost" 
-                                    className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20"
-                                     onClick={(e) => {
-                                       e.stopPropagation();
-                                       const slot = slots.find(s => 
-                                         s.formation_modules?.title === module.title &&
-                                         new Date(s.date).toDateString() === day.actualDate.toDateString()
-                                       );
-                                       if (slot) handleEditSlot(slot);
-                                     }}
-                                  >
-                                    <Edit className="h-3 w-3" />
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost" 
-                                    className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20"
-                                     onClick={(e) => {
-                                       e.stopPropagation();
-                                       const slot = slots.find(s => 
-                                         s.formation_modules?.title === module.title &&
-                                         new Date(s.date).toDateString() === day.actualDate.toDateString()
-                                       );
-                                       if (slot) handleDeleteSlot(slot);
-                                     }}
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              )}
-                           </div>
-                         </div>
-                       ))}
+                               {isEditMode && (
+                                 <div className="flex items-center space-x-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                   <Button 
+                                     size="sm" 
+                                     variant="ghost" 
+                                     className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const slot = slots.find(s => 
+                                          s.formation_modules?.title === module.title &&
+                                          new Date(s.date).toDateString() === day.actualDate.toDateString()
+                                        );
+                                        if (slot) handleEditSlot(slot);
+                                      }}
+                                   >
+                                     <Edit className="h-3 w-3" />
+                                   </Button>
+                                   <Button 
+                                     size="sm" 
+                                     variant="ghost" 
+                                     className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const slot = slots.find(s => 
+                                          s.formation_modules?.title === module.title &&
+                                          new Date(s.date).toDateString() === day.actualDate.toDateString()
+                                        );
+                                        if (slot) handleDeleteSlot(slot);
+                                      }}
+                                   >
+                                     <Trash2 className="h-3 w-3" />
+                                   </Button>
+                                 </div>
+                                )}
+                            </div>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="max-w-xs">
+                          <div className="space-y-1">
+                            <p className="font-semibold">{module.title}</p>
+                            <p className="text-xs">{module.time}</p>
+                            <p className="text-xs">{module.instructor}</p>
+                            <p className="text-xs">Salle: {module.room}</p>
+                          </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        );
+                      })}
                        {isEditMode && (
                          <Button 
                            size="sm" 
@@ -1528,6 +1603,26 @@ const ScheduleManagement = () => {
         onClose={() => setIsExcelImportModalOpen(false)}
         onSuccess={handleExcelImportSuccess}
         scheduleId={selectedSchedule?.id || ''}
+      />
+
+      <EventDetailsModal
+        event={detailsEvent}
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        onEdit={isEditMode ? (event) => {
+          // Trouver le slot correspondant pour l'éditer
+          const slot = slots.find(s => s.id === event.id);
+          if (slot) {
+            handleEditSlot(slot);
+          }
+        } : undefined}
+        onDelete={isEditMode ? (eventId) => {
+          const slot = slots.find(s => s.id === eventId);
+          if (slot) {
+            handleDeleteSlot(slot);
+          }
+        } : undefined}
+        canEdit={isEditMode}
       />
     </div>
   );
