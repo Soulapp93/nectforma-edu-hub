@@ -82,13 +82,12 @@ const ScheduleManagement = () => {
 
   // Handlers pour les boutons principaux - Simplifiés
   const handleOpenAddSlotModal = useCallback(() => {
-    console.log('Ouverture modale Ajouter créneau', { selectedSchedule: selectedSchedule?.id });
     if (!selectedSchedule?.id) {
       toast.error('Veuillez sélectionner un emploi du temps pour ajouter des créneaux');
       return;
     }
     setSelectedSlot(null);
-    setIsAddSlotModalOpen(true);
+    setTimeout(() => setIsAddSlotModalOpen(true), 0);
   }, [selectedSchedule?.id]);
 
   const handleOpenExcelImportModal = useCallback(() => {
@@ -126,16 +125,16 @@ const ScheduleManagement = () => {
   }, [convertSlotToEvent]);
 
   const handleAddSlot = useCallback((date: Date, time: string) => {
-    console.log('Ouverture modale Ajouter avec slot spécifique', { date, time, selectedSchedule: selectedSchedule?.id });
     if (!selectedSchedule?.id) {
       toast.error('Veuillez sélectionner un emploi du temps');
       return;
     }
-    setSelectedSlot({
+    const newSlot = {
       date: formatDate(date),
       time
-    });
-    setIsAddSlotModalOpen(true);
+    };
+    setSelectedSlot(newSlot);
+    setTimeout(() => setIsAddSlotModalOpen(true), 0);
   }, [selectedSchedule?.id]);
 
   const formatDate = (date: Date) => {
@@ -1318,6 +1317,9 @@ const ScheduleManagement = () => {
                     setSelectedSchedule(null);
                     setIsEditMode(false);
                     setViewMode('list');
+                    setIsAddSlotModalOpen(false);
+                    setIsEditSlotModalOpen(false);
+                    setIsDetailsModalOpen(false);
                   }}
                   className="p-2 hover:bg-primary/10"
                 >
