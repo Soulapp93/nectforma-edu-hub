@@ -90,19 +90,13 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ fileUrl, fileName, onClose })
           </div>
         </div>
 
-        {/* Contenu : message + ouverture dans le navigateur */}
-        <div className="flex-1 flex items-center justify-center bg-background">
-          <div className="text-center max-w-md px-6">
-            <p className="mb-4 text-sm text-muted-foreground">
-              Pour garantir une visualisation 100% fidèle (couleurs, mises en forme, filtres),
-              le fichier va s&apos;ouvrir dans un nouvel onglet avec votre navigateur
-              (Chrome, Google&nbsp;Sheets, Excel, etc.).
-            </p>
-            <Button onClick={openInNewTab} className="gap-2">
-              <FileSpreadsheet className="h-4 w-4" />
-              Ouvrir le fichier dans un nouvel onglet
-            </Button>
-          </div>
+        {/* Contenu : visualisation directe dans l'application */}
+        <div className="flex-1 overflow-hidden bg-background">
+          <iframe
+            src={fileUrl}
+            title={fileName}
+            className="w-full h-full border-0"
+          />
         </div>
       </div>
     </div>
