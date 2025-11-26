@@ -30,6 +30,12 @@ interface ScheduleSlot {
   };
 }
 
+interface GroupedSlots {
+  date: string;
+  isPast: boolean;
+  slots: ScheduleSlot[];
+}
+
 interface Formation {
   id: string;
   title: string;
@@ -43,7 +49,8 @@ const SendAttendanceLinkModal: React.FC<SendAttendanceLinkModalProps> = ({
 }) => {
   const [formations, setFormations] = useState<Formation[]>([]);
   const [selectedFormationId, setSelectedFormationId] = useState<string>('');
-  const [todaySlots, setTodaySlots] = useState<ScheduleSlot[]>([]);
+  const [allSlots, setAllSlots] = useState<ScheduleSlot[]>([]);
+  const [groupedSlots, setGroupedSlots] = useState<GroupedSlots[]>([]);
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
@@ -56,9 +63,10 @@ const SendAttendanceLinkModal: React.FC<SendAttendanceLinkModalProps> = ({
 
   useEffect(() => {
     if (selectedFormationId) {
-      loadTodaySlots();
+      loadAllSlots();
     } else {
-      setTodaySlots([]);
+      setAllSlots([]);
+      setGroupedSlots([]);
       setSelectedSlots([]);
     }
   }, [selectedFormationId]);
@@ -82,10 +90,9 @@ const SendAttendanceLinkModal: React.FC<SendAttendanceLinkModalProps> = ({
     }
   };
 
-  const loadTodaySlots = async () => {
+  const loadAllSlots = async () => {
     try {
       setLoading(true);
-      const today = format(new Date(), 'yyyy-MM-dd');
 
       const { data, error } = await supabase
         .from('schedule_slots')
@@ -99,14 +106,37 @@ const SendAttendanceLinkModal: React.FC<SendAttendanceLinkModalProps> = ({
           schedules!inner (formation_id)
         `)
         .eq('schedules.formation_id', selectedFormationId)
-        .eq('date', today)
-        .order('start_time');
+        .order('date', { ascending: true })
+        .order('start_time', { ascending: true });
 
       if (error) throw error;
-      setTodaySlots(data || []);
+      
+      const slots = data || [];
+      setAllSlots(slots);
+      
+      // Grouper les créneaux par date
+      const grouped = slots.reduce((acc: GroupedSlots[], slot) => {
+        const existingGroup = acc.find(g => g.date === slot.date);
+        const today = format(new Date(), 'yyyy-MM-dd');
+        const isPast = slot.date < today;
+        
+        if (existingGroup) {
+          existingGroup.slots.push(slot);
+        } else {
+          acc.push({
+            date: slot.date,
+            isPast,
+            slots: [slot]
+          });
+        }
+        
+        return acc;
+      }, []);
+      
+      setGroupedSlots(grouped);
       setSelectedSlots([]);
     } catch (error) {
-      console.error('Error loading today slots:', error);
+      console.error('Error loading slots:', error);
       toast.error('Erreur lors du chargement des créneaux');
     } finally {
       setLoading(false);
@@ -132,7 +162,7 @@ const SendAttendanceLinkModal: React.FC<SendAttendanceLinkModalProps> = ({
 
       // Pour chaque créneau sélectionné, créer une feuille d'émargement et envoyer le lien
       for (const slotId of selectedSlots) {
-        const slot = todaySlots.find(s => s.id === slotId);
+        const slot = allSlots.find(s => s.id === slotId);
         if (!slot) continue;
 
         // Vérifier si une feuille d'émargement existe déjà pour ce créneau
@@ -263,46 +293,74 @@ const SendAttendanceLinkModal: React.FC<SendAttendanceLinkModalProps> = ({
             </div>
           )}
 
-          {/* Liste des créneaux du jour */}
+          {/* Liste de tous les créneaux */}
           {selectedFormationId && (
-            <div className="space-y-2">
+            <div className="space-y-4">
               <label className="text-sm font-medium">
-                Créneaux du jour ({format(new Date(), 'dd/MM/yyyy', { locale: fr })})
+                Tous les créneaux de la formation
               </label>
               
               {loading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                 </div>
-              ) : todaySlots.length === 0 ? (
+              ) : groupedSlots.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  Aucun créneau aujourd'hui pour cette formation
+                  Aucun créneau trouvé pour cette formation
                 </div>
               ) : (
-                <div className="space-y-2">
-                  {todaySlots.map((slot) => (
-                    <div
-                      key={slot.id}
-                      className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <Checkbox
-                        checked={selectedSlots.includes(slot.id)}
-                        onCheckedChange={() => handleSlotToggle(slot.id)}
-                      />
-                      <div className="flex-1">
-                        <h4 className="font-medium">{slot.formation_modules?.title}</h4>
-                        <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {slot.start_time} - {slot.end_time}
+                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                  {groupedSlots.map((group) => (
+                    <div key={group.date} className="space-y-2">
+                      <div className="flex items-center gap-2 sticky top-0 bg-background/95 backdrop-blur-sm py-2 z-10">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium text-sm">
+                          {format(new Date(group.date), 'EEEE dd MMMM yyyy', { locale: fr })}
+                        </span>
+                        {group.isPast ? (
+                          <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">
+                            Passé
                           </span>
-                          {slot.room && (
-                            <span className="flex items-center gap-1">
-                              <Users className="h-3 w-3" />
-                              {slot.room}
-                            </span>
-                          )}
-                        </div>
+                        ) : (
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                            À venir
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2 pl-6 border-l-2 border-muted">
+                        {group.slots.map((slot) => (
+                          <div
+                            key={slot.id}
+                            className={`flex items-start space-x-3 p-3 border rounded-lg transition-colors ${
+                              group.isPast 
+                                ? 'bg-muted/30 hover:bg-muted/50' 
+                                : 'hover:bg-muted/50'
+                            }`}
+                          >
+                            <Checkbox
+                              checked={selectedSlots.includes(slot.id)}
+                              onCheckedChange={() => handleSlotToggle(slot.id)}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm truncate">
+                                {slot.formation_modules?.title || 'Cours'}
+                              </h4>
+                              <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
+                                </span>
+                                {slot.room && (
+                                  <span className="flex items-center gap-1">
+                                    <Users className="h-3 w-3" />
+                                    {slot.room}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))}
