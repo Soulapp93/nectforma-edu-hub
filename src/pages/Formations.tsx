@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Filter, BookOpen, Users, Clock, Star, Grid3x3, List } from 'lucide-react';
 import FormationCard from '../components/administration/FormationCard';
-import FormationModal from '../components/FormationModal';
+import CreateFormationModal from '@/components/administration/CreateFormationModal';
+import EditFormationModal from '@/components/administration/EditFormationModal';
 import FormationParticipantsModal from '@/components/administration/FormationParticipantsModal';
 import { useFormations } from '@/hooks/useFormations';
 import { formationService } from '@/services/formationService';
@@ -12,9 +12,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 const Formations = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedFormation, setSelectedFormation] = useState(null);
-  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingFormationId, setEditingFormationId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
@@ -28,36 +28,33 @@ const Formations = () => {
   
   const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
 
+  const fetchParticipantsCount = async () => {
+    if (formations && formations.length > 0) {
+      const formationsWithCounts = await Promise.all(
+        formations.map(async (formation) => {
+          const participantsCount = await formationService.getFormationParticipantsCount(formation.id);
+          return {
+            ...formation,
+            participantsCount
+          };
+        })
+      );
+      setFormationsWithParticipants(formationsWithCounts);
+    }
+  };
+
   // Récupérer le nombre de participants pour chaque formation
   useEffect(() => {
-    const fetchParticipantsCount = async () => {
-      if (formations && formations.length > 0) {
-        const formationsWithCounts = await Promise.all(
-          formations.map(async (formation) => {
-            const participantsCount = await formationService.getFormationParticipantsCount(formation.id);
-            return {
-              ...formation,
-              participantsCount
-            };
-          })
-        );
-        setFormationsWithParticipants(formationsWithCounts);
-      }
-    };
-
     fetchParticipantsCount();
   }, [formations]);
 
   const handleCreateFormation = () => {
-    setSelectedFormation(null);
-    setModalMode('create');
-    setIsModalOpen(true);
+    setIsCreateModalOpen(true);
   };
 
   const handleEditFormation = (formation: any) => {
-    setSelectedFormation(formation);
-    setModalMode('edit');
-    setIsModalOpen(true);
+    setEditingFormationId(formation.id);
+    setIsEditModalOpen(true);
   };
 
   const handleDeleteFormation = async (formationId: string) => {
@@ -78,24 +75,14 @@ const Formations = () => {
     setIsParticipantsModalOpen(true);
   };
 
-  const handleSaveFormation = async (formationData: any) => {
-    try {
-      if (modalMode === 'create') {
-        await formationService.createFormation({
-          ...formationData,
-          establishment_id: 'default-establishment-id'
-        });
-        toast.success('Formation créée avec succès');
-      } else {
-        await formationService.updateFormation(selectedFormation?.id, formationData);
-        toast.success('Formation mise à jour avec succès');
-      }
-      refetch();
-      setIsModalOpen(false);
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
-      toast.error('Erreur lors de la sauvegarde de la formation');
-    }
+  const handleSuccess = () => {
+    refetch();
+    toast.success('Formation mise à jour avec succès');
+  };
+
+  const handleCreateSuccess = () => {
+    refetch();
+    toast.success('Formation créée avec succès');
   };
 
   const filteredFormations = formationsWithParticipants.filter(formation => {
@@ -352,13 +339,21 @@ const Formations = () => {
         </div>
       )}
 
-      {/* Modal */}
-      <FormationModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSaveFormation}
-        formation={selectedFormation}
-        mode={modalMode}
+      {/* Modals */}
+      <CreateFormationModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={handleCreateSuccess}
+      />
+
+      <EditFormationModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingFormationId(null);
+        }}
+        onSuccess={handleSuccess}
+        formationId={editingFormationId}
       />
 
       {selectedFormationId && (
