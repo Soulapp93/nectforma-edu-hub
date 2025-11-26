@@ -10,27 +10,16 @@ interface ExcelViewerProps {
 
 const ExcelViewer: React.FC<ExcelViewerProps> = ({ fileUrl, fileName, onClose }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  
-  // Encode the file URL for Google Viewer
-  const encodedUrl = encodeURIComponent(fileUrl);
-  const googleViewerUrl = `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true`;
-  const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}`;
-  
-  // Generate Google Sheets opening URL
-  const openWithGoogleSheets = () => {
-    window.open(`https://docs.google.com/spreadsheets/d/?url=${encodedUrl}`, '_blank', 'noopener,noreferrer');
-  };
-  
-  // Generate Excel Online opening URL
-  const openWithExcel = () => {
-    window.open(`https://excel.office.com/launch?url=${encodedUrl}`, '_blank', 'noopener,noreferrer');
+
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
   };
 
   const handleDownload = async () => {
     try {
       const response = await fetch(fileUrl);
       if (!response.ok) throw new Error('Erreur lors du téléchargement');
-      
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -46,11 +35,8 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ fileUrl, fileName, onClose })
   };
 
   const openInNewTab = () => {
+    // Laisse le navigateur (Chrome, plugins, suite Office, etc.) gérer l'affichage natif
     window.open(fileUrl, '_blank', 'noopener,noreferrer');
-  };
-
-  const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
   };
 
   return (
@@ -63,7 +49,7 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ fileUrl, fileName, onClose })
             <div className="flex-1 min-w-0">
               <h2 className="text-lg font-semibold truncate">{fileName}</h2>
               <p className="text-sm text-muted-foreground">
-                Fichier Excel • Visualisation native
+                Fichier Excel • Visualisation dans le navigateur
               </p>
             </div>
           </div>
@@ -72,29 +58,20 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ fileUrl, fileName, onClose })
             <Button
               variant="outline"
               size="sm"
-              onClick={openWithGoogleSheets}
-              className="gap-2"
-            >
-              <FileSpreadsheet className="h-4 w-4" />
-              Google Sheets
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={openWithExcel}
-              className="gap-2"
-            >
-              <FileSpreadsheet className="h-4 w-4" />
-              Excel Online
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
               onClick={handleDownload}
               className="gap-2"
             >
               <Download className="h-4 w-4" />
               Télécharger
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={openInNewTab}
+              className="gap-2"
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              Ouvrir dans un nouvel onglet
             </Button>
             <Button
               variant="ghost"
@@ -113,14 +90,19 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ fileUrl, fileName, onClose })
           </div>
         </div>
 
-        {/* Content - Native Excel Viewer */}
-        <div className="flex-1 overflow-hidden bg-background">
-          <iframe
-            src={googleViewerUrl}
-            className="w-full h-full border-0"
-            title={fileName}
-            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-          />
+        {/* Contenu : message + ouverture dans le navigateur */}
+        <div className="flex-1 flex items-center justify-center bg-background">
+          <div className="text-center max-w-md px-6">
+            <p className="mb-4 text-sm text-muted-foreground">
+              Pour garantir une visualisation 100% fidèle (couleurs, mises en forme, filtres),
+              le fichier va s&apos;ouvrir dans un nouvel onglet avec votre navigateur
+              (Chrome, Google&nbsp;Sheets, Excel, etc.).
+            </p>
+            <Button onClick={openInNewTab} className="gap-2">
+              <FileSpreadsheet className="h-4 w-4" />
+              Ouvrir le fichier dans un nouvel onglet
+            </Button>
+          </div>
         </div>
       </div>
     </div>
