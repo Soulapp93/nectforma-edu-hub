@@ -36,7 +36,13 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ fileUrl, fileName, onClose })
       const response = await fetch(fileUrl);
       const arrayBuffer = await response.arrayBuffer();
       const data = new Uint8Array(arrayBuffer);
-      const wb = XLSX.read(data, { type: 'array' });
+      const wb = XLSX.read(data, { 
+        type: 'array',
+        cellStyles: true,
+        cellHTML: false,
+        cellFormula: true,
+        cellText: true
+      });
       
       setWorkbook(wb);
       if (wb.SheetNames.length > 0) {
@@ -91,9 +97,76 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ fileUrl, fileName, onClose })
   };
 
   const getCurrentSheetData = () => {
-    if (!workbook || !currentSheet) return [];
+    if (!workbook || !currentSheet) return { data: [], styles: {} };
     const sheet = workbook.Sheets[currentSheet];
-    return XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[][];
+    const data = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' }) as any[][];
+    
+    // Extract cell styles and properties
+    const styles: any = {};
+    const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
+    
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+        const cell = sheet[cellAddress];
+        
+        if (cell) {
+          const cellStyle: any = {};
+          
+          // Extract background color from cell fill
+          if (cell.s && cell.s.fgColor) {
+            const color = cell.s.fgColor;
+            if (color.rgb) {
+              cellStyle.backgroundColor = `#${color.rgb.substring(2)}`;
+            }
+          }
+          
+          // Extract font color
+          if (cell.s && cell.s.font && cell.s.font.color) {
+            const fontColor = cell.s.font.color;
+            if (fontColor.rgb) {
+              cellStyle.color = `#${fontColor.rgb.substring(2)}`;
+            }
+          }
+          
+          // Extract font styles
+          if (cell.s && cell.s.font) {
+            if (cell.s.font.bold) cellStyle.fontWeight = 'bold';
+            if (cell.s.font.italic) cellStyle.fontStyle = 'italic';
+            if (cell.s.font.underline) cellStyle.textDecoration = 'underline';
+            if (cell.s.font.sz) cellStyle.fontSize = `${cell.s.font.sz}px`;
+          }
+          
+          // Extract alignment
+          if (cell.s && cell.s.alignment) {
+            if (cell.s.alignment.horizontal) {
+              cellStyle.textAlign = cell.s.alignment.horizontal;
+            }
+            if (cell.s.alignment.vertical) {
+              cellStyle.verticalAlign = cell.s.alignment.vertical === 'center' ? 'middle' : cell.s.alignment.vertical;
+            }
+          }
+          
+          // Extract borders
+          if (cell.s && cell.s.border) {
+            const borders = [];
+            if (cell.s.border.top) borders.push('top');
+            if (cell.s.border.bottom) borders.push('bottom');
+            if (cell.s.border.left) borders.push('left');
+            if (cell.s.border.right) borders.push('right');
+            if (borders.length > 0) {
+              cellStyle.border = '1px solid #d1d5db';
+            }
+          }
+          
+          if (Object.keys(cellStyle).length > 0) {
+            styles[cellAddress] = cellStyle;
+          }
+        }
+      }
+    }
+    
+    return { data, styles };
   };
 
   const toggleFullscreen = () => {
@@ -116,7 +189,12 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ fileUrl, fileName, onClose })
     }
   };
 
-  const sheetData = getCurrentSheetData();
+  const { data: sheetData, styles: cellStyles } = getCurrentSheetData();
+  
+  const getCellStyle = (rowIdx: number, cellIdx: number) => {
+    const cellAddress = XLSX.utils.encode_cell({ r: rowIdx, c: cellIdx });
+    return cellStyles[cellAddress] || {};
+  };
 
   return (
     <div className={`fixed inset-0 z-50 bg-background ${isFullscreen ? 'p-0' : 'p-4'}`}>
@@ -232,31 +310,64 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ fileUrl, fileName, onClose })
           {!loading && !error && sheetData.length > 0 && (
             <ScrollArea className="h-full">
               <div className="p-6">
-                <div className="border rounded-lg overflow-hidden">
-                  <table className="w-full border-collapse">
+                <div className="border rounded-lg overflow-hidden bg-background">
+                  <table className="w-full border-collapse" style={{ tableLayout: 'auto' }}>
                     <thead>
-                      <tr className="bg-muted">
-                        {sheetData[0]?.map((header: any, idx: number) => (
-                          <th
-                            key={idx}
-                            className="border border-border px-4 py-2 text-left text-sm font-semibold sticky top-0 bg-muted"
-                          >
-                            {header || `Colonne ${idx + 1}`}
-                          </th>
-                        ))}
+                      <tr>
+                        {sheetData[0]?.map((header: any, idx: number) => {
+                          const headerStyle = getCellStyle(0, idx);
+                          return (
+                            <th
+                              key={idx}
+                              className="border border-border px-3 py-2 text-left text-sm sticky top-0"
+                              style={{
+                                minWidth: '100px',
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word',
+                                backgroundColor: headerStyle.backgroundColor || 'hsl(var(--muted))',
+                                color: headerStyle.color || 'inherit',
+                                fontWeight: headerStyle.fontWeight || 'bold',
+                                textAlign: headerStyle.textAlign || 'left',
+                                verticalAlign: headerStyle.verticalAlign || 'middle',
+                                fontSize: headerStyle.fontSize || '0.875rem',
+                                fontStyle: headerStyle.fontStyle,
+                                textDecoration: headerStyle.textDecoration,
+                                ...headerStyle
+                              }}
+                            >
+                              {header || ''}
+                            </th>
+                          );
+                        })}
                       </tr>
                     </thead>
                     <tbody>
                       {sheetData.slice(1).map((row: any[], rowIdx: number) => (
-                        <tr key={rowIdx} className="hover:bg-muted/50">
-                          {row.map((cell: any, cellIdx: number) => (
-                            <td
-                              key={cellIdx}
-                              className="border border-border px-4 py-2 text-sm"
-                            >
-                              {cell !== null && cell !== undefined ? String(cell) : ''}
-                            </td>
-                          ))}
+                        <tr key={rowIdx}>
+                          {row.map((cell: any, cellIdx: number) => {
+                            const cellStyle = getCellStyle(rowIdx + 1, cellIdx);
+                            return (
+                              <td
+                                key={cellIdx}
+                                className="border border-border px-3 py-2 text-sm"
+                                style={{
+                                  whiteSpace: 'pre-wrap',
+                                  wordBreak: 'break-word',
+                                  backgroundColor: cellStyle.backgroundColor || 'transparent',
+                                  color: cellStyle.color || 'inherit',
+                                  fontWeight: cellStyle.fontWeight,
+                                  textAlign: cellStyle.textAlign || 'left',
+                                  verticalAlign: cellStyle.verticalAlign || 'top',
+                                  fontSize: cellStyle.fontSize || '0.875rem',
+                                  fontStyle: cellStyle.fontStyle,
+                                  textDecoration: cellStyle.textDecoration,
+                                  ...cellStyle
+                                }}
+                              >
+                                {cell !== null && cell !== undefined && cell !== '' ? String(cell) : ''}
+                              </td>
+                            );
+                          })}
                         </tr>
                       ))}
                     </tbody>
