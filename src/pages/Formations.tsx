@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Search, Filter, BookOpen, Users, Clock, Star, Grid3x3, List } from 'lucide-react';
 import FormationCard from '../components/administration/FormationCard';
 import FormationModal from '../components/FormationModal';
+import FormationParticipantsModal from '@/components/administration/FormationParticipantsModal';
 import { useFormations } from '@/hooks/useFormations';
 import { formationService } from '@/services/formationService';
 import { toast } from 'sonner';
@@ -19,6 +20,8 @@ const Formations = () => {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [formationsWithParticipants, setFormationsWithParticipants] = useState<any[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isParticipantsModalOpen, setIsParticipantsModalOpen] = useState(false);
+  const [selectedFormationId, setSelectedFormationId] = useState<string | null>(null);
   
   const { formations, loading, error, refetch } = useFormations();
   const { userRole } = useCurrentUser();
@@ -68,6 +71,11 @@ const Formations = () => {
         toast.error('Erreur lors de la suppression de la formation');
       }
     }
+  };
+
+  const handleViewParticipants = (formationId: string) => {
+    setSelectedFormationId(formationId);
+    setIsParticipantsModalOpen(true);
   };
 
   const handleSaveFormation = async (formationData: any) => {
@@ -234,11 +242,12 @@ const Formations = () => {
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Niveau</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Formation</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Dates</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Durée</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Participants</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Modules</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Statut</th>
-                  {isAdmin && <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">Actions</th>}
+                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -267,6 +276,16 @@ const Formations = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
+                      <div className="text-sm">
+                        <div className="text-gray-900">
+                          Du {new Date(formation.start_date).toLocaleDateString('fr-FR')}
+                        </div>
+                        <div className="text-gray-600">
+                          au {new Date(formation.end_date).toLocaleDateString('fr-FR')}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
                       <span className="text-sm text-gray-600">{formation.duration}h</span>
                     </td>
                     <td className="px-6 py-4">
@@ -289,26 +308,42 @@ const Formations = () => {
                         {formation.status}
                       </Badge>
                     </td>
-                    {isAdmin && (
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditFormation(formation)}
-                          >
-                            Modifier
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDeleteFormation(formation.id)}
-                          >
-                            Supprimer
-                          </Button>
-                        </div>
-                      </td>
-                    )}
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.location.href = `/formations/${formation.id}`}
+                        >
+                          Voir détail
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewParticipants(formation.id)}
+                        >
+                          Voir les participants ({formation.participantsCount || 0})
+                        </Button>
+                        {isAdmin && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditFormation(formation)}
+                            >
+                              Modifier
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteFormation(formation.id)}
+                            >
+                              Supprimer
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -325,6 +360,19 @@ const Formations = () => {
         formation={selectedFormation}
         mode={modalMode}
       />
+
+      {selectedFormationId && (
+        <FormationParticipantsModal
+          isOpen={isParticipantsModalOpen}
+          onClose={() => {
+            setIsParticipantsModalOpen(false);
+            setSelectedFormationId(null);
+          }}
+          formationId={selectedFormationId}
+          formationTitle={filteredFormations.find(f => f.id === selectedFormationId)?.title || ''}
+          formationColor={filteredFormations.find(f => f.id === selectedFormationId)?.color}
+        />
+      )}
     </div>
   );
 };
