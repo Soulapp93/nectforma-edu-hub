@@ -39,9 +39,10 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ fileUrl, fileName, onClose })
       const wb = XLSX.read(data, { 
         type: 'array',
         cellStyles: true,
-        cellHTML: false,
+        cellHTML: true,
         cellFormula: true,
-        cellText: true
+        cellDates: true,
+        cellNF: true
       });
       
       setWorkbook(wb);
@@ -96,12 +97,19 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ fileUrl, fileName, onClose })
     }
   };
 
+  const rgbToHex = (r: number, g: number, b: number): string => {
+    return '#' + [r, g, b].map(x => {
+      const hex = x.toString(16);
+      return hex.length === 1 ? '0' + hex : hex;
+    }).join('');
+  };
+
   const getCurrentSheetData = () => {
     if (!workbook || !currentSheet) return { data: [], styles: {} };
     const sheet = workbook.Sheets[currentSheet];
     const data = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' }) as any[][];
     
-    // Extract cell styles and properties
+    // Extract cell styles and properties directly from HTML rendering
     const styles: any = {};
     const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
     
@@ -110,52 +118,78 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ fileUrl, fileName, onClose })
         const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
         const cell = sheet[cellAddress];
         
-        if (cell) {
+        if (cell && cell.s) {
           const cellStyle: any = {};
           
-          // Extract background color from cell fill
-          if (cell.s && cell.s.fgColor) {
+          // Extract background color - try multiple sources
+          if (cell.s.fgColor) {
             const color = cell.s.fgColor;
             if (color.rgb) {
-              cellStyle.backgroundColor = `#${color.rgb.substring(2)}`;
+              // Remove alpha channel if present (first 2 chars)
+              const rgb = color.rgb.length === 8 ? color.rgb.substring(2) : color.rgb;
+              cellStyle.backgroundColor = `#${rgb}`;
+            } else if (color.theme !== undefined) {
+              // Handle theme colors - basic approximation
+              cellStyle.backgroundColor = 'inherit';
             }
           }
           
-          // Extract font color
-          if (cell.s && cell.s.font && cell.s.font.color) {
-            const fontColor = cell.s.font.color;
-            if (fontColor.rgb) {
-              cellStyle.color = `#${fontColor.rgb.substring(2)}`;
+          if (cell.s.bgColor) {
+            const color = cell.s.bgColor;
+            if (color.rgb) {
+              const rgb = color.rgb.length === 8 ? color.rgb.substring(2) : color.rgb;
+              cellStyle.backgroundColor = `#${rgb}`;
             }
           }
           
-          // Extract font styles
-          if (cell.s && cell.s.font) {
+          // Extract font properties
+          if (cell.s.font) {
+            // Font color
+            if (cell.s.font.color) {
+              const fontColor = cell.s.font.color;
+              if (fontColor.rgb) {
+                const rgb = fontColor.rgb.length === 8 ? fontColor.rgb.substring(2) : fontColor.rgb;
+                cellStyle.color = `#${rgb}`;
+              }
+            }
+            
+            // Font styles
             if (cell.s.font.bold) cellStyle.fontWeight = 'bold';
             if (cell.s.font.italic) cellStyle.fontStyle = 'italic';
             if (cell.s.font.underline) cellStyle.textDecoration = 'underline';
             if (cell.s.font.sz) cellStyle.fontSize = `${cell.s.font.sz}px`;
+            if (cell.s.font.name) cellStyle.fontFamily = cell.s.font.name;
           }
           
           // Extract alignment
-          if (cell.s && cell.s.alignment) {
+          if (cell.s.alignment) {
             if (cell.s.alignment.horizontal) {
               cellStyle.textAlign = cell.s.alignment.horizontal;
             }
             if (cell.s.alignment.vertical) {
               cellStyle.verticalAlign = cell.s.alignment.vertical === 'center' ? 'middle' : cell.s.alignment.vertical;
             }
+            if (cell.s.alignment.wrapText) {
+              cellStyle.whiteSpace = 'pre-wrap';
+            }
           }
           
           // Extract borders
-          if (cell.s && cell.s.border) {
-            const borders = [];
-            if (cell.s.border.top) borders.push('top');
-            if (cell.s.border.bottom) borders.push('bottom');
-            if (cell.s.border.left) borders.push('left');
-            if (cell.s.border.right) borders.push('right');
-            if (borders.length > 0) {
-              cellStyle.border = '1px solid #d1d5db';
+          if (cell.s.border) {
+            const borderParts: string[] = [];
+            ['top', 'bottom', 'left', 'right'].forEach((side) => {
+              if (cell.s.border[side]) {
+                const borderColor = cell.s.border[side].color;
+                const color = borderColor?.rgb ? `#${borderColor.rgb.substring(2)}` : '#d1d5db';
+                borderParts.push(`border-${side}: 1px solid ${color}`);
+              }
+            });
+            if (borderParts.length > 0) {
+              // Apply individual borders
+              borderParts.forEach(bp => {
+                const [prop, value] = bp.split(': ');
+                cellStyle[prop.replace(/-./g, x => x[1].toUpperCase())] = value;
+              });
             }
           }
           
