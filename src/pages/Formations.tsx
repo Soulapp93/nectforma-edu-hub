@@ -1,12 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Filter, BookOpen, Users, Clock, Star } from 'lucide-react';
+import { Plus, Search, Filter, BookOpen, Users, Clock, Star, Grid3x3, List } from 'lucide-react';
 import FormationCard from '../components/administration/FormationCard';
 import FormationModal from '../components/FormationModal';
 import { useFormations } from '@/hooks/useFormations';
 import { formationService } from '@/services/formationService';
 import { toast } from 'sonner';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 const Formations = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -16,6 +18,7 @@ const Formations = () => {
   const [selectedLevel, setSelectedLevel] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [formationsWithParticipants, setFormationsWithParticipants] = useState<any[]>([]);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
   const { formations, loading, error, refetch } = useFormations();
   const { userRole } = useCurrentUser();
@@ -128,6 +131,30 @@ const Formations = () => {
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sm:p-6 lg:p-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">Catalogue des formations</h2>
+          
+          {/* Toggle vue grille/liste */}
+          <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+              className="h-8 px-3"
+            >
+              <Grid3x3 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="h-8 px-3"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
@@ -165,7 +192,7 @@ const Formations = () => {
       </div>
 
 
-      {/* Formations Grid */}
+      {/* Formations Grid ou Liste */}
       {filteredFormations.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 sm:p-10 lg:p-12 text-center">
           <div className="max-w-md mx-auto">
@@ -186,7 +213,7 @@ const Formations = () => {
             </p>
           </div>
         </div>
-      ) : (
+      ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
           {filteredFormations.map((formation) => (
             <FormationCard
@@ -198,6 +225,95 @@ const Formations = () => {
               isAdmin={isAdmin}
             />
           ))}
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Niveau</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Formation</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Durée</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Participants</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Modules</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Statut</th>
+                  {isAdmin && <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">Actions</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredFormations.map((formation, index) => (
+                  <tr 
+                    key={formation.id} 
+                    className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}
+                  >
+                    <td className="px-6 py-4">
+                      <Badge 
+                        variant="outline"
+                        className="font-medium"
+                        style={{ borderColor: formation.color, color: formation.color }}
+                      >
+                        {formation.level}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div>
+                        <div className="font-medium text-gray-900">{formation.title}</div>
+                        {formation.description && (
+                          <div className="text-sm text-gray-600 line-clamp-1 mt-1">
+                            {formation.description}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-gray-600">{formation.duration}h</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary">
+                          {formation.participantsCount || 0} / {formation.max_students}
+                        </Badge>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Badge variant="outline">
+                        {formation.formation_modules?.length || 0} modules
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Badge 
+                        variant={formation.status === 'Actif' ? 'default' : 'secondary'}
+                        className={formation.status === 'Actif' ? 'bg-green-100 text-green-700 border-green-200' : ''}
+                      >
+                        {formation.status}
+                      </Badge>
+                    </td>
+                    {isAdmin && (
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditFormation(formation)}
+                          >
+                            Modifier
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteFormation(formation.id)}
+                          >
+                            Supprimer
+                          </Button>
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Filter } from 'lucide-react';
+import { Search, Plus, Filter, Grid3x3, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LoadingState } from '@/components/ui/loading-state';
+import { Badge } from '@/components/ui/badge';
 import CreateFormationModal from './CreateFormationModal';
 import EditFormationModal from './EditFormationModal';
 import FormationCard from './FormationCard';
@@ -20,6 +21,7 @@ const FormationsList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
   const { userRole } = useCurrentUser();
   const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
@@ -105,16 +107,38 @@ const FormationsList: React.FC = () => {
         <div className="p-6 border-b border-border">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-foreground">Gestion des formations</h2>
-            {isAdmin && (
-              <Button 
-                onClick={handleCreateFormation}
-                className="flex items-center gap-2"
-                variant="premium"
-              >
-                <Plus className="h-4 w-4" />
-                Nouvelle formation
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {/* Toggle vue grille/liste */}
+              <div className="flex items-center bg-muted rounded-lg p-1">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className="h-8 px-3"
+                >
+                  <Grid3x3 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className="h-8 px-3"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {isAdmin && (
+                <Button 
+                  onClick={handleCreateFormation}
+                  className="flex items-center gap-2"
+                  variant="premium"
+                >
+                  <Plus className="h-4 w-4" />
+                  Nouvelle formation
+                </Button>
+              )}
+            </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4">
@@ -156,7 +180,7 @@ const FormationsList: React.FC = () => {
         </div>
       </div>
 
-      {/* Cartes des formations */}
+      {/* Cartes des formations ou vue liste */}
       {filteredFormations.length === 0 ? (
         <EmptyState
           icon={Plus}
@@ -172,7 +196,7 @@ const FormationsList: React.FC = () => {
             variant: 'premium'
           } : undefined}
         />
-      ) : (
+      ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredFormations.map((formation) => (
             <FormationCard
@@ -184,6 +208,95 @@ const FormationsList: React.FC = () => {
               isAdmin={isAdmin}
             />
           ))}
+        </div>
+      ) : (
+        <div className="glass-card rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-muted/50 border-b border-border">
+                <tr>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Niveau</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Formation</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Durée</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Participants</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Modules</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Statut</th>
+                  {isAdmin && <th className="px-6 py-4 text-right text-sm font-semibold text-foreground">Actions</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredFormations.map((formation, index) => (
+                  <tr 
+                    key={formation.id} 
+                    className={`border-b border-border hover:bg-muted/30 transition-colors ${index % 2 === 0 ? 'bg-background' : 'bg-muted/10'}`}
+                  >
+                    <td className="px-6 py-4">
+                      <Badge 
+                        variant="outline"
+                        className="font-medium"
+                        style={{ borderColor: formation.color, color: formation.color }}
+                      >
+                        {formation.level}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div>
+                        <div className="font-medium text-foreground">{formation.title}</div>
+                        {formation.description && (
+                          <div className="text-sm text-muted-foreground line-clamp-1 mt-1">
+                            {formation.description}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-muted-foreground">{formation.duration}h</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary">
+                          {formation.participantsCount || 0} / {formation.max_students}
+                        </Badge>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Badge variant="outline">
+                        {formation.formation_modules?.length || 0} modules
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Badge 
+                        variant={formation.status === 'Actif' ? 'default' : 'secondary'}
+                        className={formation.status === 'Actif' ? 'bg-success/10 text-success border-success/20' : ''}
+                      >
+                        {formation.status}
+                      </Badge>
+                    </td>
+                    {isAdmin && (
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditFormation(formation.id)}
+                          >
+                            Modifier
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteFormation(formation.id)}
+                          >
+                            Supprimer
+                          </Button>
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
