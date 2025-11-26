@@ -11,6 +11,11 @@ interface ExcelViewerProps {
 const ExcelViewer: React.FC<ExcelViewerProps> = ({ fileUrl, fileName, onClose }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Utilise le viewer Excel en ligne de Microsoft pour une visualisation fidèle dans un iframe
+  const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
+    fileUrl
+  )}`;
+
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
   };
@@ -90,10 +95,10 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ fileUrl, fileName, onClose })
           </div>
         </div>
 
-        {/* Contenu : visualisation directe dans l'application */}
+        {/* Contenu : visualisation directe dans l'application via Office Online */}
         <div className="flex-1 overflow-hidden bg-background">
           <iframe
-            src={fileUrl}
+            src={officeViewerUrl}
             title={fileName}
             className="w-full h-full border-0"
           />
