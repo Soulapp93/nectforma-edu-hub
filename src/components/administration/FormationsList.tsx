@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import CreateFormationModal from './CreateFormationModal';
 import EditFormationModal from './EditFormationModal';
 import FormationCard from './FormationCard';
+import FormationParticipantsModal from './FormationParticipantsModal';
 import { formationService } from '@/services/formationService';
 import { toast } from 'sonner';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -15,7 +16,9 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 const FormationsList: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isParticipantsModalOpen, setIsParticipantsModalOpen] = useState(false);
   const [editingFormationId, setEditingFormationId] = useState<string | null>(null);
+  const [selectedFormationId, setSelectedFormationId] = useState<string | null>(null);
   const [formations, setFormations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -62,6 +65,11 @@ const FormationsList: React.FC = () => {
   const handleEditFormation = (formationId: string) => {
     setEditingFormationId(formationId);
     setIsEditModalOpen(true);
+  };
+
+  const handleViewParticipants = (formationId: string) => {
+    setSelectedFormationId(formationId);
+    setIsParticipantsModalOpen(true);
   };
 
   const handleSuccess = () => {
@@ -217,11 +225,12 @@ const FormationsList: React.FC = () => {
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Niveau</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Formation</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Dates</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Durée</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Participants</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Modules</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Statut</th>
-                  {isAdmin && <th className="px-6 py-4 text-right text-sm font-semibold text-foreground">Actions</th>}
+                  <th className="px-6 py-4 text-right text-sm font-semibold text-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -250,6 +259,16 @@ const FormationsList: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
+                      <div className="text-sm">
+                        <div className="text-foreground">
+                          Du {new Date(formation.start_date).toLocaleDateString('fr-FR')}
+                        </div>
+                        <div className="text-muted-foreground">
+                          au {new Date(formation.end_date).toLocaleDateString('fr-FR')}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
                       <span className="text-sm text-muted-foreground">{formation.duration}h</span>
                     </td>
                     <td className="px-6 py-4">
@@ -272,26 +291,42 @@ const FormationsList: React.FC = () => {
                         {formation.status}
                       </Badge>
                     </td>
-                    {isAdmin && (
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditFormation(formation.id)}
-                          >
-                            Modifier
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDeleteFormation(formation.id)}
-                          >
-                            Supprimer
-                          </Button>
-                        </div>
-                      </td>
-                    )}
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.location.href = `/formations/${formation.id}`}
+                        >
+                          Voir détail
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewParticipants(formation.id)}
+                        >
+                          Voir les participants ({formation.participantsCount || 0})
+                        </Button>
+                        {isAdmin && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditFormation(formation.id)}
+                            >
+                              Modifier
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteFormation(formation.id)}
+                            >
+                              Supprimer
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -316,6 +351,19 @@ const FormationsList: React.FC = () => {
         onSuccess={handleSuccess}
         formationId={editingFormationId}
       />
+
+      {selectedFormationId && (
+        <FormationParticipantsModal
+          isOpen={isParticipantsModalOpen}
+          onClose={() => {
+            setIsParticipantsModalOpen(false);
+            setSelectedFormationId(null);
+          }}
+          formationId={selectedFormationId}
+          formationTitle={formations.find(f => f.id === selectedFormationId)?.title || ''}
+          formationColor={formations.find(f => f.id === selectedFormationId)?.color}
+        />
+      )}
     </div>
   );
 };
