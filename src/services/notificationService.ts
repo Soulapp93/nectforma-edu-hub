@@ -1,6 +1,43 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export const notificationService = {
+  // Envoyer des emails Gmail pour les notifications
+  async sendGmailNotifications(userIds: string[], title: string, message: string, type: string) {
+    try {
+      // Récupérer les emails des utilisateurs
+      const { data: users, error: usersError } = await supabase
+        .from('users')
+        .select('email')
+        .in('id', userIds);
+
+      if (usersError || !users || users.length === 0) {
+        console.log('No users found for Gmail notifications');
+        return;
+      }
+
+      const userEmails = users.map(u => u.email);
+
+      // Appeler l'edge function pour envoyer les emails
+      const { error: emailError } = await supabase.functions.invoke('send-notification-email', {
+        body: {
+          userEmails,
+          title,
+          message,
+          type
+        }
+      });
+
+      if (emailError) {
+        console.error('Error sending Gmail notifications:', emailError);
+      } else {
+        console.log(`Gmail notifications sent to ${userEmails.length} users`);
+      }
+    } catch (error) {
+      console.error('Error in sendGmailNotifications:', error);
+      // Ne pas bloquer si l'envoi d'email échoue
+    }
+  },
+
   // Notifier les utilisateurs d'une formation spécifique
   async notifyFormationUsers(formationId: string, title: string, message: string, type: string, metadata?: any) {
     try {
@@ -16,9 +53,11 @@ export const notificationService = {
         return { success: true, notified_users: 0 };
       }
 
+      const userIds = userAssignments.map(a => a.user_id);
+
       // Créer une notification pour chaque utilisateur
-      const notifications = userAssignments.map(assignment => ({
-        user_id: assignment.user_id,
+      const notifications = userIds.map(userId => ({
+        user_id: userId,
         title,
         message,
         type,
@@ -31,6 +70,9 @@ export const notificationService = {
         .insert(notifications);
 
       if (insertError) throw insertError;
+
+      // Envoyer les emails Gmail
+      await this.sendGmailNotifications(userIds, title, message, type);
 
       return { success: true, notified_users: notifications.length };
     } catch (error) {
@@ -54,6 +96,10 @@ export const notificationService = {
         });
 
       if (error) throw error;
+
+      // Envoyer l'email Gmail
+      await this.sendGmailNotifications([userId], title, message, type);
+
       return { success: true };
     } catch (error) {
       console.error('Erreur lors de l\'envoi de la notification:', error);
@@ -76,9 +122,11 @@ export const notificationService = {
         return { success: true, notified_users: 0 };
       }
 
+      const instructorIds = instructors.map(i => i.id);
+
       // Créer une notification pour chaque formateur
-      const notifications = instructors.map(instructor => ({
-        user_id: instructor.id,
+      const notifications = instructorIds.map(instructorId => ({
+        user_id: instructorId,
         title,
         message,
         type,
@@ -91,6 +139,9 @@ export const notificationService = {
         .insert(notifications);
 
       if (insertError) throw insertError;
+
+      // Envoyer les emails Gmail
+      await this.sendGmailNotifications(instructorIds, title, message, type);
 
       return { success: true, notified_users: notifications.length };
     } catch (error) {
@@ -115,9 +166,11 @@ export const notificationService = {
         return { success: true, notified_users: 0 };
       }
 
+      const participantIds = registrations.map(r => r.user_id);
+
       // Créer une notification pour chaque participant
-      const notifications = registrations.map(registration => ({
-        user_id: registration.user_id,
+      const notifications = participantIds.map(userId => ({
+        user_id: userId,
         title,
         message,
         type,
@@ -130,6 +183,9 @@ export const notificationService = {
         .insert(notifications);
 
       if (insertError) throw insertError;
+
+      // Envoyer les emails Gmail
+      await this.sendGmailNotifications(participantIds, title, message, type);
 
       return { success: true, notified_users: notifications.length };
     } catch (error) {
