@@ -26,6 +26,7 @@ const AdminValidationModal: React.FC<AdminValidationModalProps> = ({
   const [showSignature, setShowSignature] = useState(false);
   const [validating, setValidating] = useState(false);
   const [savedSignature, setSavedSignature] = useState<string | null>(null);
+  const [loadingSignature, setLoadingSignature] = useState(false);
   const { userId } = useCurrentUser();
 
   // Charger la signature sauvegardée de l'admin
@@ -33,9 +34,7 @@ const AdminValidationModal: React.FC<AdminValidationModalProps> = ({
     const loadSavedSignature = async () => {
       if (!isOpen || !userId) return;
       
-      // Réinitialiser la signature quand on ouvre le modal
-      setSavedSignature(null);
-      
+      setLoadingSignature(true);
       try {
         const { data, error } = await supabase
           .from('user_signatures')
@@ -45,17 +44,22 @@ const AdminValidationModal: React.FC<AdminValidationModalProps> = ({
 
         if (error) {
           console.error('Error loading admin signature:', error);
+          setLoadingSignature(false);
           return;
         }
 
         if (data?.signature_data) {
           setSavedSignature(data.signature_data);
-          console.log('Signature administrateur chargée:', !!data.signature_data);
+          console.log('Signature administrateur chargée avec succès, longueur:', data.signature_data.length);
         } else {
           console.log('Aucune signature sauvegardée trouvée pour cet administrateur');
+          setSavedSignature(null);
         }
       } catch (error) {
         console.error('Error loading admin signature:', error);
+        setSavedSignature(null);
+      } finally {
+        setLoadingSignature(false);
       }
     };
 
@@ -66,7 +70,6 @@ const AdminValidationModal: React.FC<AdminValidationModalProps> = ({
   useEffect(() => {
     if (!isOpen) {
       setShowSignature(false);
-      setSavedSignature(null);
     }
   }, [isOpen]);
 
@@ -184,11 +187,18 @@ const AdminValidationModal: React.FC<AdminValidationModalProps> = ({
                 Signez pour confirmer la validation de cette feuille d'émargement
               </p>
               
-              <SignaturePad
-                onSave={handleValidate}
-                onCancel={handleCancelSignature}
-                initialSignature={savedSignature || undefined}
-              />
+              {loadingSignature ? (
+                <div className="text-center p-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
+                  <p className="text-sm text-gray-600">Chargement de votre signature...</p>
+                </div>
+              ) : (
+                <SignaturePad
+                  onSave={handleValidate}
+                  onCancel={handleCancelSignature}
+                  initialSignature={savedSignature || undefined}
+                />
+              )}
             </div>
           )}
         </div>

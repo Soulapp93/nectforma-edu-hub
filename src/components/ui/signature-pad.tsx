@@ -17,10 +17,11 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
   onCancel,
   initialSignature
 }) => {
-  console.log('SignaturePad component loaded successfully');
+  console.log('SignaturePad component loaded', { hasInitialSignature: !!initialSignature });
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isEmpty, setIsEmpty] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -29,33 +30,44 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     const context = canvas.getContext('2d');
     if (!context) return;
 
-    // Configuration du canvas
-    context.lineCap = 'round';
-    context.lineJoin = 'round';
-    context.lineWidth = 2;
-    context.strokeStyle = '#000000';
+    // Configuration du canvas (une seule fois)
+    if (!isInitialized) {
+      context.lineCap = 'round';
+      context.lineJoin = 'round';
+      context.lineWidth = 2;
+      context.strokeStyle = '#000000';
 
-    // Effacer le canvas
-    context.fillStyle = '#ffffff';
-    context.fillRect(0, 0, width, height);
+      // Effacer le canvas
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, width, height);
+      setIsInitialized(true);
+    }
 
     // Charger la signature initiale si elle existe
     if (initialSignature) {
-      console.log('Chargement de la signature initiale...');
+      console.log('Chargement de la signature initiale, longueur:', initialSignature.length);
       const img = new Image();
       img.onload = () => {
-        console.log('Signature initiale chargée avec succès');
+        console.log('Signature initiale chargée et affichée avec succès');
+        // Effacer d'abord
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, width, height);
+        // Puis dessiner la signature
         context.drawImage(img, 0, 0, width, height);
         setIsEmpty(false);
       };
       img.onerror = (error) => {
         console.error('Erreur lors du chargement de la signature initiale:', error);
+        setIsEmpty(true);
       };
       img.src = initialSignature;
     } else {
-      setIsEmpty(true);
+      console.log('Pas de signature initiale à charger');
+      if (isInitialized) {
+        setIsEmpty(true);
+      }
     }
-  }, [width, height, initialSignature]);
+  }, [width, height, initialSignature, isInitialized]);
 
   const getMousePos = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
