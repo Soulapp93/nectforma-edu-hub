@@ -50,7 +50,7 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
   const [showInstructorSignModal, setShowInstructorSignModal] = useState(false);
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
-
+  const [adminSignature, setAdminSignature] = useState<string | null>(null);
   // Charger les données de la feuille d'émargement
   const loadAttendanceData = async () => {
     try {
@@ -81,6 +81,24 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
       if (signaturesError) throw signaturesError;
 
       setAttendanceSheet({ ...sheetData, signatures } as any);
+
+      // Charger la signature administrative depuis user_signatures
+      let adminSig: string | null = null;
+      if (sheetData.validated_by) {
+        const { data: adminSigData, error: adminSigError } = await supabase
+          .from('user_signatures')
+          .select('signature_data')
+          .eq('user_id', sheetData.validated_by)
+          .maybeSingle();
+
+        if (adminSigError) {
+          console.error('Erreur récupération signature admin:', adminSigError);
+        } else if (adminSigData && adminSigData.signature_data) {
+          adminSig = adminSigData.signature_data;
+        }
+      }
+
+      setAdminSignature(adminSig);
 
       // Récupérer les étudiants inscrits à la formation
       const { data: studentData, error: studentsError } = await supabase
@@ -361,15 +379,9 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
             <div>
               <h4 className="font-semibold mb-3">Signature de l'Administration</h4>
               <div className="border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-center justify-center p-2">
-                {(attendanceSheet as any).signatures?.find((sig: any) => 
-                    sig.user_type === 'admin' && 
-                    sig.user_id === attendanceSheet.validated_by
-                  )?.signature_data ? (
+                {adminSignature ? (
                   <img 
-                    src={(attendanceSheet as any).signatures.find((sig: any) => 
-                      sig.user_type === 'admin' && 
-                      sig.user_id === attendanceSheet.validated_by
-                    )?.signature_data} 
+                    src={adminSignature} 
                     alt="Signature administration" 
                     className="h-16 w-auto"
                   />
@@ -380,18 +392,7 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
                 )}
               </div>
               <div className="mt-2 text-center text-sm text-gray-600 border-t pt-2">
-                {attendanceSheet.validated_by && (attendanceSheet as any).signatures?.find((sig: any) => 
-                  sig.user_type === 'admin' && sig.user_id === attendanceSheet.validated_by
-                )?.users ? (
-                  <>
-                    {(attendanceSheet as any).signatures.find((sig: any) => 
-                      sig.user_type === 'admin' && sig.user_id === attendanceSheet.validated_by
-                    )?.users?.first_name} {' '}
-                    {(attendanceSheet as any).signatures.find((sig: any) => 
-                      sig.user_type === 'admin' && sig.user_id === attendanceSheet.validated_by
-                    )?.users?.last_name}
-                  </>
-                ) : 'Administration'}
+                Administration
               </div>
             </div>
           </div>
