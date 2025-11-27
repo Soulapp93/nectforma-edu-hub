@@ -454,27 +454,6 @@ export const attendanceService = {
         if (userSigError) {
           console.error('Erreur sauvegarde signature administrative dans user_signatures:', userSigError);
         }
-
-        // Ajouter la signature administrative dans attendance_signatures
-        // pour qu'elle apparaisse sur la feuille d'émargement
-        const { data: adminSigResult, error: adminSigError } = await supabase
-          .from('attendance_signatures')
-          .insert({
-            attendance_sheet_id: attendanceSheetId,
-            user_id: adminUserId,
-            user_type: 'admin',
-            signature_data: signatureData,
-            present: true,
-            signed_at: new Date().toISOString()
-          })
-          .select();
-
-        if (adminSigError) {
-          console.error('Erreur ajout signature administrative dans attendance_signatures:', adminSigError);
-          throw adminSigError;
-        }
-
-        console.log('Service: Signature administrative enregistrée avec succès');
       }
 
       console.log('Service: Validation terminée avec succès');
