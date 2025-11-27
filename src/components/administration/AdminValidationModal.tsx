@@ -192,11 +192,35 @@ const AdminValidationModal: React.FC<AdminValidationModalProps> = ({
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
                   <p className="text-sm text-gray-600">Chargement de votre signature...</p>
                 </div>
+              ) : savedSignature ? (
+                <div className="space-y-4">
+                  <div className="flex justify-center">
+                    <div className="border-2 border-gray-300 rounded-lg p-4 bg-white inline-block">
+                      <img
+                        src={savedSignature}
+                        alt="Signature administrative enregistrée"
+                        className="max-h-40 w-auto"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    Votre signature enregistrée sera utilisée pour valider cette feuille.
+                  </p>
+                  <div className="flex justify-center gap-3">
+                    <Button variant="outline" onClick={handleCancelSignature}>
+                      Annuler
+                    </Button>
+                    <Button onClick={() => handleValidate(savedSignature)} className="bg-green-600 hover:bg-green-700">
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Valider avec cette signature
+                    </Button>
+                  </div>
+                </div>
               ) : (
                 <SignaturePad
                   onSave={handleValidate}
                   onCancel={handleCancelSignature}
-                  initialSignature={savedSignature || undefined}
+                  initialSignature={undefined}
                 />
               )}
             </div>
