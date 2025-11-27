@@ -45,7 +45,12 @@ serve(async (req) => {
       );
     }
 
-    const signatureLink = `${Deno.env.get("SUPABASE_URL").replace("https://", "https://app.")}/emargement/signer/${sheet.signature_link_token}`;
+    // Construire le lien de signature
+    // Utilise l'URL de l'application depuis les variables d'environnement
+    // ou construit l'URL depuis le domaine Supabase
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const appUrl = Deno.env.get("APP_URL") || supabaseUrl.replace("cvuyglhivifusdahoztd.supabase.co", "app.yourapp.com");
+    const signatureLink = `${appUrl}/emargement/signer/${sheet.signature_link_token}`;
 
     const notificationTitle = "Nouveau lien d'émargement";
     const notificationMessage = `Un lien d'émargement a été envoyé pour la session "${sheet.formations.title}" du ${new Date(sheet.date).toLocaleDateString('fr-FR')}. Cliquez pour signer.`;
