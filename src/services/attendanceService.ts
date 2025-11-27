@@ -439,26 +439,42 @@ export const attendanceService = {
 
       // Ajouter la signature administrative si fournie
       if (signatureData && signatureData.trim() !== '') {
-        console.log('Service: Ajout signature administrative dans user_signatures, longueur:', signatureData.length);
+        console.log('Service: Ajout signature administrative, longueur:', signatureData.length);
         
-        // TOUJOURS sauvegarder la signature administrative dans user_signatures
-        // Cela permet à chaque utilisateur de conserver sa propre signature
-        const { data: userSigResult, error: userSigError } = await supabase
+        // Sauvegarder dans user_signatures pour réutilisation future
+        const { error: userSigError } = await supabase
           .from('user_signatures')
           .upsert({
             user_id: adminUserId,
             signature_data: signatureData
           }, {
             onConflict: 'user_id'
-          })
-          .select();
+          });
 
         if (userSigError) {
           console.error('Erreur sauvegarde signature administrative dans user_signatures:', userSigError);
-          throw userSigError;
         }
 
-        console.log('Service: Signature administrative sauvegardée dans user_signatures:', !!userSigResult);
+        // Ajouter la signature administrative dans attendance_signatures
+        // pour qu'elle apparaisse sur la feuille d'émargement
+        const { data: adminSigResult, error: adminSigError } = await supabase
+          .from('attendance_signatures')
+          .insert({
+            attendance_sheet_id: attendanceSheetId,
+            user_id: adminUserId,
+            user_type: 'admin',
+            signature_data: signatureData,
+            present: true,
+            signed_at: new Date().toISOString()
+          })
+          .select();
+
+        if (adminSigError) {
+          console.error('Erreur ajout signature administrative dans attendance_signatures:', adminSigError);
+          throw adminSigError;
+        }
+
+        console.log('Service: Signature administrative enregistrée avec succès');
       }
 
       console.log('Service: Validation terminée avec succès');
