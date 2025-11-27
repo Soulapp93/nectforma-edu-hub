@@ -2,3 +2,10 @@ project_id = "cvuyglhivifusdahoztd"
 
 [functions.update-class-status]
 verify_jwt = false
+
+[functions.check-expired-attendance-links]
+verify_jwt = false
+
+[functions.check-expired-attendance-links.schedule]
+# Exécuter toutes les 5 minutes pour vérifier les liens expirés
+cron = "*/5 * * * *"
