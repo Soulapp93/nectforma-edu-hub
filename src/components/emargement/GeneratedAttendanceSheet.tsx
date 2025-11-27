@@ -362,12 +362,12 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
               <h4 className="font-semibold mb-3">Signature de l'Administration</h4>
               <div className="border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-center justify-center p-2">
                 {(attendanceSheet as any).signatures?.find((sig: any) => 
-                    sig.user_type === 'instructor' && 
+                    sig.user_type === 'admin' && 
                     sig.user_id === attendanceSheet.validated_by
                   )?.signature_data ? (
                   <img 
                     src={(attendanceSheet as any).signatures.find((sig: any) => 
-                      sig.user_type === 'instructor' && 
+                      sig.user_type === 'admin' && 
                       sig.user_id === attendanceSheet.validated_by
                     )?.signature_data} 
                     alt="Signature administration" 
@@ -375,12 +375,23 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
                   />
                 ) : (
                   <div className="text-xs text-gray-500 text-center">
-                    En attente de validation
+                    {attendanceSheet.status === 'Validé' ? 'Validé sans signature' : 'En attente de validation'}
                   </div>
                 )}
               </div>
               <div className="mt-2 text-center text-sm text-gray-600 border-t pt-2">
-                Administration
+                {attendanceSheet.validated_by && (attendanceSheet as any).signatures?.find((sig: any) => 
+                  sig.user_type === 'admin' && sig.user_id === attendanceSheet.validated_by
+                )?.users ? (
+                  <>
+                    {(attendanceSheet as any).signatures.find((sig: any) => 
+                      sig.user_type === 'admin' && sig.user_id === attendanceSheet.validated_by
+                    )?.users?.first_name} {' '}
+                    {(attendanceSheet as any).signatures.find((sig: any) => 
+                      sig.user_type === 'admin' && sig.user_id === attendanceSheet.validated_by
+                    )?.users?.last_name}
+                  </>
+                ) : 'Administration'}
               </div>
             </div>
           </div>
