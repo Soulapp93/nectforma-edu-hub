@@ -89,30 +89,29 @@ export const pdfExportService = {
       pdf.text(`Formateur: ${attendanceSheet.instructor?.first_name || 'undefined'} ${attendanceSheet.instructor?.last_name || 'undefined'}`, margin, detailsY + 7);
 
       // Table header
-      const tableStartY = 72;
-      const colWidths = [70, 30, 65, 35]; // Nom, Statut, Email, Signature
-      const colX = [margin, margin + colWidths[0], margin + colWidths[0] + colWidths[1], margin + colWidths[0] + colWidths[1] + colWidths[2]];
+      const tableStartY = 70;
+      const colWidths = [90, 50, 40]; // Nom et Prénom, Statut, Signature
+      const colX = [margin, margin + colWidths[0], margin + colWidths[0] + colWidths[1]];
       
-      // Header background (dark gray)
-      pdf.setFillColor(50, 50, 50);
-      pdf.rect(margin, tableStartY, pageWidth - 2 * margin, 10, 'F');
+      // Header background (violet comme l'entête principal)
+      pdf.setFillColor(139, 92, 246);
+      pdf.rect(margin, tableStartY, pageWidth - 2 * margin, 12, 'F');
       
       // Header text
       pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(10);
+      pdf.setFontSize(11);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('Nom et Prénom', colX[0] + 2, tableStartY + 7);
-      pdf.text('Statut', colX[1] + 2, tableStartY + 7);
-      pdf.text('Email', colX[2] + 2, tableStartY + 7);
-      pdf.text('Signature', colX[3] + 2, tableStartY + 7);
+      pdf.text('Nom et Prénom', colX[0] + 3, tableStartY + 8);
+      pdf.text('Statut', colX[1] + 3, tableStartY + 8);
+      pdf.text('Signature', colX[2] + 3, tableStartY + 8);
 
       // Table content
-      let currentY = tableStartY + 10;
+      let currentY = tableStartY + 12;
       const signatures = attendanceSheet.signatures || [];
-      const rowHeight = 10;
+      const rowHeight = 12;
       
       pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(9);
+      pdf.setFontSize(10);
       
       signatures.forEach((signature, index) => {
         if (currentY > 250) {
@@ -129,34 +128,28 @@ export const pdfExportService = {
         pdf.rect(margin, currentY, pageWidth - 2 * margin, rowHeight, 'F');
 
         // Draw cell borders
-        pdf.setDrawColor(200, 200, 200);
+        pdf.setDrawColor(220, 220, 220);
         pdf.rect(margin, currentY, colWidths[0], rowHeight);
         pdf.rect(colX[1], currentY, colWidths[1], rowHeight);
         pdf.rect(colX[2], currentY, colWidths[2], rowHeight);
-        pdf.rect(colX[3], currentY, colWidths[3], rowHeight);
 
         // Cell content
         pdf.setTextColor(0, 0, 0);
-        pdf.text(`${signature.user?.first_name || ''} ${signature.user?.last_name || ''}`, colX[0] + 2, currentY + 7);
-        pdf.text(signature.present ? 'Présent' : 'Absent', colX[1] + 2, currentY + 7);
-        
-        const email = signature.user?.email || '';
-        const maxEmailWidth = colWidths[2] - 4;
-        const emailText = pdf.splitTextToSize(email, maxEmailWidth);
-        pdf.text(emailText[0] || '', colX[2] + 2, currentY + 7);
+        pdf.text(`${signature.user?.first_name || ''} ${signature.user?.last_name || ''}`, colX[0] + 3, currentY + 8);
+        pdf.text(signature.present ? 'Présent' : 'Absent', colX[1] + 3, currentY + 8);
         
         if (signature.signature_data) {
-          pdf.text('Signé', colX[3] + 2, currentY + 7);
+          pdf.text('Signé', colX[2] + 3, currentY + 8);
         } else {
-          pdf.text('', colX[3] + 2, currentY + 7);
+          pdf.text('', colX[2] + 3, currentY + 8);
         }
         
         currentY += rowHeight;
       });
 
       // Signature boxes
-      const signatureY = currentY + 15;
-      if (signatureY > 230) {
+      const signatureY = currentY + 20;
+      if (signatureY > 220) {
         pdf.addPage();
         currentY = 20;
       } else {
@@ -165,15 +158,16 @@ export const pdfExportService = {
 
       // Trainer signature
       pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(11);
-      pdf.text('Signature du Formateur', margin + 20, currentY);
-      pdf.setDrawColor(0, 0, 0);
-      pdf.setLineWidth(0.5);
-      pdf.rect(margin, currentY + 5, 80, 30);
+      pdf.setFontSize(12);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('Signature du Formateur', margin, currentY);
+      pdf.setDrawColor(100, 100, 100);
+      pdf.setLineWidth(0.3);
+      pdf.rect(margin, currentY + 5, 85, 35);
 
       // Admin signature
-      pdf.text('Signature de l\'Administration', pageWidth - margin - 80 + 5, currentY);
-      pdf.rect(pageWidth - margin - 80, currentY + 5, 80, 30);
+      pdf.text('Signature de l\'Administration', pageWidth - margin - 85, currentY);
+      pdf.rect(pageWidth - margin - 85, currentY + 5, 85, 35);
 
       // Generate filename
       const filename = `emargement-${format(new Date(attendanceSheet.date), 'yyyy-MM-dd')}-${attendanceSheet.formations?.title?.replace(/\s+/g, '-')}.pdf`;
