@@ -82,7 +82,7 @@ const QRAttendanceCard: React.FC<QRAttendanceCardProps> = ({
             </div>
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-muted-foreground" />
-              <span>{attendanceSheet.start_time} - {attendanceSheet.end_time}</span>
+              <span>{attendanceSheet.start_time.substring(0, 5)} - {attendanceSheet.end_time.substring(0, 5)}</span>
             </div>
             {attendanceSheet.room && (
               <div className="flex items-center gap-2 col-span-2">

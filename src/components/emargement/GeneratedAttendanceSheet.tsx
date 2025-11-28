@@ -249,7 +249,7 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
             <div className="font-medium">{attendanceSheet.title}</div>
             <div className="flex items-center justify-center gap-8 text-sm mt-4">
               <div>📅 {format(new Date(attendanceSheet.date), 'dd/MM/yyyy', { locale: fr })}</div>
-              <div>🕒 {attendanceSheet.start_time} - {attendanceSheet.end_time}</div>
+              <div>🕒 {attendanceSheet.start_time.substring(0, 5)} - {attendanceSheet.end_time.substring(0, 5)}</div>
               <div>🏫 {attendanceSheet.room || 'Salle non spécifiée'}</div>
               <div>👨‍🏫 {attendanceSheet.instructor ? `${attendanceSheet.instructor.first_name} ${attendanceSheet.instructor.last_name}` : 'Non assigné'}</div>
             </div>

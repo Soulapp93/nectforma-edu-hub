@@ -281,7 +281,7 @@ const StudentAttendancePortal: React.FC<StudentAttendancePortalProps> = ({
                   </h3>
                   <div className="flex items-center justify-center gap-4 text-sm text-gray-600">
                     <span>{format(new Date(attendanceSheet.date), 'EEEE d MMMM yyyy', { locale: fr })}</span>
-                    <span>{attendanceSheet.start_time} - {attendanceSheet.end_time}</span>
+                    <span>{attendanceSheet.start_time.substring(0, 5)} - {attendanceSheet.end_time.substring(0, 5)}</span>
                     {attendanceSheet.room && <span>Salle {attendanceSheet.room}</span>}
                   </div>
                   <Badge variant="outline" className="mt-2">
@@ -382,7 +382,7 @@ const StudentAttendancePortal: React.FC<StudentAttendancePortalProps> = ({
                 <div className="text-center space-y-2 text-sm text-gray-600">
                   <div>{attendanceSheet.formations?.title}</div>
                   <div>{format(new Date(attendanceSheet.date), 'EEEE d MMMM yyyy', { locale: fr })}</div>
-                  <div>{attendanceSheet.start_time} - {attendanceSheet.end_time}</div>
+                  <div>{attendanceSheet.start_time.substring(0, 5)} - {attendanceSheet.end_time.substring(0, 5)}</div>
                 </div>
               </CardContent>
             </Card>

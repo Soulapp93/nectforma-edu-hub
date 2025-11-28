@@ -262,7 +262,7 @@ const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ isOpen, onClose }
                               </div>
                               <div className="flex items-center">
                                 <Clock className="h-4 w-4 mr-1" />
-                                {sheet.start_time} - {sheet.end_time}
+                                {sheet.start_time.substring(0, 5)} - {sheet.end_time.substring(0, 5)}
                               </div>
                               <div className="flex items-center">
                                 <Users className="h-4 w-4 mr-1" />

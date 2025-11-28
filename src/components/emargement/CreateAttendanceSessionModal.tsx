@@ -253,7 +253,7 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
                             <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
                               <div className="flex items-center gap-1">
                                 <Clock className="w-4 h-4" />
-                                <span>{slot.start_time} - {slot.end_time}</span>
+                                <span>{slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}</span>
                               </div>
                               {slot.room && (
                                 <div className="flex items-center gap-1">
@@ -290,7 +290,7 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
                       <div><strong>Formation:</strong> {selectedSlot.formation_title}</div>
                       <div><strong>Module:</strong> {selectedSlot.module_title}</div>
                       <div><strong>Date:</strong> {format(new Date(), 'PPP', { locale: fr })}</div>
-                      <div><strong>Horaire:</strong> {selectedSlot.start_time} - {selectedSlot.end_time}</div>
+                      <div><strong>Horaire:</strong> {selectedSlot.start_time.substring(0, 5)} - {selectedSlot.end_time.substring(0, 5)}</div>
                       {selectedSlot.room && (
                         <div><strong>Salle:</strong> {selectedSlot.room}</div>
                       )}

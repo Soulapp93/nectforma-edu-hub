@@ -154,7 +154,7 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Horaire:</span>
-                <span>{attendanceSheet.start_time} - {attendanceSheet.end_time}</span>
+                <span>{attendanceSheet.start_time.substring(0, 5)} - {attendanceSheet.end_time.substring(0, 5)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Salle:</span>

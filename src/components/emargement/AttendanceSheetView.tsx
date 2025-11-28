@@ -109,7 +109,7 @@ const AttendanceSheetView: React.FC<AttendanceSheetViewProps> = ({
           </div>
           <div className="flex items-center">
             <Clock className="h-4 w-4 mr-1" />
-            <span>{attendanceSheet.start_time}</span>
+            <span>{attendanceSheet.start_time.substring(0, 5)}</span>
           </div>
           <div className="flex items-center">
             <FileText className="h-4 w-4 mr-1" />
