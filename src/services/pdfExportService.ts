@@ -3,6 +3,7 @@ import html2canvas from 'html2canvas';
 import { AttendanceSheet } from './attendanceService';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
 
 export const pdfExportService = {
   async exportAttendanceSheet(attendanceSheet: AttendanceSheet, elementId: string): Promise<void> {
@@ -57,6 +58,22 @@ export const pdfExportService = {
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidth = 210;
       const margin = 15;
+      
+      // Load admin signature if sheet is validated
+      let adminSignatureData = '';
+      if (attendanceSheet.validated_by) {
+        const { data: adminSig, error } = await supabase
+          .from('user_signatures')
+          .select('signature_data')
+          .eq('user_id', attendanceSheet.validated_by)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        if (!error && adminSig) {
+          adminSignatureData = adminSig.signature_data;
+        }
+      }
       
       // Header with purple background
       pdf.setFillColor(139, 92, 246);
@@ -138,10 +155,23 @@ export const pdfExportService = {
         pdf.text(`${signature.user?.first_name || ''} ${signature.user?.last_name || ''}`, colX[0] + 3, currentY + 8);
         pdf.text(signature.present ? 'Présent' : 'Absent', colX[1] + 3, currentY + 8);
         
+        // Display signature image if exists
         if (signature.signature_data) {
-          pdf.text('Signé', colX[2] + 3, currentY + 8);
-        } else {
-          pdf.text('', colX[2] + 3, currentY + 8);
+          try {
+            pdf.addImage(
+              signature.signature_data,
+              'PNG',
+              colX[2] + 2,
+              currentY + 2,
+              colWidths[2] - 4,
+              rowHeight - 4,
+              undefined,
+              'FAST'
+            );
+          } catch (e) {
+            console.error('Error adding signature image:', e);
+            pdf.text('Signé', colX[2] + 3, currentY + 8);
+          }
         }
         
         currentY += rowHeight;
@@ -164,10 +194,47 @@ export const pdfExportService = {
       pdf.setDrawColor(100, 100, 100);
       pdf.setLineWidth(0.3);
       pdf.rect(margin, currentY + 5, 85, 35);
+      
+      // Display trainer signature if exists
+      const instructorSignature = signatures.find(sig => sig.user_type === 'instructor');
+      if (instructorSignature?.signature_data) {
+        try {
+          pdf.addImage(
+            instructorSignature.signature_data,
+            'PNG',
+            margin + 10,
+            currentY + 10,
+            65,
+            25,
+            undefined,
+            'FAST'
+          );
+        } catch (e) {
+          console.error('Error adding instructor signature:', e);
+        }
+      }
 
       // Admin signature
       pdf.text('Signature de l\'Administration', pageWidth - margin - 85, currentY);
       pdf.rect(pageWidth - margin - 85, currentY + 5, 85, 35);
+      
+      // Display admin signature if validated
+      if (adminSignatureData) {
+        try {
+          pdf.addImage(
+            adminSignatureData,
+            'PNG',
+            pageWidth - margin - 75,
+            currentY + 10,
+            65,
+            25,
+            undefined,
+            'FAST'
+          );
+        } catch (e) {
+          console.error('Error adding admin signature:', e);
+        }
+      }
 
       // Generate filename
       const filename = `emargement-${format(new Date(attendanceSheet.date), 'yyyy-MM-dd')}-${attendanceSheet.formations?.title?.replace(/\s+/g, '-')}.pdf`;
