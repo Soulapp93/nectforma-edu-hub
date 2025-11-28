@@ -307,6 +307,25 @@ export const attendanceService = {
 
       if (error) throw error;
 
+      // Sauvegarder la signature dans user_signatures pour réutilisation (formateur et admin)
+      if (signatureData && signatureData.trim() !== '' && userType === 'instructor') {
+        console.log('Sauvegarde signature formateur dans user_signatures');
+        const { error: userSigError } = await supabase
+          .from('user_signatures')
+          .upsert({
+            user_id: userId,
+            signature_data: signatureData
+          }, {
+            onConflict: 'user_id'
+          });
+
+        if (userSigError) {
+          console.error('Erreur sauvegarde signature formateur dans user_signatures:', userSigError);
+        } else {
+          console.log('Signature formateur sauvegardée avec succès');
+        }
+      }
+
       // Mettre à jour le statut de la feuille d'émargement si nécessaire
       await supabase
         .from('attendance_sheets')
