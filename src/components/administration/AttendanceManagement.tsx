@@ -59,6 +59,8 @@ const AttendanceManagement = () => {
         .from('user_signatures')
         .select('signature_data')
         .eq('user_id', userId)
+        .order('updated_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (error) {
@@ -180,6 +182,8 @@ const AttendanceManagement = () => {
         .from('user_signatures')
         .select('signature_data')
         .eq('user_id', userId)
+        .order('updated_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
       
       console.log('Signature trouvée en base:', !!signatureData?.signature_data);

@@ -40,6 +40,8 @@ const AdminValidationModal: React.FC<AdminValidationModalProps> = ({
           .from('user_signatures')
           .select('signature_data')
           .eq('user_id', userId)
+          .order('updated_at', { ascending: false })
+          .limit(1)
           .maybeSingle();
 
         if (error) {
