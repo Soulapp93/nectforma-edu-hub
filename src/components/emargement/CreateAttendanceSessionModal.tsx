@@ -41,9 +41,28 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
       if (isOpen && formationId) {
         setLoading(true);
         try {
-          // Pour l'instant, on laisse vide car la requête complexe cause des problèmes de types
-          // L'utilisateur peut créer des sessions d'émargement manuellement
-          setTodaysSchedules([]);
+          const today = new Date().toISOString().split('T')[0];
+          
+          // Récupérer tous les créneaux de cette formation pour aujourd'hui
+          const { data: scheduleSlots, error } = await supabase
+            .from('schedule_slots')
+            .select(`
+              *,
+              formation_modules(title),
+              users(first_name, last_name),
+              schedules!inner(
+                id,
+                formation_id,
+                title,
+                formations(title, color)
+              )
+            `)
+            .eq('schedules.formation_id', formationId)
+            .eq('date', today)
+            .order('start_time', { ascending: true });
+
+          if (error) throw error;
+          setTodaysSchedules(scheduleSlots || []);
         } catch (error) {
           console.error('Erreur chargement emploi du temps:', error);
           toast.error('Erreur lors du chargement des cours');
@@ -110,11 +129,15 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
       // Vérifier si userId est un UUID valide (pour éviter les erreurs avec les users de demo)
       const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
       
+      // Extraire les données du slot
+      const moduleTitle = slot.formation_modules?.title || 'Module non défini';
+      const formationTitleFromSlot = slot.schedules?.formations?.title || formationTitle;
+      
       // Préparer les données pour la feuille d'émargement
       const attendanceData: any = {
         schedule_slot_id: scheduleSlot.id,
         formation_id: formationId,
-        title: `${slot.formation_title} - ${slot.module_title}`,
+        title: `${formationTitleFromSlot} - ${moduleTitle}`,
         date: new Date().toISOString().split('T')[0],
         start_time: slot.start_time,
         end_time: slot.end_time,
@@ -229,57 +252,65 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
               </div>
               
               <div className="space-y-3">
-                {todaysSchedules.map((slot) => (
-                  <Card 
-                    key={slot.id} 
-                    className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-                      selectedSlot?.id === slot.id ? 'ring-2 ring-primary' : ''
-                    }`}
-                    onClick={() => setSelectedSlot(slot)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div 
-                            className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-semibold"
-                            style={{ backgroundColor: formationColor }}
-                          >
-                            <Clock className="w-6 h-6" />
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-gray-900">
-                              {slot.module_title}
-                            </h4>
-                            <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
-                              <div className="flex items-center gap-1">
-                                <Clock className="w-4 h-4" />
-                                <span>{slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}</span>
-                              </div>
-                              {slot.room && (
+                {todaysSchedules.map((slot) => {
+                  const moduleTitle = slot.formation_modules?.title || 'Module non défini';
+                  const instructorName = slot.users 
+                    ? `${slot.users.first_name} ${slot.users.last_name}`
+                    : 'Formateur non assigné';
+                  const formationTitle = slot.schedules?.formations?.title || 'Formation non définie';
+                  
+                  return (
+                    <Card 
+                      key={slot.id} 
+                      className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
+                        selectedSlot?.id === slot.id ? 'ring-2 ring-primary' : ''
+                      }`}
+                      onClick={() => setSelectedSlot(slot)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <div 
+                              className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-semibold"
+                              style={{ backgroundColor: formationColor }}
+                            >
+                              <Clock className="w-6 h-6" />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-gray-900">
+                                {moduleTitle}
+                              </h4>
+                              <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
                                 <div className="flex items-center gap-1">
-                                  <MapPin className="w-4 h-4" />
-                                  <span>{slot.room}</span>
+                                  <Clock className="w-4 h-4" />
+                                  <span>{slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}</span>
                                 </div>
-                              )}
-                              <div className="flex items-center gap-1">
-                                <Users className="w-4 h-4" />
-                                <span>{slot.instructor_name}</span>
+                                {slot.room && (
+                                  <div className="flex items-center gap-1">
+                                    <MapPin className="w-4 h-4" />
+                                    <span>{slot.room}</span>
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-1">
+                                  <Users className="w-4 h-4" />
+                                  <span>{instructorName}</span>
+                                </div>
                               </div>
                             </div>
                           </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">
+                              {format(new Date(), 'PPP', { locale: fr })}
+                            </Badge>
+                            {selectedSlot?.id === slot.id && (
+                              <CheckCircle className="w-5 h-5 text-green-600" />
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary">
-                            {format(new Date(), 'PPP', { locale: fr })}
-                          </Badge>
-                          {selectedSlot?.id === slot.id && (
-                            <CheckCircle className="w-5 h-5 text-green-600" />
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
 
               {selectedSlot && (
@@ -287,14 +318,14 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
                   <div className="bg-gray-50 rounded-lg p-4 mb-4">
                     <h4 className="font-medium mb-2">Aperçu de la session d'émargement</h4>
                     <div className="text-sm text-gray-600 space-y-1">
-                      <div><strong>Formation:</strong> {selectedSlot.formation_title}</div>
-                      <div><strong>Module:</strong> {selectedSlot.module_title}</div>
+                      <div><strong>Formation:</strong> {selectedSlot.schedules?.formations?.title || 'Formation non définie'}</div>
+                      <div><strong>Module:</strong> {selectedSlot.formation_modules?.title || 'Module non défini'}</div>
                       <div><strong>Date:</strong> {format(new Date(), 'PPP', { locale: fr })}</div>
                       <div><strong>Horaire:</strong> {selectedSlot.start_time.substring(0, 5)} - {selectedSlot.end_time.substring(0, 5)}</div>
                       {selectedSlot.room && (
                         <div><strong>Salle:</strong> {selectedSlot.room}</div>
                       )}
-                      <div><strong>Formateur:</strong> {selectedSlot.instructor_name}</div>
+                      <div><strong>Formateur:</strong> {selectedSlot.users ? `${selectedSlot.users.first_name} ${selectedSlot.users.last_name}` : 'Formateur non assigné'}</div>
                     </div>
                   </div>
 

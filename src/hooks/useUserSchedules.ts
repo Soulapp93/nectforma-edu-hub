@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { scheduleService, ScheduleSlot } from '@/services/scheduleService';
 import { useCurrentUser } from './useCurrentUser';
 import { useUserFormations } from './useUserFormations';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useUserSchedules = () => {
   const [schedules, setSchedules] = useState<ScheduleSlot[]>([]);
@@ -53,6 +54,50 @@ export const useUserSchedules = () => {
     if (userId && userRole) {
       fetchSchedules();
     }
+  }, [userId, userRole, userFormations]);
+
+  // Synchronisation en temps réel avec Supabase
+  useEffect(() => {
+    if (!userId || !userRole) return;
+
+    // S'abonner aux changements sur schedule_slots
+    const slotsSubscription = supabase
+      .channel('schedule_slots_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'schedule_slots'
+        },
+        () => {
+          // Rafraîchir les données quand un créneau change
+          fetchSchedules();
+        }
+      )
+      .subscribe();
+
+    // S'abonner aux changements sur schedules
+    const schedulesSubscription = supabase
+      .channel('schedules_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'schedules'
+        },
+        () => {
+          // Rafraîchir les données quand un emploi du temps change
+          fetchSchedules();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      slotsSubscription.unsubscribe();
+      schedulesSubscription.unsubscribe();
+    };
   }, [userId, userRole, userFormations]);
 
   return {

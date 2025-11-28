@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { scheduleService, Schedule } from '@/services/scheduleService';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useSchedules = () => {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
@@ -21,6 +22,46 @@ export const useSchedules = () => {
 
   useEffect(() => {
     fetchSchedules();
+  }, []);
+
+  // Synchronisation en temps réel avec Supabase
+  useEffect(() => {
+    // S'abonner aux changements sur schedules
+    const schedulesSubscription = supabase
+      .channel('admin_schedules_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'schedules'
+        },
+        () => {
+          fetchSchedules();
+        }
+      )
+      .subscribe();
+
+    // S'abonner aux changements sur schedule_slots
+    const slotsSubscription = supabase
+      .channel('admin_slots_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'schedule_slots'
+        },
+        () => {
+          fetchSchedules();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      schedulesSubscription.unsubscribe();
+      slotsSubscription.unsubscribe();
+    };
   }, []);
 
   return {
