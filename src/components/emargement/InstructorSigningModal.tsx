@@ -95,6 +95,8 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
             .from('user_signatures')
             .select('signature_data')
             .eq('user_id', effectiveInstructorId)
+            .order('updated_at', { ascending: false })
+            .limit(1)
             .maybeSingle();
 
           console.log('Signature data:', { signatureData, signatureError });

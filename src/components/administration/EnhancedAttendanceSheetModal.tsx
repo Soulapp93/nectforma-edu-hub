@@ -139,6 +139,8 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
           .from('user_signatures')
           .select('signature_data')
           .eq('user_id', attendanceSheet.validated_by)
+          .order('updated_at', { ascending: false })
+          .limit(1)
           .maybeSingle();
 
         if (adminSigError) {

@@ -89,6 +89,8 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
           .from('user_signatures')
           .select('signature_data')
           .eq('user_id', sheetData.validated_by)
+          .order('updated_at', { ascending: false })
+          .limit(1)
           .maybeSingle();
 
         if (adminSigError) {
