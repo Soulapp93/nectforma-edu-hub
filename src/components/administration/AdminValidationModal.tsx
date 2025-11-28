@@ -125,7 +125,7 @@ const AdminValidationModal: React.FC<AdminValidationModalProps> = ({
               <div>
                 <span className="text-gray-600">Horaires :</span>
                 <p className="font-medium">
-                  {attendanceSheet.start_time} - {attendanceSheet.end_time}
+                  {attendanceSheet.start_time.substring(0, 5)} - {attendanceSheet.end_time.substring(0, 5)}
                 </p>
               </div>
               <div>

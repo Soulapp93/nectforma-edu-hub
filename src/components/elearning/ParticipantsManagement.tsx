@@ -130,7 +130,7 @@ const ParticipantsManagement: React.FC<ParticipantsManagementProps> = ({
                   
                   {participant.joinedAt && (
                     <div className="text-xs text-muted-foreground">
-                      Rejoint: {new Date(participant.joinedAt).toLocaleTimeString()}
+                      Rejoint: {new Date(participant.joinedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   )}
                   

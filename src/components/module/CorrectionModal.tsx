@@ -192,7 +192,7 @@ const CorrectionModal: React.FC<CorrectionModalProps> = ({
 
               <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
                 <p className="text-sm text-blue-800">
-                  <strong>Soumis le:</strong> {new Date(submission.submitted_at).toLocaleDateString()} à {new Date(submission.submitted_at).toLocaleTimeString()}
+                  <strong>Soumis le:</strong> {new Date(submission.submitted_at).toLocaleDateString()} à {new Date(submission.submitted_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
             </div>

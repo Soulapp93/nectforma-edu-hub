@@ -124,7 +124,7 @@ const AttendanceSigningModal: React.FC<AttendanceSigningModalProps> = ({
                 </div>
                 <div className="flex items-center">
                   <Clock className="h-4 w-4 mr-2 text-gray-500" />
-                  <span>{attendanceSheet.start_time} - {attendanceSheet.end_time}</span>
+                  <span>{attendanceSheet.start_time.substring(0, 5)} - {attendanceSheet.end_time.substring(0, 5)}</span>
                 </div>
                 {attendanceSheet.room && (
                   <div className="flex items-center">

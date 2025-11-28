@@ -108,7 +108,7 @@ const AdminAttendanceValidation: React.FC<AdminAttendanceValidationProps> = ({
                         <Clock className="w-4 h-4 text-gray-600" />
                         <div>
                           <div className="font-medium">
-                            {attendanceSheet.start_time} - {attendanceSheet.end_time}
+                            {attendanceSheet.start_time.substring(0, 5)} - {attendanceSheet.end_time.substring(0, 5)}
                           </div>
                         </div>
                       </div>

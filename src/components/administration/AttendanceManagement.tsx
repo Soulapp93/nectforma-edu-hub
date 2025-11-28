@@ -489,7 +489,7 @@ const AttendanceManagement = () => {
                           {format(new Date(sheet.date), 'dd/MM/yyyy', { locale: fr })}
                         </TableCell>
                         <TableCell>
-                          {sheet.start_time} - {sheet.end_time}
+                          {sheet.start_time.substring(0, 5)} - {sheet.end_time.substring(0, 5)}
                         </TableCell>
                         <TableCell>
                           {(sheet as any).schedule_slots?.formation_modules?.title || 'Module non défini'}

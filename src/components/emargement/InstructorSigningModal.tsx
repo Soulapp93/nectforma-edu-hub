@@ -290,7 +290,7 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
                   <div>
                     <span className="font-medium">Horaires:</span>
                     <div className="text-gray-900">
-                      {attendanceSheet.start_time} - {attendanceSheet.end_time}
+                      {attendanceSheet.start_time.substring(0, 5)} - {attendanceSheet.end_time.substring(0, 5)}
                     </div>
                   </div>
                 </div>

@@ -26,7 +26,7 @@ const RealtimeAttendanceIndicator: React.FC<RealtimeAttendanceIndicatorProps> = 
       </Badge>
       {lastUpdate && (
         <span className="text-gray-500">
-          Dernière maj: {lastUpdate.toLocaleTimeString()}
+          Dernière maj: {lastUpdate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
         </span>
       )}
     </div>

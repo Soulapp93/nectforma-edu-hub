@@ -211,7 +211,7 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
             <div>
               <span className="text-gray-500">Horaires:</span>
               <div className="font-medium">
-                {attendanceSheet.start_time} - {attendanceSheet.end_time}
+                {attendanceSheet.start_time.substring(0, 5)} - {attendanceSheet.end_time.substring(0, 5)}
               </div>
             </div>
           </div>
