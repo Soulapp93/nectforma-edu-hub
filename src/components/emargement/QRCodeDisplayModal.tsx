@@ -60,19 +60,15 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
     return () => clearInterval(timer);
   }, [isOpen, timeRemaining]);
 
-  // Générer un nouveau QR code
+  // Générer un nouveau QR code avec validation sécurisée
   const generateNewCode = async () => {
     setIsRegenerating(true);
     
     try {
-      console.log('Starting QR code generation for sheet:', attendanceSheet.id);
-      
-      // Générer un nouveau code unique
+      // Générer un nouveau code unique (6 chiffres)
       const newCode = Math.floor(100000 + Math.random() * 900000).toString();
-      console.log('Generated new code:', newCode);
       
       const qrData = `${window.location.origin}/emargement-qr-student?sheet=${attendanceSheet.id}&code=${newCode}`;
-      console.log('QR data URL:', qrData);
       
       // Générer l'image QR code
       const qrImageUrl = await QRCode.toDataURL(qrData, {
@@ -83,10 +79,8 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
           light: '#FFFFFF'
         }
       });
-      console.log('QR image generated successfully');
       
-      // Sauvegarder le code dans la base de données pour validation
-      console.log('Updating database with new QR code...');
+      // Sauvegarder le code dans la base de données
       const { error } = await supabase
         .from('attendance_sheets')
         .update({ 
@@ -94,12 +88,7 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
         })
         .eq('id', attendanceSheet.id);
 
-      if (error) {
-        console.error('Database update error:', error);
-        throw error;
-      }
-      
-      console.log('Database updated successfully');
+      if (error) throw error;
 
       setCurrentCode(newCode);
       setQRCodeData(qrData);
@@ -107,9 +96,8 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
       setTimeRemaining(30 * 60); // Reset timer
       
       toast.success('Nouveau code QR généré !');
-    } catch (error) {
-      console.error('Error generating QR code:', error);
-      toast.error('Erreur lors de la génération du code QR: ' + (error.message || 'Erreur inconnue'));
+    } catch (error: any) {
+      toast.error('Erreur lors de la génération du code QR');
     } finally {
       setIsRegenerating(false);
     }

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import QRCodeScannerModal from './QRCodeScannerModal';
 import StudentAttendancePortal from './StudentAttendancePortal';
 
@@ -24,17 +25,14 @@ const StudentQRScanner: React.FC<StudentQRScannerProps> = ({
   const [qrCode, setQrCode] = useState('');
 
   const handleQRCodeScanned = (qrData: string) => {
-    console.log('QR Code scanned:', qrData);
-    
-    // Extraire les informations du QR code
-    // Format attendu: http://localhost:5173/emargement/{id}?code={code}
     try {
       const url = new URL(qrData);
       const pathParts = url.pathname.split('/');
       const id = pathParts[pathParts.length - 1];
       const code = url.searchParams.get('code');
       
-      if (id && code) {
+      // Validation format code (6 chiffres)
+      if (id && code && /^\d{6}$/.test(code)) {
         setAttendanceSheetId(id);
         setQrCode(code);
         setShowScanner(false);
@@ -43,32 +41,38 @@ const StudentQRScanner: React.FC<StudentQRScannerProps> = ({
         toast.error('QR Code invalide');
       }
     } catch (error) {
-      // Si ce n'est pas une URL, essayer l'ancien format
-      if (qrData.startsWith('attendance:')) {
-        const parts = qrData.split(':');
-        if (parts.length >= 4) {
-          setAttendanceSheetId(parts[1]);
-          setQrCode(parts[3]);
-          setShowScanner(false);
-          setShowAttendancePortal(true);
-        } else {
-          toast.error('Format de QR Code invalide');
-        }
-      } else {
-        toast.error('QR Code non reconnu');
-      }
+      toast.error('QR Code non reconnu');
     }
   };
 
-  const handleManualCodeSubmit = () => {
-    if (manualCode.length !== 6) {
-      toast.error('Le code doit contenir 6 chiffres');
+  const handleManualCodeSubmit = async () => {
+    if (manualCode.length !== 6 || !/^\d{6}$/.test(manualCode)) {
+      toast.error('Le code doit contenir exactement 6 chiffres');
       return;
     }
 
-    // Pour la saisie manuelle, nous devons demander l'ID de la session
-    // Dans un vrai scenario, on pourrait faire une recherche par code
-    toast.info('Fonctionnalité de saisie manuelle en développement');
+    try {
+      // Rechercher la session par code QR
+      const { data: sheet, error } = await supabase
+        .from('attendance_sheets')
+        .select('id')
+        .eq('qr_code', manualCode)
+        .eq('status', 'En cours')
+        .eq('is_open_for_signing', true)
+        .single();
+
+      if (error || !sheet) {
+        toast.error('Code invalide ou session fermée');
+        return;
+      }
+
+      setAttendanceSheetId(sheet.id);
+      setQrCode(manualCode);
+      setShowAttendancePortal(true);
+      onClose();
+    } catch (error) {
+      toast.error('Erreur lors de la validation du code');
+    }
   };
 
   return (
