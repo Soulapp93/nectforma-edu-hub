@@ -293,7 +293,7 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
                       <div className="space-y-1.5">
                         <div className="flex items-center text-xs text-muted-foreground">
                           <Clock className="h-3 w-3 mr-1.5 flex-shrink-0" />
-                          <span>{event.startTime} - {event.endTime}</span>
+                          <span>{event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}</span>
                         </div>
                         {event.room && (
                           <div className="flex items-center text-xs text-muted-foreground">

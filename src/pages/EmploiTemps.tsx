@@ -252,7 +252,7 @@ const EmploiTemps = () => {
                             <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
                           </div>
                           <Badge variant="outline" className="font-mono text-xs">
-                            {event.startTime} - {event.endTime}
+                            {event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}
                           </Badge>
                         </div>
                         <div 
@@ -279,7 +279,7 @@ const EmploiTemps = () => {
                         </div>
                         <div className="col-span-2">
                           <Badge variant="outline" className="font-mono text-xs">
-                            {event.startTime} - {event.endTime}
+                            {event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}
                           </Badge>
                         </div>
                         <div className="col-span-3">
@@ -328,7 +328,7 @@ const EmploiTemps = () => {
                             <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
                           </div>
                           <Badge variant="outline" className="font-mono text-xs">
-                            {event.startTime} - {event.endTime}
+                            {event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}
                           </Badge>
                         </div>
                         <div 
@@ -355,7 +355,7 @@ const EmploiTemps = () => {
                         </div>
                         <div className="col-span-2">
                           <Badge variant="outline" className="font-mono text-xs">
-                            {event.startTime} - {event.endTime}
+                            {event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}
                           </Badge>
                         </div>
                         <div className="col-span-3">
@@ -404,7 +404,7 @@ const EmploiTemps = () => {
                             <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
                           </div>
                           <Badge variant="outline" className="font-mono text-xs">
-                            {event.startTime} - {event.endTime}
+                            {event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}
                           </Badge>
                         </div>
                         <div 
@@ -431,7 +431,7 @@ const EmploiTemps = () => {
                         </div>
                         <div className="col-span-2">
                           <Badge variant="outline" className="font-mono text-xs">
-                            {event.startTime} - {event.endTime}
+                            {event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}
                           </Badge>
                         </div>
                         <div className="col-span-3">
@@ -491,7 +491,7 @@ const EmploiTemps = () => {
                           <div className="text-xs text-white/80 capitalize">{eventDay}</div>
                         </div>
                         <div className="bg-white/20 text-white rounded px-2 py-1 text-xs font-medium">
-                          {event.startTime} - {event.endTime}
+                          {event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}
                         </div>
                       </div>
                       <div>
@@ -524,7 +524,7 @@ const EmploiTemps = () => {
                       </div>
                       <div className="col-span-2">
                         <div className="bg-white/20 text-white border-white/30 rounded px-2 py-1 text-xs font-medium inline-block">
-                          {event.startTime} - {event.endTime}
+                          {event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}
                         </div>
                       </div>
                       <div className="col-span-3">

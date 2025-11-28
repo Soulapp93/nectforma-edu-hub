@@ -156,7 +156,7 @@ export const exportScheduleToPDF = (
       pdf.setFont('helvetica', 'normal');
 
       // Time
-      const timeText = `${schedule.start_time} - ${schedule.end_time}`;
+      const timeText = `${schedule.start_time.substring(0, 5)} - ${schedule.end_time.substring(0, 5)}`;
       pdf.text(timeText, colPositions[0], currentY + 3);
 
       // Module/Formation info with truncation

@@ -460,7 +460,7 @@ const Emargement = () => {
                         <div className="text-left sm:text-right text-xs sm:text-sm text-gray-500">
                           <div className="flex items-center sm:justify-end mb-1">
                             <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                            {sheet.start_time} - {sheet.end_time}
+                            {sheet.start_time.substring(0, 5)} - {sheet.end_time.substring(0, 5)}
                           </div>
                         </div>
                       </div>

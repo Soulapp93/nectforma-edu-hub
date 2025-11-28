@@ -201,7 +201,7 @@ const ClassHistory: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex items-center text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4 mr-2" />
-                  {format(new Date(classItem.date), 'dd MMMM yyyy', { locale: fr })} • {classItem.start_time} - {classItem.end_time}
+                  {format(new Date(classItem.date), 'dd MMMM yyyy', { locale: fr })} • {classItem.start_time.substring(0, 5)} - {classItem.end_time.substring(0, 5)}
                 </div>
                 
                 {classItem.recording_url && (

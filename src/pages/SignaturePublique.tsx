@@ -181,7 +181,7 @@ const SignaturePublique = () => {
               <p className="text-sm font-medium mb-2">Session</p>
               <p className="text-lg">{tokenValid.formation_title}</p>
               <p className="text-sm text-muted-foreground">
-                {format(new Date(tokenValid.date), 'PPP', { locale: fr })} • {tokenValid.start_time} - {tokenValid.end_time}
+                {format(new Date(tokenValid.date), 'PPP', { locale: fr })} • {tokenValid.start_time.substring(0, 5)} - {tokenValid.end_time.substring(0, 5)}
               </p>
             </div>
 
@@ -225,7 +225,7 @@ const SignaturePublique = () => {
               </span>
               <span className="flex items-center gap-1">
                 <Clock className="h-4 w-4" />
-                {tokenValid.start_time} - {tokenValid.end_time}
+                {tokenValid.start_time.substring(0, 5)} - {tokenValid.end_time.substring(0, 5)}
               </span>
             </div>
             {tokenValid.session_type === 'autonomie' && (

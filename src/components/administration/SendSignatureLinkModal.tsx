@@ -102,7 +102,7 @@ const SendSignatureLinkModal: React.FC<SendSignatureLinkModalProps> = ({
           <div className="bg-muted p-4 rounded-lg space-y-2">
             <h3 className="font-semibold">{attendanceSheet.formations?.title}</h3>
             <p className="text-sm text-muted-foreground">
-              {format(new Date(attendanceSheet.date), 'PPP', { locale: fr })} • {attendanceSheet.start_time} - {attendanceSheet.end_time}
+              {format(new Date(attendanceSheet.date), 'PPP', { locale: fr })} • {attendanceSheet.start_time.substring(0, 5)} - {attendanceSheet.end_time.substring(0, 5)}
             </p>
             {attendanceSheet.session_type === 'autonomie' && (
               <div className="inline-flex items-center gap-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-full text-sm">
