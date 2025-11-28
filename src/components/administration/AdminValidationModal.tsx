@@ -70,6 +70,7 @@ const AdminValidationModal: React.FC<AdminValidationModalProps> = ({
   useEffect(() => {
     if (!isOpen) {
       setShowSignature(false);
+      setSavedSignature(null); // Réinitialiser la signature pour forcer le rechargement
     }
   }, [isOpen]);
 
