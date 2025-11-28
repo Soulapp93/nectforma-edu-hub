@@ -162,6 +162,61 @@ export type Database = {
           },
         ]
       }
+      attendance_audit_log: {
+        Row: {
+          action: string
+          attendance_sheet_id: string | null
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          attendance_sheet_id?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          attendance_sheet_id?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_audit_log_attendance_sheet_id_fkey"
+            columns: ["attendance_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "attendance_sheets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_audit_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["student_id"]
+          },
+          {
+            foreignKeyName: "attendance_audit_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance_sheets: {
         Row: {
           closed_at: string | null
@@ -1301,6 +1356,30 @@ export type Database = {
         }
         Relationships: []
       }
+      qr_validation_attempts: {
+        Row: {
+          attempted_at: string | null
+          id: string
+          ip_address: string | null
+          success: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          attempted_at?: string | null
+          id?: string
+          ip_address?: string | null
+          success?: boolean | null
+          user_id?: string | null
+        }
+        Update: {
+          attempted_at?: string | null
+          id?: string
+          ip_address?: string | null
+          success?: boolean | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       schedule_slots: {
         Row: {
           color: string | null
@@ -2199,6 +2278,14 @@ export type Database = {
         Args: { _file_id: string; _user_id: string }
         Returns: boolean
       }
+      check_qr_rate_limit: {
+        Args: { ip_address_param: string; user_id_param: string }
+        Returns: {
+          allowed: boolean
+          remaining_attempts: number
+          retry_after_seconds: number
+        }[]
+      }
       generate_attendance_qr_code: {
         Args: { attendance_sheet_id_param: string }
         Returns: string
@@ -2240,6 +2327,17 @@ export type Database = {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
       }
+      log_attendance_action: {
+        Args: {
+          action_type: string
+          ip_addr?: string
+          meta?: Json
+          sheet_id: string
+          user_agent_val?: string
+          user_id: string
+        }
+        Returns: undefined
+      }
       validate_qr_code: {
         Args: { code_param: string }
         Returns: {
@@ -2249,6 +2347,15 @@ export type Database = {
           is_valid: boolean
           sheet_id: string
           start_time: string
+        }[]
+      }
+      validate_qr_code_secure: {
+        Args: { code_param: string; user_id_param: string }
+        Returns: {
+          error_message: string
+          formation_title: string
+          is_valid: boolean
+          sheet_id: string
         }[]
       }
       validate_signature_token: {
