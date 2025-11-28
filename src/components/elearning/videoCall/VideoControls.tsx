@@ -63,7 +63,7 @@ const VideoControls: React.FC<VideoControlsProps> = ({
           <div className="text-white">
             <h4 className="font-medium">{selectedClass.title}</h4>
             <p className="text-sm text-gray-300">
-              {selectedClass.participants} participants • {selectedClass.startTime} - {selectedClass.endTime}
+              {selectedClass.participants} participants • {selectedClass.startTime.substring(0, 5)} - {selectedClass.endTime.substring(0, 5)}
             </p>
           </div>
         </div>

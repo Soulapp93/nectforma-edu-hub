@@ -491,7 +491,7 @@ const ScheduleManagement = () => {
       actualDate: date, // Ajouter la date réelle pour faciliter l'accès
       modules: daySlots.map(slot => ({
         title: slot.formation_modules?.title || 'Module non défini',
-        time: `${slot.start_time} - ${slot.end_time}`,
+        time: `${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`,
         instructor: slot.users?.first_name && slot.users?.last_name 
           ? `${slot.users.first_name} ${slot.users.last_name}` 
           : 'Instructeur non défini',
@@ -531,8 +531,8 @@ const ScheduleManagement = () => {
         id: slot.id,
         title: slot.formation_modules?.title || 'Module non défini',
         date: new Date(slot.date),
-        startTime: slot.start_time,
-        endTime: slot.end_time,
+        startTime: slot.start_time.substring(0, 5),
+        endTime: slot.end_time.substring(0, 5),
         instructor: slot.users?.first_name && slot.users?.last_name
           ? `${slot.users.first_name} ${slot.users.last_name}`
           : 'Instructeur non défini',
@@ -661,8 +661,8 @@ const ScheduleManagement = () => {
                   const slotsAsEvents = daySlots.map(slot => ({
                     id: slot.id,
                     title: slot.formation_modules?.title || 'Module non défini',
-                    startTime: slot.start_time,
-                    endTime: slot.end_time,
+                    startTime: slot.start_time.substring(0, 5),
+                    endTime: slot.end_time.substring(0, 5),
                     instructor: slot.users?.first_name && slot.users?.last_name 
                       ? `${slot.users.first_name} ${slot.users.last_name}` 
                       : 'Instructeur non défini',
@@ -724,14 +724,14 @@ const ScheduleManagement = () => {
                                      Module {event.title}
                                    </div>
                                    
-                                    <div className="flex items-center text-[9px] text-white/90">
-                                      <Clock className="h-2.5 w-2.5 mr-1 text-white/80" />
-                                      <span>{event.startTime}</span>
-                                    </div>
-                                    <div className="flex items-center text-[9px] text-white/90">
-                                      <Clock className="h-2.5 w-2.5 mr-1 text-white/80" />
-                                      <span>{event.endTime}</span>
-                                    </div>
+                                     <div className="flex items-center text-[9px] text-white/90">
+                                       <Clock className="h-2.5 w-2.5 mr-1 text-white/80" />
+                                       <span>{event.startTime.substring(0, 5)}</span>
+                                     </div>
+                                     <div className="flex items-center text-[9px] text-white/90">
+                                       <Clock className="h-2.5 w-2.5 mr-1 text-white/80" />
+                                       <span>{event.endTime.substring(0, 5)}</span>
+                                     </div>
                                    
                                    {event.room && (
                                      <div className="flex items-center text-[9px] text-white/90">
@@ -750,12 +750,12 @@ const ScheduleManagement = () => {
                                      </div>
                                    </TooltipTrigger>
                                    <TooltipContent side="right" className="max-w-xs">
-                                     <div className="space-y-1">
-                                       <p className="font-semibold">{event.title}</p>
-                                       <p className="text-xs">{event.startTime} - {event.endTime}</p>
-                                       <p className="text-xs">{event.instructor}</p>
-                                       <p className="text-xs">Salle: {event.room}</p>
-                                     </div>
+                                      <div className="space-y-1">
+                                        <p className="font-semibold">{event.title}</p>
+                                        <p className="text-xs">{event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}</p>
+                                        <p className="text-xs">{event.instructor}</p>
+                                        <p className="text-xs">Salle: {event.room}</p>
+                                      </div>
                                    </TooltipContent>
                                  </Tooltip>
                                </TooltipProvider>

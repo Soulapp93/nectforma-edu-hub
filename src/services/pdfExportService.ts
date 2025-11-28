@@ -74,7 +74,7 @@ export const pdfExportService = {
       pdf.setFontSize(10);
       const formattedDate = format(new Date(attendanceSheet.date), 'dd/MM/yyyy', { locale: fr });
       pdf.text(`Date: ${formattedDate}`, 10, 50);
-      pdf.text(`Heure: ${attendanceSheet.start_time} - ${attendanceSheet.end_time}`, 70, 50);
+      pdf.text(`Heure: ${attendanceSheet.start_time.substring(0, 5)} - ${attendanceSheet.end_time.substring(0, 5)}`, 70, 50);
       pdf.text(`Salle: ${attendanceSheet.room || 'A101'}`, 140, 50);
       pdf.text(`Formateur: ${attendanceSheet.instructor?.first_name} ${attendanceSheet.instructor?.last_name}`, 10, 57);
 

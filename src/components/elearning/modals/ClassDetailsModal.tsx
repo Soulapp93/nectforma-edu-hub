@@ -92,7 +92,7 @@ const ClassDetailsModal: React.FC<ClassDetailsModalProps> = ({
                   <div className="flex items-center text-sm">
                     <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
                     <span className="font-medium mr-2">Heure:</span>
-                    <span>{virtualClass.start_time} - {virtualClass.end_time}</span>
+                    <span>{virtualClass.start_time.substring(0, 5)} - {virtualClass.end_time.substring(0, 5)}</span>
                   </div>
                 </div>
 

@@ -155,13 +155,13 @@ export const MonthView: React.FC<MonthViewProps> = ({
                     {/* Événements */}
                     <div className="flex-1 space-y-1 overflow-hidden">
                        {dayEvents.slice(0, 3).map((event, index) => (
-                          <div
+                           <div
                             key={event.id}
                             className="px-2 py-2 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 mb-1 text-white"
                             style={{ 
                               backgroundColor: event.color || '#3B82F6'
                             }}
-                           title={`${event.title} - ${event.startTime}`}
+                           title={`${event.title} - ${event.startTime.substring(0, 5)}`}
                            onClick={(e) => {
                              e.stopPropagation();
                              onEventClick?.(event);
@@ -174,11 +174,11 @@ export const MonthView: React.FC<MonthViewProps> = ({
                               
                                <div className="flex items-center text-[9px] text-white/90">
                                  <Clock className="h-2.5 w-2.5 mr-1 text-white/80" />
-                                 <span>{event.startTime}</span>
+                                 <span>{event.startTime.substring(0, 5)}</span>
                                </div>
                                <div className="flex items-center text-[9px] text-white/90">
                                  <Clock className="h-2.5 w-2.5 mr-1 text-white/80" />
-                                 <span>{event.endTime}</span>
+                                 <span>{event.endTime.substring(0, 5)}</span>
                                </div>
                               
                               {event.room && (

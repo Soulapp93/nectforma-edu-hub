@@ -341,7 +341,7 @@ const SuiviEmargement = () => {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-gray-400" />
-                        {record.start_time} - {record.end_time}
+                        {record.start_time.substring(0, 5)} - {record.end_time.substring(0, 5)}
                       </div>
                     </TableCell>
                     <TableCell>

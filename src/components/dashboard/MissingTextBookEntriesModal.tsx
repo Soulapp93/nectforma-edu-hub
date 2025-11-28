@@ -135,7 +135,7 @@ const MissingTextBookEntriesModal: React.FC<MissingTextBookEntriesModalProps> = 
 Vous n'avez pas encore saisi l'entrée dans le cahier de texte pour le cours suivant :
 
 📅 Date: ${new Date(entry.date).toLocaleDateString('fr-FR')}
-🕐 Horaires: ${entry.start_time} - ${entry.end_time}
+🕐 Horaires: ${entry.start_time.substring(0, 5)} - ${entry.end_time.substring(0, 5)}
 📚 Module: ${entry.module_name}
 🎓 Formation: ${entry.formation_title}
 
@@ -207,7 +207,7 @@ L'administration`
                       
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span>{entry.start_time} - {entry.end_time}</span>
+                        <span>{entry.start_time.substring(0, 5)} - {entry.end_time.substring(0, 5)}</span>
                       </div>
                       
                       <div className="flex items-center gap-2">
