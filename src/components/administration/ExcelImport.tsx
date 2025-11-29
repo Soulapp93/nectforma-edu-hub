@@ -92,7 +92,7 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
           'Nom': 'Dupont',
           'Email': 'jean.dupont@exemple.com',
           'Rôle': 'Étudiant',
-          'Formations': 'Formation Web,Formation Mobile'
+          'Formations': 'Formation Web, Formation Mobile'
         },
         {
           'Prénom': 'Marie',
@@ -100,9 +100,16 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
           'Email': 'marie.martin@exemple.com',
           'Rôle': 'Étudiant',
           'Formations': 'Formation Web'
+        },
+        {
+          'Prénom': 'Pierre',
+          'Nom': 'Durand',
+          'Email': 'pierre.durand@exemple.com',
+          'Rôle': 'Étudiant',
+          'Formations': 'Formation Design'
         }
       ];
-      fileName = 'modele_etudiants.xlsx';
+      fileName = 'Modele_Import_Etudiants.xlsx';
     } else if (preselectedRole === 'Formateur') {
       template = [
         {
@@ -110,7 +117,7 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
           'Nom': 'Durand',
           'Email': 'pierre.durand@exemple.com',
           'Rôle': 'Formateur',
-          'Formations': 'Formation Web,Formation Mobile'
+          'Formations': 'Formation Web, Formation Mobile'
         },
         {
           'Prénom': 'Sophie',
@@ -118,9 +125,16 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
           'Email': 'sophie.bernard@exemple.com',
           'Rôle': 'Formateur',
           'Formations': 'Formation Design'
+        },
+        {
+          'Prénom': 'Marc',
+          'Nom': 'Lefebvre',
+          'Email': 'marc.lefebvre@exemple.com',
+          'Rôle': 'Formateur',
+          'Formations': 'Formation Web'
         }
       ];
-      fileName = 'modele_formateurs.xlsx';
+      fileName = 'Modele_Import_Formateurs.xlsx';
     } else {
       template = [
         {
@@ -129,17 +143,92 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
           'Email': 'jean.dupont@exemple.com',
           'Rôle': 'Étudiant',
           'Formations': 'Formation Web'
+        },
+        {
+          'Prénom': 'Pierre',
+          'Nom': 'Durand',
+          'Email': 'pierre.durand@exemple.com',
+          'Rôle': 'Formateur',
+          'Formations': 'Formation Mobile'
         }
       ];
-      fileName = 'modele_utilisateurs.xlsx';
+      fileName = 'Modele_Import_Utilisateurs.xlsx';
     }
 
+    // Créer la feuille Excel
     const ws = XLSX.utils.json_to_sheet(template);
+    
+    // Définir la largeur des colonnes pour une meilleure lisibilité
+    ws['!cols'] = [
+      { wch: 15 }, // Prénom
+      { wch: 15 }, // Nom
+      { wch: 30 }, // Email
+      { wch: 12 }, // Rôle
+      { wch: 40 }  // Formations
+    ];
+
+    // Appliquer un style professionnel aux en-têtes (première ligne)
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:E1');
+    
+    for (let col = range.s.c; col <= range.e.c; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+      if (!ws[cellAddress]) continue;
+      
+      // Appliquer le style aux en-têtes
+      ws[cellAddress].s = {
+        fill: {
+          fgColor: { rgb: "4472C4" } // Bleu professionnel
+        },
+        font: {
+          bold: true,
+          color: { rgb: "FFFFFF" },
+          sz: 12,
+          name: "Calibri"
+        },
+        alignment: {
+          horizontal: "center",
+          vertical: "center"
+        },
+        border: {
+          top: { style: "thin", color: { rgb: "000000" } },
+          bottom: { style: "thin", color: { rgb: "000000" } },
+          left: { style: "thin", color: { rgb: "000000" } },
+          right: { style: "thin", color: { rgb: "000000" } }
+        }
+      };
+    }
+
+    // Appliquer des styles aux cellules de données
+    for (let row = range.s.r + 1; row <= range.e.r; row++) {
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+        if (!ws[cellAddress]) continue;
+        
+        ws[cellAddress].s = {
+          font: {
+            sz: 11,
+            name: "Calibri"
+          },
+          alignment: {
+            horizontal: "left",
+            vertical: "center"
+          },
+          border: {
+            top: { style: "thin", color: { rgb: "D0D0D0" } },
+            bottom: { style: "thin", color: { rgb: "D0D0D0" } },
+            left: { style: "thin", color: { rgb: "D0D0D0" } },
+            right: { style: "thin", color: { rgb: "D0D0D0" } }
+          }
+        };
+      }
+    }
+
+    // Créer le classeur et ajouter la feuille
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Utilisateurs');
     
     // Télécharger le fichier
-    XLSX.writeFile(wb, fileName);
+    XLSX.writeFile(wb, fileName, { cellStyles: true });
   };
 
   const triggerFileSelect = () => {
