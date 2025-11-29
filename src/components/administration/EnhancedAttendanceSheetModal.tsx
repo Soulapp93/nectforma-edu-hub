@@ -59,7 +59,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
   onUpdate
 }) => {
   const { userId } = useCurrentUser();
-  const [mode, setMode] = useState<'view' | 'edit' | 'signature'>('view');
+  const [mode, setMode] = useState<'view' | 'edit'>('view');
   const [students, setStudents] = useState<Student[]>([]);
   const [adminSignature, setAdminSignature] = useState<string>('');
   const [instructorSignature, setInstructorSignature] = useState<string>('');
@@ -218,30 +218,46 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
     }
   };
 
-  const handleValidateAndSign = () => {
-    setMode('signature');
-  };
-
-  const handleSaveSignature = async (signature: string) => {
+  const handleValidateWithSavedSignature = async () => {
     if (!userId) {
       toast.error('Utilisateur non identifié');
       return;
     }
 
     try {
-      console.log('Début sauvegarde signature admin:', { userId, attendanceSheetId: attendanceSheet.id });
-      await attendanceService.validateAttendanceSheet(attendanceSheet.id, userId, signature);
-      console.log('Signature admin sauvegardée avec succès');
+      // Charger la signature enregistrée de l'administrateur
+      const { data: savedSignature, error: signatureError } = await supabase
+        .from('user_signatures')
+        .select('signature_data')
+        .eq('user_id', userId)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (signatureError) {
+        console.error('Erreur lors du chargement de la signature:', signatureError);
+        toast.error('Erreur lors du chargement de votre signature');
+        return;
+      }
+
+      if (!savedSignature || !savedSignature.signature_data) {
+        toast.error('Aucune signature enregistrée trouvée. Veuillez enregistrer une signature dans votre profil.');
+        return;
+      }
+
+      console.log('Validation avec signature enregistrée:', { userId, attendanceSheetId: attendanceSheet.id });
+      await attendanceService.validateAttendanceSheet(
+        attendanceSheet.id, 
+        userId, 
+        savedSignature.signature_data
+      );
+      console.log('Feuille validée avec succès');
       
-      toast.success("Feuille d'émargement validée et signée");
-      setMode('view');
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Rechargement des données...');
+      toast.success("Feuille d'émargement validée");
       await loadAttendanceData();
-      console.log('Données rechargées, signature admin actuelle:', adminSignature);
       onUpdate();
     } catch (error) {
-      console.error('Error saving signature:', error);
+      console.error('Error validating attendance sheet:', error);
       toast.error('Erreur lors de la validation');
     }
   };
@@ -273,26 +289,6 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
     };
   };
 
-  if (mode === 'signature') {
-    return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Signature administrative</DialogTitle>
-          </DialogHeader>
-          
-          <div className="py-4">
-            <SignaturePad
-              width={400}
-              height={200}
-              onSave={handleSaveSignature}
-              onCancel={() => setMode('view')}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
 
   if (loading || !attendanceSheet) {
     return (
@@ -511,9 +507,9 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
           
           <div className="flex gap-2">
             {attendanceSheet.status !== 'Validé' && (
-              <Button onClick={handleValidateAndSign} className="bg-green-600 hover:bg-green-700">
+              <Button onClick={handleValidateWithSavedSignature} className="bg-green-600 hover:bg-green-700">
                 <CheckCircle2 className="h-4 w-4 mr-2" />
-                Valider et Signer
+                Valider
               </Button>
             )}
             <Button variant="outline" onClick={onClose}>Fermer</Button>
