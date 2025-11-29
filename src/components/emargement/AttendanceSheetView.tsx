@@ -28,6 +28,23 @@ const AttendanceSheetView: React.FC<AttendanceSheetViewProps> = ({
   useEffect(() => {
     if (!attendanceSheet.id) return;
 
+    const loadSignatures = async () => {
+      const { data: signatures, error } = await supabase
+        .from('attendance_signatures')
+        .select(`
+          *,
+          user:users(first_name, last_name, email)
+        `)
+        .eq('attendance_sheet_id', attendanceSheet.id);
+
+      if (!error && signatures) {
+        setRealTimeSignatures(signatures as AttendanceSignature[]);
+      }
+    };
+
+    // Charger les signatures existantes au montage
+    loadSignatures();
+
     const channel = supabase
       .channel(`attendance_sheet_view_${attendanceSheet.id}`)
       .on(
@@ -38,21 +55,9 @@ const AttendanceSheetView: React.FC<AttendanceSheetViewProps> = ({
           table: 'attendance_signatures',
           filter: `attendance_sheet_id=eq.${attendanceSheet.id}`
         },
-        async (payload) => {
-          console.log('Real-time signature update:', payload);
-          
-          // Recharger toutes les signatures pour avoir les données complètes
-          const { data: signatures, error } = await supabase
-            .from('attendance_signatures')
-            .select(`
-              *,
-              user:users(first_name, last_name, email)
-            `)
-            .eq('attendance_sheet_id', attendanceSheet.id);
-
-          if (!error && signatures) {
-            setRealTimeSignatures(signatures as AttendanceSignature[]);
-          }
+        async () => {
+          console.log('Real-time signature update received');
+          await loadSignatures();
         }
       )
       .subscribe();
