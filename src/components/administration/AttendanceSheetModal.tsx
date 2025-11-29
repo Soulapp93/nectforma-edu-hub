@@ -11,6 +11,7 @@ import { pdfExportService } from '@/services/pdfExportService';
 import AttendanceSheetView from '@/components/emargement/AttendanceSheetView';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AttendanceSheetModalProps {
   isOpen: boolean;
@@ -29,8 +30,51 @@ const AttendanceSheetModal: React.FC<AttendanceSheetModalProps> = ({
   const [sheet, setSheet] = useState(attendanceSheet);
 
   useEffect(() => {
-    setSheet(attendanceSheet);
-  }, [attendanceSheet]);
+    const loadDetailedSheet = async () => {
+      if (!attendanceSheet?.id) {
+        setSheet(attendanceSheet);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('attendance_sheets')
+          .select(`
+            *,
+            formations!formation_id(title, level),
+            instructor:users!instructor_id(first_name, last_name),
+            attendance_signatures(*, users(first_name, last_name, email))
+          `)
+          .eq('id', attendanceSheet.id)
+          .single();
+
+        if (error || !data) {
+          console.error('Erreur chargement feuille détaillée, utilisation des données existantes', error);
+          setSheet(attendanceSheet);
+          return;
+        }
+
+        // Normaliser les champs pour correspondre à l'interface AttendanceSheet
+        const normalizedSheet: AttendanceSheet = {
+          ...(attendanceSheet as AttendanceSheet),
+          ...(data as any),
+          instructor: (data as any).instructor ?? (attendanceSheet as any).instructor ?? null,
+          signatures: (data as any).attendance_signatures ?? (attendanceSheet as any).signatures ?? []
+        };
+
+        setSheet(normalizedSheet);
+      } catch (err) {
+        console.error('Erreur chargement feuille détaillée:', err);
+        setSheet(attendanceSheet);
+      }
+    };
+
+    if (isOpen) {
+      loadDetailedSheet();
+    } else {
+      setSheet(attendanceSheet);
+    }
+  }, [attendanceSheet, isOpen]);
 
   const handleStatusUpdate = async (newStatus: string) => {
     try {
