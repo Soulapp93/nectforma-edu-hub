@@ -323,6 +323,11 @@ const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ isOpen, onClose }
           }}
           attendanceSheet={selectedSheet}
           onUpdate={fetchAttendanceHistory}
+          onValidateSheet={async () => {
+            await fetchAttendanceHistory();
+            setShowAttendanceSheet(false);
+            setSelectedSheet(null);
+          }}
         />
       )}
     </>

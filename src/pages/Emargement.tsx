@@ -556,6 +556,11 @@ const Emargement = () => {
           }}
           attendanceSheet={selectedSheet}
           onUpdate={fetchTodaysAttendance}
+          onValidateSheet={async () => {
+            await fetchTodaysAttendance();
+            setShowAttendanceSheet(false);
+            setSelectedSheet(null);
+          }}
         />
       )}
 
