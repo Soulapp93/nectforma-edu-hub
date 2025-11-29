@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { AttendanceSheet, attendanceService } from '@/services/attendanceService';
 import { pdfExportService } from '@/services/pdfExportService';
-import SignaturePad from '@/components/ui/signature-pad';
+import AdminValidationModal from './AdminValidationModal';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
@@ -65,6 +65,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
   const [instructorSignature, setInstructorSignature] = useState<string>('');
   const [instructorName, setInstructorName] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [showValidationModal, setShowValidationModal] = useState(false);
 
   // Charger les données de la feuille d'émargement
   const loadAttendanceData = async () => {
@@ -218,47 +219,65 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
     }
   };
 
-  const handleValidateWithSavedSignature = async () => {
+  const handleValidateSheet = async () => {
     if (!userId) {
       toast.error('Utilisateur non identifié');
       return;
     }
 
+    console.log('Début validation, vérification signature admin...');
+    
     try {
-      // Charger la signature enregistrée de l'administrateur
-      const { data: savedSignature, error: signatureError } = await supabase
+      // Recharger la signature depuis la base pour s'assurer d'avoir la plus récente
+      const { data: signatureData, error } = await supabase
         .from('user_signatures')
         .select('signature_data')
         .eq('user_id', userId)
         .order('updated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
-
-      if (signatureError) {
-        console.error('Erreur lors du chargement de la signature:', signatureError);
-        toast.error('Erreur lors du chargement de votre signature');
-        return;
+      
+      console.log('Signature trouvée en base:', !!signatureData?.signature_data);
+      
+      if (signatureData?.signature_data && signatureData.signature_data.trim() !== '') {
+        // Valider avec la signature existante
+        console.log('Validation avec signature existante');
+        await attendanceService.validateAttendanceSheet(
+          attendanceSheet.id, 
+          userId, 
+          signatureData.signature_data
+        );
+        toast.success('Feuille d\'émargement validée avec la signature enregistrée');
+        await loadAttendanceData();
+        onUpdate();
+      } else {
+        // Aucune signature trouvée, ouvrir le modal pour signature manuelle
+        console.log('Aucune signature trouvée, ouverture du modal');
+        setShowValidationModal(true);
       }
+    } catch (error) {
+      console.error('Error validating attendance sheet:', error);
+      toast.error('Erreur lors de la validation');
+    }
+  };
 
-      if (!savedSignature || !savedSignature.signature_data) {
-        toast.error('Aucune signature enregistrée trouvée. Veuillez enregistrer une signature dans votre profil.');
-        return;
-      }
-
-      console.log('Validation avec signature enregistrée:', { userId, attendanceSheetId: attendanceSheet.id });
+  const handleConfirmValidation = async (signatureData?: string) => {
+    if (!userId) return;
+    
+    try {
       await attendanceService.validateAttendanceSheet(
         attendanceSheet.id, 
         userId, 
-        savedSignature.signature_data
+        signatureData
       );
-      console.log('Feuille validée avec succès');
-      
       toast.success("Feuille d'émargement validée");
+      setShowValidationModal(false);
       await loadAttendanceData();
       onUpdate();
     } catch (error) {
       console.error('Error validating attendance sheet:', error);
       toast.error('Erreur lors de la validation');
+      throw error;
     }
   };
 
@@ -507,7 +526,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
           
           <div className="flex gap-2">
             {attendanceSheet.status !== 'Validé' && (
-              <Button onClick={handleValidateWithSavedSignature} className="bg-green-600 hover:bg-green-700">
+              <Button onClick={handleValidateSheet} className="bg-green-600 hover:bg-green-700">
                 <CheckCircle2 className="h-4 w-4 mr-2" />
                 Valider
               </Button>
@@ -516,6 +535,16 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
           </div>
         </div>
       </DialogContent>
+
+      {/* Modal de validation administrative */}
+      {showValidationModal && (
+        <AdminValidationModal
+          isOpen={showValidationModal}
+          onClose={() => setShowValidationModal(false)}
+          attendanceSheet={attendanceSheet}
+          onValidate={handleConfirmValidation}
+        />
+      )}
     </Dialog>
   );
 };
