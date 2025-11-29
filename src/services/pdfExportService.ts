@@ -74,6 +74,26 @@ export const pdfExportService = {
           adminSignatureData = adminSig.signature_data;
         }
       }
+
+      // Always reload signatures from the database to ensure instructor signature is available
+      let signatures: any[] = [];
+      try {
+        const { data: signaturesData, error: signaturesError } = await supabase
+          .from('attendance_signatures')
+          .select(`*, users(first_name, last_name, email)`)
+          .eq('attendance_sheet_id', attendanceSheet.id);
+
+        if (signaturesError) {
+          console.error('Error loading signatures for PDF export:', signaturesError);
+        } else if (signaturesData) {
+          signatures = (signaturesData as any[]).map(sig => ({
+            ...sig,
+            user: (sig as any).users
+          }));
+        }
+      } catch (e) {
+        console.error('Unexpected error loading signatures for PDF export:', e);
+      }
       
       // Header with purple background
       pdf.setFillColor(139, 92, 246);
@@ -124,7 +144,6 @@ export const pdfExportService = {
 
       // Table content
       let currentY = tableStartY + 12;
-      const signatures = attendanceSheet.signatures || [];
       const rowHeight = 12;
       
       pdf.setFont('helvetica', 'normal');
