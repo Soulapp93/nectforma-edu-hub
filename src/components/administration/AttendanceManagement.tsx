@@ -563,6 +563,12 @@ const AttendanceManagement = () => {
               await fetchFormationSheets(selectedFormationId);
             }
           }}
+          onValidateSheet={async (sheet) => {
+            await handleValidateSheet(sheet);
+            // Après validation, on ferme la modale détaillée
+            setShowSheetModal(false);
+            setSelectedSheet(null);
+          }}
         />
       )}
 

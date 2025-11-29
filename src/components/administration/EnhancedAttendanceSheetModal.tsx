@@ -17,6 +17,7 @@ interface EnhancedAttendanceSheetModalProps {
   onClose: () => void;
   attendanceSheet: AttendanceSheet;
   onUpdate: () => void;
+  onValidateSheet: (sheet: AttendanceSheet) => Promise<void>;
 }
 
 interface Student {
@@ -56,7 +57,8 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
   isOpen,
   onClose,
   attendanceSheet,
-  onUpdate
+  onUpdate,
+  onValidateSheet
 }) => {
   const { userId } = useCurrentUser();
   const [mode, setMode] = useState<'view' | 'edit'>('view');
@@ -221,64 +223,11 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
   };
 
   const handleValidateSheet = async () => {
-    if (!userId) {
-      toast.error('Utilisateur non identifié');
-      return;
-    }
-
-    console.log('Début validation, vérification signature admin...');
-    
     try {
-      // Recharger la signature depuis la base pour s'assurer d'avoir la plus récente
-      const { data: signatureData, error } = await supabase
-        .from('user_signatures')
-        .select('signature_data')
-        .eq('user_id', userId)
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      
-      console.log('Signature trouvée en base:', !!signatureData?.signature_data);
-      
-      if (signatureData?.signature_data && signatureData.signature_data.trim() !== '') {
-        // Valider avec la signature existante
-        console.log('Validation avec signature existante');
-        await attendanceService.validateAttendanceSheet(
-          attendanceSheet.id, 
-          userId, 
-          signatureData.signature_data
-        );
-        toast.success('Feuille d\'émargement validée avec la signature enregistrée');
-        await loadAttendanceData();
-        onUpdate();
-      } else {
-        // Aucune signature trouvée, ouvrir le modal pour signature manuelle
-        console.log('Aucune signature trouvée, ouverture du modal');
-        setShowValidationModal(true);
-      }
+      await onValidateSheet(attendanceSheet);
     } catch (error) {
-      console.error('Error validating attendance sheet:', error);
-      toast.error('Erreur lors de la validation');
-    }
-  };
-
-  const handleConfirmValidation = async (signatureData?: string) => {
-    if (!userId) return;
-    
-    try {
-      await attendanceService.validateAttendanceSheet(
-        attendanceSheet.id, 
-        userId, 
-        signatureData
-      );
-      toast.success("Feuille d'émargement validée");
-      setShowValidationModal(false);
-      await loadAttendanceData();
-      onUpdate();
-    } catch (error) {
-      console.error('Error validating attendance sheet:', error);
-      toast.error('Erreur lors de la validation');
-      throw error;
+      console.error('Error validating attendance sheet from modal:', error);
+      // Le parent gère déjà les toasts, on évite le doublon ici
     }
   };
 
@@ -543,7 +492,15 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
           isOpen={showValidationModal}
           onClose={() => setShowValidationModal(false)}
           attendanceSheet={attendanceSheet}
-          onValidate={handleConfirmValidation}
+          onValidate={async (signatureData?: string) => {
+            try {
+              // On délègue la validation au parent via onValidateSheet qui réutilise
+              // la même logique que le bouton "Valider" de la liste
+              await onValidateSheet(attendanceSheet);
+            } catch (error) {
+              console.error('Error validating from AdminValidationModal in modal:', error);
+            }
+          }}
         />
       )}
     </Dialog>
