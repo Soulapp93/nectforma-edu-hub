@@ -349,42 +349,56 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
           <div className="grid grid-cols-2 gap-8">
             <div>
               <h4 className="font-semibold mb-3">Signature du Formateur</h4>
-              <div 
-                className={`border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-center justify-center p-2 relative ${
-                  !(attendanceSheet as any).signatures?.find((sig: any) => sig.user_type === 'instructor' && sig.user_id === attendanceSheet.instructor_id) 
-                    ? 'cursor-pointer hover:bg-gray-100 transition-colors print:cursor-default print:hover:bg-gray-50' 
-                    : ''
-                }`}
-                onClick={() => {
-                  if (!(attendanceSheet as any).signatures?.find((sig: any) => sig.user_type === 'instructor' && sig.user_id === attendanceSheet.instructor_id)) {
-                    setShowInstructorSignModal(true);
-                  }
-                }}
-              >
-                {(attendanceSheet as any).signatures?.find((sig: any) => sig.user_type === 'instructor' && sig.user_id === attendanceSheet.instructor_id)?.signature_data ? (
-                  <img 
-                    src={(attendanceSheet as any).signatures.find((sig: any) => sig.user_type === 'instructor' && sig.user_id === attendanceSheet.instructor_id)?.signature_data} 
-                    alt="Signature formateur" 
-                    className="h-16 w-auto"
-                  />
-                ) : (
-                  <div className="text-xs text-gray-500 text-center flex flex-col items-center gap-2">
-                    <PenTool className="w-5 h-5 print:hidden" />
-                    <span>Cliquez pour signer</span>
-                  </div>
-                )}
-              </div>
-              <div className="mt-2 text-center text-sm text-gray-600 border-t pt-2">
-                {attendanceSheet.instructor ? `${attendanceSheet.instructor.first_name} ${attendanceSheet.instructor.last_name}` : 'Formateur non assigné'}
-              </div>
+              {(() => {
+                const instructorSignature = (attendanceSheet as any).signatures?.find(
+                  (sig: any) => sig.user_type === 'instructor'
+                );
+
+                const canInstructorSign = !instructorSignature;
+
+                return (
+                  <>
+                    <div
+                      className={`border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-center justify-center p-2 relative ${
+                        canInstructorSign
+                          ? 'cursor-pointer hover:bg-gray-100 transition-colors print:cursor-default print:hover:bg-gray-50'
+                          : ''
+                      }`}
+                      onClick={() => {
+                        if (canInstructorSign) {
+                          setShowInstructorSignModal(true);
+                        }
+                      }}
+                    >
+                      {instructorSignature?.signature_data ? (
+                        <img
+                          src={instructorSignature.signature_data}
+                          alt="Signature formateur"
+                          className="h-16 w-auto"
+                        />
+                      ) : (
+                        <div className="text-xs text-gray-500 text-center flex flex-col items-center gap-2">
+                          <PenTool className="w-5 h-5 print:hidden" />
+                          <span>Cliquez pour signer</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-2 text-center text-sm text-gray-600 border-t pt-2">
+                      {attendanceSheet.instructor
+                        ? `${attendanceSheet.instructor.first_name} ${attendanceSheet.instructor.last_name}`
+                        : 'Formateur non assigné'}
+                    </div>
+                  </>
+                );
+              })()}
             </div>
             <div>
               <h4 className="font-semibold mb-3">Signature de l'Administration</h4>
               <div className="border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-center justify-center p-2">
                 {adminSignature ? (
-                  <img 
-                    src={adminSignature} 
-                    alt="Signature administration" 
+                  <img
+                    src={adminSignature}
+                    alt="Signature administration"
                     className="h-16 w-auto"
                   />
                 ) : (
