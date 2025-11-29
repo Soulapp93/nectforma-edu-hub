@@ -98,16 +98,18 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
 
       if (studentsError) throw studentsError;
 
-      // Mapper les étudiants avec leurs signatures
-      const mappedStudents: Student[] = (studentData || []).map((assignment: any) => ({
-        id: assignment.users.id,
-        firstName: assignment.users.first_name,
-        lastName: assignment.users.last_name,
-        formation: (attendanceSheet.formations as any)?.title || '',
-        signature: signatures?.find(
-          (sig: any) => sig.user_id === assignment.users.id
-        )
-      }));
+      // Mapper les étudiants avec leurs signatures (en ignorant les lignes sans utilisateur lié)
+      const mappedStudents: Student[] = (studentData || [])
+        .filter((assignment: any) => assignment.users)
+        .map((assignment: any) => ({
+          id: assignment.users.id,
+          firstName: assignment.users.first_name,
+          lastName: assignment.users.last_name,
+          formation: (attendanceSheet.formations as any)?.title || '',
+          signature: signatures?.find(
+            (sig: any) => sig.user_id === assignment.users.id
+          )
+        }));
 
       setStudents(mappedStudents);
       
