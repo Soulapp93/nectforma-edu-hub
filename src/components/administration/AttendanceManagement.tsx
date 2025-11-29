@@ -557,7 +557,12 @@ const AttendanceManagement = () => {
             setSelectedSheet(null);
           }}
           attendanceSheet={selectedSheet}
-          onUpdate={fetchData}
+          onUpdate={async () => {
+            await fetchData();
+            if (selectedFormationId) {
+              await fetchFormationSheets(selectedFormationId);
+            }
+          }}
         />
       )}
 

@@ -135,14 +135,14 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
         }
       }
 
-      // Charger la signature administrative depuis user_signatures si la feuille est validée
-      if (attendanceSheet.validated_by) {
-        console.log('Chargement signature admin pour validated_by:', attendanceSheet.validated_by);
-        
+      // Charger la signature administrative depuis user_signatures si possible
+      const adminId = attendanceSheet.validated_by || userId;
+      if (adminId) {
+        console.log('Chargement signature admin pour utilisateur:', adminId);
         const { data: adminSigData, error: adminSigError } = await supabase
           .from('user_signatures')
           .select('signature_data')
-          .eq('user_id', attendanceSheet.validated_by)
+          .eq('user_id', adminId)
           .order('updated_at', { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -157,6 +157,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
           setAdminSignature('');
         }
       }
+
     } catch (error) {
       console.error('Error loading attendance data:', error);
     } finally {
