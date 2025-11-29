@@ -63,6 +63,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
   const [students, setStudents] = useState<Student[]>([]);
   const [adminSignature, setAdminSignature] = useState<string>('');
   const [instructorSignature, setInstructorSignature] = useState<string>('');
+  const [instructorName, setInstructorName] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   // Charger les données de la feuille d'émargement
@@ -98,7 +99,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
       if (studentsError) throw studentsError;
 
       // Mapper les étudiants avec leurs signatures
-      const mappedStudents: Student[] = (studentData || []).map(assignment => ({
+      const mappedStudents: Student[] = (studentData || []).map((assignment: any) => ({
         id: assignment.users.id,
         firstName: assignment.users.first_name,
         lastName: assignment.users.last_name,
@@ -115,26 +116,26 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
       console.log('instructor_id de la feuille:', attendanceSheet.instructor_id);
       console.log('validated_by de la feuille:', attendanceSheet.validated_by);
       
-      // Signature du formateur: TOUJOURS chercher la signature du formateur original (instructor_id de la feuille)
-      const instrSig = signatures?.find((sig: any) => 
-        sig.user_type === 'instructor' && 
-        sig.user_id === attendanceSheet.instructor_id
-      )?.signature_data;
+      // Signature du formateur: prendre la première signature de type "instructor",
+      // même si instructor_id n'est pas renseigné sur la feuille
+      const instructorSigRecord = signatures?.find((sig: any) => sig.user_type === 'instructor');
+      const instrSig = instructorSigRecord?.signature_data;
       
       console.log('Signature formateur trouvée:', !!instrSig);
-      console.log('ID formateur:', attendanceSheet.instructor_id);
-      
+      console.log('ID formateur (attendance_sheet.instructor_id):', attendanceSheet.instructor_id);
+
       if (instrSig) {
-        console.log('Conservation signature formateur originale');
+        console.log('Utilisation de la signature formateur persistée');
         setInstructorSignature(instrSig);
+        if (instructorSigRecord?.users) {
+          setInstructorName(`${instructorSigRecord.users.first_name} ${instructorSigRecord.users.last_name}`);
+        }
       }
 
       // Charger la signature administrative depuis user_signatures si la feuille est validée
       if (attendanceSheet.validated_by) {
         console.log('Chargement signature admin pour validated_by:', attendanceSheet.validated_by);
         
-        // TOUJOURS chercher la signature de l'administrateur dans user_signatures
-        // Même si c'est la même personne que le formateur, chaque rôle a sa propre signature
         const { data: adminSigData, error: adminSigError } = await supabase
           .from('user_signatures')
           .select('signature_data')
@@ -150,7 +151,6 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
           setAdminSignature(adminSigData.signature_data);
         } else {
           console.log('Aucune signature admin trouvée dans user_signatures');
-          // Réinitialiser la signature admin si aucune trouvée
           setAdminSignature('');
         }
       }
@@ -179,7 +179,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
         },
         () => {
           console.log('Real-time update detected in modal');
-          loadAttendanceData(); // Recharger les données
+          loadAttendanceData();
         }
       )
       .on(
@@ -203,18 +203,16 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
   }, [isOpen, attendanceSheet.id]);
 
   const handleStudentStatusChange = (studentId: string, present: boolean, absenceReason?: string) => {
-    // Mettre à jour le statut dans la base de données
-    // Cette fonctionnalité sera implémentée plus tard
     console.log('Update student status:', { studentId, present, absenceReason });
   };
 
   const handleExportPDF = async () => {
     try {
       await pdfExportService.exportAttendanceSheetSimple(attendanceSheet);
-      toast.success('Feuille d\'émargement exportée en PDF');
+      toast.success("Feuille d'émargement exportée en PDF");
     } catch (error) {
       console.error('Error exporting PDF:', error);
-      toast.error('Erreur lors de l\'export PDF');
+      toast.error("Erreur lors de l'export PDF");
     }
   };
 
@@ -233,17 +231,12 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
       await attendanceService.validateAttendanceSheet(attendanceSheet.id, userId, signature);
       console.log('Signature admin sauvegardée avec succès');
       
-      toast.success('Feuille d\'émargement validée et signée');
+      toast.success("Feuille d'émargement validée et signée");
       setMode('view');
-      
-      // Petit délai pour s'assurer que la base de données est mise à jour
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Recharger les données pour voir la signature
       console.log('Rechargement des données...');
       await loadAttendanceData();
       console.log('Données rechargées, signature admin actuelle:', adminSignature);
-      
       onUpdate();
     } catch (error) {
       console.error('Error saving signature:', error);
@@ -344,7 +337,6 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
               </div>
             </div>
           </div>
-
 
           {/* Liste des participants */}
           <div className="p-6">
@@ -471,7 +463,11 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
                   )}
                 </div>
                 <div className="mt-2 text-center text-sm text-gray-600 border-t pt-2">
-                  {(attendanceSheet as any).instructor ? `${(attendanceSheet as any).instructor.first_name} ${(attendanceSheet as any).instructor.last_name}` : 'Formateur non assigné'}
+                  {instructorName
+                    ? instructorName
+                    : (attendanceSheet as any).instructor
+                    ? `${(attendanceSheet as any).instructor.first_name} ${(attendanceSheet as any).instructor.last_name}`
+                    : 'Formateur non assigné'}
                 </div>
               </div>
               <div>
