@@ -11,6 +11,9 @@ export const useUserSchedules = () => {
   
   const { userId, userRole } = useCurrentUser();
   const { userFormations } = useUserFormations();
+  
+  // Extraire les IDs de formation depuis les données utilisateur
+  const formationIds = userFormations?.map(uf => uf.formation_id) || [];
 
   const fetchSchedules = async () => {
     if (!userId || !userRole) {
@@ -26,7 +29,6 @@ export const useUserSchedules = () => {
 
       if (userRole === 'Étudiant') {
         // Pour les étudiants : récupérer les emplois du temps des formations auxquelles ils sont inscrits
-        const formationIds = userFormations?.map(f => f.id) || [];
         if (formationIds.length > 0) {
           data = await scheduleService.getStudentSchedules(formationIds);
         } else {
