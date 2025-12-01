@@ -6,6 +6,7 @@ import { Send, Clock, User, BookOpen, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
+import { notificationService } from '@/services/notificationService';
 
 interface MissingEntry {
   id: string;
@@ -118,19 +119,14 @@ const MissingTextBookEntriesModal: React.FC<MissingTextBookEntriesModalProps> = 
   };
 
   const sendReminder = async (entry: MissingEntry) => {
+    if (!entry.instructor_id) {
+      toast.error('Aucun formateur associé à ce cours');
+      return;
+    }
+
     setSendingReminder(entry.id);
     try {
-      const { data: currentUser } = await supabase.auth.getUser();
-      if (!currentUser.user) throw new Error('Utilisateur non connecté');
-
-      // Envoyer un message de rappel au formateur
-      const { error } = await supabase
-        .from('messages')
-        .insert({
-          sender_id: currentUser.user.id,
-          recipient_id: entry.instructor_id,
-          subject: `Rappel: Cahier de texte manquant - ${entry.module_name}`,
-          content: `Bonjour,
+      const message = `Bonjour,
 
 Vous n'avez pas encore saisi l'entrée dans le cahier de texte pour le cours suivant :
 
@@ -142,10 +138,19 @@ Vous n'avez pas encore saisi l'entrée dans le cahier de texte pour le cours sui
 Merci de compléter cette entrée dès que possible.
 
 Cordialement,
-L'administration`
-        });
+L'administration`;
 
-      if (error) throw error;
+      await notificationService.notifyUser(
+        entry.instructor_id,
+        'Rappel: Cahier de texte manquant',
+        message,
+        'textbook_reminder',
+        {
+          module: entry.module_name,
+          date: entry.date,
+          formation: entry.formation_title
+        }
+      );
 
       toast.success(`Rappel envoyé à ${entry.instructor_name}`);
     } catch (error) {
