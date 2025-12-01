@@ -26,10 +26,10 @@ type ViewMode = 'day' | 'week' | 'month' | 'list';
 const EmploiTemps = () => {
   const { userRole } = useCurrentUser();
   
-  // Vue par défaut : liste pour les formateurs/tuteurs, semaine pour les autres
+  // Vue par défaut : semaine pour tous les utilisateurs (permet navigation complète)
   const isInstructor = userRole === 'Formateur' || userRole === 'Tuteur';
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<ViewMode>(isInstructor ? 'list' : 'week');
+  const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
   const [isEventDetailsOpen, setIsEventDetailsOpen] = useState(false);
   const [selectedFormationId, setSelectedFormationId] = useState<string | null>(null);
@@ -165,8 +165,41 @@ const EmploiTemps = () => {
     }
   };
 
-  // Filtrer les événements selon la période affichée
-  const filteredEvents = events;
+  // Filtrer les événements selon la période affichée et le mode de vue
+  const filteredEvents = (() => {
+    if (viewMode === 'list' && isInstructor) {
+      // Vue liste pour instructeurs: tous les cours
+      return events;
+    }
+    
+    if (viewMode === 'day') {
+      // Vue jour: seulement les cours du jour sélectionné
+      return events.filter(event => 
+        event.date.toDateString() === currentDate.toDateString()
+      );
+    }
+    
+    if (viewMode === 'week') {
+      // Vue semaine: cours de la semaine
+      const weekDays = getWeekDays(currentDate);
+      const weekStart = weekDays[0];
+      const weekEnd = weekDays[6];
+      return events.filter(event => 
+        event.date >= weekStart && event.date <= weekEnd
+      );
+    }
+    
+    if (viewMode === 'month') {
+      // Vue mois: cours du mois
+      const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      return events.filter(event => 
+        event.date >= monthStart && event.date <= monthEnd
+      );
+    }
+    
+    return events;
+  })();
 
   // Prepare week schedule data for week and list views
   const weekDays = getWeekDays(currentDate);
