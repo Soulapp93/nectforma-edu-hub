@@ -24,14 +24,17 @@ import type { ScheduleEvent } from '@/components/schedule/CreateEventModal';
 type ViewMode = 'day' | 'week' | 'month' | 'list';
 
 const EmploiTemps = () => {
+  const { userRole } = useCurrentUser();
+  
+  // Vue par défaut : liste pour les formateurs/tuteurs, semaine pour les autres
+  const isInstructor = userRole === 'Formateur' || userRole === 'Tuteur';
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<ViewMode>('week');
+  const [viewMode, setViewMode] = useState<ViewMode>(isInstructor ? 'list' : 'week');
   const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
   const [isEventDetailsOpen, setIsEventDetailsOpen] = useState(false);
   const [selectedFormationId, setSelectedFormationId] = useState<string | null>(null);
   
   const { toast } = useToast();
-  const { userRole } = useCurrentUser();
   const { schedules, loading, error } = useUserSchedules();
   const { userFormations, loading: loadingFormations } = useUserFormations();
 
@@ -471,6 +474,87 @@ const EmploiTemps = () => {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Cours passés */}
+              {categorizedEvents.past.length > 0 && (
+                <div>
+                  <div className="px-3 sm:px-6 py-3 bg-muted/20">
+                    <h3 className="text-sm sm:text-base font-medium text-muted-foreground">
+                      Cours passés ({categorizedEvents.past.length})
+                    </h3>
+                  </div>
+                  {categorizedEvents.past.slice(0, 10).map((event) => (
+                    <div
+                      key={event.id}
+                      className="md:grid md:grid-cols-12 md:gap-4 px-3 sm:px-6 py-4 hover:bg-muted/50 transition-colors cursor-pointer border-b border-border last:border-b-0 md:items-center space-y-2 md:space-y-0 opacity-60"
+                      onClick={() => handleEventClick(event)}
+                    >
+                      {/* Mobile Layout */}
+                      <div className="md:hidden space-y-2">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="font-medium text-sm">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
+                            <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
+                          </div>
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}
+                          </Badge>
+                        </div>
+                        <div 
+                          className="inline-flex items-center gap-2 px-2 py-1 rounded-md text-xs font-medium text-white"
+                          style={{ backgroundColor: event.color }}
+                        >
+                          <span className="w-1 h-1 rounded-full bg-white/80"></span>
+                          {event.formation}
+                        </div>
+                        <div>
+                          <div className="font-medium text-sm">{event.title}</div>
+                          {event.description && (
+                            <div className="text-xs text-muted-foreground truncate">{event.description}</div>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground">{event.room}</div>
+                      </div>
+                      
+                      {/* Desktop Layout */}
+                      <div className="hidden md:contents">
+                        <div className="col-span-2">
+                          <div className="font-medium">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
+                          <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
+                        </div>
+                        <div className="col-span-2">
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}
+                          </Badge>
+                        </div>
+                        <div className="col-span-3">
+                          <div 
+                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-white"
+                            style={{ backgroundColor: event.color }}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-white/80"></span>
+                            {event.formation}
+                          </div>
+                        </div>
+                        <div className="col-span-3">
+                          <div className="font-medium">{event.title}</div>
+                          {event.description && (
+                            <div className="text-xs text-muted-foreground truncate">{event.description}</div>
+                          )}
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-sm">{event.room}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {categorizedEvents.past.length > 10 && (
+                    <div className="px-3 sm:px-6 py-3 text-center text-xs text-muted-foreground">
+                      Affichage des 10 derniers cours passés
+                    </div>
+                  )}
                 </div>
               )}
             </div>
