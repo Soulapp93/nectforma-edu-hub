@@ -37,7 +37,7 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
           email: row['Email'] || row['email'] || '',
           role: preselectedRole || row['Rôle'] || row['Role'] || row['role'] || 'Étudiant',
           status: 'En attente',
-          formationIds: row['Formations'] || row['formations'] || ''
+          formationIds: row['Formation(s)'] || row['Formations'] || row['formations'] || ''
         }));
 
         // Valider les données
@@ -91,22 +91,25 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
           'Prénom': 'Jean',
           'Nom': 'Dupont',
           'Email': 'jean.dupont@exemple.com',
-          'Rôle': 'Étudiant',
-          'Formations': 'Formation Web, Formation Mobile'
+          'Formation(s)': 'Formation Web, Formation Mobile'
         },
         {
           'Prénom': 'Marie',
           'Nom': 'Martin', 
           'Email': 'marie.martin@exemple.com',
-          'Rôle': 'Étudiant',
-          'Formations': 'Formation Web'
+          'Formation(s)': 'Formation Web'
         },
         {
-          'Prénom': 'Pierre',
-          'Nom': 'Durand',
-          'Email': 'pierre.durand@exemple.com',
-          'Rôle': 'Étudiant',
-          'Formations': 'Formation Design'
+          'Prénom': 'Sophie',
+          'Nom': 'Bernard',
+          'Email': 'sophie.bernard@exemple.com',
+          'Formation(s)': 'Formation Design'
+        },
+        {
+          'Prénom': 'Lucas',
+          'Nom': 'Petit',
+          'Email': 'lucas.petit@exemple.com',
+          'Formation(s)': 'Formation Mobile, Formation Design'
         }
       ];
       fileName = 'Modele_Import_Etudiants.xlsx';
@@ -114,24 +117,27 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
       template = [
         {
           'Prénom': 'Pierre',
-          'Nom': 'Durand',
-          'Email': 'pierre.durand@exemple.com',
-          'Rôle': 'Formateur',
-          'Formations': 'Formation Web, Formation Mobile'
-        },
-        {
-          'Prénom': 'Sophie',
-          'Nom': 'Bernard',
-          'Email': 'sophie.bernard@exemple.com',
-          'Rôle': 'Formateur',
-          'Formations': 'Formation Design'
+          'Nom': 'Dupont',
+          'Email': 'pierre.dupont@exemple.com',
+          'Formation(s)': 'Formation Web, Formation Mobile'
         },
         {
           'Prénom': 'Marc',
           'Nom': 'Lefebvre',
           'Email': 'marc.lefebvre@exemple.com',
-          'Rôle': 'Formateur',
-          'Formations': 'Formation Web'
+          'Formation(s)': 'Formation Design'
+        },
+        {
+          'Prénom': 'Sophie',
+          'Nom': 'Bernard',
+          'Email': 'sophie.bernard@exemple.com',
+          'Formation(s)': 'Formation Web'
+        },
+        {
+          'Prénom': 'Anne',
+          'Nom': 'Moreau',
+          'Email': 'anne.moreau@exemple.com',
+          'Formation(s)': 'Formation Mobile, Formation Design'
         }
       ];
       fileName = 'Modele_Import_Formateurs.xlsx';
@@ -142,14 +148,14 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
           'Nom': 'Dupont',
           'Email': 'jean.dupont@exemple.com',
           'Rôle': 'Étudiant',
-          'Formations': 'Formation Web'
+          'Formation(s)': 'Formation Web'
         },
         {
           'Prénom': 'Pierre',
           'Nom': 'Durand',
           'Email': 'pierre.durand@exemple.com',
           'Rôle': 'Formateur',
-          'Formations': 'Formation Mobile'
+          'Formation(s)': 'Formation Mobile'
         }
       ];
       fileName = 'Modele_Import_Utilisateurs.xlsx';
@@ -159,16 +165,22 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
     const ws = XLSX.utils.json_to_sheet(template);
     
     // Définir la largeur des colonnes pour une meilleure lisibilité
-    ws['!cols'] = [
-      { wch: 15 }, // Prénom
-      { wch: 15 }, // Nom
-      { wch: 30 }, // Email
-      { wch: 12 }, // Rôle
-      { wch: 40 }  // Formations
+    const hasRoleColumn = !preselectedRole;
+    ws['!cols'] = hasRoleColumn ? [
+      { wch: 18 }, // Prénom
+      { wch: 18 }, // Nom
+      { wch: 35 }, // Email
+      { wch: 15 }, // Rôle
+      { wch: 45 }  // Formation(s)
+    ] : [
+      { wch: 18 }, // Prénom
+      { wch: 18 }, // Nom
+      { wch: 35 }, // Email
+      { wch: 50 }  // Formation(s)
     ];
 
     // Appliquer un style professionnel aux en-têtes (première ligne)
-    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:E1');
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
     
     for (let col = range.s.c; col <= range.e.c; col++) {
       const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
@@ -177,23 +189,24 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
       // Appliquer le style aux en-têtes
       ws[cellAddress].s = {
         fill: {
-          fgColor: { rgb: "4472C4" } // Bleu professionnel
+          fgColor: { rgb: "4472C4" } // Bleu professionnel Excel
         },
         font: {
           bold: true,
           color: { rgb: "FFFFFF" },
-          sz: 12,
+          sz: 11,
           name: "Calibri"
         },
         alignment: {
           horizontal: "center",
-          vertical: "center"
+          vertical: "center",
+          wrapText: false
         },
         border: {
-          top: { style: "thin", color: { rgb: "000000" } },
-          bottom: { style: "thin", color: { rgb: "000000" } },
-          left: { style: "thin", color: { rgb: "000000" } },
-          right: { style: "thin", color: { rgb: "000000" } }
+          top: { style: "thin", color: { rgb: "FFFFFF" } },
+          bottom: { style: "thin", color: { rgb: "FFFFFF" } },
+          left: { style: "thin", color: { rgb: "FFFFFF" } },
+          right: { style: "thin", color: { rgb: "FFFFFF" } }
         }
       };
     }
@@ -207,17 +220,19 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
         ws[cellAddress].s = {
           font: {
             sz: 11,
-            name: "Calibri"
+            name: "Calibri",
+            color: { rgb: "000000" }
           },
           alignment: {
             horizontal: "left",
-            vertical: "center"
+            vertical: "center",
+            wrapText: false
           },
           border: {
-            top: { style: "thin", color: { rgb: "D0D0D0" } },
-            bottom: { style: "thin", color: { rgb: "D0D0D0" } },
-            left: { style: "thin", color: { rgb: "D0D0D0" } },
-            right: { style: "thin", color: { rgb: "D0D0D0" } }
+            top: { style: "thin", color: { rgb: "D3D3D3" } },
+            bottom: { style: "thin", color: { rgb: "D3D3D3" } },
+            left: { style: "thin", color: { rgb: "D3D3D3" } },
+            right: { style: "thin", color: { rgb: "D3D3D3" } }
           }
         };
       }
@@ -227,8 +242,8 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Utilisateurs');
     
-    // Télécharger le fichier
-    XLSX.writeFile(wb, fileName, { cellStyles: true });
+    // Télécharger le fichier avec support des styles
+    XLSX.writeFile(wb, fileName, { cellStyles: true, bookType: 'xlsx' });
   };
 
   const triggerFileSelect = () => {
@@ -291,13 +306,14 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
               <div className="mt-6 text-left bg-blue-50 p-4 rounded-lg">
                 <h4 className="font-medium text-blue-900 mb-2">Instructions :</h4>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• Les colonnes requises sont : Prénom, Nom, Email, Rôle, Formations</li>
-                  <li>• Dans la colonne "Formations", séparez les formations par des virgules</li>
-                  <li>• Exemple : "Formation Web,Formation Mobile,Formation Design"</li>
+                  <li>• Les colonnes requises sont : Prénom, Nom, Email{!preselectedRole && ', Rôle'}, Formation(s)</li>
+                  <li>• Dans la colonne "Formation(s)", séparez les formations par des virgules</li>
+                  <li>• Exemple : "Formation Web, Formation Mobile, Formation Design"</li>
                   {preselectedRole && (
                     <li>• Le rôle sera automatiquement défini comme "{preselectedRole}"</li>
                   )}
-                  <li>• Téléchargez le modèle Excel pour voir un exemple</li>
+                  <li>• Téléchargez le modèle Excel pré-formaté pour commencer</li>
+                  <li>• Ne modifiez pas la mise en forme du fichier, utilisez-le tel quel</li>
                 </ul>
               </div>
             </div>
