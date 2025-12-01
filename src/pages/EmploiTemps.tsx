@@ -690,28 +690,7 @@ const EmploiTemps = () => {
     }
   };
 
-  if (events.length === 0) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
-        <ScheduleViewHeader
-          currentDate={currentDate}
-          weekInfo={weekInfo}
-          viewMode={viewMode}
-          schedulesCount={0}
-        />
-        <EmptyState
-          title="Aucun cours planifié"
-          description={
-            userRole === 'Étudiant' 
-              ? "Aucun cours n'est programmé pour vos formations actuellement."
-              : userRole === 'Formateur' || userRole === 'Tuteur'
-              ? "Vous n'avez aucun cours assigné actuellement."
-              : "Aucun emploi du temps publié pour le moment."
-          }
-        />
-      </div>
-    );
-  }
+  const hasNoEvents = events.length === 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
@@ -780,13 +759,28 @@ const EmploiTemps = () => {
                 setViewMode('week');
               }
             }}
-            className="bg-background/95 backdrop-blur-sm border-border"
+            className="bg-background/95 backdrop-blur-sm border border-border rounded-xl"
           />
         </div>
-      </div>
 
-      {/* Contenu principal */}
-      {renderCurrentView()}
+        {/* Contenu principal */}
+        {hasNoEvents ? (
+          <div className="mt-8">
+            <EmptyState
+              title="Aucun cours planifié"
+              description={
+                userRole === 'Étudiant' 
+                  ? "Aucun cours n'est programmé pour vos formations actuellement."
+                  : userRole === 'Formateur' || userRole === 'Tuteur'
+                  ? "Vous n'avez aucun cours assigné actuellement."
+                  : "Aucun emploi du temps publié pour le moment."
+              }
+            />
+          </div>
+        ) : (
+          renderCurrentView()
+        )}
+      </div>
 
       {/* Modal de détails seulement */}
       <EventDetailsModal
