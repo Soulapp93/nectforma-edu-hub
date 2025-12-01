@@ -40,6 +40,7 @@ export interface ScheduleEvent {
   instructor: string;
   room: string;
   formation: string;
+  formationId?: string;
   description?: string;
   color: string;
 }

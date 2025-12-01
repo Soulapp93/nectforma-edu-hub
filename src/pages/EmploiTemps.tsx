@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format, addWeeks, subWeeks, addMonths, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Users, Calendar } from 'lucide-react';
+import { Users, Calendar, GraduationCap } from 'lucide-react';
 import { navigateWeek, getWeekInfo, getWeekDays } from '@/utils/calendarUtils';
 import { useToast } from '@/hooks/use-toast';
 import { EventDetailsModal } from '@/components/schedule/EventDetailsModal';
@@ -14,9 +14,11 @@ import { WeekNavigator } from '@/components/schedule/WeekNavigator';
 import WeekNavigation from '@/components/ui/week-navigation';
 import { useUserSchedules } from '@/hooks/useUserSchedules';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useUserFormations } from '@/hooks/useUserFormations';
 import { LoadingState } from '@/components/ui/loading-state';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { ScheduleEvent } from '@/components/schedule/CreateEventModal';
 
 type ViewMode = 'day' | 'week' | 'month' | 'list';
@@ -26,10 +28,19 @@ const EmploiTemps = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
   const [isEventDetailsOpen, setIsEventDetailsOpen] = useState(false);
+  const [selectedFormationId, setSelectedFormationId] = useState<string | null>(null);
   
   const { toast } = useToast();
   const { userRole } = useCurrentUser();
   const { schedules, loading, error } = useUserSchedules();
+  const { userFormations, loading: loadingFormations } = useUserFormations();
+
+  // Auto-sélectionner la formation si l'utilisateur n'en a qu'une
+  useEffect(() => {
+    if (userRole === 'Étudiant' && userFormations.length === 1 && !selectedFormationId) {
+      setSelectedFormationId(userFormations[0].formation_id);
+    }
+  }, [userFormations, userRole, selectedFormationId]);
 
   // Convertir les données de Supabase en format d'événements
   const convertToEvents = (scheduleSlots: any[]): ScheduleEvent[] => {
@@ -51,7 +62,12 @@ const EmploiTemps = () => {
     });
   };
 
-  const events = convertToEvents(schedules);
+  const allEvents = convertToEvents(schedules);
+  
+  // Filtrer les événements par formation pour les étudiants
+  const events = userRole === 'Étudiant' && selectedFormationId
+    ? allEvents.filter(event => event.formationId === selectedFormationId)
+    : allEvents;
   
   // Trier les événements par date et heure pour affichage chronologique
   const sortedEvents = [...events].sort((a, b) => {
@@ -70,7 +86,7 @@ const EmploiTemps = () => {
     upcoming: sortedEvents.filter(e => e.date > today)
   };
   
-  if (loading) {
+  if (loading || loadingFormations) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
         <LoadingState message="Chargement de votre emploi du temps..." />
@@ -592,6 +608,38 @@ const EmploiTemps = () => {
 
       {/* Navigation et contrôles */}
       <div className="container mx-auto px-6 py-4">
+        {/* Sélecteur de formation pour les étudiants avec plusieurs formations */}
+        {userRole === 'Étudiant' && userFormations.length > 1 && (
+          <div className="mb-4 flex items-center gap-3 bg-card p-4 rounded-lg border border-border shadow-sm">
+            <GraduationCap className="w-5 h-5 text-primary" />
+            <span className="text-sm font-medium text-muted-foreground">Formation :</span>
+            <Select
+              value={selectedFormationId || undefined}
+              onValueChange={setSelectedFormationId}
+            >
+              <SelectTrigger className="w-full sm:w-[320px]">
+                <SelectValue placeholder="Sélectionnez une formation" />
+              </SelectTrigger>
+              <SelectContent>
+                {userFormations.map((uf) => (
+                  <SelectItem key={uf.formation_id} value={uf.formation_id}>
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: uf.formation.color || '#8B5CF6' }}
+                      />
+                      <span>{uf.formation.title}</span>
+                      <Badge variant="outline" className="ml-2 text-xs">
+                        {uf.formation.level}
+                      </Badge>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <WeekNavigator 
             currentDate={currentDate}
