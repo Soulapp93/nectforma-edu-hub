@@ -6,7 +6,7 @@ import { User } from '@/services/userService';
 import * as XLSX from 'xlsx';
 
 interface ExcelImportProps {
-  onImport: (users: Omit<User, 'id' | 'created_at' | 'updated_at'>[], usersFormations?: Array<{ userIndex: number; formationNames: string[] }>) => Promise<void>;
+  onImport: (users: Omit<User, 'id' | 'created_at' | 'updated_at'>[], formationIds?: string[]) => Promise<void>;
   onClose: () => void;
   preselectedRole?: 'Étudiant' | 'Formateur';
 }
@@ -62,31 +62,13 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
     try {
       setImporting(true);
       
-      // Préparer les données utilisateurs et formations
-      const usersData: Omit<User, 'id' | 'created_at' | 'updated_at'>[] = [];
-      const usersFormations: Array<{ userIndex: number; formationNames: string[] }> = [];
-      
-      previewData.forEach((user: any, index) => {
+      // Préparer les données utilisateurs (on ignore la colonne Formation(s) pour l'instant)
+      const usersWithFormations = previewData.map((user: any) => {
         const { formationIds, ...userData } = user;
-        usersData.push(userData);
-        
-        // Extraire les noms de formations pour cet utilisateur
-        if (formationIds) {
-          const formationNames = formationIds
-            .split(',')
-            .map((f: string) => f.trim())
-            .filter(Boolean);
-          
-          if (formationNames.length > 0) {
-            usersFormations.push({
-              userIndex: index,
-              formationNames
-            });
-          }
-        }
+        return userData;
       });
       
-      await onImport(usersData, usersFormations);
+      await onImport(usersWithFormations as Omit<User, 'id' | 'created_at' | 'updated_at'>[]);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors de l\'import');
@@ -94,7 +76,6 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
       setImporting(false);
     }
   };
-
   const downloadTemplate = () => {
     // Créer un template Excel selon le rôle
     let template;

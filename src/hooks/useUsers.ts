@@ -61,10 +61,10 @@ export const useUsers = () => {
     }
   };
 
-  const bulkCreateUsers = async (usersData: CreateUserData[], usersFormations?: Array<{ userIndex: number; formationNames: string[] }>) => {
+  const bulkCreateUsers = async (usersData: CreateUserData[]) => {
     try {
       setLoading(true);
-      const newUsers = await userService.bulkCreateUsers(usersData, usersFormations);
+      const newUsers = await userService.bulkCreateUsers(usersData);
       setUsers(prev => [...newUsers, ...prev]);
       return newUsers;
     } catch (err) {

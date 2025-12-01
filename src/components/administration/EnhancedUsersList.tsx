@@ -95,11 +95,9 @@ const EnhancedUsersList: React.FC = () => {
     setIsUserDetailModalOpen(true);
   };
 
-  const handleExcelImport = async (usersData: CreateUserData[], usersFormations?: Array<{ userIndex: number; formationNames: string[] }>) => {
-    await bulkCreateUsers(usersData, usersFormations);
-    toast.success(`${usersData.length} utilisateur(s) importé(s) avec succès`);
+  const handleExcelImport = async (usersData: CreateUserData[]) => {
+    await bulkCreateUsers(usersData);
   };
-
   const exportUsers = () => {
     const exportData = filteredUsers.map(user => {
       const userFormations = getUserFormations(user.id!);

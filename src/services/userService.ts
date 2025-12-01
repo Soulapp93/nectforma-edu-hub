@@ -168,7 +168,7 @@ export const userService = {
     if (error) throw error;
   },
 
-  async bulkCreateUsers(usersData: CreateUserData[], usersFormations?: Array<{ userIndex: number; formationNames: string[] }>): Promise<User[]> {
+  async bulkCreateUsers(usersData: CreateUserData[]): Promise<User[]> {
     const { data: establishment } = await supabase
       .from('establishments')
       .select('id')
@@ -179,19 +179,29 @@ export const userService = {
       throw new Error('Aucun établissement trouvé');
     }
 
-    // Récupérer toutes les formations de l'établissement
-    const { data: formations, error: formationsError } = await supabase
-      .from('formations')
-      .select('id, title')
-      .eq('establishment_id', establishment.id);
+    // Éviter les doublons d'emails pour ne pas faire échouer tout l'import
+    const emails = usersData.map((u) => u.email);
 
-    if (formationsError) {
-      console.error('Erreur lors de la récupération des formations:', formationsError);
+    const { data: existingUsers, error: existingError } = await supabase
+      .from('users')
+      .select('id, email')
+      .in('email', emails);
+
+    if (existingError) {
+      console.error('Erreur lors de la vérification des emails existants:', existingError);
     }
 
-    const usersWithEstablishment = usersData.map(user => ({
+    const existingEmailSet = new Set((existingUsers || []).map((u) => u.email));
+
+    const usersToInsert = usersData.filter((u) => !existingEmailSet.has(u.email));
+
+    if (usersToInsert.length === 0) {
+      throw new Error("Aucun utilisateur importé : tous les emails du fichier existent déjà dans la base.");
+    }
+
+    const usersWithEstablishment = usersToInsert.map((user) => ({
       ...user,
-      establishment_id: establishment.id
+      establishment_id: establishment.id,
     }));
 
     const { data, error } = await supabase
@@ -200,44 +210,6 @@ export const userService = {
       .select();
 
     if (error) throw error;
-
-    // Assigner les formations aux utilisateurs
-    if (usersFormations && usersFormations.length > 0 && formations) {
-      const allAssignments: Array<{ user_id: string; formation_id: string }> = [];
-
-      for (const userFormation of usersFormations) {
-        const user = data[userFormation.userIndex];
-        if (!user) continue;
-
-        for (const formationName of userFormation.formationNames) {
-          // Trouver la formation par son nom (case insensitive)
-          const formation = formations.find(
-            f => f.title.toLowerCase().trim() === formationName.toLowerCase().trim()
-          );
-
-          if (formation) {
-            allAssignments.push({
-              user_id: user.id,
-              formation_id: formation.id
-            });
-          } else {
-            console.warn(`Formation non trouvée: "${formationName}"`);
-          }
-        }
-      }
-
-      // Insérer toutes les assignations en une seule requête
-      if (allAssignments.length > 0) {
-        const { error: assignmentError } = await supabase
-          .from('user_formation_assignments')
-          .insert(allAssignments);
-
-        if (assignmentError) {
-          console.error('Erreur lors de l\'assignation aux formations:', assignmentError);
-        }
-      }
-    }
-
     return data || [];
   }
 };
