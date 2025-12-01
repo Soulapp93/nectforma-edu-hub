@@ -6,7 +6,7 @@ import { User } from '@/services/userService';
 import * as XLSX from 'xlsx';
 
 interface ExcelImportProps {
-  onImport: (users: Omit<User, 'id' | 'created_at' | 'updated_at'>[], formationIds?: string[]) => Promise<void>;
+  onImport: (users: Omit<User, 'id' | 'created_at' | 'updated_at'>[], usersFormations?: Array<{ userIndex: number; formationNames: string[] }>) => Promise<void>;
   onClose: () => void;
   preselectedRole?: 'Étudiant' | 'Formateur';
 }
@@ -62,16 +62,31 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
     try {
       setImporting(true);
       
-      // Extraire les IDs de formations depuis les données
-      const usersWithFormations = previewData.map((user: any) => {
+      // Préparer les données utilisateurs et formations
+      const usersData: Omit<User, 'id' | 'created_at' | 'updated_at'>[] = [];
+      const usersFormations: Array<{ userIndex: number; formationNames: string[] }> = [];
+      
+      previewData.forEach((user: any, index) => {
         const { formationIds, ...userData } = user;
-        return userData;
+        usersData.push(userData);
+        
+        // Extraire les noms de formations pour cet utilisateur
+        if (formationIds) {
+          const formationNames = formationIds
+            .split(',')
+            .map((f: string) => f.trim())
+            .filter(Boolean);
+          
+          if (formationNames.length > 0) {
+            usersFormations.push({
+              userIndex: index,
+              formationNames
+            });
+          }
+        }
       });
       
-      // Extraire les formations pour le premier utilisateur (assumption: tous ont les mêmes formations)
-      const firstUserFormations = previewData[0]?.formationIds?.split(',').map((f: string) => f.trim()).filter(Boolean) || [];
-      
-      await onImport(usersWithFormations as Omit<User, 'id' | 'created_at' | 'updated_at'>[], firstUserFormations);
+      await onImport(usersData, usersFormations);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors de l\'import');
