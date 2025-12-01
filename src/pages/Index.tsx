@@ -121,10 +121,10 @@ const Index = () => {
                 Se connecter
               </Link>
               <Link 
-                to="/auth" 
+                to="/create-establishment" 
                 className="px-6 py-2 bg-gradient-to-r from-primary to-purple-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 font-medium transition-all"
               >
-                Essai gratuit
+                Créer un compte établissement
               </Link>
             </div>
           </div>
@@ -158,15 +158,18 @@ const Index = () => {
           
           <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
             <Link 
-              to="/auth" 
+              to="/create-establishment" 
               className="group px-8 py-4 bg-gradient-to-r from-primary to-purple-600 text-white rounded-lg hover:shadow-xl transform hover:scale-105 font-semibold text-lg transition-all flex items-center justify-center"
             >
-              Commencer gratuitement
+              Créer un compte établissement
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <button className="px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-lg hover:border-primary hover:text-primary hover:bg-primary/5 font-semibold text-lg transition-all">
-              Voir la démo
-            </button>
+            <Link 
+              to="/auth" 
+              className="px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-lg hover:border-primary hover:text-primary hover:bg-primary/5 font-semibold text-lg transition-all text-center"
+            >
+              Se connecter
+            </Link>
           </div>
 
           <div className="flex flex-wrap justify-center gap-8 text-sm text-gray-600">
@@ -330,10 +333,10 @@ const Index = () => {
             Rejoignez des centaines d'organismes qui font déjà confiance à NECTFORMA
           </p>
           <Link 
-            to="/auth" 
+            to="/create-establishment" 
             className="inline-flex items-center px-8 py-4 bg-white text-primary rounded-lg hover:shadow-2xl transform hover:scale-105 font-bold text-lg transition-all"
           >
-            Commencer gratuitement
+            Créer un compte établissement
             <ArrowRight className="ml-2 h-5 w-5" />
           </Link>
           <p className="text-white/80 mt-6 text-sm">

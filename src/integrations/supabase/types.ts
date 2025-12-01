@@ -781,11 +781,15 @@ export type Database = {
         Row: {
           address: string | null
           created_at: string
+          director: string | null
           email: string
           id: string
           logo_url: string | null
           name: string
+          number_of_instructors: string | null
+          number_of_students: string | null
           phone: string | null
+          siret: string | null
           type: string
           updated_at: string
           website: string | null
@@ -793,11 +797,15 @@ export type Database = {
         Insert: {
           address?: string | null
           created_at?: string
+          director?: string | null
           email: string
           id?: string
           logo_url?: string | null
           name: string
+          number_of_instructors?: string | null
+          number_of_students?: string | null
           phone?: string | null
+          siret?: string | null
           type: string
           updated_at?: string
           website?: string | null
@@ -805,11 +813,15 @@ export type Database = {
         Update: {
           address?: string | null
           created_at?: string
+          director?: string | null
           email?: string
           id?: string
           logo_url?: string | null
           name?: string
+          number_of_instructors?: string | null
+          number_of_students?: string | null
           phone?: string | null
+          siret?: string | null
           type?: string
           updated_at?: string
           website?: string | null

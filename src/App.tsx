@@ -30,6 +30,7 @@ import Compte from './pages/Compte';
 import NotFound from './pages/NotFound';
 import Auth from './pages/Auth';
 import Index from './pages/Index';
+import CreateEstablishment from './pages/CreateEstablishment';
 import Solutions from './pages/Solutions';
 import Fonctionnalites from './pages/Fonctionnalites';
 import PourquoiNous from './pages/PourquoiNous';
@@ -53,6 +54,7 @@ const AppContent = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isAuthPage = location.pathname === '/auth';
+  const isCreateEstablishmentPage = location.pathname === '/create-establishment';
   const isMobile = useIsMobile();
   
   // Déterminer si on peut revenir en arrière
@@ -63,6 +65,16 @@ const AppContent = () => {
       <div className="min-h-screen w-full">
         <Routes>
           <Route path="/auth" element={<Auth />} />
+        </Routes>
+      </div>
+    );
+  }
+
+  if (isCreateEstablishmentPage) {
+    return (
+      <div className="min-h-screen w-full">
+        <Routes>
+          <Route path="/create-establishment" element={<CreateEstablishment />} />
         </Routes>
       </div>
     );
