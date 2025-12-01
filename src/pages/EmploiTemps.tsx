@@ -21,31 +21,54 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { ScheduleEvent } from '@/components/schedule/CreateEventModal';
 
+// Définition du type pour les créneaux de l'emploi du temps
+interface ScheduleSlot {
+  id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  room: string;
+  notes: string;
+  formation_modules?: {
+    title: string;
+  };
+  users?: {
+    first_name: string;
+    last_name: string;
+  };
+  schedules?: {
+    formation_id: string;
+    formations?: {
+      title: string;
+      color: string;
+    };
+  };
+  color?: string;
+}
+
 type ViewMode = 'day' | 'week' | 'month' | 'list';
 
 const EmploiTemps = () => {
   const { userRole } = useCurrentUser();
-  
-  // Vue par défaut : semaine pour tous les utilisateurs (permet navigation complète)
   const isInstructor = userRole === 'Formateur' || userRole === 'Tuteur';
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
   const [isEventDetailsOpen, setIsEventDetailsOpen] = useState(false);
   const [selectedFormationId, setSelectedFormationId] = useState<string | null>(null);
-  
+
   const { toast } = useToast();
   const { schedules, loading, error } = useUserSchedules();
   const { userFormations, loading: loadingFormations } = useUserFormations();
 
-  // Auto-sélectionner la formation si l'utilisateur n'en a qu'une
+  // Auto-sélectionner la formation si l'utilisateur n'en a qu'une (étudiant)
   useEffect(() => {
     if (userRole === 'Étudiant' && userFormations.length === 1 && !selectedFormationId) {
       setSelectedFormationId(userFormations[0].formation_id);
     }
   }, [userFormations, userRole, selectedFormationId]);
 
-  // Convertir les données de Supabase en format d'événements
+  // Conversion des créneaux en événements
   const convertToEvents = (scheduleSlots: any[]): ScheduleEvent[] => {
     return scheduleSlots.map(slot => {
       const formation = slot.schedules?.formations;
@@ -66,29 +89,26 @@ const EmploiTemps = () => {
   };
 
   const allEvents = convertToEvents(schedules);
-  
-  // Filtrer les événements par formation pour les étudiants
+
   const events = userRole === 'Étudiant' && selectedFormationId
     ? allEvents.filter(event => event.formationId === selectedFormationId)
     : allEvents;
-  
-  // Trier les événements par date et heure pour affichage chronologique
+
   const sortedEvents = [...events].sort((a, b) => {
     const dateCompare = a.date.getTime() - b.date.getTime();
     if (dateCompare !== 0) return dateCompare;
     return a.startTime.localeCompare(b.startTime);
   });
 
-  // Catégoriser les événements pour les formateurs
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  
+
   const categorizedEvents = {
     past: sortedEvents.filter(e => e.date < today),
     today: sortedEvents.filter(e => e.date.toDateString() === today.toDateString()),
     upcoming: sortedEvents.filter(e => e.date > today)
   };
-  
+
   if (loading || loadingFormations) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
@@ -104,45 +124,40 @@ const EmploiTemps = () => {
           title="Erreur de chargement"
           description={error}
           action={{
-            label: "Réessayer",
-            onClick: () => window.location.reload()
+            label: 'Réessayer',
+            onClick: () => window.location.reload(),
           }}
         />
       </div>
     );
   }
 
-  // Event handlers
   const handleEventClick = (event: ScheduleEvent) => {
     setSelectedEvent(event);
     setIsEventDetailsOpen(true);
   };
 
-  const handleEventEdit = (event: ScheduleEvent) => {
+  const handleEventEdit = () => {
     toast({
-      title: "Information",
+      title: 'Information',
       description: "Seuls les administrateurs peuvent modifier les emplois du temps via l'onglet Administration.",
-      variant: "default",
     });
   };
 
-  const handleEventDelete = (eventId: string) => {
+  const handleEventDelete = () => {
     toast({
-      title: "Information",
-      description: "Seuls les administrateurs peuvent supprimer des créneaux via l'onglet Administration.",
-      variant: "default",
+      title: 'Information',
+      description: 'Seuls les administrateurs peuvent supprimer des créneaux via l\'onglet Administration.',
     });
   };
 
-  const handleEventDuplicate = (event: ScheduleEvent) => {
+  const handleEventDuplicate = () => {
     toast({
-      title: "Information", 
-      description: "Seuls les administrateurs peuvent dupliquer des créneaux via l'onglet Administration.",
-      variant: "default",
+      title: 'Information',
+      description: 'Seuls les administrateurs peuvent dupliquer des créneaux via l\'onglet Administration.',
     });
   };
 
-  // Navigation handlers
   const handleNavigate = (direction: 'prev' | 'next' | 'today') => {
     if (viewMode === 'month') {
       if (direction === 'prev') setCurrentDate(subMonths(currentDate, 1));
@@ -165,49 +180,35 @@ const EmploiTemps = () => {
     }
   };
 
-  // Filtrer les événements selon la période affichée et le mode de vue
   const filteredEvents = (() => {
     if (viewMode === 'list' && isInstructor) {
-      // Vue liste pour instructeurs: tous les cours
       return events;
     }
-    
+
     if (viewMode === 'day') {
-      // Vue jour: seulement les cours du jour sélectionné
-      return events.filter(event => 
-        event.date.toDateString() === currentDate.toDateString()
-      );
+      return events.filter(event => event.date.toDateString() === currentDate.toDateString());
     }
-    
+
     if (viewMode === 'week') {
-      // Vue semaine: cours de la semaine
       const weekDays = getWeekDays(currentDate);
       const weekStart = weekDays[0];
       const weekEnd = weekDays[6];
-      return events.filter(event => 
-        event.date >= weekStart && event.date <= weekEnd
-      );
+      return events.filter(event => event.date >= weekStart && event.date <= weekEnd);
     }
-    
+
     if (viewMode === 'month') {
-      // Vue mois: cours du mois
       const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-      return events.filter(event => 
-        event.date >= monthStart && event.date <= monthEnd
-      );
+      return events.filter(event => event.date >= monthStart && event.date <= monthEnd);
     }
-    
+
     return events;
   })();
 
-  // Prepare week schedule data for week and list views
   const weekDays = getWeekDays(currentDate);
   const mockSchedule = weekDays.map((date, index) => {
-    const dayEvents = filteredEvents.filter(event => 
-      event.date.toDateString() === date.toDateString()
-    );
-    
+    const dayEvents = filteredEvents.filter(event => event.date.toDateString() === date.toDateString());
+
     return {
       id: (index + 1).toString(),
       day: format(date, 'EEEE', { locale: fr }),
@@ -217,28 +218,27 @@ const EmploiTemps = () => {
         time: `${event.startTime} - ${event.endTime}`,
         instructor: event.instructor,
         room: event.room,
-        color: event.color
-      }))
+        color: event.color,
+      })),
     };
   });
 
   const weekInfo = getWeekInfo(currentDate);
 
-  // Render current view
   const renderCurrentView = () => {
     switch (viewMode) {
       case 'day':
         return (
-          <DayView 
-            selectedDate={currentDate} 
+          <DayView
+            selectedDate={currentDate}
             events={filteredEvents}
             onEventClick={handleEventClick}
           />
         );
       case 'month':
         return (
-          <MonthView 
-            selectedDate={currentDate} 
+          <MonthView
+            selectedDate={currentDate}
             events={filteredEvents}
             onDateSelect={setCurrentDate}
             onMonthChange={setCurrentDate}
@@ -254,447 +254,187 @@ const EmploiTemps = () => {
 
   const renderWeekOrListView = () => {
     if (viewMode === 'week') {
-        return (
-          <ScheduleViewCalendar
-            schedule={mockSchedule}
-            filteredEvents={filteredEvents}
-            onEventClick={handleEventClick}
-          />
-        );
-    } else {
-      // Vue liste optimisée pour les formateurs - style tableau clair
-      const isInstructor = userRole === 'Formateur' || userRole === 'Tuteur';
-      
-      if (isInstructor) {
-        return (
-          <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-8">
-            {/* En-tête de tableau - Desktop only */}
-            <div className="hidden md:block bg-card rounded-t-lg border border-border shadow-sm">
-              <div className="grid grid-cols-12 gap-4 px-6 py-4 font-semibold text-sm text-muted-foreground border-b border-border">
-                <div className="col-span-2">Date</div>
-                <div className="col-span-2">Horaire</div>
-                <div className="col-span-3">Formation</div>
-                <div className="col-span-3">Module</div>
-                <div className="col-span-2">Classe/Salle</div>
-              </div>
-            </div>
+      return (
+        <ScheduleViewCalendar
+          schedule={mockSchedule}
+          filteredEvents={filteredEvents}
+          onEventClick={handleEventClick}
+        />
+      );
+    }
 
-            {/* Sections chronologiques */}
-            <div className="bg-card md:rounded-b-lg rounded-lg border border-border shadow-sm">
-              {/* Cours du jour */}
-              {categorizedEvents.today.length > 0 && (
-                <div className="border-b border-border">
-                  <div className="px-3 sm:px-6 py-3 bg-primary/5">
-                    <h3 className="text-sm sm:text-base font-semibold text-primary flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-                      Aujourd'hui ({categorizedEvents.today.length})
-                    </h3>
-                  </div>
-                  {categorizedEvents.today.map((event) => (
-                    <div
-                      key={event.id}
-                      className="md:grid md:grid-cols-12 md:gap-4 px-3 sm:px-6 py-4 hover:bg-muted/50 transition-colors cursor-pointer border-b border-border last:border-b-0 md:items-center space-y-2 md:space-y-0"
-                      onClick={() => handleEventClick(event)}
-                    >
-                      {/* Mobile Layout */}
-                      <div className="md:hidden space-y-2">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <div className="font-medium text-sm">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
-                            <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
-                          </div>
-                          <Badge variant="outline" className="font-mono text-xs">
-                            {event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}
-                          </Badge>
-                        </div>
-                        <div 
-                          className="inline-flex items-center gap-2 px-2 py-1 rounded-md text-xs font-medium text-white"
-                          style={{ backgroundColor: event.color }}
-                        >
-                          <span className="w-1 h-1 rounded-full bg-white/80"></span>
-                          {event.formation}
-                        </div>
-                        <div>
-                          <div className="font-medium text-sm">{event.title}</div>
-                          {event.description && (
-                            <div className="text-xs text-muted-foreground truncate">{event.description}</div>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground">{event.room}</div>
-                      </div>
-                      
-                      {/* Desktop Layout */}
-                      <div className="hidden md:contents">
-                        <div className="col-span-2">
-                          <div className="font-medium">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
-                          <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
-                        </div>
-                        <div className="col-span-2">
-                          <Badge variant="outline" className="font-mono text-xs">
-                            {event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}
-                          </Badge>
-                        </div>
-                        <div className="col-span-3">
-                          <div 
-                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-white"
-                            style={{ backgroundColor: event.color }}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-white/80"></span>
-                            {event.formation}
-                          </div>
-                        </div>
-                        <div className="col-span-3">
-                          <div className="font-medium">{event.title}</div>
-                          {event.description && (
-                            <div className="text-xs text-muted-foreground truncate">{event.description}</div>
-                          )}
-                        </div>
-                        <div className="col-span-2">
-                          <span className="text-sm">{event.room}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+    const instructor = userRole === 'Formateur' || userRole === 'Tuteur';
 
-              {/* Cours à venir */}
-              {categorizedEvents.upcoming.length > 0 && (
-                <div className="border-b border-border">
-                  <div className="px-3 sm:px-6 py-3 bg-muted/30">
-                    <h3 className="text-sm sm:text-base font-semibold text-foreground">
-                      À venir ({categorizedEvents.upcoming.length})
-                    </h3>
-                  </div>
-                  {categorizedEvents.upcoming.map((event) => (
-                    <div
-                      key={event.id}
-                      className="md:grid md:grid-cols-12 md:gap-4 px-3 sm:px-6 py-4 hover:bg-muted/50 transition-colors cursor-pointer border-b border-border last:border-b-0 md:items-center space-y-2 md:space-y-0"
-                      onClick={() => handleEventClick(event)}
-                    >
-                      {/* Mobile Layout */}
-                      <div className="md:hidden space-y-2">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <div className="font-medium text-sm">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
-                            <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
-                          </div>
-                          <Badge variant="outline" className="font-mono text-xs">
-                            {event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}
-                          </Badge>
-                        </div>
-                        <div 
-                          className="inline-flex items-center gap-2 px-2 py-1 rounded-md text-xs font-medium text-white"
-                          style={{ backgroundColor: event.color }}
-                        >
-                          <span className="w-1 h-1 rounded-full bg-white/80"></span>
-                          {event.formation}
-                        </div>
-                        <div>
-                          <div className="font-medium text-sm">{event.title}</div>
-                          {event.description && (
-                            <div className="text-xs text-muted-foreground truncate">{event.description}</div>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground">{event.room}</div>
-                      </div>
-                      
-                      {/* Desktop Layout */}
-                      <div className="hidden md:contents">
-                        <div className="col-span-2">
-                          <div className="font-medium">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
-                          <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
-                        </div>
-                        <div className="col-span-2">
-                          <Badge variant="outline" className="font-mono text-xs">
-                            {event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}
-                          </Badge>
-                        </div>
-                        <div className="col-span-3">
-                          <div 
-                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-white"
-                            style={{ backgroundColor: event.color }}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-white/80"></span>
-                            {event.formation}
-                          </div>
-                        </div>
-                        <div className="col-span-3">
-                          <div className="font-medium">{event.title}</div>
-                          {event.description && (
-                            <div className="text-xs text-muted-foreground truncate">{event.description}</div>
-                          )}
-                        </div>
-                        <div className="col-span-2">
-                          <span className="text-sm">{event.room}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Cours passés */}
-              {categorizedEvents.past.length > 0 && (
-                <div>
-                  <div className="px-3 sm:px-6 py-3 bg-muted/20">
-                    <h3 className="text-sm sm:text-base font-semibold text-muted-foreground">
-                      Passés ({categorizedEvents.past.length})
-                    </h3>
-                  </div>
-                  {categorizedEvents.past.slice(-10).reverse().map((event) => (
-                    <div
-                      key={event.id}
-                      className="md:grid md:grid-cols-12 md:gap-4 px-3 sm:px-6 py-4 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border last:border-b-0 md:items-center opacity-60 space-y-2 md:space-y-0"
-                      onClick={() => handleEventClick(event)}
-                    >
-                      {/* Mobile Layout */}
-                      <div className="md:hidden space-y-2">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <div className="font-medium text-sm">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
-                            <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
-                          </div>
-                          <Badge variant="outline" className="font-mono text-xs">
-                            {event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}
-                          </Badge>
-                        </div>
-                        <div 
-                          className="inline-flex items-center gap-2 px-2 py-1 rounded-md text-xs font-medium text-white"
-                          style={{ backgroundColor: event.color }}
-                        >
-                          <span className="w-1 h-1 rounded-full bg-white/80"></span>
-                          {event.formation}
-                        </div>
-                        <div>
-                          <div className="font-medium text-sm">{event.title}</div>
-                          {event.description && (
-                            <div className="text-xs text-muted-foreground truncate">{event.description}</div>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground">{event.room}</div>
-                      </div>
-                      
-                      {/* Desktop Layout */}
-                      <div className="hidden md:contents">
-                        <div className="col-span-2">
-                          <div className="font-medium">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
-                          <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
-                        </div>
-                        <div className="col-span-2">
-                          <Badge variant="outline" className="font-mono text-xs">
-                            {event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}
-                          </Badge>
-                        </div>
-                        <div className="col-span-3">
-                          <div 
-                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-white"
-                            style={{ backgroundColor: event.color }}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-white/80"></span>
-                            {event.formation}
-                          </div>
-                        </div>
-                        <div className="col-span-3">
-                          <div className="font-medium">{event.title}</div>
-                          {event.description && (
-                            <div className="text-xs text-muted-foreground truncate">{event.description}</div>
-                          )}
-                        </div>
-                        <div className="col-span-2">
-                          <span className="text-sm">{event.room}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Cours passés */}
-              {categorizedEvents.past.length > 0 && (
-                <div>
-                  <div className="px-3 sm:px-6 py-3 bg-muted/20">
-                    <h3 className="text-sm sm:text-base font-medium text-muted-foreground">
-                      Cours passés ({categorizedEvents.past.length})
-                    </h3>
-                  </div>
-                  {categorizedEvents.past.slice(0, 10).map((event) => (
-                    <div
-                      key={event.id}
-                      className="md:grid md:grid-cols-12 md:gap-4 px-3 sm:px-6 py-4 hover:bg-muted/50 transition-colors cursor-pointer border-b border-border last:border-b-0 md:items-center space-y-2 md:space-y-0 opacity-60"
-                      onClick={() => handleEventClick(event)}
-                    >
-                      {/* Mobile Layout */}
-                      <div className="md:hidden space-y-2">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <div className="font-medium text-sm">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
-                            <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
-                          </div>
-                          <Badge variant="outline" className="font-mono text-xs">
-                            {event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}
-                          </Badge>
-                        </div>
-                        <div 
-                          className="inline-flex items-center gap-2 px-2 py-1 rounded-md text-xs font-medium text-white"
-                          style={{ backgroundColor: event.color }}
-                        >
-                          <span className="w-1 h-1 rounded-full bg-white/80"></span>
-                          {event.formation}
-                        </div>
-                        <div>
-                          <div className="font-medium text-sm">{event.title}</div>
-                          {event.description && (
-                            <div className="text-xs text-muted-foreground truncate">{event.description}</div>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground">{event.room}</div>
-                      </div>
-                      
-                      {/* Desktop Layout */}
-                      <div className="hidden md:contents">
-                        <div className="col-span-2">
-                          <div className="font-medium">{format(event.date, 'dd/MM/yyyy', { locale: fr })}</div>
-                          <div className="text-xs text-muted-foreground capitalize">{format(event.date, 'EEEE', { locale: fr })}</div>
-                        </div>
-                        <div className="col-span-2">
-                          <Badge variant="outline" className="font-mono text-xs">
-                            {event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}
-                          </Badge>
-                        </div>
-                        <div className="col-span-3">
-                          <div 
-                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-white"
-                            style={{ backgroundColor: event.color }}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-white/80"></span>
-                            {event.formation}
-                          </div>
-                        </div>
-                        <div className="col-span-3">
-                          <div className="font-medium">{event.title}</div>
-                          {event.description && (
-                            <div className="text-xs text-muted-foreground truncate">{event.description}</div>
-                          )}
-                        </div>
-                        <div className="col-span-2">
-                          <span className="text-sm">{event.room}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  {categorizedEvents.past.length > 10 && (
-                    <div className="px-3 sm:px-6 py-3 text-center text-xs text-muted-foreground">
-                      Affichage des 10 derniers cours passés
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Note informative */}
-            <div className="mt-4 text-center text-xs sm:text-sm text-muted-foreground px-2">
-              💡 Dans cette vue, vous consultez l'ensemble de vos cours de toutes formations confondues, dans l'ordre chronologique
-            </div>
-          </div>
-        );
-      }
-      
-      // Vue liste standard pour les étudiants
+    if (instructor) {
       return (
         <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-8">
-          <div className="space-y-4 sm:space-y-6">
-            {filteredEvents.map((event) => {
-              const eventDate = format(event.date, 'dd/MM/yyyy', { locale: fr });
-              const eventDay = format(event.date, 'EEEE', { locale: fr });
-              
-              return (
-                <div
-                  key={event.id}
-                  className="rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden"
-                  style={{ backgroundColor: event.color }}
-                  onClick={() => handleEventClick(event)}
-                >
-                  <div className="p-4 sm:p-6">
-                    {/* Mobile Layout */}
-                    <div className="md:hidden space-y-3 text-white">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="font-medium text-white">{eventDate}</div>
-                          <div className="text-xs text-white/80 capitalize">{eventDay}</div>
-                        </div>
-                        <div className="bg-white/20 text-white rounded px-2 py-1 text-xs font-medium">
-                          {event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="font-semibold text-white text-base">{event.title}</div>
-                        {event.description && (
-                          <div className="text-sm text-white/80 mt-1">{event.description}</div>
-                        )}
-                      </div>
-                      <div className="flex items-center space-x-4 text-sm">
-                        <div className="flex items-center space-x-1">
-                          <Users className="h-4 w-4" />
-                          <span>{event.instructor}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <Calendar className="h-4 w-4" />
-                          <span>{event.room}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Desktop Layout */}
-                    <div className="hidden md:grid md:grid-cols-12 gap-4 items-center text-white">
-                      <div className="col-span-2">
-                        <div className="flex items-center space-x-2">
-                          <div>
-                            <div className="font-medium text-white">{eventDate}</div>
-                            <div className="text-xs text-white/80">{eventDay}</div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-span-2">
-                        <div className="bg-white/20 text-white border-white/30 rounded px-2 py-1 text-xs font-medium inline-block">
-                          {event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}
-                        </div>
-                      </div>
-                      <div className="col-span-3">
-                        <div className="font-medium text-white">{event.title}</div>
-                        {event.description && (
-                          <div className="text-xs text-white/80 mt-1 truncate">{event.description}</div>
-                        )}
-                      </div>
-                      <div className="col-span-2">
-                        <span className="text-sm text-white/90">{event.instructor}</span>
-                      </div>
-                      <div className="col-span-2">
-                        <span className="text-sm text-white/90">{event.room}</span>
-                      </div>
-                      <div className="col-span-1">
-                        {event.formation && (
-                          <div className="bg-white/20 text-white border-white/30 rounded px-2 py-1 text-xs font-medium text-center">
-                            {event.formation}
-                          </div>
-                        )}
-                      </div>
-                    </div>
+          <h2 className="text-2xl font-bold mb-4">Liste des cours</h2>
+          {categorizedEvents.upcoming.length > 0 && (
+            <section className="mb-6">
+              <h3 className="text-xl font-semibold mb-2">À venir</h3>
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                {categorizedEvents.upcoming.map((event) => (
+                  <div key={event.id} className="bg-card rounded-lg shadow-md p-4 border border-border">
+                    <h4 className="font-semibold">{event.title}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {format(event.date, 'EEEE d MMMM', { locale: fr })}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {event.startTime} - {event.endTime}
+                    </p>
+                    <p className="text-sm text-muted-foreground">Salle: {event.room}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Formation: {event.formation}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Intervenant: {event.instructor}
+                    </p>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {categorizedEvents.today.length > 0 && (
+            <section className="mb-6">
+              <h3 className="text-xl font-semibold mb-2">Aujourd'hui</h3>
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                {categorizedEvents.today.map((event) => (
+                  <div key={event.id} className="bg-card rounded-lg shadow-md p-4 border border-border">
+                    <h4 className="font-semibold">{event.title}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {format(event.date, 'EEEE d MMMM', { locale: fr })}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {event.startTime} - {event.endTime}
+                    </p>
+                    <p className="text-sm text-muted-foreground">Salle: {event.room}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Formation: {event.formation}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Intervenant: {event.instructor}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {categorizedEvents.past.length > 0 && (
+            <section>
+              <h3 className="text-xl font-semibold mb-2">Passés</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-border bg-card rounded-lg shadow-md border border-border">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Module
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Heure
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Salle
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Formation
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {categorizedEvents.past.map((event) => (
+                      <tr key={event.id}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-muted-foreground">
+                            {format(event.date, 'EEEE d MMMM', { locale: fr })}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-muted-foreground">{event.title}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-muted-foreground">
+                            {event.startTime} - {event.endTime}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-muted-foreground">{event.room}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-muted-foreground">{event.formation}</div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
         </div>
       );
     }
+
+    // Vue liste standard pour les étudiants
+    return (
+      <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-8">
+        <h2 className="text-2xl font-bold mb-4">Liste des cours</h2>
+        {categorizedEvents.upcoming.length > 0 && (
+          <section className="mb-6">
+            <h3 className="text-xl font-semibold mb-2">À venir</h3>
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {categorizedEvents.upcoming.map((event) => (
+                <div key={event.id} className="bg-card rounded-lg shadow-md p-4 border border-border">
+                  <h4 className="font-semibold">{event.title}</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {format(event.date, 'EEEE d MMMM', { locale: fr })}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {event.startTime} - {event.endTime}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Salle: {event.room}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Intervenant: {event.instructor}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {categorizedEvents.today.length > 0 && (
+          <section className="mb-6">
+            <h3 className="text-xl font-semibold">Aujourd'hui</h3>
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {categorizedEvents.today.map((event) => (
+                <div key={event.id} className="bg-card rounded-lg shadow-md p-4 border border-border">
+                  <h4 className="font-semibold">{event.title}</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {format(event.date, 'EEEE d MMMM', { locale: fr })}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {event.startTime} - {event.endTime}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Salle: {event.room}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Intervenant: {event.instructor}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+    );
   };
 
   const hasNoEvents = events.length === 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
-      {/* Header simplifié pour consultation */}
       <ScheduleViewHeader
         currentDate={currentDate}
         weekInfo={weekInfo}
@@ -702,9 +442,7 @@ const EmploiTemps = () => {
         schedulesCount={events.length}
       />
 
-      {/* Navigation et contrôles */}
       <div className="container mx-auto px-6 py-4">
-        {/* Sélecteur de formation pour les étudiants avec plusieurs formations */}
         {userRole === 'Étudiant' && userFormations.length > 1 && (
           <div className="mb-4 flex items-center gap-3 bg-card p-4 rounded-lg border border-border shadow-sm">
             <GraduationCap className="w-5 h-5 text-primary" />
@@ -720,8 +458,8 @@ const EmploiTemps = () => {
                 {userFormations.map((uf) => (
                   <SelectItem key={uf.formation_id} value={uf.formation_id}>
                     <div className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
+                      <div
+                        className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: uf.formation.color || '#8B5CF6' }}
                       />
                       <span>{uf.formation.title}</span>
@@ -737,18 +475,11 @@ const EmploiTemps = () => {
         )}
 
         <div className="flex items-center justify-between">
-          <WeekNavigator 
-            currentDate={currentDate}
-            onNavigate={handleNavigate}
-          />
+          <WeekNavigator currentDate={currentDate} onNavigate={handleNavigate} />
 
-          <ViewModeSelector
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-          />
+          <ViewModeSelector viewMode={viewMode} onViewModeChange={setViewMode} />
         </div>
 
-        {/* Barre de navigation par semaine */}
         <div className="mt-6">
           <WeekNavigation
             selectedDate={currentDate}
@@ -763,16 +494,14 @@ const EmploiTemps = () => {
           />
         </div>
 
-        {/* Contenu principal */}
-        {hasNoEvents ? (
+        {/* Important: pour les formateurs/tuteurs, on rend toujours la vue calendrier même sans cours */}
+        {hasNoEvents && !isInstructor && viewMode !== 'week' ? (
           <div className="mt-8">
             <EmptyState
               title="Aucun cours planifié"
               description={
-                userRole === 'Étudiant' 
+                userRole === 'Étudiant'
                   ? "Aucun cours n'est programmé pour vos formations actuellement."
-                  : userRole === 'Formateur' || userRole === 'Tuteur'
-                  ? "Vous n'avez aucun cours assigné actuellement."
                   : "Aucun emploi du temps publié pour le moment."
               }
             />
@@ -782,7 +511,6 @@ const EmploiTemps = () => {
         )}
       </div>
 
-      {/* Modal de détails seulement */}
       <EventDetailsModal
         event={selectedEvent}
         isOpen={isEventDetailsOpen}
