@@ -55,33 +55,56 @@ serve(async (req) => {
 
     console.log('Establishment created with ID:', establishmentData.id);
 
-    // 2. Create auth user
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: admin.email,
-      password: admin.password,
-      email_confirm: true, // Auto-confirm email
-      user_metadata: {
-        first_name: admin.firstName,
-        last_name: admin.lastName,
-        phone: admin.phone,
-        establishment_id: establishmentData.id
-      }
-    });
+    // 2. Check if auth user already exists
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+    const existingAuthUser = existingUsers?.users?.find(u => u.email === admin.email);
 
-    if (authError) {
-      console.error('Auth user creation error:', authError);
-      // Rollback: delete establishment if user creation fails
-      await supabaseAdmin.from('establishments').delete().eq('id', establishmentData.id);
-      throw new Error(`Erreur création utilisateur: ${authError.message}`);
+    let authUserId: string;
+
+    if (existingAuthUser) {
+      console.log('Auth user already exists, reusing:', existingAuthUser.id);
+      authUserId = existingAuthUser.id;
+      
+      // Update user metadata
+      await supabaseAdmin.auth.admin.updateUserById(existingAuthUser.id, {
+        password: admin.password,
+        user_metadata: {
+          first_name: admin.firstName,
+          last_name: admin.lastName,
+          phone: admin.phone,
+          establishment_id: establishmentData.id
+        }
+      });
+    } else {
+      // Create new auth user
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: admin.email,
+        password: admin.password,
+        email_confirm: true,
+        user_metadata: {
+          first_name: admin.firstName,
+          last_name: admin.lastName,
+          phone: admin.phone,
+          establishment_id: establishmentData.id
+        }
+      });
+
+      if (authError) {
+        console.error('Auth user creation error:', authError);
+        await supabaseAdmin.from('establishments').delete().eq('id', establishmentData.id);
+        throw new Error(`Erreur création utilisateur: ${authError.message}`);
+      }
+      
+      authUserId = authData.user.id;
     }
 
-    console.log('Auth user created with ID:', authData.user.id);
+    console.log('Auth user ID:', authUserId);
 
     // 3. Check if user profile was already created by trigger
     const { data: existingUser } = await supabaseAdmin
       .from('users')
       .select('id')
-      .eq('id', authData.user.id)
+      .eq('id', authUserId)
       .maybeSingle();
 
     if (existingUser) {
@@ -99,7 +122,7 @@ serve(async (req) => {
           status: 'Actif',
           is_activated: true
         })
-        .eq('id', authData.user.id);
+        .eq('id', authUserId);
 
       if (updateError) {
         console.error('User profile update error:', updateError);
@@ -110,7 +133,7 @@ serve(async (req) => {
       const { error: userError } = await supabaseAdmin
         .from('users')
         .insert({
-          id: authData.user.id,
+          id: authUserId,
           first_name: admin.firstName,
           last_name: admin.lastName,
           email: admin.email,
@@ -124,7 +147,7 @@ serve(async (req) => {
       if (userError) {
         console.error('User profile creation error:', userError);
         // Rollback: delete auth user and establishment
-        await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+        await supabaseAdmin.auth.admin.deleteUser(authUserId);
         await supabaseAdmin.from('establishments').delete().eq('id', establishmentData.id);
         throw new Error(`Erreur création profil: ${userError.message}`);
       }
@@ -136,7 +159,7 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         establishmentId: establishmentData.id,
-        userId: authData.user.id,
+        userId: authUserId,
         message: 'Compte établissement créé avec succès'
       }),
       {
