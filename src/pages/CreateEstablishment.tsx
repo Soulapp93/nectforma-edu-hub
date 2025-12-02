@@ -93,25 +93,23 @@ const CreateEstablishment = () => {
     setLoading(true);
     
     try {
-      // 1. Create establishment
-      const { data: establishment, error: establishmentError } = await supabase
-        .from('establishments')
-        .insert({
-          name: formData.establishmentName,
-          type: formData.establishmentType,
-          address: formData.address,
-          phone: formData.establishmentPhone,
-          email: formData.establishmentEmail,
-          website: formData.website,
-          siret: formData.siret,
-          director: formData.director,
-          number_of_students: formData.numberOfStudents,
-          number_of_instructors: formData.numberOfInstructors
-        })
-        .select()
-        .single();
+      // 1. Create establishment using SECURITY DEFINER function to bypass RLS
+      const { data: establishmentId, error: establishmentError } = await supabase
+        .rpc('create_establishment_public', {
+          p_name: formData.establishmentName,
+          p_type: formData.establishmentType,
+          p_email: formData.establishmentEmail || formData.email,
+          p_address: formData.address,
+          p_phone: formData.establishmentPhone || null,
+          p_website: formData.website || null,
+          p_siret: formData.siret || null,
+          p_director: formData.director || null,
+          p_number_of_students: formData.numberOfStudents || null,
+          p_number_of_instructors: formData.numberOfInstructors || null
+        });
 
       if (establishmentError) throw establishmentError;
+      if (!establishmentId) throw new Error('Erreur lors de la création de l\'établissement');
 
       // 2. Create auth user - the trigger will automatically create the user profile
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -123,7 +121,7 @@ const CreateEstablishment = () => {
             first_name: formData.firstName,
             last_name: formData.lastName,
             phone: formData.phone,
-            establishment_id: establishment.id
+            establishment_id: establishmentId
           }
         }
       });
