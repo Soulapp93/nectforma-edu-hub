@@ -128,11 +128,12 @@ const CreateEstablishment = () => {
 
       if (authError) throw authError;
 
-      // 3. Create user in users table
+      // 3. Create user in users table with the auth user's ID
       if (authData.user) {
         const { error: userError } = await supabase
           .from('users')
           .insert({
+            id: authData.user.id, // Use the auth user's ID
             first_name: formData.firstName,
             last_name: formData.lastName,
             email: formData.email,
