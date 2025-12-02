@@ -77,30 +77,60 @@ serve(async (req) => {
 
     console.log('Auth user created with ID:', authData.user.id);
 
-    // 3. Create user profile in users table
-    const { error: userError } = await supabaseAdmin
+    // 3. Check if user profile was already created by trigger
+    const { data: existingUser } = await supabaseAdmin
       .from('users')
-      .insert({
-        id: authData.user.id,
-        first_name: admin.firstName,
-        last_name: admin.lastName,
-        email: admin.email,
-        phone: admin.phone || null,
-        role: 'Admin',
-        establishment_id: establishmentData.id,
-        status: 'Actif',
-        is_activated: true
-      });
+      .select('id')
+      .eq('id', authData.user.id)
+      .maybeSingle();
 
-    if (userError) {
-      console.error('User profile creation error:', userError);
-      // Rollback: delete auth user and establishment
-      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-      await supabaseAdmin.from('establishments').delete().eq('id', establishmentData.id);
-      throw new Error(`Erreur création profil: ${userError.message}`);
+    if (existingUser) {
+      console.log('User profile already exists (created by trigger), updating...');
+      // Update the existing profile with correct data
+      const { error: updateError } = await supabaseAdmin
+        .from('users')
+        .update({
+          first_name: admin.firstName,
+          last_name: admin.lastName,
+          email: admin.email,
+          phone: admin.phone || null,
+          role: 'Admin',
+          establishment_id: establishmentData.id,
+          status: 'Actif',
+          is_activated: true
+        })
+        .eq('id', authData.user.id);
+
+      if (updateError) {
+        console.error('User profile update error:', updateError);
+      }
+    } else {
+      console.log('Creating user profile...');
+      // Create user profile if not created by trigger
+      const { error: userError } = await supabaseAdmin
+        .from('users')
+        .insert({
+          id: authData.user.id,
+          first_name: admin.firstName,
+          last_name: admin.lastName,
+          email: admin.email,
+          phone: admin.phone || null,
+          role: 'Admin',
+          establishment_id: establishmentData.id,
+          status: 'Actif',
+          is_activated: true
+        });
+
+      if (userError) {
+        console.error('User profile creation error:', userError);
+        // Rollback: delete auth user and establishment
+        await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+        await supabaseAdmin.from('establishments').delete().eq('id', establishmentData.id);
+        throw new Error(`Erreur création profil: ${userError.message}`);
+      }
     }
 
-    console.log('User profile created successfully');
+    console.log('User profile ready');
 
     return new Response(
       JSON.stringify({
