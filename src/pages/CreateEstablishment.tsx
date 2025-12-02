@@ -113,7 +113,7 @@ const CreateEstablishment = () => {
 
       if (establishmentError) throw establishmentError;
 
-      // 2. Create auth user
+      // 2. Create auth user - the trigger will automatically create the user profile
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -121,31 +121,14 @@ const CreateEstablishment = () => {
           emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
             first_name: formData.firstName,
-            last_name: formData.lastName
+            last_name: formData.lastName,
+            phone: formData.phone,
+            establishment_id: establishment.id
           }
         }
       });
 
       if (authError) throw authError;
-
-      // 3. Create user in users table with the auth user's ID
-      if (authData.user) {
-        const { error: userError } = await supabase
-          .from('users')
-          .insert({
-            id: authData.user.id, // Use the auth user's ID
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            email: formData.email,
-            phone: formData.phone,
-            role: 'Admin',
-            establishment_id: establishment.id,
-            status: 'Actif',
-            is_activated: true
-          });
-
-        if (userError) throw userError;
-      }
 
       toast.success('Compte établissement créé avec succès! Vérifiez vos emails pour confirmer votre compte.');
       
