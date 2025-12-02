@@ -2298,6 +2298,21 @@ export type Database = {
           retry_after_seconds: number
         }[]
       }
+      create_establishment_public: {
+        Args: {
+          p_address?: string
+          p_director?: string
+          p_email: string
+          p_name: string
+          p_number_of_instructors?: string
+          p_number_of_students?: string
+          p_phone?: string
+          p_siret?: string
+          p_type: string
+          p_website?: string
+        }
+        Returns: string
+      }
       generate_attendance_qr_code: {
         Args: { attendance_sheet_id_param: string }
         Returns: string
