@@ -93,46 +93,39 @@ const CreateEstablishment = () => {
     setLoading(true);
     
     try {
-      // 1. Create establishment using SECURITY DEFINER function to bypass RLS
-      const { data: establishmentId, error: establishmentError } = await supabase
-        .rpc('create_establishment_public', {
-          p_name: formData.establishmentName,
-          p_type: formData.establishmentType,
-          p_email: formData.establishmentEmail || formData.email,
-          p_address: formData.address,
-          p_phone: formData.establishmentPhone || null,
-          p_website: formData.website || null,
-          p_siret: formData.siret || null,
-          p_director: formData.director || null,
-          p_number_of_students: formData.numberOfStudents || null,
-          p_number_of_instructors: formData.numberOfInstructors || null
-        });
-
-      if (establishmentError) throw establishmentError;
-      if (!establishmentId) throw new Error('Erreur lors de la création de l\'établissement');
-
-      // 2. Create auth user - the trigger will automatically create the user profile
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
-          data: {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
+      // Use Edge Function with service role to bypass RLS completely
+      const { data, error } = await supabase.functions.invoke('create-establishment', {
+        body: {
+          establishment: {
+            name: formData.establishmentName,
+            type: formData.establishmentType,
+            email: formData.establishmentEmail || formData.email,
+            address: formData.address,
+            phone: formData.establishmentPhone,
+            website: formData.website,
+            siret: formData.siret,
+            director: formData.director,
+            numberOfStudents: formData.numberOfStudents,
+            numberOfInstructors: formData.numberOfInstructors
+          },
+          admin: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
             phone: formData.phone,
-            establishment_id: establishmentId
+            password: formData.password
           }
         }
       });
 
-      if (authError) throw authError;
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error || 'Erreur lors de la création');
 
-      toast.success('Compte établissement créé avec succès! Vérifiez vos emails pour confirmer votre compte.');
+      toast.success('Compte établissement créé avec succès! Vous pouvez maintenant vous connecter.');
       
-      // Redirect to dashboard
+      // Redirect to auth page for login
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/auth');
       }, 2000);
 
     } catch (error: any) {

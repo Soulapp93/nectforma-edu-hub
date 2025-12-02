@@ -9,3 +9,6 @@ verify_jwt = false
 [functions.check-expired-attendance-links.schedule]
 # Exécuter toutes les 5 minutes pour vérifier les liens expirés
 cron = "*/5 * * * *"
+
+[functions.create-establishment]
+verify_jwt = false
