@@ -30,7 +30,7 @@ serve(async (req) => {
       }
     );
 
-    // 1. Create establishment
+    // 1. Create establishment first
     const { data: establishmentData, error: establishmentError } = await supabaseAdmin
       .from('establishments')
       .insert({
@@ -55,61 +55,96 @@ serve(async (req) => {
 
     console.log('Establishment created with ID:', establishmentData.id);
 
-    // 2. Check if auth user already exists
-    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-    const existingAuthUser = existingUsers?.users?.find(u => u.email === admin.email);
-
+    // 2. Try to create auth user - if exists, we'll handle it
     let authUserId: string;
+    
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email: admin.email,
+      password: admin.password,
+      email_confirm: true,
+      user_metadata: {
+        first_name: admin.firstName,
+        last_name: admin.lastName,
+        phone: admin.phone,
+        establishment_id: establishmentData.id
+      }
+    });
 
-    if (existingAuthUser) {
-      console.log('Auth user already exists, reusing:', existingAuthUser.id);
-      authUserId = existingAuthUser.id;
+    if (authError) {
+      console.log('Auth creation error:', authError.message);
       
-      // Update user metadata
-      await supabaseAdmin.auth.admin.updateUserById(existingAuthUser.id, {
-        password: admin.password,
-        user_metadata: {
-          first_name: admin.firstName,
-          last_name: admin.lastName,
-          phone: admin.phone,
-          establishment_id: establishmentData.id
+      // If user already exists, try to find and update them
+      if (authError.message.includes('already') || authError.message.includes('registered')) {
+        console.log('User already exists, searching for them...');
+        
+        // Search through paginated results
+        let foundUser = null;
+        let page = 1;
+        const perPage = 1000;
+        
+        while (!foundUser) {
+          const { data: usersData, error: listError } = await supabaseAdmin.auth.admin.listUsers({
+            page: page,
+            perPage: perPage
+          });
+          
+          if (listError) {
+            console.error('Error listing users:', listError);
+            break;
+          }
+          
+          foundUser = usersData.users.find(u => u.email === admin.email);
+          
+          if (foundUser || usersData.users.length < perPage) {
+            break;
+          }
+          page++;
         }
-      });
-    } else {
-      // Create new auth user
-      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-        email: admin.email,
-        password: admin.password,
-        email_confirm: true,
-        user_metadata: {
-          first_name: admin.firstName,
-          last_name: admin.lastName,
-          phone: admin.phone,
-          establishment_id: establishmentData.id
+        
+        if (foundUser) {
+          console.log('Found existing user:', foundUser.id);
+          authUserId = foundUser.id;
+          
+          // Update the existing user with new password and metadata
+          const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(foundUser.id, {
+            password: admin.password,
+            user_metadata: {
+              first_name: admin.firstName,
+              last_name: admin.lastName,
+              phone: admin.phone,
+              establishment_id: establishmentData.id
+            }
+          });
+          
+          if (updateError) {
+            console.error('Error updating user:', updateError);
+          }
+        } else {
+          // User not found - delete establishment and throw error
+          console.error('Could not find existing user');
+          await supabaseAdmin.from('establishments').delete().eq('id', establishmentData.id);
+          throw new Error(`L'email ${admin.email} est déjà utilisé mais impossible de récupérer le compte. Veuillez utiliser un autre email.`);
         }
-      });
-
-      if (authError) {
-        console.error('Auth user creation error:', authError);
+      } else {
+        // Other error - rollback establishment creation
         await supabaseAdmin.from('establishments').delete().eq('id', establishmentData.id);
         throw new Error(`Erreur création utilisateur: ${authError.message}`);
       }
-      
+    } else {
       authUserId = authData.user.id;
+      console.log('New auth user created with ID:', authUserId);
     }
 
-    console.log('Auth user ID:', authUserId);
-
-    // 3. Check if user profile was already created by trigger
-    const { data: existingUser } = await supabaseAdmin
+    // 3. Check if user profile exists (may have been created by trigger)
+    const { data: existingProfile } = await supabaseAdmin
       .from('users')
       .select('id')
       .eq('id', authUserId)
       .maybeSingle();
 
-    if (existingUser) {
-      console.log('User profile already exists (created by trigger), updating...');
-      // Update the existing profile with correct data
+    if (existingProfile) {
+      console.log('User profile exists, updating...');
+      // Update existing profile with correct data
       const { error: updateError } = await supabaseAdmin
         .from('users')
         .update({
@@ -129,8 +164,8 @@ serve(async (req) => {
       }
     } else {
       console.log('Creating user profile...');
-      // Create user profile if not created by trigger
-      const { error: userError } = await supabaseAdmin
+      // Create new user profile
+      const { error: profileError } = await supabaseAdmin
         .from('users')
         .insert({
           id: authUserId,
@@ -144,16 +179,14 @@ serve(async (req) => {
           is_activated: true
         });
 
-      if (userError) {
-        console.error('User profile creation error:', userError);
-        // Rollback: delete auth user and establishment
-        await supabaseAdmin.auth.admin.deleteUser(authUserId);
-        await supabaseAdmin.from('establishments').delete().eq('id', establishmentData.id);
-        throw new Error(`Erreur création profil: ${userError.message}`);
+      if (profileError) {
+        console.error('User profile creation error:', profileError);
+        // Don't delete auth user if profile creation fails (trigger might create it later)
+        // Just log the error
       }
     }
 
-    console.log('User profile ready');
+    console.log('Account creation completed successfully');
 
     return new Response(
       JSON.stringify({
