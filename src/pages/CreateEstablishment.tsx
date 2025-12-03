@@ -121,12 +121,24 @@ const CreateEstablishment = () => {
       if (error) throw error;
       if (!data.success) throw new Error(data.error || 'Erreur lors de la création');
 
-      toast.success('Compte établissement créé avec succès! Vous pouvez maintenant vous connecter.');
-      
-      // Redirect to auth page for login
-      setTimeout(() => {
-        navigate('/auth');
-      }, 2000);
+      // Auto-login the user after successful account creation
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password
+      });
+
+      if (signInError) {
+        console.error('Auto-login failed:', signInError);
+        toast.success('Compte créé avec succès! Vous pouvez maintenant vous connecter.');
+        setTimeout(() => {
+          navigate('/auth');
+        }, 1500);
+      } else {
+        toast.success('Compte établissement créé avec succès! Redirection vers votre espace...');
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1000);
+      }
 
     } catch (error: any) {
       console.error('Error creating establishment:', error);
