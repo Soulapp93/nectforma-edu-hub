@@ -100,19 +100,45 @@ const Auth = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    
     if (isLogin) {
-      console.log('Login attempt:', { email: formData.email, password: formData.password });
-      // Redirect to dashboard
-      window.location.href = '/dashboard';
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password
+        });
+
+        if (error) {
+          if (error.message.includes('Invalid login credentials')) {
+            toast.error('Email ou mot de passe incorrect');
+          } else if (error.message.includes('Email not confirmed')) {
+            toast.error('Veuillez confirmer votre email avant de vous connecter');
+          } else {
+            toast.error(error.message);
+          }
+          setLoading(false);
+          return;
+        }
+
+        if (data.user) {
+          toast.success('Connexion réussie !');
+          window.location.href = '/dashboard';
+        }
+      } catch (error: any) {
+        toast.error('Erreur lors de la connexion');
+        setLoading(false);
+      }
     } else {
       if (step === 1) {
         setStep(2);
+        setLoading(false);
       } else {
-        console.log('Registration attempt:', formData);
-        // Handle registration logic
-        window.location.href = '/dashboard';
+        // Handle registration logic - redirect to CreateEstablishment for full flow
+        navigate('/creer-etablissement');
+        setLoading(false);
       }
     }
   };
