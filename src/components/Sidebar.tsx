@@ -48,10 +48,7 @@ const Sidebar = () => {
   const [adminExpanded, setAdminExpanded] = useState(location.pathname === '/administration');
 
   const handleLogout = async () => {
-    // Nettoyer la session démo
-    sessionStorage.removeItem('demo_user');
-    
-    // Déconnexion Supabase si connecté
+    // Déconnexion Supabase
     await supabase.auth.signOut();
     
     // Rediriger vers la page d'authentification
@@ -60,22 +57,11 @@ const Sidebar = () => {
 
   // Obtenir les informations utilisateur pour l'affichage
   const getUserDisplayInfo = () => {
-    const demoUser = sessionStorage.getItem('demo_user');
-    if (demoUser) {
-      const userData = JSON.parse(demoUser);
-      return {
-        name: `${userData.first_name} ${userData.last_name}`,
-        role: userData.role,
-        initials: `${userData.first_name[0]}${userData.last_name[0]}`,
-        relationInfo: null // Les utilisateurs démo n'ont pas de relations
-      };
-    }
-    
     if (userInfo) {
       return {
         name: `${userInfo.first_name} ${userInfo.last_name}`,
         role: userRole || 'Utilisateur',
-        initials: `${userInfo.first_name[0]}${userInfo.last_name[0]}`,
+        initials: `${userInfo.first_name?.[0] || ''}${userInfo.last_name?.[0] || ''}`.toUpperCase() || 'U',
         relationInfo
       };
     }
@@ -83,7 +69,7 @@ const Sidebar = () => {
     return {
       name: 'Utilisateur',
       role: userRole || 'Utilisateur',
-      initials: 'AN',
+      initials: 'U',
       relationInfo: null
     };
   };

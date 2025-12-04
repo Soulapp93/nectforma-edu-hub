@@ -6,11 +6,8 @@ import {
   BookOpen, 
   Calendar, 
   MessageSquare, 
-  FileText, 
   Settings,
   ClipboardCheck,
-  Building,
-  Clock,
   UsersRound
 } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -24,15 +21,6 @@ interface NavItem {
 
 const BottomNavigation = () => {
   const { userRole } = useCurrentUser();
-
-  // Vérifier s'il y a un utilisateur démo
-  const demoUser = sessionStorage.getItem('demo_user');
-  let effectiveRole = userRole;
-
-  if (demoUser) {
-    const userData = JSON.parse(demoUser);
-    effectiveRole = userData.role;
-  }
 
   // Navigation pour AdminPrincipal
   const principalAdminNavigation: NavItem[] = [
@@ -70,11 +58,11 @@ const BottomNavigation = () => {
   ];
 
   // Sélectionner la navigation selon le rôle
-  const navigation = effectiveRole === 'AdminPrincipal' 
+  const navigation = userRole === 'AdminPrincipal' 
     ? principalAdminNavigation 
-    : effectiveRole === 'Admin' 
+    : userRole === 'Admin' 
     ? adminNavigation 
-    : effectiveRole === 'Tuteur'
+    : userRole === 'Tuteur'
     ? tutorNavigation
     : limitedNavigation;
 

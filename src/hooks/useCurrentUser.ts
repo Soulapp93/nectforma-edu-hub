@@ -7,109 +7,86 @@ export const useCurrentUser = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+    
+    // Nettoyer toute ancienne session démo au démarrage
+    sessionStorage.removeItem('demo_user');
+    
+    const fetchUserRole = async (uid: string) => {
+      try {
+        const { data: userData, error } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', uid)
+          .single();
+        
+        if (!mounted) return;
+        
+        if (error) {
+          console.error('Erreur lors de la récupération du rôle:', error);
+          setUserRole(null);
+        } else {
+          setUserRole(userData?.role || null);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération du rôle:', error);
+        if (mounted) setUserRole(null);
+      }
+    };
+
     const getCurrentUser = async () => {
       try {
-        // Vérifier d'abord s'il y a un utilisateur démo en session
-        const demoUser = sessionStorage.getItem('demo_user');
-        if (demoUser) {
-          const userData = JSON.parse(demoUser);
-          // Convertir les IDs démo en UUIDs valides
-          let userId = userData.id;
-          if (userId === 'demo-adminprincipal') {
-            userId = '00000000-0000-4000-8000-000000000001'; // UUID valide pour admin démo
-          } else if (userId === 'demo-student') {
-            userId = '00000000-0000-4000-8000-000000000002'; // UUID valide pour étudiant démo
-          } else if (userId === 'demo-formateur' || userId === 'demo-instructor') {
-            userId = '00000000-0000-4000-8000-000000000003'; // UUID valide pour formateur démo
-          } else if (typeof userId === 'string' && !userId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
-            // Générer un UUID valide basé sur l'ID original
-            userId = '00000000-0000-4000-8000-' + userData.id.replace(/[^a-f0-9]/gi, '').padEnd(12, '0').substr(0, 12);
-          }
-          setUserId(userId);
-          setUserRole(userData.role);
-          setLoading(false);
-          return;
-        }
-
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.id) {
-          setUserId(user.id);
-          
-          // Récupérer les informations de l'utilisateur depuis la table users
-          const { data: userData, error } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', user.id)
-            .single();
-          
-          if (error) {
-            console.error('Erreur lors de la récupération du rôle:', error);
-            setUserRole(null);
-          } else {
-            setUserRole(userData?.role || null);
-          }
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
+        if (session?.user?.id) {
+          setUserId(session.user.id);
+          await fetchUserRole(session.user.id);
         } else {
           setUserId(null);
           setUserRole(null);
         }
       } catch (error) {
         console.error('Erreur lors de la récupération de l\'utilisateur:', error);
-        setUserId(null);
-        setUserRole(null);
+        if (mounted) {
+          setUserId(null);
+          setUserRole(null);
+        }
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
-    getCurrentUser();
-
     // Écouter les changements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        // Nettoyer la session démo si une vraie session arrive
+      (event, session) => {
+        if (!mounted) return;
+        
         if (session?.user?.id) {
-          sessionStorage.removeItem('demo_user');
           setUserId(session.user.id);
-          
-          // Récupérer les informations de l'utilisateur
-          const { data: userData, error } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (!error && userData) {
-            setUserRole(userData.role);
-          }
-        } else {
-          // Vérifier s'il y a encore un utilisateur démo
-          const demoUser = sessionStorage.getItem('demo_user');
-          if (demoUser) {
-            const userData = JSON.parse(demoUser);
-            // Convertir les IDs démo en UUIDs valides
-            let userId = userData.id;
-            if (userId === 'demo-adminprincipal') {
-              userId = '00000000-0000-4000-8000-000000000001'; // UUID valide pour admin démo
-            } else if (userId === 'demo-student') {
-              userId = '00000000-0000-4000-8000-000000000002'; // UUID valide pour étudiant démo
-            } else if (userId === 'demo-formateur' || userId === 'demo-instructor') {
-              userId = '00000000-0000-4000-8000-000000000003'; // UUID valide pour formateur démo
-            } else if (typeof userId === 'string' && !userId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
-              // Générer un UUID valide basé sur l'ID original
-              userId = '00000000-0000-4000-8000-' + userData.id.replace(/[^a-f0-9]/gi, '').padEnd(12, '0').substr(0, 12);
+          // Déférer le fetch pour éviter les deadlocks
+          setTimeout(() => {
+            if (mounted) {
+              fetchUserRole(session.user.id).finally(() => {
+                if (mounted) setLoading(false);
+              });
             }
-            setUserId(userId);
-            setUserRole(userData.role);
-          } else {
-            setUserId(null);
-            setUserRole(null);
-          }
+          }, 0);
+        } else {
+          setUserId(null);
+          setUserRole(null);
+          setLoading(false);
         }
-        setLoading(false);
       }
     );
 
-    return () => subscription.unsubscribe();
+    getCurrentUser();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return { userId, userRole, loading };
@@ -117,13 +94,23 @@ export const useCurrentUser = () => {
 
 // Créer un hook pour récupérer les informations utilisateur avec tuteur/apprenti
 export const useUserWithRelations = () => {
-  const { userId, userRole, loading } = useCurrentUser();
+  const { userId, userRole, loading: userLoading } = useCurrentUser();
   const [userInfo, setUserInfo] = useState<any>(null);
   const [relationInfo, setRelationInfo] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+    
     const fetchUserRelations = async () => {
-      if (!userId) return;
+      if (!userId) {
+        if (mounted) {
+          setUserInfo(null);
+          setRelationInfo(null);
+          setLoading(false);
+        }
+        return;
+      }
 
       try {
         // Récupérer les informations de base de l'utilisateur
@@ -133,8 +120,14 @@ export const useUserWithRelations = () => {
           .eq('id', userId)
           .single();
 
-        if (userError) throw userError;
-        setUserInfo(userData);
+        if (!mounted) return;
+
+        if (userError) {
+          console.error('Erreur lors de la récupération des infos utilisateur:', userError);
+          setUserInfo(null);
+        } else {
+          setUserInfo(userData);
+        }
 
         // Si c'est un étudiant, chercher son tuteur
         if (userRole === 'Étudiant') {
@@ -143,7 +136,9 @@ export const useUserWithRelations = () => {
             .select('*')
             .eq('student_id', userId)
             .eq('is_active', true)
-            .single();
+            .maybeSingle();
+
+          if (!mounted) return;
 
           if (!tutorError && tutorData) {
             setRelationInfo({
@@ -156,7 +151,6 @@ export const useUserWithRelations = () => {
         }
 
         // Si c'est un tuteur, chercher ses apprentis
-        // Note: Un tuteur peut avoir plusieurs apprentis, on prend le premier actif pour l'affichage
         if (userRole === 'Tuteur') {
           const { data: studentData, error: studentError } = await supabase
             .from('tutor_students_view')
@@ -164,7 +158,9 @@ export const useUserWithRelations = () => {
             .eq('tutor_id', userId)
             .eq('is_active', true)
             .limit(1)
-            .single();
+            .maybeSingle();
+
+          if (!mounted) return;
 
           if (!studentError && studentData) {
             setRelationInfo({
@@ -176,11 +172,17 @@ export const useUserWithRelations = () => {
         }
       } catch (error) {
         console.error('Erreur lors de la récupération des relations:', error);
+      } finally {
+        if (mounted) setLoading(false);
       }
     };
 
     fetchUserRelations();
+    
+    return () => {
+      mounted = false;
+    };
   }, [userId, userRole]);
 
-  return { userInfo, relationInfo, loading };
+  return { userInfo, relationInfo, loading: loading || userLoading };
 };

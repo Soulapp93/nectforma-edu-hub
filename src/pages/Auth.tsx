@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, Building, MapPin, Phone, Eye, EyeOff, Shield, GraduationCap, Users2 } from 'lucide-react';
+import { Mail, Lock, User, Building, MapPin, Phone, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -46,59 +46,6 @@ const Auth = () => {
     '101-500',
     '500+'
   ];
-
-  const handleDemoLogin = async (role: string) => {
-    setLoading(true);
-    try {
-      const emailMap = {
-        'AdminPrincipal': 'admin.principal@demo.com',
-        'Admin': 'admin@demo.com',
-        'Formateur': 'formateur@demo.com',
-        'Étudiant': 'etudiant@demo.com',
-        'Tuteur': 'tuteur-demo@test.com'
-      };
-      
-      const email = emailMap[role as keyof typeof emailMap];
-      if (!email) {
-        throw new Error('Rôle non reconnu');
-      }
-
-      // Créer des données démo directement côté client
-      const demoUserData = {
-        id: `demo-${role.toLowerCase()}`,
-        email: email,
-        first_name: role === 'AdminPrincipal' ? 'Admin' : role === 'Admin' ? 'Administrateur' : role === 'Formateur' ? 'Jean' : role === 'Tuteur' ? 'Tuteur' : 'Marie',
-        last_name: role === 'AdminPrincipal' ? 'Principal' : role === 'Admin' ? 'Système' : role === 'Formateur' ? 'Dupont' : role === 'Tuteur' ? 'Démo' : 'Martin',
-        role: role,
-        establishment_id: 'demo-establishment',
-        status: 'Actif',
-        is_activated: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      // Simuler une connexion en créant une session côté client
-      sessionStorage.setItem('demo_user', JSON.stringify(demoUserData));
-      
-      // Messages personnalisés selon le rôle
-      const roleMessages = {
-        'AdminPrincipal': 'Admin Principal - Accès complet à la gestion du compte établissement',
-        'Admin': 'Administrateur - Accès à la gestion du profil personnel uniquement',
-        'Formateur': 'Formateur - Accès à la gestion du profil personnel',
-        'Étudiant': 'Étudiant - Accès à la gestion du profil personnel',
-        'Tuteur': 'Tuteur - Accès aux formations de l\'apprenti et au profil personnel'
-      };
-      
-      toast.success(`Connexion réussie en tant que ${roleMessages[role as keyof typeof roleMessages]}`);
-      
-      // Forcer le rechargement de la page pour que useCurrentUser détecte la nouvelle session
-      window.location.href = '/dashboard';
-    } catch (error) {
-      toast.error('Erreur lors de la connexion démo');
-      console.error('Demo login error:', error);
-      setLoading(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -419,7 +366,7 @@ const Auth = () => {
                 className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-700 transition-colors"
                 disabled={loading}
               >
-                {loading ? 'Connexion...' : (isLogin 
+                {loading ? 'Chargement...' : (isLogin 
                   ? 'Se connecter' 
                   : step === 1 
                     ? 'Continuer' 
@@ -427,63 +374,6 @@ const Auth = () => {
                 )}
               </button>
             </form>
-
-            {isLogin && (
-              <>
-                <div className="mt-6 flex items-center">
-                  <div className="flex-1 border-t border-gray-300"></div>
-                  <div className="px-3 text-sm text-gray-500">OU COMPTES DE DÉMO</div>
-                  <div className="flex-1 border-t border-gray-300"></div>
-                </div>
-
-                <div className="mt-6 grid grid-cols-1 gap-3">
-                  <button
-                    onClick={() => handleDemoLogin('AdminPrincipal')}
-                    disabled={loading}
-                    className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
-                  >
-                    <Shield className="h-4 w-4 mr-2 text-red-600" />
-                    Admin Principal
-                  </button>
-                  
-                  <button
-                    onClick={() => handleDemoLogin('Admin')}
-                    disabled={loading}
-                    className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
-                  >
-                    <Shield className="h-4 w-4 mr-2 text-purple-600" />
-                    Administrateur
-                  </button>
-                  
-                  <button
-                    onClick={() => handleDemoLogin('Formateur')}
-                    disabled={loading}
-                    className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
-                  >
-                    <Users2 className="h-4 w-4 mr-2 text-blue-600" />
-                    Formateur
-                  </button>
-                  
-                  <button
-                    onClick={() => handleDemoLogin('Étudiant')}
-                    disabled={loading}
-                    className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
-                  >
-                    <GraduationCap className="h-4 w-4 mr-2 text-green-600" />
-                    Étudiant
-                  </button>
-                  
-                  <button
-                    onClick={() => handleDemoLogin('Tuteur')}
-                    disabled={loading}
-                    className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
-                  >
-                    <User className="h-4 w-4 mr-2 text-orange-600" />
-                    Tuteur
-                  </button>
-                </div>
-              </>
-            )}
 
             {!isLogin && step === 2 && (
               <button
@@ -509,12 +399,23 @@ const Auth = () => {
               </p>
             </div>
 
+            {isLogin && (
+              <div className="mt-4 text-center">
+                <Link 
+                  to="/creer-etablissement" 
+                  className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+                >
+                  Créer un nouveau compte établissement
+                </Link>
+              </div>
+            )}
+
             {!isLogin && (
               <p className="text-xs text-gray-500 text-center mt-4">
                 En créant un compte, vous acceptez nos{' '}
-                <a href="#" className="text-purple-600 hover:text-purple-700">conditions d'utilisation</a>
+                <Link to="/cgu" className="text-purple-600 hover:text-purple-700">conditions d'utilisation</Link>
                 {' '}et notre{' '}
-                <a href="#" className="text-purple-600 hover:text-purple-700">politique de confidentialité</a>.
+                <Link to="/politique-confidentialite" className="text-purple-600 hover:text-purple-700">politique de confidentialité</Link>.
               </p>
             )}
           </div>
