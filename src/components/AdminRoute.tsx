@@ -10,16 +10,7 @@ export const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
   const { userRole, loading } = useCurrentUser();
   const location = useLocation();
 
-  // Vérifier s'il y a un utilisateur démo
-  const demoUser = sessionStorage.getItem('demo_user');
-  let isAdmin = false;
-
-  if (demoUser) {
-    const userData = JSON.parse(demoUser);
-    isAdmin = userData.role === 'Admin' || userData.role === 'AdminPrincipal';
-  } else {
-    isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
-  }
+  const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
 
   if (loading) {
     return (

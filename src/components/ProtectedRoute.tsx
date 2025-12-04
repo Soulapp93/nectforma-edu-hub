@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
@@ -7,12 +7,8 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { userId, userRole, loading } = useCurrentUser();
+  const { userId, loading } = useCurrentUser();
   const location = useLocation();
-
-  // Vérifier s'il y a un utilisateur démo
-  const demoUser = sessionStorage.getItem('demo_user');
-  const isAuthenticated = userId || demoUser;
 
   if (loading) {
     return (
@@ -22,7 +18,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!userId) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
