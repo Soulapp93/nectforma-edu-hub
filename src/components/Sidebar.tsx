@@ -97,7 +97,7 @@ const Sidebar = () => {
     { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
 
-  // Navigation pour Admin (avec profil au lieu de gestion du compte - sans suivi émargement)
+  // Navigation pour Admin (avec gestion du compte établissement)
   const adminNavigation: NavigationItem[] = [
     { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Administration', href: '/administration', icon: Users, subItems: administrationSubItems },
@@ -105,6 +105,7 @@ const Sidebar = () => {
     { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
     { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
     { name: 'Groupes', href: '/groupes', icon: UsersRound },
+    { name: 'Gestion du compte', href: '/gestion-etablissement', icon: Building },
     { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
 
