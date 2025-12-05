@@ -27,8 +27,30 @@ export interface CreateUserData {
   profile_photo_url?: string;
 }
 
+// Helper function to get the current user's establishment_id
+async function getCurrentUserEstablishmentId(): Promise<string> {
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (!session?.user?.id) {
+    throw new Error('Utilisateur non connecté');
+  }
+
+  const { data: userData, error } = await supabase
+    .from('users')
+    .select('establishment_id')
+    .eq('id', session.user.id)
+    .single();
+
+  if (error || !userData?.establishment_id) {
+    throw new Error('Impossible de récupérer l\'établissement de l\'utilisateur');
+  }
+
+  return userData.establishment_id;
+}
+
 export const userService = {
   async getUsers(): Promise<User[]> {
+    // RLS will automatically filter by establishment
     const { data, error } = await supabase
       .from('users')
       .select('*')
@@ -50,21 +72,14 @@ export const userService = {
   },
 
   async createUser(userData: CreateUserData, formationIds: string[] = [], tutorData?: any): Promise<User> {
-    const { data: establishment } = await supabase
-      .from('establishments')
-      .select('id')
-      .limit(1)
-      .single();
-
-    if (!establishment) {
-      throw new Error('Aucun établissement trouvé');
-    }
+    // Get the current user's establishment_id
+    const establishmentId = await getCurrentUserEstablishmentId();
 
     const { data, error } = await supabase
       .from('users')
       .insert([{
         ...userData,
-        establishment_id: establishment.id
+        establishment_id: establishmentId
       }])
       .select()
       .single();
@@ -99,7 +114,7 @@ export const userService = {
           company_name: tutorData.company_name,
           company_address: tutorData.company_address,
           position: tutorData.position,
-          establishment_id: establishment.id
+          establishment_id: establishmentId
         };
 
         const { data: tutor, error: tutorError } = await supabase
@@ -131,7 +146,7 @@ export const userService = {
         try {
           await activationService.sendActivationEmail(
             tutorData.email,
-            'tutor-activation-token', // Temporaire, doit être généré
+            'tutor-activation-token',
             tutorData.first_name,
             tutorData.last_name
           );
@@ -140,7 +155,6 @@ export const userService = {
         }
       } catch (tutorError) {
         console.error('Erreur lors de la création du tuteur:', tutorError);
-        // On continue même si la création du tuteur échoue
       }
     }
 
@@ -169,15 +183,8 @@ export const userService = {
   },
 
   async bulkCreateUsers(usersData: CreateUserData[]): Promise<User[]> {
-    const { data: establishment } = await supabase
-      .from('establishments')
-      .select('id')
-      .limit(1)
-      .single();
-
-    if (!establishment) {
-      throw new Error('Aucun établissement trouvé');
-    }
+    // Get the current user's establishment_id
+    const establishmentId = await getCurrentUserEstablishmentId();
 
     // Éviter les doublons d'emails pour ne pas faire échouer tout l'import
     const emails = usersData.map((u) => u.email);
@@ -201,7 +208,7 @@ export const userService = {
 
     const usersWithEstablishment = usersToInsert.map((user) => ({
       ...user,
-      establishment_id: establishment.id,
+      establishment_id: establishmentId,
     }));
 
     const { data, error } = await supabase
