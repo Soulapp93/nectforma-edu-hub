@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import EstablishmentSettings from '../components/compte/EstablishmentSettings';
 import { toast } from 'sonner';
+import { establishmentService, Establishment } from '@/services/establishmentService';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { supabase } from '@/integrations/supabase/client';
 
 type EstablishmentDataState = {
   name: string;
@@ -15,6 +18,10 @@ type EstablishmentDataState = {
 };
 
 const GestionEtablissement = () => {
+  const { userId, userRole } = useCurrentUser();
+  const [loading, setLoading] = useState(true);
+  const [establishmentId, setEstablishmentId] = useState<string | null>(null);
+  
   const [adminData, setAdminData] = useState({
     firstName: '',
     lastName: '',
@@ -35,50 +42,131 @@ const GestionEtablissement = () => {
     numberOfUsers: 0
   });
 
-  // Charger les données sauvegardées au montage du composant
+  // Charger les données de l'établissement depuis Supabase
   useEffect(() => {
-    const savedAdminData = localStorage.getItem('adminData');
-    const savedEstablishmentData = localStorage.getItem('establishmentData');
-
-    if (savedAdminData) {
+    const loadData = async () => {
       try {
-        setAdminData(JSON.parse(savedAdminData));
-      } catch (error) {
-        console.error('Erreur lors du chargement des données admin:', error);
-      }
-    }
+        setLoading(true);
+        
+        // Charger l'établissement
+        const establishment = await establishmentService.getCurrentUserEstablishment();
+        
+        if (establishment) {
+          setEstablishmentId(establishment.id);
+          setEstablishmentData({
+            name: establishment.name || '',
+            phone: establishment.phone || '',
+            website: establishment.website || '',
+            address: establishment.address || '',
+            type: establishment.type || '',
+            director: establishment.director || '',
+            siret: establishment.siret || '',
+            numberOfUsers: 0,
+            logoUrl: establishment.logo_url || undefined
+          });
+        }
 
-    if (savedEstablishmentData) {
-      try {
-        setEstablishmentData(JSON.parse(savedEstablishmentData));
-      } catch (error) {
-        console.error('Erreur lors du chargement des données établissement:', error);
-      }
-    }
-  }, []);
+        // Charger les infos de l'admin actuel
+        if (userId) {
+          const { data: userData, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', userId)
+            .single();
 
-  const handleLogoUpload = (files: File[]) => {
-    if (files.length > 0) {
+          if (!error && userData) {
+            setAdminData({
+              firstName: userData.first_name || '',
+              lastName: userData.last_name || '',
+              email: userData.email || '',
+              phone: userData.phone || '',
+              role: userData.role || '',
+              personalAddress: ''
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des données:', error);
+        toast.error('Erreur lors du chargement des données');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (userId) {
+      loadData();
+    }
+  }, [userId]);
+
+  const handleLogoUpload = async (files: File[]) => {
+    if (files.length > 0 && establishmentId) {
       const file = files[0];
-      // Créer une URL temporaire pour prévisualiser l'image
-      const logoUrl = URL.createObjectURL(file);
-      setEstablishmentData(prev => ({ ...prev, logoUrl }));
       
-      // Sauvegarder le logo en base64 pour la persistance
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const logoData = e.target?.result as string;
-        setEstablishmentData(prev => ({ ...prev, logoUrl: logoData }));
-      };
-      reader.readAsDataURL(file);
+      try {
+        // Upload to Supabase storage
+        const fileName = `${establishmentId}/${Date.now()}_${file.name}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('establishment-logos')
+          .upload(fileName, file, { upsert: true });
+
+        if (uploadError) {
+          // Si le bucket n'existe pas, créer une URL temporaire
+          const logoUrl = URL.createObjectURL(file);
+          setEstablishmentData(prev => ({ ...prev, logoUrl }));
+          toast.info('Logo mis à jour localement');
+          return;
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('establishment-logos')
+          .getPublicUrl(uploadData.path);
+
+        // Update establishment with logo URL
+        await establishmentService.updateEstablishment(establishmentId, {
+          logo_url: publicUrl
+        });
+
+        setEstablishmentData(prev => ({ ...prev, logoUrl: publicUrl }));
+        toast.success('Logo mis à jour avec succès');
+      } catch (error) {
+        console.error('Erreur upload logo:', error);
+        // Fallback to local preview
+        const logoUrl = URL.createObjectURL(file);
+        setEstablishmentData(prev => ({ ...prev, logoUrl }));
+      }
     }
   };
 
-  const handleSaveEstablishment = () => {
+  const handleSaveEstablishment = async () => {
+    if (!establishmentId) {
+      toast.error('Établissement non trouvé');
+      return;
+    }
+
     try {
-      // Sauvegarder les données dans localStorage
-      localStorage.setItem('adminData', JSON.stringify(adminData));
-      localStorage.setItem('establishmentData', JSON.stringify(establishmentData));
+      // Mettre à jour l'établissement
+      await establishmentService.updateEstablishment(establishmentId, {
+        name: establishmentData.name,
+        phone: establishmentData.phone,
+        website: establishmentData.website,
+        address: establishmentData.address,
+        type: establishmentData.type,
+        director: establishmentData.director,
+        siret: establishmentData.siret,
+      });
+
+      // Mettre à jour les infos admin si nécessaire
+      if (userId) {
+        await supabase
+          .from('users')
+          .update({
+            first_name: adminData.firstName,
+            last_name: adminData.lastName,
+            phone: adminData.phone,
+          })
+          .eq('id', userId);
+      }
       
       toast.success('Informations sauvegardées avec succès');
     } catch (error) {
@@ -86,6 +174,25 @@ const GestionEtablissement = () => {
       toast.error('Erreur lors de la sauvegarde des informations');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Vérifier que l'utilisateur est admin
+  if (userRole !== 'Admin' && userRole !== 'AdminPrincipal') {
+    return (
+      <div className="p-8">
+        <div className="text-center text-muted-foreground">
+          Vous n'avez pas les droits pour accéder à cette page.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
