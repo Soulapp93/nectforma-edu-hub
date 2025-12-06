@@ -1,92 +1,47 @@
-
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, Building, MapPin, Phone, Eye, EyeOff } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const Auth = () => {
-  const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
-  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    // Personal info
     email: '',
     password: '',
-    confirmPassword: '',
-    firstName: '',
-    lastName: '',
-    phone: '',
-    
-    // Establishment info
-    establishmentName: '',
-    establishmentType: '',
-    establishmentAddress: '',
-    siret: '',
-    numberOfStudents: '',
-    establishmentPhone: '',
-    establishmentEmail: ''
   });
-
-  const establishmentTypes = [
-    'École supérieure',
-    'Centre de formation',
-    'Organisme de formation',
-    'Entreprise',
-    'Formateur indépendant'
-  ];
-
-  const studentRanges = [
-    '1-10',
-    '11-25',
-    '26-50',
-    '51-100',
-    '101-500',
-    '500+'
-  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
-    if (isLogin) {
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password
-        });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password
+      });
 
-        if (error) {
-          if (error.message.includes('Invalid login credentials')) {
-            toast.error('Email ou mot de passe incorrect');
-          } else if (error.message.includes('Email not confirmed')) {
-            toast.error('Veuillez confirmer votre email avant de vous connecter');
-          } else {
-            toast.error(error.message);
-          }
-          setLoading(false);
-          return;
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          toast.error('Email ou mot de passe incorrect');
+        } else if (error.message.includes('Email not confirmed')) {
+          toast.error('Veuillez confirmer votre email avant de vous connecter');
+        } else {
+          toast.error(error.message);
         }
+        setLoading(false);
+        return;
+      }
 
-        if (data.user) {
-          toast.success('Connexion réussie !');
-          window.location.href = '/dashboard';
-        }
-      } catch (error: any) {
-        toast.error('Erreur lors de la connexion');
-        setLoading(false);
+      if (data.user) {
+        toast.success('Connexion réussie !');
+        window.location.href = '/dashboard';
       }
-    } else {
-      if (step === 1) {
-        setStep(2);
-        setLoading(false);
-      } else {
-        // Handle registration logic - redirect to CreateEstablishment for full flow
-        navigate('/creer-etablissement');
-        setLoading(false);
-      }
+    } catch (error: any) {
+      toast.error('Erreur lors de la connexion');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -95,7 +50,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white flex">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white flex flex-col lg:flex-row">
       {/* Left side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-purple-600 to-purple-800 text-white p-12 flex-col justify-center">
         <div className="max-w-md">
@@ -140,284 +95,96 @@ const Auth = () => {
       </div>
 
       {/* Right side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
         <div className="w-full max-w-md">
-          <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
+            {/* Mobile Logo */}
+            <div className="lg:hidden flex items-center justify-center space-x-2 mb-6">
+              <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">NF</span>
+              </div>
+              <span className="text-xl font-bold text-gray-900">NECTFORMA</span>
+            </div>
+
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                {isLogin ? 'Connexion' : 'Créer un compte'}
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                Connexion
               </h2>
               <p className="text-gray-600">
-                {isLogin 
-                  ? 'Connectez-vous à votre espace NectForma'
-                  : step === 1 
-                    ? 'Commencez votre essai gratuit'
-                    : 'Informations sur votre établissement'
-                }
+                Connectez-vous à votre espace NectForma
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {isLogin ? (
-                // Login Form
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <Mail className="inline h-4 w-4 mr-2" />
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="votre@email.com"
-                      required
-                    />
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Mail className="inline h-4 w-4 mr-2" />
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="votre@email.com"
+                  required
+                />
+              </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <Lock className="inline h-4 w-4 mr-2" />
-                      Mot de passe
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        value={formData.password}
-                        onChange={(e) => handleInputChange('password', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent pr-12"
-                        placeholder="Votre mot de passe"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                      </button>
-                    </div>
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Lock className="inline h-4 w-4 mr-2" />
+                  Mot de passe
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent pr-12"
+                    placeholder="Votre mot de passe"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+              </div>
 
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center">
-                      <input type="checkbox" className="rounded border-gray-300 text-purple-600 focus:ring-purple-500" />
-                      <span className="ml-2 text-sm text-gray-600">Se souvenir de moi</span>
-                    </label>
-                    <a href="#" className="text-sm text-purple-600 hover:text-purple-700">
-                      Mot de passe oublié ?
-                    </a>
-                  </div>
-                </>
-              ) : (
-                // Registration Form
-                step === 1 ? (
-                  // Step 1: Personal Information
-                  <>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Prénom</label>
-                        <input
-                          type="text"
-                          value={formData.firstName}
-                          onChange={(e) => handleInputChange('firstName', e.target.value)}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Nom</label>
-                        <input
-                          type="text"
-                          value={formData.lastName}
-                          onChange={(e) => handleInputChange('lastName', e.target.value)}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <Mail className="inline h-4 w-4 mr-2" />
-                        Email professionnel
-                      </label>
-                      <input
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="votre@email.com"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <Phone className="inline h-4 w-4 mr-2" />
-                        Téléphone
-                      </label>
-                      <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => handleInputChange('phone', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="+33 1 23 45 67 89"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <Lock className="inline h-4 w-4 mr-2" />
-                        Mot de passe
-                      </label>
-                      <input
-                        type="password"
-                        value={formData.password}
-                        onChange={(e) => handleInputChange('password', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="Minimum 8 caractères"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Confirmer le mot de passe</label>
-                      <input
-                        type="password"
-                        value={formData.confirmPassword}
-                        onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="Confirmez votre mot de passe"
-                        required
-                      />
-                    </div>
-                  </>
-                ) : (
-                  // Step 2: Establishment Information
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <Building className="inline h-4 w-4 mr-2" />
-                        Nom de l'établissement
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.establishmentName}
-                        onChange={(e) => handleInputChange('establishmentName', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="Nom de votre établissement"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Type d'établissement</label>
-                      <select
-                        value={formData.establishmentType}
-                        onChange={(e) => handleInputChange('establishmentType', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        required
-                      >
-                        <option value="">Sélectionnez un type</option>
-                        {establishmentTypes.map(type => (
-                          <option key={type} value={type}>{type}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Nombre d'apprenants</label>
-                      <select
-                        value={formData.numberOfStudents}
-                        onChange={(e) => handleInputChange('numberOfStudents', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        required
-                      >
-                        <option value="">Sélectionnez une tranche</option>
-                        {studentRanges.map(range => (
-                          <option key={range} value={range}>{range} apprenants</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <MapPin className="inline h-4 w-4 mr-2" />
-                        Adresse
-                      </label>
-                      <textarea
-                        value={formData.establishmentAddress}
-                        onChange={(e) => handleInputChange('establishmentAddress', e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        rows={3}
-                        placeholder="Adresse complète de l'établissement"
-                        required
-                      />
-                    </div>
-                  </>
-                )
-              )}
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <label className="flex items-center">
+                  <input type="checkbox" className="rounded border-gray-300 text-purple-600 focus:ring-purple-500" />
+                  <span className="ml-2 text-sm text-gray-600">Se souvenir de moi</span>
+                </label>
+                <a href="#" className="text-sm text-purple-600 hover:text-purple-700">
+                  Mot de passe oublié ?
+                </a>
+              </div>
 
               <button
                 type="submit"
-                className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50"
                 disabled={loading}
               >
-                {loading ? 'Chargement...' : (isLogin 
-                  ? 'Se connecter' 
-                  : step === 1 
-                    ? 'Continuer' 
-                    : 'Créer mon compte'
-                )}
+                {loading ? 'Connexion en cours...' : 'Se connecter'}
               </button>
             </form>
 
-            {!isLogin && step === 2 && (
-              <button
-                onClick={() => setStep(1)}
-                className="w-full mt-4 text-purple-600 hover:text-purple-700 font-medium"
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <p className="text-center text-gray-600 mb-4">
+                Vous n'avez pas encore de compte établissement ?
+              </p>
+              <Link 
+                to="/create-establishment" 
+                className="block w-full text-center bg-gray-100 text-purple-600 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
               >
-                Étape précédente
-              </button>
-            )}
-
-            <div className="mt-6 text-center">
-              <p className="text-gray-600">
-                {isLogin ? "Vous n'avez pas de compte ?" : "Vous avez déjà un compte ?"}
-                <button
-                  onClick={() => {
-                    setIsLogin(!isLogin);
-                    setStep(1);
-                  }}
-                  className="ml-2 text-purple-600 hover:text-purple-700 font-medium"
-                >
-                  {isLogin ? 'Créer un compte' : 'Se connecter'}
-                </button>
-              </p>
+                Créer un compte établissement
+              </Link>
             </div>
-
-            {isLogin && (
-              <div className="mt-4 text-center">
-                <Link 
-                  to="/creer-etablissement" 
-                  className="text-sm text-purple-600 hover:text-purple-700 font-medium"
-                >
-                  Créer un nouveau compte établissement
-                </Link>
-              </div>
-            )}
-
-            {!isLogin && (
-              <p className="text-xs text-gray-500 text-center mt-4">
-                En créant un compte, vous acceptez nos{' '}
-                <Link to="/cgu" className="text-purple-600 hover:text-purple-700">conditions d'utilisation</Link>
-                {' '}et notre{' '}
-                <Link to="/politique-confidentialite" className="text-purple-600 hover:text-purple-700">politique de confidentialité</Link>.
-              </p>
-            )}
           </div>
         </div>
       </div>
