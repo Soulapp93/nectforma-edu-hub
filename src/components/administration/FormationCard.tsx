@@ -87,37 +87,37 @@ const FormationCard: React.FC<FormationCardProps> = ({
 
   return (
     <>
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 group">
+      <div className="bg-card rounded-xl shadow-sm border border-border hover:shadow-md transition-shadow duration-200 group">
         {/* Barre de couleur en haut */}
         <div 
-          className="h-2 rounded-t-xl" 
+          className="h-1.5 sm:h-2 rounded-t-xl" 
           style={{ backgroundColor: color }}
         />
         
-        <div className="p-4">
+        <div className="p-3 sm:p-4">
           {/* Header avec actions */}
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getLevelColor(level)}`}>
+          <div className="flex items-start justify-between mb-3 sm:mb-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 mb-2 flex-wrap">
+                <span className={`px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium rounded-full ${getLevelColor(level)}`}>
                   {level}
                 </span>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(status)}`}>
+                <span className={`px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium rounded-full ${getStatusColor(status)}`}>
                   {status}
                 </span>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">{title}</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1 line-clamp-2">{title}</h3>
               {description && (
-                <p className="text-sm text-gray-600 line-clamp-2">{description}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{description}</p>
               )}
             </div>
             
             {isAdmin && (
-              <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex space-x-1 sm:space-x-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity ml-2">
                 {onEdit && (
                   <button
                     onClick={onEdit}
-                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    className="p-1.5 sm:p-2 text-muted-foreground hover:text-info hover:bg-info/10 rounded-lg transition-colors"
                   >
                     <Edit className="h-4 w-4" />
                   </button>
@@ -125,7 +125,7 @@ const FormationCard: React.FC<FormationCardProps> = ({
                 {onDelete && (
                   <button
                     onClick={onDelete}
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    className="p-1.5 sm:p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -135,44 +135,44 @@ const FormationCard: React.FC<FormationCardProps> = ({
           </div>
 
           {/* Informations principales */}
-          <div className="space-y-2 mb-3">
-            <div className="flex items-center text-sm text-gray-600">
-              <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-              <span>Du {new Date(start_date).toLocaleDateString()} au {new Date(end_date).toLocaleDateString()}</span>
+          <div className="space-y-1.5 sm:space-y-2 mb-3">
+            <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+              <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-muted-foreground/70 flex-shrink-0" />
+              <span className="truncate">Du {new Date(start_date).toLocaleDateString('fr-FR')} au {new Date(end_date).toLocaleDateString('fr-FR')}</span>
             </div>
             
-            <div className="flex items-center text-sm text-gray-600">
-              <Clock className="h-4 w-4 mr-2 text-gray-400" />
+            <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+              <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-muted-foreground/70 flex-shrink-0" />
               <span>{duration}h de formation</span>
             </div>
           </div>
 
           {/* Modules */}
-          <div className="border-t border-gray-100 pt-3 mb-3">
-            <div className="flex items-center text-sm text-gray-600">
-              <BookOpen className="h-4 w-4 mr-2 text-gray-400" />
+          <div className="border-t border-border pt-2 sm:pt-3 mb-2 sm:mb-3">
+            <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+              <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-muted-foreground/70 flex-shrink-0" />
               <span>{modules.length} module{modules.length > 1 ? 's' : ''}</span>
             </div>
           </div>
 
           {/* Formateurs */}
           {uniqueInstructors.length > 0 && (
-            <div className="border-t border-gray-100 pt-3 mb-3">
-              <span className="text-sm font-medium text-gray-700">
-                <User className="h-4 w-4 inline mr-1" />
+            <div className="border-t border-border pt-2 sm:pt-3 mb-2 sm:mb-3">
+              <span className="text-xs sm:text-sm font-medium text-foreground">
+                <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 inline mr-1" />
                 Formateurs:
               </span>
               <div className="flex flex-wrap gap-1 mt-1">
                 {uniqueInstructors.slice(0, 2).map(instructor => (
                   <span 
                     key={instructor.id}
-                    className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full"
+                    className="text-[10px] sm:text-xs bg-muted text-muted-foreground px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full"
                   >
                     {instructor.first_name} {instructor.last_name}
                   </span>
                 ))}
                 {uniqueInstructors.length > 2 && (
-                  <span className="text-xs text-gray-500">
+                  <span className="text-[10px] sm:text-xs text-muted-foreground">
                     +{uniqueInstructors.length - 2} autre(s)
                   </span>
                 )}
@@ -181,21 +181,21 @@ const FormationCard: React.FC<FormationCardProps> = ({
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-2 pt-3 border-t border-gray-100">
+          <div className="flex gap-2 pt-2 sm:pt-3 border-t border-border">
             <button
               onClick={handleViewParticipants}
-              className="flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="flex-1 flex items-center justify-center px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded-lg sm:rounded-xl transition-colors active:scale-[0.98]"
             >
-              <Users className="h-4 w-4 mr-2" />
-              Voir les participants ({participantsCount})
+              <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">Participants</span> ({participantsCount})
             </button>
             <button
               onClick={handleViewDetail}
-              className="flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium text-white rounded-lg transition-colors"
+              className="flex-1 flex items-center justify-center px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-primary-foreground rounded-lg sm:rounded-xl transition-colors active:scale-[0.98]"
               style={{ backgroundColor: color }}
             >
-              <Eye className="h-4 w-4 mr-2" />
-              Voir détail
+              <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              Détail
             </button>
           </div>
         </div>

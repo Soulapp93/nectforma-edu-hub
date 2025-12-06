@@ -1,14 +1,14 @@
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { ArrowLeft } from 'lucide-react';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import Sidebar from './components/Sidebar';
 import BottomNavigation from './components/BottomNavigation';
+import MobileHeader from './components/MobileHeader';
 import NotificationBell from './components/NotificationBell';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
@@ -52,13 +52,9 @@ const queryClient = new QueryClient({
 
 const AppContent = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const isAuthPage = location.pathname === '/auth';
   const isCreateEstablishmentPage = location.pathname === '/create-establishment';
   const isMobile = useIsMobile();
-  
-  // Déterminer si on peut revenir en arrière
-  const canGoBack = location.pathname !== '/dashboard' && location.pathname !== '/' && location.pathname !== '/formations';
 
   if (isAuthPage) {
     return (
@@ -108,28 +104,7 @@ const AppContent = () => {
           </header>
           
           {/* Mobile Header - shown only on mobile */}
-          <header className="md:hidden h-14 flex items-center justify-between border-b bg-white px-4 sticky top-0 z-40 shadow-sm">
-            {canGoBack ? (
-              <button 
-                onClick={() => navigate(-1)}
-                className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 transition-colors"
-                aria-label="Retour"
-              >
-                <ArrowLeft className="h-5 w-5 text-gray-700" />
-              </button>
-            ) : (
-              <div className="w-9" /> // Placeholder pour maintenir le centrage
-            )}
-            
-            <div className="flex items-center space-x-2 absolute left-1/2 transform -translate-x-1/2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">N</span>
-              </div>
-              <h1 className="text-lg font-bold text-primary">NECTFY</h1>
-            </div>
-            
-            <NotificationBell />
-          </header>
+          <MobileHeader />
           
           <main className="flex-1 overflow-auto bg-gray-50 pb-20 md:pb-0">
             <Routes>

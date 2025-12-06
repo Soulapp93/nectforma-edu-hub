@@ -8,7 +8,9 @@ import {
   MessageSquare, 
   Settings,
   ClipboardCheck,
-  UsersRound
+  UsersRound,
+  MoreHorizontal,
+  Home
 } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
@@ -22,52 +24,41 @@ interface NavItem {
 const BottomNavigation = () => {
   const { userRole } = useCurrentUser();
 
-  // Navigation pour AdminPrincipal
-  const principalAdminNavigation: NavItem[] = [
-    { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard, label: 'Tableau de bord' },
-    { name: 'Administration', href: '/administration', icon: Users, label: 'Administration' },
-    { name: 'Formation', href: '/formations', icon: BookOpen, label: 'Formation' },
-    { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar, label: 'Emploi du temps' },
-    { name: 'Messagerie', href: '/messagerie', icon: MessageSquare, label: 'Messagerie' },
-  ];
-
-  // Navigation pour Admin
+  // Navigation pour AdminPrincipal et Admin
   const adminNavigation: NavItem[] = [
-    { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard, label: 'Tableau de bord' },
-    { name: 'Administration', href: '/administration', icon: Users, label: 'Administration' },
-    { name: 'Formation', href: '/formations', icon: BookOpen, label: 'Formation' },
-    { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar, label: 'Emploi du temps' },
-    { name: 'Messagerie', href: '/messagerie', icon: MessageSquare, label: 'Messagerie' },
+    { name: 'Accueil', href: '/dashboard', icon: Home, label: 'Accueil' },
+    { name: 'Admin', href: '/administration', icon: Users, label: 'Admin' },
+    { name: 'Formations', href: '/formations', icon: BookOpen, label: 'Formations' },
+    { name: 'Planning', href: '/emploi-temps', icon: Calendar, label: 'Planning' },
+    { name: 'Messages', href: '/messagerie', icon: MessageSquare, label: 'Messages' },
   ];
 
   // Navigation pour tuteurs
   const tutorNavigation: NavItem[] = [
-    { name: 'Formation', href: '/formations', icon: BookOpen, label: 'Formation' },
-    { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck, label: 'Suivi' },
-    { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar, label: 'Emploi du temps' },
-    { name: 'Mon Profil', href: '/compte', icon: Settings, label: 'Compte' },
+    { name: 'Formations', href: '/formations', icon: BookOpen, label: 'Formations' },
+    { name: 'Suivi', href: '/suivi-emargement', icon: ClipboardCheck, label: 'Suivi' },
+    { name: 'Planning', href: '/emploi-temps', icon: Calendar, label: 'Planning' },
+    { name: 'Profil', href: '/compte', icon: Settings, label: 'Profil' },
   ];
 
   // Navigation pour formateurs et étudiants
   const limitedNavigation: NavItem[] = [
-    { name: 'Formation', href: '/formations', icon: BookOpen, label: 'Formation' },
-    { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck, label: 'Suivi' },
-    { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar, label: 'EDT' },
+    { name: 'Formations', href: '/formations', icon: BookOpen, label: 'Formations' },
+    { name: 'Planning', href: '/emploi-temps', icon: Calendar, label: 'Planning' },
+    { name: 'Suivi', href: '/suivi-emargement', icon: ClipboardCheck, label: 'Suivi' },
     { name: 'Groupes', href: '/groupes', icon: UsersRound, label: 'Groupes' },
-    { name: 'Mon Profil', href: '/compte', icon: Settings, label: 'Compte' },
+    { name: 'Profil', href: '/compte', icon: Settings, label: 'Profil' },
   ];
 
   // Sélectionner la navigation selon le rôle
-  const navigation = userRole === 'AdminPrincipal' 
-    ? principalAdminNavigation 
-    : userRole === 'Admin' 
+  const navigation = (userRole === 'AdminPrincipal' || userRole === 'Admin')
     ? adminNavigation 
     : userRole === 'Tuteur'
     ? tutorNavigation
     : limitedNavigation;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg md:hidden safe-area-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border shadow-lg md:hidden safe-area-bottom">
       <div className="grid grid-cols-5 h-16">
         {navigation.slice(0, 5).map((item) => {
           const Icon = item.icon;
@@ -77,15 +68,21 @@ const BottomNavigation = () => {
               to={item.href}
               end={item.href === '/dashboard'}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center gap-1 text-xs font-medium transition-colors ${
+                `flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-all ${
                   isActive
                     ? 'text-primary'
-                    : 'text-gray-500 hover:text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`
               }
             >
-              <Icon className="h-6 w-6" strokeWidth={2} />
-              <span className="text-[10px] leading-none">{item.label}</span>
+              {({ isActive }) => (
+                <>
+                  <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-primary/10' : ''}`}>
+                    <Icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} />
+                  </div>
+                  <span className="text-[10px] leading-none font-medium">{item.label}</span>
+                </>
+              )}
             </NavLink>
           );
         })}
