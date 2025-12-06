@@ -29,8 +29,8 @@ export const ScheduleViewCalendar: React.FC<ScheduleViewCalendarProps> = ({
   onEventClick
 }) => {
   return (
-    <div className="container mx-auto px-6 py-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-6">
+    <div className="w-full px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3 sm:gap-4 lg:gap-6">
         {schedule.map((day) => (
           <Card
             key={day.id}
@@ -40,14 +40,14 @@ export const ScheduleViewCalendar: React.FC<ScheduleViewCalendarProps> = ({
                 : 'bg-muted/30 shadow-sm opacity-70'
             }`}
           >
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg font-bold text-foreground">
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-base sm:text-lg font-bold text-foreground truncate">
                     {day.day}
                   </CardTitle>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <span className="text-2xl font-bold text-primary">
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xl sm:text-2xl font-bold text-primary">
                       {day.date}
                     </span>
                     {day.modules.length > 0 && (
@@ -60,11 +60,11 @@ export const ScheduleViewCalendar: React.FC<ScheduleViewCalendarProps> = ({
               </div>
             </CardHeader>
 
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2 sm:space-y-3 p-3 sm:p-4 pt-0">
               {day.modules.length === 0 ? (
-                <div className="text-center py-8">
-                  <Calendar className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-muted-foreground text-sm">
+                <div className="text-center py-4 sm:py-8">
+                  <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground text-xs sm:text-sm">
                     Aucun cours
                   </p>
                 </div>
@@ -79,7 +79,7 @@ export const ScheduleViewCalendar: React.FC<ScheduleViewCalendarProps> = ({
                   return (
                     <div
                       key={index}
-                      className="px-4 py-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer group text-white"
+                      className="px-3 py-3 sm:px-4 sm:py-4 rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer group text-white"
                       style={{ 
                         backgroundColor: module.color || '#3B82F6'
                       }}
@@ -87,14 +87,14 @@ export const ScheduleViewCalendar: React.FC<ScheduleViewCalendarProps> = ({
                         if (fullEvent) onEventClick(fullEvent);
                       }}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold text-white text-sm group-hover:text-white/90 transition-colors">
+                      <div className="flex items-start justify-between mb-2 gap-1">
+                        <h4 className="font-semibold text-white text-xs sm:text-sm group-hover:text-white/90 transition-colors line-clamp-2">
                           {module.title}
                         </h4>
                         {fullEvent?.formation && (
                           <Badge 
                             variant="outline" 
-                            className="text-xs ml-2 border-white/30 text-white/90 bg-white/10"
+                            className="text-[10px] sm:text-xs ml-1 border-white/30 text-white/90 bg-white/10 flex-shrink-0 hidden sm:flex"
                           >
                             {fullEvent.formation}
                           </Badge>
@@ -102,17 +102,17 @@ export const ScheduleViewCalendar: React.FC<ScheduleViewCalendarProps> = ({
                       </div>
                       
                       <div className="space-y-1">
-                        <div className="flex items-center text-xs text-white/90">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {module.time}
+                        <div className="flex items-center text-[10px] sm:text-xs text-white/90">
+                          <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
+                          <span className="truncate">{module.time}</span>
                         </div>
-                        <div className="flex items-center text-xs text-white/90">
-                          <MapPin className="h-3 w-3 mr-1" />
-                          {module.room}
+                        <div className="flex items-center text-[10px] sm:text-xs text-white/90">
+                          <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                          <span className="truncate">{module.room}</span>
                         </div>
-                        <div className="flex items-center text-xs text-white/90">
-                          <User className="h-3 w-3 mr-1" />
-                          {module.instructor}
+                        <div className="flex items-center text-[10px] sm:text-xs text-white/90">
+                          <User className="h-3 w-3 mr-1 flex-shrink-0" />
+                          <span className="truncate">{module.instructor}</span>
                         </div>
                       </div>
                     </div>

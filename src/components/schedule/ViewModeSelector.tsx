@@ -21,21 +21,21 @@ export const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
   ];
 
   return (
-    <div className="flex items-center space-x-2 bg-muted/50 rounded-xl p-1 border">
+    <div className="flex items-center gap-1 bg-muted/50 rounded-lg sm:rounded-xl p-0.5 sm:p-1 border overflow-x-auto">
       {viewModes.map(({ id, label, icon: Icon }) => (
         <Button
           key={id}
           variant={viewMode === id ? 'default' : 'ghost'}
           size="sm"
           onClick={() => onViewModeChange(id)}
-          className={`px-3 ${
+          className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm flex-shrink-0 ${
             viewMode === id 
               ? 'bg-primary text-primary-foreground shadow-md' 
               : 'hover:bg-primary/10'
           }`}
         >
-          <Icon className="h-4 w-4 mr-2" />
-          {label}
+          <Icon className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+          <span className="hidden sm:inline">{label}</span>
         </Button>
       ))}
     </div>
