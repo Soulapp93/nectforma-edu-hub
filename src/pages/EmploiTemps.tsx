@@ -442,11 +442,13 @@ const EmploiTemps = () => {
         schedulesCount={events.length}
       />
 
-      <div className="container mx-auto px-6 py-4">
+      <div className="w-full px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
         {userRole === 'Étudiant' && userFormations.length > 1 && (
-          <div className="mb-4 flex items-center gap-3 bg-card p-4 rounded-lg border border-border shadow-sm">
-            <GraduationCap className="w-5 h-5 text-primary" />
-            <span className="text-sm font-medium text-muted-foreground">Formation :</span>
+          <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 bg-card p-3 sm:p-4 rounded-lg border border-border shadow-sm">
+            <div className="flex items-center gap-2">
+              <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+              <span className="text-xs sm:text-sm font-medium text-muted-foreground">Formation :</span>
+            </div>
             <Select
               value={selectedFormationId || undefined}
               onValueChange={setSelectedFormationId}
@@ -459,11 +461,11 @@ const EmploiTemps = () => {
                   <SelectItem key={uf.formation_id} value={uf.formation_id}>
                     <div className="flex items-center gap-2">
                       <div
-                        className="w-3 h-3 rounded-full"
+                        className="w-3 h-3 rounded-full flex-shrink-0"
                         style={{ backgroundColor: uf.formation.color || '#8B5CF6' }}
                       />
-                      <span>{uf.formation.title}</span>
-                      <Badge variant="outline" className="ml-2 text-xs">
+                      <span className="truncate">{uf.formation.title}</span>
+                      <Badge variant="outline" className="ml-2 text-xs hidden sm:inline-flex">
                         {uf.formation.level}
                       </Badge>
                     </div>
@@ -474,7 +476,7 @@ const EmploiTemps = () => {
           </div>
         )}
 
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <WeekNavigator currentDate={currentDate} onNavigate={handleNavigate} />
 
           <ViewModeSelector viewMode={viewMode} onViewModeChange={setViewMode} />

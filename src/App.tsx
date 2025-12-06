@@ -4,11 +4,11 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { useIsMobile } from '@/hooks/use-mobile';
+// useIsMobile removed - no longer needed
 import ErrorBoundary from '@/components/ErrorBoundary';
 import Sidebar from './components/Sidebar';
-import BottomNavigation from './components/BottomNavigation';
-import MobileHeader from './components/MobileHeader';
+// BottomNavigation removed - using only sidebar
+// MobileHeader removed - using unified header with SidebarTrigger
 import NotificationBell from './components/NotificationBell';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
@@ -54,7 +54,7 @@ const AppContent = () => {
   const location = useLocation();
   const isAuthPage = location.pathname === '/auth';
   const isCreateEstablishmentPage = location.pathname === '/create-establishment' || location.pathname === '/creer-etablissement';
-  const isMobile = useIsMobile();
+  
 
   if (isAuthPage) {
     return (
@@ -88,26 +88,21 @@ const AppContent = () => {
   }
 
   return (
-    <SidebarProvider defaultOpen={!isMobile}>
+    <SidebarProvider defaultOpen={true}>
       <div className="flex h-screen w-full bg-gray-50">
-        {/* Desktop Sidebar - hidden on mobile */}
-        <div className="hidden md:block">
-          <Sidebar />
-        </div>
+        {/* Sidebar - always visible */}
+        <Sidebar />
         
-        <div className="flex flex-col flex-1 w-full">
-          {/* Header - hidden on mobile, shown on desktop */}
-          <header className="hidden md:flex h-14 sm:h-16 items-center justify-between border-b bg-white px-4 sm:px-6 sticky top-0 z-40 shadow-sm">
+        <div className="flex flex-col flex-1 w-full min-w-0">
+          {/* Header - always visible */}
+          <header className="flex h-14 sm:h-16 items-center justify-between border-b bg-white px-4 sm:px-6 sticky top-0 z-40 shadow-sm">
             <SidebarTrigger className="h-9 w-9" />
             <div className="flex items-center space-x-3 sm:space-x-4">
               <NotificationBell />
             </div>
           </header>
           
-          {/* Mobile Header - shown only on mobile */}
-          <MobileHeader />
-          
-          <main className="flex-1 overflow-auto bg-gray-50 pb-20 md:pb-0">
+          <main className="flex-1 overflow-auto bg-gray-50">
             <Routes>
               <Route path="/emargement/signer/:token" element={<SignaturePublique />} />
               <Route path="/dashboard" element={<ProtectedRoute><AdminRoute><Dashboard /></AdminRoute></ProtectedRoute>} />
@@ -136,8 +131,7 @@ const AppContent = () => {
           </main>
         </div>
         
-        {/* Bottom Navigation - shown only on mobile */}
-        <BottomNavigation />
+        {/* Bottom Navigation removed - using only sidebar */}
       </div>
       <Toaster />
     </SidebarProvider>

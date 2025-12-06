@@ -54,15 +54,15 @@ export const ScheduleViewHeader: React.FC<ScheduleViewHeaderProps> = ({
 
   return (
     <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border shadow-sm">
-      <div className="container mx-auto px-6 py-4">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
-              <Icon className="h-6 w-6 text-primary-foreground" />
+      <div className="w-full px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25 flex-shrink-0">
+              <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Emploi du Temps</h1>
-              <p className="text-muted-foreground">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">Emploi du Temps</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">
                 {getRoleDescription()} • {' '}
                 {viewMode === 'month' 
                   ? format(currentDate, 'MMMM yyyy', { locale: fr })
@@ -72,15 +72,15 @@ export const ScheduleViewHeader: React.FC<ScheduleViewHeaderProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center space-x-3">
-            <Badge variant="outline" className="px-3 py-1">
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Badge variant="outline" className="px-2 sm:px-3 py-1 text-xs">
               <Clock className="h-3 w-3 mr-1" />
               {schedulesCount} cours
             </Badge>
             {userRole && (
               <Badge 
                 variant="secondary" 
-                className="px-3 py-1"
+                className="px-2 sm:px-3 py-1 text-xs"
               >
                 {userRole}
               </Badge>
