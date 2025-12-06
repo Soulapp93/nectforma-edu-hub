@@ -361,13 +361,13 @@ const AttendanceManagement = () => {
 
       {/* Navigation et contenu principal */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center">
+        <CardHeader className="p-3 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <CardTitle className="flex items-center text-base sm:text-lg">
               {view === 'formations' ? (
                 <>
-                  <FileText className="h-5 w-5 mr-2" />
-                  Gestion des émargements par formation
+                  <FileText className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                  <span className="truncate">Gestion des émargements par formation</span>
                 </>
               ) : (
                 <>
@@ -379,26 +379,30 @@ const AttendanceManagement = () => {
                   >
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
-                  <FileText className="h-5 w-5 mr-2" />
-                  Feuilles d'émargement - {selectedFormation?.title}
+                  <FileText className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
+                  <span className="truncate">Feuilles - {selectedFormation?.title}</span>
                 </>
               )}
             </CardTitle>
             {view === 'formations' && (
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button
                   onClick={() => setShowSendAttendanceLinkModal(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm"
+                  size="sm"
                 >
-                  <Link className="h-4 w-4 mr-2" />
-                  Envoyer lien d'émargement
+                  <Link className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Envoyer lien d'émargement</span>
+                  <span className="sm:hidden">Lien</span>
                 </Button>
                 <Button
                   onClick={() => setShowSignatureModal(true)}
-                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                  className="bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm"
+                  size="sm"
                 >
-                  <PenTool className="h-4 w-4 mr-2" />
-                  Enregistrement signature
+                  <PenTool className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Enregistrement signature</span>
+                  <span className="sm:hidden">Signature</span>
                 </Button>
               </div>
             )}

@@ -121,26 +121,27 @@ const TextBooksList: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header with title and create button */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center space-x-3">
-          <BookOpen className="h-6 w-6 text-purple-600" />
-          <h2 className="text-xl font-semibold text-gray-900">Gestion des Cahiers de Texte</h2>
+          <BookOpen className="h-5 sm:h-6 w-5 sm:w-6 text-purple-600" />
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Gestion des Cahiers de Texte</h2>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 flex-wrap">
           {/* View mode toggle */}
           <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'grid' | 'list')} className="w-auto">
             <TabsList>
-              <TabsTrigger value="grid" className="px-3">
+              <TabsTrigger value="grid" className="px-2 sm:px-3">
                 <Grid className="h-4 w-4" />
               </TabsTrigger>
-              <TabsTrigger value="list" className="px-3">
+              <TabsTrigger value="list" className="px-2 sm:px-3">
                 <List className="h-4 w-4" />
               </TabsTrigger>
             </TabsList>
           </Tabs>
-          <Button onClick={() => setIsCreateModalOpen(true)} className="bg-purple-600 hover:bg-purple-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Créer un Cahier de texte
+          <Button onClick={() => setIsCreateModalOpen(true)} className="bg-purple-600 hover:bg-purple-700 text-xs sm:text-sm" size="sm">
+            <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Créer un Cahier de texte</span>
+            <span className="sm:hidden">Créer</span>
           </Button>
         </div>
       </div>

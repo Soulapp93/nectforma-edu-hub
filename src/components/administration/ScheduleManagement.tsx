@@ -1164,63 +1164,68 @@ const ScheduleManagement = () => {
                 </div>
               </div>
 
-              <div className="flex items-center space-x-3">
-                {isEditMode ? (
-                  <>
-                    <Button 
-                      onClick={handleOpenAddSlotModal}
-                      disabled={!selectedSchedule?.id}
-                      variant="premium"
-                      className="shadow-lg hover:shadow-xl transition-all"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Ajouter un créneau
-                    </Button>
-                    
-                    {selectedSchedule?.status === 'Brouillon' && (
-                      <Button 
-                        onClick={handlePublishSchedule}
-                        disabled={slots.length === 0}
-                        variant="success"
-                        className="shadow-lg hover:shadow-xl transition-all"
-                      >
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Publier
-                      </Button>
-                    )}
-                    
-                    <Button 
-                      onClick={handleOpenExcelImportModal}
-                      disabled={!selectedSchedule?.id}
-                      variant="elegant"
-                      size="sm"
-                      className="shadow-md hover:shadow-lg transition-all"
-                    >
-                      <Upload className="h-4 w-4 mr-2" />
-                      Import Excel
-                    </Button>
-
-                    <Button 
-                      onClick={handleSaveModifications}
-                      variant="success"
-                      className="shadow-lg hover:shadow-xl transition-all"
-                    >
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Enregistrer les modifications
-                    </Button>
-                  </>
-                ) : (
+            <div className="flex items-center gap-2 flex-wrap">
+              {isEditMode ? (
+                <>
                   <Button 
-                    onClick={() => setIsEditMode(true)}
+                    onClick={handleOpenAddSlotModal}
+                    disabled={!selectedSchedule?.id}
                     variant="premium"
-                    className="shadow-lg hover:shadow-xl transition-all"
+                    size="sm"
+                    className="shadow-lg hover:shadow-xl transition-all text-xs"
                   >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Modifier l'emploi du temps
+                    <Plus className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Ajouter un créneau</span>
                   </Button>
-                )}
-              </div>
+                  
+                  {selectedSchedule?.status === 'Brouillon' && (
+                    <Button 
+                      onClick={handlePublishSchedule}
+                      disabled={slots.length === 0}
+                      variant="success"
+                      size="sm"
+                      className="shadow-lg hover:shadow-xl transition-all text-xs"
+                    >
+                      <CheckCircle className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Publier</span>
+                    </Button>
+                  )}
+                  
+                  <Button 
+                    onClick={handleOpenExcelImportModal}
+                    disabled={!selectedSchedule?.id}
+                    variant="elegant"
+                    size="sm"
+                    className="shadow-md hover:shadow-lg transition-all text-xs"
+                  >
+                    <Upload className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Import Excel</span>
+                  </Button>
+
+                  <Button 
+                    onClick={handleSaveModifications}
+                    variant="success"
+                    size="sm"
+                    className="shadow-lg hover:shadow-xl transition-all text-xs"
+                  >
+                    <CheckCircle className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Enregistrer</span>
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  onClick={() => setIsEditMode(true)}
+                  variant="premium"
+                  size="sm"
+                  className="shadow-lg hover:shadow-xl transition-all text-xs"
+                >
+                  <Edit className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Modifier l'emploi du temps</span>
+                  <span className="sm:hidden">Modifier</span>
+                </Button>
+              )}
             </div>
+          </div>
 
             {/* Navigation et vues identiques */}
             <div className="flex items-center justify-between">
@@ -1321,27 +1326,29 @@ const ScheduleManagement = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
       {/* Header moderne identique */}
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border shadow-sm">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
-                <Calendar className="h-6 w-6 text-primary-foreground" />
+        <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
+                <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">Gestion des Emplois du Temps</h1>
-                <p className="text-muted-foreground">
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-3xl font-bold text-foreground truncate">Gestion des Emplois du Temps</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">
                   Créez et gérez les emplois du temps pour chaque formation
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center gap-2">
               <Button 
                 onClick={handleCreateSchedule}
-                className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all hover:scale-105"
+                className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all hover:scale-105 text-xs sm:text-sm"
+                size="sm"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Créer un Emploi du Temps
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Créer un Emploi du Temps</span>
+                <span className="sm:hidden">Créer</span>
               </Button>
             </div>
           </div>
