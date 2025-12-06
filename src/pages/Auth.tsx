@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -15,6 +16,7 @@ const Auth = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -24,11 +26,11 @@ const Auth = () => {
 
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
-          toast.error('Email ou mot de passe incorrect');
+          setError('Adresse email ou mot de passe incorrect');
         } else if (error.message.includes('Email not confirmed')) {
-          toast.error('Veuillez confirmer votre email avant de vous connecter');
+          setError('Veuillez confirmer votre email avant de vous connecter');
         } else {
-          toast.error(error.message);
+          setError('Erreur de connexion. Veuillez réessayer.');
         }
         setLoading(false);
         return;
@@ -38,14 +40,15 @@ const Auth = () => {
         toast.success('Connexion réussie !');
         window.location.href = '/dashboard';
       }
-    } catch (error: any) {
-      toast.error('Erreur lors de la connexion');
+    } catch (err: any) {
+      setError('Erreur lors de la connexion. Veuillez réessayer.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleInputChange = (field: string, value: string) => {
+    setError(null);
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -114,6 +117,12 @@ const Auth = () => {
                 Connectez-vous à votre espace NectForma
               </p>
             </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
