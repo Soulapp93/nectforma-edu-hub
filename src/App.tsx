@@ -53,7 +53,7 @@ const queryClient = new QueryClient({
 const AppContent = () => {
   const location = useLocation();
   const isAuthPage = location.pathname === '/auth';
-  const isCreateEstablishmentPage = location.pathname === '/create-establishment';
+  const isCreateEstablishmentPage = location.pathname === '/create-establishment' || location.pathname === '/creer-etablissement';
   const isMobile = useIsMobile();
 
   if (isAuthPage) {
@@ -71,6 +71,7 @@ const AppContent = () => {
       <div className="min-h-screen w-full">
         <Routes>
           <Route path="/create-establishment" element={<CreateEstablishment />} />
+          <Route path="/creer-etablissement" element={<CreateEstablishment />} />
         </Routes>
       </div>
     );
