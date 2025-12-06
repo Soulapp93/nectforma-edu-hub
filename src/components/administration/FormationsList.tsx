@@ -112,17 +112,17 @@ const FormationsList: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="glass-card rounded-xl">
-        <div className="p-6 border-b border-border">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-foreground">Gestion des formations</h2>
-            <div className="flex items-center gap-2">
+        <div className="p-4 sm:p-6 border-b border-border">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <h2 className="text-lg sm:text-xl font-semibold text-foreground">Gestion des formations</h2>
+            <div className="flex items-center gap-2 flex-wrap">
               {/* Toggle vue grille/liste */}
               <div className="flex items-center bg-muted rounded-lg p-1">
                 <Button
                   variant={viewMode === 'grid' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('grid')}
-                  className="h-8 px-3"
+                  className="h-8 px-2 sm:px-3"
                 >
                   <Grid3x3 className="h-4 w-4" />
                 </Button>
@@ -130,7 +130,7 @@ const FormationsList: React.FC = () => {
                   variant={viewMode === 'list' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('list')}
-                  className="h-8 px-3"
+                  className="h-8 px-2 sm:px-3"
                 >
                   <List className="h-4 w-4" />
                 </Button>
@@ -139,11 +139,13 @@ const FormationsList: React.FC = () => {
               {isAdmin && (
                 <Button 
                   onClick={handleCreateFormation}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 text-xs sm:text-sm"
                   variant="premium"
+                  size="sm"
                 >
                   <Plus className="h-4 w-4" />
-                  Nouvelle formation
+                  <span className="hidden xs:inline">Nouvelle formation</span>
+                  <span className="xs:hidden">Nouveau</span>
                 </Button>
               )}
             </div>

@@ -49,15 +49,15 @@ export const ScheduleManagementHeader: React.FC<ScheduleManagementHeaderProps> =
 
   return (
     <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border shadow-sm">
-      <div className="container mx-auto px-6 py-4">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
-              <Calendar className="h-6 w-6 text-primary-foreground" />
+      <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+          <div className="flex items-center space-x-3 sm:space-x-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
+              <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">{getTitle()}</h1>
-              <p className="text-muted-foreground">
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-3xl font-bold text-foreground truncate">{getTitle()}</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">
                 {getSubtitle()} • {' '}
                 {viewMode === 'month' 
                   ? format(currentDate, 'MMMM yyyy', { locale: fr })
@@ -67,9 +67,9 @@ export const ScheduleManagementHeader: React.FC<ScheduleManagementHeaderProps> =
             </div>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-2 flex-wrap">
             {/* Badges informatifs */}
-            <Badge variant="outline" className="px-3 py-1">
+            <Badge variant="outline" className="px-2 sm:px-3 py-1 text-xs">
               <Clock className="h-3 w-3 mr-1" />
               {slotsCount} créneaux
             </Badge>
@@ -78,7 +78,7 @@ export const ScheduleManagementHeader: React.FC<ScheduleManagementHeaderProps> =
               <>
                 <Badge 
                   variant="secondary" 
-                  className={selectedSchedule.status === 'Publié' ? 'bg-success/10 text-success border-success/20' : 'bg-warning/10 text-warning border-warning/20'}
+                  className={`text-xs ${selectedSchedule.status === 'Publié' ? 'bg-success/10 text-success border-success/20' : 'bg-warning/10 text-warning border-warning/20'}`}
                 >
                   {selectedSchedule.status}
                 </Badge>
@@ -88,10 +88,10 @@ export const ScheduleManagementHeader: React.FC<ScheduleManagementHeaderProps> =
                   variant="outline" 
                   size="sm"
                   onClick={onBackToList}
-                  className="hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
+                  className="hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 text-xs"
                 >
-                  <Eye className="h-4 w-4 mr-2" />
-                  Retour à la liste
+                  <Eye className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Retour à la liste</span>
                 </Button>
 
                 {!readOnly && (
@@ -100,19 +100,19 @@ export const ScheduleManagementHeader: React.FC<ScheduleManagementHeaderProps> =
                       variant="outline" 
                       size="sm"
                       onClick={onImportExcel}
-                      className="hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
+                      className="hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 text-xs"
                     >
-                      <FileSpreadsheet className="h-4 w-4 mr-2" />
-                      Import Excel
+                      <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Import Excel</span>
                     </Button>
 
                     <Button 
                       onClick={onAddSlot}
                       size="sm"
-                      className="bg-primary hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
+                      className="bg-primary hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 text-xs"
                     >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Ajouter un créneau
+                      <Plus className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Ajouter un créneau</span>
                     </Button>
 
                     {onPublishSchedule && (
@@ -121,10 +121,10 @@ export const ScheduleManagementHeader: React.FC<ScheduleManagementHeaderProps> =
                         size="sm"
                         disabled={slotsCount === 0}
                         variant="default"
-                        className="bg-success hover:bg-success/90 hover:shadow-lg hover:shadow-success/25 transition-all duration-300"
+                        className="bg-success hover:bg-success/90 hover:shadow-lg hover:shadow-success/25 transition-all duration-300 text-xs"
                       >
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Enregistrer les modifications et publier
+                        <CheckCircle className="h-4 w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Enregistrer et publier</span>
                       </Button>
                     )}
                   </>
