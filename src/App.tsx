@@ -29,6 +29,7 @@ import NotFound from './pages/NotFound';
 import Auth from './pages/Auth';
 import Index from './pages/Index';
 import CreateEstablishment from './pages/CreateEstablishment';
+import AcceptInvitation from './pages/AcceptInvitation';
 import Solutions from './pages/Solutions';
 import Fonctionnalites from './pages/Fonctionnalites';
 import PourquoiNous from './pages/PourquoiNous';
@@ -52,6 +53,7 @@ const AppContent = () => {
   const location = useLocation();
   const isAuthPage = location.pathname === '/auth';
   const isCreateEstablishmentPage = location.pathname === '/create-establishment' || location.pathname === '/creer-etablissement';
+  const isAcceptInvitationPage = location.pathname === '/accept-invitation';
   
 
   if (isAuthPage) {
@@ -70,6 +72,16 @@ const AppContent = () => {
         <Routes>
           <Route path="/create-establishment" element={<CreateEstablishment />} />
           <Route path="/creer-etablissement" element={<CreateEstablishment />} />
+        </Routes>
+      </div>
+    );
+  }
+
+  if (isAcceptInvitationPage) {
+    return (
+      <div className="min-h-screen w-full">
+        <Routes>
+          <Route path="/accept-invitation" element={<AcceptInvitation />} />
         </Routes>
       </div>
     );
