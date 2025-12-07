@@ -48,13 +48,28 @@ const Compte = () => {
 
 
   const handleProfilePhotoUpload = async (files: File[]) => {
-    if (files.length > 0) {
+    if (files.length > 0 && userId) {
       const file = files[0];
       try {
         // Uploader le fichier vers Supabase Storage avec l'ID utilisateur
         const uploadedUrl = await fileUploadService.uploadFile(file, 'avatars', userId);
+        
+        // Mettre à jour l'état local
         setProfileData(prev => ({ ...prev, profilePhotoUrl: uploadedUrl }));
-        toast.success('Photo de profil téléchargée avec succès');
+        
+        // Sauvegarder immédiatement dans la base de données
+        const currentUser = await userService.getUserById(userId);
+        await userService.updateUser(userId, {
+          first_name: currentUser.first_name,
+          last_name: currentUser.last_name,
+          email: currentUser.email,
+          phone: currentUser.phone,
+          profile_photo_url: uploadedUrl,
+          role: currentUser.role,
+          status: currentUser.status
+        });
+        
+        toast.success('Photo de profil sauvegardée avec succès');
       } catch (error) {
         console.error('Erreur lors du téléchargement de la photo:', error);
         toast.error('Erreur lors du téléchargement de la photo');
