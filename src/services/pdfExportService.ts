@@ -59,6 +59,30 @@ export const pdfExportService = {
       const pageWidth = 210;
       const margin = 15;
       
+      // Load establishment info for logo
+      let establishmentLogo = '';
+      let establishmentName = '';
+      if (attendanceSheet.formation_id) {
+        const { data: formationData, error: formationError } = await supabase
+          .from('formations')
+          .select('establishment_id')
+          .eq('id', attendanceSheet.formation_id)
+          .single();
+        
+        if (!formationError && formationData?.establishment_id) {
+          const { data: establishmentData, error: establishmentError } = await supabase
+            .from('establishments')
+            .select('logo_url, name')
+            .eq('id', formationData.establishment_id)
+            .single();
+          
+          if (!establishmentError && establishmentData) {
+            establishmentLogo = establishmentData.logo_url || '';
+            establishmentName = establishmentData.name || '';
+          }
+        }
+      }
+      
       // Load admin signature if sheet is validated
       let adminSignatureData = '';
       if (attendanceSheet.validated_by) {
@@ -98,6 +122,50 @@ export const pdfExportService = {
       // Header with purple background
       pdf.setFillColor(139, 92, 246);
       pdf.rect(0, 0, pageWidth, 45, 'F');
+      
+      // Add establishment logo in top-left corner if available
+      if (establishmentLogo) {
+        try {
+          // Load and add logo image
+          const logoImg = new Image();
+          logoImg.crossOrigin = 'anonymous';
+          await new Promise((resolve, reject) => {
+            logoImg.onload = resolve;
+            logoImg.onerror = reject;
+            logoImg.src = establishmentLogo;
+          });
+          
+          // Create canvas to convert to base64
+          const canvas = document.createElement('canvas');
+          canvas.width = logoImg.width;
+          canvas.height = logoImg.height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(logoImg, 0, 0);
+            const logoData = canvas.toDataURL('image/png');
+            
+            // Add white background for logo
+            pdf.setFillColor(255, 255, 255);
+            pdf.roundedRect(margin - 2, 5, 26, 26, 3, 3, 'F');
+            
+            // Add logo
+            pdf.addImage(logoData, 'PNG', margin, 7, 22, 22);
+          }
+        } catch (e) {
+          console.error('Error loading establishment logo:', e);
+          // Fallback: just show establishment name
+          if (establishmentName) {
+            pdf.setFontSize(8);
+            pdf.setTextColor(255, 255, 255);
+            pdf.text(establishmentName, margin, 15);
+          }
+        }
+      } else if (establishmentName) {
+        // No logo, just show establishment name
+        pdf.setFontSize(8);
+        pdf.setTextColor(255, 255, 255);
+        pdf.text(establishmentName, margin, 15);
+      }
       
       // Title
       pdf.setTextColor(255, 255, 255);
