@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { RotateCcw, Check } from 'lucide-react';
+import { RotateCcw, Check, X } from 'lucide-react';
 
 interface SignaturePadProps {
   width?: number;
@@ -17,11 +17,29 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
   onCancel,
   initialSignature
 }) => {
-  console.log('SignaturePad component loaded', { hasInitialSignature: !!initialSignature });
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isEmpty, setIsEmpty] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [canvasSize, setCanvasSize] = useState({ width, height });
+
+  // Responsive canvas sizing
+  useEffect(() => {
+    const updateSize = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.offsetWidth - 32; // Subtract padding
+        const newWidth = Math.min(width, containerWidth);
+        const aspectRatio = height / width;
+        const newHeight = Math.round(newWidth * aspectRatio);
+        setCanvasSize({ width: newWidth, height: Math.max(newHeight, 150) });
+      }
+    };
+
+    updateSize();
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, [width, height]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -30,53 +48,46 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     const context = canvas.getContext('2d');
     if (!context) return;
 
-    // Configuration du canvas (une seule fois)
-    if (!isInitialized) {
-      context.lineCap = 'round';
-      context.lineJoin = 'round';
-      context.lineWidth = 2;
-      context.strokeStyle = '#000000';
+    // Configuration du canvas
+    context.lineCap = 'round';
+    context.lineJoin = 'round';
+    context.lineWidth = 2;
+    context.strokeStyle = '#000000';
 
-      // Effacer le canvas
-      context.fillStyle = '#ffffff';
-      context.fillRect(0, 0, width, height);
-      setIsInitialized(true);
-    }
+    // Effacer le canvas
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, canvasSize.width, canvasSize.height);
 
     // Charger la signature initiale si elle existe
     if (initialSignature) {
-      console.log('Chargement de la signature initiale, longueur:', initialSignature.length);
       const img = new Image();
       img.onload = () => {
-        console.log('Signature initiale chargée et affichée avec succès');
-        // Effacer d'abord
         context.fillStyle = '#ffffff';
-        context.fillRect(0, 0, width, height);
-        // Puis dessiner la signature
-        context.drawImage(img, 0, 0, width, height);
+        context.fillRect(0, 0, canvasSize.width, canvasSize.height);
+        context.drawImage(img, 0, 0, canvasSize.width, canvasSize.height);
         setIsEmpty(false);
       };
-      img.onerror = (error) => {
-        console.error('Erreur lors du chargement de la signature initiale:', error);
+      img.onerror = () => {
         setIsEmpty(true);
       };
       img.src = initialSignature;
     } else {
-      console.log('Pas de signature initiale à charger');
-      if (isInitialized) {
-        setIsEmpty(true);
-      }
+      setIsEmpty(true);
     }
-  }, [width, height, initialSignature, isInitialized]);
+    
+    setIsInitialized(true);
+  }, [canvasSize.width, canvasSize.height, initialSignature]);
 
   const getMousePos = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
 
     const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
     return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
     };
   };
 
@@ -86,9 +97,11 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
 
     const rect = canvas.getBoundingClientRect();
     const touch = e.touches[0];
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
     return {
-      x: touch.clientX - rect.left,
-      y: touch.clientY - rect.top
+      x: (touch.clientX - rect.left) * scaleX,
+      y: (touch.clientY - rect.top) * scaleY
     };
   };
 
@@ -158,7 +171,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
     if (!context) return;
 
     context.fillStyle = '#ffffff';
-    context.fillRect(0, 0, width, height);
+    context.fillRect(0, 0, canvasSize.width, canvasSize.height);
     setIsEmpty(true);
   };
 
@@ -171,13 +184,14 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center space-y-4">
-      <div className="border-2 border-gray-300 rounded-lg p-4 bg-white">
+    <div ref={containerRef} className="flex flex-col items-center space-y-4 w-full max-w-full">
+      <div className="border-2 border-gray-300 rounded-lg p-2 sm:p-4 bg-white w-full max-w-full overflow-hidden">
         <canvas
           ref={canvasRef}
-          width={width}
-          height={height}
-          className="border border-gray-200 cursor-crosshair touch-none"
+          width={canvasSize.width}
+          height={canvasSize.height}
+          className="border border-gray-200 cursor-crosshair touch-none w-full"
+          style={{ maxWidth: '100%', height: 'auto' }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -186,36 +200,43 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         />
-        <p className="text-sm text-gray-500 mt-2 text-center">
+        <p className="text-xs sm:text-sm text-muted-foreground mt-2 text-center">
           Signez dans la zone ci-dessus
         </p>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap justify-center gap-2 sm:gap-3 w-full">
         <Button
           variant="outline"
+          size="sm"
           onClick={clearCanvas}
           disabled={isEmpty}
-          className="flex items-center"
+          className="flex items-center text-xs sm:text-sm"
         >
-          <RotateCcw className="h-4 w-4 mr-2" />
-          Effacer
+          <RotateCcw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+          <span className="hidden sm:inline">Effacer</span>
+          <span className="sm:hidden">Reset</span>
         </Button>
         
         <Button
           variant="outline"
+          size="sm"
           onClick={onCancel}
+          className="text-xs sm:text-sm"
         >
-          Annuler
+          <X className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:hidden" />
+          <span>Annuler</span>
         </Button>
 
         <Button
+          size="sm"
           onClick={saveSignature}
           disabled={isEmpty}
-          className="bg-green-600 hover:bg-green-700 text-white"
+          className="bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm"
         >
-          <Check className="h-4 w-4 mr-2" />
-          Valider ma signature
+          <Check className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+          <span className="hidden sm:inline">Valider ma signature</span>
+          <span className="sm:hidden">Valider</span>
         </Button>
       </div>
     </div>
