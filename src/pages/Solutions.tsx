@@ -108,7 +108,7 @@ const Solutions = () => {
                 <span className="text-white font-bold text-lg">N</span>
               </div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                NECTFORMA
+                NECTFY
               </h1>
             </Link>
             
@@ -150,7 +150,7 @@ const Solutions = () => {
             La Solution Teetche
           </h1>
           <p className="text-xl text-gray-600 leading-relaxed">
-            Une seule plateforme, des bénéfices multiples. NECTFORMA vous accompagne dans toutes les étapes 
+            Une seule plateforme, des bénéfices multiples. NECTFY vous accompagne dans toutes les étapes 
             de la gestion de vos formations, du planning à l'émargement en passant par le suivi pédagogique.
           </p>
         </div>
@@ -194,7 +194,7 @@ const Solutions = () => {
             Prêt à découvrir toutes nos solutions ?
           </h2>
           <p className="text-xl text-white/90 mb-10">
-            Testez gratuitement NECTFORMA pendant 14 jours
+            Testez gratuitement NECTFY pendant 14 jours
           </p>
           <Link 
             to="/auth" 
@@ -215,7 +215,7 @@ const Solutions = () => {
                 <span className="text-white font-bold text-lg">N</span>
               </div>
               <div>
-                <h3 className="text-xl font-bold">NECTFORMA</h3>
+                <h3 className="text-xl font-bold">NECTFY</h3>
                 <p className="text-gray-400 text-sm">© 2024 Tous droits réservés</p>
               </div>
             </div>

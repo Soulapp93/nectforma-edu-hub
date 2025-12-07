@@ -165,7 +165,7 @@ const Fonctionnalites = () => {
                 <span className="text-white font-bold text-lg">N</span>
               </div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                NECTFORMA
+                NECTFY
               </h1>
             </Link>
             
@@ -207,7 +207,7 @@ const Fonctionnalites = () => {
             Toutes les Fonctionnalités
           </h1>
           <p className="text-xl text-gray-600 leading-relaxed">
-            Découvrez l'ensemble des outils qui feront de NECTFORMA votre partenaire idéal 
+            Découvrez l'ensemble des outils qui feront de NECTFY votre partenaire idéal 
             pour la gestion de vos formations.
           </p>
         </div>
@@ -258,7 +258,7 @@ const Fonctionnalites = () => {
               Accessible partout, à tout moment
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              NECTFORMA est optimisé pour tous vos appareils : ordinateur, tablette et smartphone.
+              NECTFY est optimisé pour tous vos appareils : ordinateur, tablette et smartphone.
               Gérez vos formations où que vous soyez.
             </p>
           </div>
@@ -293,7 +293,7 @@ const Fonctionnalites = () => {
                 <span className="text-white font-bold text-lg">N</span>
               </div>
               <div>
-                <h3 className="text-xl font-bold">NECTFORMA</h3>
+                <h3 className="text-xl font-bold">NECTFY</h3>
                 <p className="text-gray-400 text-sm">© 2024 Tous droits réservés</p>
               </div>
             </div>

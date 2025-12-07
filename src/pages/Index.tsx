@@ -96,7 +96,7 @@ const Index = () => {
               </div>
               <div>
                 <h1 className="text-lg md:text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                  NECTFORMA
+                  NECTFY
                 </h1>
               </div>
             </div>
@@ -152,7 +152,7 @@ const Index = () => {
           </h1>
           
           <p className="text-base md:text-xl text-gray-600 mb-8 md:mb-10 max-w-3xl mx-auto leading-relaxed px-2">
-            NECTFORMA est la solution complète pour digitaliser et automatiser 
+            NECTFY est la solution complète pour digitaliser et automatiser 
             la gestion de vos formations. Gagnez du temps et concentrez-vous sur l'essentiel.
           </p>
           
@@ -281,7 +281,7 @@ const Index = () => {
               Pour qui ?
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              NECTFORMA s'adapte à tous les professionnels de la formation
+              NECTFY s'adapte à tous les professionnels de la formation
             </p>
           </div>
 
@@ -316,7 +316,7 @@ const Index = () => {
               to="/pourquoi-nous" 
               className="inline-flex items-center text-primary hover:text-primary/80 font-semibold text-lg group"
             >
-              Pourquoi choisir NECTFORMA ?
+              Pourquoi choisir NECTFY ?
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
@@ -330,7 +330,7 @@ const Index = () => {
             Prêt à transformer votre gestion de formation ?
           </h2>
           <p className="text-base md:text-xl text-white/90 mb-8 md:mb-10 px-2">
-            Rejoignez des centaines d'organismes qui font déjà confiance à NECTFORMA
+            Rejoignez des centaines d'organismes qui font déjà confiance à NECTFY
           </p>
           <Link 
             to="/create-establishment" 
@@ -354,7 +354,7 @@ const Index = () => {
                 <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-primary to-purple-600 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-sm md:text-lg">N</span>
                 </div>
-                <h3 className="text-xl md:text-2xl font-bold">NECTFORMA</h3>
+                <h3 className="text-xl md:text-2xl font-bold">NECTFY</h3>
               </div>
               <p className="text-gray-400 text-sm md:text-base max-w-md">
                 La plateforme de gestion complète pour digitaliser votre organisme de formation.
@@ -381,7 +381,7 @@ const Index = () => {
           
           <div className="border-t border-gray-800 pt-6 md:pt-8">
             <p className="text-gray-400 text-center text-xs md:text-sm">
-              © 2024 NECTFORMA. Tous droits réservés.
+              © 2024 NECTFY. Tous droits réservés.
             </p>
           </div>
         </div>

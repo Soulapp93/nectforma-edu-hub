@@ -59,10 +59,10 @@ const Auth = () => {
         <div className="max-w-md">
           <div className="flex items-center space-x-3 mb-8">
             <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-              <span className="text-purple-600 font-bold text-xl">NF</span>
+              <span className="text-purple-600 font-bold text-xl">N</span>
             </div>
             <div>
-              <h1 className="text-3xl font-bold">NECTFORMA</h1>
+              <h1 className="text-3xl font-bold">NECTFY</h1>
               <p className="text-purple-200">Plateforme de gestion éducative</p>
             </div>
           </div>
@@ -72,7 +72,7 @@ const Auth = () => {
           </h2>
           
           <p className="text-lg text-purple-100 mb-8">
-            Rejoignez des milliers d'établissements qui font confiance à NectForma 
+            Rejoignez des milliers d'établissements qui font confiance à NECTFY 
             pour digitaliser leur gestion pédagogique et administrative.
           </p>
           
@@ -104,9 +104,9 @@ const Auth = () => {
             {/* Mobile Logo */}
             <div className="lg:hidden flex items-center justify-center space-x-2 mb-6">
               <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">NF</span>
+                <span className="text-white font-bold text-lg">N</span>
               </div>
-              <span className="text-xl font-bold text-gray-900">NECTFORMA</span>
+              <span className="text-xl font-bold text-gray-900">NECTFY</span>
             </div>
 
             <div className="text-center mb-8">
@@ -114,7 +114,7 @@ const Auth = () => {
                 Connexion
               </h2>
               <p className="text-gray-600">
-                Connectez-vous à votre espace NectForma
+                Connectez-vous à votre espace NECTFY
               </p>
             </div>
 

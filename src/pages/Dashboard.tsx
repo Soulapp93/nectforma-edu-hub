@@ -87,7 +87,7 @@ const Dashboard = () => {
       {/* Header */}
       <div className="mb-6 sm:mb-8 lg:mb-10">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2 sm:mb-3">Tableau de bord</h1>
-        <p className="text-base sm:text-lg text-muted-foreground">Bienvenue sur votre espace de gestion NectForma</p>
+        <p className="text-base sm:text-lg text-muted-foreground">Bienvenue sur votre espace de gestion NECTFY</p>
       </div>
 
       {/* Filters */}

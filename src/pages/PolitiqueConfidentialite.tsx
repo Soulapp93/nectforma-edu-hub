@@ -14,7 +14,7 @@ const PolitiqueConfidentialite = () => {
                 <span className="text-white font-bold text-lg">N</span>
               </div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                NECTFORMA
+                NECTFY
               </h1>
             </Link>
             
@@ -46,7 +46,7 @@ const PolitiqueConfidentialite = () => {
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Introduction</h2>
             <p className="text-gray-700 leading-relaxed mb-4">
-              NECTFORMA (ci-après "nous", "notre" ou "la Société") s'engage à protéger la confidentialité 
+              NECTFY (ci-après "nous", "notre" ou "la Société") s'engage à protéger la confidentialité 
               et la sécurité des données personnelles de ses utilisateurs. La présente Politique de Confidentialité 
               explique comment nous collectons, utilisons, partageons et protégeons vos données personnelles 
               lorsque vous utilisez notre plateforme.
@@ -180,8 +180,8 @@ const PolitiqueConfidentialite = () => {
             </ul>
             <p className="text-gray-700 leading-relaxed mt-4">
               Pour exercer ces droits, contactez-nous à : 
-              <a href="mailto:privacy@nectforma.com" className="text-primary hover:underline ml-1">
-                privacy@nectforma.com
+              <a href="mailto:privacy@nectfy.com" className="text-primary hover:underline ml-1">
+                privacy@nectfy.com
               </a>
             </p>
           </section>
@@ -232,8 +232,8 @@ const PolitiqueConfidentialite = () => {
               vous pouvez nous contacter :
             </p>
             <p className="text-gray-700 leading-relaxed mt-4">
-              Email : <a href="mailto:privacy@nectforma.com" className="text-primary hover:underline">privacy@nectforma.com</a><br />
-              Adresse : NECTFORMA - Service Protection des Données
+              Email : <a href="mailto:privacy@nectfy.com" className="text-primary hover:underline">privacy@nectfy.com</a><br />
+              Adresse : NECTFY - Service Protection des Données
             </p>
           </section>
         </div>
@@ -248,7 +248,7 @@ const PolitiqueConfidentialite = () => {
                 <span className="text-white font-bold text-lg">N</span>
               </div>
               <div>
-                <h3 className="text-xl font-bold">NECTFORMA</h3>
+                <h3 className="text-xl font-bold">NECTFY</h3>
                 <p className="text-gray-400 text-sm">© 2024 Tous droits réservés</p>
               </div>
             </div>
