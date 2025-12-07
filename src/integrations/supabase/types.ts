@@ -1016,6 +1016,76 @@ export type Database = {
           },
         ]
       }
+      invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          created_by: string | null
+          email: string
+          establishment_id: string
+          expires_at: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          status: Database["public"]["Enums"]["invitation_status"]
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          email: string
+          establishment_id: string
+          expires_at: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          status?: Database["public"]["Enums"]["invitation_status"]
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          establishment_id?: string
+          expires_at?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          status?: Database["public"]["Enums"]["invitation_status"]
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "tutor_students_view"
+            referencedColumns: ["student_id"]
+          },
+          {
+            foreignKeyName: "invitations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitations_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_attachments: {
         Row: {
           content_type: string | null
@@ -2286,6 +2356,10 @@ export type Database = {
       }
     }
     Functions: {
+      accept_invitation: {
+        Args: { token_param: string; user_id_param: string }
+        Returns: boolean
+      }
       can_access_file: {
         Args: { _file_id: string; _user_id: string }
         Returns: boolean
@@ -2313,10 +2387,12 @@ export type Database = {
         }
         Returns: string
       }
+      expire_old_invitations: { Args: never; Returns: number }
       generate_attendance_qr_code: {
         Args: { attendance_sheet_id_param: string }
         Returns: string
       }
+      generate_invitation_token: { Args: never; Returns: string }
       generate_signature_token: { Args: never; Returns: string }
       get_attendance_stats: {
         Args: { sheet_id: string }
@@ -2365,6 +2441,20 @@ export type Database = {
         }
         Returns: undefined
       }
+      validate_invitation_token: {
+        Args: { token_param: string }
+        Returns: {
+          email: string
+          error_message: string
+          establishment_id: string
+          establishment_name: string
+          first_name: string
+          invitation_id: string
+          is_valid: boolean
+          last_name: string
+          role: Database["public"]["Enums"]["user_role"]
+        }[]
+      }
       validate_qr_code: {
         Args: { code_param: string }
         Returns: {
@@ -2401,6 +2491,7 @@ export type Database = {
       }
     }
     Enums: {
+      invitation_status: "pending" | "accepted" | "expired" | "cancelled"
       user_role: "Admin" | "Formateur" | "Étudiant" | "AdminPrincipal"
       user_status: "Actif" | "Inactif" | "En attente"
     }
@@ -2530,6 +2621,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      invitation_status: ["pending", "accepted", "expired", "cancelled"],
       user_role: ["Admin", "Formateur", "Étudiant", "AdminPrincipal"],
       user_status: ["Actif", "Inactif", "En attente"],
     },
