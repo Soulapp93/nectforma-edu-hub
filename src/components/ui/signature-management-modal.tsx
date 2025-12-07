@@ -75,38 +75,39 @@ const SignatureManagementModal: React.FC<SignatureManagementModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center">
-            <PenTool className="h-5 w-5 mr-2" />
-            {title}
+          <DialogTitle className="flex items-center text-sm sm:text-base">
+            <PenTool className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
+            <span className="truncate">{title}</span>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {mode === 'view' && (
             <div className="space-y-4">
               {currentSignature ? (
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Signature actuelle</CardTitle>
+                  <CardHeader className="pb-2 sm:pb-4">
+                    <CardTitle className="text-base sm:text-lg">Signature actuelle</CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="px-3 sm:px-6">
                     <div className="flex justify-center mb-4">
-                      <div className="border-2 border-gray-200 rounded-lg p-4 bg-white">
+                      <div className="border-2 border-gray-200 rounded-lg p-2 sm:p-4 bg-white w-full max-w-xs sm:max-w-md">
                         <img 
                           src={currentSignature} 
                           alt="Signature actuelle" 
-                          className="max-w-full h-auto"
-                          style={{ maxHeight: '150px' }}
+                          className="w-full h-auto object-contain"
+                          style={{ maxHeight: '120px' }}
                         />
                       </div>
                     </div>
-                    <div className="flex gap-2 justify-center">
+                    <div className="flex flex-col sm:flex-row gap-2 justify-center">
                       <Button
                         variant="outline"
                         onClick={() => setMode('create')}
-                        className="flex items-center"
+                        className="flex items-center justify-center text-sm"
+                        size="sm"
                       >
                         <Edit className="h-4 w-4 mr-2" />
                         Modifier
@@ -114,7 +115,8 @@ const SignatureManagementModal: React.FC<SignatureManagementModalProps> = ({
                       <Button
                         variant="outline"
                         onClick={() => fileInputRef.current?.click()}
-                        className="flex items-center"
+                        className="flex items-center justify-center text-sm"
+                        size="sm"
                       >
                         <Upload className="h-4 w-4 mr-2" />
                         Remplacer
@@ -123,7 +125,8 @@ const SignatureManagementModal: React.FC<SignatureManagementModalProps> = ({
                         variant="destructive"
                         onClick={handleDeleteSignature}
                         disabled={loading}
-                        className="flex items-center"
+                        className="flex items-center justify-center text-sm"
+                        size="sm"
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
                         Supprimer
@@ -133,29 +136,34 @@ const SignatureManagementModal: React.FC<SignatureManagementModalProps> = ({
                 </Card>
               ) : (
                 <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center py-8">
-                      <PenTool className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
+                    <div className="text-center py-4 sm:py-8">
+                      <PenTool className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-3 sm:mb-4" />
+                      <h3 className="text-base sm:text-lg font-medium text-foreground mb-2">
                         Aucune signature enregistrée
                       </h3>
-                      <p className="text-gray-600 mb-4">
+                      <p className="text-muted-foreground text-sm mb-4 px-2">
                         Enregistrez votre signature pour l'apposer automatiquement lors des validations.
                       </p>
-                      <div className="flex gap-2 justify-center">
+                      <div className="flex flex-col sm:flex-row gap-2 justify-center">
                         <Button
                           onClick={() => setMode('create')}
-                          className="bg-purple-600 hover:bg-purple-700 text-white"
+                          className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm"
+                          size="sm"
                         >
                           <PenTool className="h-4 w-4 mr-2" />
-                          Créer une signature
+                          <span className="sm:inline">Créer</span>
+                          <span className="hidden sm:inline ml-1">une signature</span>
                         </Button>
                         <Button
                           variant="outline"
                           onClick={() => fileInputRef.current?.click()}
+                          size="sm"
+                          className="text-sm"
                         >
                           <Upload className="h-4 w-4 mr-2" />
-                          Importer une image
+                          <span className="sm:inline">Importer</span>
+                          <span className="hidden sm:inline ml-1">une image</span>
                         </Button>
                       </div>
                     </div>
@@ -168,16 +176,18 @@ const SignatureManagementModal: React.FC<SignatureManagementModalProps> = ({
           {mode === 'create' && (
             <div className="space-y-4">
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Créer votre signature</CardTitle>
+                <CardHeader className="pb-2 sm:pb-4">
+                  <CardTitle className="text-base sm:text-lg">Créer votre signature</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <SignaturePad
-                    width={500}
-                    height={200}
-                    onSave={handleSaveSignature}
-                    onCancel={() => setMode('view')}
-                  />
+                <CardContent className="px-2 sm:px-6">
+                  <div className="w-full overflow-x-auto">
+                    <SignaturePad
+                      width={Math.min(500, window.innerWidth - 80)}
+                      height={180}
+                      onSave={handleSaveSignature}
+                      onCancel={() => setMode('view')}
+                    />
+                  </div>
                 </CardContent>
               </Card>
             </div>
