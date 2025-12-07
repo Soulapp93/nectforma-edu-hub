@@ -2430,6 +2430,7 @@ export type Database = {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
       }
+      is_message_recipient: { Args: { msg_id: string }; Returns: boolean }
       log_attendance_action: {
         Args: {
           action_type: string
