@@ -15,6 +15,8 @@ import { User, CreateUserData } from '@/services/userService';
 import SimplifiedUserModal from './SimplifiedUserModal';
 import UserDetailModal from './UserDetailModal';
 import ExcelImport from './ExcelImport';
+import ChangeRoleModal from './ChangeRoleModal';
+import SendEmailModal from './SendEmailModal';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,7 +38,8 @@ const EnhancedUsersList: React.FC = () => {
   const [preselectedRole, setPreselectedRole] = useState<'Admin' | 'Formateur' | 'Étudiant' | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [bulkAction, setBulkAction] = useState<string>('');
-
+  const [isChangeRoleModalOpen, setIsChangeRoleModalOpen] = useState(false);
+  const [isSendEmailModalOpen, setIsSendEmailModalOpen] = useState(false);
   const filteredUsers = users.filter(user => {
     const matchesSearch = 
       user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -130,16 +133,25 @@ const EnhancedUsersList: React.FC = () => {
 
   const handleResetPassword = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth`,
+      const redirectUrl = `${window.location.origin}/reset-password`;
+      
+      const { data, error } = await supabase.functions.invoke('send-password-reset', {
+        body: { email, redirectUrl }
       });
       
       if (error) throw error;
       
-      toast.success(`Lien de réinitialisation envoyé à ${email}`);
+      toast.success(`Lien de réinitialisation NECTFY envoyé à ${email}`);
     } catch (error) {
       console.error('Erreur lors de l\'envoi du lien:', error);
       toast.error('Erreur lors de l\'envoi du lien de réinitialisation');
+    }
+  };
+
+  const handleChangeRole = async (userId: string, newRole: string) => {
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      await updateUser(userId, { ...user, role: newRole as any });
     }
   };
 
@@ -190,12 +202,12 @@ const EnhancedUsersList: React.FC = () => {
         break;
       
       case 'change-role':
-        toast.info('Fonctionnalité de modification de rôle en cours de développement');
-        break;
+        setIsChangeRoleModalOpen(true);
+        return; // Don't cancel selection yet
       
       case 'send-email':
-        toast.info('Fonctionnalité d\'envoi d\'email en cours de développement');
-        break;
+        setIsSendEmailModalOpen(true);
+        return; // Don't cancel selection yet
       
       case 'reset-password':
         for (const user of selectedUserData) {
@@ -658,6 +670,35 @@ const EnhancedUsersList: React.FC = () => {
           preselectedRole="Étudiant"
         />
       )}
+
+      <ChangeRoleModal
+        isOpen={isChangeRoleModalOpen}
+        onClose={() => {
+          setIsChangeRoleModalOpen(false);
+          handleCancelSelection();
+        }}
+        selectedUsers={users.filter(u => selectedUsers.includes(u.id!)).map(u => ({
+          id: u.id!,
+          email: u.email,
+          first_name: u.first_name,
+          last_name: u.last_name,
+          role: u.role
+        }))}
+        onSave={handleChangeRole}
+      />
+
+      <SendEmailModal
+        isOpen={isSendEmailModalOpen}
+        onClose={() => {
+          setIsSendEmailModalOpen(false);
+          handleCancelSelection();
+        }}
+        recipients={users.filter(u => selectedUsers.includes(u.id!)).map(u => ({
+          email: u.email,
+          firstName: u.first_name,
+          lastName: u.last_name
+        }))}
+      />
     </div>
   );
 };
