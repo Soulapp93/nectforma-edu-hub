@@ -216,7 +216,7 @@ const CreateEstablishment = () => {
                 <span className="text-white font-bold text-lg">N</span>
               </div>
               <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                NECTFORMA
+                NECTFY
               </h1>
             </Link>
             <Link to="/auth" className="text-sm text-muted-foreground hover:text-primary transition-colors">

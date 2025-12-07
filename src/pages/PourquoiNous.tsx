@@ -19,7 +19,7 @@ const PourquoiNous = () => {
         'Tarifs adaptés aux indépendants'
       ],
       testimonial: {
-        text: 'NECTFORMA m\'a permis de me concentrer sur l\'essentiel : former. Plus de temps perdu en administratif !',
+        text: 'NECTFY m\'a permis de me concentrer sur l\'essentiel : former. Plus de temps perdu en administratif !',
         author: 'Sophie M., Formatrice indépendante'
       }
     },
@@ -35,7 +35,7 @@ const PourquoiNous = () => {
         'Tableaux de bord détaillés'
       ],
       testimonial: {
-        text: 'Depuis NECTFORMA, nous avons divisé par 3 le temps passé sur l\'administratif. Un vrai game-changer !',
+        text: 'Depuis NECTFY, nous avons divisé par 3 le temps passé sur l\'administratif. Un vrai game-changer !',
         author: 'Marc D., Directeur de centre de formation'
       }
     },
@@ -101,7 +101,7 @@ const PourquoiNous = () => {
                 <span className="text-white font-bold text-lg">N</span>
               </div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                NECTFORMA
+                NECTFY
               </h1>
             </Link>
             
@@ -143,7 +143,7 @@ const PourquoiNous = () => {
             Pour Qui ?
           </h1>
           <p className="text-xl text-gray-600 leading-relaxed">
-            NECTFORMA s'adapte à tous les professionnels de la formation, 
+            NECTFY s'adapte à tous les professionnels de la formation, 
             quelle que soit la taille de votre structure.
           </p>
         </div>
@@ -203,7 +203,7 @@ const PourquoiNous = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Pourquoi Choisir NECTFORMA ?
+              Pourquoi Choisir NECTFY ?
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Plus qu'un simple logiciel, un véritable partenaire pour votre réussite
@@ -261,7 +261,7 @@ const PourquoiNous = () => {
             Rejoignez des centaines de professionnels satisfaits
           </h2>
           <p className="text-xl text-white/90 mb-10">
-            Testez NECTFORMA gratuitement pendant 14 jours, sans engagement
+            Testez NECTFY gratuitement pendant 14 jours, sans engagement
           </p>
           <Link 
             to="/auth" 
@@ -285,7 +285,7 @@ const PourquoiNous = () => {
                 <span className="text-white font-bold text-lg">N</span>
               </div>
               <div>
-                <h3 className="text-xl font-bold">NECTFORMA</h3>
+                <h3 className="text-xl font-bold">NECTFY</h3>
                 <p className="text-gray-400 text-sm">© 2024 Tous droits réservés</p>
               </div>
             </div>
