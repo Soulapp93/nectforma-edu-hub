@@ -7,7 +7,7 @@ export interface User {
   first_name: string;
   last_name: string;
   email: string;
-  role: 'Admin' | 'Formateur' | 'Étudiant';
+  role: 'AdminPrincipal' | 'Admin' | 'Formateur' | 'Étudiant';
   status: 'Actif' | 'Inactif' | 'En attente';
   phone?: string;
   created_at: string;
@@ -21,7 +21,7 @@ export interface CreateUserData {
   first_name: string;
   last_name: string;
   email: string;
-  role: 'Admin' | 'Formateur' | 'Étudiant';
+  role: 'AdminPrincipal' | 'Admin' | 'Formateur' | 'Étudiant';
   status: 'Actif' | 'Inactif' | 'En attente';
   phone?: string;
   profile_photo_url?: string;

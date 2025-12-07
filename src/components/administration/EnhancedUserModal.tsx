@@ -25,7 +25,7 @@ const EnhancedUserModal: React.FC<EnhancedUserModalProps> = ({
     last_name: '',
     email: '',
     phone: '',
-    role: 'Étudiant' as 'Admin' | 'Formateur' | 'Étudiant',
+    role: 'Étudiant' as 'AdminPrincipal' | 'Admin' | 'Formateur' | 'Étudiant',
     status: 'En attente' as 'Actif' | 'Inactif' | 'En attente',
     address: '',
     birth_date: '',
