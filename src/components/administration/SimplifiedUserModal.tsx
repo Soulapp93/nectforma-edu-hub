@@ -20,7 +20,7 @@ interface SimplifiedUserModalProps {
   }) => Promise<UserType>;
   user?: UserType | null;
   mode: 'create' | 'edit';
-  preselectedRole?: 'Admin' | 'Formateur' | 'Étudiant' | null;
+  preselectedRole?: 'AdminPrincipal' | 'Admin' | 'Formateur' | 'Étudiant' | null;
 }
 
 const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
@@ -35,7 +35,7 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
     first_name: '',
     last_name: '',
     email: '',
-    role: 'Étudiant' as 'Admin' | 'Formateur' | 'Étudiant',
+    role: 'Étudiant' as 'AdminPrincipal' | 'Admin' | 'Formateur' | 'Étudiant',
     status: 'Actif' as 'Actif' | 'Inactif' | 'En attente'
   });
 

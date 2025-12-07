@@ -4,14 +4,12 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-// useIsMobile removed - no longer needed
 import ErrorBoundary from '@/components/ErrorBoundary';
 import Sidebar from './components/Sidebar';
-// BottomNavigation removed - using only sidebar
-// MobileHeader removed - using unified header with SidebarTrigger
 import NotificationBell from './components/NotificationBell';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
+import AdminPrincipalRoute from './components/AdminPrincipalRoute';
 import Dashboard from './pages/Dashboard';
 import Administration from './pages/Administration';
 import Formations from './pages/Formations';
@@ -77,12 +75,19 @@ const AppContent = () => {
     );
   }
 
-  const isIndexPage = location.pathname === '/';
+  // Pages publiques (sans authentification)
+  const publicPages = ['/', '/solutions', '/fonctionnalites', '/pourquoi-nous', '/cgu', '/politique-confidentialite'];
+  const isPublicPage = publicPages.includes(location.pathname);
   
-  if (isIndexPage) {
+  if (isPublicPage) {
     return (
       <Routes>
         <Route path="/" element={<Index />} />
+        <Route path="/solutions" element={<Solutions />} />
+        <Route path="/fonctionnalites" element={<Fonctionnalites />} />
+        <Route path="/pourquoi-nous" element={<PourquoiNous />} />
+        <Route path="/cgu" element={<CGU />} />
+        <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
       </Routes>
     );
   }
@@ -119,13 +124,8 @@ const AppContent = () => {
               <Route path="/groupes" element={<ProtectedRoute><Groupes /></ProtectedRoute>} />
               <Route path="/emargement" element={<ProtectedRoute><Emargement /></ProtectedRoute>} />
               <Route path="/emargement-qr" element={<ProtectedRoute><EmargementQR /></ProtectedRoute>} />
-              <Route path="/gestion-etablissement" element={<ProtectedRoute><GestionEtablissement /></ProtectedRoute>} />
+              <Route path="/gestion-etablissement" element={<ProtectedRoute><AdminPrincipalRoute><GestionEtablissement /></AdminPrincipalRoute></ProtectedRoute>} />
               <Route path="/compte" element={<ProtectedRoute><Compte /></ProtectedRoute>} />
-              <Route path="/solutions" element={<ProtectedRoute><Solutions /></ProtectedRoute>} />
-              <Route path="/fonctionnalites" element={<ProtectedRoute><Fonctionnalites /></ProtectedRoute>} />
-              <Route path="/pourquoi-nous" element={<ProtectedRoute><PourquoiNous /></ProtectedRoute>} />
-              <Route path="/cgu" element={<ProtectedRoute><CGU /></ProtectedRoute>} />
-              <Route path="/politique-confidentialite" element={<ProtectedRoute><PolitiqueConfidentialite /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
