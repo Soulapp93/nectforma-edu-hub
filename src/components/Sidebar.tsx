@@ -174,7 +174,6 @@ const Sidebar = () => {
               {!collapsed && (
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-primary-foreground truncate">{establishment.name}</p>
-                  <p className="text-xs text-primary-foreground/60 truncate">{establishment.type}</p>
                 </div>
               )}
             </div>

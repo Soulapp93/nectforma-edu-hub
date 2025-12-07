@@ -103,26 +103,24 @@ const GestionEtablissement = () => {
       const file = files[0];
       
       try {
-        // Upload to Supabase storage
-        const fileName = `${establishmentId}/${Date.now()}_${file.name}`;
+        // Upload to Supabase storage - use avatars bucket which exists
+        const fileName = `establishments/${establishmentId}/${Date.now()}_${file.name}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('establishment-logos')
+          .from('avatars')
           .upload(fileName, file, { upsert: true });
 
         if (uploadError) {
-          // Si le bucket n'existe pas, créer une URL temporaire
-          const logoUrl = URL.createObjectURL(file);
-          setEstablishmentData(prev => ({ ...prev, logoUrl }));
-          toast.info('Logo mis à jour localement');
+          console.error('Upload error:', uploadError);
+          toast.error('Erreur lors de l\'upload du logo');
           return;
         }
 
         // Get public URL
         const { data: { publicUrl } } = supabase.storage
-          .from('establishment-logos')
+          .from('avatars')
           .getPublicUrl(uploadData.path);
 
-        // Update establishment with logo URL
+        // Update establishment with logo URL immediately
         await establishmentService.updateEstablishment(establishmentId, {
           logo_url: publicUrl
         });
@@ -131,9 +129,7 @@ const GestionEtablissement = () => {
         toast.success('Logo mis à jour avec succès');
       } catch (error) {
         console.error('Erreur upload logo:', error);
-        // Fallback to local preview
-        const logoUrl = URL.createObjectURL(file);
-        setEstablishmentData(prev => ({ ...prev, logoUrl }));
+        toast.error('Erreur lors de l\'upload du logo');
       }
     }
   };
