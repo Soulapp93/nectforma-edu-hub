@@ -30,6 +30,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { useCurrentUser, useUserWithRelations } from '@/hooks/useCurrentUser';
+import { useEstablishment } from '@/hooks/useEstablishment';
 import { supabase } from '@/integrations/supabase/client';
 
 interface NavigationItem {
@@ -44,6 +45,7 @@ const Sidebar = () => {
   const collapsed = state === 'collapsed';
   const { userRole, userId } = useCurrentUser();
   const { userInfo, relationInfo } = useUserWithRelations();
+  const { establishment } = useEstablishment();
   const location = useLocation();
   const [adminExpanded, setAdminExpanded] = useState(location.pathname === '/administration');
 
@@ -142,13 +144,39 @@ const Sidebar = () => {
       style={{ backgroundColor: 'hsl(var(--nect-purple-from))' }}
     >
       <SidebarHeader className="p-6">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-primary-foreground rounded-lg flex items-center justify-center flex-shrink-0">
-            <span className="text-primary font-bold text-lg">N</span>
+        <div className="flex flex-col gap-4">
+          {/* NECTFY Logo */}
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-primary-foreground rounded-lg flex items-center justify-center flex-shrink-0">
+              <span className="text-primary font-bold text-lg">N</span>
+            </div>
+            {!collapsed && (
+              <div>
+                <h1 className="text-xl font-bold text-primary-foreground">NECTFY</h1>
+              </div>
+            )}
           </div>
-          {!collapsed && (
-            <div>
-              <h1 className="text-xl font-bold text-primary-foreground">NECTFY</h1>
+          
+          {/* Establishment Logo and Name */}
+          {establishment && (
+            <div className={`flex items-center ${collapsed ? 'justify-center' : 'space-x-3'} pt-2 border-t border-primary-foreground/20`}>
+              {establishment.logo_url ? (
+                <img 
+                  src={establishment.logo_url} 
+                  alt={establishment.name}
+                  className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-white"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-primary-foreground/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Building className="w-5 h-5 text-primary-foreground" />
+                </div>
+              )}
+              {!collapsed && (
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-primary-foreground truncate">{establishment.name}</p>
+                  <p className="text-xs text-primary-foreground/60 truncate">{establishment.type}</p>
+                </div>
+              )}
             </div>
           )}
         </div>
