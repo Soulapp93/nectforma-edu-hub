@@ -341,86 +341,98 @@ const EnhancedUsersList: React.FC = () => {
       )}
 
       {/* En-tête */}
-      <div className="p-6 border-b border-border">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="p-3 sm:p-4 lg:p-6 border-b border-border">
+        <div className="flex flex-col gap-3 sm:gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-foreground">
+            <h2 className="text-lg sm:text-xl font-semibold text-foreground">
               Gestion des utilisateurs
             </h2>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
               {filteredUsers.length} utilisateur{filteredUsers.length > 1 ? 's' : ''} trouvé{filteredUsers.length > 1 ? 's' : ''}
             </p>
           </div>
           
-          <div className="flex flex-wrap gap-3">
+          {/* Action buttons - responsive grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap gap-2">
             <Button
               onClick={exportUsers}
               variant="outline"
-              className="flex items-center gap-2"
+              size="sm"
+              className="flex items-center justify-center gap-1.5 text-xs sm:text-sm"
             >
-              <Download className="h-4 w-4" />
-              Exporter
+              <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span>Exporter</span>
             </Button>
             <Button
               onClick={() => setIsInstructorExcelImportOpen(true)}
               variant="outline"
-              className="flex items-center gap-2"
+              size="sm"
+              className="flex items-center justify-center gap-1.5 text-xs sm:text-sm"
             >
-              <Upload className="h-4 w-4" />
-              Importer Formateurs
+              <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Importer Formateurs</span>
+              <span className="sm:hidden">Form.</span>
             </Button>
             <Button
               onClick={() => setIsStudentExcelImportOpen(true)}
               variant="success"
-              className="flex items-center gap-2"
+              size="sm"
+              className="flex items-center justify-center gap-1.5 text-xs sm:text-sm"
             >
-              <Upload className="h-4 w-4" />
-              Importer Étudiants
+              <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Importer Étudiants</span>
+              <span className="sm:hidden">Étud.</span>
             </Button>
             <Button
               onClick={handleCreateAdmin}
               variant="elegant"
-              className="flex items-center gap-2"
+              size="sm"
+              className="flex items-center justify-center gap-1.5 text-xs sm:text-sm"
             >
-              <Plus className="h-4 w-4" />
-              Ajouter un Administrateur
+              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Ajouter Admin</span>
+              <span className="sm:hidden">Admin</span>
             </Button>
             <Button
               onClick={handleCreateInstructor}
               variant="info"
-              className="flex items-center gap-2"
+              size="sm"
+              className="flex items-center justify-center gap-1.5 text-xs sm:text-sm"
             >
-              <Plus className="h-4 w-4" />
-              Ajouter un Formateur
+              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Ajouter Formateur</span>
+              <span className="sm:hidden">Form.</span>
             </Button>
             <Button
               onClick={handleCreateStudent}
               variant="premium"
-              className="flex items-center gap-2"
+              size="sm"
+              className="flex items-center justify-center gap-1.5 text-xs sm:text-sm"
             >
-              <Plus className="h-4 w-4" />
-              Ajouter un Étudiant
+              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Ajouter Étudiant</span>
+              <span className="sm:hidden">Étud.</span>
             </Button>
           </div>
         </div>
 
         {/* Filtres */}
-        <div className="flex flex-col lg:flex-row gap-4 mt-6">
-          <div className="relative flex-1">
+        <div className="flex flex-col gap-3 mt-4 sm:mt-6">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Rechercher par nom ou email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 text-sm"
             />
           </div>
           
-          <div className="flex gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
             <select
               value={selectedRole}
               onChange={(e) => setSelectedRole(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="flex h-9 sm:h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <option value="">Tous les rôles</option>
               <option value="Admin">Administrateur</option>
@@ -431,7 +443,7 @@ const EnhancedUsersList: React.FC = () => {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="flex h-9 sm:h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <option value="">Tous les statuts</option>
               <option value="Actif">Actif</option>
