@@ -16,7 +16,8 @@ import SimplifiedUserModal from './SimplifiedUserModal';
 import UserDetailModal from './UserDetailModal';
 import ExcelImport from './ExcelImport';
 import ChangeRoleModal from './ChangeRoleModal';
-import SendEmailModal from './SendEmailModal';
+import SendMessageModal from './SendMessageModal';
+import ExportUsersModal from './ExportUsersModal';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,7 +40,8 @@ const EnhancedUsersList: React.FC = () => {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [bulkAction, setBulkAction] = useState<string>('');
   const [isChangeRoleModalOpen, setIsChangeRoleModalOpen] = useState(false);
-  const [isSendEmailModalOpen, setIsSendEmailModalOpen] = useState(false);
+  const [isSendMessageModalOpen, setIsSendMessageModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const filteredUsers = users.filter(user => {
     const matchesSearch = 
       user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -206,7 +208,7 @@ const EnhancedUsersList: React.FC = () => {
         return; // Don't cancel selection yet
       
       case 'send-email':
-        setIsSendEmailModalOpen(true);
+        setIsSendMessageModalOpen(true);
         return; // Don't cancel selection yet
       
       case 'reset-password':
@@ -217,31 +219,8 @@ const EnhancedUsersList: React.FC = () => {
         break;
       
       case 'export':
-        const exportData = selectedUserData.map(user => {
-          const userFormations = getUserFormations(user.id!);
-          const formationsText = userFormations.map(assignment => 
-            `${assignment.formation.title} (${assignment.formation.level})`
-          ).join(', ');
-
-          return {
-            'Prénom': user.first_name,
-            'Nom': user.last_name,
-            'Email': user.email,
-            'Rôle': user.role,
-            'Formations': formationsText,
-            'Statut': user.status,
-            'Date de création': user.created_at ? new Date(user.created_at).toLocaleDateString('fr-FR') : ''
-          };
-        });
-
-        const ws = XLSX.utils.json_to_sheet(exportData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Utilisateurs sélectionnés');
-        
-        const filename = `selection_utilisateurs_${new Date().toISOString().split('T')[0]}.xlsx`;
-        XLSX.writeFile(wb, filename);
-        toast.success('Export réalisé avec succès');
-        break;
+        setIsExportModalOpen(true);
+        return; // Don't cancel selection yet
       
       case 'delete':
         if (confirm(`Êtes-vous sûr de vouloir supprimer ${selectedUsers.length} utilisateur(s) ?`)) {
@@ -687,17 +666,43 @@ const EnhancedUsersList: React.FC = () => {
         onSave={handleChangeRole}
       />
 
-      <SendEmailModal
-        isOpen={isSendEmailModalOpen}
+      <SendMessageModal
+        isOpen={isSendMessageModalOpen}
         onClose={() => {
-          setIsSendEmailModalOpen(false);
+          setIsSendMessageModalOpen(false);
           handleCancelSelection();
         }}
         recipients={users.filter(u => selectedUsers.includes(u.id!)).map(u => ({
+          id: u.id!,
           email: u.email,
           firstName: u.first_name,
           lastName: u.last_name
         }))}
+      />
+
+      <ExportUsersModal
+        isOpen={isExportModalOpen}
+        onClose={() => {
+          setIsExportModalOpen(false);
+          handleCancelSelection();
+        }}
+        users={users.filter(u => selectedUsers.includes(u.id!)).map(u => {
+          const userFormations = getUserFormations(u.id!);
+          const formationsText = userFormations.map(assignment => 
+            `${assignment.formation.title} (${assignment.formation.level})`
+          ).join(', ');
+          
+          return {
+            id: u.id!,
+            first_name: u.first_name,
+            last_name: u.last_name,
+            email: u.email,
+            role: u.role,
+            status: u.status,
+            created_at: u.created_at,
+            formations: formationsText
+          };
+        })}
       />
     </div>
   );
