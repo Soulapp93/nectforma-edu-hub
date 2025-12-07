@@ -103,8 +103,14 @@ const GestionEtablissement = () => {
       const file = files[0];
       
       try {
+        // Sanitize filename - remove special characters and accents
+        const sanitizedName = file.name
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '') // Remove accents
+          .replace(/[^a-zA-Z0-9.-]/g, '_'); // Replace special chars with underscore
+        
         // Upload to Supabase storage - use avatars bucket which exists
-        const fileName = `establishments/${establishmentId}/${Date.now()}_${file.name}`;
+        const fileName = `establishments/${establishmentId}/${Date.now()}_${sanitizedName}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('avatars')
           .upload(fileName, file, { upsert: true });
@@ -126,7 +132,7 @@ const GestionEtablissement = () => {
         });
 
         setEstablishmentData(prev => ({ ...prev, logoUrl: publicUrl }));
-        toast.success('Logo mis à jour avec succès');
+        toast.success('Logo mis à jour avec succès - Rechargez la page pour voir le logo dans la sidebar');
       } catch (error) {
         console.error('Erreur upload logo:', error);
         toast.error('Erreur lors de l\'upload du logo');
