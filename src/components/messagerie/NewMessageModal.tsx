@@ -178,26 +178,26 @@ const NewMessageModal = ({ isOpen, onClose }: NewMessageModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
         <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
+          <DialogTitle className="flex items-center space-x-2 text-base sm:text-lg">
             <span>Nouveau message</span>
           </DialogTitle>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="individual" className="flex items-center space-x-2">
-              <User className="h-4 w-4" />
-              <span>Message individuel</span>
+          <TabsList className="flex flex-col sm:grid sm:grid-cols-3 w-full h-auto gap-1 p-1">
+            <TabsTrigger value="individual" className="flex items-center justify-center gap-2 w-full text-xs sm:text-sm py-2">
+              <User className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+              <span className="truncate">Individuel</span>
             </TabsTrigger>
-            <TabsTrigger value="groups" className="flex items-center space-x-2">
-              <Users className="h-4 w-4" />
-              <span>Groupes (Formations)</span>
+            <TabsTrigger value="groups" className="flex items-center justify-center gap-2 w-full text-xs sm:text-sm py-2">
+              <Users className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+              <span className="truncate">Formations</span>
             </TabsTrigger>
-            <TabsTrigger value="instructors" className="flex items-center space-x-2">
-              <Users className="h-4 w-4" />
-              <span>Formateurs</span>
+            <TabsTrigger value="instructors" className="flex items-center justify-center gap-2 w-full text-xs sm:text-sm py-2">
+              <Users className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+              <span className="truncate">Formateurs</span>
             </TabsTrigger>
           </TabsList>
 
@@ -452,22 +452,25 @@ const NewMessageModal = ({ isOpen, onClose }: NewMessageModalProps) => {
           </div>
         </div>
 
-        <div className="flex justify-end space-x-2 mt-6 pt-4 border-t">
-          <Button variant="outline" onClick={handleClose} disabled={sending}>
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 mt-6 pt-4 border-t sticky bottom-0 bg-background pb-2">
+          <Button variant="outline" onClick={handleClose} disabled={sending} size="sm" className="w-full sm:w-auto">
             Annuler
           </Button>
           <Button 
             variant="outline" 
             onClick={handleSaveDraft} 
             disabled={sending}
-            className="text-primary border-primary hover:bg-primary hover:text-primary-foreground"
+            size="sm"
+            className="text-primary border-primary hover:bg-primary hover:text-primary-foreground w-full sm:w-auto"
           >
-            Enregistrer brouillon
+            <span className="sm:hidden">Brouillon</span>
+            <span className="hidden sm:inline">Enregistrer brouillon</span>
           </Button>
           <Button 
             onClick={() => handleSend(false)} 
             disabled={sending}
-            className="bg-primary hover:bg-primary/90"
+            size="sm"
+            className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
           >
             {sending ? 'Envoi...' : 'Envoyer'}
           </Button>
