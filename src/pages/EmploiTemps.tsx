@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { format, addWeeks, subWeeks, addMonths, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Users, Calendar, GraduationCap, PanelLeftClose, PanelLeft } from 'lucide-react';
-import { useSidebar } from '@/components/ui/sidebar';
+import { Users, Calendar, GraduationCap, ChevronUp, ChevronDown } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Button } from '@/components/ui/button';
 import { navigateWeek, getWeekInfo, getWeekDays } from '@/utils/calendarUtils';
 import { useToast } from '@/hooks/use-toast';
 import { EventDetailsModal } from '@/components/schedule/EventDetailsModal';
@@ -50,8 +51,8 @@ interface ScheduleSlot {
 type ViewMode = 'day' | 'week' | 'month' | 'list';
 
 const EmploiTemps = () => {
-  const { state, toggleSidebar } = useSidebar();
   const { userRole } = useCurrentUser();
+  const [isWeekNavigationOpen, setIsWeekNavigationOpen] = useState(true);
   const isInstructor = userRole === 'Formateur' || userRole === 'Tuteur';
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('week');
@@ -437,21 +438,6 @@ const EmploiTemps = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
-      {/* Bouton de rabattement de la sidebar */}
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border px-3 py-2">
-        <button
-          onClick={toggleSidebar}
-          className="p-2 rounded-lg hover:bg-muted transition-colors"
-          title={state === 'collapsed' ? 'Ouvrir le menu' : 'Fermer le menu'}
-        >
-          {state === 'collapsed' ? (
-            <PanelLeft className="h-5 w-5 text-muted-foreground" />
-          ) : (
-            <PanelLeftClose className="h-5 w-5 text-muted-foreground" />
-          )}
-        </button>
-      </div>
-
       <ScheduleViewHeader
         currentDate={currentDate}
         weekInfo={weekInfo}
@@ -499,19 +485,34 @@ const EmploiTemps = () => {
           <ViewModeSelector viewMode={viewMode} onViewModeChange={setViewMode} />
         </div>
 
-        <div className="mt-6">
-          <WeekNavigation
-            selectedDate={currentDate}
-            onDateChange={setCurrentDate}
-            onWeekSelect={(weekStartDate) => {
-              setCurrentDate(weekStartDate);
-              if (viewMode !== 'week') {
-                setViewMode('week');
-              }
-            }}
-            className="bg-background/95 backdrop-blur-sm border border-border rounded-xl"
-          />
-        </div>
+        {/* Barre de navigation par semaine - Collapsible */}
+        <Collapsible open={isWeekNavigationOpen} onOpenChange={setIsWeekNavigationOpen} className="mt-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium text-muted-foreground">Navigation par semaines</h3>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                {isWeekNavigationOpen ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent>
+            <WeekNavigation
+              selectedDate={currentDate}
+              onDateChange={setCurrentDate}
+              onWeekSelect={(weekStartDate) => {
+                setCurrentDate(weekStartDate);
+                if (viewMode !== 'week') {
+                  setViewMode('week');
+                }
+              }}
+              className="bg-background/95 backdrop-blur-sm border border-border rounded-xl"
+            />
+          </CollapsibleContent>
+        </Collapsible>
 
         {/* Important: pour les formateurs/tuteurs, on rend toujours la vue calendrier même sans cours */}
         {hasNoEvents && !isInstructor && viewMode !== 'week' ? (
