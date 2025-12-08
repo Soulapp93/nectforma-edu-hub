@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { format, addWeeks, subWeeks, addMonths, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Users, Calendar, GraduationCap } from 'lucide-react';
+import { Users, Calendar, GraduationCap, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { useSidebar } from '@/components/ui/sidebar';
 import { navigateWeek, getWeekInfo, getWeekDays } from '@/utils/calendarUtils';
 import { useToast } from '@/hooks/use-toast';
 import { EventDetailsModal } from '@/components/schedule/EventDetailsModal';
@@ -49,6 +50,7 @@ interface ScheduleSlot {
 type ViewMode = 'day' | 'week' | 'month' | 'list';
 
 const EmploiTemps = () => {
+  const { state, toggleSidebar } = useSidebar();
   const { userRole } = useCurrentUser();
   const isInstructor = userRole === 'Formateur' || userRole === 'Tuteur';
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -435,6 +437,21 @@ const EmploiTemps = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
+      {/* Bouton de rabattement de la sidebar */}
+      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border px-3 py-2">
+        <button
+          onClick={toggleSidebar}
+          className="p-2 rounded-lg hover:bg-muted transition-colors"
+          title={state === 'collapsed' ? 'Ouvrir le menu' : 'Fermer le menu'}
+        >
+          {state === 'collapsed' ? (
+            <PanelLeft className="h-5 w-5 text-muted-foreground" />
+          ) : (
+            <PanelLeftClose className="h-5 w-5 text-muted-foreground" />
+          )}
+        </button>
+      </div>
+
       <ScheduleViewHeader
         currentDate={currentDate}
         weekInfo={weekInfo}
