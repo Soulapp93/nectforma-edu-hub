@@ -1,12 +1,57 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Shield, Users, GraduationCap, UserCheck, Briefcase } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+// Comptes de démo pour les tests
+const DEMO_ACCOUNTS = [
+  { 
+    role: 'Admin Principal', 
+    email: 'admin.principal@demo.nectfy.fr', 
+    password: 'Demo123!',
+    icon: Shield,
+    color: 'text-purple-600',
+    borderColor: 'border-purple-200 hover:border-purple-400 hover:bg-purple-50'
+  },
+  { 
+    role: 'Administrateur', 
+    email: 'admin@demo.nectfy.fr', 
+    password: 'Demo123!',
+    icon: Users,
+    color: 'text-blue-600',
+    borderColor: 'border-blue-200 hover:border-blue-400 hover:bg-blue-50'
+  },
+  { 
+    role: 'Formateur', 
+    email: 'formateur@demo.nectfy.fr', 
+    password: 'Demo123!',
+    icon: Briefcase,
+    color: 'text-emerald-600',
+    borderColor: 'border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50'
+  },
+  { 
+    role: 'Étudiant', 
+    email: 'etudiant@demo.nectfy.fr', 
+    password: 'Demo123!',
+    icon: GraduationCap,
+    color: 'text-amber-600',
+    borderColor: 'border-amber-200 hover:border-amber-400 hover:bg-amber-50'
+  },
+  { 
+    role: 'Tuteur', 
+    email: 'tuteur@demo.nectfy.fr', 
+    password: 'Demo123!',
+    icon: UserCheck,
+    color: 'text-rose-600',
+    borderColor: 'border-rose-200 hover:border-rose-400 hover:bg-rose-50'
+  },
+];
 
 const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingDemo, setLoadingDemo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: '',
@@ -44,6 +89,33 @@ const Auth = () => {
       setError('Erreur lors de la connexion. Veuillez réessayer.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async (email: string, password: string, role: string) => {
+    setLoadingDemo(role);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        toast.error(`Compte démo ${role} non disponible. Contactez l'administrateur.`);
+        setLoadingDemo(null);
+        return;
+      }
+
+      if (data.user) {
+        toast.success(`Connexion réussie en tant que ${role} !`);
+        window.location.href = '/dashboard';
+      }
+    } catch (err: any) {
+      toast.error('Erreur lors de la connexion démo');
+    } finally {
+      setLoadingDemo(null);
     }
   };
 
@@ -98,7 +170,7 @@ const Auth = () => {
       </div>
 
       {/* Right side - Form */}
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 overflow-y-auto">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
             {/* Mobile Logo */}
@@ -119,7 +191,7 @@ const Auth = () => {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
                 {error}
               </div>
             )}
@@ -182,6 +254,34 @@ const Auth = () => {
                 {loading ? 'Connexion en cours...' : 'Se connecter'}
               </button>
             </form>
+
+            {/* Demo Accounts Section */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="text-center mb-4">
+                <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+                  OU COMPTES DE DÉMO
+                </span>
+              </div>
+              
+              <div className="space-y-2">
+                {DEMO_ACCOUNTS.map((account) => {
+                  const Icon = account.icon;
+                  return (
+                    <button
+                      key={account.role}
+                      onClick={() => handleDemoLogin(account.email, account.password, account.role)}
+                      disabled={loadingDemo !== null}
+                      className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 border-2 rounded-lg transition-all ${account.borderColor} disabled:opacity-50`}
+                    >
+                      <Icon className={`h-4 w-4 ${account.color}`} />
+                      <span className={`font-medium text-sm ${account.color}`}>
+                        {loadingDemo === account.role ? 'Connexion...' : account.role}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
             <div className="mt-6 pt-6 border-t border-gray-200">
               <p className="text-center text-gray-600 mb-4">
