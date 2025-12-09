@@ -86,11 +86,23 @@ const QRAttendanceScannerModal: React.FC<QRAttendanceScannerModalProps> = ({
 
   // Initialize camera when modal opens
   useEffect(() => {
-    if (isOpen && step === 'scanning' && videoRef.current) {
-      startCamera();
+    let mounted = true;
+    
+    const initCamera = async () => {
+      // Wait for DOM to be ready
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      if (mounted && isOpen && step === 'scanning' && videoRef.current) {
+        startCamera();
+      }
+    };
+
+    if (isOpen && step === 'scanning') {
+      initCamera();
     }
 
     return () => {
+      mounted = false;
       stopCamera();
     };
   }, [isOpen, step]);
