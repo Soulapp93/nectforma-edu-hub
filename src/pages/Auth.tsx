@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, Shield, Users, GraduationCap, UserCheck, Briefcase } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Shield, Users, GraduationCap, UserCheck, Briefcase, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -52,11 +52,49 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingDemo, setLoadingDemo] = useState<string | null>(null);
+  const [demoReady, setDemoReady] = useState(false);
+  const [settingUpDemo, setSettingUpDemo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+
+  // Initialize demo accounts on first load
+  useEffect(() => {
+    const initDemoAccounts = async () => {
+      try {
+        // Check if demo account exists by trying to get user info
+        const { data: demoCheck } = await supabase
+          .from('establishments')
+          .select('id')
+          .eq('email', 'demo@nectfy.fr')
+          .maybeSingle();
+
+        if (demoCheck) {
+          setDemoReady(true);
+          return;
+        }
+
+        // Setup demo accounts
+        setSettingUpDemo(true);
+        const { data, error } = await supabase.functions.invoke('setup-demo-accounts');
+        
+        if (error) {
+          console.error('Demo setup error:', error);
+        } else {
+          console.log('Demo accounts setup:', data);
+          setDemoReady(true);
+        }
+      } catch (err) {
+        console.error('Error checking demo accounts:', err);
+      } finally {
+        setSettingUpDemo(false);
+      }
+    };
+
+    initDemoAccounts();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,14 +135,47 @@ const Auth = () => {
     setError(null);
     
     try {
+      // If demo not ready, try to setup first
+      if (!demoReady) {
+        toast.loading('Préparation des comptes démo...');
+        const { error: setupError } = await supabase.functions.invoke('setup-demo-accounts');
+        if (setupError) {
+          toast.dismiss();
+          toast.error('Erreur lors de la préparation des comptes démo');
+          setLoadingDemo(null);
+          return;
+        }
+        toast.dismiss();
+        setDemoReady(true);
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
       if (error) {
-        toast.error(`Compte démo ${role} non disponible. Contactez l'administrateur.`);
-        setLoadingDemo(null);
+        // If login fails, try to setup demo accounts again
+        toast.loading('Configuration du compte démo...');
+        await supabase.functions.invoke('setup-demo-accounts');
+        toast.dismiss();
+        
+        // Retry login
+        const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (retryError) {
+          toast.error(`Impossible de se connecter en tant que ${role}. Veuillez réessayer.`);
+          setLoadingDemo(null);
+          return;
+        }
+
+        if (retryData.user) {
+          toast.success(`Connexion réussie en tant que ${role} !`);
+          window.location.href = '/dashboard';
+        }
         return;
       }
 
@@ -261,21 +332,32 @@ const Auth = () => {
                 <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
                   OU COMPTES DE DÉMO
                 </span>
+                {settingUpDemo && (
+                  <div className="flex items-center justify-center gap-2 mt-2 text-xs text-gray-500">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Préparation des comptes...
+                  </div>
+                )}
               </div>
               
               <div className="space-y-2">
                 {DEMO_ACCOUNTS.map((account) => {
                   const Icon = account.icon;
+                  const isLoading = loadingDemo === account.role;
                   return (
                     <button
                       key={account.role}
                       onClick={() => handleDemoLogin(account.email, account.password, account.role)}
-                      disabled={loadingDemo !== null}
+                      disabled={loadingDemo !== null || settingUpDemo}
                       className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 border-2 rounded-lg transition-all ${account.borderColor} disabled:opacity-50`}
                     >
-                      <Icon className={`h-4 w-4 ${account.color}`} />
+                      {isLoading ? (
+                        <Loader2 className={`h-4 w-4 animate-spin ${account.color}`} />
+                      ) : (
+                        <Icon className={`h-4 w-4 ${account.color}`} />
+                      )}
                       <span className={`font-medium text-sm ${account.color}`}>
-                        {loadingDemo === account.role ? 'Connexion...' : account.role}
+                        {isLoading ? 'Connexion...' : account.role}
                       </span>
                     </button>
                   );
