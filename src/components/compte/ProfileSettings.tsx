@@ -5,7 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import FileUpload from '@/components/ui/file-upload';
 import SignatureManagementModal from '@/components/ui/signature-management-modal';
-import { User, Lock, Camera, PenTool } from 'lucide-react';
+import QRAttendanceScannerModal from './QRAttendanceScannerModal';
+import { User, Lock, Camera, PenTool, QrCode, ScanLine } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -38,15 +39,18 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
-  // États pour la gestion des signatures (formateurs uniquement)
+  // États pour la gestion des signatures (tous les utilisateurs)
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [currentSignature, setCurrentSignature] = useState<string | null>(null);
   const [loadingSignature, setLoadingSignature] = useState(false);
+  
+  // État pour le scanner QR (étudiants uniquement)
+  const [showQRScanner, setShowQRScanner] = useState(false);
 
-  // Charger la signature actuelle du formateur
+  // Charger la signature actuelle de l'utilisateur (pour tous les rôles)
   useEffect(() => {
     const loadUserSignature = async () => {
-      if (userRole === 'Formateur' && userId) {
+      if (userId) {
         try {
           setLoadingSignature(true);
           const { data, error } = await supabase
@@ -74,7 +78,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
     };
 
     loadUserSignature();
-  }, [userRole, userId]);
+  }, [userId]);
 
   const handleInputChange = (field: keyof ProfileData, value: string) => {
     onProfileDataChange({
@@ -263,13 +267,44 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
         </CardContent>
       </Card>
 
-      {/* Gestion de signature - uniquement pour les formateurs */}
-      {userRole === 'Formateur' && (
+      {/* Émargement QR Code - uniquement pour les étudiants */}
+      {userRole === 'Étudiant' && (
+        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center text-base sm:text-lg">
+              <QrCode className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-primary" />
+              Émargement rapide
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Scannez le QR code affiché par votre formateur pour valider votre présence automatiquement.
+            </p>
+            <Button
+              onClick={() => setShowQRScanner(true)}
+              className="w-full h-14 text-base font-medium bg-primary hover:bg-primary/90"
+              size="lg"
+            >
+              <ScanLine className="h-5 w-5 mr-2" />
+              Émarger par QR Code
+            </Button>
+            {!currentSignature && (
+              <p className="text-xs text-amber-600 flex items-center gap-1">
+                <PenTool className="h-3 w-3" />
+                Enregistrez votre signature ci-dessous pour un émargement complet
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Gestion de signature - pour tous les utilisateurs sauf Admin */}
+      {(userRole === 'Étudiant' || userRole === 'Formateur' || userRole === 'Tuteur') && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center text-base sm:text-lg">
               <PenTool className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-              Signature du Formateur
+              Ma Signature
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -295,7 +330,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                   <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
                     {currentSignature 
                       ? 'Utilisée automatiquement lors des émargements'
-                      : 'Enregistrez votre signature pour la validation'
+                      : 'Enregistrez votre signature pour la validation automatique'
                     }
                   </p>
                 </div>
@@ -394,14 +429,22 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
         </div>
       )}
       
-      {/* Modal de gestion des signatures */}
-      {userRole === 'Formateur' && (
+      {/* Modal de gestion des signatures - pour tous les rôles concernés */}
+      {(userRole === 'Étudiant' || userRole === 'Formateur' || userRole === 'Tuteur') && (
         <SignatureManagementModal
           isOpen={showSignatureModal}
           onClose={() => setShowSignatureModal(false)}
           currentSignature={currentSignature}
           onSave={handleSaveSignature}
           title="Gestion de votre signature"
+        />
+      )}
+
+      {/* Modal Scanner QR Code - pour les étudiants */}
+      {userRole === 'Étudiant' && (
+        <QRAttendanceScannerModal
+          isOpen={showQRScanner}
+          onClose={() => setShowQRScanner(false)}
         />
       )}
     </div>
