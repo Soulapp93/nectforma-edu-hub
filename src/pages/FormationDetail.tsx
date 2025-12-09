@@ -54,14 +54,19 @@ const FormationDetail = () => {
     );
   }
 
-  // Get appropriate back navigation
+  // Get appropriate back navigation based on user role
   const getBackNavigation = () => {
-    if (from === 'administration') {
+    // Only admins can go back to administration
+    const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
+    
+    if (from === 'administration' && isAdmin) {
       return {
         path: '/administration?tab=formations',
         label: 'Retour à l\'administration'
       };
     }
+    
+    // For all other roles (student, instructor, tutor), always go to formations
     return {
       path: '/formations',
       label: 'Retour aux formations'

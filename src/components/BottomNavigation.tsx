@@ -33,11 +33,10 @@ const BottomNavigation = () => {
     { name: 'Messages', href: '/messagerie', icon: MessageSquare, label: 'Messages' },
   ];
 
-  // Navigation pour tuteurs
+  // Navigation pour tuteurs (limitée - seulement formations, suivi et profil)
   const tutorNavigation: NavItem[] = [
     { name: 'Formations', href: '/formations', icon: BookOpen, label: 'Formations' },
     { name: 'Suivi', href: '/suivi-emargement', icon: ClipboardCheck, label: 'Suivi' },
-    { name: 'Planning', href: '/emploi-temps', icon: Calendar, label: 'Planning' },
     { name: 'Profil', href: '/compte', icon: Settings, label: 'Profil' },
   ];
 
