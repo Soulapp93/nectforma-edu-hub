@@ -95,7 +95,33 @@ const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({ isOpen, onClose }) 
 
     const sections: MenuSection[] = [];
 
-    // Section principale
+    // Navigation spécifique pour tuteurs (limitée)
+    if (isTutor) {
+      sections.push({
+        title: 'Formation',
+        items: [
+          { name: 'Formations', href: '/formations', icon: BookOpen, description: 'Formations de vos apprentis' },
+        ]
+      });
+      
+      sections.push({
+        title: 'Présence',
+        items: [
+          { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck, description: 'Suivi des présences' },
+        ]
+      });
+      
+      sections.push({
+        title: 'Compte',
+        items: [
+          { name: 'Mon Profil', href: '/compte', icon: User, description: 'Paramètres du compte' },
+        ]
+      });
+      
+      return sections;
+    }
+
+    // Section principale pour admins
     if (isAdmin) {
       sections.push({
         title: 'Gestion',
@@ -126,7 +152,7 @@ const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({ isOpen, onClose }) 
       });
     }
 
-    // Section Communication
+    // Section Communication (pas pour les tuteurs)
     sections.push({
       title: 'Communication',
       items: [

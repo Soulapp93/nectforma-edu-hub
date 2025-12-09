@@ -110,11 +110,10 @@ const Sidebar = () => {
     { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
 
-  // Navigation pour tuteurs (limitée)
+  // Navigation pour tuteurs (limitée - seulement formations, suivi et profil)
   const tutorNavigation: NavigationItem[] = [
     { name: 'Formation', href: '/formations', icon: BookOpen },
     { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck },
-    { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
     { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
 
