@@ -129,91 +129,97 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Documents</h2>
-        <Button onClick={() => setShowCreateModal(true)}>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+        <h2 className="text-lg sm:text-xl font-semibold">Documents</h2>
+        <Button onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Ajouter un document
         </Button>
       </div>
 
       {documents.length > 0 ? (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {documents.map((document) => (
-            <div key={document.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <span className="text-2xl">{getFileIcon(document.file_name)}</span>
-                    <div>
-                      <h3 className="font-medium text-gray-900">{document.title}</h3>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <span className={`text-xs px-2 py-1 rounded-full ${getDocumentTypeColor(document.document_type)}`}>
-                          {document.document_type}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  {document.description && (
-                    <p className="text-gray-600 text-sm mb-3 ml-11">{document.description}</p>
-                  )}
-                  <div className="flex items-center text-sm text-gray-500 space-x-4 ml-11">
-                    <div className="flex items-center">
-                      <FileText className="h-4 w-4 mr-1" />
-                      <span>{document.file_name}</span>
-                    </div>
-                    {document.file_size && (
-                      <span>{formatFileSize(document.file_size)}</span>
-                    )}
+            <div key={document.id} className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow">
+              <div className="flex flex-col gap-3">
+                {/* Header avec titre et type */}
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <span className="text-xl sm:text-2xl flex-shrink-0">{getFileIcon(document.file_name)}</span>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-gray-900 text-sm sm:text-base truncate">{document.title}</h3>
+                    <span className={`inline-block text-xs px-2 py-0.5 rounded-full mt-1 ${getDocumentTypeColor(document.document_type)}`}>
+                      {document.document_type}
+                    </span>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-2">
+                {document.description && (
+                  <p className="text-gray-600 text-xs sm:text-sm">{document.description}</p>
+                )}
+                
+                <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-500">
+                  <div className="flex items-center min-w-0">
+                    <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
+                    <span className="truncate">{document.file_name}</span>
+                  </div>
+                  {document.file_size && (
+                    <span className="flex-shrink-0">({formatFileSize(document.file_size)})</span>
+                  )}
+                </div>
+                
+                {/* Boutons d'action - responsive */}
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100">
                   <Button 
                     size="sm" 
                     variant="default"
                     onClick={() => handleOpenFile(document.file_url, document.file_name)}
+                    className="flex-1 sm:flex-none text-xs sm:text-sm"
                   >
-                    <Eye className="h-4 w-4 mr-1" />
-                    Visualiser
+                    <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    <span>Voir</span>
                   </Button>
                   
                   <Button 
                     size="sm" 
                     variant="outline"
                     onClick={() => handleDownloadDocument(document.file_url, document.file_name)}
+                    className="flex-1 sm:flex-none text-xs sm:text-sm"
                   >
-                    <Download className="h-4 w-4 mr-1" />
-                    Télécharger
+                    <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    <span className="hidden sm:inline">Télécharger</span>
+                    <span className="sm:hidden">DL</span>
                   </Button>
 
-                  <Button 
-                    size="sm" 
-                    variant="ghost"
-                    onClick={() => handleEdit(document)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    className="text-red-600"
-                    onClick={() => handleDelete(document.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-1 ml-auto">
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => handleEdit(document)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </Button>
+                    
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="text-red-600 h-8 w-8 p-0"
+                      onClick={() => handleDelete(document.id)}
+                    >
+                      <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="text-center py-8">
-          <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun document</h3>
-          <p className="text-gray-600">Aucun document n'a encore été ajouté à ce module.</p>
+        <div className="text-center py-6 sm:py-8">
+          <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">Aucun document</h3>
+          <p className="text-sm sm:text-base text-gray-600">Aucun document n'a encore été ajouté à ce module.</p>
         </div>
       )}
 
