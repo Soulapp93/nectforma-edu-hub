@@ -14,6 +14,7 @@ export const useCurrentUser = () => {
     
     const fetchUserRole = async (uid: string) => {
       try {
+        // D'abord chercher dans la table users
         const { data: userData, error } = await supabase
           .from('users')
           .select('role')
@@ -22,12 +23,27 @@ export const useCurrentUser = () => {
         
         if (!mounted) return;
         
-        if (error) {
-          console.error('Erreur lors de la récupération du rôle:', error);
-          setUserRole(null);
-        } else {
-          setUserRole(userData?.role || null);
+        if (!error && userData?.role) {
+          setUserRole(userData.role);
+          return;
         }
+        
+        // Si pas trouvé dans users, vérifier si c'est un tuteur dans la table tutors
+        const { data: tutorData, error: tutorError } = await supabase
+          .from('tutors')
+          .select('id')
+          .eq('id', uid)
+          .single();
+        
+        if (!mounted) return;
+        
+        if (!tutorError && tutorData) {
+          setUserRole('Tuteur');
+          return;
+        }
+        
+        // Aucun rôle trouvé
+        setUserRole(null);
       } catch (error) {
         console.error('Erreur lors de la récupération du rôle:', error);
         if (mounted) setUserRole(null);
