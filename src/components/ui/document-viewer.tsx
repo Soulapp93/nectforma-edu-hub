@@ -1,5 +1,5 @@
 import React from 'react';
-import ModernFileViewer from './viewers/ModernFileViewer';
+import MobileResponsiveFileViewer from './viewers/MobileResponsiveFileViewer';
 
 interface DocumentViewerProps {
   fileUrl: string;
@@ -8,23 +8,6 @@ interface DocumentViewerProps {
   onClose: () => void;
 }
 
-/**
- * DocumentViewer - Visionneuse de documents moderne
- * 
- * Supporte:
- * - PDFs avec contrôles avancés (zoom, navigation, rotation)
- * - Images (JPG, PNG, GIF, SVG, etc.)
- * - Vidéos (MP4, WEBM, etc.)
- * - Documents Office (via Office Online Viewer)
- * 
- * Fonctionnalités:
- * - Zoom ajustable pour PDFs
- * - Navigation page par page
- * - Rotation des pages
- * - Mode plein écran
- * - Téléchargement
- * - Raccourcis clavier
- */
 const DocumentViewer: React.FC<DocumentViewerProps> = ({
   fileUrl,
   fileName,
@@ -32,7 +15,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({
   onClose
 }) => {
   return (
-    <ModernFileViewer
+    <MobileResponsiveFileViewer
       fileUrl={fileUrl}
       fileName={fileName}
       isOpen={isOpen}
