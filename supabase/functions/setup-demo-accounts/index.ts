@@ -222,17 +222,22 @@ serve(async (req) => {
           const { data: existingTutor } = await supabaseAdmin
             .from('tutors')
             .select('id')
-            .eq('user_id', userId)
+            .eq('email', account.email)
             .maybeSingle();
 
           if (!existingTutor) {
+            // Le tuteur doit avoir le même ID que l'auth user pour que useCurrentUser fonctionne
             await supabaseAdmin
               .from('tutors')
               .insert({
-                user_id: userId,
+                id: userId,
                 establishment_id: establishmentId,
+                first_name: account.first_name,
+                last_name: account.last_name,
+                email: account.email,
                 company_name: 'Entreprise Démo',
-                position: 'Tuteur professionnel'
+                position: 'Tuteur professionnel',
+                is_activated: true
               });
             console.log(`Created tutor record for ${account.email}`);
           }
