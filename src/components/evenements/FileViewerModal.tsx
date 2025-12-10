@@ -1,5 +1,5 @@
 import React from 'react';
-import ChromeStyleViewer from '@/components/ui/viewers/ChromeStyleViewer';
+import MobileResponsiveFileViewer from '@/components/ui/viewers/MobileResponsiveFileViewer';
 
 interface FileViewerModalProps {
   isOpen: boolean;
@@ -15,7 +15,7 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({
   fileName
 }) => {
   return (
-    <ChromeStyleViewer
+    <MobileResponsiveFileViewer
       fileUrl={fileUrl}
       fileName={fileName}
       isOpen={isOpen}
