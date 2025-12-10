@@ -110,9 +110,9 @@ const WeekNavigation: React.FC<WeekNavigationProps> = ({
 
   return (
     <div className={cn("bg-white rounded-xl shadow-sm border border-gray-100", className)}>
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-gray-700">Navigation par semaines</h2>
+      <div className="p-3 sm:p-4 border-b border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3">
+          <h2 className="text-xs sm:text-sm font-semibold text-gray-700">Navigation par semaines</h2>
           
           <div className="flex items-center space-x-2">
             {/* Year Navigation */}
@@ -121,12 +121,12 @@ const WeekNavigation: React.FC<WeekNavigationProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => handleYearChange('prev')}
-                className="h-8 w-8 p-0"
+                className="h-7 w-7 sm:h-8 sm:w-8 p-0"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
               
-              <span className="text-sm font-medium text-gray-700 min-w-[60px] text-center">
+              <span className="text-xs sm:text-sm font-medium text-gray-700 min-w-[50px] sm:min-w-[60px] text-center">
                 {selectedYear}
               </span>
               
@@ -134,17 +134,17 @@ const WeekNavigation: React.FC<WeekNavigationProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => handleYearChange('next')}
-                className="h-8 w-8 p-0"
+                className="h-7 w-7 sm:h-8 sm:w-8 p-0"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             </div>
 
             {/* Calendar Picker */}
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8">
-                  <Calendar className="h-4 w-4" />
+                <Button variant="outline" size="sm" className="h-7 sm:h-8 px-2">
+                  <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="end">
@@ -161,7 +161,7 @@ const WeekNavigation: React.FC<WeekNavigationProps> = ({
         </div>
         
         {/* Weeks Grid */}
-        <div className="flex overflow-x-auto scrollbar-hide space-x-2 pb-2">
+        <div className="flex overflow-x-auto scrollbar-hide gap-1.5 sm:gap-2 pb-2 -mx-1 px-1">
           {weeks.map((week) => {
             const isCurrentWeek = currentWeekNumber === week.number && selectedDate.getFullYear() === selectedYear;
             const weekEndDate = getWeekEndDate(week.startDate);
@@ -169,7 +169,7 @@ const WeekNavigation: React.FC<WeekNavigationProps> = ({
               <button
                 key={week.number}
                 onClick={() => navigateToWeek(week.startDate)}
-                className={`flex-shrink-0 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 min-w-[50px] ${
+                className={`flex-shrink-0 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 min-w-[40px] sm:min-w-[50px] ${
                   isCurrentWeek
                     ? 'bg-primary text-white shadow-md transform scale-105'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800'

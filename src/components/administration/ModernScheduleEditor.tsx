@@ -167,14 +167,15 @@ export const ModernScheduleEditor: React.FC<ModernScheduleEditorProps> = ({
       {/* Modern Schedule Editor */}
       <div className="bg-card/50 backdrop-blur-sm rounded-2xl shadow-lg border border-border/50">
         {/* Controls Header */}
-        <div className="p-6 border-b border-border/50">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-4">
+        <div className="p-3 sm:p-4 lg:p-6 border-b border-border/50">
+          <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
+            {/* Top Row - View & Display Selectors */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
               {/* Schedule View Selector */}
               <div className="flex bg-muted/50 rounded-xl p-1 border border-border/30">
                 <button
                   onClick={() => onViewChange('day')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                     currentView === 'day' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -182,7 +183,7 @@ export const ModernScheduleEditor: React.FC<ModernScheduleEditorProps> = ({
                 </button>
                 <button
                   onClick={() => onViewChange('week')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                     currentView === 'week' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -190,7 +191,7 @@ export const ModernScheduleEditor: React.FC<ModernScheduleEditorProps> = ({
                 </button>
                 <button
                   onClick={() => onViewChange('month')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                     currentView === 'month' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -203,7 +204,7 @@ export const ModernScheduleEditor: React.FC<ModernScheduleEditorProps> = ({
                 <div className="flex bg-muted/50 rounded-xl p-1 border border-border/30">
                   <button
                     onClick={() => onDisplayModeChange('planning')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                       displayMode === 'planning' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
@@ -211,7 +212,7 @@ export const ModernScheduleEditor: React.FC<ModernScheduleEditorProps> = ({
                   </button>
                   <button
                     onClick={() => onDisplayModeChange('list')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                       displayMode === 'list' ? 'bg-primary text-primary-foreground shadow-md' : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
@@ -219,60 +220,66 @@ export const ModernScheduleEditor: React.FC<ModernScheduleEditorProps> = ({
                   </button>
                 </div>
               )}
+            </div>
 
+            {/* Bottom Row - Date Navigation & Actions */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               {/* Date Navigation */}
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => navigateDate('prev')}
-                  className="hover:bg-primary/10"
+                  className="hover:bg-primary/10 h-8 w-8 sm:h-9 sm:w-9 p-0"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <span className="text-sm font-medium min-w-60 text-center text-foreground">{getCurrentPeriodLabel()}</span>
+                <span className="text-xs sm:text-sm font-medium text-center text-foreground min-w-0 flex-1 sm:flex-none sm:min-w-40 lg:min-w-60 truncate">{getCurrentPeriodLabel()}</span>
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => navigateDate('next')}
-                  className="hover:bg-primary/10"
+                  className="hover:bg-primary/10 h-8 w-8 sm:h-9 sm:w-9 p-0"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onDateChange(new Date())}
+                  className="hover:bg-primary/10 text-xs sm:text-sm h-8 sm:h-9"
+                >
+                  Aujourd'hui
+                </Button>
               </div>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onDateChange(new Date())}
-                className="hover:bg-primary/10"
-              >
-                Aujourd'hui
-              </Button>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex space-x-2">
-              <Button 
-                variant="outline"
-                onClick={onExcelImport}
-                className="hover:bg-primary/10"
-              >
-                <FileSpreadsheet className="h-4 w-4 mr-2" />
-                Import Excel
-              </Button>
-              <Button 
-                onClick={() => onAddSlot(selectedDate, '09:00')}
-                className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter un créneau
-              </Button>
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={onExcelImport}
+                  className="hover:bg-primary/10 text-xs sm:text-sm h-8 sm:h-9 flex-1 sm:flex-none"
+                >
+                  <FileSpreadsheet className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Import Excel</span>
+                  <span className="sm:hidden">Import</span>
+                </Button>
+                <Button 
+                  size="sm"
+                  onClick={() => onAddSlot(selectedDate, '09:00')}
+                  className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all text-xs sm:text-sm h-8 sm:h-9 flex-1 sm:flex-none"
+                >
+                  <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Ajouter un créneau</span>
+                  <span className="sm:hidden">Ajouter</span>
+                </Button>
+              </div>
             </div>
           </div>
 
           {/* View Mode Selector */}
-          <div className="flex items-center space-x-2 overflow-x-auto pb-2">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-3 sm:-mx-4 lg:-mx-6 px-3 sm:px-4 lg:px-6 scrollbar-hide">
             {viewModes.map((mode) => {
               const Icon = mode.icon;
               const isActive = viewMode === mode.id;
@@ -282,7 +289,7 @@ export const ModernScheduleEditor: React.FC<ModernScheduleEditorProps> = ({
                   key={mode.id}
                   onClick={() => setViewMode(mode.id)}
                   className={`
-                    group relative flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 min-w-fit
+                    group relative flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-xl transition-all duration-300 flex-shrink-0
                     ${isActive 
                       ? 'bg-primary text-primary-foreground shadow-lg scale-105' 
                       : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground hover:scale-102'
@@ -293,11 +300,11 @@ export const ModernScheduleEditor: React.FC<ModernScheduleEditorProps> = ({
                     <div className={`absolute inset-0 rounded-xl bg-gradient-to-r ${mode.color} opacity-20 animate-pulse`} />
                   )}
                   
-                  <div className="relative flex items-center space-x-3">
-                    <Icon className={`h-5 w-5 ${isActive ? 'animate-float' : 'group-hover:scale-110'} transition-transform`} />
+                  <div className="relative flex items-center gap-2 sm:gap-3">
+                    <Icon className={`h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 ${isActive ? 'animate-float' : 'group-hover:scale-110'} transition-transform`} />
                     <div className="text-left">
-                      <div className="font-semibold text-sm">{mode.name}</div>
-                      <div className="text-xs opacity-80">{mode.description}</div>
+                      <div className="font-semibold text-xs sm:text-sm whitespace-nowrap">{mode.name}</div>
+                      <div className="text-[10px] sm:text-xs opacity-80 hidden sm:block">{mode.description}</div>
                     </div>
                   </div>
 

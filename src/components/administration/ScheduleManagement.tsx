@@ -1136,9 +1136,9 @@ const ScheduleManagement = () => {
       <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
         {/* Header moderne identique à l'emploi du temps */}
         <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border shadow-sm">
-          <div className="container mx-auto px-6 py-4">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-4">
+          <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
+              <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
                 <Button
                   variant="ghost"
                   onClick={() => {
@@ -1149,22 +1149,23 @@ const ScheduleManagement = () => {
                     setIsEditSlotModalOpen(false);
                     setIsDetailsModalOpen(false);
                   }}
-                  className="p-2 hover:bg-primary/10"
+                  className="p-2 hover:bg-primary/10 flex-shrink-0"
+                  size="sm"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
-                  <Calendar className="h-6 w-6 text-primary-foreground" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25 flex-shrink-0">
+                  <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
                 </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-foreground">{selectedSchedule.title}</h1>
-                  <p className="text-muted-foreground">
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-foreground truncate">{selectedSchedule.title}</h1>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">
                     {`Semaine du ${weekInfo.start} au ${weekInfo.end}`}
                   </p>
                 </div>
               </div>
 
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap justify-end">
               {isEditMode ? (
                 <>
                   <Button 
@@ -1228,7 +1229,7 @@ const ScheduleManagement = () => {
           </div>
 
             {/* Navigation et vues identiques */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <WeekNavigator 
                 currentDate={selectedDate}
                 onNavigate={handleNavigate}
@@ -1354,13 +1355,13 @@ const ScheduleManagement = () => {
           </div>
 
           {/* Navigation et vues identiques à l'emploi du temps */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <WeekNavigator 
               currentDate={selectedDate}
               onNavigate={handleNavigate}
             />
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 justify-end">
               {/* Toggle vue liste/cartes */}
               <Tabs value={scheduleListViewMode} onValueChange={(value) => setScheduleListViewMode(value as 'grid' | 'list')} className="w-auto">
                 <TabsList>
@@ -1400,10 +1401,10 @@ const ScheduleManagement = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-3 sm:px-6 py-4 sm:py-8">
         {schedules.length === 0 ? (
           <Card className="border-dashed border-2 border-border/50 bg-card/30">
-            <CardContent className="flex flex-col items-center justify-center py-16">
+            <CardContent className="flex flex-col items-center justify-center py-8 sm:py-16 px-4">
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                 <Calendar className="h-8 w-8 text-primary" />
               </div>
@@ -1420,26 +1421,26 @@ const ScheduleManagement = () => {
             </CardContent>
           </Card>
         ) : scheduleListViewMode === 'grid' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
             {schedules.map((schedule) => (
               <Card
                 key={schedule.id}
                 className={`overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 bg-card shadow-md hover:shadow-primary/10 cursor-pointer`}
                 onClick={() => handleViewSchedule(schedule.id)}
               >
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-lg font-bold text-foreground">
+                <CardHeader className="pb-3 p-3 sm:p-6 sm:pb-3">
+                  <div className="flex items-start justify-between">
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-sm sm:text-lg font-bold text-foreground truncate">
                         {schedule.title}
                       </CardTitle>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
+                      <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1">
+                        <Badge variant="secondary" className="text-[10px] sm:text-xs bg-primary/10 text-primary border-primary/20 truncate max-w-[120px] sm:max-w-none">
                           {schedule.formations?.title || 'Formation'}
                         </Badge>
                         <Badge 
                           variant="secondary" 
-                          className={`text-xs ${getStatusColor(schedule.status)}`}
+                          className={`text-[10px] sm:text-xs ${getStatusColor(schedule.status)}`}
                         >
                           {schedule.status}
                         </Badge>
@@ -1448,20 +1449,20 @@ const ScheduleManagement = () => {
                   </div>
                 </CardHeader>
 
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-3 p-3 sm:p-6 pt-0">
                   <div className="space-y-1">
-                    <div className="flex items-center text-xs text-muted-foreground">
-                      <Book className="h-3 w-3 mr-1" />
-                      {schedule.academic_year}
+                    <div className="flex items-center text-[10px] sm:text-xs text-muted-foreground">
+                      <Book className="h-3 w-3 mr-1 flex-shrink-0" />
+                      <span className="truncate">{schedule.academic_year}</span>
                     </div>
-                    <div className="flex items-center text-xs text-muted-foreground">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {new Date(schedule.created_at).toLocaleDateString('fr-FR')}
+                    <div className="flex items-center text-[10px] sm:text-xs text-muted-foreground">
+                      <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
+                      <span>{new Date(schedule.created_at).toLocaleDateString('fr-FR')}</span>
                     </div>
                   </div>
                   
                   {/* Actions admin */}
-                  <div className="flex items-center space-x-1 pt-2 border-t border-border/50">
+                  <div className="flex items-center gap-1 pt-2 border-t border-border/50">
                     <Button 
                       size="sm" 
                       variant="outline"
@@ -1469,10 +1470,11 @@ const ScheduleManagement = () => {
                         e.stopPropagation();
                         handleViewSchedule(schedule.id);
                       }}
-                      className="flex-1 text-xs"
+                      className="flex-1 text-[10px] sm:text-xs h-7 sm:h-8"
                     >
                       <Eye className="h-3 w-3 mr-1" />
-                      Consulter
+                      <span className="hidden sm:inline">Consulter</span>
+                      <span className="sm:hidden">Voir</span>
                     </Button>
                     <Button 
                       size="sm" 
@@ -1481,7 +1483,7 @@ const ScheduleManagement = () => {
                         e.stopPropagation();
                         handleDeleteSchedule(schedule.id, schedule.title);
                       }}
-                      className="text-xs text-destructive hover:text-destructive"
+                      className="text-[10px] sm:text-xs text-destructive hover:text-destructive h-7 sm:h-8 px-2"
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>
@@ -1491,47 +1493,47 @@ const ScheduleManagement = () => {
             ))}
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {schedules.map((schedule) => (
               <Card
                 key={schedule.id}
                 className="overflow-hidden transition-all duration-200 hover:shadow-lg border-border/50 bg-card shadow-sm hover:shadow-primary/10 cursor-pointer"
                 onClick={() => handleViewSchedule(schedule.id)}
               >
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4 flex-1">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
-                        <Calendar className="h-6 w-6 text-primary" />
+                <CardContent className="p-3 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center flex-shrink-0">
+                        <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3">
-                          <h3 className="text-lg font-bold text-foreground">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-sm sm:text-lg font-bold text-foreground truncate">
                             {schedule.title}
                           </h3>
-                          <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
+                          <Badge variant="secondary" className="text-[10px] sm:text-xs bg-primary/10 text-primary border-primary/20 truncate max-w-[100px] sm:max-w-none">
                             {schedule.formations?.title || 'Formation'}
                           </Badge>
                           <Badge 
                             variant="secondary" 
-                            className={`text-xs ${getStatusColor(schedule.status)}`}
+                            className={`text-[10px] sm:text-xs ${getStatusColor(schedule.status)}`}
                           >
                             {schedule.status}
                           </Badge>
                         </div>
-                        <div className="flex items-center space-x-4 mt-2">
-                          <div className="flex items-center text-sm text-muted-foreground">
-                            <Book className="h-4 w-4 mr-1" />
-                            {schedule.academic_year}
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-1 sm:mt-2">
+                          <div className="flex items-center text-[10px] sm:text-sm text-muted-foreground">
+                            <Book className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
+                            <span>{schedule.academic_year}</span>
                           </div>
-                          <div className="flex items-center text-sm text-muted-foreground">
-                            <Calendar className="h-4 w-4 mr-1" />
-                            {new Date(schedule.created_at).toLocaleDateString('fr-FR')}
+                          <div className="flex items-center text-[10px] sm:text-sm text-muted-foreground">
+                            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
+                            <span>{new Date(schedule.created_at).toLocaleDateString('fr-FR')}</span>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-2 justify-end">
                       <Button 
                         size="sm" 
                         variant="outline"
@@ -1539,9 +1541,11 @@ const ScheduleManagement = () => {
                           e.stopPropagation();
                           handleViewSchedule(schedule.id);
                         }}
+                        className="text-xs sm:text-sm h-8"
                       >
-                        <Eye className="h-4 w-4 mr-2" />
-                        Consulter
+                        <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                        <span className="hidden sm:inline">Consulter</span>
+                        <span className="sm:hidden">Voir</span>
                       </Button>
                       <Button 
                         size="sm" 
@@ -1550,9 +1554,9 @@ const ScheduleManagement = () => {
                           e.stopPropagation();
                           handleDeleteSchedule(schedule.id, schedule.title);
                         }}
-                        className="text-destructive hover:text-destructive"
+                        className="text-destructive hover:text-destructive h-8 px-2"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
                     </div>
                   </div>
