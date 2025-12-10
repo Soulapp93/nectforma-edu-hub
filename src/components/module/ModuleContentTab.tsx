@@ -61,24 +61,19 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
   };
 
   const handleOpenFile = (fileUrl: string, fileName: string) => {
-    // Ouvrir le visualiseur intégré pour éviter les blocages Chrome
     setViewerFile({ url: fileUrl, name: fileName });
   };
 
   const handleDownloadFile = async (fileUrl: string, fileName: string) => {
     try {
-      // Créer un lien de téléchargement
       const link = document.createElement('a');
       link.href = fileUrl;
       link.download = fileName;
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
-      
-      // Déclencher le téléchargement
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
       toast.success('Téléchargement démarré');
     } catch (error) {
       console.error('Erreur lors du téléchargement:', error);
@@ -91,7 +86,6 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
   };
 
   const handleOpenLink = (url: string, title: string) => {
-    // Ouvrir le visualiseur de lien
     setViewerLink({ url, title });
   };
 
@@ -140,60 +134,62 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Contenu du Module</h2>
-        <Button onClick={() => setShowCreateModal(true)}>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+        <h2 className="text-lg sm:text-xl font-semibold">Contenu du Module</h2>
+        <Button onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Ajouter un élément
         </Button>
       </div>
 
       {contents.length > 0 ? (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {contents.map((content) => (
-            <div key={content.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <span className="text-2xl">{getFileIcon(content.file_name, content.content_type)}</span>
-                    <div>
-                      <h3 className="font-medium text-gray-900">{content.title}</h3>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <span className={`text-xs px-2 py-1 rounded-full ${getContentTypeColor(content.content_type)}`}>
-                          {content.content_type}
-                        </span>
-                      </div>
-                    </div>
+            <div key={content.id} className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow">
+              <div className="flex flex-col gap-3">
+                {/* Header avec titre et type */}
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <span className="text-xl sm:text-2xl flex-shrink-0">{getFileIcon(content.file_name, content.content_type)}</span>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-gray-900 text-sm sm:text-base truncate">{content.title}</h3>
+                    <span className={`inline-block text-xs px-2 py-0.5 rounded-full mt-1 ${getContentTypeColor(content.content_type)}`}>
+                      {content.content_type}
+                    </span>
                   </div>
-                  {content.description && (
-                    <p className="text-gray-600 text-sm mb-3 ml-11">{content.description}</p>
-                  )}
-                  {content.content_type === 'lien' && content.file_url && (
-                    <button
-                      onClick={() => handleOpenLink(content.file_url, content.title)}
-                      className="flex items-center text-sm text-blue-600 hover:text-blue-800 hover:underline ml-11 cursor-pointer"
-                    >
-                      <ExternalLink className="h-3 w-3 mr-1" />
-                      {content.file_url}
-                    </button>
-                  )}
-                  {content.content_type !== 'lien' && content.file_name && (
-                    <div className="flex items-center text-sm text-gray-500 ml-11">
-                      <FileText className="h-4 w-4 mr-1" />
-                      <span>{content.file_name}</span>
-                    </div>
-                  )}
                 </div>
                 
-                <div className="flex items-center space-x-2">
+                {content.description && (
+                  <p className="text-gray-600 text-xs sm:text-sm">{content.description}</p>
+                )}
+                
+                {content.content_type === 'lien' && content.file_url && (
+                  <button
+                    onClick={() => handleOpenLink(content.file_url, content.title)}
+                    className="flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer truncate"
+                  >
+                    <ExternalLink className="h-3 w-3 mr-1 flex-shrink-0" />
+                    <span className="truncate">{content.file_url}</span>
+                  </button>
+                )}
+                
+                {content.content_type !== 'lien' && content.file_name && (
+                  <div className="flex items-center text-xs sm:text-sm text-gray-500">
+                    <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
+                    <span className="truncate">{content.file_name}</span>
+                  </div>
+                )}
+                
+                {/* Boutons d'action - responsive */}
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100">
                   {content.content_type === 'lien' && content.file_url ? (
                     <Button 
                       size="sm" 
                       variant="default"
                       onClick={() => handleOpenLink(content.file_url, content.title)}
+                      className="flex-1 sm:flex-none text-xs sm:text-sm"
                     >
-                      <ExternalLink className="h-4 w-4 mr-1" />
+                      <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                       Accéder
                     </Button>
                   ) : content.file_url ? (
@@ -202,47 +198,53 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
                         size="sm" 
                         variant="default"
                         onClick={() => handleOpenFile(content.file_url, content.file_name || 'fichier')}
+                        className="flex-1 sm:flex-none text-xs sm:text-sm"
                       >
-                        <Eye className="h-4 w-4 mr-1" />
-                        Visualiser
+                        <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                        <span>Voir</span>
                       </Button>
                       <Button 
                         size="sm" 
                         variant="outline"
                         onClick={() => handleDownloadFile(content.file_url, content.file_name || 'fichier')}
+                        className="flex-1 sm:flex-none text-xs sm:text-sm"
                       >
-                        <Download className="h-4 w-4 mr-1" />
-                        Télécharger
+                        <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                        <span className="hidden sm:inline">Télécharger</span>
+                        <span className="sm:hidden">DL</span>
                       </Button>
                     </>
                   ) : null}
                   
-                  <Button 
-                    size="sm" 
-                    variant="ghost"
-                    onClick={() => handleEdit(content)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    className="text-red-600"
-                    onClick={() => handleDelete(content.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-1 ml-auto">
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => handleEdit(content)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </Button>
+                    
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="text-red-600 h-8 w-8 p-0"
+                      onClick={() => handleDelete(content.id)}
+                    >
+                      <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="text-center py-8">
-          <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun contenu</h3>
-          <p className="text-gray-600">Aucun contenu n'a encore été ajouté à ce module.</p>
+        <div className="text-center py-6 sm:py-8">
+          <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">Aucun contenu</h3>
+          <p className="text-sm sm:text-base text-gray-600">Aucun contenu n'a encore été ajouté à ce module.</p>
         </div>
       )}
 
