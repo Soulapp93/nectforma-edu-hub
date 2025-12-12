@@ -59,11 +59,9 @@ export const exportScheduleToPDFAdvanced = (
   // Set default font
   pdf.setFont('helvetica');
 
-  // Filter schedules by date range
-  const filteredSchedules = schedules.filter(s => {
-    const slotDate = new Date(s.date);
-    return slotDate >= options.dateRange.start && slotDate <= options.dateRange.end;
-  }).sort((a, b) => {
+  // Les créneaux sont déjà filtrés en amont (ex: PrintScheduleModal)
+  // Ici, on ne fait que trier pour garantir l'ordre d'affichage
+  const filteredSchedules = [...schedules].sort((a, b) => {
     if (a.date !== b.date) return a.date.localeCompare(b.date);
     return a.start_time.localeCompare(b.start_time);
   });
