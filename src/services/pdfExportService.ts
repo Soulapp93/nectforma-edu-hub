@@ -327,18 +327,13 @@ export const pdfExportService = {
         const fullName = `${participant.first_name} ${participant.last_name}`.trim() || 'Nom inconnu';
         pdf.text(fullName, colX[0] + 3, currentY + 9);
         
-        // Status with color
-        if (participant.signed) {
-          if (participant.present) {
-            pdf.setTextColor(34, 197, 94); // Green
-            pdf.text('Présent', colX[1] + 3, currentY + 9);
-          } else {
-            pdf.setTextColor(239, 68, 68); // Red
-            pdf.text('Absent', colX[1] + 3, currentY + 9);
-          }
+        // Status with color - Absent if not signed OR if signed but not present
+        if (participant.signed && participant.present) {
+          pdf.setTextColor(34, 197, 94); // Green
+          pdf.text('Présent', colX[1] + 3, currentY + 9);
         } else {
-          pdf.setTextColor(156, 163, 175); // Gray
-          pdf.text('Non signé', colX[1] + 3, currentY + 9);
+          pdf.setTextColor(239, 68, 68); // Red
+          pdf.text('Absent', colX[1] + 3, currentY + 9);
         }
         
         // Display signature image if exists

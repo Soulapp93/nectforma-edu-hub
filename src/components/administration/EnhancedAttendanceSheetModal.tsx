@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Edit, Download, CheckCircle2, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { X, Edit, Download, CheckCircle2, CheckCircle, XCircle, Clock, Building } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -68,6 +68,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
   const [instructorName, setInstructorName] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [showValidationModal, setShowValidationModal] = useState(false);
+  const [establishmentInfo, setEstablishmentInfo] = useState<{ logo_url: string | null; name: string } | null>(null);
 
   // Charger les données de la feuille d'émargement
   const loadAttendanceData = async () => {
@@ -157,6 +158,27 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
         } else {
           console.log('Aucune signature admin trouvée dans user_signatures');
           setAdminSignature('');
+        }
+      }
+
+      // Load establishment info for logo
+      if (attendanceSheet.formation_id) {
+        const { data: formationData, error: formationError } = await supabase
+          .from('formations')
+          .select('establishment_id')
+          .eq('id', attendanceSheet.formation_id)
+          .single();
+        
+        if (!formationError && formationData?.establishment_id) {
+          const { data: establishmentData, error: establishmentError } = await supabase
+            .from('establishments')
+            .select('logo_url, name')
+            .eq('id', formationData.establishment_id)
+            .single();
+          
+          if (!establishmentError && establishmentData) {
+            setEstablishmentInfo(establishmentData);
+          }
         }
       }
 
@@ -289,18 +311,42 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
         <div className="bg-white">
           {/* En-tête */}
           <div 
-            className="p-8 text-white text-center"
+            className="p-8 text-white relative"
             style={{ backgroundColor: formationColor }}
           >
-            <h1 className="text-4xl font-bold mb-6">FEUILLE D'ÉMARGEMENT</h1>
-            <div className="space-y-2 text-base">
-              <div className="font-semibold text-xl">{attendanceSheet.formations?.title}</div>
-              <div className="font-medium">{attendanceSheet.title}</div>
-              <div className="flex items-center justify-center gap-8 text-sm mt-4">
-                <div>📅 {format(new Date(attendanceSheet.date), 'dd/MM/yyyy', { locale: fr })}</div>
-                <div>🕒 {attendanceSheet.start_time.substring(0, 5)} - {attendanceSheet.end_time.substring(0, 5)}</div>
-                <div>🏫 {attendanceSheet.room || 'Salle non spécifiée'}</div>
-                <div>👨‍🏫 {(attendanceSheet as any).instructor ? `${(attendanceSheet as any).instructor.first_name} ${(attendanceSheet as any).instructor.last_name}` : 'Non assigné'}</div>
+            {/* Logo établissement en haut à gauche */}
+            {establishmentInfo && (
+              <div className="absolute top-4 left-4 flex items-center gap-3">
+                {establishmentInfo.logo_url ? (
+                  <div className="bg-white rounded-lg p-1.5 shadow-md">
+                    <img 
+                      src={establishmentInfo.logo_url} 
+                      alt={establishmentInfo.name}
+                      className="w-12 h-12 object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="bg-white/20 rounded-lg p-2">
+                    <Building className="w-8 h-8 text-white" />
+                  </div>
+                )}
+                <div className="text-left">
+                  <p className="text-sm font-medium text-white/90">{establishmentInfo.name}</p>
+                </div>
+              </div>
+            )}
+            
+            <div className={`text-center ${establishmentInfo ? 'pt-12' : ''}`}>
+              <h1 className="text-4xl font-bold mb-6">FEUILLE D'ÉMARGEMENT</h1>
+              <div className="space-y-2 text-base">
+                <div className="font-semibold text-xl">{attendanceSheet.formations?.title}</div>
+                <div className="font-medium">{attendanceSheet.title}</div>
+                <div className="flex items-center justify-center gap-8 text-sm mt-4">
+                  <div>📅 {format(new Date(attendanceSheet.date), 'dd/MM/yyyy', { locale: fr })}</div>
+                  <div>🕒 {attendanceSheet.start_time.substring(0, 5)} - {attendanceSheet.end_time.substring(0, 5)}</div>
+                  <div>🏫 {attendanceSheet.room || 'Salle non spécifiée'}</div>
+                  <div>👨‍🏫 {(attendanceSheet as any).instructor ? `${(attendanceSheet as any).instructor.first_name} ${(attendanceSheet as any).instructor.last_name}` : 'Non assigné'}</div>
+                </div>
               </div>
             </div>
           </div>
