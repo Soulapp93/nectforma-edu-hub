@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import { ScheduleSlot } from './scheduleService';
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, getDay } from 'date-fns';
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, addDays, addMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 interface PrintOptions {
@@ -77,15 +77,50 @@ export const exportScheduleToPDFAdvanced = (
 
   // Render based on view mode
   switch (options.viewMode) {
-    case 'day':
-      renderDayView(pdf, schedules, options, margin, contentWidth, currentY, pageHeight);
+    case 'day': {
+      const days = eachDayOfInterval({
+        start: options.dateRange.start,
+        end: options.dateRange.end,
+      });
+
+      days.forEach((day, index) => {
+        if (index > 0) {
+          pdf.addPage();
+        }
+        renderDayView(pdf, schedules, day, margin, contentWidth, currentY, pageHeight);
+      });
       break;
-    case 'week':
-      renderWeekView(pdf, schedules, options, margin, contentWidth, currentY, pageWidth, pageHeight);
+    }
+    case 'week': {
+      let currentWeekStart = startOfWeek(options.dateRange.start, { weekStartsOn: 1 });
+      const rangeEnd = options.dateRange.end;
+      let weekIndex = 0;
+
+      while (currentWeekStart <= rangeEnd) {
+        if (weekIndex > 0) {
+          pdf.addPage();
+        }
+        renderWeekView(pdf, schedules, currentWeekStart, margin, contentWidth, currentY, pageWidth, pageHeight);
+        currentWeekStart = addDays(currentWeekStart, 7);
+        weekIndex++;
+      }
       break;
-    case 'month':
-      renderMonthView(pdf, schedules, options, margin, contentWidth, currentY, pageWidth, pageHeight);
+    }
+    case 'month': {
+      let currentMonth = new Date(options.dateRange.start.getFullYear(), options.dateRange.start.getMonth(), 1);
+      const endMonth = new Date(options.dateRange.end.getFullYear(), options.dateRange.end.getMonth(), 1);
+      let monthIndex = 0;
+
+      while (currentMonth <= endMonth) {
+        if (monthIndex > 0) {
+          pdf.addPage();
+        }
+        renderMonthView(pdf, schedules, currentMonth, margin, contentWidth, currentY, pageWidth, pageHeight);
+        currentMonth = addMonths(currentMonth, 1);
+        monthIndex++;
+      }
       break;
+    }
     case 'list':
     default:
       renderListView(pdf, schedules, margin, contentWidth, currentY, pageHeight);
@@ -103,19 +138,22 @@ export const exportScheduleToPDFAdvanced = (
 const renderDayView = (
   pdf: jsPDF,
   schedules: ScheduleSlot[],
-  options: PrintOptions,
+  day: Date,
   margin: number,
   contentWidth: number,
   startY: number,
   pageHeight: number
 ) => {
   let currentY = startY;
-  const daySchedules = schedules.filter(s => {
-    const slotDate = new Date(s.date);
-    return slotDate.toDateString() === options.dateRange.start.toDateString();
-  }).sort((a, b) => a.start_time.localeCompare(b.start_time));
 
-  const dateStr = format(options.dateRange.start, 'EEEE d MMMM yyyy', { locale: fr });
+  const daySchedules = schedules
+    .filter((s) => {
+      const slotDate = new Date(s.date);
+      return slotDate.toDateString() === day.toDateString();
+    })
+    .sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+  const dateStr = format(day, 'EEEE d MMMM yyyy', { locale: fr });
   pdf.setFontSize(12);
   pdf.setFont('helvetica', 'bold');
   pdf.setFillColor(248, 250, 252);
@@ -132,7 +170,7 @@ const renderDayView = (
     return;
   }
 
-  daySchedules.forEach((slot, index) => {
+  daySchedules.forEach((slot) => {
     if (currentY > pageHeight - 40) {
       pdf.addPage();
       currentY = margin + 10;
@@ -140,7 +178,7 @@ const renderDayView = (
 
     const slotColor = slot.color || '#8B5CF6';
     const rgb = hexToRgb(slotColor);
-    
+
     // Slot card
     pdf.setFillColor(rgb.r, rgb.g, rgb.b);
     pdf.roundedRect(margin, currentY, contentWidth, 22, 2, 2, 'F');
@@ -177,7 +215,7 @@ const renderDayView = (
 const renderWeekView = (
   pdf: jsPDF,
   schedules: ScheduleSlot[],
-  options: PrintOptions,
+  weekStartDate: Date,
   margin: number,
   contentWidth: number,
   startY: number,
@@ -185,25 +223,25 @@ const renderWeekView = (
   pageHeight: number
 ) => {
   let currentY = startY;
-  
+
   // Get week days
-  const weekStart = startOfWeek(options.dateRange.start, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(options.dateRange.start, { weekStartsOn: 1 });
+  const weekStart = startOfWeek(weekStartDate, { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(weekStartDate, { weekStartsOn: 1 });
   const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
-  
+
   const dayWidth = contentWidth / 7;
   const headerHeight = 15;
 
   // Day headers
   pdf.setFillColor(139, 92, 246);
   pdf.rect(margin, currentY, contentWidth, headerHeight, 'F');
-  
+
   pdf.setFontSize(8);
   pdf.setFont('helvetica', 'bold');
   pdf.setTextColor(255, 255, 255);
-  
+
   days.forEach((day, index) => {
-    const x = margin + (index * dayWidth) + (dayWidth / 2);
+    const x = margin + index * dayWidth + dayWidth / 2;
     const dayName = format(day, 'EEE', { locale: fr });
     const dayNum = format(day, 'd');
     pdf.text(`${dayName} ${dayNum}`, x, currentY + 6, { align: 'center' });
@@ -215,27 +253,28 @@ const renderWeekView = (
 
   // Calculate max slots per day for height
   const slotsByDay: { [key: string]: ScheduleSlot[] } = {};
-  days.forEach(day => {
+  days.forEach((day) => {
     const dateStr = format(day, 'yyyy-MM-dd');
-    slotsByDay[dateStr] = schedules.filter(s => s.date === dateStr)
+    slotsByDay[dateStr] = schedules
+      .filter((s) => s.date === dateStr)
       .sort((a, b) => a.start_time.localeCompare(b.start_time));
   });
 
-  const maxSlots = Math.max(...Object.values(slotsByDay).map(s => s.length), 1);
+  const maxSlots = Math.max(...Object.values(slotsByDay).map((s) => s.length), 1);
   const slotHeight = Math.min(25, (pageHeight - currentY - 30) / maxSlots);
 
   // Draw slots
   days.forEach((day, dayIndex) => {
     const dateStr = format(day, 'yyyy-MM-dd');
     const daySlots = slotsByDay[dateStr] || [];
-    const x = margin + (dayIndex * dayWidth);
+    const x = margin + dayIndex * dayWidth;
 
     // Day column background
     pdf.setFillColor(dayIndex % 2 === 0 ? 252 : 248, 250, 252);
     pdf.rect(x, currentY, dayWidth, maxSlots * slotHeight, 'F');
 
     daySlots.forEach((slot, slotIndex) => {
-      const y = currentY + (slotIndex * slotHeight);
+      const y = currentY + slotIndex * slotHeight;
       const slotColor = slot.color || '#8B5CF6';
       const rgb = hexToRgb(slotColor);
 
@@ -272,7 +311,7 @@ const renderWeekView = (
 const renderMonthView = (
   pdf: jsPDF,
   schedules: ScheduleSlot[],
-  options: PrintOptions,
+  monthDate: Date,
   margin: number,
   contentWidth: number,
   startY: number,
@@ -280,9 +319,9 @@ const renderMonthView = (
   pageHeight: number
 ) => {
   let currentY = startY;
-  
+
   // Month header
-  const monthName = format(options.dateRange.start, 'MMMM yyyy', { locale: fr });
+  const monthName = format(monthDate, 'MMMM yyyy', { locale: fr });
   pdf.setFontSize(14);
   pdf.setFont('helvetica', 'bold');
   pdf.text(monthName.charAt(0).toUpperCase() + monthName.slice(1), pageWidth / 2, currentY, { align: 'center' });
@@ -295,20 +334,20 @@ const renderMonthView = (
 
   pdf.setFillColor(139, 92, 246);
   pdf.rect(margin, currentY, contentWidth, 8, 'F');
-  
+
   pdf.setFontSize(8);
   pdf.setTextColor(255, 255, 255);
   dayNames.forEach((name, index) => {
-    pdf.text(name, margin + (index * cellWidth) + (cellWidth / 2), currentY + 5, { align: 'center' });
+    pdf.text(name, margin + index * cellWidth + cellWidth / 2, currentY + 5, { align: 'center' });
   });
-  
+
   pdf.setTextColor(0, 0, 0);
   currentY += 10;
 
   // Get all days of the month
-  const firstDay = new Date(options.dateRange.start.getFullYear(), options.dateRange.start.getMonth(), 1);
-  const lastDay = new Date(options.dateRange.start.getFullYear(), options.dateRange.start.getMonth() + 1, 0);
-  
+  const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+  const lastDay = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+
   // Start from Monday of the first week
   const startDate = startOfWeek(firstDay, { weekStartsOn: 1 });
   const endDate = endOfWeek(lastDay, { weekStartsOn: 1 });
@@ -319,11 +358,11 @@ const renderMonthView = (
     const col = index % 7;
     if (index > 0 && col === 0) row++;
 
-    const x = margin + (col * cellWidth);
-    const y = currentY + (row * cellHeight);
+    const x = margin + col * cellWidth;
+    const y = currentY + row * cellHeight;
 
     // Cell background
-    const isCurrentMonth = day.getMonth() === options.dateRange.start.getMonth();
+    const isCurrentMonth = day.getMonth() === monthDate.getMonth();
     pdf.setFillColor(isCurrentMonth ? 255 : 245, isCurrentMonth ? 255 : 245, isCurrentMonth ? 255 : 245);
     pdf.rect(x, y, cellWidth, cellHeight, 'FD');
     pdf.setDrawColor(220, 220, 220);
@@ -337,23 +376,23 @@ const renderMonthView = (
 
     // Slots for this day
     const dateStr = format(day, 'yyyy-MM-dd');
-    const daySlots = schedules.filter(s => s.date === dateStr);
-    
+    const daySlots = schedules.filter((s) => s.date === dateStr);
+
     pdf.setFontSize(5);
     daySlots.slice(0, 3).forEach((slot, slotIndex) => {
       const slotColor = slot.color || '#8B5CF6';
       const rgb = hexToRgb(slotColor);
-      
-      const slotY = y + 8 + (slotIndex * 6);
+
+      const slotY = y + 8 + slotIndex * 6;
       pdf.setFillColor(rgb.r, rgb.g, rgb.b);
       pdf.roundedRect(x + 1, slotY, cellWidth - 2, 5, 0.5, 0.5, 'F');
-      
+
       if (isLightColor(slotColor)) {
         pdf.setTextColor(0, 0, 0);
       } else {
         pdf.setTextColor(255, 255, 255);
       }
-      
+
       const slotText = `${slot.start_time.substring(0, 5)} ${slot.formation_modules?.title?.substring(0, 8) || ''}`;
       pdf.text(slotText, x + 2, slotY + 3.5);
     });
