@@ -59,10 +59,16 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
     let start: Date, end: Date;
 
     switch (mode) {
-      case 'day':
-        start = today;
-        end = today;
+      case 'day': {
+        const todayNoTime = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate()
+        );
+        start = todayNoTime;
+        end = todayNoTime;
         break;
+      }
       case 'week':
         start = startOfWeek(today, { weekStartsOn: 1 });
         end = endOfWeek(today, { weekStartsOn: 1 });
