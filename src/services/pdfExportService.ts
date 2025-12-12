@@ -119,22 +119,30 @@ export const pdfExportService = {
         }
       }
 
-      // Load all students assigned to the formation
+      // Load all students assigned to the formation (using user_formation_assignments for consistency)
       let students: { id: string; first_name: string; last_name: string; email: string }[] = [];
       if (attendanceSheet.formation_id) {
-        const { data: studentFormations } = await supabase
-          .from('student_formations')
-          .select('student_id, users:student_id(id, first_name, last_name, email)')
+        const { data: assignments, error: assignmentsError } = await supabase
+          .from('user_formation_assignments')
+          .select(`
+            user_id,
+            users!user_id(
+              id,
+              first_name,
+              last_name,
+              email
+            )
+          `)
           .eq('formation_id', attendanceSheet.formation_id);
-        
-        if (studentFormations) {
-          students = studentFormations
-            .filter((sf: any) => sf.users)
-            .map((sf: any) => ({
-              id: sf.users.id,
-              first_name: sf.users.first_name || '',
-              last_name: sf.users.last_name || '',
-              email: sf.users.email || ''
+
+        if (!assignmentsError && assignments) {
+          students = (assignments as any[])
+            .filter((a) => a.users)
+            .map((a) => ({
+              id: a.users.id,
+              first_name: a.users.first_name || '',
+              last_name: a.users.last_name || '',
+              email: a.users.email || ''
             }));
         }
       }
