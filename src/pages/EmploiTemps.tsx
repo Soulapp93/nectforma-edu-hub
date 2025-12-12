@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { format, addWeeks, subWeeks, addMonths, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Users, Calendar, GraduationCap, ChevronUp, ChevronDown } from 'lucide-react';
+import { Users, Calendar, GraduationCap, ChevronUp, ChevronDown, Clock, BookOpen, User, MapPin, Eye } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { navigateWeek, getWeekInfo, getWeekDays } from '@/utils/calendarUtils';
@@ -269,10 +269,7 @@ const EmploiTemps = () => {
       );
     }
 
-    // Vue liste format tableau coloré pour tous les utilisateurs
-    const now = new Date();
-    const isPast = (eventDate: Date) => eventDate < today;
-
+    // Vue liste format tableau coloré - Design comme dans l'administration
     // Fonction pour formater les horaires en HH:mm
     const formatTime = (time: string) => {
       if (!time) return '';
@@ -283,87 +280,112 @@ const EmploiTemps = () => {
     return (
       <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-8">
         <div className="bg-card rounded-2xl shadow-xl border border-border/40 overflow-hidden">
-          {/* En-têtes du tableau - Design moderne avec gradient */}
-          <div className="bg-gradient-to-r from-primary via-primary/90 to-primary/80 px-4 sm:px-6 py-4">
-            <div className="grid grid-cols-12 gap-2 sm:gap-4 items-center text-xs sm:text-sm font-bold text-primary-foreground uppercase tracking-wider">
+          {/* En-têtes du tableau - Design moderne comme l'admin */}
+          <div className="bg-muted/60 border-b border-border/40 px-4 sm:px-6 py-4">
+            <div className="grid grid-cols-12 gap-2 sm:gap-4 items-center text-xs sm:text-sm font-semibold text-muted-foreground">
               <div className="col-span-2 flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 Date
               </div>
-              <div className="col-span-2">Horaire</div>
-              <div className="col-span-3">Module</div>
-              <div className="col-span-2">Formateur</div>
-              <div className="col-span-2">Salle</div>
+              <div className="col-span-2 flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Horaire
+              </div>
+              <div className="col-span-3 flex items-center gap-2">
+                <BookOpen className="h-4 w-4" />
+                Module
+              </div>
+              <div className="col-span-2 flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Formateur
+              </div>
+              <div className="col-span-2 flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Salle
+              </div>
               <div className="col-span-1 text-center">Actions</div>
             </div>
           </div>
 
-          {/* Corps du tableau */}
-          <div className="divide-y divide-border/30">
+          {/* Corps du tableau - Créneaux colorés */}
+          <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
             {listEvents.length === 0 && (
-              <div className="px-4 sm:px-6 py-8 text-center text-sm text-muted-foreground">
-                Aucun cours pour la période sélectionnée.
+              <div className="px-4 sm:px-6 py-8 text-center text-sm text-muted-foreground bg-muted/30 rounded-xl">
+                <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+                <p>Aucun cours pour la période sélectionnée.</p>
               </div>
             )}
 
             {listEvents.map((event) => {
-              const eventIsPast = isPast(event.date);
-              const bgColor = eventIsPast ? 'bg-green-500' : 'bg-red-500';
+              const slotColor = event.color || '#8B5CF6';
 
               return (
                 <div
                   key={event.id}
-                  className={`px-4 sm:px-6 py-3 sm:py-4 ${bgColor} text-white transition-all hover:opacity-90`}
+                  onClick={() => handleEventClick(event)}
+                  className="rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden"
+                  style={{ backgroundColor: slotColor }}
                 >
-                  <div className="grid grid-cols-12 gap-2 sm:gap-4 items-center">
-                    {/* Date */}
-                    <div className="col-span-2">
-                      <div className="text-sm font-semibold">
-                        {format(event.date, 'dd/MM/yyyy', { locale: fr })}
+                  <div className="px-4 sm:px-6 py-4">
+                    <div className="grid grid-cols-12 gap-2 sm:gap-4 items-center">
+                      {/* Date */}
+                      <div className="col-span-2">
+                        <div className="text-sm font-bold text-white">
+                          {format(event.date, 'dd/MM/yyyy', { locale: fr })}
+                        </div>
+                        <div className="text-xs text-white/80 capitalize">
+                          {format(event.date, 'EEEE', { locale: fr })}
+                        </div>
                       </div>
-                      <div className="text-xs opacity-80 capitalize">
-                        {format(event.date, 'EEEE', { locale: fr })}
+
+                      {/* Horaire */}
+                      <div className="col-span-2">
+                        <span className="inline-flex items-center rounded-md bg-white/20 backdrop-blur-sm px-2.5 py-1 text-xs sm:text-sm font-semibold text-white border border-white/30">
+                          {formatTime(event.startTime)} - {formatTime(event.endTime)}
+                        </span>
                       </div>
-                    </div>
 
-                    {/* Horaire */}
-                    <div className="col-span-2">
-                      <span className="inline-flex items-center rounded-full bg-white/20 px-2 py-1 text-xs sm:text-sm font-medium">
-                        {formatTime(event.startTime)} - {formatTime(event.endTime)}
-                      </span>
-                    </div>
-
-                    {/* Module */}
-                    <div className="col-span-3">
-                      <div className="text-sm font-semibold truncate">
-                        {event.title}
+                      {/* Module */}
+                      <div className="col-span-3">
+                        <div className="text-sm font-bold text-white">
+                          {event.title}
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Formateur */}
-                    <div className="col-span-2">
-                      <div className="text-sm opacity-90 truncate">
-                        {event.instructor}
+                      {/* Formateur */}
+                      <div className="col-span-2">
+                        <div className="flex items-center gap-1.5">
+                          <User className="h-3.5 w-3.5 text-white/70" />
+                          <span className="text-sm text-white/90 truncate">
+                            {event.instructor || 'Non assigné'}
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Salle */}
-                    <div className="col-span-2">
-                      <span className="inline-flex items-center rounded-full bg-white/20 px-2 py-1 text-xs sm:text-sm">
-                        {event.room}
-                      </span>
-                    </div>
+                      {/* Salle */}
+                      <div className="col-span-2">
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="h-3.5 w-3.5 text-white/70" />
+                          <span className="text-sm text-white font-medium">
+                            {event.room || 'Non définie'}
+                          </span>
+                        </div>
+                      </div>
 
-                    {/* Actions */}
-                    <div className="col-span-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEventClick(event)}
-                        className="h-8 w-8 p-0 text-white hover:bg-white/20"
-                      >
-                        <Users className="h-4 w-4" />
-                      </Button>
+                      {/* Actions */}
+                      <div className="col-span-1 flex justify-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEventClick(event);
+                          }}
+                          className="h-8 w-8 p-0 text-white hover:bg-white/20 rounded-full"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
