@@ -17,7 +17,9 @@ import {
   FileSpreadsheet,
   CheckCircle,
   Edit,
-  Trash2
+  Trash2,
+  Copy,
+  GripVertical
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -234,10 +236,6 @@ const ScheduleManagement = () => {
   };
 
   const handleEditSlot = (slot: ScheduleSlot) => {
-    if (!isEditMode) {
-      toast.info('Passez en mode édition pour modifier les créneaux');
-      return;
-    }
     if (selectedSchedule?.id) {
       setSlotToEdit(slot);
       setIsEditSlotModalOpen(true);
@@ -261,10 +259,6 @@ const ScheduleManagement = () => {
   };
 
   const handleDuplicateSlot = async (slot: ScheduleSlot) => {
-    if (!isEditMode) {
-      toast.info('Passez en mode édition pour dupliquer les créneaux');
-      return;
-    }
     try {
       const duplicatedSlot = {
         schedule_id: slot.schedule_id,
@@ -287,10 +281,6 @@ const ScheduleManagement = () => {
   };
 
   const handleDeleteSlot = async (slot: ScheduleSlot) => {
-    if (!isEditMode) {
-      toast.info('Passez en mode édition pour supprimer les créneaux');
-      return;
-    }
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce créneau ?')) {
       try {
         await scheduleService.deleteScheduleSlot(slot.id);
@@ -490,6 +480,8 @@ const ScheduleManagement = () => {
       date: format(date, 'd'),
       actualDate: date, // Ajouter la date réelle pour faciliter l'accès
       modules: daySlots.map(slot => ({
+        slotId: slot.id, // Ajouter l'ID du slot pour pouvoir le retrouver facilement
+        slot: slot, // Référence directe au slot
         title: slot.formation_modules?.title || 'Module non défini',
         time: `${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`,
         instructor: slot.users?.first_name && slot.users?.last_name 
@@ -921,6 +913,7 @@ const ScheduleManagement = () => {
                                         e.stopPropagation();
                                         handleEditSlot(slot);
                                       }}
+                                      title="Modifier"
                                     >
                                       <Edit className="h-3 w-3" />
                                     </Button>
@@ -930,8 +923,21 @@ const ScheduleManagement = () => {
                                       className="h-7 w-7 p-0 text-white/80 hover:text-white hover:bg-white/20"
                                       onClick={(e) => {
                                         e.stopPropagation();
+                                        handleDuplicateSlot(slot);
+                                      }}
+                                      title="Dupliquer"
+                                    >
+                                      <Copy className="h-3 w-3" />
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="ghost" 
+                                      className="h-7 w-7 p-0 text-white/80 hover:text-white hover:bg-white/20"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
                                         handleDeleteSlot(slot);
                                       }}
+                                      title="Supprimer"
                                     >
                                       <Trash2 className="h-3 w-3" />
                                     </Button>
@@ -970,7 +976,9 @@ const ScheduleManagement = () => {
                   day.modules.length > 0 
                     ? 'bg-card shadow-md hover:shadow-primary/10' 
                     : 'bg-muted/30 shadow-sm opacity-70'
-                }`}
+                } ${isEditMode ? 'border-dashed border-2 border-primary/30' : ''}`}
+                onDragOver={isEditMode ? handleDragOver : undefined}
+                onDrop={isEditMode ? (e) => handleDrop(e, day.actualDate) : undefined}
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
@@ -1020,108 +1028,120 @@ const ScheduleManagement = () => {
                     </div>
                   ) : (
                     <>
-                      {day.modules.map((module, index) => {
-                        const slot = slots.find(s => 
-                          s.formation_modules?.title === module.title &&
-                          new Date(s.date).toDateString() === day.actualDate.toDateString()
-                        );
-                        return (
-                          <TooltipProvider key={index}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div
-                                  className="relative p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all duration-200 mb-2 text-white group"
-                                  style={{ 
-                                    backgroundColor: module.color || slot?.color || '#8B5CF6'
-                                  }}
-                                  onClick={() => slot && handleSlotClick(slot)}
-                                >
-                           <div>
-                             <h4 className="font-semibold text-white text-sm mb-2">
-                               {module.title}
-                             </h4>
-                             
-                             <div className="space-y-1">
-                               <div className="flex items-center text-xs text-white/90">
-                                 <Clock className="h-3 w-3 mr-1 text-white/80" />
-                                 {module.time}
-                               </div>
-                               <div className="flex items-center text-xs text-white/90">
-                                 <MapPin className="h-3 w-3 mr-1 text-white/80" />
-                                 {module.room}
-                               </div>
-                               <div className="flex items-center text-xs text-white/90">
-                                 <User className="h-3 w-3 mr-1 text-white/80" />
-                                 {module.instructor}
-                               </div>
-                             </div>
-                             
-                              {/* Admin actions */}
-                               {isEditMode && (
-                                 <div className="flex items-center space-x-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                   <Button 
-                                     size="sm" 
-                                     variant="ghost" 
-                                     className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        const slot = slots.find(s => 
-                                          s.formation_modules?.title === module.title &&
-                                          new Date(s.date).toDateString() === day.actualDate.toDateString()
-                                        );
-                                        if (slot) handleEditSlot(slot);
-                                      }}
-                                   >
-                                     <Edit className="h-3 w-3" />
-                                   </Button>
-                                   <Button 
-                                     size="sm" 
-                                     variant="ghost" 
-                                     className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        const slot = slots.find(s => 
-                                          s.formation_modules?.title === module.title &&
-                                          new Date(s.date).toDateString() === day.actualDate.toDateString()
-                                        );
-                                        if (slot) handleDeleteSlot(slot);
-                                      }}
-                                   >
-                                     <Trash2 className="h-3 w-3" />
-                                   </Button>
-                                 </div>
+                      {day.modules.map((module, index) => (
+                        <TooltipProvider key={module.slotId || index}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div
+                                draggable={isEditMode}
+                                onDragStart={isEditMode ? (e) => handleDragStart(e, module.slot) : undefined}
+                                className={`relative p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all duration-200 mb-2 text-white group ${isEditMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
+                                style={{ 
+                                  backgroundColor: module.color || '#8B5CF6'
+                                }}
+                                onClick={() => module.slot && handleSlotClick(module.slot)}
+                              >
+                                {/* Drag handle indicator */}
+                                {isEditMode && (
+                                  <div className="absolute top-2 right-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                                    <GripVertical className="h-4 w-4 text-white/70" />
+                                  </div>
                                 )}
-                            </div>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="right" className="max-w-xs">
-                          <div className="space-y-1">
-                            <p className="font-semibold">{module.title}</p>
-                            <p className="text-xs">{module.time}</p>
-                            <p className="text-xs">{module.instructor}</p>
-                            <p className="text-xs">Salle: {module.room}</p>
-                          </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        );
-                      })}
-                       {isEditMode && (
-                         <Button 
-                           size="sm" 
-                           variant="outline"
-                           onClick={(e) => {
-                             e.preventDefault();
-                             e.stopPropagation();
-                             handleAddSlot(day.actualDate, '09:00');
-                           }}
-                           disabled={!selectedSchedule?.id}
-                           className="w-full text-xs"
-                         >
-                           <Plus className="h-3 w-3 mr-1" />
-                           Ajouter un cours
-                         </Button>
-                       )}
+                                
+                                <div>
+                                  <h4 className="font-semibold text-white text-sm mb-2 pr-6">
+                                    {module.title}
+                                  </h4>
+                                  
+                                  <div className="space-y-1">
+                                    <div className="flex items-center text-xs text-white/90">
+                                      <Clock className="h-3 w-3 mr-1 text-white/80" />
+                                      {module.time}
+                                    </div>
+                                    <div className="flex items-center text-xs text-white/90">
+                                      <MapPin className="h-3 w-3 mr-1 text-white/80" />
+                                      {module.room}
+                                    </div>
+                                    <div className="flex items-center text-xs text-white/90">
+                                      <User className="h-3 w-3 mr-1 text-white/80" />
+                                      {module.instructor}
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Admin actions */}
+                                  {isEditMode && (
+                                    <div className="flex items-center space-x-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <Button 
+                                        size="sm" 
+                                        variant="ghost" 
+                                        className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (module.slot) handleEditSlot(module.slot);
+                                        }}
+                                        title="Modifier"
+                                      >
+                                        <Edit className="h-3 w-3" />
+                                      </Button>
+                                      <Button 
+                                        size="sm" 
+                                        variant="ghost" 
+                                        className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (module.slot) handleDuplicateSlot(module.slot);
+                                        }}
+                                        title="Dupliquer"
+                                      >
+                                        <Copy className="h-3 w-3" />
+                                      </Button>
+                                      <Button 
+                                        size="sm" 
+                                        variant="ghost" 
+                                        className="h-6 w-6 p-0 text-white/80 hover:text-white hover:bg-white/20"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (module.slot) handleDeleteSlot(module.slot);
+                                        }}
+                                        title="Supprimer"
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" className="max-w-xs">
+                              <div className="space-y-1">
+                                <p className="font-semibold">{module.title}</p>
+                                <p className="text-xs">{module.time}</p>
+                                <p className="text-xs">{module.instructor}</p>
+                                <p className="text-xs">Salle: {module.room}</p>
+                                {isEditMode && (
+                                  <p className="text-xs text-muted-foreground mt-2">Glissez pour déplacer</p>
+                                )}
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ))}
+                      {isEditMode && (
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleAddSlot(day.actualDate, '09:00');
+                          }}
+                          disabled={!selectedSchedule?.id}
+                          className="w-full text-xs"
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Ajouter un cours
+                        </Button>
+                      )}
                     </>
                   )}
                 </CardContent>

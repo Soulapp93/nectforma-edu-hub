@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, MapPin, User, Plus, Edit, Copy, Trash2 } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, Plus, Edit, Copy, Trash2, GripVertical } from 'lucide-react';
 import { ScheduleSlot } from '@/services/scheduleService';
 import SlotActionMenu from './SlotActionMenu';
 
@@ -34,6 +34,7 @@ interface ScheduleManagementCalendarProps {
   onDragStart?: (e: React.DragEvent, slot: ScheduleSlot) => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent, date: Date) => void;
+  isEditMode?: boolean;
 }
 
 export const ScheduleManagementCalendar: React.FC<ScheduleManagementCalendarProps> = ({
@@ -46,7 +47,8 @@ export const ScheduleManagementCalendar: React.FC<ScheduleManagementCalendarProp
   onDeleteSlot,
   onDragStart,
   onDragOver,
-  onDrop
+  onDrop,
+  isEditMode = false
 }) => {
   return (
     <div className="container mx-auto px-6 py-8">
@@ -58,9 +60,9 @@ export const ScheduleManagementCalendar: React.FC<ScheduleManagementCalendarProp
               day.modules.length > 0 
                 ? 'bg-card shadow-md hover:shadow-primary/10' 
                 : 'bg-muted/30 shadow-sm'
-            }`}
-            onDragOver={onDragOver}
-            onDrop={onDrop ? (e) => onDrop(e, day.dateObj) : undefined}
+            } ${isEditMode ? 'border-dashed border-2 border-primary/30' : ''}`}
+            onDragOver={isEditMode ? onDragOver : undefined}
+            onDrop={isEditMode && onDrop ? (e) => onDrop(e, day.dateObj) : undefined}
           >
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -81,15 +83,17 @@ export const ScheduleManagementCalendar: React.FC<ScheduleManagementCalendarProp
                 </div>
                 
                 {/* Bouton Ajouter sur chaque colonne de date */}
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => onAddSlotToDate(day.dateObj)}
-                  className="p-2 h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary transition-all duration-300"
-                  title="Ajouter un créneau"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
+                {isEditMode && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => onAddSlotToDate(day.dateObj)}
+                    className="p-2 h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary transition-all duration-300"
+                    title="Ajouter un créneau"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </CardHeader>
 
@@ -100,23 +104,25 @@ export const ScheduleManagementCalendar: React.FC<ScheduleManagementCalendarProp
                   <p className="text-muted-foreground text-sm mb-3">
                     Aucun cours
                   </p>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => onAddSlotToDate(day.dateObj)}
-                    className="text-primary hover:bg-primary/10 transition-all duration-300"
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Ajouter
-                  </Button>
+                  {isEditMode && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => onAddSlotToDate(day.dateObj)}
+                      className="text-primary hover:bg-primary/10 transition-all duration-300"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Ajouter
+                    </Button>
+                  )}
                 </div>
               ) : (
                 day.modules.map((module, index) => (
                   <div
                     key={module.id}
-                    draggable={onDragStart ? true : false}
-                    onDragStart={onDragStart ? (e) => onDragStart(e, module.slot) : undefined}
-                    className="relative p-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-move group"
+                    draggable={isEditMode && onDragStart ? true : false}
+                    onDragStart={isEditMode && onDragStart ? (e) => onDragStart(e, module.slot) : undefined}
+                    className={`relative p-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 group ${isEditMode ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
                     style={{ 
                       backgroundColor: module.color || '#6B7280',
                       backgroundImage: `linear-gradient(135deg, ${module.color || '#6B7280'}, ${module.color ? module.color + '90' : '#6B7280BB'})`,
@@ -124,8 +130,15 @@ export const ScheduleManagementCalendar: React.FC<ScheduleManagementCalendarProp
                     }}
                     onClick={() => onSlotClick?.(module.slot)}
                   >
+                    {/* Drag handle indicator */}
+                    {isEditMode && (
+                      <div className="absolute top-2 right-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                        <GripVertical className="h-4 w-4 text-white/70" />
+                      </div>
+                    )}
+                    
                     <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
+                      <div className="flex-1 pr-6">
                         <h4 className="font-semibold text-white text-sm mb-1">
                           {module.title}
                         </h4>
@@ -140,12 +153,14 @@ export const ScheduleManagementCalendar: React.FC<ScheduleManagementCalendarProp
                       </div>
                       
                       {/* Menu d'actions pour chaque slot */}
-                      <SlotActionMenu
-                        slot={module.slot}
-                        onEdit={onEditSlot}
-                        onDuplicate={onDuplicateSlot}
-                        onDelete={onDeleteSlot}
-                      />
+                      {isEditMode && (
+                        <SlotActionMenu
+                          slot={module.slot}
+                          onEdit={onEditSlot}
+                          onDuplicate={onDuplicateSlot}
+                          onDelete={onDeleteSlot}
+                        />
+                      )}
                     </div>
                     
                     <div className="space-y-1">
@@ -162,6 +177,12 @@ export const ScheduleManagementCalendar: React.FC<ScheduleManagementCalendarProp
                         {module.instructor}
                       </div>
                     </div>
+                    
+                    {isEditMode && (
+                      <p className="text-[10px] text-white/50 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        Glissez pour déplacer
+                      </p>
+                    )}
                   </div>
                 ))
               )}
