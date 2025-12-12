@@ -95,10 +95,16 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
   };
 
   const handlePrint = () => {
-    // Filtrer les créneaux selon la plage de dates
+    // Normaliser les dates pour ignorer l'heure (évite les décalages de fuseau horaire)
+    const normalizeDate = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+    // Filtrer les créneaux selon la plage de dates (comparaison sur la date uniquement)
     const filteredSchedules = schedules.filter(slot => {
-      const slotDate = new Date(slot.date);
-      return slotDate >= printOptions.dateRange.start && slotDate <= printOptions.dateRange.end;
+      const slotDateRaw = new Date(slot.date);
+      const slotDate = normalizeDate(slotDateRaw);
+      const start = normalizeDate(printOptions.dateRange.start);
+      const end = normalizeDate(printOptions.dateRange.end);
+      return slotDate >= start && slotDate <= end;
     });
 
     if (filteredSchedules.length === 0) {
