@@ -83,6 +83,26 @@ export const pdfExportService = {
         }
       }
       
+      // Load instructor info if not present
+      let instructorName = '';
+      if (attendanceSheet.instructor) {
+        instructorName = `${attendanceSheet.instructor.first_name || ''} ${attendanceSheet.instructor.last_name || ''}`.trim();
+      }
+      if (!instructorName && attendanceSheet.instructor_id) {
+        const { data: instructorData } = await supabase
+          .from('users')
+          .select('first_name, last_name')
+          .eq('id', attendanceSheet.instructor_id)
+          .single();
+        
+        if (instructorData) {
+          instructorName = `${instructorData.first_name || ''} ${instructorData.last_name || ''}`.trim();
+        }
+      }
+      if (!instructorName) {
+        instructorName = 'Non assigné';
+      }
+      
       // Load admin signature if sheet is validated
       let adminSignatureData = '';
       if (attendanceSheet.validated_by) {
@@ -99,7 +119,27 @@ export const pdfExportService = {
         }
       }
 
-      // Always reload signatures from the database to ensure instructor signature is available
+      // Load all students assigned to the formation
+      let students: { id: string; first_name: string; last_name: string; email: string }[] = [];
+      if (attendanceSheet.formation_id) {
+        const { data: studentFormations } = await supabase
+          .from('student_formations')
+          .select('student_id, users:student_id(id, first_name, last_name, email)')
+          .eq('formation_id', attendanceSheet.formation_id);
+        
+        if (studentFormations) {
+          students = studentFormations
+            .filter((sf: any) => sf.users)
+            .map((sf: any) => ({
+              id: sf.users.id,
+              first_name: sf.users.first_name || '',
+              last_name: sf.users.last_name || '',
+              email: sf.users.email || ''
+            }));
+        }
+      }
+
+      // Load all signatures from the database
       let signatures: any[] = [];
       try {
         const { data: signaturesData, error: signaturesError } = await supabase
@@ -107,9 +147,7 @@ export const pdfExportService = {
           .select(`*, users(first_name, last_name, email)`)
           .eq('attendance_sheet_id', attendanceSheet.id);
 
-        if (signaturesError) {
-          console.error('Error loading signatures for PDF export:', signaturesError);
-        } else if (signaturesData) {
+        if (!signaturesError && signaturesData) {
           signatures = (signaturesData as any[]).map(sig => ({
             ...sig,
             user: (sig as any).users
@@ -118,15 +156,39 @@ export const pdfExportService = {
       } catch (e) {
         console.error('Unexpected error loading signatures for PDF export:', e);
       }
+
+      // Create a map of signatures by user_id
+      const signatureMap = new Map<string, any>();
+      signatures.forEach(sig => {
+        signatureMap.set(sig.user_id, sig);
+      });
+
+      // Merge students with their signatures
+      const participants = students.map(student => {
+        const signature = signatureMap.get(student.id);
+        return {
+          id: student.id,
+          first_name: student.first_name,
+          last_name: student.last_name,
+          email: student.email,
+          present: signature?.present ?? false,
+          signed: !!signature,
+          signature_data: signature?.signature_data || null,
+          absence_reason: signature?.absence_reason || null
+        };
+      });
+
+      // Get instructor signature
+      const instructorSignature = signatures.find(sig => sig.user_type === 'instructor');
       
       // Header with purple background
       pdf.setFillColor(139, 92, 246);
-      pdf.rect(0, 0, pageWidth, 45, 'F');
+      pdf.rect(0, 0, pageWidth, 50, 'F');
       
-      // Add establishment logo in top-left corner if available
+      // Add establishment logo and name in top-left corner
+      let logoHeight = 0;
       if (establishmentLogo) {
         try {
-          // Load and add logo image
           const logoImg = new Image();
           logoImg.crossOrigin = 'anonymous';
           await new Promise((resolve, reject) => {
@@ -135,7 +197,6 @@ export const pdfExportService = {
             logoImg.src = establishmentLogo;
           });
           
-          // Create canvas to convert to base64
           const canvas = document.createElement('canvas');
           canvas.width = logoImg.width;
           canvas.height = logoImg.height;
@@ -150,21 +211,22 @@ export const pdfExportService = {
             
             // Add logo
             pdf.addImage(logoData, 'PNG', margin, 7, 22, 22);
+            logoHeight = 30;
           }
         } catch (e) {
           console.error('Error loading establishment logo:', e);
-          // Fallback: just show establishment name
-          if (establishmentName) {
-            pdf.setFontSize(8);
-            pdf.setTextColor(255, 255, 255);
-            pdf.text(establishmentName, margin, 15);
-          }
         }
-      } else if (establishmentName) {
-        // No logo, just show establishment name
-        pdf.setFontSize(8);
+      }
+      
+      // Add establishment name below logo
+      if (establishmentName) {
+        pdf.setFontSize(7);
         pdf.setTextColor(255, 255, 255);
-        pdf.text(establishmentName, margin, 15);
+        pdf.setFont('helvetica', 'normal');
+        const nameY = establishmentLogo ? 37 : 15;
+        const maxWidth = 30;
+        const lines = pdf.splitTextToSize(establishmentName, maxWidth);
+        pdf.text(lines, margin + 10, nameY, { align: 'center' });
       }
       
       // Title
@@ -176,10 +238,10 @@ export const pdfExportService = {
       // Formation info
       pdf.setFontSize(14);
       pdf.setFont('helvetica', 'normal');
-      pdf.text(attendanceSheet.formations?.title || '', pageWidth / 2, 28, { align: 'center' });
+      pdf.text(attendanceSheet.formations?.title || '', pageWidth / 2, 30, { align: 'center' });
       
       pdf.setFontSize(11);
-      pdf.text(`Niveau : ${attendanceSheet.formations?.level || ''}`, pageWidth / 2, 37, { align: 'center' });
+      pdf.text(`Niveau : ${attendanceSheet.formations?.level || ''}`, pageWidth / 2, 42, { align: 'center' });
 
       // Course details section
       pdf.setTextColor(0, 0, 0);
@@ -187,18 +249,33 @@ export const pdfExportService = {
       pdf.setFont('helvetica', 'normal');
       const formattedDate = format(new Date(attendanceSheet.date), 'dd/MM/yyyy', { locale: fr });
       
-      const detailsY = 55;
+      const detailsY = 60;
       pdf.text(`Date: ${formattedDate}`, margin, detailsY);
       pdf.text(`Heure: ${attendanceSheet.start_time.substring(0, 5)} - ${attendanceSheet.end_time.substring(0, 5)}`, 80, detailsY);
-      pdf.text(`Salle: ${attendanceSheet.room || ''}`, 160, detailsY);
-      pdf.text(`Formateur: ${attendanceSheet.instructor?.first_name || 'undefined'} ${attendanceSheet.instructor?.last_name || 'undefined'}`, margin, detailsY + 7);
+      pdf.text(`Salle: ${attendanceSheet.room || 'Non définie'}`, 160, detailsY);
+      pdf.text(`Formateur: ${instructorName}`, margin, detailsY + 7);
+
+      // Count present and absent
+      const presentCount = participants.filter(p => p.present).length;
+      const absentCount = participants.filter(p => !p.present).length;
+
+      // Participants list header
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`Liste des participants (${participants.length})`, margin, detailsY + 18);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      pdf.setTextColor(34, 197, 94);
+      pdf.text(`Présents: ${presentCount}`, margin, detailsY + 24);
+      pdf.setTextColor(239, 68, 68);
+      pdf.text(`Absents: ${absentCount}`, margin + 30, detailsY + 24);
 
       // Table header
-      const tableStartY = 70;
+      const tableStartY = detailsY + 30;
       const colWidths = [90, 50, 40]; // Nom et Prénom, Statut, Signature
       const colX = [margin, margin + colWidths[0], margin + colWidths[0] + colWidths[1]];
       
-      // Header background (violet comme l'entête principal)
+      // Header background (violet)
       pdf.setFillColor(139, 92, 246);
       pdf.rect(margin, tableStartY, pageWidth - 2 * margin, 12, 'F');
       
@@ -212,12 +289,12 @@ export const pdfExportService = {
 
       // Table content
       let currentY = tableStartY + 12;
-      const rowHeight = 12;
+      const rowHeight = 14;
       
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(10);
       
-      signatures.forEach((signature, index) => {
+      participants.forEach((participant, index) => {
         if (currentY > 250) {
           pdf.addPage();
           currentY = 20;
@@ -237,16 +314,30 @@ export const pdfExportService = {
         pdf.rect(colX[1], currentY, colWidths[1], rowHeight);
         pdf.rect(colX[2], currentY, colWidths[2], rowHeight);
 
-        // Cell content
+        // Name
         pdf.setTextColor(0, 0, 0);
-        pdf.text(`${signature.user?.first_name || ''} ${signature.user?.last_name || ''}`, colX[0] + 3, currentY + 8);
-        pdf.text(signature.present ? 'Présent' : 'Absent', colX[1] + 3, currentY + 8);
+        const fullName = `${participant.first_name} ${participant.last_name}`.trim() || 'Nom inconnu';
+        pdf.text(fullName, colX[0] + 3, currentY + 9);
+        
+        // Status with color
+        if (participant.signed) {
+          if (participant.present) {
+            pdf.setTextColor(34, 197, 94); // Green
+            pdf.text('Présent', colX[1] + 3, currentY + 9);
+          } else {
+            pdf.setTextColor(239, 68, 68); // Red
+            pdf.text('Absent', colX[1] + 3, currentY + 9);
+          }
+        } else {
+          pdf.setTextColor(156, 163, 175); // Gray
+          pdf.text('Non signé', colX[1] + 3, currentY + 9);
+        }
         
         // Display signature image if exists
-        if (signature.signature_data) {
+        if (participant.signature_data) {
           try {
             pdf.addImage(
-              signature.signature_data,
+              participant.signature_data,
               'PNG',
               colX[2] + 2,
               currentY + 2,
@@ -256,9 +347,12 @@ export const pdfExportService = {
               'FAST'
             );
           } catch (e) {
-            console.error('Error adding signature image:', e);
-            pdf.text('Signé', colX[2] + 3, currentY + 8);
+            pdf.setTextColor(34, 197, 94);
+            pdf.text('Signé', colX[2] + 3, currentY + 9);
           }
+        } else {
+          pdf.setTextColor(156, 163, 175);
+          pdf.text('Non signé', colX[2] + 3, currentY + 9);
         }
         
         currentY += rowHeight;
@@ -283,7 +377,6 @@ export const pdfExportService = {
       pdf.rect(margin, currentY + 5, 85, 35);
       
       // Display trainer signature if exists
-      const instructorSignature = signatures.find(sig => sig.user_type === 'instructor');
       if (instructorSignature?.signature_data) {
         try {
           pdf.addImage(
@@ -299,9 +392,23 @@ export const pdfExportService = {
         } catch (e) {
           console.error('Error adding instructor signature:', e);
         }
+      } else {
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'italic');
+        pdf.setTextColor(156, 163, 175);
+        pdf.text('En attente de signature', margin + 15, currentY + 25);
       }
 
+      // Instructor name below signature box
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(instructorName, margin + 42.5, currentY + 45, { align: 'center' });
+
       // Admin signature
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(12);
+      pdf.setTextColor(0, 0, 0);
       pdf.text('Signature de l\'Administration', pageWidth - margin - 85, currentY);
       pdf.rect(pageWidth - margin - 85, currentY + 5, 85, 35);
       
@@ -321,7 +428,25 @@ export const pdfExportService = {
         } catch (e) {
           console.error('Error adding admin signature:', e);
         }
+      } else {
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'italic');
+        pdf.setTextColor(156, 163, 175);
+        pdf.text('En attente de validation', pageWidth - margin - 60, currentY + 25);
       }
+
+      // Admin label
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(100, 100, 100);
+      pdf.text('Administration', pageWidth - margin - 42.5, currentY + 45, { align: 'center' });
+
+      // Footer
+      pdf.setFontSize(8);
+      pdf.setTextColor(150, 150, 150);
+      const footerY = Math.min(currentY + 55, 285);
+      const generatedAt = format(new Date(), "dd MMMM yyyy 'à' HH:mm", { locale: fr });
+      pdf.text(`Document généré le ${generatedAt} - NECTFY`, pageWidth / 2, footerY, { align: 'center' });
 
       // Generate filename
       const filename = `emargement-${format(new Date(attendanceSheet.date), 'yyyy-MM-dd')}-${attendanceSheet.formations?.title?.replace(/\s+/g, '-')}.pdf`;
