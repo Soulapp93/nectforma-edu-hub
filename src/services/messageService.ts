@@ -32,16 +32,22 @@ export interface MessageAttachment {
   created_at: string;
 }
 
+export interface UploadedAttachment {
+  file_name: string;
+  file_url: string;
+  file_size: number;
+}
+
 export interface CreateMessageData {
   subject: string;
   content: string;
-  scheduled_for?: string;
+  scheduledFor?: string;
   is_draft?: boolean;
   recipients: {
     type: 'user' | 'formation' | 'all_instructors';
     ids?: string[]; // user_ids for individual, formation_ids for groups
   };
-  attachments?: File[];
+  attachments?: File[] | UploadedAttachment[];
 }
 
 export const messageService = {
@@ -58,7 +64,7 @@ export const messageService = {
           sender_id: user.id,
           subject: messageData.subject,
           content: messageData.content,
-          scheduled_for: messageData.scheduled_for,
+          scheduled_for: messageData.scheduledFor,
           is_draft: messageData.is_draft || false,
           attachment_count: messageData.attachments?.length || 0
         })
@@ -97,7 +103,14 @@ export const messageService = {
 
       // Handle attachments if any
       if (messageData.attachments && messageData.attachments.length > 0) {
-        await this.uploadAttachments(message.id, messageData.attachments);
+        // Check if attachments are Files or already uploaded
+        const firstAttachment = messageData.attachments[0];
+        if (firstAttachment instanceof File) {
+          await this.uploadAttachments(message.id, messageData.attachments as File[]);
+        } else {
+          // Already uploaded attachments
+          await this.saveUploadedAttachments(message.id, messageData.attachments as UploadedAttachment[]);
+        }
       }
 
       // Notifier les destinataires du nouveau message
@@ -147,6 +160,26 @@ export const messageService = {
       await Promise.all(attachmentPromises);
     } catch (error) {
       console.error('Erreur lors du téléchargement des pièces jointes:', error);
+      throw error;
+    }
+  },
+
+  async saveUploadedAttachments(messageId: string, attachments: UploadedAttachment[]): Promise<void> {
+    try {
+      const attachmentRecords = attachments.map(att => ({
+        message_id: messageId,
+        file_name: att.file_name,
+        file_url: att.file_url,
+        file_size: att.file_size
+      }));
+
+      const { error } = await supabase
+        .from('message_attachments')
+        .insert(attachmentRecords);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde des pièces jointes:', error);
       throw error;
     }
   },

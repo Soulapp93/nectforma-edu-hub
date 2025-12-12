@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { Mail, Send, MessageSquare, ExternalLink } from 'lucide-react';
+import { Mail, Send, MessageSquare, ExternalLink, Paperclip, X, Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { messageService } from '@/services/messageService';
+import { fileUploadService } from '@/services/fileUploadService';
 
 interface SendMessageModalProps {
   isOpen: boolean;
@@ -24,6 +27,33 @@ const SendMessageModal: React.FC<SendMessageModalProps> = ({
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'nectfy' | 'gmail'>('nectfy');
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState('');
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setAttachments(prev => [...prev, ...newFiles]);
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const resetForm = () => {
+    setSubject('');
+    setMessage('');
+    setAttachments([]);
+    setScheduleEnabled(false);
+    setScheduledDate('');
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
 
   const handleSendViaGmail = () => {
     const emails = recipients.map(r => r.email).join(',');
@@ -43,8 +73,24 @@ const SendMessageModal: React.FC<SendMessageModalProps> = ({
       return;
     }
 
+    if (scheduleEnabled && !scheduledDate) {
+      toast.error('Veuillez sélectionner une date pour la programmation');
+      return;
+    }
+
     setLoading(true);
     try {
+      // Upload attachments if any
+      const uploadedFiles: { file_name: string; file_url: string; file_size: number }[] = [];
+      for (const file of attachments) {
+        const fileUrl = await fileUploadService.uploadFile(file, 'message-attachments');
+        uploadedFiles.push({
+          file_name: file.name,
+          file_url: fileUrl,
+          file_size: file.size
+        });
+      }
+
       // Create message via NECTFY messaging system
       await messageService.createMessage({
         subject,
@@ -52,27 +98,33 @@ const SendMessageModal: React.FC<SendMessageModalProps> = ({
         recipients: {
           type: 'user',
           ids: recipients.map(r => r.id)
-        }
+        },
+        attachments: uploadedFiles,
+        scheduledFor: scheduleEnabled ? scheduledDate : undefined
       });
 
-      // Send email notification via Edge Function
-      const { error } = await supabase.functions.invoke('send-notification-email', {
-        body: {
-          userEmails: recipients.map(r => r.email),
-          title: subject,
-          message: 'Vous avez reçu un nouveau message sur votre espace NECTFY. Veuillez vous connecter pour le consulter.',
-          type: 'message'
-        }
-      });
+      // Send email notification via Edge Function (only if not scheduled)
+      if (!scheduleEnabled) {
+        const { error } = await supabase.functions.invoke('send-notification-email', {
+          body: {
+            userEmails: recipients.map(r => r.email),
+            title: subject,
+            message: 'Vous avez reçu un nouveau message sur votre espace NECTFY. Veuillez vous connecter pour le consulter.',
+            type: 'message'
+          }
+        });
 
-      if (error) {
-        console.error('Error sending email notification:', error);
-        // Don't fail the whole operation if email notification fails
+        if (error) {
+          console.error('Error sending email notification:', error);
+        }
       }
 
-      toast.success(`Message envoyé à ${recipients.length} destinataire(s)`);
-      setSubject('');
-      setMessage('');
+      toast.success(
+        scheduleEnabled 
+          ? `Message programmé pour ${recipients.length} destinataire(s)` 
+          : `Message envoyé à ${recipients.length} destinataire(s)`
+      );
+      resetForm();
       onClose();
     } catch (error: any) {
       console.error('Error sending message:', error);
@@ -83,8 +135,8 @@ const SendMessageModal: React.FC<SendMessageModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5 text-primary" />
@@ -133,9 +185,96 @@ const SendMessageModal: React.FC<SendMessageModalProps> = ({
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Votre message..."
-                rows={6}
+                rows={4}
               />
             </div>
+
+            {/* Schedule option - Only for NECTFY */}
+            {activeTab === 'nectfy' && (
+              <div className="space-y-3 border-t pt-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="schedule"
+                    checked={scheduleEnabled}
+                    onCheckedChange={(checked) => setScheduleEnabled(checked === true)}
+                  />
+                  <Label htmlFor="schedule" className="flex items-center gap-2 cursor-pointer">
+                    <Calendar className="h-4 w-4" />
+                    Programmer l'envoi
+                  </Label>
+                </div>
+
+                {scheduleEnabled && (
+                  <div className="flex items-center gap-2 pl-6">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="datetime-local"
+                      value={scheduledDate}
+                      onChange={(e) => setScheduledDate(e.target.value)}
+                      min={new Date().toISOString().slice(0, 16)}
+                      className="max-w-xs"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Attachments - Only for NECTFY */}
+            {activeTab === 'nectfy' && (
+              <div className="space-y-3 border-t pt-3">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Paperclip className="h-4 w-4" />
+                  Pièces jointes
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => document.getElementById('file-upload-admin')?.click()}
+                  >
+                    <Paperclip className="h-4 w-4 mr-2" />
+                    Ajouter des fichiers
+                  </Button>
+                  <input
+                    id="file-upload-admin"
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={handleFileUpload}
+                  />
+                </div>
+
+                {attachments.length > 0 && (
+                  <div className="space-y-2">
+                    {attachments.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-2 bg-muted/50 rounded-lg"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Paperclip className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <span className="text-sm truncate">{file.name}</span>
+                          <span className="text-xs text-muted-foreground flex-shrink-0">
+                            ({(file.size / 1024).toFixed(1)} Ko)
+                          </span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeAttachment(index)}
+                          className="h-6 w-6 p-0 flex-shrink-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <TabsContent value="nectfy" className="mt-4">
@@ -146,7 +285,7 @@ const SendMessageModal: React.FC<SendMessageModalProps> = ({
               </p>
             </div>
             <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={onClose} disabled={loading}>
+              <Button variant="outline" onClick={handleClose} disabled={loading}>
                 Annuler
               </Button>
               <Button onClick={handleSendViaNectfy} disabled={loading}>
@@ -155,7 +294,7 @@ const SendMessageModal: React.FC<SendMessageModalProps> = ({
                 ) : (
                   <>
                     <Send className="h-4 w-4 mr-2" />
-                    Envoyer via NECTFY
+                    {scheduleEnabled ? 'Programmer' : 'Envoyer via NECTFY'}
                   </>
                 )}
               </Button>
@@ -170,7 +309,7 @@ const SendMessageModal: React.FC<SendMessageModalProps> = ({
               </p>
             </div>
             <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={onClose}>
+              <Button variant="outline" onClick={handleClose}>
                 Annuler
               </Button>
               <Button onClick={handleSendViaGmail} variant="success">
