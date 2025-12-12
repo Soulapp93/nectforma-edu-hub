@@ -273,12 +273,19 @@ const EmploiTemps = () => {
     const now = new Date();
     const isPast = (eventDate: Date) => eventDate < today;
 
+    // Fonction pour formater les horaires en HH:mm
+    const formatTime = (time: string) => {
+      if (!time) return '';
+      const parts = time.split(':');
+      return `${parts[0]}:${parts[1]}`;
+    };
+
     return (
       <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-8">
-        <div className="bg-card rounded-2xl shadow-lg border border-border/60 overflow-hidden">
-          {/* En-têtes du tableau */}
-          <div className="px-4 sm:px-6 py-3 border-b border-border/60 bg-muted/40">
-            <div className="grid grid-cols-12 gap-2 sm:gap-4 items-center text-xs sm:text-sm font-semibold text-muted-foreground">
+        <div className="bg-card rounded-2xl shadow-xl border border-border/40 overflow-hidden">
+          {/* En-têtes du tableau - Design moderne avec gradient */}
+          <div className="bg-gradient-to-r from-primary via-primary/90 to-primary/80 px-4 sm:px-6 py-4">
+            <div className="grid grid-cols-12 gap-2 sm:gap-4 items-center text-xs sm:text-sm font-bold text-primary-foreground uppercase tracking-wider">
               <div className="col-span-2 flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 Date
@@ -287,7 +294,7 @@ const EmploiTemps = () => {
               <div className="col-span-3">Module</div>
               <div className="col-span-2">Formateur</div>
               <div className="col-span-2">Salle</div>
-              <div className="col-span-1">Actions</div>
+              <div className="col-span-1 text-center">Actions</div>
             </div>
           </div>
 
@@ -322,7 +329,7 @@ const EmploiTemps = () => {
                     {/* Horaire */}
                     <div className="col-span-2">
                       <span className="inline-flex items-center rounded-full bg-white/20 px-2 py-1 text-xs sm:text-sm font-medium">
-                        {event.startTime} - {event.endTime}
+                        {formatTime(event.startTime)} - {formatTime(event.endTime)}
                       </span>
                     </div>
 
