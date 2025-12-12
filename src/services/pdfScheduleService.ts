@@ -456,7 +456,12 @@ const renderMonthView = (
         const paddingTop = 10; // espace sous le numéro du jour
         const cardHeight = 22; // hauteur d'une carte créneau
         const innerHeight = cellHeight - paddingTop - 2;
-        const maxCards = Math.max(0, Math.floor(innerHeight / (cardHeight + 2)));
+        // Limiter à 3 cartes comme dans l'interface et garantir au moins 1 carte visible
+        let maxCards = Math.floor(innerHeight / (cardHeight + 2));
+        if (maxCards < 1 && daySlots.length > 0) {
+          maxCards = 1;
+        }
+        maxCards = Math.min(maxCards, 3);
         const slotsToShow = daySlots.slice(0, maxCards);
 
         pdf.setFontSize(7);
