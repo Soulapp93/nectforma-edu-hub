@@ -453,8 +453,8 @@ const renderMonthView = (
         .sort((a, b) => a.start_time.localeCompare(b.start_time));
 
       if (daySlots.length > 0) {
-        const paddingTop = 10; // espace sous le numéro du jour
-        const cardHeight = 22; // hauteur d'une carte créneau
+        const paddingTop = 12; // espace sous le numéro du jour
+        const cardHeight = 26; // hauteur d'une carte créneau proche de la carte UI
         const innerHeight = cellHeight - paddingTop - 2;
         // Limiter à 3 cartes comme dans l'interface et garantir au moins 1 carte visible
         let maxCards = Math.floor(innerHeight / (cardHeight + 2));
@@ -471,7 +471,7 @@ const renderMonthView = (
           const rgb = hexToRgb(slotColor);
           const cardY = y + paddingTop + indexSlot * (cardHeight + 2);
 
-          // Carte colorée
+          // Carte colorée (même logique que les cartes de la vue mois)
           pdf.setFillColor(rgb.r, rgb.g, rgb.b);
           pdf.roundedRect(x + 2, cardY, cellWidth - 4, cardHeight, 2, 2, 'F');
 
@@ -483,7 +483,7 @@ const renderMonthView = (
           const moduleName = slot.formation_modules?.title || slot.notes || 'Cours';
           const maxTextWidth = cellWidth - 8;
 
-          // Titre du module
+          // Titre du module – "Module {titre}" comme dans l'interface
           pdf.setFont('helvetica', 'bold');
           pdf.text(
             truncateText(pdf, `Module ${moduleName}`, maxTextWidth),
@@ -493,26 +493,33 @@ const renderMonthView = (
 
           pdf.setFont('helvetica', 'normal');
 
-          // Ligne horaires
-          const timeText = `⏰ ${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`;
-          pdf.text(truncateText(pdf, timeText, maxTextWidth), x + 4, cardY + 11);
+          // Horaires – deux lignes avec l'icône horloge comme dans la carte React
+          const startTime = slot.start_time.substring(0, 5);
+          const endTime = slot.end_time.substring(0, 5);
+          const startTimeText = `⏰ ${startTime}`.trim();
+          const endTimeText = `⏰ ${endTime}`;
+          pdf.text(truncateText(pdf, startTimeText, maxTextWidth), x + 4, cardY + 11);
+          pdf.text(truncateText(pdf, endTimeText, maxTextWidth), x + 4, cardY + 15);
 
-          // Salle
+          let infoLineY = cardY + 19;
+
+          // Salle – "📍 Salle X"
           if (slot.room) {
             const roomText = `📍 Salle ${slot.room}`;
-            pdf.text(truncateText(pdf, roomText, maxTextWidth), x + 4, cardY + 16);
+            pdf.text(truncateText(pdf, roomText, maxTextWidth), x + 4, infoLineY);
+            infoLineY += 4;
           }
 
-          // Formateur (si assez de place)
+          // Formateur – "👤 Nom Prénom"
           const instructor = slot.users
             ? `${slot.users.first_name} ${slot.users.last_name}`
             : undefined;
-          if (instructor && cardHeight >= 22) {
+          if (instructor) {
             const instructorText = `👤 ${instructor}`;
             pdf.text(
               truncateText(pdf, instructorText, maxTextWidth),
               x + 4,
-              cardY + (slot.room ? 21 : 16)
+              infoLineY
             );
           }
 
