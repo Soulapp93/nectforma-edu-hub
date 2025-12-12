@@ -149,24 +149,24 @@ const renderDayView = (
     const daySchedules = schedules.filter(s => isSameDay(new Date(s.date), day))
       .sort((a, b) => a.start_time.localeCompare(b.start_time));
 
-    // Check if we need a new page
-    const estimatedHeight = 20 + (daySchedules.length * 35);
+    // Nouvelle page si nécessaire
+    const estimatedHeight = 20 + (daySchedules.length * 45);
     if (!isFirstDay && currentY + estimatedHeight > pageHeight - 30) {
       pdf.addPage();
       currentY = margin + 10;
     }
     isFirstDay = false;
 
-    // Day header
+    // En-tête du jour
     const dateStr = format(day, 'EEEE d MMMM yyyy', { locale: fr });
-    pdf.setFillColor(248, 250, 252);
-    pdf.roundedRect(margin, currentY, contentWidth, 12, 2, 2, 'F');
+    pdf.setFillColor(139, 92, 246);
+    pdf.roundedRect(margin, currentY, contentWidth, 14, 3, 3, 'F');
     pdf.setFontSize(12);
     pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(139, 92, 246);
-    pdf.text(dateStr.charAt(0).toUpperCase() + dateStr.slice(1), margin + 5, currentY + 8);
+    pdf.setTextColor(255, 255, 255);
+    pdf.text(dateStr.charAt(0).toUpperCase() + dateStr.slice(1), margin + 8, currentY + 9);
     pdf.setTextColor(0, 0, 0);
-    currentY += 16;
+    currentY += 18;
 
     if (daySchedules.length === 0) {
       pdf.setFont('helvetica', 'italic');
@@ -179,50 +179,50 @@ const renderDayView = (
     }
 
     daySchedules.forEach((slot) => {
-      // Check for page break
-      if (currentY + 35 > pageHeight - 30) {
+      // Saut de page si nécessaire
+      if (currentY + 42 > pageHeight - 30) {
         pdf.addPage();
         currentY = margin + 10;
       }
 
       const slotColor = slot.color || '#8B5CF6';
       const rgb = hexToRgb(slotColor);
-      const slotHeight = 30;
+      const cardHeight = 38;
 
-      // Slot card with color
+      // Carte colorée avec coins arrondis
       pdf.setFillColor(rgb.r, rgb.g, rgb.b);
-      pdf.roundedRect(margin, currentY, contentWidth, slotHeight, 3, 3, 'F');
+      pdf.roundedRect(margin, currentY, contentWidth, cardHeight, 4, 4, 'F');
 
-      // Text color based on background
+      // Couleur du texte selon luminosité
       const textColor = isLightColor(slotColor) ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 };
       pdf.setTextColor(textColor.r, textColor.g, textColor.b);
 
-      // Module name
-      pdf.setFontSize(11);
-      pdf.setFont('helvetica', 'bold');
+      // Nom du module en gras
       const moduleName = slot.formation_modules?.title || slot.notes || 'Cours';
-      pdf.text(truncateText(pdf, moduleName, contentWidth - 20), margin + 8, currentY + 8);
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(truncateText(pdf, moduleName, contentWidth - 20), margin + 10, currentY + 10);
 
-      // Time
+      // Horaires
       pdf.setFontSize(10);
       pdf.setFont('helvetica', 'normal');
-      const timeText = `🕐 ${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`;
-      pdf.text(timeText, margin + 8, currentY + 16);
+      const timeText = `${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`;
+      pdf.text(timeText, margin + 10, currentY + 20);
 
-      // Instructor
+      // Formateur
       const instructor = slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Non assigné';
-      pdf.text(`👤 ${instructor}`, margin + 60, currentY + 16);
+      pdf.text(instructor, margin + 80, currentY + 20);
 
-      // Room
+      // Salle
       if (slot.room) {
-        pdf.text(`📍 ${slot.room}`, margin + 8, currentY + 24);
+        pdf.text(`Salle ${slot.room}`, margin + 10, currentY + 30);
       }
 
       pdf.setTextColor(0, 0, 0);
-      currentY += slotHeight + 5;
+      currentY += cardHeight + 6;
     });
 
-    currentY += 10;
+    currentY += 8;
   });
 };
 
@@ -251,41 +251,38 @@ const renderWeekView = (
     const weekEnd = endOfWeek(currentWeekStart, { weekStartsOn: 1 });
     const days = eachDayOfInterval({ start: currentWeekStart, end: weekEnd });
 
-    // Week period header
+    // Titre de la semaine
     const weekStartStr = format(currentWeekStart, 'd MMMM', { locale: fr });
     const weekEndStr = format(weekEnd, 'd MMMM yyyy', { locale: fr });
-    pdf.setFontSize(11);
+    pdf.setFontSize(12);
     pdf.setFont('helvetica', 'bold');
-    pdf.text(`Semaine du ${weekStartStr} au ${weekEndStr}`, margin, currentY);
-    currentY += 8;
+    pdf.setTextColor(139, 92, 246);
+    pdf.text(`Semaine du ${weekStartStr} au ${weekEndStr}`, pageWidth / 2, currentY, { align: 'center' });
+    pdf.setTextColor(0, 0, 0);
+    currentY += 10;
 
     const dayWidth = contentWidth / 7;
-    const headerHeight = 18;
+    const headerHeight = 16;
 
-    // Day headers with date
+    // En-têtes des jours
     pdf.setFillColor(139, 92, 246);
     pdf.rect(margin, currentY, contentWidth, headerHeight, 'F');
 
-    pdf.setFontSize(9);
+    pdf.setFontSize(8);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(255, 255, 255);
 
     days.forEach((day, index) => {
       const x = margin + index * dayWidth + dayWidth / 2;
-      const dayName = format(day, 'EEEE', { locale: fr });
-      const dayNum = format(day, 'd MMM', { locale: fr });
-      pdf.text(dayName.charAt(0).toUpperCase() + dayName.slice(1, 3), x, currentY + 7, { align: 'center' });
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(8);
-      pdf.text(dayNum, x, currentY + 13, { align: 'center' });
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(9);
+      const dayName = format(day, 'EEE', { locale: fr });
+      const dayNum = format(day, 'd', { locale: fr });
+      pdf.text(`${dayName.charAt(0).toUpperCase()}${dayName.slice(1, 3)} ${dayNum}`, x, currentY + 10, { align: 'center' });
     });
 
     pdf.setTextColor(0, 0, 0);
     currentY += headerHeight + 2;
 
-    // Group slots by day
+    // Grouper les créneaux par jour
     const slotsByDay: { [key: string]: ScheduleSlot[] } = {};
     days.forEach((day) => {
       const dateStr = format(day, 'yyyy-MM-dd');
@@ -296,56 +293,60 @@ const renderWeekView = (
 
     const maxSlots = Math.max(...Object.values(slotsByDay).map((s) => s.length), 1);
     const availableHeight = pageHeight - currentY - 25;
-    const slotHeight = Math.min(40, Math.max(25, availableHeight / maxSlots));
+    const slotHeight = Math.min(48, Math.max(32, availableHeight / Math.max(maxSlots, 3)));
 
-    // Draw columns and slots
+    // Dessiner les colonnes et créneaux
     days.forEach((day, dayIndex) => {
       const dateStr = format(day, 'yyyy-MM-dd');
       const daySlots = slotsByDay[dateStr] || [];
       const x = margin + dayIndex * dayWidth;
 
-      // Column background
-      pdf.setFillColor(dayIndex % 2 === 0 ? 250 : 255, 250, 255);
+      // Fond de colonne alternée
+      pdf.setFillColor(dayIndex % 2 === 0 ? 252 : 248, 250, 255);
       pdf.rect(x, currentY, dayWidth, availableHeight, 'F');
 
-      // Column border
+      // Bordure de colonne
       pdf.setDrawColor(220, 220, 220);
       pdf.rect(x, currentY, dayWidth, availableHeight, 'S');
 
       daySlots.forEach((slot, slotIndex) => {
-        const y = currentY + slotIndex * slotHeight + 2;
+        const y = currentY + slotIndex * slotHeight + 3;
         const slotColor = slot.color || '#8B5CF6';
         const rgb = hexToRgb(slotColor);
 
-        // Slot card
+        // Carte du créneau
+        const cardHeight = slotHeight - 6;
         pdf.setFillColor(rgb.r, rgb.g, rgb.b);
-        pdf.roundedRect(x + 2, y, dayWidth - 4, slotHeight - 4, 2, 2, 'F');
+        pdf.roundedRect(x + 2, y, dayWidth - 4, cardHeight, 2, 2, 'F');
 
-        // Text
+        // Couleur du texte
         const textColor = isLightColor(slotColor) ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 };
         pdf.setTextColor(textColor.r, textColor.g, textColor.b);
 
-        // Module name
+        const maxTextWidth = dayWidth - 8;
+
+        // Nom du module
         pdf.setFontSize(7);
         pdf.setFont('helvetica', 'bold');
         const moduleName = slot.formation_modules?.title || slot.notes || 'Cours';
-        const maxTextWidth = dayWidth - 8;
         pdf.text(truncateText(pdf, moduleName, maxTextWidth), x + 4, y + 6);
 
-        // Time
+        // Horaires
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(6);
-        pdf.text(`${slot.start_time.substring(0, 5)}-${slot.end_time.substring(0, 5)}`, x + 4, y + 11);
+        pdf.text(`${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`, x + 4, y + 12);
 
-        // Instructor (if space)
-        if (slotHeight >= 30) {
-          const instructor = slot.users ? `${slot.users.first_name?.charAt(0)}. ${slot.users.last_name}` : '';
-          pdf.text(truncateText(pdf, instructor, maxTextWidth), x + 4, y + 16);
+        // Salle
+        if (slot.room && cardHeight >= 24) {
+          pdf.text(truncateText(pdf, `Salle ${slot.room}`, maxTextWidth), x + 4, y + 18);
         }
 
-        // Room (if space)
-        if (slotHeight >= 35 && slot.room) {
-          pdf.text(truncateText(pdf, slot.room, maxTextWidth), x + 4, y + 21);
+        // Formateur
+        if (cardHeight >= 30) {
+          const instructor = slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : '';
+          if (instructor) {
+            pdf.text(truncateText(pdf, instructor, maxTextWidth), x + 4, y + 24);
+          }
         }
 
         pdf.setTextColor(0, 0, 0);
@@ -525,93 +526,97 @@ const renderListView = (
 ) => {
   let currentY = startY;
 
-  // Define columns based on orientation
+  // Colonnes adaptées à l'orientation
   const colWidths = isLandscape 
-    ? { time: 30, module: 80, instructor: 60, room: 40, date: 30 }
-    : { time: 28, module: 55, instructor: 45, room: 28, date: 24 };
+    ? { date: 35, time: 35, module: 85, instructor: 55, room: 35 }
+    : { date: 28, time: 32, module: 60, instructor: 40, room: 20 };
 
   const colPositions = {
-    time: margin,
-    module: margin + colWidths.time,
-    instructor: margin + colWidths.time + colWidths.module,
-    room: margin + colWidths.time + colWidths.module + colWidths.instructor,
-    date: margin + colWidths.time + colWidths.module + colWidths.instructor + colWidths.room
+    date: margin,
+    time: margin + colWidths.date,
+    module: margin + colWidths.date + colWidths.time,
+    instructor: margin + colWidths.date + colWidths.time + colWidths.module,
+    room: margin + colWidths.date + colWidths.time + colWidths.module + colWidths.instructor
   };
 
   const renderTableHeader = (y: number): number => {
     pdf.setFillColor(139, 92, 246);
-    pdf.rect(margin, y, contentWidth, 10, 'F');
+    pdf.roundedRect(margin, y, contentWidth, 12, 2, 2, 'F');
     
     pdf.setFontSize(9);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(255, 255, 255);
-    pdf.text('Horaire', colPositions.time + 3, y + 7);
-    pdf.text('Module', colPositions.module + 3, y + 7);
-    pdf.text('Formateur', colPositions.instructor + 3, y + 7);
-    pdf.text('Salle', colPositions.room + 3, y + 7);
-    pdf.text('Date', colPositions.date + 3, y + 7);
+    pdf.text('Date', colPositions.date + 4, y + 8);
+    pdf.text('Horaire', colPositions.time + 4, y + 8);
+    pdf.text('Module', colPositions.module + 4, y + 8);
+    pdf.text('Formateur', colPositions.instructor + 4, y + 8);
+    pdf.text('Salle', colPositions.room + 4, y + 8);
     
     pdf.setTextColor(0, 0, 0);
-    return y + 12;
+    return y + 14;
   };
 
   currentY = renderTableHeader(currentY);
 
-  // Sort schedules by date and time
+  // Trier par date et heure
   const sortedSchedules = [...schedules].sort((a, b) => {
     if (a.date !== b.date) return a.date.localeCompare(b.date);
     return a.start_time.localeCompare(b.start_time);
   });
 
-  const rowHeight = 10;
+  const rowHeight = 14;
 
   sortedSchedules.forEach((slot, index) => {
-    // Check for page break
+    // Saut de page si nécessaire
     if (currentY + rowHeight > pageHeight - 25) {
       pdf.addPage();
       currentY = margin + 10;
       currentY = renderTableHeader(currentY);
     }
 
-    // Alternating row background
+    // Fond alterné
     if (index % 2 === 0) {
-      pdf.setFillColor(250, 250, 252);
-      pdf.rect(margin, currentY - 2, contentWidth, rowHeight, 'F');
+      pdf.setFillColor(250, 248, 255);
+      pdf.rect(margin, currentY, contentWidth, rowHeight, 'F');
     }
 
-    // Color indicator circle
+    // Bordure légère
+    pdf.setDrawColor(230, 230, 230);
+    pdf.rect(margin, currentY, contentWidth, rowHeight, 'S');
+
+    // Indicateur de couleur
     const slotColor = slot.color || '#8B5CF6';
     const rgb = hexToRgb(slotColor);
     pdf.setFillColor(rgb.r, rgb.g, rgb.b);
-    pdf.circle(colPositions.time + 4, currentY + 3, 2.5, 'F');
+    pdf.roundedRect(colPositions.date + 2, currentY + 3, 4, rowHeight - 6, 1, 1, 'F');
 
-    pdf.setFontSize(8);
-    
-    // Time
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(`${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`, colPositions.time + 9, currentY + 4);
-    
-    // Module (bold)
-    pdf.setFont('helvetica', 'bold');
-    const moduleName = slot.formation_modules?.title || slot.notes || 'Cours';
-    pdf.text(truncateText(pdf, moduleName, colWidths.module - 5), colPositions.module + 3, currentY + 4);
-    
-    // Instructor
-    pdf.setFont('helvetica', 'normal');
-    const instructor = slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Non assigné';
-    pdf.text(truncateText(pdf, instructor, colWidths.instructor - 5), colPositions.instructor + 3, currentY + 4);
-    
-    // Room
-    pdf.text(truncateText(pdf, slot.room || '-', colWidths.room - 5), colPositions.room + 3, currentY + 4);
+    pdf.setFontSize(9);
     
     // Date
     const slotDate = new Date(slot.date);
-    pdf.text(format(slotDate, 'dd/MM/yy', { locale: fr }), colPositions.date + 3, currentY + 4);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(format(slotDate, 'dd/MM/yyyy', { locale: fr }), colPositions.date + 9, currentY + 9);
+    
+    // Horaire
+    pdf.text(`${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`, colPositions.time + 4, currentY + 9);
+    
+    // Module (en gras)
+    pdf.setFont('helvetica', 'bold');
+    const moduleName = slot.formation_modules?.title || slot.notes || 'Cours';
+    pdf.text(truncateText(pdf, moduleName, colWidths.module - 6), colPositions.module + 4, currentY + 9);
+    
+    // Formateur
+    pdf.setFont('helvetica', 'normal');
+    const instructor = slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : '-';
+    pdf.text(truncateText(pdf, instructor, colWidths.instructor - 6), colPositions.instructor + 4, currentY + 9);
+    
+    // Salle
+    pdf.text(truncateText(pdf, slot.room || '-', colWidths.room - 6), colPositions.room + 4, currentY + 9);
 
     currentY += rowHeight;
   });
 
-  // If no schedules
+  // Aucun cours
   if (sortedSchedules.length === 0) {
     pdf.setFont('helvetica', 'italic');
     pdf.setFontSize(10);
