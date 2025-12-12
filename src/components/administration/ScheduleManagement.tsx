@@ -86,6 +86,7 @@ const ScheduleManagement = () => {
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string } | null>(null);
   const [slotToEdit, setSlotToEdit] = useState<ScheduleSlot | null>(null);
   const [draggedSlot, setDraggedSlot] = useState<ScheduleSlot | null>(null);
+  const [dragOverDay, setDragOverDay] = useState<string | null>(null);
   const [detailsEvent, setDetailsEvent] = useState<ScheduleEvent | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
@@ -295,28 +296,60 @@ const ScheduleManagement = () => {
   const handleDragStart = (e: React.DragEvent, slot: ScheduleSlot) => {
     setDraggedSlot(slot);
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', slot.id);
+    // Add visual effect to dragged element
+    const target = e.target as HTMLElement;
+    target.style.opacity = '0.5';
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragEnd = (e: React.DragEvent) => {
+    const target = e.target as HTMLElement;
+    target.style.opacity = '1';
+    setDraggedSlot(null);
+    setDragOverDay(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent, dateStr?: string) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+    if (dateStr && dateStr !== dragOverDay) {
+      setDragOverDay(dateStr);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    // Only clear if leaving the drop zone completely
+    const relatedTarget = e.relatedTarget as HTMLElement;
+    if (!relatedTarget || !e.currentTarget.contains(relatedTarget)) {
+      setDragOverDay(null);
+    }
   };
 
   const handleDrop = async (e: React.DragEvent, targetDate: Date) => {
     e.preventDefault();
+    setDragOverDay(null);
     
     if (!draggedSlot) return;
     
     try {
       const newDate = formatDate(targetDate);
       if (newDate !== draggedSlot.date) {
+        // Optimistic update - update local state immediately
+        setSlots(prevSlots => 
+          prevSlots.map(s => 
+            s.id === draggedSlot.id ? { ...s, date: newDate } : s
+          )
+        );
+        
         await scheduleService.updateScheduleSlot(draggedSlot.id, {
           date: newDate
         });
-        fetchScheduleSlots();
         toast.success('Créneau déplacé avec succès');
       }
     } catch (error) {
+      // Revert on error
+      fetchScheduleSlots();
       toast.error('Erreur lors du déplacement du créneau');
     } finally {
       setDraggedSlot(null);
@@ -795,8 +828,8 @@ const ScheduleManagement = () => {
 
     const renderWeekOrListView = () => {
       if (viewMode === 'list') {
-        // Vue liste tabulaire
-        const allSlots = slots.filter(slot => slot.formation_modules).sort((a, b) => {
+        // Vue liste tabulaire - ALL slots (past and future), sorted chronologically
+        const allSlots = [...slots].sort((a, b) => {
           const dateA = new Date(a.date);
           const dateB = new Date(b.date);
           if (dateA.getTime() !== dateB.getTime()) {
@@ -969,41 +1002,53 @@ const ScheduleManagement = () => {
       return (
         <div className="container mx-auto px-6 py-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-6">
-            {mockSchedule.map((day) => (
-              <Card
-                key={day.id}
-                className={`overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 ${
-                  day.modules.length > 0 
-                    ? 'bg-card shadow-md hover:shadow-primary/10' 
-                    : 'bg-muted/30 shadow-sm opacity-70'
-                } ${isEditMode ? 'border-dashed border-2 border-primary/30' : ''}`}
-                onDragOver={isEditMode ? handleDragOver : undefined}
-                onDrop={isEditMode ? (e) => handleDrop(e, day.actualDate) : undefined}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-lg font-bold text-foreground">
-                        {day.day}
-                      </CardTitle>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <span className="text-2xl font-bold text-primary">
-                          {day.date}
-                        </span>
-                        {day.modules.length > 0 && (
-                          <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
-                            {day.modules.length} cours
-                          </Badge>
-                        )}
+            {mockSchedule.map((day) => {
+              const dayDateStr = formatDate(day.actualDate);
+              const isDragOver = dragOverDay === dayDateStr && draggedSlot?.date !== dayDateStr;
+              
+              return (
+                <Card
+                  key={day.id}
+                  className={`overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 ${
+                    day.modules.length > 0 
+                      ? 'bg-card shadow-md hover:shadow-primary/10' 
+                      : 'bg-muted/30 shadow-sm opacity-70'
+                  } ${isEditMode ? 'border-dashed border-2 border-primary/30' : ''} ${
+                    isDragOver ? 'ring-2 ring-primary bg-primary/10 scale-105' : ''
+                  }`}
+                  onDragOver={isEditMode ? (e) => handleDragOver(e, dayDateStr) : undefined}
+                  onDragLeave={isEditMode ? handleDragLeave : undefined}
+                  onDrop={isEditMode ? (e) => handleDrop(e, day.actualDate) : undefined}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-lg font-bold text-foreground">
+                          {day.day}
+                        </CardTitle>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <span className="text-2xl font-bold text-primary">
+                            {day.date}
+                          </span>
+                          {day.modules.length > 0 && (
+                            <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
+                              {day.modules.length} cours
+                            </Badge>
+                          )}
+                        </div>
                       </div>
+                      {day.modules.length === 0 && !isDragOver && (
+                        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      )}
+                      {isDragOver && (
+                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center animate-pulse">
+                          <Plus className="h-4 w-4 text-primary" />
+                        </div>
+                      )}
                     </div>
-                    {day.modules.length === 0 && (
-                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-                </CardHeader>
+                  </CardHeader>
 
                 <CardContent className="space-y-3">
                   {day.modules.length === 0 ? (
@@ -1035,7 +1080,8 @@ const ScheduleManagement = () => {
                               <div
                                 draggable={isEditMode}
                                 onDragStart={isEditMode ? (e) => handleDragStart(e, module.slot) : undefined}
-                                className={`relative p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all duration-200 mb-2 text-white group ${isEditMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
+                                onDragEnd={isEditMode ? handleDragEnd : undefined}
+                                className={`relative p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all duration-200 mb-2 text-white group ${isEditMode ? 'cursor-grab active:cursor-grabbing' : ''} ${draggedSlot?.id === module.slotId ? 'opacity-50 ring-2 ring-primary' : ''}`}
                                 style={{ 
                                   backgroundColor: module.color || '#8B5CF6'
                                 }}
@@ -1144,9 +1190,10 @@ const ScheduleManagement = () => {
                       )}
                     </>
                   )}
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       );
