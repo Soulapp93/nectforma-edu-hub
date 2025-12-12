@@ -21,6 +21,7 @@ import { LoadingState } from '@/components/ui/loading-state';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PrintScheduleModal } from '@/components/schedule/PrintScheduleModal';
 import type { ScheduleEvent } from '@/components/schedule/CreateEventModal';
 
 // Définition du type pour les créneaux de l'emploi du temps
@@ -51,7 +52,7 @@ interface ScheduleSlot {
 type ViewMode = 'day' | 'week' | 'month' | 'list';
 
 const EmploiTemps = () => {
-  const { userRole } = useCurrentUser();
+  const { userRole, userId } = useCurrentUser();
   const [isWeekNavigationOpen, setIsWeekNavigationOpen] = useState(true);
   const isInstructor = userRole === 'Formateur' || userRole === 'Tuteur';
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -446,6 +447,15 @@ const EmploiTemps = () => {
       />
 
       <div className="w-full px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
+        {/* Print button for all users */}
+        <div className="flex justify-end mb-3">
+          <PrintScheduleModal
+            schedules={schedules}
+            title="Emploi du temps"
+            userRole={userRole || undefined}
+          />
+        </div>
+
         {userRole === 'Étudiant' && userFormations.length > 1 && (
           <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 bg-card p-3 sm:p-4 rounded-lg border border-border shadow-sm">
             <div className="flex items-center gap-2">
