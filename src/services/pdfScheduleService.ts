@@ -398,9 +398,8 @@ const renderMonthView = (
     // En-têtes des jours
     const dayNames = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
     const cellWidth = contentWidth / 7;
-    const availableHeight = pageHeight - currentY - 25;
-    const maxRows = 6; // comme dans l'interface calendrier
-    const cellHeight = availableHeight / maxRows;
+    // Cellules plus grandes pour afficher les cartes lisibles
+    const cellHeight = 38;
 
     pdf.setFillColor(139, 92, 246);
     pdf.rect(margin, currentY, contentWidth, 10, 'F');
@@ -417,7 +416,7 @@ const renderMonthView = (
     pdf.setTextColor(0, 0, 0);
     currentY += 12;
 
-    // Calcul de tous les jours du mois (avec jours précédents / suivants)
+    // Calcul de tous les jours du mois
     const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
     const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
     const calendarStart = startOfWeek(firstDay, { weekStartsOn: 1 });
@@ -441,10 +440,10 @@ const renderMonthView = (
       pdf.rect(x, y, cellWidth, cellHeight, 'S');
 
       // Numéro du jour
-      pdf.setFontSize(10);
+      pdf.setFontSize(8);
       pdf.setFont('helvetica', isCurrentMonth ? 'bold' : 'normal');
       pdf.setTextColor(isCurrentMonth ? 60 : 180, isCurrentMonth ? 60 : 180, isCurrentMonth ? 60 : 180);
-      pdf.text(day.getDate().toString(), x + 3, y + 6);
+      pdf.text(day.getDate().toString(), x + 2, y + 5);
 
       // Créneaux pour ce jour
       const dateStr = format(day, 'yyyy-MM-dd');
@@ -453,93 +452,60 @@ const renderMonthView = (
         .sort((a, b) => a.start_time.localeCompare(b.start_time));
 
       if (daySlots.length > 0) {
-        const paddingTop = 12; // espace sous le numéro du jour
-        const cardHeight = 26; // hauteur d'une carte créneau proche de la carte UI
-        const innerHeight = cellHeight - paddingTop - 2;
-        // Limiter à 3 cartes comme dans l'interface et garantir au moins 1 carte visible
-        let maxCards = Math.floor(innerHeight / (cardHeight + 2));
-        if (maxCards < 1 && daySlots.length > 0) {
-          maxCards = 1;
+        const slot = daySlots[0];
+        const slotColor = slot.color || '#8B5CF6';
+        const rgb = hexToRgb(slotColor);
+        
+        // Carte créneau sous le numéro du jour
+        const cardX = x + 2;
+        const cardY = y + 8;
+        const cardWidth = cellWidth - 4;
+        const cardHeight = cellHeight - 12;
+
+        pdf.setFillColor(rgb.r, rgb.g, rgb.b);
+        pdf.roundedRect(cardX, cardY, cardWidth, cardHeight, 2, 2, 'F');
+
+        const textColor = isLightColor(slotColor)
+          ? { r: 0, g: 0, b: 0 }
+          : { r: 255, g: 255, b: 255 };
+        pdf.setTextColor(textColor.r, textColor.g, textColor.b);
+
+        const moduleName = slot.formation_modules?.title || slot.notes || 'Cours';
+        const maxTextWidth = cardWidth - 4;
+
+        // Titre du module
+        pdf.setFontSize(6);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(truncateText(pdf, moduleName, maxTextWidth), cardX + 2, cardY + 5);
+
+        // Horaires
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(5);
+        const timeText = `${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`;
+        pdf.text(truncateText(pdf, timeText, maxTextWidth), cardX + 2, cardY + 10);
+
+        // Salle
+        if (slot.room) {
+          pdf.text(truncateText(pdf, `Salle ${slot.room}`, maxTextWidth), cardX + 2, cardY + 15);
         }
-        maxCards = Math.min(maxCards, 3);
-        const slotsToShow = daySlots.slice(0, maxCards);
 
-        pdf.setFontSize(7);
-
-        slotsToShow.forEach((slot, indexSlot) => {
-          const slotColor = slot.color || '#8B5CF6';
-          const rgb = hexToRgb(slotColor);
-          const cardY = y + paddingTop + indexSlot * (cardHeight + 2);
-
-          // Carte colorée (même logique que les cartes de la vue mois)
-          pdf.setFillColor(rgb.r, rgb.g, rgb.b);
-          pdf.roundedRect(x + 2, cardY, cellWidth - 4, cardHeight, 2, 2, 'F');
-
-          const textColor = isLightColor(slotColor)
-            ? { r: 0, g: 0, b: 0 }
-            : { r: 255, g: 255, b: 255 };
-          pdf.setTextColor(textColor.r, textColor.g, textColor.b);
-
-          const moduleName = slot.formation_modules?.title || slot.notes || 'Cours';
-          const maxTextWidth = cellWidth - 8;
-
-          // Titre du module – "Module {titre}" comme dans l'interface
-          pdf.setFont('helvetica', 'bold');
-          pdf.text(
-            truncateText(pdf, `Module ${moduleName}`, maxTextWidth),
-            x + 4,
-            cardY + 6
-          );
-
-          pdf.setFont('helvetica', 'normal');
-
-          // Horaires – deux lignes avec l'icône horloge comme dans la carte React
-          const startTime = slot.start_time.substring(0, 5);
-          const endTime = slot.end_time.substring(0, 5);
-          const startTimeText = `⏰ ${startTime}`.trim();
-          const endTimeText = `⏰ ${endTime}`;
-          pdf.text(truncateText(pdf, startTimeText, maxTextWidth), x + 4, cardY + 11);
-          pdf.text(truncateText(pdf, endTimeText, maxTextWidth), x + 4, cardY + 15);
-
-          let infoLineY = cardY + 19;
-
-          // Salle – "📍 Salle X"
-          if (slot.room) {
-            const roomText = `📍 Salle ${slot.room}`;
-            pdf.text(truncateText(pdf, roomText, maxTextWidth), x + 4, infoLineY);
-            infoLineY += 4;
-          }
-
-          // Formateur – "👤 Nom Prénom"
-          const instructor = slot.users
-            ? `${slot.users.first_name} ${slot.users.last_name}`
-            : undefined;
-          if (instructor) {
-            const instructorText = `👤 ${instructor}`;
-            pdf.text(
-              truncateText(pdf, instructorText, maxTextWidth),
-              x + 4,
-              infoLineY
-            );
-          }
-
-          pdf.setTextColor(0, 0, 0);
-        });
-
-        // Indicateur +N autres si besoin
-        if (daySlots.length > maxCards) {
-          pdf.setFontSize(7);
-          pdf.setFont('helvetica', 'normal');
-          pdf.setTextColor(120, 120, 120);
-          pdf.text(
-            `+${daySlots.length - maxCards} autres`,
-            x + cellWidth - 4,
-            y + cellHeight - 3,
-            { align: 'right' }
-          );
+        // Formateur
+        const instructor = slot.users
+          ? `${slot.users.first_name} ${slot.users.last_name}`
+          : undefined;
+        if (instructor && cardHeight >= 22) {
+          pdf.text(truncateText(pdf, instructor, maxTextWidth), cardX + 2, cardY + 20);
         }
 
         pdf.setTextColor(0, 0, 0);
+
+        // Indicateur +N si plusieurs créneaux
+        if (daySlots.length > 1) {
+          pdf.setFontSize(5);
+          pdf.setTextColor(100, 100, 100);
+          pdf.text(`+${daySlots.length - 1}`, x + cellWidth - 6, y + 5);
+          pdf.setTextColor(0, 0, 0);
+        }
       }
     });
 
