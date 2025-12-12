@@ -373,6 +373,7 @@ const renderMonthView = (
   let isFirstMonth = true;
 
   while (currentMonth <= endMonth) {
+    // Nouvelle page pour chaque mois (sauf le premier)
     if (!isFirstMonth) {
       pdf.addPage();
     }
@@ -380,20 +381,26 @@ const renderMonthView = (
 
     let currentY = startY;
 
-    // Month title
+    // Titre du mois – similaire à l'interface
     const monthName = format(currentMonth, 'MMMM yyyy', { locale: fr });
     pdf.setFontSize(16);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(139, 92, 246);
-    pdf.text(monthName.charAt(0).toUpperCase() + monthName.slice(1), pageWidth / 2, currentY, { align: 'center' });
+    pdf.text(
+      monthName.charAt(0).toUpperCase() + monthName.slice(1),
+      pageWidth / 2,
+      currentY,
+      { align: 'center' }
+    );
     pdf.setTextColor(0, 0, 0);
     currentY += 12;
 
-    // Day headers
+    // En-têtes des jours
     const dayNames = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
     const cellWidth = contentWidth / 7;
     const availableHeight = pageHeight - currentY - 25;
-    const cellHeight = availableHeight / 6;
+    const maxRows = 6; // comme dans l'interface calendrier
+    const cellHeight = availableHeight / maxRows;
 
     pdf.setFillColor(139, 92, 246);
     pdf.rect(margin, currentY, contentWidth, 10, 'F');
@@ -402,13 +409,15 @@ const renderMonthView = (
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(255, 255, 255);
     dayNames.forEach((name, index) => {
-      pdf.text(name, margin + index * cellWidth + cellWidth / 2, currentY + 7, { align: 'center' });
+      pdf.text(name, margin + index * cellWidth + cellWidth / 2, currentY + 7, {
+        align: 'center',
+      });
     });
 
     pdf.setTextColor(0, 0, 0);
     currentY += 12;
 
-    // Get all days of the month calendar
+    // Calcul de tous les jours du mois (avec jours précédents / suivants)
     const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
     const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
     const calendarStart = startOfWeek(firstDay, { weekStartsOn: 1 });
@@ -423,57 +432,103 @@ const renderMonthView = (
       const x = margin + col * cellWidth;
       const y = currentY + row * cellHeight;
 
-      // Cell background
       const isCurrentMonth = day.getMonth() === currentMonth.getMonth();
+
+      // Fond de cellule
       pdf.setFillColor(isCurrentMonth ? 255 : 248, isCurrentMonth ? 255 : 248, isCurrentMonth ? 255 : 248);
       pdf.rect(x, y, cellWidth, cellHeight, 'F');
-      pdf.setDrawColor(200, 200, 200);
+      pdf.setDrawColor(230, 230, 230);
       pdf.rect(x, y, cellWidth, cellHeight, 'S');
 
-      // Day number
+      // Numéro du jour
       pdf.setFontSize(10);
       pdf.setFont('helvetica', isCurrentMonth ? 'bold' : 'normal');
       pdf.setTextColor(isCurrentMonth ? 60 : 180, isCurrentMonth ? 60 : 180, isCurrentMonth ? 60 : 180);
-      pdf.text(day.getDate().toString(), x + 3, y + 7);
+      pdf.text(day.getDate().toString(), x + 3, y + 6);
 
-      // Slots for this day
+      // Créneaux pour ce jour
       const dateStr = format(day, 'yyyy-MM-dd');
-      const daySlots = schedules.filter((s) => s.date === dateStr);
+      const daySlots = schedules
+        .filter((s) => s.date === dateStr)
+        .sort((a, b) => a.start_time.localeCompare(b.start_time));
 
       if (daySlots.length > 0) {
-        const maxVisibleSlots = Math.floor((cellHeight - 12) / 8);
-        const slotsToShow = daySlots.slice(0, maxVisibleSlots);
+        const paddingTop = 10; // espace sous le numéro du jour
+        const cardHeight = 22; // hauteur d'une carte créneau
+        const innerHeight = cellHeight - paddingTop - 2;
+        const maxCards = Math.max(0, Math.floor(innerHeight / (cardHeight + 2)));
+        const slotsToShow = daySlots.slice(0, maxCards);
 
-        pdf.setFontSize(6);
-        slotsToShow.forEach((slot, slotIndex) => {
+        pdf.setFontSize(7);
+
+        slotsToShow.forEach((slot, indexSlot) => {
           const slotColor = slot.color || '#8B5CF6';
           const rgb = hexToRgb(slotColor);
-          const slotY = y + 10 + slotIndex * 8;
+          const cardY = y + paddingTop + indexSlot * (cardHeight + 2);
 
-          // Slot background
+          // Carte colorée
           pdf.setFillColor(rgb.r, rgb.g, rgb.b);
-          pdf.roundedRect(x + 2, slotY, cellWidth - 4, 7, 1, 1, 'F');
+          pdf.roundedRect(x + 2, cardY, cellWidth - 4, cardHeight, 2, 2, 'F');
 
-          // Slot text
-          const textColor = isLightColor(slotColor) ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 };
+          const textColor = isLightColor(slotColor)
+            ? { r: 0, g: 0, b: 0 }
+            : { r: 255, g: 255, b: 255 };
           pdf.setTextColor(textColor.r, textColor.g, textColor.b);
-          pdf.setFont('helvetica', 'bold');
 
-          const timeStr = slot.start_time.substring(0, 5);
-          const moduleName = slot.formation_modules?.title || slot.notes || '';
-          const displayText = `${timeStr} ${moduleName}`;
-          pdf.text(truncateText(pdf, displayText, cellWidth - 6), x + 4, slotY + 5);
+          const moduleName = slot.formation_modules?.title || slot.notes || 'Cours';
+          const maxTextWidth = cellWidth - 8;
+
+          // Titre du module
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(
+            truncateText(pdf, `Module ${moduleName}`, maxTextWidth),
+            x + 4,
+            cardY + 6
+          );
+
+          pdf.setFont('helvetica', 'normal');
+
+          // Ligne horaires
+          const timeText = `⏰ ${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`;
+          pdf.text(truncateText(pdf, timeText, maxTextWidth), x + 4, cardY + 11);
+
+          // Salle
+          if (slot.room) {
+            const roomText = `📍 Salle ${slot.room}`;
+            pdf.text(truncateText(pdf, roomText, maxTextWidth), x + 4, cardY + 16);
+          }
+
+          // Formateur (si assez de place)
+          const instructor = slot.users
+            ? `${slot.users.first_name} ${slot.users.last_name}`
+            : undefined;
+          if (instructor && cardHeight >= 22) {
+            const instructorText = `👤 ${instructor}`;
+            pdf.text(
+              truncateText(pdf, instructorText, maxTextWidth),
+              x + 4,
+              cardY + (slot.room ? 21 : 16)
+            );
+          }
+
+          pdf.setTextColor(0, 0, 0);
         });
 
-        // Show more indicator
-        if (daySlots.length > maxVisibleSlots) {
-          pdf.setTextColor(100, 100, 100);
+        // Indicateur +N autres si besoin
+        if (daySlots.length > maxCards) {
+          pdf.setFontSize(7);
           pdf.setFont('helvetica', 'normal');
-          pdf.text(`+${daySlots.length - maxVisibleSlots}`, x + cellWidth - 8, y + cellHeight - 3);
+          pdf.setTextColor(120, 120, 120);
+          pdf.text(
+            `+${daySlots.length - maxCards} autres`,
+            x + cellWidth - 4,
+            y + cellHeight - 3,
+            { align: 'right' }
+          );
         }
-      }
 
-      pdf.setTextColor(0, 0, 0);
+        pdf.setTextColor(0, 0, 0);
+      }
     });
 
     currentMonth = addMonths(currentMonth, 1);
