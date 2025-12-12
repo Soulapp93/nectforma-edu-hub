@@ -61,6 +61,9 @@ const TextBookDetail: React.FC = () => {
   });
 
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [editUploadedFiles, setEditUploadedFiles] = useState<File[]>([]);
+  const [existingFiles, setExistingFiles] = useState<any[]>([]);
+  const [filesToDelete, setFilesToDelete] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<{ url: string; name: string } | null>(null);
   const [isFileViewerOpen, setIsFileViewerOpen] = useState(false);
@@ -239,6 +242,7 @@ const TextBookDetail: React.FC = () => {
     setIsSubmitting(true);
     
     try {
+      // Update entry data
       await textBookService.updateTextBookEntry(selectedEntry.id, {
         date: editEntry.date,
         start_time: editEntry.start_time,
@@ -247,6 +251,16 @@ const TextBookDetail: React.FC = () => {
         content: editEntry.content || undefined,
       });
 
+      // Delete files marked for deletion
+      for (const fileId of filesToDelete) {
+        await textBookService.deleteEntryFile(fileId);
+      }
+
+      // Upload new files if any
+      if (editUploadedFiles.length > 0) {
+        await textBookService.uploadEntryFiles(selectedEntry.id, editUploadedFiles);
+      }
+
       toast({
         title: "Succès",
         description: "L'entrée a été modifiée avec succès.",
@@ -254,6 +268,9 @@ const TextBookDetail: React.FC = () => {
 
       setIsEditEntryModalOpen(false);
       setSelectedEntry(null);
+      setEditUploadedFiles([]);
+      setExistingFiles([]);
+      setFilesToDelete([]);
       
       // Refresh entries
       fetchTextBookData();
@@ -305,7 +322,15 @@ const TextBookDetail: React.FC = () => {
       module_id: entryModule?.id || '',
       content: entry.content || ''
     });
+    setExistingFiles(entry.files || []);
+    setEditUploadedFiles([]);
+    setFilesToDelete([]);
     setIsEditEntryModalOpen(true);
+  };
+
+  const handleRemoveExistingFile = (fileId: string) => {
+    setFilesToDelete(prev => [...prev, fileId]);
+    setExistingFiles(prev => prev.filter(f => f.id !== fileId));
   };
 
   const openDeleteModal = (entry: TextBookEntry) => {
@@ -621,7 +646,7 @@ const TextBookDetail: React.FC = () => {
                   accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif"
                   onChange={(e) => {
                     if (e.target.files) {
-                      setUploadedFiles(Array.from(e.target.files));
+                      setUploadedFiles(prev => [...prev, ...Array.from(e.target.files!)]);
                     }
                   }}
                   className="hidden"
@@ -759,6 +784,95 @@ const TextBookDetail: React.FC = () => {
                 placeholder="Décrivez le contenu de la séance..."
                 rows={8}
               />
+            </div>
+
+            {/* File Upload Section */}
+            <div className="space-y-2">
+              <Label>Fichiers joints</Label>
+              
+              {/* Existing files */}
+              {existingFiles.length > 0 && (
+                <div className="mb-3">
+                  <h4 className="text-sm font-medium mb-2">Fichiers existants :</h4>
+                  <div className="space-y-1">
+                    {existingFiles.map((file) => (
+                      <div key={file.id} className="flex items-center justify-between text-sm p-2 bg-muted rounded">
+                        <span className="flex items-center truncate">
+                          <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
+                          <span className="truncate">{file.file_name}</span>
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveExistingFile(file.id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Upload new files */}
+              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4">
+                <input
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif"
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      setEditUploadedFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+                    }
+                  }}
+                  className="hidden"
+                  id="edit-file-upload"
+                />
+                <div className="flex items-center justify-center">
+                  <div className="text-center">
+                    <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {editUploadedFiles.length > 0 
+                        ? `${editUploadedFiles.length} nouveau(x) fichier(s) à ajouter` 
+                        : 'Ajouter de nouveaux fichiers'}
+                    </p>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => document.getElementById('edit-file-upload')?.click()}
+                      disabled={uploading}
+                    >
+                      {uploading ? 'Téléchargement...' : 'Sélectionner des fichiers'}
+                    </Button>
+                  </div>
+                </div>
+                {editUploadedFiles.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium mb-2">Nouveaux fichiers :</h4>
+                    <div className="space-y-1">
+                      {editUploadedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between text-sm p-2 bg-green-50 rounded">
+                          <span className="flex items-center truncate">
+                            <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
+                            <span className="truncate">{file.name}</span>
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditUploadedFiles(files => files.filter((_, i) => i !== index))}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Action Buttons */}

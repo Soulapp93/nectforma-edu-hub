@@ -239,6 +239,22 @@ export const textBookService = {
     console.log('Entrée supprimée avec succès');
   },
 
+  async deleteEntryFile(fileId: string) {
+    console.log('Suppression du fichier:', fileId);
+    
+    const { error } = await supabase
+      .from('text_book_entry_files')
+      .delete()
+      .eq('id', fileId);
+
+    if (error) {
+      console.error('Erreur lors de la suppression du fichier:', error);
+      throw new Error(`Erreur lors de la suppression du fichier: ${error.message}`);
+    }
+
+    console.log('Fichier supprimé avec succès');
+  },
+
   async archiveTextBook(textBookId: string) {
     console.log('Archivage du cahier de texte:', textBookId);
     
