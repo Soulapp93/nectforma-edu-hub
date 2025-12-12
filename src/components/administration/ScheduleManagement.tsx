@@ -496,7 +496,7 @@ const ScheduleManagement = () => {
           ? `${slot.users.first_name} ${slot.users.last_name}` 
           : 'Instructeur non défini',
         room: slot.room || 'Salle non définie',
-        color: slot.notes ? getModuleColor(extractModuleName(slot.notes)) : '#3B82F6'
+        color: slot.color || '#8B5CF6'
       }))
     };
   });
@@ -1032,7 +1032,7 @@ const ScheduleManagement = () => {
                                 <div
                                   className="relative p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all duration-200 mb-2 text-white group"
                                   style={{ 
-                                    backgroundColor: getModuleColor(module.title)
+                                    backgroundColor: module.color || slot?.color || '#8B5CF6'
                                   }}
                                   onClick={() => slot && handleSlotClick(slot)}
                                 >
