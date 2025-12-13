@@ -33,10 +33,10 @@ const BottomNavigation = () => {
     { name: 'Messages', href: '/messagerie', icon: MessageSquare, label: 'Messages' },
   ];
 
-  // Navigation pour tuteurs (limitée - 4 onglets uniquement)
+  // Navigation pour tuteurs (4 onglets - vue apprenti uniquement, pas de tableau de bord)
   const tutorNavigation: NavItem[] = [
-    { name: 'Accueil', href: '/dashboard', icon: Home, label: 'Accueil' },
-    { name: 'Formations', href: '/formations', icon: BookOpen, label: 'Formations' },
+    { name: 'Formation', href: '/formations', icon: BookOpen, label: 'Formation' },
+    { name: 'Émargement', href: '/suivi-emargement', icon: ClipboardCheck, label: 'Émargement' },
     { name: 'Planning', href: '/emploi-temps', icon: Calendar, label: 'Planning' },
     { name: 'Profil', href: '/compte', icon: Settings, label: 'Profil' },
   ];
