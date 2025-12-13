@@ -95,19 +95,20 @@ const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({ isOpen, onClose }) 
 
     const sections: MenuSection[] = [];
 
-    // Navigation spécifique pour tuteurs (limitée)
+    // Navigation spécifique pour tuteurs (limitée à 4 onglets)
     if (isTutor) {
       sections.push({
-        title: 'Formation',
+        title: 'Accueil',
         items: [
-          { name: 'Formations', href: '/formations', icon: BookOpen, description: 'Formations de vos apprentis' },
+          { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard, description: 'Vue d\'ensemble' },
         ]
       });
       
       sections.push({
-        title: 'Présence',
+        title: 'Formation',
         items: [
-          { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck, description: 'Suivi des présences' },
+          { name: 'Formations', href: '/formations', icon: BookOpen, description: 'Formations de votre apprenti' },
+          { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar, description: 'Planning de votre apprenti' },
         ]
       });
       
