@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { format, addWeeks, subWeeks, addMonths, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Users, Calendar, GraduationCap, ChevronUp, ChevronDown, Clock, BookOpen, User, MapPin, Eye } from 'lucide-react';
+import { Users, Calendar, GraduationCap, ChevronUp, ChevronDown, Clock, BookOpen, User, MapPin, Eye, Briefcase } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { navigateWeek, getWeekInfo, getWeekDays } from '@/utils/calendarUtils';
@@ -15,8 +15,10 @@ import { ScheduleViewCalendar } from '@/components/schedule/ScheduleViewCalendar
 import { WeekNavigator } from '@/components/schedule/WeekNavigator';
 import WeekNavigation from '@/components/ui/week-navigation';
 import { useUserSchedules } from '@/hooks/useUserSchedules';
+import { useTutorSchedules } from '@/hooks/useTutorSchedules';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useUserFormations } from '@/hooks/useUserFormations';
+import { useFormations } from '@/hooks/useFormations';
 import { LoadingState } from '@/components/ui/loading-state';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@/components/ui/badge';
@@ -54,7 +56,6 @@ type ViewMode = 'day' | 'week' | 'month' | 'list';
 const EmploiTemps = () => {
   const { userRole, userId } = useCurrentUser();
   const [isWeekNavigationOpen, setIsWeekNavigationOpen] = useState(true);
-  const isInstructor = userRole === 'Formateur' || userRole === 'Tuteur';
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent | null>(null);
@@ -62,17 +63,44 @@ const EmploiTemps = () => {
   const [selectedFormationId, setSelectedFormationId] = useState<string | null>(null);
 
   const { toast } = useToast();
-  const { schedules, loading, error } = useUserSchedules();
+  
+  // Hook pour étudiants/formateurs
+  const { schedules: userSchedules, loading: loadingUser, error: errorUser } = useUserSchedules();
+  
+  // Hook pour tuteurs (récupère les emplois du temps de leur apprenti)
+  const { schedules: tutorSchedules, studentInfo, loading: loadingTutor, error: errorTutor } = useTutorSchedules();
+  
+  // Hook pour formations de l'utilisateur (étudiants)
   const { userFormations, loading: loadingFormations } = useUserFormations();
+  
+  // Hook pour toutes les formations (admins)
+  const { formations: allFormations, loading: loadingAllFormations } = useFormations();
+
+  // Déterminer quel set de données utiliser selon le rôle
+  const isTutor = userRole === 'Tuteur';
+  const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
+  const isStudent = userRole === 'Étudiant';
+  const isInstructor = userRole === 'Formateur';
+
+  const schedules = isTutor ? tutorSchedules : userSchedules;
+  const loading = isTutor ? loadingTutor : (loadingUser || loadingFormations || (isAdmin && loadingAllFormations));
+  const error = isTutor ? errorTutor : errorUser;
 
   // Auto-sélectionner la formation si l'utilisateur n'en a qu'une (étudiant)
   useEffect(() => {
-    if (userRole === 'Étudiant' && userFormations.length === 1 && !selectedFormationId) {
+    if (isStudent && userFormations.length === 1 && !selectedFormationId) {
       setSelectedFormationId(userFormations[0].formation_id);
     }
-  }, [userFormations, userRole, selectedFormationId]);
+  }, [userFormations, isStudent, selectedFormationId]);
 
-  // Conversion des créneaux en événements
+  // Pour les tuteurs, auto-sélectionner la formation de l'apprenti
+  useEffect(() => {
+    if (isTutor && studentInfo && studentInfo.formationIds.length === 1 && !selectedFormationId) {
+      setSelectedFormationId(studentInfo.formationIds[0]);
+    }
+  }, [isTutor, studentInfo, selectedFormationId]);
+
+  // Conversion des créneaux en événements avec gestion spécifique par rôle
   const convertToEvents = (scheduleSlots: any[]): ScheduleEvent[] => {
     return scheduleSlots.map(slot => {
       const formation = slot.schedules?.formations;
@@ -94,9 +122,21 @@ const EmploiTemps = () => {
 
   const allEvents = convertToEvents(schedules);
 
-  const events = userRole === 'Étudiant' && selectedFormationId
-    ? allEvents.filter(event => event.formationId === selectedFormationId)
-    : allEvents;
+  // Filtrer les événements selon le rôle et la formation sélectionnée
+  const getFilteredEvents = () => {
+    // Pour les étudiants et tuteurs : filtrer par formation sélectionnée
+    if ((isStudent || isTutor) && selectedFormationId) {
+      return allEvents.filter(event => event.formationId === selectedFormationId);
+    }
+    // Pour les admins : filtrer par formation sélectionnée si une est choisie
+    if (isAdmin && selectedFormationId) {
+      return allEvents.filter(event => event.formationId === selectedFormationId);
+    }
+    // Pour les formateurs : afficher tous les créneaux (vue globale)
+    return allEvents;
+  };
+
+  const events = getFilteredEvents();
 
   const sortedEvents = [...events].sort((a, b) => {
     const dateCompare = a.date.getTime() - b.date.getTime();
@@ -113,7 +153,27 @@ const EmploiTemps = () => {
     upcoming: sortedEvents.filter(e => e.date > today)
   };
 
-  if (loading || loadingFormations) {
+  // Obtenir le titre de la formation sélectionnée
+  const getSelectedFormationTitle = (): string | undefined => {
+    if (isStudent) {
+      const selectedFormation = userFormations.find(uf => uf.formation_id === selectedFormationId);
+      return selectedFormation?.formation.title;
+    }
+    if (isTutor) {
+      const idx = studentInfo?.formationIds.indexOf(selectedFormationId || '');
+      if (idx !== undefined && idx >= 0 && studentInfo?.formationTitles[idx]) {
+        return studentInfo.formationTitles[idx];
+      }
+      return studentInfo?.formationTitles[0];
+    }
+    if (isAdmin) {
+      const selectedFormation = allFormations.find(f => f.id === selectedFormationId);
+      return selectedFormation?.title;
+    }
+    return undefined;
+  };
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
         <LoadingState message="Chargement de votre emploi du temps..." />
@@ -225,11 +285,22 @@ const EmploiTemps = () => {
         instructor: event.instructor,
         room: event.room,
         color: event.color,
+        formation: event.formation, // Pour les formateurs
       })),
     };
   });
 
   const weekInfo = getWeekInfo(currentDate);
+
+  // Fonction pour formater les horaires en HH:mm
+  const formatTime = (time: string) => {
+    if (!time) return '';
+    const parts = time.split(':');
+    return `${parts[0]}:${parts[1]}`;
+  };
+
+  // Déterminer si on doit afficher le nom de la formation sur les cartes
+  const shouldShowFormationOnCards = isInstructor || isAdmin;
 
   const renderCurrentView = () => {
     switch (viewMode) {
@@ -269,20 +340,13 @@ const EmploiTemps = () => {
       );
     }
 
-    // Vue liste format tableau coloré - Design comme dans l'administration
-    // Fonction pour formater les horaires en HH:mm
-    const formatTime = (time: string) => {
-      if (!time) return '';
-      const parts = time.split(':');
-      return `${parts[0]}:${parts[1]}`;
-    };
-
+    // Vue liste format tableau coloré
     return (
       <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-8">
         <div className="bg-card rounded-2xl shadow-xl border border-border/40 overflow-hidden">
-          {/* En-têtes du tableau - Design moderne comme l'admin */}
+          {/* En-têtes du tableau */}
           <div className="bg-muted/60 border-b border-border/40 px-4 sm:px-6 py-4">
-            <div className="grid grid-cols-12 gap-2 sm:gap-4 items-center text-xs sm:text-sm font-semibold text-muted-foreground">
+            <div className={`grid gap-2 sm:gap-4 items-center text-xs sm:text-sm font-semibold text-muted-foreground ${shouldShowFormationOnCards ? 'grid-cols-12' : 'grid-cols-11'}`}>
               <div className="col-span-2 flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 Date
@@ -291,6 +355,12 @@ const EmploiTemps = () => {
                 <Clock className="h-4 w-4" />
                 Horaire
               </div>
+              {shouldShowFormationOnCards && (
+                <div className="col-span-2 flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4" />
+                  Formation
+                </div>
+              )}
               <div className="col-span-3 flex items-center gap-2">
                 <BookOpen className="h-4 w-4" />
                 Module
@@ -303,11 +373,10 @@ const EmploiTemps = () => {
                 <MapPin className="h-4 w-4" />
                 Salle
               </div>
-              <div className="col-span-1 text-center">Actions</div>
             </div>
           </div>
 
-          {/* Corps du tableau - Créneaux colorés */}
+          {/* Corps du tableau */}
           <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
             {listEvents.length === 0 && (
               <div className="px-4 sm:px-6 py-8 text-center text-sm text-muted-foreground bg-muted/30 rounded-xl">
@@ -327,7 +396,7 @@ const EmploiTemps = () => {
                   style={{ backgroundColor: slotColor }}
                 >
                   <div className="px-4 sm:px-6 py-4">
-                    <div className="grid grid-cols-12 gap-2 sm:gap-4 items-center">
+                    <div className={`grid gap-2 sm:gap-4 items-center ${shouldShowFormationOnCards ? 'grid-cols-12' : 'grid-cols-11'}`}>
                       {/* Date */}
                       <div className="col-span-2">
                         <div className="text-sm font-bold text-white">
@@ -344,6 +413,15 @@ const EmploiTemps = () => {
                           {formatTime(event.startTime)} - {formatTime(event.endTime)}
                         </span>
                       </div>
+
+                      {/* Formation - Uniquement pour formateurs et admins */}
+                      {shouldShowFormationOnCards && (
+                        <div className="col-span-2">
+                          <div className="text-sm font-semibold text-white truncate">
+                            {event.formation}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Module */}
                       <div className="col-span-3">
@@ -371,21 +449,6 @@ const EmploiTemps = () => {
                           </span>
                         </div>
                       </div>
-
-                      {/* Actions */}
-                      <div className="col-span-1 flex justify-center">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEventClick(event);
-                          }}
-                          className="h-8 w-8 p-0 text-white hover:bg-white/20 rounded-full"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -399,6 +462,112 @@ const EmploiTemps = () => {
 
   const hasNoEvents = events.length === 0;
 
+  // Rendu du sélecteur de formation selon le rôle
+  const renderFormationSelector = () => {
+    // Pour les étudiants avec plusieurs formations
+    if (isStudent && userFormations.length > 1) {
+      return (
+        <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 bg-card p-3 sm:p-4 rounded-lg border border-border shadow-sm">
+          <div className="flex items-center gap-2">
+            <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground">Formation :</span>
+          </div>
+          <Select
+            value={selectedFormationId || undefined}
+            onValueChange={setSelectedFormationId}
+          >
+            <SelectTrigger className="w-full sm:w-[320px]">
+              <SelectValue placeholder="Sélectionnez une formation" />
+            </SelectTrigger>
+            <SelectContent>
+              {userFormations.map((uf) => (
+                <SelectItem key={uf.formation_id} value={uf.formation_id}>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: uf.formation.color || '#8B5CF6' }}
+                    />
+                    <span className="truncate">{uf.formation.title}</span>
+                    <Badge variant="outline" className="ml-2 text-xs hidden sm:inline-flex">
+                      {uf.formation.level}
+                    </Badge>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+
+    // Pour les tuteurs avec plusieurs formations d'apprenti
+    if (isTutor && studentInfo && studentInfo.formationIds.length > 1) {
+      return (
+        <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 bg-card p-3 sm:p-4 rounded-lg border border-border shadow-sm">
+          <div className="flex items-center gap-2">
+            <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground">
+              Formation de {studentInfo.studentName} :
+            </span>
+          </div>
+          <Select
+            value={selectedFormationId || undefined}
+            onValueChange={setSelectedFormationId}
+          >
+            <SelectTrigger className="w-full sm:w-[320px]">
+              <SelectValue placeholder="Sélectionnez une formation" />
+            </SelectTrigger>
+            <SelectContent>
+              {studentInfo.formationIds.map((formationId, idx) => (
+                <SelectItem key={formationId} value={formationId}>
+                  <span className="truncate">{studentInfo.formationTitles[idx]}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+
+    // Pour les admins : sélecteur de toutes les formations
+    if (isAdmin) {
+      return (
+        <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 bg-card p-3 sm:p-4 rounded-lg border border-border shadow-sm">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground">Consulter l'emploi du temps :</span>
+          </div>
+          <Select
+            value={selectedFormationId || undefined}
+            onValueChange={setSelectedFormationId}
+          >
+            <SelectTrigger className="w-full sm:w-[320px]">
+              <SelectValue placeholder="Sélectionnez une formation" />
+            </SelectTrigger>
+            <SelectContent>
+              {allFormations.map((formation) => (
+                <SelectItem key={formation.id} value={formation.id}>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: formation.color || '#8B5CF6' }}
+                    />
+                    <span className="truncate">{formation.title}</span>
+                    <Badge variant="outline" className="ml-2 text-xs hidden sm:inline-flex">
+                      {formation.level}
+                    </Badge>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
       <ScheduleViewHeader
@@ -406,6 +575,8 @@ const EmploiTemps = () => {
         weekInfo={weekInfo}
         viewMode={viewMode}
         schedulesCount={events.length}
+        formationTitle={getSelectedFormationTitle()}
+        studentName={isTutor ? studentInfo?.studentName : undefined}
       />
 
       <div className="w-full px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
@@ -418,38 +589,8 @@ const EmploiTemps = () => {
           />
         </div>
 
-        {userRole === 'Étudiant' && userFormations.length > 1 && (
-          <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 bg-card p-3 sm:p-4 rounded-lg border border-border shadow-sm">
-            <div className="flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
-              <span className="text-xs sm:text-sm font-medium text-muted-foreground">Formation :</span>
-            </div>
-            <Select
-              value={selectedFormationId || undefined}
-              onValueChange={setSelectedFormationId}
-            >
-              <SelectTrigger className="w-full sm:w-[320px]">
-                <SelectValue placeholder="Sélectionnez une formation" />
-              </SelectTrigger>
-              <SelectContent>
-                {userFormations.map((uf) => (
-                  <SelectItem key={uf.formation_id} value={uf.formation_id}>
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-3 h-3 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: uf.formation.color || '#8B5CF6' }}
-                      />
-                      <span className="truncate">{uf.formation.title}</span>
-                      <Badge variant="outline" className="ml-2 text-xs hidden sm:inline-flex">
-                        {uf.formation.level}
-                      </Badge>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        {/* Sélecteur de formation selon le rôle */}
+        {renderFormationSelector()}
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <WeekNavigator currentDate={currentDate} onNavigate={handleNavigate} />
@@ -486,20 +627,47 @@ const EmploiTemps = () => {
           </CollapsibleContent>
         </Collapsible>
 
-        {/* Important: pour les formateurs/tuteurs, on rend toujours la vue calendrier même sans cours */}
-        {hasNoEvents && !isInstructor && viewMode !== 'week' ? (
+        {/* Message pour étudiants/tuteurs si pas de formation sélectionnée */}
+        {(isStudent || isTutor) && !selectedFormationId && userFormations.length === 0 && !studentInfo && (
           <div className="mt-8">
             <EmptyState
-              title="Aucun cours planifié"
-              description={
-                userRole === 'Étudiant'
-                  ? "Aucun cours n'est programmé pour vos formations actuellement."
-                  : "Aucun emploi du temps publié pour le moment."
+              title="Aucune formation"
+              description={isTutor 
+                ? "Vous n'avez pas encore d'apprenti assigné."
+                : "Vous n'êtes inscrit à aucune formation."
               }
             />
           </div>
-        ) : (
-          renderCurrentView()
+        )}
+
+        {/* Message pour admins si pas de formation sélectionnée */}
+        {isAdmin && !selectedFormationId && (
+          <div className="mt-8">
+            <EmptyState
+              title="Sélectionnez une formation"
+              description="Choisissez une formation ci-dessus pour consulter son emploi du temps."
+            />
+          </div>
+        )}
+
+        {/* Affichage de l'emploi du temps */}
+        {((isStudent && selectedFormationId) || (isTutor && studentInfo) || isInstructor || (isAdmin && selectedFormationId)) && (
+          hasNoEvents && viewMode !== 'week' ? (
+            <div className="mt-8">
+              <EmptyState
+                title="Aucun cours planifié"
+                description={
+                  isStudent || isTutor
+                    ? "Aucun cours n'est programmé pour cette formation actuellement."
+                    : isInstructor
+                      ? "Aucun cours ne vous est assigné actuellement."
+                      : "Aucun emploi du temps publié pour cette formation."
+                }
+              />
+            </div>
+          ) : (
+            renderCurrentView()
+          )
         )}
       </div>
 
