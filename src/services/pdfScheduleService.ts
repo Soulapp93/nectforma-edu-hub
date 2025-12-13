@@ -454,18 +454,21 @@ const renderMonthView = (
         .sort((a, b) => a.start_time.localeCompare(b.start_time));
 
       if (daySlots.length > 0) {
-        // Afficher tous les créneaux (max 3 visibles, les autres indiqués par +N)
-        const maxSlotsToShow = cellHeight >= 35 ? 2 : 1;
-        const slotsToDisplay = daySlots.slice(0, maxSlotsToShow);
-        const remainingSlots = daySlots.length - maxSlotsToShow;
+        // Afficher TOUS les créneaux du jour, sans +N
+        // On adapte dynamiquement la hauteur de chaque carte pour que tout tienne dans la cellule
+        const slotAreaTop = y + 9;
+        const slotAreaHeight = Math.max(6, cellHeight - 10); // espace sous le numéro du jour
+        const slotCount = daySlots.length;
+        const slotSpacing = 1; // espace vertical entre les cartes
+        const rawCardHeight = slotAreaHeight - (slotCount - 1) * slotSpacing;
+        const slotCardHeight = Math.max(6, rawCardHeight / slotCount);
 
-        const slotCardHeight = cellHeight >= 35 ? 12 : (cellHeight - 10);
-        let slotY = y + 9;
+        let slotY = slotAreaTop;
 
-        slotsToDisplay.forEach((slot, slotIdx) => {
+        daySlots.forEach((slot) => {
           const slotColor = slot.color || '#8B5CF6';
           const rgb = hexToRgb(slotColor);
-          
+
           const cardX = x + 1;
           const cardWidth = cellWidth - 2;
 
@@ -483,44 +486,36 @@ const renderMonthView = (
           // Titre du module
           pdf.setFontSize(5);
           pdf.setFont('helvetica', 'bold');
-          pdf.text(truncateText(pdf, moduleName, maxTextWidth), cardX + 1.5, slotY + 4);
+          pdf.text(truncateText(pdf, moduleName, maxTextWidth), cardX + 1.5, slotY + 3.5);
 
-          // Horaires
+          // Horaires (ligne suivante si assez de place)
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(4);
           const timeText = `${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`;
-          pdf.text(truncateText(pdf, timeText, maxTextWidth), cardX + 1.5, slotY + 8);
+          if (slotCardHeight >= 8) {
+            pdf.text(truncateText(pdf, timeText, maxTextWidth), cardX + 1.5, slotY + 7);
+          }
 
-          // Salle et formateur sur la même ligne si assez de place
-          if (slotCardHeight >= 14) {
+          // Salle et formateur si encore de la place
+          if (slotCardHeight >= 11) {
             let infoText = '';
             if (slot.room) infoText += `Salle ${slot.room}`;
             const instructor = slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : '';
             if (instructor) infoText += infoText ? ` • ${instructor}` : instructor;
             if (infoText) {
-              pdf.text(truncateText(pdf, infoText, maxTextWidth), cardX + 1.5, slotY + 11);
+              pdf.text(truncateText(pdf, infoText, maxTextWidth), cardX + 1.5, slotY + 10);
             }
           }
 
           pdf.setTextColor(0, 0, 0);
-          slotY += slotCardHeight + 1;
+          slotY += slotCardHeight + slotSpacing;
         });
-
-        // Indicateur +N si plus de créneaux
-        if (remainingSlots > 0) {
-          pdf.setFontSize(5);
-          pdf.setFont('helvetica', 'bold');
-          pdf.setTextColor(139, 92, 246);
-          pdf.text(`+${remainingSlots}`, x + cellWidth - 6, y + 6);
-          pdf.setTextColor(0, 0, 0);
-        }
       }
     });
 
     currentMonth = addMonths(currentMonth, 1);
   }
 };
-
 const renderListView = (
   pdf: jsPDF,
   schedules: ScheduleSlot[],
