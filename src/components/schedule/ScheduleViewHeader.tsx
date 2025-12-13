@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Clock, Users, BookOpen } from 'lucide-react';
+import { Calendar, Clock, Users, BookOpen, GraduationCap, Briefcase } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -10,13 +10,17 @@ interface ScheduleViewHeaderProps {
   weekInfo: { start: string; end: string };
   viewMode: string;
   schedulesCount: number;
+  formationTitle?: string;
+  studentName?: string;
 }
 
 export const ScheduleViewHeader: React.FC<ScheduleViewHeaderProps> = ({
   currentDate,
   weekInfo,
   viewMode,
-  schedulesCount
+  schedulesCount,
+  formationTitle,
+  studentName
 }) => {
   const { userRole } = useCurrentUser();
 
@@ -25,11 +29,12 @@ export const ScheduleViewHeader: React.FC<ScheduleViewHeaderProps> = ({
       case 'Étudiant':
         return 'Vos cours et formations';
       case 'Formateur':
+        return 'Tous vos créneaux d\'enseignement';
       case 'Tuteur':
-        return 'Vos créneaux d\'enseignement';
+        return studentName ? `Emploi du temps de ${studentName}` : 'Emploi du temps de votre apprenti';
       case 'Admin':
       case 'AdminPrincipal':
-        return 'Tous les emplois du temps';
+        return 'Consultation des emplois du temps';
       default:
         return 'Emploi du temps';
     }
@@ -38,16 +43,37 @@ export const ScheduleViewHeader: React.FC<ScheduleViewHeaderProps> = ({
   const getRoleIcon = () => {
     switch (userRole) {
       case 'Étudiant':
-        return BookOpen;
+        return GraduationCap;
       case 'Formateur':
-      case 'Tuteur':
         return Users;
+      case 'Tuteur':
+        return Briefcase;
       case 'Admin':
       case 'AdminPrincipal':
         return Calendar;
       default:
         return Clock;
     }
+  };
+
+  const getTitle = () => {
+    // Pour les étudiants avec une formation sélectionnée, afficher le titre de la formation
+    if (userRole === 'Étudiant' && formationTitle) {
+      return `Emploi du Temps – ${formationTitle}`;
+    }
+    // Pour les tuteurs, afficher le titre de la formation de l'apprenti
+    if (userRole === 'Tuteur' && formationTitle) {
+      return `Emploi du Temps – ${formationTitle}`;
+    }
+    // Pour les admins avec une formation sélectionnée
+    if ((userRole === 'Admin' || userRole === 'AdminPrincipal') && formationTitle) {
+      return `Emploi du Temps – ${formationTitle}`;
+    }
+    // Pour les formateurs, vue globale
+    if (userRole === 'Formateur') {
+      return 'Mon Emploi du Temps';
+    }
+    return 'Emploi du Temps';
   };
 
   const Icon = getRoleIcon();
@@ -61,7 +87,9 @@ export const ScheduleViewHeader: React.FC<ScheduleViewHeaderProps> = ({
               <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
             </div>
             <div className="min-w-0 flex-1">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">Emploi du Temps</h1>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">
+                {getTitle()}
+              </h1>
               <p className="text-xs sm:text-sm text-muted-foreground truncate">
                 {getRoleDescription()} • {' '}
                 {viewMode === 'month' 

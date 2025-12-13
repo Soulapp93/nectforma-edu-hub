@@ -16,7 +16,8 @@ export const useUserSchedules = () => {
   const formationIds = userFormations?.map(uf => uf.formation_id) || [];
 
   const fetchSchedules = async () => {
-    if (!userId || !userRole) {
+    // Les tuteurs utilisent useTutorSchedules, pas ce hook
+    if (!userId || !userRole || userRole === 'Tuteur') {
       setSchedules([]);
       return;
     }
