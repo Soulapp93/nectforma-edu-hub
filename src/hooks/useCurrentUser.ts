@@ -129,45 +129,34 @@ export const useUserWithRelations = () => {
       }
 
       try {
-        // Récupérer les informations de base de l'utilisateur
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', userId)
-          .single();
-
-        if (!mounted) return;
-
-        if (userError) {
-          console.error('Erreur lors de la récupération des infos utilisateur:', userError);
-          setUserInfo(null);
-        } else {
-          setUserInfo(userData);
-        }
-
-        // Si c'est un étudiant, chercher son tuteur
-        if (userRole === 'Étudiant') {
+        // Pour les tuteurs, récupérer depuis la table tutors
+        if (userRole === 'Tuteur') {
           const { data: tutorData, error: tutorError } = await supabase
-            .from('tutor_students_view')
+            .from('tutors')
             .select('*')
-            .eq('student_id', userId)
-            .eq('is_active', true)
-            .maybeSingle();
+            .eq('id', userId)
+            .single();
 
           if (!mounted) return;
 
-          if (!tutorError && tutorData) {
-            setRelationInfo({
-              type: 'tutor',
-              name: `${tutorData.tutor_first_name} ${tutorData.tutor_last_name}`,
-              company: tutorData.company_name,
-              position: tutorData.position
+          if (tutorError) {
+            console.error('Erreur lors de la récupération des infos tuteur:', tutorError);
+            setUserInfo(null);
+          } else {
+            // Formater les données tuteur pour être compatibles avec userInfo
+            setUserInfo({
+              id: tutorData.id,
+              first_name: tutorData.first_name,
+              last_name: tutorData.last_name,
+              email: tutorData.email,
+              phone: tutorData.phone,
+              profile_photo_url: tutorData.profile_photo_url,
+              establishment_id: tutorData.establishment_id,
+              role: 'Tuteur'
             });
           }
-        }
 
-        // Si c'est un tuteur, chercher ses apprentis
-        if (userRole === 'Tuteur') {
+          // Chercher l'apprenti du tuteur
           const { data: studentData, error: studentError } = await supabase
             .from('tutor_students_view')
             .select('*')
@@ -184,6 +173,43 @@ export const useUserWithRelations = () => {
               name: `${studentData.student_first_name} ${studentData.student_last_name}`,
               formation: studentData.formation_title
             });
+          }
+        } else {
+          // Pour les autres rôles, récupérer depuis la table users
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', userId)
+            .single();
+
+          if (!mounted) return;
+
+          if (userError) {
+            console.error('Erreur lors de la récupération des infos utilisateur:', userError);
+            setUserInfo(null);
+          } else {
+            setUserInfo(userData);
+          }
+
+          // Si c'est un étudiant, chercher son tuteur
+          if (userRole === 'Étudiant') {
+            const { data: tutorData, error: tutorError } = await supabase
+              .from('tutor_students_view')
+              .select('*')
+              .eq('student_id', userId)
+              .eq('is_active', true)
+              .maybeSingle();
+
+            if (!mounted) return;
+
+            if (!tutorError && tutorData) {
+              setRelationInfo({
+                type: 'tutor',
+                name: `${tutorData.tutor_first_name} ${tutorData.tutor_last_name}`,
+                company: tutorData.company_name,
+                position: tutorData.position
+              });
+            }
           }
         }
       } catch (error) {

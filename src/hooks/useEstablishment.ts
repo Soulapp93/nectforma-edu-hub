@@ -28,14 +28,31 @@ export const useEstablishment = () => {
       }
 
       try {
-        // Get the user's establishment_id
-        const { data: userData, error: userError } = await supabase
+        // Get the user's establishment_id - d'abord dans users, puis dans tutors
+        let establishmentId: string | null = null;
+        
+        const { data: userData } = await supabase
           .from('users')
           .select('establishment_id')
           .eq('id', userId)
-          .single();
+          .maybeSingle();
 
-        if (userError || !userData?.establishment_id) {
+        if (userData?.establishment_id) {
+          establishmentId = userData.establishment_id;
+        } else {
+          // Vérifier dans la table tutors
+          const { data: tutorData } = await supabase
+            .from('tutors')
+            .select('establishment_id')
+            .eq('id', userId)
+            .maybeSingle();
+          
+          if (tutorData?.establishment_id) {
+            establishmentId = tutorData.establishment_id;
+          }
+        }
+
+        if (!establishmentId) {
           setLoading(false);
           return;
         }
@@ -44,7 +61,7 @@ export const useEstablishment = () => {
         const { data: establishmentData, error: establishmentError } = await supabase
           .from('establishments')
           .select('*')
-          .eq('id', userData.establishment_id)
+          .eq('id', establishmentId)
           .single();
 
         if (establishmentError) {
