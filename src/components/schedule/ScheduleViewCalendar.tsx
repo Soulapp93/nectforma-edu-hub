@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, MapPin, User } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, GraduationCap } from 'lucide-react';
 import { ScheduleEvent } from './CreateEventModal';
 
 interface ScheduleDay {
@@ -14,6 +14,7 @@ interface ScheduleDay {
     instructor: string;
     room: string;
     color: string;
+    formation?: string;
   }>;
 }
 
@@ -21,12 +22,14 @@ interface ScheduleViewCalendarProps {
   schedule: ScheduleDay[];
   filteredEvents: ScheduleEvent[];
   onEventClick: (event: ScheduleEvent) => void;
+  showFormationName?: boolean;
 }
 
 export const ScheduleViewCalendar: React.FC<ScheduleViewCalendarProps> = ({
   schedule,
   filteredEvents,
-  onEventClick
+  onEventClick,
+  showFormationName = false
 }) => {
   return (
     <div className="w-full px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
@@ -87,29 +90,30 @@ export const ScheduleViewCalendar: React.FC<ScheduleViewCalendarProps> = ({
                         if (fullEvent) onEventClick(fullEvent);
                       }}
                     >
-                      <div className="flex items-start justify-between mb-2 gap-1">
-                        <h4 className="font-semibold text-white text-xs sm:text-sm group-hover:text-white/90 transition-colors line-clamp-2">
-                          {module.title}
-                        </h4>
-                        {fullEvent?.formation && (
-                          <Badge 
-                            variant="outline" 
-                            className="text-[10px] sm:text-xs ml-1 border-white/30 text-white/90 bg-white/10 flex-shrink-0 hidden sm:flex"
-                          >
-                            {fullEvent.formation}
-                          </Badge>
-                        )}
-                      </div>
+                      {/* Titre du module */}
+                      <h4 className="font-semibold text-white text-xs sm:text-sm group-hover:text-white/90 transition-colors line-clamp-2 mb-2">
+                        {module.title}
+                      </h4>
                       
                       <div className="space-y-1">
+                        {/* Formation - uniquement pour les formateurs */}
+                        {showFormationName && fullEvent?.formation && (
+                          <div className="flex items-center text-[10px] sm:text-xs text-white/90">
+                            <GraduationCap className="h-3 w-3 mr-1 flex-shrink-0" />
+                            <span className="truncate">{fullEvent.formation}</span>
+                          </div>
+                        )}
+                        {/* Horaire */}
                         <div className="flex items-center text-[10px] sm:text-xs text-white/90">
                           <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
                           <span className="truncate">{module.time}</span>
                         </div>
+                        {/* Salle */}
                         <div className="flex items-center text-[10px] sm:text-xs text-white/90">
                           <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
                           <span className="truncate">{module.room}</span>
                         </div>
+                        {/* Formateur */}
                         <div className="flex items-center text-[10px] sm:text-xs text-white/90">
                           <User className="h-3 w-3 mr-1 flex-shrink-0" />
                           <span className="truncate">{module.instructor}</span>
