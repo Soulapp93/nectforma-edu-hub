@@ -420,97 +420,153 @@ const renderMonthView = (
     const calendarEnd = endOfWeek(lastDay, { weekStartsOn: 1 });
     const allDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
-    // Calculer le nombre de semaines et ajuster la hauteur des cellules
-    const numberOfWeeks = Math.ceil(allDays.length / 7);
-    const availableHeight = pageHeight - currentY - 20; // 20mm pour le footer
-    const cellHeight = Math.min(38, availableHeight / numberOfWeeks);
+    // Regrouper les jours par semaines (7 jours par ligne)
+    const weeks: Date[][] = [];
+    for (let i = 0; i < allDays.length; i += 7) {
+      weeks.push(allDays.slice(i, i + 7));
+    }
 
-    let row = 0;
-    allDays.forEach((day, index) => {
-      const col = index % 7;
-      if (index > 0 && col === 0) row++;
+    // Paramètres d'affichage des créneaux dans une cellule
+    const minSlotCardHeight = 11; // hauteur minimale confortable pour afficher titre + horaire + salle/formateur
+    const slotSpacing = 1.5; // espace vertical entre les cartes
+    const dayHeaderHeight = 8; // hauteur pour le numéro du jour
+    const bottomPadding = 3; // marge basse de la cellule
 
-      const x = margin + col * cellWidth;
-      const y = currentY + row * cellHeight;
+    weeks.forEach((week, weekIndex) => {
+      // Calculer le nombre maximum de créneaux sur un jour de cette semaine
+      let maxSlotsInWeek = 0;
+      week.forEach((day) => {
+        const dateStr = format(day, 'yyyy-MM-dd');
+        const daySlotsCount = schedules.filter((s) => s.date === dateStr).length;
+        if (daySlotsCount > maxSlotsInWeek) maxSlotsInWeek = daySlotsCount;
+      });
 
-      const isCurrentMonth = day.getMonth() === currentMonth.getMonth();
-
-      // Fond de cellule
-      pdf.setFillColor(isCurrentMonth ? 255 : 248, isCurrentMonth ? 255 : 248, isCurrentMonth ? 255 : 248);
-      pdf.rect(x, y, cellWidth, cellHeight, 'F');
-      pdf.setDrawColor(230, 230, 230);
-      pdf.rect(x, y, cellWidth, cellHeight, 'S');
-
-      // Numéro du jour
-      pdf.setFontSize(8);
-      pdf.setFont('helvetica', isCurrentMonth ? 'bold' : 'normal');
-      pdf.setTextColor(isCurrentMonth ? 60 : 180, isCurrentMonth ? 60 : 180, isCurrentMonth ? 60 : 180);
-      pdf.text(day.getDate().toString(), x + 2, y + 6);
-
-      // Créneaux pour ce jour
-      const dateStr = format(day, 'yyyy-MM-dd');
-      const daySlots = schedules
-        .filter((s) => s.date === dateStr)
-        .sort((a, b) => a.start_time.localeCompare(b.start_time));
-
-      if (daySlots.length > 0) {
-        // Afficher TOUS les créneaux du jour, sans +N
-        // On adapte dynamiquement la hauteur de chaque carte pour que tout tienne dans la cellule
-        const slotAreaTop = y + 9;
-        const slotAreaHeight = Math.max(6, cellHeight - 10); // espace sous le numéro du jour
-        const slotCount = daySlots.length;
-        const slotSpacing = 1; // espace vertical entre les cartes
-        const rawCardHeight = slotAreaHeight - (slotCount - 1) * slotSpacing;
-        const slotCardHeight = Math.max(6, rawCardHeight / slotCount);
-
-        let slotY = slotAreaTop;
-
-        daySlots.forEach((slot) => {
-          const slotColor = slot.color || '#8B5CF6';
-          const rgb = hexToRgb(slotColor);
-
-          const cardX = x + 1;
-          const cardWidth = cellWidth - 2;
-
-          pdf.setFillColor(rgb.r, rgb.g, rgb.b);
-          pdf.roundedRect(cardX, slotY, cardWidth, slotCardHeight, 1, 1, 'F');
-
-          const textColor = isLightColor(slotColor)
-            ? { r: 0, g: 0, b: 0 }
-            : { r: 255, g: 255, b: 255 };
-          pdf.setTextColor(textColor.r, textColor.g, textColor.b);
-
-          const moduleName = slot.formation_modules?.title || slot.notes || 'Cours';
-          const maxTextWidth = cardWidth - 3;
-
-          // Titre du module
-          pdf.setFontSize(5);
-          pdf.setFont('helvetica', 'bold');
-          pdf.text(truncateText(pdf, moduleName, maxTextWidth), cardX + 1.5, slotY + 3.5);
-
-          // Horaires (ligne suivante si assez de place)
-          pdf.setFont('helvetica', 'normal');
-          pdf.setFontSize(4);
-          const timeText = `${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`;
-          if (slotCardHeight >= 8) {
-            pdf.text(truncateText(pdf, timeText, maxTextWidth), cardX + 1.5, slotY + 7);
-          }
-
-          // Salle et formateur si encore de la place
-          if (slotCardHeight >= 11) {
-            let infoText = '';
-            if (slot.room) infoText += `Salle ${slot.room}`;
-            const instructor = slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : '';
-            if (instructor) infoText += infoText ? ` • ${instructor}` : instructor;
-            if (infoText) {
-              pdf.text(truncateText(pdf, infoText, maxTextWidth), cardX + 1.5, slotY + 10);
-            }
-          }
-
-          pdf.setTextColor(0, 0, 0);
-          slotY += slotCardHeight + slotSpacing;
-        });
+      // Hauteur nécessaire pour cette ligne de semaine pour afficher TOUS les créneaux sans chevauchement
+      let slotAreaHeight = 0;
+      if (maxSlotsInWeek > 0) {
+        slotAreaHeight =
+          maxSlotsInWeek * minSlotCardHeight + (maxSlotsInWeek - 1) * slotSpacing + 1;
       }
+      const cellHeight = dayHeaderHeight + slotAreaHeight + bottomPadding;
+
+      // Saut de page si la semaine ne tient pas sur la page actuelle
+      if (currentY + cellHeight > pageHeight - 20) {
+        pdf.addPage();
+
+        // Réafficher le titre du mois et les en-têtes de jours sur la nouvelle page
+        currentY = startY;
+        pdf.setFontSize(16);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(139, 92, 246);
+        pdf.text(
+          monthName.charAt(0).toUpperCase() + monthName.slice(1),
+          pageWidth / 2,
+          currentY,
+          { align: 'center' }
+        );
+        pdf.setTextColor(0, 0, 0);
+        currentY += 12;
+
+        pdf.setFillColor(139, 92, 246);
+        pdf.rect(margin, currentY, contentWidth, 10, 'F');
+
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(255, 255, 255);
+        dayNames.forEach((name, index) => {
+          pdf.text(name, margin + index * cellWidth + cellWidth / 2, currentY + 7, {
+            align: 'center',
+          });
+        });
+        pdf.setTextColor(0, 0, 0);
+        currentY += 12;
+      }
+
+      // Dessiner la semaine
+      week.forEach((day, dayIndex) => {
+        const col = dayIndex;
+        const x = margin + col * cellWidth;
+        const y = currentY;
+
+        const isCurrentMonth = day.getMonth() === currentMonth.getMonth();
+
+        // Fond de cellule
+        pdf.setFillColor(isCurrentMonth ? 255 : 248, isCurrentMonth ? 255 : 248, isCurrentMonth ? 255 : 248);
+        pdf.rect(x, y, cellWidth, cellHeight, 'F');
+        pdf.setDrawColor(230, 230, 230);
+        pdf.rect(x, y, cellWidth, cellHeight, 'S');
+
+        // Numéro du jour
+        pdf.setFontSize(8);
+        pdf.setFont('helvetica', isCurrentMonth ? 'bold' : 'normal');
+        pdf.setTextColor(isCurrentMonth ? 60 : 180, isCurrentMonth ? 60 : 180, isCurrentMonth ? 60 : 180);
+        pdf.text(day.getDate().toString(), x + 2, y + 6);
+
+        // Créneaux pour ce jour
+        const dateStr = format(day, 'yyyy-MM-dd');
+        const daySlots = schedules
+          .filter((s) => s.date === dateStr)
+          .sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+        if (daySlots.length > 0) {
+          const slotAreaTop = y + dayHeaderHeight + 1;
+          const availableHeightForSlots = cellHeight - dayHeaderHeight - bottomPadding;
+          const effectiveCardHeight = Math.max(
+            minSlotCardHeight,
+            (availableHeightForSlots - (daySlots.length - 1) * slotSpacing) / daySlots.length
+          );
+
+          let slotY = slotAreaTop;
+
+          daySlots.forEach((slot) => {
+            const slotColor = slot.color || '#8B5CF6';
+            const rgb = hexToRgb(slotColor);
+
+            const cardX = x + 1;
+            const cardWidth = cellWidth - 2;
+
+            pdf.setFillColor(rgb.r, rgb.g, rgb.b);
+            pdf.roundedRect(cardX, slotY, cardWidth, effectiveCardHeight, 1, 1, 'F');
+
+            const textColor = isLightColor(slotColor)
+              ? { r: 0, g: 0, b: 0 }
+              : { r: 255, g: 255, b: 255 };
+            pdf.setTextColor(textColor.r, textColor.g, textColor.b);
+
+            const moduleName = slot.formation_modules?.title || slot.notes || 'Cours';
+            const maxTextWidth = cardWidth - 3;
+
+            // Titre du module
+            pdf.setFontSize(5);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text(truncateText(pdf, moduleName, maxTextWidth), cardX + 1.5, slotY + 3.5);
+
+            // Horaires (ligne suivante si assez de place)
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(4);
+            const timeText = `${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`;
+            if (effectiveCardHeight >= 8) {
+              pdf.text(truncateText(pdf, timeText, maxTextWidth), cardX + 1.5, slotY + 7);
+            }
+
+            // Salle + formateur si assez de place
+            if (effectiveCardHeight >= 11) {
+              let infoText = '';
+              if (slot.room) infoText += `Salle ${slot.room}`;
+              const instructor = slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : '';
+              if (instructor) infoText += infoText ? ` • ${instructor}` : instructor;
+              if (infoText) {
+                pdf.text(truncateText(pdf, infoText, maxTextWidth), cardX + 1.5, slotY + 10);
+              }
+            }
+
+            pdf.setTextColor(0, 0, 0);
+            slotY += effectiveCardHeight + slotSpacing;
+          });
+        }
+      });
+
+      currentY += cellHeight;
     });
 
     currentMonth = addMonths(currentMonth, 1);
