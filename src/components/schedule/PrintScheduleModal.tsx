@@ -26,6 +26,8 @@ export interface PrintOptions {
     end: Date;
   };
   orientation: 'portrait' | 'landscape';
+  showFormationName?: boolean;
+  formationTitle?: string;
 }
 
 interface PrintScheduleModalProps {
@@ -34,6 +36,8 @@ interface PrintScheduleModalProps {
   userName?: string;
   userRole?: string;
   triggerClassName?: string;
+  showFormationName?: boolean; // true pour formateurs uniquement
+  formationTitle?: string; // titre de la formation pour le header
 }
 
 export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
@@ -41,7 +45,9 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
   title = "Emploi du temps",
   userName,
   userRole,
-  triggerClassName
+  triggerClassName,
+  showFormationName = false,
+  formationTitle
 }) => {
   const [open, setOpen] = useState(false);
   const [printOptions, setPrintOptions] = useState<PrintOptions>({
@@ -116,10 +122,17 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
       return;
     }
 
+    // Ajouter les options pour formation
+    const pdfOptions = {
+      ...printOptions,
+      showFormationName,
+      formationTitle
+    };
+
     exportScheduleToPDFAdvanced(
       filteredSchedules,
       title,
-      printOptions,
+      pdfOptions,
       userRole,
       userName
     );

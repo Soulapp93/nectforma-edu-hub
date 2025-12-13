@@ -10,6 +10,8 @@ interface PrintOptions {
     end: Date;
   };
   orientation: 'portrait' | 'landscape';
+  showFormationName?: boolean; // Afficher le nom de la formation sur les cartes (uniquement pour formateurs)
+  formationTitle?: string; // Titre de la formation à afficher dans le header
 }
 
 // Convertir couleur hex en RGB
@@ -70,13 +72,22 @@ export const exportScheduleToPDFAdvanced = (
   const renderHeader = (startY: number): number => {
     let currentY = startY;
     
+    // Générer le titre dynamique selon le rôle
+    // Pour les formateurs: "EMPLOI DU TEMPS" simple
+    // Pour les étudiants/admins/tuteurs: "EMPLOI DU TEMPS – [FORMATION]"
+    let headerTitle = title;
+    if (options.formationTitle && !options.showFormationName) {
+      // Pour étudiants/admins/tuteurs: ajouter le nom de la formation dans le titre
+      headerTitle = `${title} – ${options.formationTitle}`;
+    }
+    
     // Header banner
     pdf.setFillColor(139, 92, 246);
     pdf.rect(0, 0, pageWidth, 22, 'F');
-    pdf.setFontSize(16);
+    pdf.setFontSize(14);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(255, 255, 255);
-    pdf.text(title, pageWidth / 2, 14, { align: 'center' });
+    pdf.text(truncateText(pdf, headerTitle, pageWidth - 20), pageWidth / 2, 14, { align: 'center' });
 
     pdf.setTextColor(0, 0, 0);
     currentY = 30;
@@ -102,20 +113,22 @@ export const exportScheduleToPDFAdvanced = (
 
   let startY = renderHeader(margin);
 
+  const showFormationOnCards = options.showFormationName || false;
+
   // Render based on view mode
   switch (options.viewMode) {
     case 'day':
-      renderDayView(pdf, filteredSchedules, options.dateRange.start, options.dateRange.end, margin, contentWidth, startY, pageWidth, pageHeight, isLandscape);
+      renderDayView(pdf, filteredSchedules, options.dateRange.start, options.dateRange.end, margin, contentWidth, startY, pageWidth, pageHeight, isLandscape, showFormationOnCards);
       break;
     case 'week':
-      renderWeekView(pdf, filteredSchedules, options.dateRange.start, options.dateRange.end, margin, contentWidth, startY, pageWidth, pageHeight, isLandscape);
+      renderWeekView(pdf, filteredSchedules, options.dateRange.start, options.dateRange.end, margin, contentWidth, startY, pageWidth, pageHeight, isLandscape, showFormationOnCards);
       break;
     case 'month':
-      renderMonthView(pdf, filteredSchedules, options.dateRange.start, options.dateRange.end, margin, contentWidth, startY, pageWidth, pageHeight, isLandscape);
+      renderMonthView(pdf, filteredSchedules, options.dateRange.start, options.dateRange.end, margin, contentWidth, startY, pageWidth, pageHeight, isLandscape, showFormationOnCards);
       break;
     case 'list':
     default:
-      renderListView(pdf, filteredSchedules, margin, contentWidth, startY, pageWidth, pageHeight, isLandscape);
+      renderListView(pdf, filteredSchedules, margin, contentWidth, startY, pageWidth, pageHeight, isLandscape, showFormationOnCards);
       break;
   }
 
@@ -137,7 +150,8 @@ const renderDayView = (
   startY: number,
   pageWidth: number,
   pageHeight: number,
-  isLandscape: boolean
+  isLandscape: boolean,
+  showFormationOnCards: boolean = false
 ) => {
   const days = eachDayOfInterval({ start: startDate, end: endDate });
   let currentY = startY;
@@ -201,19 +215,28 @@ const renderDayView = (
       pdf.setFont('helvetica', 'bold');
       pdf.text(truncateText(pdf, moduleName, contentWidth - 20), margin + 10, currentY + 10);
 
+      // Formation (uniquement pour les formateurs)
+      let infoY = currentY + 20;
+      if (showFormationOnCards && (slot as any).formationTitle) {
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'italic');
+        pdf.text(truncateText(pdf, (slot as any).formationTitle, contentWidth - 20), margin + 10, infoY);
+        infoY += 8;
+      }
+
       // Horaires
       pdf.setFontSize(10);
       pdf.setFont('helvetica', 'normal');
       const timeText = `${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`;
-      pdf.text(timeText, margin + 10, currentY + 20);
+      pdf.text(timeText, margin + 10, infoY);
 
       // Formateur
       const instructor = slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Non assigné';
-      pdf.text(instructor, margin + 80, currentY + 20);
+      pdf.text(instructor, margin + 80, infoY);
 
       // Salle
       if (slot.room) {
-        pdf.text(`Salle ${slot.room}`, margin + 10, currentY + 30);
+        pdf.text(`Salle ${slot.room}`, margin + 10, infoY + 10);
       }
 
       pdf.setTextColor(0, 0, 0);
@@ -234,7 +257,8 @@ const renderWeekView = (
   startY: number,
   pageWidth: number,
   pageHeight: number,
-  isLandscape: boolean
+  isLandscape: boolean,
+  showFormationOnCards: boolean = false
 ) => {
   let currentWeekStart = startOfWeek(startDate, { weekStartsOn: 1 });
   let isFirstWeek = true;
@@ -322,28 +346,40 @@ const renderWeekView = (
         pdf.setTextColor(textColor.r, textColor.g, textColor.b);
 
         const maxTextWidth = dayWidth - 8;
+        let textY = y + 6;
 
         // Nom du module
         pdf.setFontSize(7);
         pdf.setFont('helvetica', 'bold');
         const moduleName = slot.formation_modules?.title || slot.notes || 'Cours';
-        pdf.text(truncateText(pdf, moduleName, maxTextWidth), x + 4, y + 6);
+        pdf.text(truncateText(pdf, moduleName, maxTextWidth), x + 4, textY);
+        textY += 6;
+
+        // Formation (uniquement pour les formateurs)
+        if (showFormationOnCards && (slot as any).formationTitle && cardHeight >= 36) {
+          pdf.setFontSize(5);
+          pdf.setFont('helvetica', 'italic');
+          pdf.text(truncateText(pdf, (slot as any).formationTitle, maxTextWidth), x + 4, textY);
+          textY += 5;
+        }
 
         // Horaires
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(6);
-        pdf.text(`${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`, x + 4, y + 12);
+        pdf.text(`${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`, x + 4, textY);
+        textY += 6;
 
         // Salle
         if (slot.room && cardHeight >= 24) {
-          pdf.text(truncateText(pdf, `Salle ${slot.room}`, maxTextWidth), x + 4, y + 18);
+          pdf.text(truncateText(pdf, `Salle ${slot.room}`, maxTextWidth), x + 4, textY);
+          textY += 6;
         }
 
         // Formateur
         if (cardHeight >= 30) {
           const instructor = slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : '';
           if (instructor) {
-            pdf.text(truncateText(pdf, instructor, maxTextWidth), x + 4, y + 24);
+            pdf.text(truncateText(pdf, instructor, maxTextWidth), x + 4, textY);
           }
         }
 
@@ -365,7 +401,8 @@ const renderMonthView = (
   startY: number,
   pageWidth: number,
   pageHeight: number,
-  isLandscape: boolean
+  isLandscape: boolean,
+  showFormationOnCards: boolean = false
 ) => {
   let currentMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
   const endMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
@@ -541,12 +578,22 @@ const renderMonthView = (
             pdf.setFont('helvetica', 'bold');
             pdf.text(truncateText(pdf, moduleName, maxTextWidth), cardX + 1.5, slotY + 3.5);
 
+            // Formation (uniquement pour formateurs) - si assez de place
+            let cardTextY = slotY + 7;
+            if (showFormationOnCards && (slot as any).formationTitle && effectiveCardHeight >= 14) {
+              pdf.setFont('helvetica', 'italic');
+              pdf.setFontSize(3.5);
+              pdf.text(truncateText(pdf, (slot as any).formationTitle, maxTextWidth), cardX + 1.5, cardTextY);
+              cardTextY += 3;
+            }
+
             // Horaires (ligne suivante si assez de place)
             pdf.setFont('helvetica', 'normal');
             pdf.setFontSize(4);
             const timeText = `${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`;
             if (effectiveCardHeight >= 8) {
-              pdf.text(truncateText(pdf, timeText, maxTextWidth), cardX + 1.5, slotY + 7);
+              pdf.text(truncateText(pdf, timeText, maxTextWidth), cardX + 1.5, cardTextY);
+              cardTextY += 3;
             }
 
             // Salle + formateur si assez de place
@@ -580,32 +627,50 @@ const renderListView = (
   startY: number,
   pageWidth: number,
   pageHeight: number,
-  isLandscape: boolean
+  isLandscape: boolean,
+  showFormationOnCards: boolean = false
 ) => {
   let currentY = startY;
 
-  // Colonnes adaptées à l'orientation
-  const colWidths = isLandscape 
-    ? { date: 35, time: 35, module: 85, instructor: 55, room: 35 }
-    : { date: 28, time: 32, module: 60, instructor: 40, room: 20 };
+  // Colonnes adaptées à l'orientation et au rôle
+  // Pour les formateurs: ajouter une colonne Formation
+  const colWidths = showFormationOnCards
+    ? (isLandscape 
+        ? { date: 30, time: 30, formation: 50, module: 60, instructor: 40, room: 30 }
+        : { date: 24, time: 28, formation: 35, module: 45, instructor: 30, room: 18 })
+    : (isLandscape 
+        ? { date: 35, time: 35, module: 85, instructor: 55, room: 35 }
+        : { date: 28, time: 32, module: 60, instructor: 40, room: 20 });
 
-  const colPositions = {
-    date: margin,
-    time: margin + colWidths.date,
-    module: margin + colWidths.date + colWidths.time,
-    instructor: margin + colWidths.date + colWidths.time + colWidths.module,
-    room: margin + colWidths.date + colWidths.time + colWidths.module + colWidths.instructor
-  };
+  const colPositions = showFormationOnCards
+    ? {
+        date: margin,
+        time: margin + colWidths.date,
+        formation: margin + colWidths.date + colWidths.time,
+        module: margin + colWidths.date + colWidths.time + (colWidths as any).formation,
+        instructor: margin + colWidths.date + colWidths.time + (colWidths as any).formation + colWidths.module,
+        room: margin + colWidths.date + colWidths.time + (colWidths as any).formation + colWidths.module + colWidths.instructor
+      }
+    : {
+        date: margin,
+        time: margin + colWidths.date,
+        module: margin + colWidths.date + colWidths.time,
+        instructor: margin + colWidths.date + colWidths.time + colWidths.module,
+        room: margin + colWidths.date + colWidths.time + colWidths.module + colWidths.instructor
+      };
 
   const renderTableHeader = (y: number): number => {
     pdf.setFillColor(139, 92, 246);
     pdf.roundedRect(margin, y, contentWidth, 12, 2, 2, 'F');
     
-    pdf.setFontSize(9);
+    pdf.setFontSize(8);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(255, 255, 255);
     pdf.text('Date', colPositions.date + 4, y + 8);
     pdf.text('Horaire', colPositions.time + 4, y + 8);
+    if (showFormationOnCards) {
+      pdf.text('Formation', (colPositions as any).formation + 4, y + 8);
+    }
     pdf.text('Module', colPositions.module + 4, y + 8);
     pdf.text('Formateur', colPositions.instructor + 4, y + 8);
     pdf.text('Salle', colPositions.room + 4, y + 8);
@@ -648,7 +713,7 @@ const renderListView = (
     pdf.setFillColor(rgb.r, rgb.g, rgb.b);
     pdf.roundedRect(colPositions.date + 2, currentY + 3, 4, rowHeight - 6, 1, 1, 'F');
 
-    pdf.setFontSize(9);
+    pdf.setFontSize(8);
     
     // Date
     const slotDate = new Date(slot.date);
@@ -657,6 +722,12 @@ const renderListView = (
     
     // Horaire
     pdf.text(`${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`, colPositions.time + 4, currentY + 9);
+    
+    // Formation (uniquement pour les formateurs)
+    if (showFormationOnCards) {
+      const formationName = (slot as any).formationTitle || '-';
+      pdf.text(truncateText(pdf, formationName, (colWidths as any).formation - 6), (colPositions as any).formation + 4, currentY + 9);
+    }
     
     // Module (en gras)
     pdf.setFont('helvetica', 'bold');
