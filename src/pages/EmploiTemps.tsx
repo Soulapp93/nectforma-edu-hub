@@ -300,7 +300,9 @@ const EmploiTemps = () => {
   };
 
   // Déterminer si on doit afficher le nom de la formation sur les cartes
-  const shouldShowFormationOnCards = isInstructor || isAdmin;
+  // Seuls les formateurs voient le nom de la formation car ils enseignent dans plusieurs formations
+  // Les étudiants, admins et tuteurs voient le nom de la formation dans le titre de la page uniquement
+  const shouldShowFormationOnCards = isInstructor;
 
   const renderCurrentView = () => {
     switch (viewMode) {
@@ -336,6 +338,7 @@ const EmploiTemps = () => {
           schedule={mockSchedule}
           filteredEvents={filteredEvents}
           onEventClick={handleEventClick}
+          showFormationName={shouldShowFormationOnCards}
         />
       );
     }
