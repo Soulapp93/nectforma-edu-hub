@@ -225,9 +225,11 @@ serve(async (req) => {
             .eq('email', account.email)
             .maybeSingle();
 
+          let tutorId = existingTutor?.id;
+
           if (!existingTutor) {
             // Le tuteur doit avoir le même ID que l'auth user pour que useCurrentUser fonctionne
-            await supabaseAdmin
+            const { data: newTutor } = await supabaseAdmin
               .from('tutors')
               .insert({
                 id: userId,
@@ -238,8 +240,49 @@ serve(async (req) => {
                 company_name: 'Entreprise Démo',
                 position: 'Tuteur professionnel',
                 is_activated: true
-              });
+              })
+              .select('id')
+              .single();
+            
+            if (newTutor) {
+              tutorId = newTutor.id;
+            }
             console.log(`Created tutor record for ${account.email}`);
+          }
+
+          // Assigner le tuteur à l'étudiant démo
+          if (tutorId) {
+            // Trouver l'étudiant démo
+            const { data: studentUser } = await supabaseAdmin
+              .from('users')
+              .select('id')
+              .eq('email', 'etudiant@demo.nectfy.fr')
+              .eq('establishment_id', establishmentId)
+              .maybeSingle();
+
+            if (studentUser) {
+              // Vérifier si l'assignation existe déjà
+              const { data: existingAssignment } = await supabaseAdmin
+                .from('tutor_student_assignments')
+                .select('id')
+                .eq('tutor_id', tutorId)
+                .eq('student_id', studentUser.id)
+                .maybeSingle();
+
+              if (!existingAssignment) {
+                await supabaseAdmin
+                  .from('tutor_student_assignments')
+                  .insert({
+                    tutor_id: tutorId,
+                    student_id: studentUser.id,
+                    is_active: true,
+                    contract_type: 'Apprentissage',
+                    contract_start_date: new Date().toISOString().split('T')[0],
+                    contract_end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+                  });
+                console.log(`Assigned tutor ${account.email} to student etudiant@demo.nectfy.fr`);
+              }
+            }
           }
         }
 
