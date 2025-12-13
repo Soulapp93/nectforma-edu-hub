@@ -587,8 +587,10 @@ const EmploiTemps = () => {
         <div className="flex justify-end mb-3">
           <PrintScheduleModal
             schedules={schedules}
-            title="Emploi du temps"
+            title="EMPLOI DU TEMPS"
             userRole={userRole || undefined}
+            showFormationName={shouldShowFormationOnCards}
+            formationTitle={getSelectedFormationTitle()}
           />
         </div>
 
