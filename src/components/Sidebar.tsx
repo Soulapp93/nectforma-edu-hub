@@ -110,11 +110,11 @@ const Sidebar = () => {
     { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
 
-  // Navigation pour tuteurs (limitée - 4 onglets uniquement)
+  // Navigation pour tuteurs (4 onglets - vue apprenti uniquement, pas de tableau de bord)
   const tutorNavigation: NavigationItem[] = [
-    { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Formation', href: '/formations', icon: BookOpen },
-    { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
+    { name: 'Formation Apprenti', href: '/formations', icon: BookOpen },
+    { name: 'Suivi Émargement Apprenti', href: '/suivi-emargement', icon: ClipboardCheck },
+    { name: 'Emploi du temps Apprenti', href: '/emploi-temps', icon: Calendar },
     { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
 
