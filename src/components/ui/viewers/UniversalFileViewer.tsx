@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Download, ExternalLink, RefreshCw, AlertCircle, Eye, Maximize2, Presentation, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Download, ExternalLink, RefreshCw, AlertCircle, Eye, Maximize2, Presentation, ChevronLeft, ChevronRight, Share2 } from 'lucide-react';
 import { Button } from '../button';
 import { toast } from 'sonner';
 
@@ -138,6 +138,39 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
     } catch (error) {
       console.error('Erreur de téléchargement:', error);
       toast.error('Impossible de télécharger le fichier');
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      // Vérifier si l'API Web Share est disponible
+      if (navigator.share) {
+        // Télécharger le fichier pour le partager
+        const response = await fetch(fileUrl);
+        const blob = await response.blob();
+        const file = new File([blob], fileName, { type: blob.type });
+        
+        await navigator.share({
+          title: fileName,
+          files: [file],
+        });
+        toast.success('Fichier partagé');
+      } else {
+        // Fallback: copier le lien dans le presse-papiers
+        await navigator.clipboard.writeText(fileUrl);
+        toast.success('Lien copié dans le presse-papiers');
+      }
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') {
+        console.error('Erreur de partage:', error);
+        // Fallback: copier le lien
+        try {
+          await navigator.clipboard.writeText(fileUrl);
+          toast.success('Lien copié dans le presse-papiers');
+        } catch {
+          toast.error('Impossible de partager le fichier');
+        }
+      }
     }
   };
 
@@ -293,6 +326,14 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
           >
             <Download className="h-4 w-4 mr-1" />
             Télécharger
+          </button>
+          
+          <button 
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3"
+            onClick={handleShare}
+          >
+            <Share2 className="h-4 w-4 mr-1" />
+            Partager
           </button>
 
           {onTogglePresentationMode && (
