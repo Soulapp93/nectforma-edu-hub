@@ -29,8 +29,10 @@ import {
   SidebarFooter,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { Badge } from '@/components/ui/badge';
 import { useCurrentUser, useUserWithRelations } from '@/hooks/useCurrentUser';
 import { useEstablishment } from '@/hooks/useEstablishment';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { supabase } from '@/integrations/supabase/client';
 
 interface NavigationItem {
@@ -46,6 +48,7 @@ const Sidebar = () => {
   const { userRole, userId } = useCurrentUser();
   const { userInfo, relationInfo } = useUserWithRelations();
   const { establishment } = useEstablishment();
+  const { counts: unreadCounts } = useUnreadMessages();
   const location = useLocation();
   const [adminExpanded, setAdminExpanded] = useState(location.pathname === '/administration');
 
@@ -272,6 +275,14 @@ const Sidebar = () => {
                   );
                 }
                 
+                // Déterminer le badge pour cet item
+                const getBadgeCount = () => {
+                  if (item.href === '/messagerie') return unreadCounts.messagerie;
+                  if (item.href === '/groupes') return unreadCounts.groupes;
+                  return 0;
+                };
+                const badgeCount = getBadgeCount();
+                
                 return (
                   <SidebarMenuItem key={item.name}>
                     <SidebarMenuButton asChild>
@@ -279,7 +290,7 @@ const Sidebar = () => {
                         to={item.href}
                         end={item.href === '/' || item.href === '/dashboard'}
                         className={({ isActive }) =>
-                          `flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                          `flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                             isActive
                               ? 'nect-glass text-primary-foreground'
                               : 'text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground'
@@ -287,8 +298,22 @@ const Sidebar = () => {
                         }
                         title={collapsed ? item.name : undefined}
                       >
-                        <Icon className={`${collapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0`} />
-                        {!collapsed && <span>{item.name}</span>}
+                        <div className="flex items-center">
+                          <Icon className={`${collapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0`} />
+                          {!collapsed && <span>{item.name}</span>}
+                        </div>
+                        {badgeCount > 0 && !collapsed && (
+                          <Badge 
+                            className="ml-auto bg-green-500 text-white hover:bg-green-600 text-xs min-w-[20px] h-5 flex items-center justify-center"
+                          >
+                            {badgeCount > 99 ? '99+' : badgeCount}
+                          </Badge>
+                        )}
+                        {badgeCount > 0 && collapsed && (
+                          <span className="absolute -top-1 -right-1 bg-green-500 text-white text-[10px] min-w-[16px] h-4 rounded-full flex items-center justify-center">
+                            {badgeCount > 99 ? '99+' : badgeCount}
+                          </span>
+                        )}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

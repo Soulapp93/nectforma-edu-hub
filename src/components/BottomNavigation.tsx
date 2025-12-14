@@ -13,6 +13,7 @@ import {
   Home
 } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 
 interface NavItem {
   name: string;
@@ -23,6 +24,14 @@ interface NavItem {
 
 const BottomNavigation = () => {
   const { userRole } = useCurrentUser();
+  const { counts: unreadCounts } = useUnreadMessages();
+
+  // Fonction pour obtenir le badge count
+  const getBadgeCount = (href: string): number => {
+    if (href === '/messagerie') return unreadCounts.messagerie;
+    if (href === '/groupes') return unreadCounts.groupes;
+    return 0;
+  };
 
   // Navigation pour AdminPrincipal et Admin
   const adminNavigation: NavItem[] = [
@@ -62,13 +71,15 @@ const BottomNavigation = () => {
       <div className="grid grid-cols-5 h-16">
         {navigation.slice(0, 5).map((item) => {
           const Icon = item.icon;
+          const badgeCount = getBadgeCount(item.href);
+          
           return (
             <NavLink
               key={item.name}
               to={item.href}
               end={item.href === '/dashboard'}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-all ${
+                `flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-all relative ${
                   isActive
                     ? 'text-primary'
                     : 'text-muted-foreground hover:text-foreground'
@@ -77,8 +88,13 @@ const BottomNavigation = () => {
             >
               {({ isActive }) => (
                 <>
-                  <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-primary/10' : ''}`}>
+                  <div className={`relative p-1.5 rounded-xl transition-all ${isActive ? 'bg-primary/10' : ''}`}>
                     <Icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} />
+                    {badgeCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-green-500 text-white text-[9px] min-w-[16px] h-4 rounded-full flex items-center justify-center font-bold shadow-sm">
+                        {badgeCount > 99 ? '99+' : badgeCount}
+                      </span>
+                    )}
                   </div>
                   <span className="text-[10px] leading-none font-medium">{item.label}</span>
                 </>
