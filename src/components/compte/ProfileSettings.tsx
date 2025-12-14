@@ -298,8 +298,8 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
         </Card>
       )}
 
-      {/* Gestion de signature - pour tous les utilisateurs sauf Admin */}
-      {(userRole === 'Étudiant' || userRole === 'Formateur' || userRole === 'Tuteur') && (
+      {/* Gestion de signature - uniquement pour les étudiants et formateurs */}
+      {(userRole === 'Étudiant' || userRole === 'Formateur') && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center text-base sm:text-lg">
@@ -429,8 +429,8 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
         </div>
       )}
       
-      {/* Modal de gestion des signatures - pour tous les rôles concernés */}
-      {(userRole === 'Étudiant' || userRole === 'Formateur' || userRole === 'Tuteur') && (
+      {/* Modal de gestion des signatures - pour étudiants et formateurs */}
+      {(userRole === 'Étudiant' || userRole === 'Formateur') && (
         <SignatureManagementModal
           isOpen={showSignatureModal}
           onClose={() => setShowSignatureModal(false)}
