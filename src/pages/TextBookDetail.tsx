@@ -40,7 +40,10 @@ const TextBookDetail: React.FC = () => {
   const [selectedEntry, setSelectedEntry] = useState<TextBookEntry | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { userId } = useCurrentUser();
+  const { userId, userRole } = useCurrentUser();
+  
+  // Seuls les formateurs et admins peuvent modifier le cahier de texte
+  const canEdit = userRole === 'Formateur' || userRole === 'Admin' || userRole === 'AdminPrincipal';
 
   // Form state for new entry
   const [newEntry, setNewEntry] = useState({
@@ -405,10 +408,12 @@ const TextBookDetail: React.FC = () => {
             {backNav.label}
           </Button>
           
-          <Button onClick={() => setIsAddEntryModalOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Ajouter une entrée
-          </Button>
+          {canEdit && (
+            <Button onClick={() => setIsAddEntryModalOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Ajouter une entrée
+            </Button>
+          )}
         </div>
         
         <div 
@@ -442,10 +447,12 @@ const TextBookDetail: React.FC = () => {
                 <p className="text-gray-600 mb-6">
                   Commencez par ajouter votre première entrée pour ce cours.
                 </p>
-                <Button onClick={() => setIsAddEntryModalOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Ajouter une entrée
-                </Button>
+                {canEdit && (
+                  <Button onClick={() => setIsAddEntryModalOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Ajouter une entrée
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -489,26 +496,28 @@ const TextBookDetail: React.FC = () => {
                       <div className="bg-white rounded p-3 shadow-sm">
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="text-purple-600 font-medium text-sm uppercase tracking-wide">CONTENU</h4>
-                          <div className="flex space-x-2">
-                            <Button
-                              onClick={() => openEditModal(entry)}
-                              size="sm"
-                              variant="outline"
-                              className="h-8 px-2"
-                            >
-                              <Edit2 className="h-3 w-3 mr-1" />
-                              Modifier
-                            </Button>
-                            <Button
-                              onClick={() => openDeleteModal(entry)}
-                              size="sm"
-                              variant="outline"
-                              className="h-8 px-2 text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-3 w-3 mr-1" />
-                              Supprimer
-                            </Button>
-                          </div>
+                          {canEdit && (
+                            <div className="flex space-x-2">
+                              <Button
+                                onClick={() => openEditModal(entry)}
+                                size="sm"
+                                variant="outline"
+                                className="h-8 px-2"
+                              >
+                                <Edit2 className="h-3 w-3 mr-1" />
+                                Modifier
+                              </Button>
+                              <Button
+                                onClick={() => openDeleteModal(entry)}
+                                size="sm"
+                                variant="outline"
+                                className="h-8 px-2 text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Supprimer
+                              </Button>
+                            </div>
+                          )}
                         </div>
                         <div 
                           className="prose prose-sm max-w-none text-gray-700"
