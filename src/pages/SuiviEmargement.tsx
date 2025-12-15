@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useCurrentUser, useUserWithRelations } from '@/hooks/useCurrentUser';
 import { supabase } from '@/integrations/supabase/client';
+import { attendanceService } from '@/services/attendanceService';
 
 interface AttendanceRecord {
   id: string;
@@ -17,7 +18,7 @@ interface AttendanceRecord {
   title: string;
   room?: string;
   formation_title: string;
-  status: 'Présent' | 'Absent';
+  status: 'Présent' | 'Absent' | 'Non signé';
   signed_at?: string;
   absence_reason?: string;
   instructor_name?: string;
@@ -33,25 +34,144 @@ const SuiviEmargement = () => {
   const [dateFilter, setDateFilter] = useState('');
 
   useEffect(() => {
-    loadAttendanceHistory();
+    if (userId && userRole) {
+      loadAttendanceHistory();
+    }
   }, [userId, userRole, relationInfo]);
 
   const loadAttendanceHistory = async () => {
     try {
       setLoading(true);
       
-      // Générer des données démo selon le rôle
       let records: AttendanceRecord[] = [];
       
-      if (userRole === 'Étudiant' || (userRole === 'Tuteur' && relationInfo?.type === 'student')) {
-        // Données pour étudiant ou pour l'apprenti du tuteur
-        records = generateStudentAttendanceHistory();
-      } else if (userRole === 'Formateur') {
-        // Données pour formateur
-        records = generateInstructorAttendanceHistory();
+      // Déterminer l'ID de l'utilisateur cible (pour tuteur, c'est l'apprenti)
+      let targetUserId = userId;
+      let targetUserRole = userRole;
+      
+      if (userRole === 'Tuteur' && relationInfo?.type === 'student') {
+        // Pour les tuteurs, on récupère les données de l'apprenti
+        const { data: studentAssignment } = await supabase
+          .from('tutor_student_assignments')
+          .select('student_id')
+          .eq('tutor_id', userId)
+          .eq('is_active', true)
+          .single();
+        
+        if (studentAssignment) {
+          targetUserId = studentAssignment.student_id;
+          targetUserRole = 'Étudiant';
+        }
+      }
+      
+      // Récupérer l'historique réel depuis la base de données
+      if (targetUserRole === 'Formateur') {
+        // Pour les formateurs, récupérer toutes les sessions qu'ils ont dispensées
+        const { data: sheets, error } = await supabase
+          .from('attendance_sheets')
+          .select(`
+            id,
+            date,
+            start_time,
+            end_time,
+            title,
+            room,
+            status,
+            formations(title, level),
+            attendance_signatures(
+              id,
+              user_id,
+              user_type,
+              signed_at,
+              present,
+              absence_reason
+            )
+          `)
+          .eq('instructor_id', targetUserId)
+          .order('date', { ascending: false })
+          .order('start_time', { ascending: false });
+        
+        if (!error && sheets) {
+          records = sheets.map(sheet => {
+            const instructorSignature = sheet.attendance_signatures?.find(
+              sig => sig.user_type === 'instructor' && sig.user_id === targetUserId
+            );
+            
+            return {
+              id: sheet.id,
+              date: sheet.date,
+              start_time: sheet.start_time,
+              end_time: sheet.end_time,
+              title: sheet.title,
+              room: sheet.room || undefined,
+              formation_title: (sheet.formations as any)?.title || 'N/A',
+              status: instructorSignature?.present ? 'Présent' : (instructorSignature ? 'Absent' : 'Non signé') as any,
+              signed_at: instructorSignature?.signed_at,
+              instructor_name: 'Vous'
+            };
+          });
+        }
       } else {
-        // Données générales pour admin
-        records = generateGeneralAttendanceHistory();
+        // Pour les étudiants (et tuteurs voyant leur apprenti)
+        // D'abord récupérer les formations de l'utilisateur
+        const { data: userFormations } = await supabase
+          .from('user_formation_assignments')
+          .select('formation_id')
+          .eq('user_id', targetUserId);
+        
+        if (userFormations && userFormations.length > 0) {
+          const formationIds = userFormations.map(uf => uf.formation_id);
+          
+          const { data: sheets, error } = await supabase
+            .from('attendance_sheets')
+            .select(`
+              id,
+              date,
+              start_time,
+              end_time,
+              title,
+              room,
+              status,
+              instructor_id,
+              formations(title, level),
+              users:instructor_id(first_name, last_name),
+              attendance_signatures(
+                id,
+                user_id,
+                user_type,
+                signed_at,
+                present,
+                absence_reason
+              )
+            `)
+            .in('formation_id', formationIds)
+            .order('date', { ascending: false })
+            .order('start_time', { ascending: false });
+          
+          if (!error && sheets) {
+            records = sheets.map(sheet => {
+              const userSignature = sheet.attendance_signatures?.find(
+                sig => sig.user_type === 'student' && sig.user_id === targetUserId
+              );
+              
+              const instructor = sheet.users as any;
+              
+              return {
+                id: sheet.id,
+                date: sheet.date,
+                start_time: sheet.start_time,
+                end_time: sheet.end_time,
+                title: sheet.title,
+                room: sheet.room || undefined,
+                formation_title: (sheet.formations as any)?.title || 'N/A',
+                status: userSignature?.present ? 'Présent' : (userSignature ? 'Absent' : 'Non signé') as any,
+                signed_at: userSignature?.signed_at,
+                absence_reason: userSignature?.absence_reason || undefined,
+                instructor_name: instructor ? `${instructor.first_name} ${instructor.last_name}` : 'N/A'
+              };
+            });
+          }
+        }
       }
       
       setAttendanceRecords(records);
@@ -60,63 +180,6 @@ const SuiviEmargement = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const generateStudentAttendanceHistory = (): AttendanceRecord[] => {
-    const formations = ['Formation Développement Web', 'Formation React Avancé', 'Formation Base de données'];
-    const instructors = ['Marie Dubois', 'Pierre Martin', 'Sophie Laurent'];
-    const rooms = ['Salle A101', 'Salle B203', 'Lab Informatique'];
-    const statuses: AttendanceRecord['status'][] = ['Présent', 'Absent'];
-    
-    return Array.from({ length: 25 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - i * 2);
-      const status = i === 0 ? 'Présent' : statuses[Math.floor(Math.random() * statuses.length)];
-      
-      return {
-        id: `student-${i}`,
-        date: date.toISOString().split('T')[0],
-        start_time: ['08:30', '09:00', '14:00'][Math.floor(Math.random() * 3)],
-        end_time: ['12:00', '17:00', '18:00'][Math.floor(Math.random() * 3)],
-        title: `Cours ${formations[Math.floor(Math.random() * formations.length)]}`,
-        room: rooms[Math.floor(Math.random() * rooms.length)],
-        formation_title: formations[Math.floor(Math.random() * formations.length)],
-        status,
-        signed_at: status === 'Présent' ? date.toISOString() : undefined,
-        absence_reason: undefined,
-        instructor_name: instructors[Math.floor(Math.random() * instructors.length)]
-      };
-    });
-  };
-
-  const generateInstructorAttendanceHistory = (): AttendanceRecord[] => {
-    const formations = ['Formation Développement Web', 'Formation React Avancé', 'Formation Base de données'];
-    const rooms = ['Salle A101', 'Salle B203', 'Lab Informatique'];
-    
-    return Array.from({ length: 20 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - i * 3);
-      
-      return {
-        id: `instructor-${i}`,
-        date: date.toISOString().split('T')[0],
-        start_time: ['08:30', '09:00', '14:00'][Math.floor(Math.random() * 3)],
-        end_time: ['12:00', '17:00', '18:00'][Math.floor(Math.random() * 3)],
-        title: `Cours ${formations[Math.floor(Math.random() * formations.length)]}`,
-        room: rooms[Math.floor(Math.random() * rooms.length)],
-        formation_title: formations[Math.floor(Math.random() * formations.length)],
-        status: 'Présent',
-        signed_at: date.toISOString(),
-        instructor_name: 'Vous'
-      };
-    });
-  };
-
-  const generateGeneralAttendanceHistory = (): AttendanceRecord[] => {
-    return [
-      ...generateStudentAttendanceHistory().slice(0, 10),
-      ...generateInstructorAttendanceHistory().slice(0, 10)
-    ];
   };
 
   const filteredRecords = attendanceRecords.filter(record => {
@@ -134,12 +197,14 @@ const SuiviEmargement = () => {
   const getStatusBadge = (status: AttendanceRecord['status']) => {
     const variants = {
       'Présent': 'bg-green-100 text-green-800 border-green-200',
-      'Absent': 'bg-red-100 text-red-800 border-red-200'
+      'Absent': 'bg-red-100 text-red-800 border-red-200',
+      'Non signé': 'bg-yellow-100 text-yellow-800 border-yellow-200'
     };
 
     const icons = {
       'Présent': CheckCircle,
-      'Absent': XCircle
+      'Absent': XCircle,
+      'Non signé': AlertCircle
     };
 
     const Icon = icons[status];
@@ -156,6 +221,7 @@ const SuiviEmargement = () => {
     const total = filteredRecords.length;
     const present = filteredRecords.filter(r => r.status === 'Présent').length;
     const absent = filteredRecords.filter(r => r.status === 'Absent').length;
+    const unsigned = filteredRecords.filter(r => r.status === 'Non signé').length;
     
     const attendanceRate = total > 0 ? (present / total * 100).toFixed(1) : '0';
 
@@ -208,8 +274,8 @@ const SuiviEmargement = () => {
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded mb-4 w-64"></div>
           <div className="h-4 bg-gray-200 rounded mb-8 w-96"></div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            {[...Array(4)].map((_, i) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {[...Array(3)].map((_, i) => (
               <div key={i} className="h-32 bg-gray-200 rounded"></div>
             ))}
           </div>
@@ -278,6 +344,7 @@ const SuiviEmargement = () => {
                 <SelectItem value="all">Tous les statuts</SelectItem>
                 <SelectItem value="Présent">Présent</SelectItem>
                 <SelectItem value="Absent">Absent</SelectItem>
+                <SelectItem value="Non signé">Non signé</SelectItem>
               </SelectContent>
             </Select>
             

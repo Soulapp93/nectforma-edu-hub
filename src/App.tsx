@@ -10,6 +10,7 @@ import NotificationBell from './components/NotificationBell';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import AdminPrincipalRoute from './components/AdminPrincipalRoute';
+import TutorRestrictedRoute from './components/TutorRestrictedRoute';
 import Dashboard from './pages/Dashboard';
 import Administration from './pages/Administration';
 import Formations from './pages/Formations';
@@ -135,7 +136,7 @@ const AppContent = () => {
             <Routes>
               <Route path="/emargement/signer/:token" element={<SignaturePublique />} />
               <Route path="/dashboard" element={<ProtectedRoute><AdminRoute><Dashboard /></AdminRoute></ProtectedRoute>} />
-              <Route path="/administration" element={<ProtectedRoute><Administration /></ProtectedRoute>} />
+              <Route path="/administration" element={<ProtectedRoute><AdminRoute><Administration /></AdminRoute></ProtectedRoute>} />
               <Route path="/formations" element={<ProtectedRoute><Formations /></ProtectedRoute>} />
               <Route path="/formations/:formationId" element={<ProtectedRoute><FormationDetail /></ProtectedRoute>} />
               <Route path="/cahier-texte/:textBookId" element={<ProtectedRoute><TextBookDetail /></ProtectedRoute>} />
@@ -144,10 +145,10 @@ const AppContent = () => {
               <Route path="/emploi-temps" element={<ProtectedRoute><EmploiTemps /></ProtectedRoute>} />
               <Route path="/emploi-temps/view/:scheduleId" element={<ProtectedRoute><EmploiTemps /></ProtectedRoute>} />
               <Route path="/emploi-temps/edit/:scheduleId" element={<ProtectedRoute><EmploiTemps /></ProtectedRoute>} />
-              <Route path="/messagerie" element={<ProtectedRoute><Messagerie /></ProtectedRoute>} />
-              <Route path="/groupes" element={<ProtectedRoute><Groupes /></ProtectedRoute>} />
-              <Route path="/emargement" element={<ProtectedRoute><Emargement /></ProtectedRoute>} />
-              <Route path="/emargement-qr" element={<ProtectedRoute><EmargementQR /></ProtectedRoute>} />
+              <Route path="/messagerie" element={<ProtectedRoute><TutorRestrictedRoute><Messagerie /></TutorRestrictedRoute></ProtectedRoute>} />
+              <Route path="/groupes" element={<ProtectedRoute><TutorRestrictedRoute><Groupes /></TutorRestrictedRoute></ProtectedRoute>} />
+              <Route path="/emargement" element={<ProtectedRoute><TutorRestrictedRoute><Emargement /></TutorRestrictedRoute></ProtectedRoute>} />
+              <Route path="/emargement-qr" element={<ProtectedRoute><TutorRestrictedRoute><EmargementQR /></TutorRestrictedRoute></ProtectedRoute>} />
               <Route path="/gestion-etablissement" element={<ProtectedRoute><AdminPrincipalRoute><GestionEtablissement /></AdminPrincipalRoute></ProtectedRoute>} />
               <Route path="/compte" element={<ProtectedRoute><Compte /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
