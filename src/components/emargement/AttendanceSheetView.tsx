@@ -283,25 +283,28 @@ const AttendanceSheetView: React.FC<AttendanceSheetViewProps> = ({
 
       {/* Signatures Section */}
       <div className="p-6 border-t bg-gray-50">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="text-center">
-            <h4 className="font-semibold mb-2 text-gray-900">Signature du Formateur</h4>
-            <div className="h-20 border-2 border-gray-300 rounded-lg flex items-center justify-center bg-white">
-              {attendanceSheet.signatures?.find(sig => sig.user_type === 'instructor')?.signature_data ? (
-                <img
-                  src={attendanceSheet.signatures.find(sig => sig.user_type === 'instructor')?.signature_data}
-                  alt="Signature formateur"
-                  className="h-16 max-w-32 object-contain"
-                />
-              ) : (
-                <div className="w-32 h-12 bg-black/10 rounded flex items-center justify-center">
-                  <span className="text-gray-500 text-xs">Signature requise</span>
-                </div>
-              )}
+        <div className={`grid gap-8 ${attendanceSheet.session_type === 'autonomie' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+          {/* Signature formateur - masquée pour les sessions en autonomie */}
+          {attendanceSheet.session_type !== 'autonomie' && (
+            <div className="text-center">
+              <h4 className="font-semibold mb-2 text-gray-900">Signature du Formateur</h4>
+              <div className="h-20 border-2 border-gray-300 rounded-lg flex items-center justify-center bg-white">
+                {attendanceSheet.signatures?.find(sig => sig.user_type === 'instructor')?.signature_data ? (
+                  <img
+                    src={attendanceSheet.signatures.find(sig => sig.user_type === 'instructor')?.signature_data}
+                    alt="Signature formateur"
+                    className="h-16 max-w-32 object-contain"
+                  />
+                ) : (
+                  <div className="w-32 h-12 bg-black/10 rounded flex items-center justify-center">
+                    <span className="text-gray-500 text-xs">Signature requise</span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
           
-          <div className="text-center">
+          <div className={`text-center ${attendanceSheet.session_type === 'autonomie' ? 'max-w-md mx-auto' : ''}`}>
             <h4 className="font-semibold mb-2 text-gray-900">Signature de l'Administration</h4>
             <div className="h-20 border-2 border-gray-300 rounded-lg flex items-center justify-center bg-white">
               <div className="w-32 h-12 bg-black/10 rounded flex items-center justify-center">

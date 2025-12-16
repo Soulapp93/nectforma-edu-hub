@@ -338,14 +338,21 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
             
             <div className={`text-center ${establishmentInfo ? 'pt-12' : ''}`}>
               <h1 className="text-4xl font-bold mb-6">FEUILLE D'ÉMARGEMENT</h1>
+              {attendanceSheet.session_type === 'autonomie' && (
+                <div className="inline-flex items-center gap-2 bg-blue-500/20 text-blue-100 px-4 py-1 rounded-full text-sm mb-4">
+                  Session en autonomie
+                </div>
+              )}
               <div className="space-y-2 text-base">
                 <div className="font-semibold text-xl">{attendanceSheet.formations?.title}</div>
                 <div className="font-medium">{attendanceSheet.title}</div>
-                <div className="flex items-center justify-center gap-8 text-sm mt-4">
+                <div className="flex items-center justify-center gap-8 text-sm mt-4 flex-wrap">
                   <div>📅 {format(new Date(attendanceSheet.date), 'dd/MM/yyyy', { locale: fr })}</div>
                   <div>🕒 {attendanceSheet.start_time.substring(0, 5)} - {attendanceSheet.end_time.substring(0, 5)}</div>
                   <div>🏫 {attendanceSheet.room || 'Salle non spécifiée'}</div>
-                  <div>👨‍🏫 {(attendanceSheet as any).instructor ? `${(attendanceSheet as any).instructor.first_name} ${(attendanceSheet as any).instructor.last_name}` : 'Non assigné'}</div>
+                  {attendanceSheet.session_type !== 'autonomie' && (
+                    <div>👨‍🏫 {(attendanceSheet as any).instructor ? `${(attendanceSheet as any).instructor.first_name} ${(attendanceSheet as any).instructor.last_name}` : 'Non assigné'}</div>
+                  )}
                 </div>
               </div>
             </div>
@@ -459,31 +466,34 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
 
           {/* Signatures des responsables */}
           <div className="p-6 border-t">
-            <div className="grid grid-cols-2 gap-8">
-              <div>
-                <h4 className="font-semibold mb-3">Signature du Formateur</h4>
-                <div className="border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-center justify-center p-2">
-                  {instructorSignature ? (
-                    <img 
-                      src={instructorSignature} 
-                      alt="Signature formateur" 
-                      className="h-16 w-auto"
-                    />
-                  ) : (
-                    <div className="text-xs text-gray-500 text-center">
-                      En attente de signature
-                    </div>
-                  )}
+            <div className={`grid gap-8 ${attendanceSheet.session_type === 'autonomie' ? 'grid-cols-1' : 'grid-cols-2'}`}>
+              {/* Signature formateur - masquée pour les sessions en autonomie */}
+              {attendanceSheet.session_type !== 'autonomie' && (
+                <div>
+                  <h4 className="font-semibold mb-3">Signature du Formateur</h4>
+                  <div className="border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-center justify-center p-2">
+                    {instructorSignature ? (
+                      <img 
+                        src={instructorSignature} 
+                        alt="Signature formateur" 
+                        className="h-16 w-auto"
+                      />
+                    ) : (
+                      <div className="text-xs text-gray-500 text-center">
+                        En attente de signature
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-2 text-center text-sm text-gray-600 border-t pt-2">
+                    {instructorName
+                      ? instructorName
+                      : (attendanceSheet as any).instructor
+                      ? `${(attendanceSheet as any).instructor.first_name} ${(attendanceSheet as any).instructor.last_name}`
+                      : 'Formateur non assigné'}
+                  </div>
                 </div>
-                <div className="mt-2 text-center text-sm text-gray-600 border-t pt-2">
-                  {instructorName
-                    ? instructorName
-                    : (attendanceSheet as any).instructor
-                    ? `${(attendanceSheet as any).instructor.first_name} ${(attendanceSheet as any).instructor.last_name}`
-                    : 'Formateur non assigné'}
-                </div>
-              </div>
-              <div>
+              )}
+              <div className={attendanceSheet.session_type === 'autonomie' ? 'max-w-md mx-auto' : ''}>
                 <h4 className="font-semibold mb-3">Signature de l'Administration</h4>
                 <div className="border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-center justify-center p-2">
                   {attendanceSheet.validated_by && adminSignature ? (

@@ -1474,6 +1474,7 @@ export type Database = {
           notes: string | null
           room: string | null
           schedule_id: string
+          session_type: string | null
           start_time: string
           updated_at: string
         }
@@ -1488,6 +1489,7 @@ export type Database = {
           notes?: string | null
           room?: string | null
           schedule_id: string
+          session_type?: string | null
           start_time: string
           updated_at?: string
         }
@@ -1502,6 +1504,7 @@ export type Database = {
           notes?: string | null
           room?: string | null
           schedule_id?: string
+          session_type?: string | null
           start_time?: string
           updated_at?: string
         }

@@ -370,50 +370,57 @@ export const pdfExportService = {
         currentY = signatureY;
       }
 
-      // Trainer signature
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(12);
-      pdf.setTextColor(0, 0, 0);
-      pdf.text('Signature du Formateur', margin, currentY);
-      pdf.setDrawColor(100, 100, 100);
-      pdf.setLineWidth(0.3);
-      pdf.rect(margin, currentY + 5, 85, 35);
-      
-      // Display trainer signature if exists
-      if (instructorSignature?.signature_data) {
-        try {
-          pdf.addImage(
-            instructorSignature.signature_data,
-            'PNG',
-            margin + 10,
-            currentY + 10,
-            65,
-            25,
-            undefined,
-            'FAST'
-          );
-        } catch (e) {
-          console.error('Error adding instructor signature:', e);
+      // Check if this is an autonomy session (no instructor signature needed)
+      const isAutonomySession = attendanceSheet.session_type === 'autonomie';
+
+      if (!isAutonomySession) {
+        // Trainer signature - only for non-autonomy sessions
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(12);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Signature du Formateur', margin, currentY);
+        pdf.setDrawColor(100, 100, 100);
+        pdf.setLineWidth(0.3);
+        pdf.rect(margin, currentY + 5, 85, 35);
+        
+        // Display trainer signature if exists
+        if (instructorSignature?.signature_data) {
+          try {
+            pdf.addImage(
+              instructorSignature.signature_data,
+              'PNG',
+              margin + 10,
+              currentY + 10,
+              65,
+              25,
+              undefined,
+              'FAST'
+            );
+          } catch (e) {
+            console.error('Error adding instructor signature:', e);
+          }
+        } else {
+          pdf.setFontSize(9);
+          pdf.setFont('helvetica', 'italic');
+          pdf.setTextColor(156, 163, 175);
+          pdf.text('En attente de signature', margin + 15, currentY + 25);
         }
-      } else {
+
+        // Instructor name below signature box
         pdf.setFontSize(9);
-        pdf.setFont('helvetica', 'italic');
-        pdf.setTextColor(156, 163, 175);
-        pdf.text('En attente de signature', margin + 15, currentY + 25);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(100, 100, 100);
+        pdf.text(instructorName, margin + 42.5, currentY + 45, { align: 'center' });
       }
 
-      // Instructor name below signature box
-      pdf.setFontSize(9);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(100, 100, 100);
-      pdf.text(instructorName, margin + 42.5, currentY + 45, { align: 'center' });
-
-      // Admin signature
+      // Admin signature - position depends on whether instructor signature is shown
+      const adminSignatureX = isAutonomySession ? (pageWidth / 2) - 42.5 : pageWidth - margin - 85;
+      
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(12);
       pdf.setTextColor(0, 0, 0);
-      pdf.text('Signature de l\'Administration', pageWidth - margin - 85, currentY);
-      pdf.rect(pageWidth - margin - 85, currentY + 5, 85, 35);
+      pdf.text('Signature de l\'Administration', adminSignatureX, currentY);
+      pdf.rect(adminSignatureX, currentY + 5, 85, 35);
       
       // Display admin signature if validated
       if (adminSignatureData) {
@@ -421,7 +428,7 @@ export const pdfExportService = {
           pdf.addImage(
             adminSignatureData,
             'PNG',
-            pageWidth - margin - 75,
+            adminSignatureX + 10,
             currentY + 10,
             65,
             25,
@@ -435,14 +442,14 @@ export const pdfExportService = {
         pdf.setFontSize(9);
         pdf.setFont('helvetica', 'italic');
         pdf.setTextColor(156, 163, 175);
-        pdf.text('En attente de validation', pageWidth - margin - 60, currentY + 25);
+        pdf.text('En attente de validation', adminSignatureX + 15, currentY + 25);
       }
 
       // Admin label
       pdf.setFontSize(9);
       pdf.setFont('helvetica', 'normal');
       pdf.setTextColor(100, 100, 100);
-      pdf.text('Administration', pageWidth - margin - 42.5, currentY + 45, { align: 'center' });
+      pdf.text('Administration', adminSignatureX + 42.5, currentY + 45, { align: 'center' });
 
       // Footer
       pdf.setFontSize(8);

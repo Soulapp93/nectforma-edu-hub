@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, Users, UserX, Info } from 'lucide-react';
 import { useFormations } from '@/hooks/useFormations';
 import { useInstructors } from '@/hooks/useInstructors';
 import { scheduleService } from '@/services/scheduleService';
@@ -52,7 +52,8 @@ const AddSlotModal: React.FC<AddSlotModalProps> = ({
     end_time: '',
     room: '',
     color: '#8B5CF6',
-    notes: ''
+    notes: '',
+    session_type: 'encadree' as 'encadree' | 'autonomie'
   });
 
   React.useEffect(() => {
@@ -65,6 +66,13 @@ const AddSlotModal: React.FC<AddSlotModalProps> = ({
       }));
     }
   }, [selectedSlot]);
+
+  // Clear instructor when switching to autonomy mode
+  React.useEffect(() => {
+    if (formData.session_type === 'autonomie') {
+      setFormData(prev => ({ ...prev, instructor_id: '' }));
+    }
+  }, [formData.session_type]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,13 +92,14 @@ const AddSlotModal: React.FC<AddSlotModalProps> = ({
       await scheduleService.createScheduleSlot({
         schedule_id: scheduleId,
         module_id: formData.module_id || undefined,
-        instructor_id: formData.instructor_id || undefined,
+        instructor_id: formData.session_type === 'encadree' ? (formData.instructor_id || undefined) : undefined,
         date: formData.date,
         start_time: formData.start_time,
         end_time: formData.end_time,
         room: formData.room || undefined,
         color: formData.color,
-        notes: formData.notes || undefined
+        notes: formData.notes || undefined,
+        session_type: formData.session_type
       });
       
       setFormData({
@@ -101,7 +110,8 @@ const AddSlotModal: React.FC<AddSlotModalProps> = ({
         end_time: '',
         room: '',
         color: '#8B5CF6',
-        notes: ''
+        notes: '',
+        session_type: 'encadree'
       });
       onSuccess();
     } catch (error) {
@@ -135,6 +145,53 @@ const AddSlotModal: React.FC<AddSlotModalProps> = ({
 
         <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Type de session */}
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Type de session *
+              </Label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, session_type: 'encadree' }))}
+                  className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-2 ${
+                    formData.session_type === 'encadree'
+                      ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/20'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-violet-300'
+                  }`}
+                >
+                  <Users className={`h-6 w-6 ${formData.session_type === 'encadree' ? 'text-violet-600' : 'text-gray-400'}`} />
+                  <span className={`font-medium text-sm ${formData.session_type === 'encadree' ? 'text-violet-700 dark:text-violet-300' : 'text-gray-600 dark:text-gray-400'}`}>
+                    Session encadrée
+                  </span>
+                  <span className="text-xs text-gray-500 text-center">Avec formateur • QR Code autorisé</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, session_type: 'autonomie' }))}
+                  className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-2 ${
+                    formData.session_type === 'autonomie'
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-blue-300'
+                  }`}
+                >
+                  <UserX className={`h-6 w-6 ${formData.session_type === 'autonomie' ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <span className={`font-medium text-sm ${formData.session_type === 'autonomie' ? 'text-blue-700 dark:text-blue-300' : 'text-gray-600 dark:text-gray-400'}`}>
+                    Session en autonomie
+                  </span>
+                  <span className="text-xs text-gray-500 text-center">Sans formateur • Lien uniquement</span>
+                </button>
+              </div>
+              {formData.session_type === 'autonomie' && (
+                <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm">
+                  <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <span className="text-blue-700 dark:text-blue-300">
+                    Les sessions en autonomie ne permettent pas l'utilisation du QR Code. L'émargement se fait uniquement via l'envoi de liens par l'administration.
+                  </span>
+                </div>
+              )}
+            </div>
+
             {/* Nom du module */}
             <div className="space-y-2">
               <Label htmlFor="module" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -195,7 +252,7 @@ const AddSlotModal: React.FC<AddSlotModalProps> = ({
             </div>
 
             {/* Salle et Formateur */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className={`grid gap-4 ${formData.session_type === 'encadree' ? 'grid-cols-2' : 'grid-cols-1'}`}>
               <div className="space-y-2">
                 <Label htmlFor="room" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                   Salle
@@ -209,23 +266,26 @@ const AddSlotModal: React.FC<AddSlotModalProps> = ({
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="instructor" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  Formateur
-                </Label>
-                <Select value={formData.instructor_id} onValueChange={(value) => setFormData(prev => ({ ...prev, instructor_id: value }))}>
-                  <SelectTrigger className="h-11 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                    <SelectValue placeholder="Choisir un formateur" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {instructors.map((instructor) => (
-                      <SelectItem key={instructor.id} value={instructor.id}>
-                        {instructor.first_name} {instructor.last_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Formateur - affiché uniquement pour les sessions encadrées */}
+              {formData.session_type === 'encadree' && (
+                <div className="space-y-2">
+                  <Label htmlFor="instructor" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Formateur
+                  </Label>
+                  <Select value={formData.instructor_id} onValueChange={(value) => setFormData(prev => ({ ...prev, instructor_id: value }))}>
+                    <SelectTrigger className="h-11 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                      <SelectValue placeholder="Choisir un formateur" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {instructors.map((instructor) => (
+                        <SelectItem key={instructor.id} value={instructor.id}>
+                          {instructor.first_name} {instructor.last_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
 
             {/* Couleur du créneau */}
