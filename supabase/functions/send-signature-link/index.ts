@@ -32,7 +32,8 @@ serve(async (req) => {
       .from("attendance_sheets")
       .select(`
         *,
-        formations(title, level)
+        formations(title, level),
+        users:instructor_id(id, email, first_name, last_name)
       `)
       .eq("id", attendanceSheetId)
       .single();
@@ -46,14 +47,17 @@ serve(async (req) => {
     }
 
     // Construire le lien de signature
-    // Utilise l'URL de l'application depuis les variables d'environnement
-    // ou construit l'URL depuis le domaine Supabase
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-    const appUrl = Deno.env.get("APP_URL") || supabaseUrl.replace("cvuyglhivifusdahoztd.supabase.co", "app.yourapp.com");
+    const appUrl = Deno.env.get("APP_URL") || "https://nectfy.app";
     const signatureLink = `${appUrl}/emargement/signer/${sheet.signature_link_token}`;
 
-    const notificationTitle = "Nouveau lien d'émargement";
-    const notificationMessage = `Un lien d'émargement a été envoyé pour la session "${sheet.formations.title}" du ${new Date(sheet.date).toLocaleDateString('fr-FR')}. Cliquez pour signer.`;
+    const notificationTitle = "Lien d'émargement - " + sheet.formations.title;
+    const sessionDate = new Date(sheet.date).toLocaleDateString('fr-FR', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    const notificationMessage = `Un lien d'émargement a été envoyé pour la session "${sheet.formations.title}" du ${sessionDate} (${sheet.start_time.substring(0, 5)} - ${sheet.end_time.substring(0, 5)}). Connectez-vous à NECTFY pour signer votre présence.`;
 
     // Créer les notifications pour chaque étudiant
     const notifications = studentIds.map((studentId: string) => ({
@@ -68,6 +72,21 @@ serve(async (req) => {
       }
     }));
 
+    // Ajouter notification pour le formateur si présent
+    if (sheet.instructor_id && sheet.users) {
+      notifications.push({
+        user_id: sheet.instructor_id,
+        type: "attendance",
+        title: notificationTitle,
+        message: `Lien d'émargement envoyé pour votre session "${sheet.formations.title}" du ${sessionDate}. Les étudiants ont été notifiés.`,
+        metadata: {
+          attendance_sheet_id: attendanceSheetId,
+          signature_link: signatureLink,
+          expires_at: sheet.signature_link_expires_at
+        }
+      });
+    }
+
     // Insérer les notifications
     const { error: notifError } = await supabase
       .from("notifications")
@@ -81,12 +100,14 @@ serve(async (req) => {
       );
     }
 
-    // Créer un message dans la messagerie pour chaque étudiant
-    const { data: { user: sender } } = await supabase.auth.admin.listUsers();
-    const adminUser = sender?.[0]; // Premier admin comme expéditeur
+    // Créer un message dans la messagerie
+    // Récupérer l'admin qui envoie (premier admin de l'établissement)
+    const { data: adminUsers } = await supabase.auth.admin.listUsers();
+    const adminUser = adminUsers?.users?.[0];
 
     if (adminUser) {
-      const messageContent = `${notificationMessage}\n\nLien de signature: ${signatureLink}\n\nExpire le: ${new Date(sheet.signature_link_expires_at).toLocaleString('fr-FR')}`;
+      // Message pour étudiants (sans le lien direct - le lien est dans les métadonnées/notifications)
+      const messageContent = `Bonjour,\n\nUn lien d'émargement est disponible pour la session suivante :\n\n📚 Formation : ${sheet.formations.title}\n📅 Date : ${sessionDate}\n🕐 Horaire : ${sheet.start_time.substring(0, 5)} - ${sheet.end_time.substring(0, 5)}\n\nVeuillez vous connecter à votre espace NECTFY pour signer votre présence.\n\n⏰ Vous avez 24 heures pour signer.\n\nCordialement,\nL'administration`;
       
       const { data: message, error: messageError } = await supabase
         .from("messages")
@@ -101,10 +122,15 @@ serve(async (req) => {
         .single();
 
       if (!messageError && message) {
-        // Créer les destinataires du message
-        const recipients = studentIds.map((studentId: string) => ({
+        // Créer les destinataires du message (étudiants + formateur)
+        const allRecipientIds = [...studentIds];
+        if (sheet.instructor_id) {
+          allRecipientIds.push(sheet.instructor_id);
+        }
+        
+        const recipients = allRecipientIds.map((recipientId: string) => ({
           message_id: message.id,
-          recipient_id: studentId,
+          recipient_id: recipientId,
           recipient_type: 'user'
         }));
 
@@ -112,38 +138,44 @@ serve(async (req) => {
       }
     }
 
-    // Récupérer les emails des étudiants pour l'envoi d'email Gmail
-    const { data: students, error: studentsError } = await supabase
+    // Récupérer les emails pour l'envoi d'email Gmail
+    const allUserIds = [...studentIds];
+    if (sheet.instructor_id) {
+      allUserIds.push(sheet.instructor_id);
+    }
+
+    const { data: users, error: usersError } = await supabase
       .from("users")
       .select("email")
-      .in("id", studentIds);
+      .in("id", allUserIds);
 
-    if (!studentsError && students && students.length > 0) {
-      const userEmails = students.map(s => s.email);
+    if (!usersError && users && users.length > 0) {
+      const userEmails = users.map(u => u.email);
       
       // Appeler l'edge function pour envoyer les emails
+      // NOTE: L'email ne contient PAS le lien direct, seulement une notification
       try {
         await supabase.functions.invoke("send-notification-email", {
           body: {
             userEmails,
             title: notificationTitle,
-            message: notificationMessage,
+            message: "Un lien d'émargement est disponible pour une session de formation. Connectez-vous à votre espace NECTFY pour signer votre présence.",
             type: "attendance"
           }
         });
-        console.log(`Gmail notifications sent to ${userEmails.length} students`);
+        console.log(`Gmail notifications sent to ${userEmails.length} users (students + instructor)`);
       } catch (emailError) {
         console.error("Failed to send Gmail notifications:", emailError);
         // Ne pas bloquer si l'envoi d'email échoue
       }
     }
 
-    console.log(`Sent signature link to ${studentIds.length} students for attendance sheet ${attendanceSheetId}`);
+    console.log(`Sent signature link to ${studentIds.length} students and instructor for attendance sheet ${attendanceSheetId}`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Notifications sent to ${studentIds.length} students`,
+        message: `Notifications sent to ${studentIds.length} students${sheet.instructor_id ? ' and instructor' : ''}`,
         link: signatureLink
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
