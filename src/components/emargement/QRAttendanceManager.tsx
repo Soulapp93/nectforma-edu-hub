@@ -225,7 +225,7 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
           )}
 
           {/* Statut */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-500">Statut:</span>
               <Badge 
@@ -242,6 +242,12 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
                 {attendanceSheet.status}
               </Badge>
             </div>
+            {/* Badge type de session */}
+            {attendanceSheet.session_type === 'autonomie' && (
+              <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                Session en autonomie
+              </Badge>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -309,8 +315,8 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
           <CardTitle>Actions</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {/* Démarrer la session QR */}
-          {attendanceSheet.status === 'En cours' && (
+          {/* Démarrer la session QR - uniquement pour les sessions encadrées */}
+          {attendanceSheet.status === 'En cours' && attendanceSheet.session_type !== 'autonomie' && (
             <Button 
               onClick={handleStartQRSession}
               className="w-full bg-purple-600 hover:bg-purple-700"
@@ -319,6 +325,20 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
               <QrCode className="w-4 h-4 mr-2" />
               Afficher le QR Code aux étudiants
             </Button>
+          )}
+
+          {/* Message pour les sessions en autonomie */}
+          {attendanceSheet.session_type === 'autonomie' && attendanceSheet.status === 'En cours' && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-blue-800">
+                <Users className="w-4 h-4" />
+                <span className="font-medium">Session en autonomie</span>
+              </div>
+              <p className="text-sm text-blue-600 mt-1">
+                Le QR Code n'est pas disponible pour les sessions en autonomie. 
+                L'émargement se fait via les liens envoyés par l'administration.
+              </p>
+            </div>
           )}
 
 

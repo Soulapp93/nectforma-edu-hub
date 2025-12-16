@@ -26,6 +26,7 @@ export interface ScheduleSlot {
   room?: string;
   color?: string;
   notes?: string;
+  session_type?: string; // 'encadree' | 'autonomie'
   created_at: string;
   updated_at: string;
   formation_modules?: {
@@ -134,7 +135,7 @@ export const scheduleService = {
       .order('start_time', { ascending: true });
 
     if (error) throw error;
-    return data || [];
+    return (data || []) as ScheduleSlot[];
   },
 
   // Create schedule slot
