@@ -227,7 +227,7 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                           <div className="flex items-start justify-between mb-1">
                             <div className="flex-1 min-w-0">
                               <h4 className="font-semibold text-sm leading-tight truncate">
-                                {slot.formation_modules?.title || 'Module'}
+                                {slot.session_type === 'autonomie' ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module')}
                               </h4>
                               {/* Badge de durée */}
                               <Badge 
@@ -253,15 +253,15 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                               <span>{slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}</span>
                             </div>
                             
-                            {slot.room && (
+                            {slot.session_type !== 'autonomie' && slot.room && (
                               <div className="flex items-center text-white/90">
                                 <MapPin className="h-3 w-3 mr-1.5 flex-shrink-0" />
                                 <span className="truncate">{slot.room}</span>
                               </div>
                             )}
                             
-                            {/* Afficher instructeur si durée >= 1h */}
-                            {showInstructor && slot.users && (
+                            {/* Afficher instructeur si durée >= 1h et pas en autonomie */}
+                            {showInstructor && slot.session_type !== 'autonomie' && slot.users && (
                               <div className="flex items-center text-white/90">
                                 <User className="h-3 w-3 mr-1.5 flex-shrink-0" />
                                 <span className="truncate">{slot.users.first_name} {slot.users.last_name}</span>
@@ -317,9 +317,10 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1 min-w-0">
                             <h5 className="font-semibold text-sm text-foreground leading-tight truncate">
-                              {slot.formation_modules?.title || 'Module'}
+                              {slot.session_type === 'autonomie' ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module')}
                             </h5>
-                            {/* Badge formation avec couleur assortie */}
+                            {/* Badge formation avec couleur assortie - masqué pour autonomie */}
+                            {slot.session_type !== 'autonomie' && (
                             <Badge 
                               variant="secondary" 
                               className="mt-1 text-xs"
@@ -331,6 +332,7 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                             >
                               Formation
                             </Badge>
+                            )}
                           </div>
                           {/* Numéro de cours dans un cercle coloré */}
                           <div 
@@ -346,13 +348,13 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                             <span className="font-medium">{slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}</span>
                             <span className="ml-1 text-muted-foreground/70">({duration})</span>
                           </div>
-                          {slot.room && (
+                          {slot.session_type !== 'autonomie' && slot.room && (
                             <div className="flex items-center text-xs text-muted-foreground">
                               <MapPin className="h-3 w-3 mr-1.5 flex-shrink-0" />
                               <span className="truncate">{slot.room}</span>
                             </div>
                           )}
-                          {slot.users && (
+                          {slot.session_type !== 'autonomie' && slot.users && (
                             <div className="flex items-center text-xs text-muted-foreground">
                               <User className="h-3 w-3 mr-1.5 flex-shrink-0" />
                               <span className="truncate">{slot.users.first_name} {slot.users.last_name}</span>
