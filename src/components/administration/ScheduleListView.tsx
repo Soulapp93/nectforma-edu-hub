@@ -212,7 +212,7 @@ export const ScheduleListView: React.FC<ScheduleListViewProps> = ({
                 {/* Module */}
                 <div className="col-span-3">
                   <div className="font-medium text-white">
-                    {slot.formation_modules?.title || 'Module non défini'}
+                    {slot.session_type === 'autonomie' ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non défini')}
                   </div>
                   {slot.notes && (
                     <div className="text-xs text-white/80 mt-1 truncate">
@@ -226,7 +226,7 @@ export const ScheduleListView: React.FC<ScheduleListViewProps> = ({
                   <div className="flex items-center space-x-2">
                     <User className="h-4 w-4 text-white/80" />
                     <span className="text-sm text-white/90">
-                      {slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Non assigné'}
+                      {slot.session_type === 'autonomie' ? '—' : (slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Non assigné')}
                     </span>
                   </div>
                 </div>
@@ -235,7 +235,7 @@ export const ScheduleListView: React.FC<ScheduleListViewProps> = ({
                 <div className="col-span-2">
                   <div className="flex items-center space-x-2">
                     <MapPin className="h-4 w-4 text-white/80" />
-                    <span className="text-sm text-white/90">{slot.room || 'Non définie'}</span>
+                    <span className="text-sm text-white/90">{slot.session_type === 'autonomie' ? '—' : (slot.room || 'Non définie')}</span>
                   </div>
                 </div>
 

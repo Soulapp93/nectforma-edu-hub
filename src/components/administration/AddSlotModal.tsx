@@ -67,17 +67,23 @@ const AddSlotModal: React.FC<AddSlotModalProps> = ({
     }
   }, [selectedSlot]);
 
-  // Clear instructor when switching to autonomy mode
+  // Clear instructor and module when switching to autonomy mode
   React.useEffect(() => {
     if (formData.session_type === 'autonomie') {
-      setFormData(prev => ({ ...prev, instructor_id: '' }));
+      setFormData(prev => ({ ...prev, instructor_id: '', module_id: '', room: '' }));
     }
   }, [formData.session_type]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.module_id || !formData.date || !formData.start_time || !formData.end_time) {
+    // For autonomy sessions, module is not required
+    if (formData.session_type === 'encadree' && !formData.module_id) {
+      toast.error('Veuillez sélectionner un module');
+      return;
+    }
+    
+    if (!formData.date || !formData.start_time || !formData.end_time) {
       toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
@@ -192,24 +198,26 @@ const AddSlotModal: React.FC<AddSlotModalProps> = ({
               )}
             </div>
 
-            {/* Nom du module */}
-            <div className="space-y-2">
-              <Label htmlFor="module" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Nom du module *
-              </Label>
-              <Select value={formData.module_id} onValueChange={(value) => setFormData(prev => ({ ...prev, module_id: value }))}>
-                <SelectTrigger className="h-11 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                  <SelectValue placeholder="Sélectionner un module" />
-                </SelectTrigger>
-                <SelectContent>
-                  {modules.map((module) => (
-                    <SelectItem key={module.id} value={module.id}>
-                      {module.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Nom du module - uniquement pour sessions encadrées */}
+            {formData.session_type === 'encadree' && (
+              <div className="space-y-2">
+                <Label htmlFor="module" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Nom du module *
+                </Label>
+                <Select value={formData.module_id} onValueChange={(value) => setFormData(prev => ({ ...prev, module_id: value }))}>
+                  <SelectTrigger className="h-11 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                    <SelectValue placeholder="Sélectionner un module" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {modules.map((module) => (
+                      <SelectItem key={module.id} value={module.id}>
+                        {module.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Date et heures */}
             <div className="grid grid-cols-3 gap-4">
@@ -251,23 +259,22 @@ const AddSlotModal: React.FC<AddSlotModalProps> = ({
               </div>
             </div>
 
-            {/* Salle et Formateur */}
-            <div className={`grid gap-4 ${formData.session_type === 'encadree' ? 'grid-cols-2' : 'grid-cols-1'}`}>
-              <div className="space-y-2">
-                <Label htmlFor="room" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  Salle
-                </Label>
-                <Input
-                  id="room"
-                  value={formData.room}
-                  onChange={(e) => setFormData(prev => ({ ...prev, room: e.target.value }))}
-                  placeholder="Salle A1"
-                  className="h-11 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
-                />
-              </div>
+            {/* Salle et Formateur - uniquement pour sessions encadrées */}
+            {formData.session_type === 'encadree' && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="room" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Salle
+                  </Label>
+                  <Input
+                    id="room"
+                    value={formData.room}
+                    onChange={(e) => setFormData(prev => ({ ...prev, room: e.target.value }))}
+                    placeholder="Salle A1"
+                    className="h-11 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                  />
+                </div>
 
-              {/* Formateur - affiché uniquement pour les sessions encadrées */}
-              {formData.session_type === 'encadree' && (
                 <div className="space-y-2">
                   <Label htmlFor="instructor" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Formateur
@@ -285,8 +292,8 @@ const AddSlotModal: React.FC<AddSlotModalProps> = ({
                     </SelectContent>
                   </Select>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Couleur du créneau */}
             <div className="space-y-3">
