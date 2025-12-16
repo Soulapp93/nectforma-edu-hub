@@ -121,7 +121,14 @@ const Auth = () => {
 
       if (data.user) {
         toast.success('Connexion réussie !');
-        window.location.href = '/dashboard';
+        // Check for redirect after login (e.g., from signature link)
+        const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+        if (redirectUrl) {
+          sessionStorage.removeItem('redirectAfterLogin');
+          window.location.href = redirectUrl;
+        } else {
+          window.location.href = '/dashboard';
+        }
       }
     } catch (err: any) {
       setError('Erreur lors de la connexion. Veuillez réessayer.');
@@ -174,14 +181,26 @@ const Auth = () => {
 
         if (retryData.user) {
           toast.success(`Connexion réussie en tant que ${role} !`);
-          window.location.href = '/dashboard';
+          const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+          if (redirectUrl) {
+            sessionStorage.removeItem('redirectAfterLogin');
+            window.location.href = redirectUrl;
+          } else {
+            window.location.href = '/dashboard';
+          }
         }
         return;
       }
 
       if (data.user) {
         toast.success(`Connexion réussie en tant que ${role} !`);
-        window.location.href = '/dashboard';
+        const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+        if (redirectUrl) {
+          sessionStorage.removeItem('redirectAfterLogin');
+          window.location.href = redirectUrl;
+        } else {
+          window.location.href = '/dashboard';
+        }
       }
     } catch (err: any) {
       toast.error('Erreur lors de la connexion démo');
