@@ -65,66 +65,77 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ schedules, selectedD
 
             {/* Timeline items */}
             <div className="space-y-6">
-              {daySchedules.map((slot, index) => (
-                <div 
-                  key={slot.id} 
-                  className="relative ml-16 animate-fade-in floating-card"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  {/* Timeline dot */}
-                  <div className="absolute -left-12 top-6 w-6 h-6 timeline-dot rounded-full border-4 border-white"></div>
-                  
-                  {/* Course card */}
-                  <div className="course-card rounded-2xl p-6 morphing-card">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className="text-xl font-bold text-white mb-1">
-                          {slot.formation_modules?.title || 'Module non défini'}
-                        </h3>
-                        <p className="text-white/70 text-sm">
-                          Formation
-                        </p>
+              {daySchedules.map((slot, index) => {
+                const isAutonomie = slot.session_type === 'autonomie';
+                return (
+                  <div 
+                    key={slot.id} 
+                    className="relative ml-16 animate-fade-in floating-card"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    {/* Timeline dot */}
+                    <div className="absolute -left-12 top-6 w-6 h-6 timeline-dot rounded-full border-4 border-white"></div>
+                    
+                    {/* Course card */}
+                    <div className="course-card rounded-2xl p-6 morphing-card">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h3 className="text-xl font-bold text-white mb-1">
+                            {isAutonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non défini')}
+                          </h3>
+                          {!isAutonomie && (
+                            <p className="text-white/70 text-sm">
+                              Formation
+                            </p>
+                          )}
+                        </div>
+                        <div 
+                          className="w-4 h-4 rounded-full animate-pulse-glow"
+                          style={{ backgroundColor: slot.color || '#8B5CF6' }}
+                        ></div>
                       </div>
-                      <div 
-                        className="w-4 h-4 rounded-full animate-pulse-glow"
-                        style={{ backgroundColor: slot.color || '#8B5CF6' }}
-                      ></div>
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                      <div className="flex items-center text-white/80">
-                        <Clock className="h-4 w-4 mr-2" />
-                        <span className="text-sm font-medium">
-                          {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
-                        </span>
+                      <div className={`grid grid-cols-1 ${isAutonomie ? '' : 'md:grid-cols-3'} gap-4 mb-4`}>
+                        <div className="flex items-center text-white/80">
+                          <Clock className="h-4 w-4 mr-2" />
+                          <span className="text-sm font-medium">
+                            {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                          </span>
+                        </div>
+                        
+                        {!isAutonomie && (
+                          <>
+                            <div className="flex items-center text-white/80">
+                              <MapPin className="h-4 w-4 mr-2" />
+                              <span className="text-sm">{slot.room || 'Salle A101'}</span>
+                            </div>
+                            
+                            <div className="flex items-center text-white/80">
+                              <User className="h-4 w-4 mr-2" />
+                              <span className="text-sm">
+                                {slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Formateur'}
+                              </span>
+                            </div>
+                          </>
+                        )}
                       </div>
-                      
-                      <div className="flex items-center text-white/80">
-                        <MapPin className="h-4 w-4 mr-2" />
-                        <span className="text-sm">{slot.room || 'Salle A101'}</span>
-                      </div>
-                      
-                      <div className="flex items-center text-white/80">
-                        <User className="h-4 w-4 mr-2" />
-                        <span className="text-sm">
-                          {slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Formateur'}
-                        </span>
-                      </div>
-                    </div>
 
-                    <div className="flex items-start text-white/70">
-                      <Book className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                      <p className="text-sm">Module de formation</p>
-                    </div>
+                      {!isAutonomie && (
+                        <div className="flex items-start text-white/70">
+                          <Book className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+                          <p className="text-sm">Module de formation</p>
+                        </div>
+                      )}
 
-                    {slot.notes && (
-                      <div className="mt-4 p-3 bg-white/10 rounded-lg">
-                        <p className="text-white/80 text-sm">{slot.notes}</p>
-                      </div>
-                    )}
+                      {slot.notes && (
+                        <div className="mt-4 p-3 bg-white/10 rounded-lg">
+                          <p className="text-white/80 text-sm">{slot.notes}</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

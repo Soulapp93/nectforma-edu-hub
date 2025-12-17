@@ -43,6 +43,7 @@ export interface ScheduleEvent {
   formationId?: string;
   description?: string;
   color: string;
+  sessionType?: string;
 }
 
 export const CreateEventModal: React.FC<CreateEventModalProps> = ({ 
