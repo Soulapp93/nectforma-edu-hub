@@ -184,6 +184,7 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
                   {dayEvents.map((event) => {
                     const { top, height } = getEventPosition(event);
                     const duration = formatDuration(event);
+                    const isAutonomie = event.sessionType === 'autonomie';
                     
                     // Récupérer les infos de chevauchement
                     const overlapInfo = overlapMap.get(event.id);
@@ -209,13 +210,12 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
                         }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          console.log('Clic sur événement:', event);
                           onEventClick?.(event);
                         }}
                       >
                         <div className="h-full p-3 flex flex-col text-white">
-                          <h4 className="font-semibold text-sm leading-tight mb-1">
-                            {event.title}
+                          <h4 className="font-bold text-sm leading-tight mb-1">
+                            {isAutonomie ? 'AUTONOMIE' : event.title}
                           </h4>
                           
                           <div className="space-y-1 text-xs">
@@ -226,18 +226,22 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
                               </span>
                             </div>
                             
-                            {event.room && (
+                            {!isAutonomie && event.room && (
                               <div className="flex items-center text-white/90">
                                 <MapPin className="h-3 w-3 mr-1.5 flex-shrink-0" />
                                 <span className="truncate">{event.room}</span>
                               </div>
                             )}
                             
-                            {event.instructor && (
+                            {!isAutonomie && event.instructor && (
                               <div className="flex items-center text-white/90">
                                 <User className="h-3 w-3 mr-1.5 flex-shrink-0" />
                                 <span className="truncate">{event.instructor}</span>
                               </div>
+                            )}
+
+                            {isAutonomie && event.description && (
+                              <p className="text-white/80 italic truncate">{event.description}</p>
                             )}
                           </div>
                         </div>
@@ -267,50 +271,55 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
                   Aucun cours programmé
                 </p>
               ) : (
-                dayEvents.map((event, index) => (
-                  <Card 
-                    key={event.id}
-                    className="overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 border-l-4"
-                    style={{ borderLeftColor: event.color || '#3B82F6' }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      console.log('Clic sur événement liste:', event);
-                      onEventClick?.(event);
-                    }}
-                  >
-                    <CardContent className="p-3">
-                      <div className="flex items-start justify-between mb-2">
-                        <h5 className="font-semibold text-sm text-foreground leading-tight">
-                          {event.title}
-                        </h5>
-                        <div 
-                          className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ml-2"
-                          style={{ backgroundColor: event.color || '#3B82F6' }}
-                        >
-                          <span className="text-white text-xs font-bold">{index + 1}</span>
-                        </div>
-                      </div>
-                      <div className="space-y-1.5">
-                        <div className="flex items-center text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3 mr-1.5 flex-shrink-0" />
-                          <span>{event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}</span>
-                        </div>
-                        {event.room && (
-                          <div className="flex items-center text-xs text-muted-foreground">
-                            <MapPin className="h-3 w-3 mr-1.5 flex-shrink-0" />
-                            <span className="truncate">{event.room}</span>
+                dayEvents.map((event, index) => {
+                  const isAutonomie = event.sessionType === 'autonomie';
+                  return (
+                    <Card 
+                      key={event.id}
+                      className="overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 border-l-4"
+                      style={{ borderLeftColor: event.color || '#3B82F6' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEventClick?.(event);
+                      }}
+                    >
+                      <CardContent className="p-3">
+                        <div className="flex items-start justify-between mb-2">
+                          <h5 className="font-bold text-sm text-foreground leading-tight">
+                            {isAutonomie ? 'AUTONOMIE' : event.title}
+                          </h5>
+                          <div 
+                            className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ml-2"
+                            style={{ backgroundColor: event.color || '#3B82F6' }}
+                          >
+                            <span className="text-white text-xs font-bold">{index + 1}</span>
                           </div>
-                        )}
-                        {event.instructor && (
+                        </div>
+                        <div className="space-y-1.5">
                           <div className="flex items-center text-xs text-muted-foreground">
-                            <User className="h-3 w-3 mr-1.5 flex-shrink-0" />
-                            <span className="truncate">{event.instructor}</span>
+                            <Clock className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                            <span>{event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}</span>
                           </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+                          {!isAutonomie && event.room && (
+                            <div className="flex items-center text-xs text-muted-foreground">
+                              <MapPin className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                              <span className="truncate">{event.room}</span>
+                            </div>
+                          )}
+                          {!isAutonomie && event.instructor && (
+                            <div className="flex items-center text-xs text-muted-foreground">
+                              <User className="h-3 w-3 mr-1.5 flex-shrink-0" />
+                              <span className="truncate">{event.instructor}</span>
+                            </div>
+                          )}
+                          {isAutonomie && event.description && (
+                            <p className="text-xs text-muted-foreground italic truncate">{event.description}</p>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
               )}
             </CardContent>
           </Card>

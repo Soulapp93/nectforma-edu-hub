@@ -15,6 +15,8 @@ interface ScheduleDay {
     room: string;
     color: string;
     formation?: string;
+    sessionType?: string;
+    notes?: string;
   }>;
 }
 
@@ -78,6 +80,7 @@ export const ScheduleViewCalendar: React.FC<ScheduleViewCalendarProps> = ({
                     e.instructor === module.instructor &&
                     e.room === module.room
                   );
+                  const isAutonomie = module.sessionType === 'autonomie';
                   
                   return (
                     <div
@@ -91,13 +94,13 @@ export const ScheduleViewCalendar: React.FC<ScheduleViewCalendarProps> = ({
                       }}
                     >
                       {/* Titre du module */}
-                      <h4 className="font-semibold text-white text-xs sm:text-sm group-hover:text-white/90 transition-colors line-clamp-2 mb-2">
+                      <h4 className="font-bold text-white text-sm sm:text-base group-hover:text-white/90 transition-colors line-clamp-2 mb-2">
                         {module.title}
                       </h4>
                       
                       <div className="space-y-1">
-                        {/* Formation - uniquement pour les formateurs */}
-                        {showFormationName && fullEvent?.formation && (
+                        {/* Formation - uniquement pour les formateurs et pas autonomie */}
+                        {showFormationName && fullEvent?.formation && !isAutonomie && (
                           <div className="flex items-center text-[10px] sm:text-xs text-white/90">
                             <GraduationCap className="h-3 w-3 mr-1 flex-shrink-0" />
                             <span className="truncate">{fullEvent.formation}</span>
@@ -108,16 +111,26 @@ export const ScheduleViewCalendar: React.FC<ScheduleViewCalendarProps> = ({
                           <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
                           <span className="truncate">{module.time}</span>
                         </div>
-                        {/* Salle */}
-                        <div className="flex items-center text-[10px] sm:text-xs text-white/90">
-                          <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
-                          <span className="truncate">{module.room}</span>
-                        </div>
-                        {/* Formateur */}
-                        <div className="flex items-center text-[10px] sm:text-xs text-white/90">
-                          <User className="h-3 w-3 mr-1 flex-shrink-0" />
-                          <span className="truncate">{module.instructor}</span>
-                        </div>
+                        {/* Salle - masquée pour autonomie */}
+                        {!isAutonomie && (
+                          <div className="flex items-center text-[10px] sm:text-xs text-white/90">
+                            <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                            <span className="truncate">{module.room}</span>
+                          </div>
+                        )}
+                        {/* Formateur - masqué pour autonomie */}
+                        {!isAutonomie && (
+                          <div className="flex items-center text-[10px] sm:text-xs text-white/90">
+                            <User className="h-3 w-3 mr-1 flex-shrink-0" />
+                            <span className="truncate">{module.instructor}</span>
+                          </div>
+                        )}
+                        {/* Notes - affichées pour autonomie */}
+                        {isAutonomie && module.notes && (
+                          <p className="text-[10px] sm:text-xs text-white/80 italic truncate">
+                            {module.notes}
+                          </p>
+                        )}
                       </div>
                     </div>
                   );

@@ -83,72 +83,79 @@ export const KanbanView: React.FC<KanbanViewProps> = ({ schedules, selectedDate 
                       <p className="text-white/50 text-xs">Libre</p>
                     </div>
                   ) : (
-                    daySlots.map((slot) => (
-                      <div
-                        key={slot.id}
-                        className={`rounded-xl p-4 cursor-pointer transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 ${
-                          expandedCard === slot.id ? 'scale-105 shadow-2xl' : ''
-                        }`}
-                        style={{ 
-                          backgroundColor: slot.color || '#E879F9',
-                          color: 'white',
-                          border: 'none',
-                          backgroundImage: `linear-gradient(135deg, ${slot.color || '#E879F9'}, ${slot.color ? slot.color + '90' : '#E879F9BB'})`
-                        }}
-                        onClick={() => setExpandedCard(expandedCard === slot.id ? null : slot.id)}
-                      >
+                    daySlots.map((slot) => {
+                      const isAutonomie = slot.session_type === 'autonomie';
+                      return (
+                        <div
+                          key={slot.id}
+                          className={`rounded-xl p-4 cursor-pointer transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 ${
+                            expandedCard === slot.id ? 'scale-105 shadow-2xl' : ''
+                          }`}
+                          style={{ 
+                            backgroundColor: slot.color || '#E879F9',
+                            color: 'white',
+                            border: 'none',
+                            backgroundImage: `linear-gradient(135deg, ${slot.color || '#E879F9'}, ${slot.color ? slot.color + '90' : '#E879F9BB'})`
+                          }}
+                          onClick={() => setExpandedCard(expandedCard === slot.id ? null : slot.id)}
+                        >
 
-                        {/* Course title */}
-                        <h4 className="text-white font-semibold text-sm mb-2 line-clamp-2">
-                          Module {slot.formation_modules?.title || 'Module non défini'}
-                        </h4>
+                          {/* Course title */}
+                          <h4 className="text-white font-bold text-sm mb-2 line-clamp-2">
+                            {isAutonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non défini')}
+                          </h4>
 
-                        {/* Time */}
-                        <div className="flex items-center text-white/70 text-xs mb-2">
-                          <Clock className="h-3 w-3 mr-1" />
-                          <span>{formatTime(slot.start_time)} - {formatTime(slot.end_time)}</span>
+                          {/* Time */}
+                          <div className="flex items-center text-white/70 text-xs mb-2">
+                            <Clock className="h-3 w-3 mr-1" />
+                            <span>{formatTime(slot.start_time)} - {formatTime(slot.end_time)}</span>
+                          </div>
+
+                          {/* Expanded details */}
+                          {expandedCard === slot.id && (
+                            <div className="mt-3 pt-3 border-t border-white/20 animate-fade-in">
+                              <div className="space-y-2">
+                                {!isAutonomie && (
+                                  <>
+                                    <div className="flex items-center text-white/70 text-xs">
+                                      <MapPin className="h-3 w-3 mr-1" />
+                                      <span>{slot.room || 'Salle A101'}</span>
+                                    </div>
+                                    
+                                    <div className="flex items-center text-white/70 text-xs">
+                                      <User className="h-3 w-3 mr-1" />
+                                      <span>
+                                        {slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Formateur'}
+                                      </span>
+                                    </div>
+                                  </>
+                                )}
+
+                                {slot.notes && (
+                                  <div className="mt-2 p-2 bg-white/10 rounded text-xs text-white/80">
+                                    {slot.notes}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Minimized indicators */}
+                          {expandedCard !== slot.id && !isAutonomie && (
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-1">
+                                <div className="w-1 h-1 bg-white/50 rounded-full"></div>
+                                <div className="w-1 h-1 bg-white/50 rounded-full"></div>
+                                <div className="w-1 h-1 bg-white/50 rounded-full"></div>
+                              </div>
+                              <div className="text-white/50 text-xs">
+                                {slot.room?.slice(0, 4) || 'Salle'}
+                              </div>
+                            </div>
+                          )}
                         </div>
-
-                        {/* Expanded details */}
-                        {expandedCard === slot.id && (
-                          <div className="mt-3 pt-3 border-t border-white/20 animate-fade-in">
-                            <div className="space-y-2">
-                              <div className="flex items-center text-white/70 text-xs">
-                                <MapPin className="h-3 w-3 mr-1" />
-                                <span>{slot.room || 'Salle A101'}</span>
-                              </div>
-                              
-                              <div className="flex items-center text-white/70 text-xs">
-                                <User className="h-3 w-3 mr-1" />
-                                <span>
-                                  {slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Formateur'}
-                                </span>
-                              </div>
-
-                              {slot.notes && (
-                                <div className="mt-2 p-2 bg-white/10 rounded text-xs text-white/80">
-                                  {slot.notes}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Minimized indicators */}
-                        {expandedCard !== slot.id && (
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-1">
-                              <div className="w-1 h-1 bg-white/50 rounded-full"></div>
-                              <div className="w-1 h-1 bg-white/50 rounded-full"></div>
-                              <div className="w-1 h-1 bg-white/50 rounded-full"></div>
-                            </div>
-                            <div className="text-white/50 text-xs">
-                              {slot.room?.slice(0, 4) || 'Salle'}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </div>

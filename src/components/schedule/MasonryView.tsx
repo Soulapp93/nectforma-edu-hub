@@ -97,6 +97,7 @@ export const MasonryView: React.FC<MasonryViewProps> = ({ schedules, selectedDat
               const slotDate = new Date(slot.date);
               const dayName = format(slotDate, 'EEEE', { locale: fr });
               const isToday = slotDate.toDateString() === new Date().toDateString();
+              const isAutonomie = slot.session_type === 'autonomie';
               
               return (
                 <div 
@@ -124,7 +125,7 @@ export const MasonryView: React.FC<MasonryViewProps> = ({ schedules, selectedDat
                           </span>
                         </div>
                         <h3 className="text-lg font-bold text-foreground leading-tight">
-                          {slot.formation_modules?.title || 'Module non défini'}
+                          {isAutonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non défini')}
                         </h3>
                       </div>
                       <button className="text-muted-foreground hover:text-foreground transition-colors">
@@ -142,40 +143,52 @@ export const MasonryView: React.FC<MasonryViewProps> = ({ schedules, selectedDat
                       {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
                     </div>
 
-                    {/* Basic info */}
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-                        <span>{slot.room || 'Salle A101'}</span>
+                    {/* Basic info - masqué pour autonomie */}
+                    {!isAutonomie && (
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                          <span>{slot.room || 'Salle A101'}</span>
+                        </div>
+                        
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <User className="h-4 w-4 mr-2 flex-shrink-0" />
+                          <span className="truncate">
+                            {slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Formateur'}
+                          </span>
+                        </div>
                       </div>
-                      
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <User className="h-4 w-4 mr-2 flex-shrink-0" />
-                        <span className="truncate">
-                          {slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Formateur'}
-                        </span>
+                    )}
+
+                    {/* Notes pour autonomie */}
+                    {isAutonomie && slot.notes && (
+                      <div className="mb-4 text-sm text-muted-foreground italic">
+                        {slot.notes}
                       </div>
-                    </div>
+                    )}
 
                     {/* Expanded content */}
                     {isExpanded && (
                       <div className="space-y-4 animate-fade-in">
-                        {/* Formation info */}
-                        <div className="p-3 bg-muted/20 rounded-lg">
-                          <p className="text-sm font-medium text-foreground mb-1">Formation</p>
-                          <p className="text-sm text-muted-foreground">Module de formation</p>
-                        </div>
+                        {/* Formation info - masqué pour autonomie */}
+                        {!isAutonomie && (
+                          <>
+                            <div className="p-3 bg-muted/20 rounded-lg">
+                              <p className="text-sm font-medium text-foreground mb-1">Formation</p>
+                              <p className="text-sm text-muted-foreground">Module de formation</p>
+                            </div>
 
-                        {/* Module description */}
-                        <div className="flex items-start">
-                          <Book className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                          <p className="text-sm text-muted-foreground">
-                            Module de formation avancé
-                          </p>
-                        </div>
+                            <div className="flex items-start">
+                              <Book className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                              <p className="text-sm text-muted-foreground">
+                                Module de formation avancé
+                              </p>
+                            </div>
+                          </>
+                        )}
 
                         {/* Notes */}
-                        {slot.notes && (
+                        {slot.notes && !isAutonomie && (
                           <div className="p-3 bg-accent/10 rounded-lg border border-accent/20">
                             <p className="text-sm text-foreground">{slot.notes}</p>
                           </div>
@@ -193,8 +206,8 @@ export const MasonryView: React.FC<MasonryViewProps> = ({ schedules, selectedDat
                       </div>
                     )}
 
-                    {/* Minimized footer */}
-                    {!isExpanded && (
+                    {/* Minimized footer - masqué pour autonomie */}
+                    {!isExpanded && !isAutonomie && (
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>Formation</span>
                         <div className="flex space-x-1">

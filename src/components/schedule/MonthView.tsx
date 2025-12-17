@@ -154,41 +154,39 @@ export const MonthView: React.FC<MonthViewProps> = ({
 
                     {/* Événements */}
                     <div className="flex-1 space-y-1 overflow-hidden">
-                       {dayEvents.slice(0, 3).map((event, index) => (
+                       {dayEvents.slice(0, 3).map((event, index) => {
+                         const isAutonomie = event.sessionType === 'autonomie';
+                         return (
                            <div
                             key={event.id}
                             className="px-2 py-2 rounded-md shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 mb-1 text-white"
                             style={{ 
                               backgroundColor: event.color || '#3B82F6'
                             }}
-                           title={`${event.title} - ${event.startTime.substring(0, 5)}`}
+                           title={`${isAutonomie ? 'AUTONOMIE' : event.title} - ${event.startTime.substring(0, 5)}`}
                            onClick={(e) => {
                              e.stopPropagation();
                              onEventClick?.(event);
                            }}
                          >
                            <div className="space-y-0.5">
-                              <div className="font-semibold text-white text-[11px] leading-tight">
-                                Module {event.title}
+                              <div className="font-bold text-white text-[11px] leading-tight">
+                                {isAutonomie ? 'AUTONOMIE' : event.title}
                               </div>
                               
                                <div className="flex items-center text-[9px] text-white/90">
                                  <Clock className="h-2.5 w-2.5 mr-1 text-white/80" />
-                                 <span>{event.startTime.substring(0, 5)}</span>
-                               </div>
-                               <div className="flex items-center text-[9px] text-white/90">
-                                 <Clock className="h-2.5 w-2.5 mr-1 text-white/80" />
-                                 <span>{event.endTime.substring(0, 5)}</span>
+                                 <span>{event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}</span>
                                </div>
                               
-                              {event.room && (
+                              {!isAutonomie && event.room && (
                                 <div className="flex items-center text-[9px] text-white/90">
                                   <MapPin className="h-2.5 w-2.5 mr-1 text-white/80" />
-                                  <span>Salle {event.room}</span>
+                                  <span>{event.room}</span>
                                 </div>
                               )}
                               
-                              {event.instructor && (
+                              {!isAutonomie && event.instructor && (
                                 <div className="flex items-center text-[9px] text-white/90">
                                   <User className="h-2.5 w-2.5 mr-1 text-white/80" />
                                   <span>{event.instructor}</span>
@@ -196,7 +194,8 @@ export const MonthView: React.FC<MonthViewProps> = ({
                               )}
                            </div>
                         </div>
-                      ))}
+                         );
+                       })}
                       
                        {dayEvents.length > 3 && (
                          <div className="text-xs text-muted-foreground text-center py-2 font-medium opacity-75">

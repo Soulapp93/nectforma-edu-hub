@@ -104,9 +104,10 @@ const EmploiTemps = () => {
   const convertToEvents = (scheduleSlots: any[]): ScheduleEvent[] => {
     return scheduleSlots.map(slot => {
       const formation = slot.schedules?.formations;
+      const isAutonomie = slot.session_type === 'autonomie';
       return {
         id: slot.id,
-        title: slot.formation_modules?.title || 'Cours',
+        title: isAutonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Cours'),
         date: new Date(slot.date),
         startTime: slot.start_time,
         endTime: slot.end_time,
@@ -115,7 +116,8 @@ const EmploiTemps = () => {
         formation: formation?.title || 'Formation non définie',
         color: slot.color || formation?.color || '#6B7280',
         description: slot.notes || `Cours de ${slot.formation_modules?.title || 'formation'}`,
-        formationId: slot.schedules?.formation_id
+        formationId: slot.schedules?.formation_id,
+        sessionType: slot.session_type
       };
     });
   };
@@ -285,7 +287,9 @@ const EmploiTemps = () => {
         instructor: event.instructor,
         room: event.room,
         color: event.color,
-        formation: event.formation, // Pour les formateurs
+        formation: event.formation,
+        sessionType: event.sessionType,
+        notes: event.description,
       })),
     };
   });
@@ -390,6 +394,7 @@ const EmploiTemps = () => {
 
             {listEvents.map((event) => {
               const slotColor = event.color || '#8B5CF6';
+              const isAutonomie = event.sessionType === 'autonomie';
 
               return (
                 <div
@@ -399,60 +404,93 @@ const EmploiTemps = () => {
                   style={{ backgroundColor: slotColor }}
                 >
                   <div className="px-4 sm:px-6 py-4">
-                    <div className={`grid gap-2 sm:gap-4 items-center ${shouldShowFormationOnCards ? 'grid-cols-12' : 'grid-cols-11'}`}>
-                      {/* Date */}
-                      <div className="col-span-2">
-                        <div className="text-sm font-bold text-white">
-                          {format(event.date, 'dd/MM/yyyy', { locale: fr })}
+                    {isAutonomie ? (
+                      // Affichage simplifié pour autonomie
+                      <div className="flex flex-wrap items-center gap-4">
+                        {/* Date */}
+                        <div>
+                          <div className="text-sm font-bold text-white">
+                            {format(event.date, 'dd/MM/yyyy', { locale: fr })}
+                          </div>
+                          <div className="text-xs text-white/80 capitalize">
+                            {format(event.date, 'EEEE', { locale: fr })}
+                          </div>
                         </div>
-                        <div className="text-xs text-white/80 capitalize">
-                          {format(event.date, 'EEEE', { locale: fr })}
-                        </div>
-                      </div>
 
-                      {/* Horaire */}
-                      <div className="col-span-2">
+                        {/* Titre AUTONOMIE */}
+                        <div className="text-lg font-bold text-white">
+                          AUTONOMIE
+                        </div>
+
+                        {/* Horaire */}
                         <span className="inline-flex items-center rounded-md bg-white/20 backdrop-blur-sm px-2.5 py-1 text-xs sm:text-sm font-semibold text-white border border-white/30">
                           {formatTime(event.startTime)} - {formatTime(event.endTime)}
                         </span>
-                      </div>
 
-                      {/* Formation - Uniquement pour formateurs et admins */}
-                      {shouldShowFormationOnCards && (
+                        {/* Notes si disponibles */}
+                        {event.description && (
+                          <span className="text-sm text-white/80 italic">
+                            {event.description}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      // Affichage normal pour les cours encadrés
+                      <div className={`grid gap-2 sm:gap-4 items-center ${shouldShowFormationOnCards ? 'grid-cols-12' : 'grid-cols-11'}`}>
+                        {/* Date */}
                         <div className="col-span-2">
-                          <div className="text-sm font-semibold text-white truncate">
-                            {event.formation}
+                          <div className="text-sm font-bold text-white">
+                            {format(event.date, 'dd/MM/yyyy', { locale: fr })}
+                          </div>
+                          <div className="text-xs text-white/80 capitalize">
+                            {format(event.date, 'EEEE', { locale: fr })}
                           </div>
                         </div>
-                      )}
 
-                      {/* Module */}
-                      <div className="col-span-3">
-                        <div className="text-sm font-bold text-white">
-                          {event.title}
-                        </div>
-                      </div>
-
-                      {/* Formateur */}
-                      <div className="col-span-2">
-                        <div className="flex items-center gap-1.5">
-                          <User className="h-3.5 w-3.5 text-white/70" />
-                          <span className="text-sm text-white/90 truncate">
-                            {event.instructor || 'Non assigné'}
+                        {/* Horaire */}
+                        <div className="col-span-2">
+                          <span className="inline-flex items-center rounded-md bg-white/20 backdrop-blur-sm px-2.5 py-1 text-xs sm:text-sm font-semibold text-white border border-white/30">
+                            {formatTime(event.startTime)} - {formatTime(event.endTime)}
                           </span>
                         </div>
-                      </div>
 
-                      {/* Salle */}
-                      <div className="col-span-2">
-                        <div className="flex items-center gap-1.5">
-                          <MapPin className="h-3.5 w-3.5 text-white/70" />
-                          <span className="text-sm text-white font-medium">
-                            {event.room || 'Non définie'}
-                          </span>
+                        {/* Formation - Uniquement pour formateurs et admins */}
+                        {shouldShowFormationOnCards && (
+                          <div className="col-span-2">
+                            <div className="text-sm font-semibold text-white truncate">
+                              {event.formation}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Module */}
+                        <div className="col-span-3">
+                          <div className="text-sm font-bold text-white">
+                            {event.title}
+                          </div>
+                        </div>
+
+                        {/* Formateur */}
+                        <div className="col-span-2">
+                          <div className="flex items-center gap-1.5">
+                            <User className="h-3.5 w-3.5 text-white/70" />
+                            <span className="text-sm text-white/90 truncate">
+                              {event.instructor || 'Non assigné'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Salle */}
+                        <div className="col-span-2">
+                          <div className="flex items-center gap-1.5">
+                            <MapPin className="h-3.5 w-3.5 text-white/70" />
+                            <span className="text-sm text-white font-medium">
+                              {event.room || 'Non définie'}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               );
