@@ -268,8 +268,17 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                               </div>
                             )}
                             
-                            {/* Afficher formation complète si durée >= 2h */}
-                            {showFullInfo && (
+                            {/* Afficher notes pour autonomie */}
+                            {slot.session_type === 'autonomie' && slot.notes && (
+                              <div className="mt-1 pt-1 border-t border-white/20">
+                                <p className="text-xs text-white/80 truncate">
+                                  {slot.notes}
+                                </p>
+                              </div>
+                            )}
+                            
+                            {/* Afficher formation complète si durée >= 2h et pas autonomie */}
+                            {showFullInfo && slot.session_type !== 'autonomie' && (
                               <div className="mt-1 pt-1 border-t border-white/20">
                                 <p className="text-xs text-white/80 truncate">
                                   Formation
@@ -358,6 +367,11 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                             <div className="flex items-center text-xs text-muted-foreground">
                               <User className="h-3 w-3 mr-1.5 flex-shrink-0" />
                               <span className="truncate">{slot.users.first_name} {slot.users.last_name}</span>
+                            </div>
+                          )}
+                          {slot.session_type === 'autonomie' && slot.notes && (
+                            <div className="text-xs text-muted-foreground italic truncate">
+                              {slot.notes}
                             </div>
                           )}
                         </div>
