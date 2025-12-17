@@ -152,12 +152,17 @@ export const ScheduleMonthView: React.FC<ScheduleMonthViewProps> = ({
                         }}
                       >
                         <div className="font-medium text-white truncate mb-1">
-                          {slot.formation_modules?.title || 'Module'}
+                          {slot.session_type === 'autonomie' ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module')}
                         </div>
                         <div className="text-white/80 flex items-center space-x-1">
                           <Clock className="h-3 w-3" />
-                          <span>{slot.start_time.slice(0, 5)}</span>
+                          <span>{slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}</span>
                         </div>
+                        {slot.session_type === 'autonomie' && slot.notes && (
+                          <div className="text-white/70 text-xs truncate mt-1">
+                            {slot.notes}
+                          </div>
+                        )}
                       </div>
                     ))}
                     
