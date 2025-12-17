@@ -14,6 +14,11 @@ interface PrintOptions {
   formationTitle?: string; // Titre de la formation à afficher dans le header
 }
 
+interface EstablishmentInfo {
+  name: string;
+  logo_url?: string | null;
+}
+
 // Convertir couleur hex en RGB
 const hexToRgb = (hex: string): { r: number; g: number; b: number } => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -43,12 +48,30 @@ const truncateText = (pdf: jsPDF, text: string, maxWidth: number): string => {
   return truncated + '...';
 };
 
-export const exportScheduleToPDFAdvanced = (
+// Charger une image depuis une URL et la convertir en base64
+const loadImageAsBase64 = async (url: string): Promise<string | null> => {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error('Error loading image:', error);
+    return null;
+  }
+};
+
+export const exportScheduleToPDFAdvanced = async (
   schedules: ScheduleSlot[],
   title: string,
   options: PrintOptions,
   userRole?: string,
-  userName?: string
+  userName?: string,
+  establishment?: EstablishmentInfo | null
 ) => {
   const isLandscape = options.orientation === 'landscape';
   const pdf = new jsPDF(isLandscape ? 'l' : 'p', 'mm', 'a4');
@@ -68,6 +91,12 @@ export const exportScheduleToPDFAdvanced = (
     return a.start_time.localeCompare(b.start_time);
   });
 
+  // Charger le logo de l'établissement si disponible
+  let logoBase64: string | null = null;
+  if (establishment?.logo_url) {
+    logoBase64 = await loadImageAsBase64(establishment.logo_url);
+  }
+
   // Render header on first page
   const renderHeader = (startY: number): number => {
     let currentY = startY;
@@ -83,14 +112,41 @@ export const exportScheduleToPDFAdvanced = (
     
     // Header banner
     pdf.setFillColor(139, 92, 246);
-    pdf.rect(0, 0, pageWidth, 22, 'F');
+    pdf.rect(0, 0, pageWidth, 28, 'F');
+    
+    // Logo et nom de l'établissement en haut à gauche
+    let logoEndX = margin;
+    if (logoBase64) {
+      try {
+        pdf.addImage(logoBase64, 'PNG', margin, 3, 22, 22);
+        logoEndX = margin + 25;
+      } catch (e) {
+        console.error('Error adding logo to PDF:', e);
+      }
+    }
+    
+    // Nom de l'établissement (sans NECTFY)
+    if (establishment?.name) {
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(255, 255, 255);
+      pdf.text(establishment.name, logoEndX + 2, 10);
+      
+      // Type ou sous-titre optionnel
+      pdf.setFontSize(7);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(220, 220, 255);
+      pdf.text('Emploi du temps', logoEndX + 2, 16);
+    }
+    
+    // Titre principal centré
     pdf.setFontSize(14);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(255, 255, 255);
-    pdf.text(truncateText(pdf, headerTitle, pageWidth - 20), pageWidth / 2, 14, { align: 'center' });
+    pdf.text(truncateText(pdf, headerTitle, pageWidth - 100), pageWidth / 2, 18, { align: 'center' });
 
     pdf.setTextColor(0, 0, 0);
-    currentY = 30;
+    currentY = 36;
 
     // Period info
     pdf.setFontSize(10);
@@ -133,7 +189,7 @@ export const exportScheduleToPDFAdvanced = (
   }
 
   // Footer for all pages
-  addFooter(pdf, pageWidth, pageHeight, margin);
+  addFooter(pdf, pageWidth, pageHeight, margin, establishment?.name);
 
   // Save
   const filename = `emploi-du-temps-${format(options.dateRange.start, 'yyyy-MM-dd')}-${format(options.dateRange.end, 'yyyy-MM-dd')}.pdf`;
@@ -755,7 +811,7 @@ const renderListView = (
   }
 };
 
-const addFooter = (pdf: jsPDF, pageWidth: number, pageHeight: number, margin: number) => {
+const addFooter = (pdf: jsPDF, pageWidth: number, pageHeight: number, margin: number, establishmentName?: string) => {
   const totalPages = pdf.internal.pages.length - 1;
   
   for (let i = 1; i <= totalPages; i++) {
@@ -768,6 +824,15 @@ const addFooter = (pdf: jsPDF, pageWidth: number, pageHeight: number, margin: nu
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(100, 100, 100);
     
+    // Afficher le nom de l'établissement dans le footer (sans NECTFY)
+    if (establishmentName) {
+      pdf.text(establishmentName, margin, pageHeight - 6);
+    } else {
+      const now = new Date();
+      const formattedDate = format(now, 'dd/MM/yyyy à HH:mm', { locale: fr });
+      pdf.text(`Généré le ${formattedDate}`, margin, pageHeight - 6);
+    }
+    
     pdf.text(
       `Page ${i} sur ${totalPages}`,
       pageWidth - margin,
@@ -775,26 +840,19 @@ const addFooter = (pdf: jsPDF, pageWidth: number, pageHeight: number, margin: nu
       { align: 'right' }
     );
     
-    const now = new Date();
-    const formattedDate = format(now, 'dd/MM/yyyy à HH:mm', { locale: fr });
-    pdf.text(
-      `Généré le ${formattedDate}`,
-      margin,
-      pageHeight - 6
-    );
-    
     pdf.setTextColor(0, 0, 0);
   }
 };
 
 // Legacy function for backward compatibility
-export const exportScheduleToPDF = (
+export const exportScheduleToPDF = async (
   schedules: ScheduleSlot[],
   title: string,
   userRole?: string,
   userName?: string,
   startDate?: Date,
-  endDate?: Date
+  endDate?: Date,
+  establishment?: EstablishmentInfo | null
 ) => {
   const options: PrintOptions = {
     viewMode: 'list',
@@ -805,5 +863,5 @@ export const exportScheduleToPDF = (
     orientation: 'portrait'
   };
   
-  exportScheduleToPDFAdvanced(schedules, title, options, userRole, userName);
+  await exportScheduleToPDFAdvanced(schedules, title, options, userRole, userName, establishment);
 };
