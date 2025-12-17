@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { ScheduleSlot } from '@/services/scheduleService';
 import { exportScheduleToPDFAdvanced } from '@/services/pdfScheduleService';
+import { useEstablishment } from '@/hooks/useEstablishment';
 
 export interface PrintOptions {
   viewMode: 'day' | 'week' | 'month' | 'list';
@@ -50,6 +51,7 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
   formationTitle
 }) => {
   const [open, setOpen] = useState(false);
+  const { establishment } = useEstablishment();
   const [printOptions, setPrintOptions] = useState<PrintOptions>({
     viewMode: 'week',
     dateRange: {
@@ -134,7 +136,8 @@ export const PrintScheduleModal: React.FC<PrintScheduleModalProps> = ({
       title,
       pdfOptions,
       userRole,
-      userName
+      userName,
+      establishment ? { name: establishment.name, logo_url: establishment.logo_url } : null
     );
 
     toast({
