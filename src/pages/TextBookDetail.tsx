@@ -410,20 +410,25 @@ const TextBookDetail: React.FC = () => {
           </Button>
           
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline"
-              onClick={async () => {
+            <Select
+              onValueChange={async (value: 'portrait' | 'landscape') => {
                 try {
-                  await pdfExportService.exportTextBookToPDF(textBook, entries, 'portrait');
+                  await pdfExportService.exportTextBookToPDF(textBook, entries, value);
                   toast({ title: "Export réussi", description: "Le cahier de texte a été exporté en PDF." });
                 } catch (error) {
                   toast({ title: "Erreur", description: "Impossible d'exporter le PDF.", variant: "destructive" });
                 }
               }}
             >
-              <Download className="h-4 w-4 mr-2" />
-              Exporter PDF
-            </Button>
+              <SelectTrigger className="w-[180px]">
+                <Download className="h-4 w-4 mr-2" />
+                <span>Exporter PDF</span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="portrait">Portrait (vertical)</SelectItem>
+                <SelectItem value="landscape">Paysage (horizontal)</SelectItem>
+              </SelectContent>
+            </Select>
             
             {canEdit && (
               <Button onClick={() => setIsAddEntryModalOpen(true)}>

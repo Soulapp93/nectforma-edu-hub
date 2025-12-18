@@ -173,7 +173,7 @@ export const ScheduleManagementCalendar: React.FC<ScheduleManagementCalendarProp
                           <Clock className="h-3 w-3 mr-2" />
                           {module.time}
                         </div>
-                        {/* Salle et formateur masqués pour autonomie */}
+                        {/* Salle et formateur masqués pour autonomie - uniquement heure affichée */}
                         {!isAutonomie && module.room && (
                           <div className="flex items-center text-xs text-white/80">
                             <MapPin className="h-3 w-3 mr-2" />
@@ -185,12 +185,6 @@ export const ScheduleManagementCalendar: React.FC<ScheduleManagementCalendarProp
                             <User className="h-3 w-3 mr-2" />
                             {module.instructor}
                           </div>
-                        )}
-                        {/* Notes pour autonomie */}
-                        {isAutonomie && module.notes && (
-                          <p className="text-[10px] text-white/80 italic truncate mt-1">
-                            {module.notes}
-                          </p>
                         )}
                       </div>
                       
