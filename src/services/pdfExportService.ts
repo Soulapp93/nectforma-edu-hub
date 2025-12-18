@@ -621,49 +621,52 @@ export const pdfExportService = {
       };
       
       // Function to render plain text from HTML (simplified, no async issues)
+      // IMPORTANT: entry.content may sometimes be plain text (no <p>), so we enforce
+      // a consistent top padding to prevent overlap with the section header.
       const renderContent = (html: string, startY: number, maxWidth: number): number => {
         if (!html || html.trim() === '' || html === '<p></p>') return startY;
-        
-        let y = startY;
-        
+
+        // Always add a bit of breathing room before first rendered line
+        let y = startY + 2;
+
         // Clean HTML and extract text
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = html;
-        
+
+        const ensurePageSpace = (needed: number) => {
+          if (y + needed > maxContentY) {
+            addFooter(currentPage);
+            pdf.addPage();
+            currentPage++;
+            // Add header for continuation (same rules: logo only on first page)
+            // We keep it lightweight here to avoid async/await inside render loop.
+            pdf.setFontSize(16);
+            pdf.setTextColor(139, 92, 246);
+            pdf.setFont('helvetica', 'bold');
+            const title = `Cahier de Texte - ${textBook.formations?.title || 'Formation'}`;
+            pdf.text(title, pageWidth / 2, margin + 15, { align: 'center' });
+            pdf.setFontSize(10);
+            pdf.setTextColor(100, 100, 100);
+            pdf.setFont('helvetica', 'normal');
+            pdf.text(`Année académique : ${textBook.academic_year || ''}`, pageWidth / 2, margin + 23, { align: 'center' });
+            pdf.setDrawColor(139, 92, 246);
+            pdf.setLineWidth(0.5);
+            pdf.line(margin, margin + headerHeight - 5, pageWidth - margin, margin + headerHeight - 5);
+            y = contentStartY + 2;
+          }
+        };
+
         const processElement = (element: Element | ChildNode, indent: number = 0): void => {
           if (element.nodeType === Node.TEXT_NODE) {
-            const text = element.textContent?.trim();
+            const text = element.textContent?.replace(/\s+/g, ' ').trim();
             if (text) {
               pdf.setFont('helvetica', 'normal');
               pdf.setFontSize(10);
               pdf.setTextColor(60, 60, 60);
-              
-              const lines = pdf.splitTextToSize(text, maxWidth - indent - 5);
+
+              const lines = pdf.splitTextToSize(text, maxWidth - indent - 6);
               for (const line of lines) {
-                // Check for page break
-                if (y + 6 > maxContentY) {
-                  addFooter(currentPage);
-                  pdf.addPage();
-                  currentPage++;
-                  // Add simple header for continuation
-                  pdf.setFontSize(16);
-                  pdf.setTextColor(139, 92, 246);
-                  pdf.setFont('helvetica', 'bold');
-                  const title = `Cahier de Texte - ${textBook.formations?.title || 'Formation'}`;
-                  pdf.text(title, pageWidth / 2, margin + 15, { align: 'center' });
-                  pdf.setFontSize(10);
-                  pdf.setTextColor(100, 100, 100);
-                  pdf.setFont('helvetica', 'normal');
-                  pdf.text(`Année académique : ${textBook.academic_year || ''}`, pageWidth / 2, margin + 23, { align: 'center' });
-                  pdf.setDrawColor(139, 92, 246);
-                  pdf.setLineWidth(0.5);
-                  pdf.line(margin, margin + headerHeight - 5, pageWidth - margin, margin + headerHeight - 5);
-                  y = contentStartY;
-                }
-                
-                pdf.setFont('helvetica', 'normal');
-                pdf.setFontSize(10);
-                pdf.setTextColor(60, 60, 60);
+                ensurePageSpace(6);
                 pdf.text(line, margin + 5 + indent, y);
                 y += 5;
               }
@@ -671,8 +674,8 @@ export const pdfExportService = {
           } else if (element.nodeType === Node.ELEMENT_NODE) {
             const el = element as HTMLElement;
             const tagName = el.tagName.toLowerCase();
-            
-            // Handle block elements
+
+            // Pre spacing for common blocks
             if (tagName === 'p' || tagName === 'div') {
               y += 2;
             } else if (tagName === 'h1' || tagName === 'h2' || tagName === 'h3') {
@@ -688,33 +691,15 @@ export const pdfExportService = {
               const bullet = el.parentElement?.tagName.toLowerCase() === 'ol'
                 ? `${Array.from(el.parentElement.children).indexOf(el) + 1}. `
                 : '• ';
-              const text = el.textContent?.trim();
+              const text = el.textContent?.replace(/\s+/g, ' ').trim();
               if (text) {
-                // Check for page break
-                if (y + 6 > maxContentY) {
-                  addFooter(currentPage);
-                  pdf.addPage();
-                  currentPage++;
-                  pdf.setFontSize(16);
-                  pdf.setTextColor(139, 92, 246);
-                  pdf.setFont('helvetica', 'bold');
-                  const title = `Cahier de Texte - ${textBook.formations?.title || 'Formation'}`;
-                  pdf.text(title, pageWidth / 2, margin + 15, { align: 'center' });
-                  pdf.setFontSize(10);
-                  pdf.setTextColor(100, 100, 100);
-                  pdf.setFont('helvetica', 'normal');
-                  pdf.text(`Année académique : ${textBook.academic_year || ''}`, pageWidth / 2, margin + 23, { align: 'center' });
-                  pdf.setDrawColor(139, 92, 246);
-                  pdf.setLineWidth(0.5);
-                  pdf.line(margin, margin + headerHeight - 5, pageWidth - margin, margin + headerHeight - 5);
-                  y = contentStartY;
-                }
-                
                 pdf.setFont('helvetica', 'normal');
                 pdf.setFontSize(10);
                 pdf.setTextColor(60, 60, 60);
+
                 const lines = pdf.splitTextToSize(bullet + text, maxWidth - 15);
                 for (const line of lines) {
+                  ensurePageSpace(6);
                   pdf.text(line, margin + 10, y);
                   y += 5;
                 }
@@ -725,12 +710,12 @@ export const pdfExportService = {
             } else if (tagName === 'em' || tagName === 'i') {
               pdf.setFont('helvetica', 'italic');
             }
-            
+
             // Process children
             for (const child of Array.from(el.childNodes)) {
               processElement(child, indent);
             }
-            
+
             // Reset after block elements
             if (['p', 'div', 'h1', 'h2', 'h3', 'ul', 'ol'].includes(tagName)) {
               y += 3;
@@ -739,11 +724,11 @@ export const pdfExportService = {
             }
           }
         };
-        
+
         for (const child of Array.from(tempDiv.childNodes)) {
           processElement(child);
         }
-        
+
         return y;
       };
       
@@ -838,22 +823,25 @@ export const pdfExportService = {
           
           // Content section if exists
           if (entry.content && entry.content.trim() !== '' && entry.content !== '<p></p>') {
-            currentY = await handlePageBreak(15);
-            
-            // Content header
+            // Reserve enough space for the header band + first lines
+            currentY = await handlePageBreak(22);
+
+            // Content header (taller band to avoid baseline overlap)
+            const contentHeaderH = 7;
             pdf.setFillColor(243, 232, 255);
-            pdf.rect(margin, currentY, contentWidth, 6, 'F');
-            
+            pdf.rect(margin, currentY, contentWidth, contentHeaderH, 'F');
+
             pdf.setFontSize(8);
             pdf.setTextColor(139, 92, 246);
             pdf.setFont('helvetica', 'bold');
-            pdf.text('CONTENU DE LA SÉANCE', margin + 3, currentY + 4);
-            
-            currentY += 8;
-            
-            // Render content
+            pdf.text('CONTENU DE LA SÉANCE', margin + 3, currentY + 4.8);
+
+            // Space between the header band and the content block
+            currentY += contentHeaderH + 4;
+
+            // Render content (renderContent already adds a small top padding)
             currentY = renderContent(entry.content, currentY, contentWidth);
-            currentY += 5;
+            currentY += 6;
           }
           
           // Files section if exists
