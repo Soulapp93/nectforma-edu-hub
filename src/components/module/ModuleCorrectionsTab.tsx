@@ -33,10 +33,8 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
 
   // Fonction pour vérifier si l'utilisateur peut corriger/modifier une soumission
   const canCorrectSubmission = (assignment: Assignment) => {
-    // Le formateur peut tout corriger
-    if (isFormateur) return true;
-    // L'admin ne peut corriger que les devoirs qu'il a créés
-    if (isAdmin && assignment.created_by === userId) return true;
+    // Admin/Formateur: correction uniquement sur ses propres devoirs
+    if ((isFormateur || isAdmin) && assignment.created_by && assignment.created_by === userId) return true;
     return false;
   };
 
