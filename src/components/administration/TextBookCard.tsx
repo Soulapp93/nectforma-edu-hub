@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Download, Archive, FileX } from 'lucide-react';
-import { TextBook, textBookService } from '@/services/textBookService';
+import { TextBook, TextBookEntry, textBookService } from '@/services/textBookService';
 import { pdfExportService } from '@/services/pdfExportService';
 import { useToast } from '@/hooks/use-toast';
 
@@ -15,20 +15,20 @@ interface TextBookCardProps {
 const TextBookCard: React.FC<TextBookCardProps> = ({ textBook, onUpdate }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [entriesCount, setEntriesCount] = useState(0);
+  const [entries, setEntries] = useState<TextBookEntry[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchEntriesCount = async () => {
+    const fetchEntries = async () => {
       try {
-        const entries = await textBookService.getTextBookEntries(textBook.id);
-        setEntriesCount(entries?.length || 0);
+        const entriesData = await textBookService.getTextBookEntries(textBook.id);
+        setEntries((entriesData as TextBookEntry[]) || []);
       } catch (error) {
         console.error('Erreur lors du chargement des entrées:', error);
       }
     };
 
-    fetchEntriesCount();
+    fetchEntries();
   }, [textBook.id]);
 
   const handleOpenTextBook = () => {
@@ -38,7 +38,7 @@ const TextBookCard: React.FC<TextBookCardProps> = ({ textBook, onUpdate }) => {
   const handleExportPDF = async () => {
     setLoading(true);
     try {
-      await pdfExportService.exportTextBookToPDF(textBook);
+      await pdfExportService.exportTextBookToPDF(textBook, entries, 'portrait');
       toast({
         title: "Export réussi",
         description: "Le cahier de texte a été exporté en PDF.",
@@ -96,7 +96,7 @@ const TextBookCard: React.FC<TextBookCardProps> = ({ textBook, onUpdate }) => {
             Année {textBook.academic_year}
           </div>
           <div className="text-sm font-medium">
-            {entriesCount} entrée{entriesCount > 1 ? 's' : ''}
+            {entries.length} entrée{entries.length > 1 ? 's' : ''}
           </div>
         </div>
       </div>

@@ -76,7 +76,9 @@ const TextBooksList: React.FC = () => {
   const handleExportPDF = async (textBook: TextBook) => {
     try {
       const { pdfExportService } = await import('@/services/pdfExportService');
-      await pdfExportService.exportTextBookToPDF(textBook);
+      // Fetch entries for the textbook
+      const entries = await textBookService.getTextBookEntries(textBook.id);
+      await pdfExportService.exportTextBookToPDF(textBook, entries || [], 'portrait');
       toast({
         title: "Export réussi",
         description: "Le cahier de texte a été exporté en PDF.",
