@@ -125,15 +125,24 @@ export const assignmentService = {
     return data;
   },
 
-  async correctSubmission(submissionId: string, correction: Omit<Database['public']['Tables']['assignment_corrections']['Insert'], 'submission_id'>) {
+  async correctSubmission(
+    submissionId: string,
+    correction: Omit<Database['public']['Tables']['assignment_corrections']['Insert'], 'submission_id'>
+  ) {
     const { data, error } = await supabase
       .from('assignment_corrections')
-      .upsert({
-        ...correction,
-        submission_id: submissionId,
-        is_corrected: true,
-        corrected_at: new Date().toISOString()
-      })
+      .upsert(
+        {
+          ...correction,
+          submission_id: submissionId,
+          is_corrected: true,
+          corrected_at: new Date().toISOString(),
+        },
+        {
+          // IMPORTANT: la contrainte unique est sur submission_id (pas sur id)
+          onConflict: 'submission_id',
+        }
+      )
       .select()
       .single();
 
