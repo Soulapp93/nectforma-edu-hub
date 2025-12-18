@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,6 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const TextBookDetail: React.FC = () => {
   const { textBookId } = useParams<{ textBookId: string }>();
@@ -41,8 +42,12 @@ const TextBookDetail: React.FC = () => {
   const [selectedEntry, setSelectedEntry] = useState<TextBookEntry | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [exportOrientation, setExportOrientation] = useState<'portrait' | 'landscape'>('portrait');
+  const [isExporting, setIsExporting] = useState(false);
+
   const { userId, userRole } = useCurrentUser();
-  
+
   // Seuls les formateurs et admins peuvent modifier le cahier de texte
   const canEdit = userRole === 'Formateur' || userRole === 'Admin' || userRole === 'AdminPrincipal';
 
@@ -75,26 +80,26 @@ const TextBookDetail: React.FC = () => {
 
   const fetchTextBookData = async () => {
     if (!textBookId) return;
-    
+
     try {
       setLoading(true);
-      
+
       // Fetch text book details
       const textBookData = await textBookService.getTextBooks();
       const currentTextBook = textBookData?.find(tb => tb.id === textBookId);
-      
+
       if (!currentTextBook) {
         throw new Error('Cahier de texte non trouvé');
       }
-      
+
       setTextBook(currentTextBook);
-      
+
       // Fetch modules for this formation
       if (currentTextBook.formation_id) {
         const modulesData = await moduleService.getFormationModules(currentTextBook.formation_id);
         setModules(modulesData || []);
       }
-      
+
       // Fetch current user details
       if (userId) {
         const { data: userData } = await supabase
@@ -104,11 +109,11 @@ const TextBookDetail: React.FC = () => {
           .single();
         setCurrentUser(userData);
       }
-      
+
       // Fetch entries
       const entriesData = await textBookService.getTextBookEntries(textBookId);
       setEntries((entriesData as any) || []);
-      
+
     } catch (error) {
       console.error('Erreur lors du chargement:', error);
       toast({
@@ -410,26 +415,17 @@ const TextBookDetail: React.FC = () => {
           </Button>
           
           <div className="flex items-center gap-2">
-            <Select
-              onValueChange={async (value: 'portrait' | 'landscape') => {
-                try {
-                  await pdfExportService.exportTextBookToPDF(textBook, entries, value);
-                  toast({ title: "Export réussi", description: "Le cahier de texte a été exporté en PDF." });
-                } catch (error) {
-                  toast({ title: "Erreur", description: "Impossible d'exporter le PDF.", variant: "destructive" });
-                }
+            <Button
+              variant="outline"
+              onClick={() => {
+                setExportOrientation('portrait');
+                setIsExportDialogOpen(true);
               }}
             >
-              <SelectTrigger className="w-[180px]">
-                <Download className="h-4 w-4 mr-2" />
-                <span>Exporter PDF</span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="portrait">Portrait (vertical)</SelectItem>
-                <SelectItem value="landscape">Paysage (horizontal)</SelectItem>
-              </SelectContent>
-            </Select>
-            
+              <Download className="h-4 w-4 mr-2" />
+              Exporter PDF
+            </Button>
+
             {canEdit && (
               <Button onClick={() => setIsAddEntryModalOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
