@@ -135,8 +135,11 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
         <h2 className="text-xl font-semibold">Mes corrections</h2>
         
         <div className="space-y-4">
-          {myCorrections.map((submission) => {
-            const correction = submission.correction!;
+        {myCorrections.map((submission) => {
+            const correction = submission.correction;
+            
+            // Ignorer les soumissions sans correction (sécurité supplémentaire)
+            if (!correction) return null;
             
             return (
               <div key={submission.id} className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
@@ -148,7 +151,7 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
                     <div className="flex items-center gap-4 text-sm text-gray-600">
                       <span>Rendu le {new Date(submission.submitted_at).toLocaleDateString('fr-FR')}</span>
                       <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
-                        Note: {correction.score}/{correction.max_score}
+                        Note: {correction.score ?? '-'}/{correction.max_score ?? '-'}
                       </span>
                     </div>
                   </div>
