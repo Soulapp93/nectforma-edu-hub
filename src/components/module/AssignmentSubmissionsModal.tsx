@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { X, User, Calendar, FileText, CheckCircle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { assignmentService, Assignment, AssignmentSubmission } from '@/services/assignmentService';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import CorrectionModal from './CorrectionModal';
 
 interface AssignmentSubmissionsModalProps {
@@ -17,6 +18,14 @@ const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProps> = ({
   const [submissions, setSubmissions] = useState<AssignmentSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCorrectionModal, setShowCorrectionModal] = useState<AssignmentSubmission | null>(null);
+  
+  const { userId, userRole } = useCurrentUser();
+
+  // Définir les permissions - L'Admin ne peut corriger que les devoirs qu'il a créés
+  const isFormateur = userRole === 'Formateur';
+  const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
+  const canCorrect = isFormateur || (isAdmin && assignment.created_by === userId);
+  const canPublish = isFormateur || (isAdmin && assignment.created_by === userId);
 
   const fetchSubmissions = async () => {
     try {
@@ -64,7 +73,7 @@ const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProps> = ({
               </p>
             </div>
             <div className="flex items-center gap-2">
-              {correctedCount > 0 && (
+              {canPublish && correctedCount > 0 && (
                 <Button 
                   onClick={handlePublishCorrections}
                   disabled={correctedCount === publishedCount}
@@ -110,13 +119,15 @@ const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProps> = ({
                                   <CheckCircle className="h-4 w-4 mr-1" />
                                   Corrigé ({submission.correction.score}/{submission.correction.max_score})
                                 </span>
-                                <Button 
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setShowCorrectionModal(submission)}
-                                >
-                                  Modifier correction
-                                </Button>
+                                {canCorrect && (
+                                  <Button 
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => setShowCorrectionModal(submission)}
+                                  >
+                                    Modifier correction
+                                  </Button>
+                                )}
                               </>
                             ) : (
                               <span className="flex items-center text-yellow-600 text-sm">
@@ -131,12 +142,14 @@ const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProps> = ({
                             )}
                           </div>
                         ) : (
-                          <Button 
-                            size="sm"
-                            onClick={() => setShowCorrectionModal(submission)}
-                          >
-                            Corriger
-                          </Button>
+                          canCorrect && (
+                            <Button 
+                              size="sm"
+                              onClick={() => setShowCorrectionModal(submission)}
+                            >
+                              Corriger
+                            </Button>
+                          )
                         )}
                       </div>
                     </div>
