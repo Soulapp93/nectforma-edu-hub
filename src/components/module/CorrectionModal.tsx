@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Download, File, Eye } from 'lucide-react';
+import { X, Download, File, Eye, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { assignmentService, AssignmentSubmission } from '@/services/assignmentService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -26,7 +26,10 @@ const CorrectionModal: React.FC<CorrectionModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [submissionFiles, setSubmissionFiles] = useState<any[]>([]);
   const [viewerFile, setViewerFile] = useState<{ url: string; name: string } | null>(null);
-  const { userId } = useCurrentUser();
+  const { userId, userRole, loading: userLoading } = useCurrentUser();
+
+  // Vérifier que seul un formateur peut corriger
+  const isFormateur = userRole === 'Formateur' || userRole === 'Admin' || userRole === 'AdminPrincipal';
 
   useEffect(() => {
     // Charger les fichiers de la soumission
@@ -56,6 +59,11 @@ const CorrectionModal: React.FC<CorrectionModalProps> = ({
     
     if (!userId) {
       toast.error('Utilisateur non authentifié');
+      return;
+    }
+
+    if (!isFormateur) {
+      toast.error('Seuls les formateurs peuvent corriger les devoirs');
       return;
     }
 
