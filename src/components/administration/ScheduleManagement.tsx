@@ -507,6 +507,8 @@ const ScheduleManagement = () => {
       new Date(slot.date).toDateString() === date.toDateString()
     );
     
+    const isAutonomie = (slot: ScheduleSlot) => slot.session_type === 'autonomie';
+    
     return {
       id: (index + 1).toString(),
       day: format(date, 'EEEE', { locale: fr }),
@@ -515,13 +517,15 @@ const ScheduleManagement = () => {
       modules: daySlots.map(slot => ({
         slotId: slot.id, // Ajouter l'ID du slot pour pouvoir le retrouver facilement
         slot: slot, // Référence directe au slot
-        title: slot.formation_modules?.title || 'Module non défini',
+        title: isAutonomie(slot) ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non défini'),
         time: `${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`,
-        instructor: slot.users?.first_name && slot.users?.last_name 
+        instructor: isAutonomie(slot) ? '' : (slot.users?.first_name && slot.users?.last_name 
           ? `${slot.users.first_name} ${slot.users.last_name}` 
-          : 'Instructeur non défini',
-        room: slot.room || 'Salle non définie',
-        color: slot.color || '#8B5CF6'
+          : 'Instructeur non défini'),
+        room: isAutonomie(slot) ? '' : (slot.room || 'Salle non définie'),
+        color: slot.color || '#8B5CF6',
+        sessionType: slot.session_type,
+        notes: slot.notes
       }))
     };
   });

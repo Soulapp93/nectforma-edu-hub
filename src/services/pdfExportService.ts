@@ -468,22 +468,416 @@ export const pdfExportService = {
     }
   },
 
-  async exportTextBookToPDF(textBook: any): Promise<void> {
+  async exportTextBookToPDF(textBook: any, entries: any[], orientation: 'portrait' | 'landscape' = 'portrait'): Promise<void> {
     try {
-      const pdf = new jsPDF('p', 'mm', 'a4');
+      const isLandscape = orientation === 'landscape';
+      const pdf = new jsPDF(isLandscape ? 'l' : 'p', 'mm', 'a4');
       
-      // Simple text book export
-      pdf.setFontSize(20);
-      pdf.text('Cahier de Texte', 105, 20, { align: 'center' });
+      // Page dimensions with margins (20mm all around)
+      const pageWidth = isLandscape ? 297 : 210;
+      const pageHeight = isLandscape ? 210 : 297;
+      const margin = 20;
+      const contentWidth = pageWidth - 2 * margin;
+      const headerHeight = 35;
+      const footerHeight = 15;
+      const contentStartY = margin + headerHeight;
+      const maxContentY = pageHeight - margin - footerHeight;
       
-      pdf.setFontSize(12);
-      pdf.text(`Formation: ${textBook.formation?.title || ''}`, 10, 40);
-      pdf.text(`Année académique: ${textBook.academic_year || ''}`, 10, 50);
+      let currentY = contentStartY;
+      let currentPage = 1;
+      let totalPages = 1;
       
-      pdf.save(`cahier-texte-${textBook.formation?.title?.replace(/\s+/g, '-')}.pdf`);
+      // Load establishment info
+      let establishmentLogo = '';
+      let establishmentName = '';
+      if (textBook.formation_id) {
+        const { data: formationData } = await supabase
+          .from('formations')
+          .select('establishment_id')
+          .eq('id', textBook.formation_id)
+          .single();
+        
+        if (formationData?.establishment_id) {
+          const { data: establishmentData } = await supabase
+            .from('establishments')
+            .select('logo_url, name')
+            .eq('id', formationData.establishment_id)
+            .single();
+          
+          if (establishmentData) {
+            establishmentLogo = establishmentData.logo_url || '';
+            establishmentName = establishmentData.name || '';
+          }
+        }
+      }
+      
+      // Function to add header on each page
+      const addHeader = async (pageNum: number) => {
+        // Header background line
+        pdf.setDrawColor(139, 92, 246);
+        pdf.setLineWidth(0.5);
+        pdf.line(margin, margin + headerHeight - 5, pageWidth - margin, margin + headerHeight - 5);
+        
+        // Logo on the left
+        if (establishmentLogo) {
+          try {
+            const logoImg = new Image();
+            logoImg.crossOrigin = 'anonymous';
+            await new Promise((resolve, reject) => {
+              logoImg.onload = resolve;
+              logoImg.onerror = reject;
+              logoImg.src = establishmentLogo;
+            });
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = logoImg.width;
+            canvas.height = logoImg.height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(logoImg, 0, 0);
+              const logoData = canvas.toDataURL('image/png');
+              pdf.addImage(logoData, 'PNG', margin, margin, 20, 20);
+            }
+          } catch (e) {
+            console.error('Error loading logo:', e);
+          }
+        }
+        
+        // Establishment name
+        pdf.setFontSize(10);
+        pdf.setTextColor(100, 100, 100);
+        pdf.setFont('helvetica', 'normal');
+        const nameX = establishmentLogo ? margin + 25 : margin;
+        pdf.text(establishmentName, nameX, margin + 8);
+        
+        // Title
+        pdf.setFontSize(16);
+        pdf.setTextColor(139, 92, 246);
+        pdf.setFont('helvetica', 'bold');
+        const title = `Cahier de Texte - ${textBook.formations?.title || 'Formation'}`;
+        pdf.text(title, pageWidth / 2, margin + 15, { align: 'center' });
+        
+        // Academic year
+        pdf.setFontSize(10);
+        pdf.setTextColor(100, 100, 100);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(`Année académique : ${textBook.academic_year || ''}`, pageWidth / 2, margin + 23, { align: 'center' });
+      };
+      
+      // Function to add footer on each page
+      const addFooter = (pageNum: number, totalPagesCount: number) => {
+        const footerY = pageHeight - margin;
+        
+        // Separator line
+        pdf.setDrawColor(200, 200, 200);
+        pdf.setLineWidth(0.3);
+        pdf.line(margin, footerY - 8, pageWidth - margin, footerY - 8);
+        
+        // Footer text
+        pdf.setFontSize(8);
+        pdf.setTextColor(150, 150, 150);
+        pdf.setFont('helvetica', 'normal');
+        
+        const generatedAt = format(new Date(), "dd MMMM yyyy 'à' HH:mm", { locale: fr });
+        pdf.text(`Document généré le ${generatedAt}`, margin, footerY - 3);
+        pdf.text(establishmentName, pageWidth / 2, footerY - 3, { align: 'center' });
+        pdf.text(`Page ${pageNum}`, pageWidth - margin, footerY - 3, { align: 'right' });
+        
+        // App mention
+        pdf.setFontSize(7);
+        pdf.text('Document généré automatiquement depuis NECTFY', pageWidth / 2, footerY + 2, { align: 'center' });
+      };
+      
+      // Function to check and handle page break
+      const checkPageBreak = async (neededHeight: number): Promise<void> => {
+        if (currentY + neededHeight > maxContentY) {
+          addFooter(currentPage, totalPages);
+          pdf.addPage();
+          currentPage++;
+          currentY = contentStartY;
+          await addHeader(currentPage);
+        }
+      };
+      
+      // Function to parse and render HTML content
+      const renderHTMLContent = async (html: string, startY: number, maxWidth: number): Promise<number> => {
+        if (!html || html.trim() === '') return startY;
+        
+        let y = startY;
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        // Extract text content with basic formatting
+        const processNode = (node: Node): void => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.textContent?.trim();
+            if (text) {
+              const lines = pdf.splitTextToSize(text, maxWidth - 10);
+              for (const line of lines) {
+                if (y + 5 > maxContentY) {
+                  addFooter(currentPage, totalPages);
+                  pdf.addPage();
+                  currentPage++;
+                  y = contentStartY;
+                  addHeader(currentPage);
+                }
+                pdf.text(line, margin + 5, y);
+                y += 5;
+              }
+            }
+          } else if (node.nodeType === Node.ELEMENT_NODE) {
+            const element = node as HTMLElement;
+            const tagName = element.tagName.toLowerCase();
+            
+            // Handle formatting
+            if (tagName === 'strong' || tagName === 'b') {
+              pdf.setFont('helvetica', 'bold');
+            } else if (tagName === 'em' || tagName === 'i') {
+              pdf.setFont('helvetica', 'italic');
+            } else if (tagName === 'u') {
+              // Underline handled separately
+            } else if (tagName === 'h1' || tagName === 'h2' || tagName === 'h3') {
+              pdf.setFontSize(tagName === 'h1' ? 14 : tagName === 'h2' ? 12 : 11);
+              pdf.setFont('helvetica', 'bold');
+              y += 3;
+            } else if (tagName === 'p') {
+              y += 2;
+            } else if (tagName === 'br') {
+              y += 4;
+            } else if (tagName === 'ul' || tagName === 'ol') {
+              y += 2;
+            } else if (tagName === 'li') {
+              const bulletOrNumber = element.parentElement?.tagName.toLowerCase() === 'ol' 
+                ? `${Array.from(element.parentElement.children).indexOf(element) + 1}. `
+                : '• ';
+              const text = element.textContent?.trim();
+              if (text) {
+                const lines = pdf.splitTextToSize(bulletOrNumber + text, maxWidth - 15);
+                for (const line of lines) {
+                  if (y + 5 > maxContentY) {
+                    addFooter(currentPage, totalPages);
+                    pdf.addPage();
+                    currentPage++;
+                    y = contentStartY;
+                    addHeader(currentPage);
+                  }
+                  pdf.text(line, margin + 10, y);
+                  y += 5;
+                }
+              }
+              return; // Don't process children for li
+            }
+            
+            // Process children
+            for (const child of Array.from(element.childNodes)) {
+              processNode(child);
+            }
+            
+            // Reset formatting
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(10);
+            
+            // Add spacing after block elements
+            if (['p', 'h1', 'h2', 'h3', 'ul', 'ol', 'div'].includes(tagName)) {
+              y += 3;
+            }
+          }
+        };
+        
+        pdf.setFontSize(10);
+        pdf.setTextColor(60, 60, 60);
+        
+        for (const child of Array.from(tempDiv.childNodes)) {
+          processNode(child);
+        }
+        
+        return y;
+      };
+      
+      // Add first page header
+      await addHeader(1);
+      
+      // Sort entries by date
+      const sortedEntries = [...entries].sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        if (dateA.getTime() !== dateB.getTime()) {
+          return dateA.getTime() - dateB.getTime();
+        }
+        return a.start_time.localeCompare(b.start_time);
+      });
+      
+      if (sortedEntries.length === 0) {
+        pdf.setFontSize(12);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text('Aucune entrée dans ce cahier de texte.', pageWidth / 2, currentY + 20, { align: 'center' });
+      } else {
+        // Render each entry
+        for (let i = 0; i < sortedEntries.length; i++) {
+          const entry = sortedEntries[i];
+          
+          // Calculate needed height for entry header (minimum)
+          const minEntryHeight = 35;
+          await checkPageBreak(minEntryHeight);
+          
+          // Entry header background
+          pdf.setFillColor(139, 92, 246);
+          pdf.rect(margin, currentY, contentWidth, 8, 'F');
+          
+          // Entry header row
+          const colWidths = isLandscape 
+            ? [50, 45, 85, 77] // Date, Heure, Module, Formateur
+            : [40, 35, 55, 40];
+          const colX = [
+            margin,
+            margin + colWidths[0],
+            margin + colWidths[0] + colWidths[1],
+            margin + colWidths[0] + colWidths[1] + colWidths[2]
+          ];
+          
+          pdf.setFontSize(9);
+          pdf.setTextColor(255, 255, 255);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text('DATE', colX[0] + 3, currentY + 5.5);
+          pdf.text('HEURE', colX[1] + 3, currentY + 5.5);
+          pdf.text('MATIÈRE/MODULE', colX[2] + 3, currentY + 5.5);
+          pdf.text('FORMATEUR', colX[3] + 3, currentY + 5.5);
+          
+          currentY += 8;
+          
+          // Entry data row
+          pdf.setFillColor(249, 250, 251);
+          pdf.rect(margin, currentY, contentWidth, 10, 'F');
+          
+          // Draw cell borders
+          pdf.setDrawColor(220, 220, 220);
+          pdf.setLineWidth(0.2);
+          for (let j = 0; j < 4; j++) {
+            pdf.rect(colX[j], currentY, colWidths[j], 10);
+          }
+          
+          pdf.setFontSize(9);
+          pdf.setTextColor(60, 60, 60);
+          pdf.setFont('helvetica', 'normal');
+          
+          const formattedDate = format(new Date(entry.date), 'dd/MM/yyyy', { locale: fr });
+          const timeRange = `${entry.start_time.substring(0, 5)} - ${entry.end_time.substring(0, 5)}`;
+          
+          pdf.text(formattedDate, colX[0] + 3, currentY + 6.5);
+          pdf.text(timeRange, colX[1] + 3, currentY + 6.5);
+          
+          // Subject matter - truncate if too long
+          const subjectText = entry.subject_matter || '';
+          const truncatedSubject = subjectText.length > (isLandscape ? 40 : 25) 
+            ? subjectText.substring(0, isLandscape ? 37 : 22) + '...'
+            : subjectText;
+          pdf.text(truncatedSubject, colX[2] + 3, currentY + 6.5);
+          
+          // Instructor name (fetch if needed)
+          let instructorName = 'N/A';
+          if (entry.instructor_id) {
+            const { data: instructorData } = await supabase
+              .from('users')
+              .select('first_name, last_name')
+              .eq('id', entry.instructor_id)
+              .single();
+            if (instructorData) {
+              instructorName = `${instructorData.first_name || ''} ${instructorData.last_name || ''}`.trim();
+            }
+          }
+          const truncatedInstructor = instructorName.length > (isLandscape ? 35 : 18) 
+            ? instructorName.substring(0, isLandscape ? 32 : 15) + '...'
+            : instructorName;
+          pdf.text(truncatedInstructor, colX[3] + 3, currentY + 6.5);
+          
+          currentY += 12;
+          
+          // Content section if exists
+          if (entry.content && entry.content.trim() !== '' && entry.content !== '<p></p>') {
+            // Content header
+            pdf.setFillColor(243, 232, 255);
+            pdf.rect(margin, currentY, contentWidth, 6, 'F');
+            
+            pdf.setFontSize(8);
+            pdf.setTextColor(139, 92, 246);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('CONTENU DE LA SÉANCE', margin + 3, currentY + 4);
+            
+            currentY += 8;
+            
+            // Content body
+            pdf.setDrawColor(230, 220, 250);
+            pdf.setLineWidth(0.3);
+            pdf.rect(margin, currentY - 2, contentWidth, 0);
+            
+            currentY = await renderHTMLContent(entry.content, currentY, contentWidth);
+            currentY += 5;
+          }
+          
+          // Files section if exists
+          if (entry.files && entry.files.length > 0) {
+            await checkPageBreak(15);
+            
+            pdf.setFillColor(239, 246, 255);
+            pdf.rect(margin, currentY, contentWidth, 6, 'F');
+            
+            pdf.setFontSize(8);
+            pdf.setTextColor(59, 130, 246);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('PIÈCES JOINTES', margin + 3, currentY + 4);
+            
+            currentY += 8;
+            
+            pdf.setFontSize(9);
+            pdf.setTextColor(60, 60, 60);
+            pdf.setFont('helvetica', 'normal');
+            
+            for (const file of entry.files) {
+              await checkPageBreak(6);
+              
+              // File icon indicator
+              const fileName = file.file_name || 'Document';
+              const fileExt = fileName.split('.').pop()?.toUpperCase() || 'FILE';
+              
+              pdf.setFillColor(220, 220, 220);
+              pdf.roundedRect(margin + 3, currentY - 3, 12, 5, 1, 1, 'F');
+              pdf.setFontSize(6);
+              pdf.setTextColor(100, 100, 100);
+              pdf.text(fileExt.substring(0, 4), margin + 4, currentY);
+              
+              pdf.setFontSize(9);
+              pdf.setTextColor(60, 60, 60);
+              pdf.text(`${fileName} - Document joint à la séance`, margin + 18, currentY);
+              
+              currentY += 6;
+            }
+            
+            currentY += 3;
+          }
+          
+          // Spacing between entries
+          currentY += 8;
+          
+          // Add a separator line between entries
+          if (i < sortedEntries.length - 1) {
+            pdf.setDrawColor(200, 200, 200);
+            pdf.setLineWidth(0.1);
+            pdf.line(margin + 20, currentY - 4, pageWidth - margin - 20, currentY - 4);
+          }
+        }
+      }
+      
+      // Add footer to the last page
+      addFooter(currentPage, currentPage);
+      
+      // Generate filename
+      const formationTitle = textBook.formations?.title?.replace(/\s+/g, '-') || 'formation';
+      const filename = `cahier-texte-${formationTitle}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      
+      pdf.save(filename);
     } catch (error) {
       console.error('Error exporting text book PDF:', error);
-      throw new Error('Erreur lors de l\'export PDF');
+      throw new Error('Erreur lors de l\'export PDF du cahier de texte');
     }
   }
 };
