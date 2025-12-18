@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { assignmentService, Assignment } from '@/services/assignmentService';
 import { fileUploadService } from '@/services/fileUploadService';
 import FileUpload from '@/components/ui/file-upload';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface CreateAssignmentModalProps {
   isOpen: boolean;
@@ -31,6 +32,8 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const { userId } = useCurrentUser();
+
   useEffect(() => {
     if (editAssignment) {
       setFormData({
@@ -56,15 +59,17 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         });
       } else {
         // Mode création
-        console.log('Données du formulaire:', formData);
-        console.log('Module ID:', moduleId);
-        
+        if (!userId) {
+          alert('Utilisateur non authentifié');
+          return;
+        }
+
         const assignment = await assignmentService.createAssignment({
           title: formData.title,
           description: formData.description,
           assignment_type: formData.assignment_type,
           module_id: moduleId,
-          created_by: null, // Sera défini quand l'authentification sera implémentée
+          created_by: userId,
           is_published: true,
           due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null,
           max_points: formData.max_points

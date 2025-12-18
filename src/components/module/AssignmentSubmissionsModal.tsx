@@ -21,11 +21,12 @@ const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProps> = ({
   
   const { userId, userRole } = useCurrentUser();
 
-  // Définir les permissions - L'Admin ne peut corriger que les devoirs qu'il a créés
+  // Permissions: gestion (corriger/publier) uniquement pour le créateur du devoir
   const isFormateur = userRole === 'Formateur';
   const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
-  const canCorrect = isFormateur || (isAdmin && assignment.created_by === userId);
-  const canPublish = isFormateur || (isAdmin && assignment.created_by === userId);
+  const canManage = !!userId && (isFormateur || isAdmin) && assignment.created_by && assignment.created_by === userId;
+  const canCorrect = canManage;
+  const canPublish = canManage;
 
   const fetchSubmissions = async () => {
     try {

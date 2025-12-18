@@ -33,10 +33,8 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
 
   // Fonction pour vérifier si l'utilisateur peut modifier un devoir
   const canEditAssignment = (assignment: Assignment) => {
-    // Le formateur peut tout modifier
-    if (isFormateur) return true;
-    // L'admin ne peut modifier que les devoirs qu'il a créés
-    if (isAdmin && assignment.created_by === userId) return true;
+    // Admin/Formateur: gestion uniquement sur ses propres devoirs
+    if ((isFormateur || isAdmin) && assignment.created_by && assignment.created_by === userId) return true;
     return false;
   };
 
