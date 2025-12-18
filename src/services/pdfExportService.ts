@@ -511,46 +511,50 @@ export const pdfExportService = {
         }
       }
       
-      // Function to add header on each page
+      // Function to add header on each page (logo/establishment only on first page)
       const addHeader = async (pageNum: number) => {
         // Header background line
         pdf.setDrawColor(139, 92, 246);
         pdf.setLineWidth(0.5);
         pdf.line(margin, margin + headerHeight - 5, pageWidth - margin, margin + headerHeight - 5);
         
-        // Logo on the left
-        if (establishmentLogo) {
-          try {
-            const logoImg = new Image();
-            logoImg.crossOrigin = 'anonymous';
-            await new Promise((resolve, reject) => {
-              logoImg.onload = resolve;
-              logoImg.onerror = reject;
-              logoImg.src = establishmentLogo;
-            });
-            
-            const canvas = document.createElement('canvas');
-            canvas.width = logoImg.width;
-            canvas.height = logoImg.height;
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-              ctx.drawImage(logoImg, 0, 0);
-              const logoData = canvas.toDataURL('image/png');
-              pdf.addImage(logoData, 'PNG', margin, margin, 20, 20);
+        // Logo and establishment name ONLY on first page
+        if (pageNum === 1) {
+          if (establishmentLogo) {
+            try {
+              const logoImg = new Image();
+              logoImg.crossOrigin = 'anonymous';
+              await new Promise((resolve, reject) => {
+                logoImg.onload = resolve;
+                logoImg.onerror = reject;
+                logoImg.src = establishmentLogo;
+              });
+              
+              const canvas = document.createElement('canvas');
+              canvas.width = logoImg.width;
+              canvas.height = logoImg.height;
+              const ctx = canvas.getContext('2d');
+              if (ctx) {
+                ctx.drawImage(logoImg, 0, 0);
+                const logoData = canvas.toDataURL('image/png');
+                pdf.addImage(logoData, 'PNG', margin, margin, 20, 20);
+              }
+            } catch (e) {
+              console.error('Error loading logo:', e);
             }
-          } catch (e) {
-            console.error('Error loading logo:', e);
+          }
+          
+          // Establishment name below logo
+          if (establishmentName) {
+            pdf.setFontSize(8);
+            pdf.setTextColor(100, 100, 100);
+            pdf.setFont('helvetica', 'normal');
+            const nameY = establishmentLogo ? margin + 25 : margin + 8;
+            pdf.text(establishmentName, margin + 10, nameY, { align: 'center', maxWidth: 30 });
           }
         }
         
-        // Establishment name
-        pdf.setFontSize(10);
-        pdf.setTextColor(100, 100, 100);
-        pdf.setFont('helvetica', 'normal');
-        const nameX = establishmentLogo ? margin + 25 : margin;
-        pdf.text(establishmentName, nameX, margin + 8);
-        
-        // Title
+        // Title - always shown on all pages
         pdf.setFontSize(16);
         pdf.setTextColor(139, 92, 246);
         pdf.setFont('helvetica', 'bold');
@@ -588,13 +592,13 @@ export const pdfExportService = {
         pdf.text('Document généré automatiquement depuis NECTFY', pageWidth / 2, footerY + 2, { align: 'center' });
       };
       
-      // Function to check and handle page break
+      // Function to check and handle page break with proper spacing
       const checkPageBreak = async (neededHeight: number): Promise<void> => {
         if (currentY + neededHeight > maxContentY) {
           addFooter(currentPage, totalPages);
           pdf.addPage();
           currentPage++;
-          currentY = contentStartY;
+          currentY = contentStartY + 5; // Add extra spacing on new pages
           await addHeader(currentPage);
         }
       };
