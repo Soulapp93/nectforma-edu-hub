@@ -26,8 +26,19 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
   const { userId, userRole, loading: userLoading } = useCurrentUser();
 
   // Définir les permissions
-  const isFormateur = userRole === 'Formateur' || userRole === 'Admin' || userRole === 'AdminPrincipal';
+  const isFormateur = userRole === 'Formateur';
+  const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
+  const canViewCorrections = isFormateur || isAdmin;
   const isEtudiant = userRole === 'Étudiant';
+
+  // Fonction pour vérifier si l'utilisateur peut corriger/modifier une soumission
+  const canCorrectSubmission = (assignment: Assignment) => {
+    // Le formateur peut tout corriger
+    if (isFormateur) return true;
+    // L'admin ne peut corriger que les devoirs qu'il a créés
+    if (isAdmin && assignment.created_by === userId) return true;
+    return false;
+  };
 
   const fetchData = async () => {
     if (!userId) return;
@@ -51,7 +62,7 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
         }
         
         // Ne pas ajouter les devoirs sans soumissions pertinentes
-        if (filteredSubmissions.length > 0 || isFormateur) {
+        if (filteredSubmissions.length > 0 || canViewCorrections) {
           result.push({
             assignment,
             submissions: filteredSubmissions
@@ -61,8 +72,8 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
       
       setAssignmentsWithSubmissions(result);
       
-      // Étendre tous les devoirs par défaut pour les formateurs
-      if (isFormateur) {
+      // Étendre tous les devoirs par défaut pour les formateurs/admins
+      if (canViewCorrections) {
         setExpandedAssignments(new Set(result.map(r => r.assignment.id)));
       }
     } catch (error) {
@@ -184,7 +195,7 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
     );
   }
 
-  // Vue Formateur - Historique des corrections par devoir
+  // Vue Formateur/Admin - Historique des corrections par devoir
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -261,14 +272,17 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
                                   )}
                                 </span>
                                 
-                                <Button 
-                                  size="sm" 
-                                  variant={submission.correction?.is_corrected ? 'outline' : 'default'}
-                                  onClick={() => setShowCorrectionModal(submission)}
-                                >
-                                  <Edit className="h-4 w-4 mr-1" />
-                                  {submission.correction?.is_corrected ? 'Modifier' : 'Corriger'}
-                                </Button>
+                                {/* Bouton Corriger/Modifier - uniquement si l'utilisateur peut corriger ce devoir */}
+                                {canCorrectSubmission(assignment) && (
+                                  <Button 
+                                    size="sm" 
+                                    variant={submission.correction?.is_corrected ? 'outline' : 'default'}
+                                    onClick={() => setShowCorrectionModal(submission)}
+                                  >
+                                    <Edit className="h-4 w-4 mr-1" />
+                                    {submission.correction?.is_corrected ? 'Modifier' : 'Corriger'}
+                                  </Button>
+                                )}
                               </div>
                             </div>
                           </div>

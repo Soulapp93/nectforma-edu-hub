@@ -26,8 +26,19 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
   const { userId, userRole, loading: userLoading } = useCurrentUser();
 
   // Définir les permissions basées sur le rôle
-  const isFormateur = userRole === 'Formateur' || userRole === 'Admin' || userRole === 'AdminPrincipal';
+  const isFormateur = userRole === 'Formateur';
+  const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
+  const canCreateAssignment = isFormateur || isAdmin;
   const isEtudiant = userRole === 'Étudiant';
+
+  // Fonction pour vérifier si l'utilisateur peut modifier un devoir
+  const canEditAssignment = (assignment: Assignment) => {
+    // Le formateur peut tout modifier
+    if (isFormateur) return true;
+    // L'admin ne peut modifier que les devoirs qu'il a créés
+    if (isAdmin && assignment.created_by === userId) return true;
+    return false;
+  };
 
   const fetchAssignments = async () => {
     try {
@@ -127,8 +138,8 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Devoirs & Évaluations</h2>
         
-        {/* Bouton Créer - FORMATEUR uniquement */}
-        {isFormateur && (
+        {/* Bouton Créer - FORMATEUR et ADMIN */}
+        {canCreateAssignment && (
           <Button onClick={() => setShowCreateModal(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Créer un devoir
@@ -216,8 +227,8 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
                       </>
                     )}
 
-                    {/* === BOUTONS FORMATEUR === */}
-                    {isFormateur && (
+                    {/* === BOUTONS FORMATEUR/ADMIN === */}
+                    {canCreateAssignment && (
                       <>
                         <Button 
                           size="sm" 
@@ -228,22 +239,27 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
                           Voir soumissions
                         </Button>
                         
-                        <Button 
-                          size="sm" 
-                          variant="ghost"
-                          onClick={() => setShowEditModal(assignment)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          onClick={() => handleDelete(assignment.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {/* Boutons Modifier/Supprimer - uniquement si l'utilisateur peut modifier ce devoir */}
+                        {canEditAssignment(assignment) && (
+                          <>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={() => setShowEditModal(assignment)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => handleDelete(assignment.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
                       </>
                     )}
                   </div>
@@ -257,7 +273,7 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
           <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun devoir</h3>
           <p className="text-gray-600">
-            {isFormateur 
+            {canCreateAssignment 
               ? "Créez votre premier devoir pour cette formation."
               : "Aucun devoir n'a encore été publié pour ce module."}
           </p>
