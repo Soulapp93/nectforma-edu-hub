@@ -478,14 +478,13 @@ export const pdfExportService = {
       const pageHeight = isLandscape ? 210 : 297;
       const margin = 20;
       const contentWidth = pageWidth - 2 * margin;
-      const headerHeight = 35;
-      const footerHeight = 15;
+      const headerHeight = 40;
+      const footerHeight = 20;
       const contentStartY = margin + headerHeight;
       const maxContentY = pageHeight - margin - footerHeight;
       
       let currentY = contentStartY;
       let currentPage = 1;
-      let totalPages = 1;
       
       // Load establishment info
       let establishmentLogo = '';
@@ -511,13 +510,23 @@ export const pdfExportService = {
         }
       }
       
-      // Function to add header on each page (logo/establishment only on first page)
+      // Pre-load instructor names to avoid async issues
+      const instructorCache: Record<string, string> = {};
+      for (const entry of entries) {
+        if (entry.instructor_id && !instructorCache[entry.instructor_id]) {
+          const { data: instructorData } = await supabase
+            .from('users')
+            .select('first_name, last_name')
+            .eq('id', entry.instructor_id)
+            .single();
+          if (instructorData) {
+            instructorCache[entry.instructor_id] = `${instructorData.first_name || ''} ${instructorData.last_name || ''}`.trim();
+          }
+        }
+      }
+      
+      // Function to add header (logo only on first page)
       const addHeader = async (pageNum: number) => {
-        // Header background line
-        pdf.setDrawColor(139, 92, 246);
-        pdf.setLineWidth(0.5);
-        pdf.line(margin, margin + headerHeight - 5, pageWidth - margin, margin + headerHeight - 5);
-        
         // Logo and establishment name ONLY on first page
         if (pageNum === 1) {
           if (establishmentLogo) {
@@ -527,6 +536,7 @@ export const pdfExportService = {
               await new Promise((resolve, reject) => {
                 logoImg.onload = resolve;
                 logoImg.onerror = reject;
+                setTimeout(reject, 3000);
                 logoImg.src = establishmentLogo;
               });
               
@@ -537,7 +547,7 @@ export const pdfExportService = {
               if (ctx) {
                 ctx.drawImage(logoImg, 0, 0);
                 const logoData = canvas.toDataURL('image/png');
-                pdf.addImage(logoData, 'PNG', margin, margin, 20, 20);
+                pdf.addImage(logoData, 'PNG', margin, margin, 22, 22);
               }
             } catch (e) {
               console.error('Error loading logo:', e);
@@ -549,12 +559,13 @@ export const pdfExportService = {
             pdf.setFontSize(8);
             pdf.setTextColor(100, 100, 100);
             pdf.setFont('helvetica', 'normal');
-            const nameY = establishmentLogo ? margin + 25 : margin + 8;
-            pdf.text(establishmentName, margin + 10, nameY, { align: 'center', maxWidth: 30 });
+            const nameY = establishmentLogo ? margin + 27 : margin + 10;
+            const lines = pdf.splitTextToSize(establishmentName, 35);
+            pdf.text(lines, margin + 11, nameY, { align: 'center' });
           }
         }
         
-        // Title - always shown on all pages
+        // Title - always centered, shown on all pages
         pdf.setFontSize(16);
         pdf.setTextColor(139, 92, 246);
         pdf.setFont('helvetica', 'bold');
@@ -566,16 +577,21 @@ export const pdfExportService = {
         pdf.setTextColor(100, 100, 100);
         pdf.setFont('helvetica', 'normal');
         pdf.text(`Année académique : ${textBook.academic_year || ''}`, pageWidth / 2, margin + 23, { align: 'center' });
+        
+        // Header separator line
+        pdf.setDrawColor(139, 92, 246);
+        pdf.setLineWidth(0.5);
+        pdf.line(margin, margin + headerHeight - 5, pageWidth - margin, margin + headerHeight - 5);
       };
       
       // Function to add footer on each page
-      const addFooter = (pageNum: number, totalPagesCount: number) => {
+      const addFooter = (pageNum: number) => {
         const footerY = pageHeight - margin;
         
         // Separator line
         pdf.setDrawColor(200, 200, 200);
         pdf.setLineWidth(0.3);
-        pdf.line(margin, footerY - 8, pageWidth - margin, footerY - 8);
+        pdf.line(margin, footerY - 10, pageWidth - margin, footerY - 10);
         
         // Footer text
         pdf.setFontSize(8);
@@ -583,116 +599,149 @@ export const pdfExportService = {
         pdf.setFont('helvetica', 'normal');
         
         const generatedAt = format(new Date(), "dd MMMM yyyy 'à' HH:mm", { locale: fr });
-        pdf.text(`Document généré le ${generatedAt}`, margin, footerY - 3);
-        pdf.text(establishmentName, pageWidth / 2, footerY - 3, { align: 'center' });
-        pdf.text(`Page ${pageNum}`, pageWidth - margin, footerY - 3, { align: 'right' });
+        pdf.text(`Document généré le ${generatedAt}`, margin, footerY - 5);
+        pdf.text(establishmentName, pageWidth / 2, footerY - 5, { align: 'center' });
+        pdf.text(`Page ${pageNum}`, pageWidth - margin, footerY - 5, { align: 'right' });
         
         // App mention
         pdf.setFontSize(7);
-        pdf.text('Document généré automatiquement depuis NECTFY', pageWidth / 2, footerY + 2, { align: 'center' });
+        pdf.text('Document généré automatiquement depuis NECTFY', pageWidth / 2, footerY, { align: 'center' });
       };
       
-      // Function to check and handle page break with proper spacing
-      const checkPageBreak = async (neededHeight: number): Promise<void> => {
+      // Function to handle page break - returns new Y position
+      const handlePageBreak = async (neededHeight: number): Promise<number> => {
         if (currentY + neededHeight > maxContentY) {
-          addFooter(currentPage, totalPages);
+          addFooter(currentPage);
           pdf.addPage();
           currentPage++;
-          currentY = contentStartY + 5; // Add extra spacing on new pages
           await addHeader(currentPage);
+          return contentStartY;
         }
+        return currentY;
       };
       
-      // Function to parse and render HTML content
-      const renderHTMLContent = async (html: string, startY: number, maxWidth: number): Promise<number> => {
-        if (!html || html.trim() === '') return startY;
+      // Function to render plain text from HTML (simplified, no async issues)
+      const renderContent = (html: string, startY: number, maxWidth: number): number => {
+        if (!html || html.trim() === '' || html === '<p></p>') return startY;
         
         let y = startY;
+        
+        // Clean HTML and extract text
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = html;
         
-        // Extract text content with basic formatting
-        const processNode = (node: Node): void => {
-          if (node.nodeType === Node.TEXT_NODE) {
-            const text = node.textContent?.trim();
+        const processElement = (element: Element | ChildNode, indent: number = 0): void => {
+          if (element.nodeType === Node.TEXT_NODE) {
+            const text = element.textContent?.trim();
             if (text) {
-              const lines = pdf.splitTextToSize(text, maxWidth - 10);
+              pdf.setFont('helvetica', 'normal');
+              pdf.setFontSize(10);
+              pdf.setTextColor(60, 60, 60);
+              
+              const lines = pdf.splitTextToSize(text, maxWidth - indent - 5);
               for (const line of lines) {
-                if (y + 5 > maxContentY) {
-                  addFooter(currentPage, totalPages);
+                // Check for page break
+                if (y + 6 > maxContentY) {
+                  addFooter(currentPage);
                   pdf.addPage();
                   currentPage++;
+                  // Add simple header for continuation
+                  pdf.setFontSize(16);
+                  pdf.setTextColor(139, 92, 246);
+                  pdf.setFont('helvetica', 'bold');
+                  const title = `Cahier de Texte - ${textBook.formations?.title || 'Formation'}`;
+                  pdf.text(title, pageWidth / 2, margin + 15, { align: 'center' });
+                  pdf.setFontSize(10);
+                  pdf.setTextColor(100, 100, 100);
+                  pdf.setFont('helvetica', 'normal');
+                  pdf.text(`Année académique : ${textBook.academic_year || ''}`, pageWidth / 2, margin + 23, { align: 'center' });
+                  pdf.setDrawColor(139, 92, 246);
+                  pdf.setLineWidth(0.5);
+                  pdf.line(margin, margin + headerHeight - 5, pageWidth - margin, margin + headerHeight - 5);
                   y = contentStartY;
-                  addHeader(currentPage);
                 }
-                pdf.text(line, margin + 5, y);
+                
+                pdf.setFont('helvetica', 'normal');
+                pdf.setFontSize(10);
+                pdf.setTextColor(60, 60, 60);
+                pdf.text(line, margin + 5 + indent, y);
                 y += 5;
               }
             }
-          } else if (node.nodeType === Node.ELEMENT_NODE) {
-            const element = node as HTMLElement;
-            const tagName = element.tagName.toLowerCase();
+          } else if (element.nodeType === Node.ELEMENT_NODE) {
+            const el = element as HTMLElement;
+            const tagName = el.tagName.toLowerCase();
             
-            // Handle formatting
-            if (tagName === 'strong' || tagName === 'b') {
-              pdf.setFont('helvetica', 'bold');
-            } else if (tagName === 'em' || tagName === 'i') {
-              pdf.setFont('helvetica', 'italic');
-            } else if (tagName === 'u') {
-              // Underline handled separately
-            } else if (tagName === 'h1' || tagName === 'h2' || tagName === 'h3') {
-              pdf.setFontSize(tagName === 'h1' ? 14 : tagName === 'h2' ? 12 : 11);
-              pdf.setFont('helvetica', 'bold');
-              y += 3;
-            } else if (tagName === 'p') {
+            // Handle block elements
+            if (tagName === 'p' || tagName === 'div') {
               y += 2;
+            } else if (tagName === 'h1' || tagName === 'h2' || tagName === 'h3') {
+              y += 4;
+              pdf.setFont('helvetica', 'bold');
+              pdf.setFontSize(tagName === 'h1' ? 14 : tagName === 'h2' ? 12 : 11);
             } else if (tagName === 'br') {
               y += 4;
+              return;
             } else if (tagName === 'ul' || tagName === 'ol') {
               y += 2;
             } else if (tagName === 'li') {
-              const bulletOrNumber = element.parentElement?.tagName.toLowerCase() === 'ol' 
-                ? `${Array.from(element.parentElement.children).indexOf(element) + 1}. `
+              const bullet = el.parentElement?.tagName.toLowerCase() === 'ol'
+                ? `${Array.from(el.parentElement.children).indexOf(el) + 1}. `
                 : '• ';
-              const text = element.textContent?.trim();
+              const text = el.textContent?.trim();
               if (text) {
-                const lines = pdf.splitTextToSize(bulletOrNumber + text, maxWidth - 15);
+                // Check for page break
+                if (y + 6 > maxContentY) {
+                  addFooter(currentPage);
+                  pdf.addPage();
+                  currentPage++;
+                  pdf.setFontSize(16);
+                  pdf.setTextColor(139, 92, 246);
+                  pdf.setFont('helvetica', 'bold');
+                  const title = `Cahier de Texte - ${textBook.formations?.title || 'Formation'}`;
+                  pdf.text(title, pageWidth / 2, margin + 15, { align: 'center' });
+                  pdf.setFontSize(10);
+                  pdf.setTextColor(100, 100, 100);
+                  pdf.setFont('helvetica', 'normal');
+                  pdf.text(`Année académique : ${textBook.academic_year || ''}`, pageWidth / 2, margin + 23, { align: 'center' });
+                  pdf.setDrawColor(139, 92, 246);
+                  pdf.setLineWidth(0.5);
+                  pdf.line(margin, margin + headerHeight - 5, pageWidth - margin, margin + headerHeight - 5);
+                  y = contentStartY;
+                }
+                
+                pdf.setFont('helvetica', 'normal');
+                pdf.setFontSize(10);
+                pdf.setTextColor(60, 60, 60);
+                const lines = pdf.splitTextToSize(bullet + text, maxWidth - 15);
                 for (const line of lines) {
-                  if (y + 5 > maxContentY) {
-                    addFooter(currentPage, totalPages);
-                    pdf.addPage();
-                    currentPage++;
-                    y = contentStartY;
-                    addHeader(currentPage);
-                  }
                   pdf.text(line, margin + 10, y);
                   y += 5;
                 }
               }
               return; // Don't process children for li
+            } else if (tagName === 'strong' || tagName === 'b') {
+              pdf.setFont('helvetica', 'bold');
+            } else if (tagName === 'em' || tagName === 'i') {
+              pdf.setFont('helvetica', 'italic');
             }
             
             // Process children
-            for (const child of Array.from(element.childNodes)) {
-              processNode(child);
+            for (const child of Array.from(el.childNodes)) {
+              processElement(child, indent);
             }
             
-            // Reset formatting
-            pdf.setFont('helvetica', 'normal');
-            pdf.setFontSize(10);
-            
-            // Add spacing after block elements
-            if (['p', 'h1', 'h2', 'h3', 'ul', 'ol', 'div'].includes(tagName)) {
+            // Reset after block elements
+            if (['p', 'div', 'h1', 'h2', 'h3', 'ul', 'ol'].includes(tagName)) {
               y += 3;
+              pdf.setFont('helvetica', 'normal');
+              pdf.setFontSize(10);
             }
           }
         };
         
-        pdf.setFontSize(10);
-        pdf.setTextColor(60, 60, 60);
-        
         for (const child of Array.from(tempDiv.childNodes)) {
-          processNode(child);
+          processElement(child);
         }
         
         return y;
@@ -720,17 +769,16 @@ export const pdfExportService = {
         for (let i = 0; i < sortedEntries.length; i++) {
           const entry = sortedEntries[i];
           
-          // Calculate needed height for entry header (minimum)
-          const minEntryHeight = 35;
-          await checkPageBreak(minEntryHeight);
+          // Check if we need a page break for entry header
+          currentY = await handlePageBreak(40);
           
           // Entry header background
           pdf.setFillColor(139, 92, 246);
           pdf.rect(margin, currentY, contentWidth, 8, 'F');
           
-          // Entry header row
+          // Entry header columns
           const colWidths = isLandscape 
-            ? [50, 45, 85, 77] // Date, Heure, Module, Formateur
+            ? [50, 45, 85, 77]
             : [40, 35, 55, 40];
           const colX = [
             margin,
@@ -770,27 +818,19 @@ export const pdfExportService = {
           pdf.text(formattedDate, colX[0] + 3, currentY + 6.5);
           pdf.text(timeRange, colX[1] + 3, currentY + 6.5);
           
-          // Subject matter - truncate if too long
+          // Subject matter
           const subjectText = entry.subject_matter || '';
-          const truncatedSubject = subjectText.length > (isLandscape ? 40 : 25) 
-            ? subjectText.substring(0, isLandscape ? 37 : 22) + '...'
+          const maxSubjectLen = isLandscape ? 40 : 25;
+          const truncatedSubject = subjectText.length > maxSubjectLen 
+            ? subjectText.substring(0, maxSubjectLen - 3) + '...'
             : subjectText;
           pdf.text(truncatedSubject, colX[2] + 3, currentY + 6.5);
           
-          // Instructor name (fetch if needed)
-          let instructorName = 'N/A';
-          if (entry.instructor_id) {
-            const { data: instructorData } = await supabase
-              .from('users')
-              .select('first_name, last_name')
-              .eq('id', entry.instructor_id)
-              .single();
-            if (instructorData) {
-              instructorName = `${instructorData.first_name || ''} ${instructorData.last_name || ''}`.trim();
-            }
-          }
-          const truncatedInstructor = instructorName.length > (isLandscape ? 35 : 18) 
-            ? instructorName.substring(0, isLandscape ? 32 : 15) + '...'
+          // Instructor name from cache
+          const instructorName = entry.instructor_id ? (instructorCache[entry.instructor_id] || 'N/A') : 'N/A';
+          const maxInstructorLen = isLandscape ? 35 : 18;
+          const truncatedInstructor = instructorName.length > maxInstructorLen 
+            ? instructorName.substring(0, maxInstructorLen - 3) + '...'
             : instructorName;
           pdf.text(truncatedInstructor, colX[3] + 3, currentY + 6.5);
           
@@ -798,6 +838,8 @@ export const pdfExportService = {
           
           // Content section if exists
           if (entry.content && entry.content.trim() !== '' && entry.content !== '<p></p>') {
+            currentY = await handlePageBreak(15);
+            
             // Content header
             pdf.setFillColor(243, 232, 255);
             pdf.rect(margin, currentY, contentWidth, 6, 'F');
@@ -809,18 +851,14 @@ export const pdfExportService = {
             
             currentY += 8;
             
-            // Content body
-            pdf.setDrawColor(230, 220, 250);
-            pdf.setLineWidth(0.3);
-            pdf.rect(margin, currentY - 2, contentWidth, 0);
-            
-            currentY = await renderHTMLContent(entry.content, currentY, contentWidth);
+            // Render content
+            currentY = renderContent(entry.content, currentY, contentWidth);
             currentY += 5;
           }
           
           // Files section if exists
           if (entry.files && entry.files.length > 0) {
-            await checkPageBreak(15);
+            currentY = await handlePageBreak(20);
             
             pdf.setFillColor(239, 246, 255);
             pdf.rect(margin, currentY, contentWidth, 6, 'F');
@@ -837,9 +875,8 @@ export const pdfExportService = {
             pdf.setFont('helvetica', 'normal');
             
             for (const file of entry.files) {
-              await checkPageBreak(6);
+              currentY = await handlePageBreak(8);
               
-              // File icon indicator
               const fileName = file.file_name || 'Document';
               const fileExt = fileName.split('.').pop()?.toUpperCase() || 'FILE';
               
@@ -853,26 +890,26 @@ export const pdfExportService = {
               pdf.setTextColor(60, 60, 60);
               pdf.text(`${fileName} - Document joint à la séance`, margin + 18, currentY);
               
-              currentY += 6;
+              currentY += 7;
             }
             
             currentY += 3;
           }
           
           // Spacing between entries
-          currentY += 8;
+          currentY += 10;
           
-          // Add a separator line between entries
+          // Separator line between entries
           if (i < sortedEntries.length - 1) {
             pdf.setDrawColor(200, 200, 200);
             pdf.setLineWidth(0.1);
-            pdf.line(margin + 20, currentY - 4, pageWidth - margin - 20, currentY - 4);
+            pdf.line(margin + 20, currentY - 5, pageWidth - margin - 20, currentY - 5);
           }
         }
       }
       
       // Add footer to the last page
-      addFooter(currentPage, currentPage);
+      addFooter(currentPage);
       
       // Generate filename
       const formationTitle = textBook.formations?.title?.replace(/\s+/g, '-') || 'formation';
