@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, BookOpen, Grid, List, Download, Archive } from 'lucide-react';
+import { Plus, Search, BookOpen, Grid, List, Download, Archive, Building2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useNavigate } from 'react-router-dom';
 import CreateTextBookModal from './CreateTextBookModal';
 import TextBookCard from './TextBookCard';
 import { textBookService, TextBook } from '@/services/textBookService';
 import { formationService } from '@/services/formationService';
 import { useToast } from '@/hooks/use-toast';
+import { useEstablishment } from '@/hooks/useEstablishment';
 
 const TextBooksList: React.FC = () => {
   const [textBooks, setTextBooks] = useState<TextBook[]>([]);
@@ -21,8 +23,11 @@ const TextBooksList: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('active');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [selectedTextBookForExport, setSelectedTextBookForExport] = useState<TextBook | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { establishment } = useEstablishment();
 
   const fetchData = async () => {
     try {
@@ -73,16 +78,24 @@ const TextBooksList: React.FC = () => {
     fetchData();
   };
 
-  const handleExportPDF = async (textBook: TextBook) => {
+  const openExportModal = (textBook: TextBook) => {
+    setSelectedTextBookForExport(textBook);
+    setIsExportModalOpen(true);
+  };
+
+  const handleExportPDF = async (orientation: 'portrait' | 'landscape') => {
+    if (!selectedTextBookForExport) return;
+    
     try {
       const { pdfExportService } = await import('@/services/pdfExportService');
-      // Fetch entries for the textbook
-      const entries = await textBookService.getTextBookEntries(textBook.id);
-      await pdfExportService.exportTextBookToPDF(textBook, entries || [], 'portrait');
+      const entries = await textBookService.getTextBookEntries(selectedTextBookForExport.id);
+      await pdfExportService.exportTextBookToPDF(selectedTextBookForExport, entries || [], orientation);
       toast({
         title: "Export réussi",
         description: "Le cahier de texte a été exporté en PDF.",
       });
+      setIsExportModalOpen(false);
+      setSelectedTextBookForExport(null);
     } catch (error) {
       toast({
         title: "Erreur",
@@ -122,6 +135,31 @@ const TextBooksList: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Establishment header - like PDF export */}
+      {establishment && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+          <div className="flex items-center gap-4">
+            {establishment.logo_url ? (
+              <img 
+                src={establishment.logo_url} 
+                alt={establishment.name}
+                className="h-12 w-12 object-contain rounded"
+              />
+            ) : (
+              <div className="h-12 w-12 bg-purple-100 rounded flex items-center justify-center">
+                <Building2 className="h-6 w-6 text-purple-600" />
+              </div>
+            )}
+            <div>
+              <h1 className="text-lg font-bold text-gray-900">{establishment.name}</h1>
+              {establishment.address && (
+                <p className="text-sm text-muted-foreground">{establishment.address}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header with title and create button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center space-x-3">
@@ -269,7 +307,7 @@ const TextBooksList: React.FC = () => {
                       Ouvrir
                     </Button>
                     <Button 
-                      onClick={() => handleExportPDF(textBook)}
+                      onClick={() => openExportModal(textBook)}
                       variant="outline" 
                       size="sm"
                     >
@@ -295,6 +333,36 @@ const TextBooksList: React.FC = () => {
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={handleCreateSuccess}
       />
+
+      {/* Export PDF Modal with orientation selection */}
+      <Dialog open={isExportModalOpen} onOpenChange={setIsExportModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Exporter en PDF</DialogTitle>
+            <DialogDescription>
+              Choisissez l'orientation du document PDF
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <Button
+              variant="outline"
+              className="h-24 flex flex-col items-center justify-center gap-2 border-2 hover:border-purple-500 hover:bg-purple-50"
+              onClick={() => handleExportPDF('portrait')}
+            >
+              <div className="w-8 h-12 border-2 border-current rounded" />
+              <span>Portrait</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-24 flex flex-col items-center justify-center gap-2 border-2 hover:border-purple-500 hover:bg-purple-50"
+              onClick={() => handleExportPDF('landscape')}
+            >
+              <div className="w-12 h-8 border-2 border-current rounded" />
+              <span>Paysage</span>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
