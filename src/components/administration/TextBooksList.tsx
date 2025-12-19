@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, BookOpen, Grid, List, Download, Archive, Building2 } from 'lucide-react';
+import { Plus, Search, BookOpen, Grid, List, Download, Archive } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,7 +11,7 @@ import TextBookCard from './TextBookCard';
 import { textBookService, TextBook } from '@/services/textBookService';
 import { formationService } from '@/services/formationService';
 import { useToast } from '@/hooks/use-toast';
-import { useEstablishment } from '@/hooks/useEstablishment';
+
 
 const TextBooksList: React.FC = () => {
   const [textBooks, setTextBooks] = useState<TextBook[]>([]);
@@ -27,7 +27,7 @@ const TextBooksList: React.FC = () => {
   const [selectedTextBookForExport, setSelectedTextBookForExport] = useState<TextBook | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { establishment } = useEstablishment();
+  
 
   const fetchData = async () => {
     try {
@@ -135,31 +135,6 @@ const TextBooksList: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Establishment header - like PDF export */}
-      {establishment && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-          <div className="flex items-center gap-4">
-            {establishment.logo_url ? (
-              <img 
-                src={establishment.logo_url} 
-                alt={establishment.name}
-                className="h-12 w-12 object-contain rounded"
-              />
-            ) : (
-              <div className="h-12 w-12 bg-purple-100 rounded flex items-center justify-center">
-                <Building2 className="h-6 w-6 text-purple-600" />
-              </div>
-            )}
-            <div>
-              <h1 className="text-lg font-bold text-gray-900">{establishment.name}</h1>
-              {establishment.address && (
-                <p className="text-sm text-muted-foreground">{establishment.address}</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Header with title and create button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center space-x-3">
