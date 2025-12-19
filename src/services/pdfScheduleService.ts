@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import { ScheduleSlot } from './scheduleService';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addDays, addMonths, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { isAutonomieSlot } from '@/utils/slotDisplay';
 
 interface PrintOptions {
   viewMode: 'day' | 'week' | 'month' | 'list';
@@ -266,7 +267,7 @@ const renderDayView = (
       pdf.setTextColor(textColor.r, textColor.g, textColor.b);
 
       // Nom du module en gras
-      const isAutonomie = slot.session_type === 'autonomie';
+      const isAutonomie = isAutonomieSlot(slot);
       const moduleName = isAutonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Cours');
       pdf.setFontSize(12);
       pdf.setFont('helvetica', 'bold');
@@ -408,7 +409,7 @@ const renderWeekView = (
         let textY = y + 6;
 
         // Gérer les créneaux d'autonomie
-        const isAutonomie = slot.session_type === 'autonomie';
+        const isAutonomie = isAutonomieSlot(slot);
         
         // Nom du module - TAILLE AUGMENTÉE
         pdf.setFontSize(9);

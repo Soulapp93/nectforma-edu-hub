@@ -59,6 +59,7 @@ import ExcelImportModal from '@/components/administration/ExcelImportModal';
 import CreateScheduleModal from './CreateScheduleModal';
 import { getModuleColor, extractModuleName } from '@/utils/moduleColors';
 import { navigateWeek, getWeekInfo, getWeekDays } from '@/utils/calendarUtils';
+import { formatTimeRange, isAutonomieSlot } from '@/utils/slotDisplay';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -507,7 +508,7 @@ const ScheduleManagement = () => {
       new Date(slot.date).toDateString() === date.toDateString()
     );
     
-    const isAutonomie = (slot: ScheduleSlot) => slot.session_type === 'autonomie';
+    const isAutonomie = (slot: ScheduleSlot) => isAutonomieSlot(slot);
     
     return {
       id: (index + 1).toString(),
@@ -556,20 +557,26 @@ const ScheduleManagement = () => {
         .filter(slot => new Date(slot.date).toDateString() === selectedDate.toDateString())
         .sort((a, b) => a.start_time.localeCompare(b.start_time));
 
-      const slotsAsEvents = daySlots.map(slot => ({
-        id: slot.id,
-        title: slot.formation_modules?.title || 'Module non défini',
-        date: new Date(slot.date),
-        startTime: slot.start_time.substring(0, 5),
-        endTime: slot.end_time.substring(0, 5),
-        instructor: slot.users?.first_name && slot.users?.last_name
-          ? `${slot.users.first_name} ${slot.users.last_name}`
-          : 'Instructeur non défini',
-        room: slot.room || 'Salle non définie',
-        formation: selectedSchedule?.formations?.title || 'Formation',
-        color: slot.color || '#3B82F6',
-        description: slot.notes || ''
-      }));
+       const slotsAsEvents = daySlots.map(slot => {
+         const autonomie = isAutonomieSlot(slot);
+         return {
+           id: slot.id,
+           title: autonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non défini'),
+           date: new Date(slot.date),
+           startTime: slot.start_time.substring(0, 5),
+           endTime: slot.end_time.substring(0, 5),
+           instructor: autonomie
+             ? ''
+             : (slot.users?.first_name && slot.users?.last_name
+               ? `${slot.users.first_name} ${slot.users.last_name}`
+               : 'Instructeur non défini'),
+           room: autonomie ? '' : (slot.room || 'Salle non définie'),
+           formation: selectedSchedule?.formations?.title || 'Formation',
+           color: slot.color || '#3B82F6',
+           description: slot.notes || '',
+           sessionType: autonomie ? 'autonomie' : slot.session_type,
+         };
+       });
 
       return (
         <DayView
@@ -687,17 +694,23 @@ const ScheduleManagement = () => {
                   const isSelected = isSameDay(date, selectedDate);
                   const isTodayDate = isToday(date);
 
-                  const slotsAsEvents = daySlots.map(slot => ({
-                    id: slot.id,
-                    title: slot.formation_modules?.title || 'Module non défini',
-                    startTime: slot.start_time.substring(0, 5),
-                    endTime: slot.end_time.substring(0, 5),
-                    instructor: slot.users?.first_name && slot.users?.last_name 
-                      ? `${slot.users.first_name} ${slot.users.last_name}` 
-                      : 'Instructeur non défini',
-                    room: slot.room || 'Salle non définie',
-                    color: slot.color || '#3B82F6'
-                  }));
+                   const slotsAsEvents = daySlots.map(slot => {
+                     const autonomie = isAutonomieSlot(slot);
+                     return {
+                       id: slot.id,
+                       title: autonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non défini'),
+                       startTime: slot.start_time.substring(0, 5),
+                       endTime: slot.end_time.substring(0, 5),
+                       instructor: autonomie
+                         ? ''
+                         : (slot.users?.first_name && slot.users?.last_name
+                           ? `${slot.users.first_name} ${slot.users.last_name}`
+                           : 'Instructeur non défini'),
+                       room: autonomie ? '' : (slot.room || 'Salle non définie'),
+                       color: slot.color || '#3B82F6',
+                       sessionType: autonomie ? 'autonomie' : slot.session_type,
+                     };
+                   });
 
                   return (
                     <div
@@ -748,28 +761,24 @@ const ScheduleManagement = () => {
                                          if (originalSlot) handleSlotClick(originalSlot);
                                        }}
                                      >
-                                <div className="space-y-0.5">
-                                   <div className="font-semibold text-white text-[11px] leading-tight">
-                                     Module {event.title}
+                                 <div className="space-y-0.5">
+                                   <div className="font-bold text-white text-[11px] leading-tight">
+                                     {event.sessionType === 'autonomie' ? 'AUTONOMIE' : event.title}
                                    </div>
-                                   
-                                     <div className="flex items-center text-[9px] text-white/90">
-                                       <Clock className="h-2.5 w-2.5 mr-1 text-white/80" />
-                                       <span>{event.startTime.substring(0, 5)}</span>
-                                     </div>
-                                     <div className="flex items-center text-[9px] text-white/90">
-                                       <Clock className="h-2.5 w-2.5 mr-1 text-white/80" />
-                                       <span>{event.endTime.substring(0, 5)}</span>
-                                     </div>
-                                   
-                                   {event.room && (
+
+                                   <div className="flex items-center text-[9px] text-white/90">
+                                     <Clock className="h-2.5 w-2.5 mr-1 text-white/80" />
+                                     <span>{formatTimeRange(event.startTime, event.endTime)}</span>
+                                   </div>
+
+                                   {event.sessionType !== 'autonomie' && event.room && (
                                      <div className="flex items-center text-[9px] text-white/90">
                                        <MapPin className="h-2.5 w-2.5 mr-1 text-white/80" />
-                                       <span>Salle {event.room}</span>
+                                       <span>{event.room}</span>
                                      </div>
                                    )}
-                                   
-                                   {event.instructor && (
+
+                                   {event.sessionType !== 'autonomie' && event.instructor && (
                                      <div className="flex items-center text-[9px] text-white/90">
                                        <User className="h-2.5 w-2.5 mr-1 text-white/80" />
                                        <span>{event.instructor}</span>
@@ -912,7 +921,7 @@ const ScheduleManagement = () => {
                               {/* Module */}
                               <div>
                                 <div className="font-medium text-white text-sm">
-                                  {slot.formation_modules?.title || 'Module non défini'}
+                                  {isAutonomieSlot(slot) ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non défini')}
                                 </div>
                                 {slot.notes && (
                                   <div className="text-xs text-white/80 mt-1">
@@ -923,19 +932,27 @@ const ScheduleManagement = () => {
 
                               {/* Formateur */}
                               <div>
-                                <span className="text-sm text-white">
-                                  {slot.users?.first_name && slot.users?.last_name 
-                                    ? `${slot.users.first_name} ${slot.users.last_name}`
-                                    : 'Non assigné'
-                                  }
-                                </span>
+                                {isAutonomieSlot(slot) ? (
+                                  <span className="text-sm text-white/70"> </span>
+                                ) : (
+                                  <span className="text-sm text-white">
+                                    {slot.users?.first_name && slot.users?.last_name
+                                      ? `${slot.users.first_name} ${slot.users.last_name}`
+                                      : 'Non assigné'
+                                    }
+                                  </span>
+                                )}
                               </div>
 
                               {/* Salle */}
                               <div>
-                                <span className="text-sm text-white">
-                                  {slot.room || 'Non définie'}
-                                </span>
+                                {isAutonomieSlot(slot) ? (
+                                  <span className="text-sm text-white/70"> </span>
+                                ) : (
+                                  <span className="text-sm text-white">
+                                    {slot.room || 'Non définie'}
+                                  </span>
+                                )}
                               </div>
 
                               {/* Actions */}
@@ -985,10 +1002,14 @@ const ScheduleManagement = () => {
                           </TooltipTrigger>
                           <TooltipContent side="right" className="max-w-xs">
                             <div className="space-y-1">
-                              <p className="font-semibold">{slot.formation_modules?.title || 'Module non défini'}</p>
+                              <p className="font-semibold">{isAutonomieSlot(slot) ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non défini')}</p>
                               <p className="text-xs">{slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}</p>
-                              <p className="text-xs">{slot.users?.first_name} {slot.users?.last_name}</p>
-                              <p className="text-xs">Salle: {slot.room}</p>
+                              {!isAutonomieSlot(slot) && (
+                                <>
+                                  <p className="text-xs">{slot.users?.first_name} {slot.users?.last_name}</p>
+                                  <p className="text-xs">Salle: {slot.room}</p>
+                                </>
+                              )}
                             </div>
                           </TooltipContent>
                         </Tooltip>
@@ -1100,12 +1121,13 @@ const ScheduleManagement = () => {
                                 
                                 <div>
                                   <h4 className="font-semibold text-white text-sm mb-2 pr-6">
-                                    {module.slot?.session_type === 'autonomie' ? 'AUTONOMIE' : module.title}
+                                    {isAutonomieSlot(module.slot) ? 'AUTONOMIE' : module.title}
                                   </h4>
 
-                                  {/* Autonomie: uniquement titre + horaire (sans icônes) */}
-                                  {module.slot?.session_type === 'autonomie' ? (
-                                    <div className="text-xs text-white/90">
+                                  {/* Autonomie: uniquement titre + horaire (sans salle/formateur) */}
+                                  {isAutonomieSlot(module.slot) ? (
+                                    <div className="flex items-center text-xs text-white/90">
+                                      <Clock className="h-3 w-3 mr-1 text-white/80" />
                                       {module.time}
                                     </div>
                                   ) : (
@@ -1172,10 +1194,14 @@ const ScheduleManagement = () => {
                             </TooltipTrigger>
                             <TooltipContent side="right" className="max-w-xs">
                               <div className="space-y-1">
-                                <p className="font-semibold">{module.title}</p>
+                                <p className="font-semibold">{isAutonomieSlot(module.slot) ? 'AUTONOMIE' : module.title}</p>
                                 <p className="text-xs">{module.time}</p>
-                                <p className="text-xs">{module.instructor}</p>
-                                <p className="text-xs">Salle: {module.room}</p>
+                                {!isAutonomieSlot(module.slot) && (
+                                  <>
+                                    <p className="text-xs">{module.instructor}</p>
+                                    <p className="text-xs">Salle: {module.room}</p>
+                                  </>
+                                )}
                                 {isEditMode && (
                                   <p className="text-xs text-muted-foreground mt-2">Glissez pour déplacer</p>
                                 )}
