@@ -283,7 +283,7 @@ const EmploiTemps = () => {
       date: format(date, 'd'),
       modules: dayEvents.map(event => ({
         title: event.title,
-        time: `${event.startTime} - ${event.endTime}`,
+        time: `${formatTime(event.startTime)} - ${formatTime(event.endTime)}`,
         instructor: event.instructor,
         room: event.room,
         color: event.color,
