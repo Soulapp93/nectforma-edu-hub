@@ -169,11 +169,11 @@ export const ScheduleManagementCalendar: React.FC<ScheduleManagementCalendarProp
                       </div>
                       
                       <div className="space-y-1">
-                        <div className="flex items-center text-xs text-white/80">
-                          <Clock className="h-3 w-3 mr-2" />
+                        {/* Autonomie: uniquement le titre + horaire (sans icônes) */}
+                        <div className={isAutonomie ? 'text-xs text-white/90' : 'flex items-center text-xs text-white/80'}>
+                          {!isAutonomie && <Clock className="h-3 w-3 mr-2" />}
                           {module.time}
                         </div>
-                        {/* Salle et formateur masqués pour autonomie - uniquement heure affichée */}
                         {!isAutonomie && module.room && (
                           <div className="flex items-center text-xs text-white/80">
                             <MapPin className="h-3 w-3 mr-2" />

@@ -214,29 +214,43 @@ export const ScheduleListView: React.FC<ScheduleListViewProps> = ({
                   <div className="font-medium text-white">
                     {slot.session_type === 'autonomie' ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non défini')}
                   </div>
-                  {slot.notes && (
-                    <div className="text-xs text-white/80 mt-1 truncate">
-                      {slot.notes}
+                  {slot.session_type === 'autonomie' ? (
+                    <div className="text-xs text-white/85 mt-1">
+                      {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
                     </div>
+                  ) : (
+                    slot.notes && (
+                      <div className="text-xs text-white/80 mt-1 truncate">
+                        {slot.notes}
+                      </div>
+                    )
                   )}
                 </div>
 
                 {/* Formateur */}
                 <div className="col-span-2">
-                  <div className="flex items-center space-x-2">
-                    <User className="h-4 w-4 text-white/80" />
-                    <span className="text-sm text-white/90">
-                      {slot.session_type === 'autonomie' ? '—' : (slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Non assigné')}
-                    </span>
-                  </div>
+                  {slot.session_type === 'autonomie' ? (
+                    <span className="text-sm text-white/70"> </span>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <User className="h-4 w-4 text-white/80" />
+                      <span className="text-sm text-white/90">
+                        {slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Non assigné'}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Salle */}
                 <div className="col-span-2">
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4 text-white/80" />
-                    <span className="text-sm text-white/90">{slot.session_type === 'autonomie' ? '—' : (slot.room || 'Non définie')}</span>
-                  </div>
+                  {slot.session_type === 'autonomie' ? (
+                    <span className="text-sm text-white/70"> </span>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <MapPin className="h-4 w-4 text-white/80" />
+                      <span className="text-sm text-white/90">{slot.room || 'Non définie'}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Actions */}
