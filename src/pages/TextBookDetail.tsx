@@ -15,6 +15,7 @@ import { textBookService, TextBook, TextBookEntry } from '@/services/textBookSer
 import { pdfExportService } from '@/services/pdfExportService';
 import { moduleService, FormationModule } from '@/services/moduleService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useEstablishment } from '@/hooks/useEstablishment';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -47,6 +48,7 @@ const TextBookDetail: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
 
   const { userId, userRole } = useCurrentUser();
+  const { establishment } = useEstablishment();
 
   // Seuls les formateurs et admins peuvent modifier le cahier de texte
   const canEdit = userRole === 'Formateur' || userRole === 'Admin' || userRole === 'AdminPrincipal';
@@ -441,6 +443,19 @@ const TextBookDetail: React.FC = () => {
             background: `linear-gradient(135deg, ${textBook.formations?.color || '#8B5CF6'}, ${textBook.formations?.color || '#8B5CF6'}cc)`
           }}
         >
+          {/* Establishment logo and name */}
+          {establishment && (
+            <div className="flex items-center gap-3 mb-4">
+              {establishment.logo_url && (
+                <img 
+                  src={establishment.logo_url} 
+                  alt={establishment.name}
+                  className="h-10 w-10 object-contain bg-white rounded p-1"
+                />
+              )}
+              <span className="font-semibold text-white/90">{establishment.name}</span>
+            </div>
+          )}
           <div className="flex items-center space-x-3 mb-2">
             <BookOpen className="h-6 w-6" />
             <h1 className="text-2xl font-bold">
