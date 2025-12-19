@@ -273,6 +273,13 @@ const EmploiTemps = () => {
     return a.startTime.localeCompare(b.startTime);
   });
 
+  // Fonction pour formater les horaires en HH:mm
+  const formatTime = (time: string) => {
+    if (!time) return '';
+    const parts = time.split(':');
+    return `${parts[0]}:${parts[1]}`;
+  };
+
   const weekDays = getWeekDays(currentDate);
   const mockSchedule = weekDays.map((date, index) => {
     const dayEvents = filteredEvents.filter(event => event.date.toDateString() === date.toDateString());
@@ -295,13 +302,6 @@ const EmploiTemps = () => {
   });
 
   const weekInfo = getWeekInfo(currentDate);
-
-  // Fonction pour formater les horaires en HH:mm
-  const formatTime = (time: string) => {
-    if (!time) return '';
-    const parts = time.split(':');
-    return `${parts[0]}:${parts[1]}`;
-  };
 
   // Déterminer si on doit afficher le nom de la formation sur les cartes
   // Seuls les formateurs voient le nom de la formation car ils enseignent dans plusieurs formations
