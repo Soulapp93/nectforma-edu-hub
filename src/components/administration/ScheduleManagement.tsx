@@ -1100,23 +1100,31 @@ const ScheduleManagement = () => {
                                 
                                 <div>
                                   <h4 className="font-semibold text-white text-sm mb-2 pr-6">
-                                    {module.title}
+                                    {module.slot?.session_type === 'autonomie' ? 'AUTONOMIE' : module.title}
                                   </h4>
-                                  
-                                  <div className="space-y-1">
-                                    <div className="flex items-center text-xs text-white/90">
-                                      <Clock className="h-3 w-3 mr-1 text-white/80" />
+
+                                  {/* Autonomie: uniquement titre + horaire (sans icônes) */}
+                                  {module.slot?.session_type === 'autonomie' ? (
+                                    <div className="text-xs text-white/90">
                                       {module.time}
                                     </div>
-                                    <div className="flex items-center text-xs text-white/90">
-                                      <MapPin className="h-3 w-3 mr-1 text-white/80" />
-                                      {module.room}
+                                  ) : (
+                                    <div className="space-y-1">
+                                      <div className="flex items-center text-xs text-white/90">
+                                        <Clock className="h-3 w-3 mr-1 text-white/80" />
+                                        {module.time}
+                                      </div>
+                                      <div className="flex items-center text-xs text-white/90">
+                                        <MapPin className="h-3 w-3 mr-1 text-white/80" />
+                                        {module.room}
+                                      </div>
+                                      <div className="flex items-center text-xs text-white/90">
+                                        <User className="h-3 w-3 mr-1 text-white/80" />
+                                        {module.instructor}
+                                      </div>
                                     </div>
-                                    <div className="flex items-center text-xs text-white/90">
-                                      <User className="h-3 w-3 mr-1 text-white/80" />
-                                      {module.instructor}
-                                    </div>
-                                  </div>
+                                  )}
+
                                   
                                   {/* Admin actions */}
                                   {isEditMode && (

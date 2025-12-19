@@ -266,7 +266,8 @@ const renderDayView = (
       pdf.setTextColor(textColor.r, textColor.g, textColor.b);
 
       // Nom du module en gras
-      const moduleName = slot.formation_modules?.title || slot.notes || 'Cours';
+      const isAutonomie = slot.session_type === 'autonomie';
+      const moduleName = isAutonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Cours');
       pdf.setFontSize(12);
       pdf.setFont('helvetica', 'bold');
       pdf.text(truncateText(pdf, moduleName, contentWidth - 20), margin + 10, currentY + 10);
@@ -286,14 +287,16 @@ const renderDayView = (
       const timeText = `${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`;
       pdf.text(timeText, margin + 10, infoY);
 
-      // Formateur
-      const instructor = slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Non assigné';
-      pdf.text(instructor, margin + 80, infoY);
+      // Pour autonomie: on n'affiche pas salle / formateur (comme l'interface)
+      if (!isAutonomie) {
+        const instructor = slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Non assigné';
+        pdf.text(instructor, margin + 80, infoY);
 
-      // Salle
-      if (slot.room) {
-        pdf.text(`Salle ${slot.room}`, margin + 10, infoY + 10);
+        if (slot.room) {
+          pdf.text(`Salle ${slot.room}`, margin + 10, infoY + 10);
+        }
       }
+
 
       pdf.setTextColor(0, 0, 0);
       currentY += cardHeight + 6;
@@ -665,21 +668,19 @@ const renderMonthView = (
               cardTextY += 4;
             }
 
-            // Notes pour autonomie ou Salle + formateur si assez de place
-            if (effectiveCardHeight >= 16) {
+            // Autonomie: uniquement titre + horaire (pas de notes/salle/formateur)
+            if (effectiveCardHeight >= 16 && !isAutonomie) {
               let infoText = '';
-              if (isAutonomie && slot.notes) {
-                infoText = slot.notes;
-              } else {
-                if (slot.room) infoText += `Salle ${slot.room}`;
-                const instructor = slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : '';
-                if (instructor) infoText += infoText ? ` • ${instructor}` : instructor;
-              }
+              if (slot.room) infoText += `Salle ${slot.room}`;
+              const instructor = slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : '';
+              if (instructor) infoText += infoText ? ` • ${instructor}` : instructor;
+
               if (infoText) {
                 pdf.setFontSize(5);
                 pdf.text(truncateText(pdf, infoText, maxTextWidth), cardX + 2, cardTextY);
               }
             }
+
 
             pdf.setTextColor(0, 0, 0);
             slotY += effectiveCardHeight + slotSpacing;
@@ -804,17 +805,18 @@ const renderListView = (
     }
     
     // Module (en gras)
+    const isAutonomie = slot.session_type === 'autonomie';
     pdf.setFont('helvetica', 'bold');
-    const moduleName = slot.formation_modules?.title || slot.notes || 'Cours';
+    const moduleName = isAutonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || slot.notes || 'Cours');
     pdf.text(truncateText(pdf, moduleName, colWidths.module - 6), colPositions.module + 4, currentY + 9);
-    
-    // Formateur
+
+    // Formateur / Salle (masqués pour autonomie)
     pdf.setFont('helvetica', 'normal');
-    const instructor = slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : '-';
+    const instructor = isAutonomie ? '' : (slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : '-');
+    const room = isAutonomie ? '' : (slot.room || '-');
     pdf.text(truncateText(pdf, instructor, colWidths.instructor - 6), colPositions.instructor + 4, currentY + 9);
-    
-    // Salle
-    pdf.text(truncateText(pdf, slot.room || '-', colWidths.room - 6), colPositions.room + 4, currentY + 9);
+    pdf.text(truncateText(pdf, room, colWidths.room - 6), colPositions.room + 4, currentY + 9);
+
 
     currentY += rowHeight;
   });

@@ -1,11 +1,11 @@
 import React from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin, User } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ScheduleSlot } from '@/services/scheduleService';
+import { formatTimeRange, isAutonomieSession } from '@/utils/slotDisplay';
 
 interface ScheduleMonthViewProps {
   selectedDate: Date;
@@ -138,15 +138,15 @@ export const ScheduleMonthView: React.FC<ScheduleMonthViewProps> = ({
                   
                   <div className="space-y-1">
                     {daySlots.slice(0, 3).map((slot, slotIndex) => {
-                      const isAutonomie = slot.session_type === 'autonomie';
+                      const isAutonomie = isAutonomieSession(slot.session_type);
                       return (
                         <div
                           key={slotIndex}
                           className="text-xs p-2 rounded shadow-sm cursor-pointer hover:shadow-md transition-all"
-                          style={{ 
+                          style={{
                             backgroundColor: slot.color || '#6B7280',
                             backgroundImage: `linear-gradient(135deg, ${slot.color || '#6B7280'}, ${slot.color ? slot.color + '90' : '#6B7280BB'})`,
-                            color: 'white'
+                            color: 'white',
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -156,18 +156,14 @@ export const ScheduleMonthView: React.FC<ScheduleMonthViewProps> = ({
                           <div className="font-medium text-white truncate mb-1">
                             {isAutonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module')}
                           </div>
-                          <div className="text-white/80 flex items-center space-x-1">
-                            <Clock className="h-3 w-3" />
-                            <span>{slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}</span>
+                          {/* Autonomie: uniquement le titre + horaire (sans icônes) */}
+                          <div className="text-white/85">
+                            {formatTimeRange(slot.start_time, slot.end_time)}
                           </div>
-                          {isAutonomie && slot.notes && (
-                            <div className="text-white/70 text-xs truncate mt-1">
-                              {slot.notes}
-                            </div>
-                          )}
                         </div>
                       );
                     })}
+
                     
                     {daySlots.length > 3 && (
                       <div className="text-xs text-muted-foreground font-medium">
