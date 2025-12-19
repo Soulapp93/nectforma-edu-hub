@@ -137,34 +137,37 @@ export const ScheduleMonthView: React.FC<ScheduleMonthViewProps> = ({
                   </div>
                   
                   <div className="space-y-1">
-                    {daySlots.slice(0, 3).map((slot, slotIndex) => (
-                      <div
-                        key={slotIndex}
-                        className="text-xs p-2 rounded shadow-sm cursor-pointer hover:shadow-md transition-all"
-                        style={{ 
-                          backgroundColor: slot.color || '#6B7280',
-                          backgroundImage: `linear-gradient(135deg, ${slot.color || '#6B7280'}, ${slot.color ? slot.color + '90' : '#6B7280BB'})`,
-                          color: 'white'
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSlotClick?.(slot);
-                        }}
-                      >
-                        <div className="font-medium text-white truncate mb-1">
-                          {slot.session_type === 'autonomie' ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module')}
-                        </div>
-                        <div className="text-white/80 flex items-center space-x-1">
-                          <Clock className="h-3 w-3" />
-                          <span>{slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}</span>
-                        </div>
-                        {slot.session_type === 'autonomie' && slot.notes && (
-                          <div className="text-white/70 text-xs truncate mt-1">
-                            {slot.notes}
+                    {daySlots.slice(0, 3).map((slot, slotIndex) => {
+                      const isAutonomie = slot.session_type === 'autonomie';
+                      return (
+                        <div
+                          key={slotIndex}
+                          className="text-xs p-2 rounded shadow-sm cursor-pointer hover:shadow-md transition-all"
+                          style={{ 
+                            backgroundColor: slot.color || '#6B7280',
+                            backgroundImage: `linear-gradient(135deg, ${slot.color || '#6B7280'}, ${slot.color ? slot.color + '90' : '#6B7280BB'})`,
+                            color: 'white'
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSlotClick?.(slot);
+                          }}
+                        >
+                          <div className="font-medium text-white truncate mb-1">
+                            {isAutonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module')}
                           </div>
-                        )}
-                      </div>
-                    ))}
+                          <div className="text-white/80 flex items-center space-x-1">
+                            <Clock className="h-3 w-3" />
+                            <span>{slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}</span>
+                          </div>
+                          {isAutonomie && slot.notes && (
+                            <div className="text-white/70 text-xs truncate mt-1">
+                              {slot.notes}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                     
                     {daySlots.length > 3 && (
                       <div className="text-xs text-muted-foreground font-medium">
