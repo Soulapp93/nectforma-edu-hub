@@ -1,201 +1,100 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   NECTFY Design System - Ultra Modern Premium Theme
-   Light: Lavender/Purple gradient (FinBix inspired)
-   Dark: Teal/Cyan theme (Flex Finance inspired)
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* NECTFY Design System - Production-ready unified theme */
 
 @layer base {
   :root {
-    /* Font Family */
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    
-    /* ═══════════════════════════════════════════════════════════════════════
-       LIGHT THEME - Lavender Purple Premium
-       ═══════════════════════════════════════════════════════════════════════ */
-    
-    /* Base Colors */
-    --background: 250 50% 98%;
-    --background-gradient-from: 260 60% 95%;
-    --background-gradient-to: 260 30% 99%;
+    --background: 240 12% 97%;
     --foreground: 240 10% 15%;
 
-    /* Cards - Pure white with subtle elevation */
-    --card: 0 0% 100%;
+    --card: 240 12% 98%;
     --card-foreground: 240 10% 15%;
 
-    --popover: 0 0% 100%;
+    --popover: 240 12% 98%;
     --popover-foreground: 240 10% 15%;
 
-    /* Primary - Rich Violet/Purple */
-    --primary: 262 80% 55%;
-    --primary-foreground: 0 0% 100%;
-    --primary-light: 262 80% 95%;
-    --primary-hover: 262 80% 48%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 240 12% 98%;
 
-    /* Secondary - Soft Lavender */
-    --secondary: 260 40% 96%;
-    --secondary-foreground: 260 20% 30%;
+    --secondary: 240 8% 94%;
+    --secondary-foreground: 240 10% 25%;
 
-    --muted: 260 20% 96%;
-    --muted-foreground: 260 10% 50%;
+    --muted: 240 8% 94%;
+    --muted-foreground: 240 6% 55%;
 
-    /* Accent - Light Purple */
-    --accent: 262 70% 94%;
-    --accent-foreground: 262 80% 45%;
+    --accent: 262 83% 58%;
+    --accent-foreground: 240 12% 98%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 240 12% 98%;
 
-    /* Borders & Inputs */
-    --border: 260 20% 90%;
-    --input: 260 20% 94%;
-    --ring: 262 80% 55%;
+    --border: 240 8% 88%;
+    --input: 240 8% 88%;
+    --ring: 262 83% 58%;
 
-    --radius: 0.875rem;
+    --radius: 0.5rem;
 
-    /* Status Colors */
-    --success: 160 84% 39%;
-    --success-foreground: 0 0% 100%;
-    --success-muted: 160 50% 94%;
+    /* Enhanced Status Colors - Semantic tokens */
+    --success: 142 76% 36%;
+    --success-foreground: 210 40% 98%;
+    --success-muted: 142 76% 96%;
     
     --warning: 38 92% 50%;
-    --warning-foreground: 38 92% 15%;
-    --warning-muted: 38 60% 94%;
+    --warning-foreground: 222.2 84% 4.9%;
+    --warning-muted: 38 92% 95%;
     
-    --info: 210 100% 52%;
-    --info-foreground: 0 0% 100%;
-    --info-muted: 210 60% 94%;
+    --info: 217 91% 60%;
+    --info-foreground: 210 40% 98%;
+    --info-muted: 217 91% 95%;
 
-    /* NECTFY Brand Gradient Colors */
-    --nect-purple: 262 80% 55%;
-    --nect-purple-light: 262 80% 95%;
-    --nect-purple-dark: 262 80% 45%;
-    --nect-gradient-from: 262 80% 55%;
-    --nect-gradient-via: 280 75% 60%;
-    --nect-gradient-to: 200 85% 60%;
-
-    /* Sidebar - Premium Purple */
-    --sidebar-background: 262 80% 55%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 262 80% 55%;
-    --sidebar-accent: 262 75% 62%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 262 70% 48%;
-    --sidebar-ring: 0 0% 100%;
-
-    /* Modern Shadows - Light Theme */
-    --shadow-color: 262 80% 20%;
-    --shadow-xs: 0 1px 2px hsl(var(--shadow-color) / 0.03);
-    --shadow-sm: 0 2px 4px hsl(var(--shadow-color) / 0.04), 0 1px 2px hsl(var(--shadow-color) / 0.03);
-    --shadow-md: 0 4px 12px hsl(var(--shadow-color) / 0.06), 0 2px 4px hsl(var(--shadow-color) / 0.04);
-    --shadow-lg: 0 8px 24px hsl(var(--shadow-color) / 0.08), 0 4px 8px hsl(var(--shadow-color) / 0.04);
-    --shadow-xl: 0 16px 48px hsl(var(--shadow-color) / 0.12), 0 8px 16px hsl(var(--shadow-color) / 0.06);
-    --shadow-2xl: 0 24px 64px hsl(var(--shadow-color) / 0.16);
-    --shadow-primary: 0 4px 16px hsl(262 80% 55% / 0.25);
-    --shadow-glow: 0 0 24px hsl(262 80% 55% / 0.35);
-    --shadow-inner: inset 0 2px 4px hsl(var(--shadow-color) / 0.05);
-
-    /* Chart Colors */
-    --chart-1: 262 80% 55%;
-    --chart-2: 200 85% 55%;
-    --chart-3: 160 84% 39%;
-    --chart-4: 38 92% 50%;
-    --chart-5: 0 84% 60%;
+    /* Enhanced Custom NECTFY colors */
+    --nect-purple-from: 262 83% 58%;
+    --nect-purple-to: 280 75% 65%;
+    --nect-purple-light: 262 83% 90%;
+    --nect-purple-dark: 262 83% 40%;
+    
+    --nect-sidebar-bg: 262 83% 58%;
+    --nect-card-bg: 240 12% 98%;
+    --nect-card-border: 240 8% 88%;
+    
+    /* Production gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--nect-purple-from)), hsl(var(--nect-purple-to)));
+    --gradient-card: linear-gradient(145deg, hsl(var(--card)), hsl(var(--muted)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    
+    /* Professional shadows */
+    --shadow-sm: 0 1px 3px rgba(124, 58, 237, 0.1);
+    --shadow-md: 0 4px 12px rgba(124, 58, 237, 0.15);
+    --shadow-lg: 0 10px 25px rgba(124, 58, 237, 0.2);
+    --shadow-xl: 0 20px 40px rgba(124, 58, 237, 0.25);
   }
 
-  /* ═══════════════════════════════════════════════════════════════════════════
-     DARK THEME - Teal/Cyan Premium (Flex Finance inspired)
-     ═══════════════════════════════════════════════════════════════════════════ */
   .dark {
-    /* Base - Deep Teal Background */
-    --background: 174 30% 8%;
-    --background-gradient-from: 174 40% 6%;
-    --background-gradient-to: 174 25% 12%;
-    --foreground: 180 20% 95%;
-
-    /* Cards - Darker with subtle transparency */
-    --card: 174 25% 12%;
-    --card-foreground: 180 20% 95%;
-
-    --popover: 174 25% 14%;
-    --popover-foreground: 180 20% 95%;
-
-    /* Primary - Vibrant Teal/Cyan */
-    --primary: 168 80% 45%;
-    --primary-foreground: 174 30% 8%;
-    --primary-light: 168 60% 20%;
-    --primary-hover: 168 85% 52%;
-
-    /* Secondary - Muted Teal */
-    --secondary: 174 20% 16%;
-    --secondary-foreground: 180 20% 90%;
-
-    --muted: 174 20% 18%;
-    --muted-foreground: 180 15% 55%;
-
-    /* Accent - Teal glow */
-    --accent: 168 50% 18%;
-    --accent-foreground: 168 80% 65%;
-
-    --destructive: 0 72% 55%;
-    --destructive-foreground: 0 0% 100%;
-
-    /* Borders & Inputs */
-    --border: 174 20% 20%;
-    --input: 174 20% 18%;
-    --ring: 168 80% 45%;
-
-    /* Status Colors - Brighter for dark mode */
-    --success: 160 84% 45%;
-    --success-muted: 160 50% 15%;
+    --background: 240 15% 8%;
+    --foreground: 240 12% 95%;
+    --card: 240 15% 10%;
+    --card-foreground: 240 12% 95%;
+    --primary: 262 83% 65%;
+    --primary-foreground: 240 15% 8%;
     
-    --warning: 38 92% 55%;
-    --warning-muted: 38 60% 15%;
+    --secondary: 240 12% 18%;
+    --secondary-foreground: 240 12% 85%;
     
-    --info: 210 100% 60%;
-    --info-muted: 210 60% 15%;
-
-    /* NECTFY Brand - Teal variant for dark mode */
-    --nect-purple: 168 80% 45%;
-    --nect-purple-light: 168 50% 18%;
-    --nect-purple-dark: 168 80% 55%;
-    --nect-gradient-from: 168 80% 45%;
-    --nect-gradient-via: 180 70% 40%;
-    --nect-gradient-to: 200 75% 50%;
-
-    /* Sidebar - Deep Dark */
-    --sidebar-background: 174 30% 6%;
-    --sidebar-foreground: 180 20% 95%;
-    --sidebar-primary: 168 80% 45%;
-    --sidebar-primary-foreground: 174 30% 8%;
-    --sidebar-accent: 174 20% 16%;
-    --sidebar-accent-foreground: 180 20% 95%;
-    --sidebar-border: 174 20% 18%;
-    --sidebar-ring: 168 80% 45%;
-
-    /* Modern Shadows - Dark Theme */
-    --shadow-color: 174 80% 5%;
-    --shadow-xs: 0 1px 2px hsl(0 0% 0% / 0.2);
-    --shadow-sm: 0 2px 4px hsl(0 0% 0% / 0.25), 0 1px 2px hsl(0 0% 0% / 0.2);
-    --shadow-md: 0 4px 12px hsl(0 0% 0% / 0.3), 0 2px 4px hsl(0 0% 0% / 0.2);
-    --shadow-lg: 0 8px 24px hsl(0 0% 0% / 0.35), 0 4px 8px hsl(0 0% 0% / 0.25);
-    --shadow-xl: 0 16px 48px hsl(0 0% 0% / 0.4), 0 8px 16px hsl(0 0% 0% / 0.3);
-    --shadow-2xl: 0 24px 64px hsl(0 0% 0% / 0.5);
-    --shadow-primary: 0 4px 20px hsl(168 80% 45% / 0.25);
-    --shadow-glow: 0 0 30px hsl(168 80% 45% / 0.35);
-    --shadow-inner: inset 0 2px 4px hsl(0 0% 0% / 0.2);
-
-    /* Chart Colors - Dark mode */
-    --chart-1: 168 80% 45%;
-    --chart-2: 200 85% 55%;
-    --chart-3: 160 84% 45%;
-    --chart-4: 38 92% 55%;
-    --chart-5: 0 72% 55%;
+    --muted: 240 12% 18%;
+    --muted-foreground: 240 8% 65%;
+    
+    --border: 240 12% 18%;
+    --input: 240 12% 18%;
+    
+    --success: 142 76% 45%;
+    --warning: 38 92% 60%;
+    --info: 217 91% 70%;
+    
+    --nect-card-bg: 240 15% 10%;
+    --nect-card-border: 240 12% 18%;
   }
 }
 
@@ -204,52 +103,12 @@
     @apply border-border;
   }
 
-  html {
-    font-family: var(--font-sans);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    scroll-behavior: smooth;
-  }
-
   body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-    letter-spacing: -0.01em;
-  }
-
-  /* Smooth theme transitions */
-  html.transitioning,
-  html.transitioning *,
-  html.transitioning *::before,
-  html.transitioning *::after {
-    transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                fill 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                stroke 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  }
-
-  /* Typography improvements */
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
-    text-wrap: balance;
-  }
-
-  h1 { @apply text-4xl md:text-5xl; }
-  h2 { @apply text-3xl md:text-4xl; }
-  h3 { @apply text-2xl md:text-3xl; }
-  h4 { @apply text-xl md:text-2xl; }
-  h5 { @apply text-lg md:text-xl; }
-  h6 { @apply text-base md:text-lg; }
-
-  p {
-    text-wrap: pretty;
-    line-height: 1.7;
+    @apply bg-background text-foreground font-sans;
   }
 }
 
-/* React-PDF Styles */
+/* React-PDF Styles - Required for proper PDF rendering */
 .react-pdf__Page {
   position: relative;
   background: white;
@@ -306,7 +165,7 @@
   box-shadow: 0px 2px 10px rgba(255, 255, 0, 0.5);
 }
 
-/* Fullscreen styles */
+/* Fullscreen styles for Chrome-style viewer - Enhanced for complete fullscreen */
 .fullscreen-container {
   width: 100vw !important;
   height: 100vh !important;
@@ -321,6 +180,7 @@
   padding: 0 !important;
 }
 
+/* Force fullscreen on all platforms */
 .fullscreen-container:-webkit-full-screen,
 .fullscreen-container:-moz-full-screen,
 .fullscreen-container:-ms-fullscreen,
@@ -334,6 +194,7 @@
   overflow: hidden !important;
 }
 
+/* Hide scrollbars in fullscreen */
 .fullscreen-container::-webkit-scrollbar {
   display: none !important;
 }
@@ -343,429 +204,113 @@
   scrollbar-width: none !important;
 }
 
+/* Ensure body doesn't interfere with fullscreen */
 body:has(.fullscreen-container) {
   overflow: hidden !important;
 }
 
 @layer components {
-  /* ═══════════════════════════════════════════════════════════════════════════
-     PREMIUM BACKGROUND PATTERNS
-     ═══════════════════════════════════════════════════════════════════════════ */
-  
-  /* Main app background - Lavender gradient for light, Teal for dark */
-  .app-background {
-    background: linear-gradient(
-      180deg,
-      hsl(var(--background-gradient-from)) 0%,
-      hsl(var(--background)) 30%,
-      hsl(var(--background)) 100%
-    );
-    min-height: 100vh;
-  }
-
-  /* Hero section gradient */
-  .hero-gradient {
-    background: linear-gradient(
-      135deg,
-      hsl(260 60% 95%) 0%,
-      hsl(260 40% 98%) 50%,
-      hsl(0 0% 100%) 100%
-    );
-  }
-
-  .dark .hero-gradient {
-    background: linear-gradient(
-      135deg,
-      hsl(174 35% 10%) 0%,
-      hsl(168 30% 15%) 50%,
-      hsl(174 25% 12%) 100%
-    );
-  }
-
-  /* Premium gradient backgrounds */
   .nect-gradient {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--nect-gradient-from)),
-      hsl(var(--nect-gradient-via)),
-      hsl(var(--nect-gradient-to))
-    );
+    background: linear-gradient(135deg, hsl(var(--nect-purple-from)), hsl(var(--nect-purple-to)));
   }
   
-  .nect-gradient-subtle {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--primary-light)),
-      hsl(var(--background))
-    );
-  }
-
-  /* Aurora effect background */
-  .aurora-bg {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .aurora-bg::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(
-      ellipse at 30% 20%,
-      hsl(var(--primary) / 0.15) 0%,
-      transparent 50%
-    ),
-    radial-gradient(
-      ellipse at 70% 60%,
-      hsl(var(--nect-gradient-to) / 0.1) 0%,
-      transparent 50%
-    );
-    animation: aurora 20s ease-in-out infinite;
-    pointer-events: none;
-  }
-
-  @keyframes aurora {
-    0%, 100% { transform: translate(0, 0) rotate(0deg); }
-    25% { transform: translate(2%, 2%) rotate(1deg); }
-    50% { transform: translate(-1%, 1%) rotate(-1deg); }
-    75% { transform: translate(1%, -2%) rotate(0.5deg); }
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════════════
-     GLASS MORPHISM
-     ═══════════════════════════════════════════════════════════════════════════ */
-  
-  .glass {
-    background: hsl(var(--card) / 0.7);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid hsl(var(--border) / 0.5);
-  }
-
-  .glass-strong {
-    background: hsl(var(--card) / 0.9);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid hsl(var(--border) / 0.8);
+  .nect-glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
 
   .glass-card {
-    background: hsl(var(--card) / 0.8);
+    background: hsl(var(--card));
     backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid hsl(var(--border) / 0.4);
-    box-shadow: var(--shadow-lg);
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 2px 8px rgba(126, 34, 206, 0.08);
   }
 
-  .dark .glass {
-    background: hsl(var(--card) / 0.6);
-    border: 1px solid hsl(var(--border) / 0.3);
-  }
-
-  .dark .glass-strong {
-    background: hsl(var(--card) / 0.85);
-    border: 1px solid hsl(var(--border) / 0.5);
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════════════
-     MODERN CARD STYLES
-     ═══════════════════════════════════════════════════════════════════════════ */
-
-  .card-elevated {
-    @apply bg-card rounded-2xl border border-border;
-    box-shadow: var(--shadow-md);
+  .floating-card {
+    transform: translateY(0);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .card-elevated:hover {
-    box-shadow: var(--shadow-xl);
-    transform: translateY(-4px);
-    border-color: hsl(var(--primary) / 0.2);
+  .floating-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 24px rgba(126, 34, 206, 0.15);
   }
 
-  .card-interactive {
-    @apply bg-card rounded-2xl border border-border cursor-pointer;
-    box-shadow: var(--shadow-sm);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  .timeline-dot {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
   }
 
-  .card-interactive:hover {
-    @apply border-primary/30;
-    box-shadow: var(--shadow-lg), var(--shadow-primary);
-    transform: translateY(-4px) scale(1.01);
+  .pulse-dot {
+    animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
-  .card-premium {
-    @apply bg-card rounded-2xl;
-    border: 1px solid hsl(var(--border) / 0.5);
-    box-shadow: var(--shadow-lg);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .card-premium::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      hsl(var(--primary) / 0.3),
-      transparent
-    );
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════════════
-     MODERN FORM STYLES
-     ═══════════════════════════════════════════════════════════════════════════ */
-
-  .form-group {
-    @apply space-y-2;
-  }
-
-  .form-label {
-    @apply text-sm font-medium text-foreground;
-  }
-
-  .form-hint {
-    @apply text-xs text-muted-foreground mt-1.5;
-  }
-
-  .form-error {
-    @apply text-xs text-destructive mt-1.5 flex items-center gap-1;
-  }
-
-  /* Premium input styles */
-  .input-premium {
-    @apply h-12 px-4 rounded-xl border-2 border-input bg-background/50 text-base;
-    @apply transition-all duration-200;
-    @apply focus:border-primary focus:ring-2 focus:ring-primary/20;
-    @apply hover:border-primary/50;
-  }
-
-  .input-premium:focus {
-    box-shadow: var(--shadow-primary);
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════════════
-     STATUS INDICATORS
-     ═══════════════════════════════════════════════════════════════════════════ */
-
-  .status-dot {
-    @apply w-2.5 h-2.5 rounded-full;
-  }
-
-  .status-online {
-    @apply bg-success;
-    box-shadow: 0 0 10px hsl(var(--success) / 0.5);
-    animation: pulse-status 2s ease-in-out infinite;
-  }
-
-  .status-offline {
-    @apply bg-muted-foreground;
-  }
-
-  .status-busy {
-    @apply bg-warning;
-    box-shadow: 0 0 10px hsl(var(--warning) / 0.5);
-  }
-
-  @keyframes pulse-status {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.8; transform: scale(1.1); }
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════════════
-     ANIMATIONS
-     ═══════════════════════════════════════════════════════════════════════════ */
-
-  /* Pulse animation for notifications */
-  .pulse-notification {
-    animation: pulse-notification 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
-  @keyframes pulse-notification {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-
-  /* Shimmer loading effect */
-  .shimmer {
-    background: linear-gradient(
-      90deg,
-      hsl(var(--muted)) 0%,
-      hsl(var(--muted-foreground) / 0.1) 50%,
-      hsl(var(--muted)) 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-  }
-
-  @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-
-  /* Float animation */
-  .animate-float {
-    animation: float 4s ease-in-out infinite;
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(124, 58, 237, 0.7);
+      transform: scale(1.1);
+    }
   }
 
   @keyframes float {
     0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-8px); }
+    50% { transform: translateY(-4px); }
   }
 
-  /* Fade in animation */
-  .animate-fade-in {
-    animation: fadeIn 0.4s ease-out;
+  .morphing-card {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
   }
 
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(12px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  .morphing-card:hover {
+    transform: rotateY(5deg) rotateX(5deg);
   }
 
-  /* Scale in animation */
-  .animate-scale-in {
-    animation: scaleIn 0.3s ease-out;
+  .kanban-column {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
-  @keyframes scaleIn {
-    from {
-      opacity: 0;
-      transform: scale(0.92);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  /* Slide animations */
-  .animate-slide-up {
-    animation: slideUp 0.4s ease-out;
-  }
-
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .animate-slide-down {
-    animation: slideDown 0.4s ease-out;
-  }
-
-  @keyframes slideDown {
-    from {
-      opacity: 0;
-      transform: translateY(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* Glow effects */
-  .glow-primary {
-    box-shadow: var(--shadow-glow);
-  }
-
-  .glow-primary-hover:hover {
-    box-shadow: var(--shadow-glow);
-  }
-
-  /* Gradient border */
-  .gradient-border {
-    position: relative;
-    background: hsl(var(--card));
-    border-radius: 1rem;
-  }
-
-  .gradient-border::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px;
-    background: linear-gradient(
-      135deg,
-      hsl(var(--primary)),
-      hsl(var(--nect-gradient-to))
-    );
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════════════
-     BUTTON ENHANCEMENTS
-     ═══════════════════════════════════════════════════════════════════════════ */
-
-  .btn-premium {
-    @apply relative overflow-hidden;
+  .course-card {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .btn-premium::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      hsl(0 0% 100% / 0.2),
-      transparent
-    );
-    transition: left 0.5s;
+  .course-card:hover {
+    transform: scale(1.02);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
   }
 
-  .btn-premium:hover::before {
-    left: 100%;
+  .search-bar {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
   }
 
-  .btn-gradient {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--primary)),
-      hsl(var(--nect-gradient-to))
-    );
-    color: hsl(var(--primary-foreground));
-    box-shadow: var(--shadow-primary);
+  .search-bar:focus-within {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.2);
   }
 
-  .btn-gradient:hover {
-    box-shadow: var(--shadow-glow);
-    transform: translateY(-2px);
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
   }
 
-  /* ═══════════════════════════════════════════════════════════════════════════
-     MOBILE UTILITIES
-     ═══════════════════════════════════════════════════════════════════════════ */
+  .border-3 {
+    border-width: 3px;
+  }
 
+  /* Safe area for mobile devices (iPhone notch, etc.) */
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
@@ -774,152 +319,43 @@ body:has(.fullscreen-container) {
     padding-top: env(safe-area-inset-top);
   }
 
+  /* Mobile responsive utilities */
   .mobile-card {
-    @apply bg-card rounded-2xl border border-border p-4;
-    box-shadow: var(--shadow-sm);
+    @apply bg-card rounded-xl border border-border p-4 shadow-sm;
   }
 
   .mobile-list-item {
-    @apply flex items-center gap-3 p-3.5 rounded-xl hover:bg-muted/50 transition-all duration-200;
-  }
-
-  .mobile-list-item:active {
-    @apply scale-[0.98];
+    @apply flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors;
   }
 
   .mobile-section-title {
-    @apply text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3;
+    @apply text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2;
   }
 
   .mobile-btn {
-    @apply h-12 px-5 rounded-xl font-medium transition-all active:scale-[0.97];
+    @apply h-11 px-4 rounded-xl font-medium transition-all active:scale-95;
   }
 
   .mobile-input {
-    @apply h-13 px-4 rounded-xl border-2 border-input bg-background text-base;
+    @apply h-12 px-4 rounded-xl border border-input bg-background text-base;
   }
 
-  /* Touch target improvements */
+  /* Improved touch targets for mobile */
   @media (max-width: 768px) {
     .touch-target {
-      min-height: 48px;
-      min-width: 48px;
+      min-height: 44px;
+      min-width: 44px;
     }
 
+    /* Improve tap feedback */
     .tap-highlight {
-      -webkit-tap-highlight-color: hsl(var(--primary) / 0.1);
+      -webkit-tap-highlight-color: rgba(124, 58, 237, 0.1);
     }
 
+    /* Better scrolling on mobile */
     .mobile-scroll {
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
     }
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════════════
-     SCROLLBAR STYLING
-     ═══════════════════════════════════════════════════════════════════════════ */
-
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: hsl(var(--muted) / 0.5);
-    border-radius: 4px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.3);
-    border-radius: 4px;
-    transition: background 0.2s;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.5);
-  }
-
-  /* Hide scrollbar but keep functionality */
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════════════
-     SPECIAL EFFECTS
-     ═══════════════════════════════════════════════════════════════════════════ */
-
-  /* Sparkle effect */
-  .sparkle {
-    position: relative;
-  }
-
-  .sparkle::after {
-    content: '✦';
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    font-size: 10px;
-    color: hsl(var(--primary));
-    animation: sparkle 1.5s ease-in-out infinite;
-  }
-
-  @keyframes sparkle {
-    0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); }
-    50% { opacity: 0.5; transform: scale(1.2) rotate(180deg); }
-  }
-
-  /* Rainbow border animation */
-  .rainbow-border {
-    position: relative;
-    background: hsl(var(--card));
-  }
-
-  .rainbow-border::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    border-radius: inherit;
-    background: linear-gradient(
-      90deg,
-      hsl(var(--primary)),
-      hsl(var(--nect-gradient-via)),
-      hsl(var(--nect-gradient-to)),
-      hsl(var(--primary))
-    );
-    background-size: 400% 100%;
-    z-index: -1;
-    animation: rainbow 3s linear infinite;
-  }
-
-  @keyframes rainbow {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 400% 50%; }
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════════════
-     BADGE VARIANTS
-     ═══════════════════════════════════════════════════════════════════════════ */
-
-  .badge-gradient {
-    background: linear-gradient(
-      135deg,
-      hsl(var(--primary)),
-      hsl(var(--nect-gradient-to))
-    );
-    color: hsl(var(--primary-foreground));
-  }
-
-  .badge-outline-primary {
-    @apply border-2 border-primary text-primary bg-primary/5;
-  }
-
-  .badge-glow {
-    box-shadow: var(--shadow-primary);
   }
 }
