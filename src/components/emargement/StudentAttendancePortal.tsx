@@ -64,25 +64,27 @@ const StudentAttendancePortal: React.FC<StudentAttendancePortalProps> = ({
 
       setAttendanceSheet(sheetData as any);
 
-      // Récupérer les participants inscrits à la formation (uniquement les étudiants)
-      const { data: participantData, error: studentsError } = await supabase
-        .from('user_formation_assignments')
-        .select(`
-          user_id,
-          users!user_id(
+      // Récupérer les étudiants inscrits à la formation (student_formations)
+      const { data: enrollmentData, error: studentsError } = await supabase
+        .from('student_formations')
+        .select(
+          `
+          student_id,
+          users!student_id(
             id,
             first_name,
             last_name,
             email,
             role
           )
-        `)
+        `
+        )
         .eq('formation_id', sheetData.formation_id);
 
       if (studentsError) throw studentsError;
 
-      const enrolledStudents = (participantData || []).filter(
-        (assignment: any) => assignment.users?.role === 'Étudiant'
+      const enrolledStudents = (enrollmentData || []).filter(
+        (enrollment: any) => enrollment.users?.role === 'Étudiant'
       );
 
       // Récupérer les signatures existantes
@@ -97,12 +99,12 @@ const StudentAttendancePortal: React.FC<StudentAttendancePortalProps> = ({
       const signedUserIds = new Set(signatures?.map(s => s.user_id) || []);
       setSignedStudents(signedUserIds);
 
-      const studentsWithSignature: StudentInfo[] = enrolledStudents.map((assignment: any) => ({
-        id: assignment.users.id,
-        first_name: assignment.users.first_name,
-        last_name: assignment.users.last_name,
-        email: assignment.users.email,
-        hasSignature: signedUserIds.has(assignment.users.id)
+      const studentsWithSignature: StudentInfo[] = enrolledStudents.map((enrollment: any) => ({
+        id: enrollment.users.id,
+        first_name: enrollment.users.first_name,
+        last_name: enrollment.users.last_name,
+        email: enrollment.users.email,
+        hasSignature: signedUserIds.has(enrollment.users.id)
       }));
 
       setStudents(studentsWithSignature);

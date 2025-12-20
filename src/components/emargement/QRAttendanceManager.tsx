@@ -51,8 +51,8 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
     try {
       // Récupérer le nombre total d'étudiants inscrits
       const { data: enrollments, error: enrollmentError } = await supabase
-        .from('user_formation_assignments')
-        .select('user_id')
+        .from('student_formations')
+        .select('student_id')
         .eq('formation_id', attendanceSheet.formation_id);
 
       if (enrollmentError) throw enrollmentError;

@@ -124,34 +124,36 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
         }
       }
 
-      // Récupérer les participants inscrits à la formation (uniquement les étudiants)
-      const { data: participantData, error: studentsError } = await supabase
-        .from('user_formation_assignments')
-        .select(`
-          user_id,
-          users!user_id(
+      // Récupérer les étudiants inscrits à la formation (student_formations)
+      const { data: enrollmentData, error: studentsError } = await supabase
+        .from('student_formations')
+        .select(
+          `
+          student_id,
+          users!student_id(
             id,
             first_name,
             last_name,
             email,
             role
           )
-        `)
+        `
+        )
         .eq('formation_id', sheetData.formation_id);
 
       if (studentsError) throw studentsError;
 
-      const enrolledStudents = (participantData || []).filter(
-        (assignment: any) => assignment.users?.role === 'Étudiant'
+      const enrolledStudents = (enrollmentData || []).filter(
+        (enrollment: any) => enrollment.users?.role === 'Étudiant'
       );
 
       // Mapper les étudiants avec leurs signatures
-      const mappedStudents: Student[] = enrolledStudents.map((assignment: any) => ({
-        id: assignment.users.id,
-        firstName: assignment.users.first_name,
-        lastName: assignment.users.last_name,
+      const mappedStudents: Student[] = enrolledStudents.map((enrollment: any) => ({
+        id: enrollment.users.id,
+        firstName: enrollment.users.first_name,
+        lastName: enrollment.users.last_name,
         formation: sheetData.formations?.title || '',
-        signature: signatures?.find((sig: any) => sig.user_id === assignment.users.id)
+        signature: signatures?.find((sig: any) => sig.user_id === enrollment.users.id)
       }));
 
       setStudents(mappedStudents);
