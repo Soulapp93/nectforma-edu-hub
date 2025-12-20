@@ -84,47 +84,9 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
 
     setGeneratingSheet(true);
     try {
-      // Chercher ou créer un planning pour cette formation
-      let { data: existingSchedule, error: scheduleError } = await supabase
-        .from('schedules')
-        .select('id')
-        .eq('formation_id', formationId)
-        .limit(1)
-        .single();
-
-      let scheduleId = existingSchedule?.id;
-
-      // Si aucun planning n'existe, en créer un
-      if (!scheduleId) {
-        const { data: newSchedule, error: newScheduleError } = await supabase
-          .from('schedules')
-          .insert({
-            formation_id: formationId,
-            title: `Planning - ${formationTitle}`,
-            academic_year: '2025-2026',
-            status: 'Publié'
-          })
-          .select()
-          .single();
-
-        if (newScheduleError) throw newScheduleError;
-        scheduleId = newSchedule.id;
-      }
-
-      // Créer un créneau d'horaire pour cette session
-      const { data: scheduleSlot, error: slotError } = await supabase
-        .from('schedule_slots')
-        .insert({
-          schedule_id: scheduleId,
-          date: new Date().toISOString().split('T')[0],
-          start_time: slot.start_time,
-          end_time: slot.end_time,
-          room: slot.room
-        })
-        .select()
-        .single();
-
-      if (slotError) throw slotError;
+      // Utiliser directement le slot existant (déjà récupéré depuis la BDD)
+      // Ne pas créer de nouveau slot pour éviter les problèmes de RLS
+      const scheduleSlotId = slot.id;
 
       // Vérifier si userId est un UUID valide (pour éviter les erreurs avec les users de demo)
       const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
@@ -135,10 +97,10 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
       
       // Préparer les données pour la feuille d'émargement
       const attendanceData: any = {
-        schedule_slot_id: scheduleSlot.id,
+        schedule_slot_id: scheduleSlotId,
         formation_id: formationId,
         title: `${formationTitleFromSlot} - ${moduleTitle}`,
-        date: new Date().toISOString().split('T')[0],
+        date: slot.date || new Date().toISOString().split('T')[0],
         start_time: slot.start_time,
         end_time: slot.end_time,
         room: slot.room,
