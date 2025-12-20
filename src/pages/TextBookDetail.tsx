@@ -8,11 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Plus, Clock, Calendar, User, BookOpen, Upload, X, FileText, Edit2, Trash2, AlertCircle, Download } from 'lucide-react';
+import { ArrowLeft, Plus, Clock, Calendar, User, BookOpen, Upload, X, FileText, Edit2, Trash2, AlertCircle } from 'lucide-react';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import ChromeStyleViewer from '@/components/ui/viewers/ChromeStyleViewer';
 import { textBookService, TextBook, TextBookEntry } from '@/services/textBookService';
-import { pdfExportService } from '@/services/pdfExportService';
 import { moduleService, FormationModule } from '@/services/moduleService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useEstablishment } from '@/hooks/useEstablishment';
@@ -42,10 +41,6 @@ const TextBookDetail: React.FC = () => {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<TextBookEntry | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
-  const [exportOrientation, setExportOrientation] = useState<'portrait' | 'landscape'>('portrait');
-  const [isExporting, setIsExporting] = useState(false);
 
   const { userId, userRole } = useCurrentUser();
   const { establishment } = useEstablishment();
@@ -416,25 +411,12 @@ const TextBookDetail: React.FC = () => {
             {backNav.label}
           </Button>
           
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setExportOrientation('portrait');
-                setIsExportDialogOpen(true);
-              }}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Exporter PDF
+          {canEdit && (
+            <Button onClick={() => setIsAddEntryModalOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Ajouter une entrée
             </Button>
-
-            {canEdit && (
-              <Button onClick={() => setIsAddEntryModalOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter une entrée
-              </Button>
-            )}
-          </div>
+          )}
         </div>
         
         <div 
