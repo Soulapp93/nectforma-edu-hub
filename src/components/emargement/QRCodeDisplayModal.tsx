@@ -68,7 +68,8 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
       // Générer un nouveau code unique (6 chiffres)
       const newCode = Math.floor(100000 + Math.random() * 900000).toString();
       
-      const qrData = `${window.location.origin}/emargement-qr-student?sheet=${attendanceSheet.id}&code=${newCode}`;
+      // Le scanner (Compte > QR) récupère juste le paramètre "code"
+      const qrData = `${window.location.origin}/emargement-qr?code=${newCode}`;
       
       // Générer l'image QR code
       const qrImageUrl = await QRCode.toDataURL(qrData, {

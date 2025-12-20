@@ -160,8 +160,28 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
     };
   }, [attendanceSheet.id, instructorId]);
 
-  const handleStartQRSession = () => {
-    setShowQRModal(true);
+  const handleStartQRSession = async () => {
+    try {
+      // Ouvrir la session si elle est encore en attente
+      if (attendanceSheet.status === 'En attente' || !attendanceSheet.is_open_for_signing) {
+        const { error } = await supabase
+          .from('attendance_sheets')
+          .update({
+            status: 'En cours',
+            is_open_for_signing: true,
+            opened_at: new Date().toISOString(),
+          })
+          .eq('id', attendanceSheet.id);
+
+        if (error) throw error;
+        onUpdate();
+      }
+
+      setShowQRModal(true);
+    } catch (error) {
+      console.error('Error starting QR session:', error);
+      toast.error("Impossible d'ouvrir l'émargement pour cette session");
+    }
   };
 
   const handleInstructorSign = () => {
@@ -331,20 +351,22 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
           <CardTitle>Actions</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {/* Démarrer la session QR - uniquement pour les sessions encadrées */}
-          {attendanceSheet.status === 'En cours' && attendanceSheet.session_type !== 'autonomie' && (
+          {/* Démarrer / Afficher le QR code - uniquement pour les sessions encadrées */}
+          {attendanceSheet.session_type !== 'autonomie' && (attendanceSheet.status === 'En cours' || attendanceSheet.status === 'En attente') && (
             <Button 
               onClick={handleStartQRSession}
               className="w-full bg-purple-600 hover:bg-purple-700"
               size="lg"
             >
               <QrCode className="w-4 h-4 mr-2" />
-              Afficher le QR Code aux étudiants
+              {attendanceSheet.status === 'En attente' || !attendanceSheet.is_open_for_signing
+                ? "Ouvrir l'émargement & afficher le QR Code"
+                : 'Afficher le QR Code aux étudiants'}
             </Button>
           )}
 
           {/* Message pour les sessions en autonomie */}
-          {attendanceSheet.session_type === 'autonomie' && attendanceSheet.status === 'En cours' && (
+          {attendanceSheet.session_type === 'autonomie' && (attendanceSheet.status === 'En cours' || attendanceSheet.status === 'En attente') && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-center gap-2 text-blue-800">
                 <Users className="w-4 h-4" />
