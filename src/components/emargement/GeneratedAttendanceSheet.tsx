@@ -124,8 +124,8 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
         }
       }
 
-      // Récupérer les étudiants inscrits à la formation
-      const { data: studentData, error: studentsError } = await supabase
+      // Récupérer les participants inscrits à la formation (uniquement les étudiants)
+      const { data: participantData, error: studentsError } = await supabase
         .from('user_formation_assignments')
         .select(`
           user_id,
@@ -133,22 +133,25 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
             id,
             first_name,
             last_name,
-            email
+            email,
+            role
           )
         `)
         .eq('formation_id', sheetData.formation_id);
 
       if (studentsError) throw studentsError;
 
+      const enrolledStudents = (participantData || []).filter(
+        (assignment: any) => assignment.users?.role === 'Étudiant'
+      );
+
       // Mapper les étudiants avec leurs signatures
-      const mappedStudents: Student[] = (studentData || []).map(assignment => ({
+      const mappedStudents: Student[] = enrolledStudents.map((assignment: any) => ({
         id: assignment.users.id,
         firstName: assignment.users.first_name,
         lastName: assignment.users.last_name,
         formation: sheetData.formations?.title || '',
-        signature: signatures?.find(
-          (sig: any) => sig.user_id === assignment.users.id
-        )
+        signature: signatures?.find((sig: any) => sig.user_id === assignment.users.id)
       }));
 
       setStudents(mappedStudents);
