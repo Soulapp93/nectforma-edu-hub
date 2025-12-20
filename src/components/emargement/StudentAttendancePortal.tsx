@@ -64,8 +64,8 @@ const StudentAttendancePortal: React.FC<StudentAttendancePortalProps> = ({
 
       setAttendanceSheet(sheetData as any);
 
-      // Récupérer les étudiants inscrits à la formation
-      const { data: studentData, error: studentsError } = await supabase
+      // Récupérer les participants inscrits à la formation (uniquement les étudiants)
+      const { data: participantData, error: studentsError } = await supabase
         .from('user_formation_assignments')
         .select(`
           user_id,
@@ -73,12 +73,17 @@ const StudentAttendancePortal: React.FC<StudentAttendancePortalProps> = ({
             id,
             first_name,
             last_name,
-            email
+            email,
+            role
           )
         `)
         .eq('formation_id', sheetData.formation_id);
 
       if (studentsError) throw studentsError;
+
+      const enrolledStudents = (participantData || []).filter(
+        (assignment: any) => assignment.users?.role === 'Étudiant'
+      );
 
       // Récupérer les signatures existantes
       const { data: signatures, error: signaturesError } = await supabase
@@ -92,7 +97,7 @@ const StudentAttendancePortal: React.FC<StudentAttendancePortalProps> = ({
       const signedUserIds = new Set(signatures?.map(s => s.user_id) || []);
       setSignedStudents(signedUserIds);
 
-      const studentsWithSignature: StudentInfo[] = (studentData || []).map(assignment => ({
+      const studentsWithSignature: StudentInfo[] = enrolledStudents.map((assignment: any) => ({
         id: assignment.users.id,
         first_name: assignment.users.first_name,
         last_name: assignment.users.last_name,
