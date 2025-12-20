@@ -525,10 +525,10 @@ export const pdfExportService = {
         }
       }
       
-      // Function to add header (logo only on first page)
+      // Function to add header (logo, title, and establishment name ONLY on first page)
       const addHeader = async (pageNum: number) => {
-        // Logo and establishment name ONLY on first page
         if (pageNum === 1) {
+          // Logo ONLY on first page
           if (establishmentLogo) {
             try {
               const logoImg = new Image();
@@ -554,7 +554,7 @@ export const pdfExportService = {
             }
           }
           
-          // Establishment name below logo
+          // Establishment name below logo ONLY on first page
           if (establishmentName) {
             pdf.setFontSize(8);
             pdf.setTextColor(100, 100, 100);
@@ -563,25 +563,26 @@ export const pdfExportService = {
             const lines = pdf.splitTextToSize(establishmentName, 35);
             pdf.text(lines, margin + 11, nameY, { align: 'center' });
           }
+          
+          // Title ONLY on first page
+          pdf.setFontSize(16);
+          pdf.setTextColor(139, 92, 246);
+          pdf.setFont('helvetica', 'bold');
+          const title = `Cahier de Texte - ${textBook.formations?.title || 'Formation'}`;
+          pdf.text(title, pageWidth / 2, margin + 15, { align: 'center' });
+          
+          // Academic year ONLY on first page
+          pdf.setFontSize(10);
+          pdf.setTextColor(100, 100, 100);
+          pdf.setFont('helvetica', 'normal');
+          pdf.text(`Année académique : ${textBook.academic_year || ''}`, pageWidth / 2, margin + 23, { align: 'center' });
+          
+          // Header separator line ONLY on first page
+          pdf.setDrawColor(139, 92, 246);
+          pdf.setLineWidth(0.5);
+          pdf.line(margin, margin + headerHeight - 5, pageWidth - margin, margin + headerHeight - 5);
         }
-        
-        // Title - always centered, shown on all pages
-        pdf.setFontSize(16);
-        pdf.setTextColor(139, 92, 246);
-        pdf.setFont('helvetica', 'bold');
-        const title = `Cahier de Texte - ${textBook.formations?.title || 'Formation'}`;
-        pdf.text(title, pageWidth / 2, margin + 15, { align: 'center' });
-        
-        // Academic year
-        pdf.setFontSize(10);
-        pdf.setTextColor(100, 100, 100);
-        pdf.setFont('helvetica', 'normal');
-        pdf.text(`Année académique : ${textBook.academic_year || ''}`, pageWidth / 2, margin + 23, { align: 'center' });
-        
-        // Header separator line
-        pdf.setDrawColor(139, 92, 246);
-        pdf.setLineWidth(0.5);
-        pdf.line(margin, margin + headerHeight - 5, pageWidth - margin, margin + headerHeight - 5);
+        // Pages after first page: no header, content starts higher
       };
       
       // Function to add footer on each page
@@ -609,15 +610,23 @@ export const pdfExportService = {
       };
       
       // Function to handle page break - returns new Y position
+      // Pages after first start content higher since no header
       const handlePageBreak = async (neededHeight: number): Promise<number> => {
         if (currentY + neededHeight > maxContentY) {
           addFooter(currentPage);
           pdf.addPage();
           currentPage++;
           await addHeader(currentPage);
-          return contentStartY;
+          // No header on subsequent pages, start content at margin
+          return margin + 5;
         }
         return currentY;
+      };
+      
+      // Function to strip email addresses from text
+      const stripEmails = (text: string): string => {
+        // Remove email patterns like "email@domain.com Name" or just "email@domain.com"
+        return text.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\s*[A-Za-zÀ-ÿ]*/g, '').trim();
       };
       
       // Function to render plain text from HTML (simplified, no async issues)
@@ -625,6 +634,9 @@ export const pdfExportService = {
       // a consistent top padding to prevent overlap with the section header.
       const renderContent = (html: string, startY: number, maxWidth: number): number => {
         if (!html || html.trim() === '' || html === '<p></p>') return startY;
+        
+        // Strip emails from HTML content
+        html = stripEmails(html);
 
         // Always add a bit of breathing room before first rendered line
         let y = startY + 2;
@@ -638,21 +650,8 @@ export const pdfExportService = {
             addFooter(currentPage);
             pdf.addPage();
             currentPage++;
-            // Add header for continuation (same rules: logo only on first page)
-            // We keep it lightweight here to avoid async/await inside render loop.
-            pdf.setFontSize(16);
-            pdf.setTextColor(139, 92, 246);
-            pdf.setFont('helvetica', 'bold');
-            const title = `Cahier de Texte - ${textBook.formations?.title || 'Formation'}`;
-            pdf.text(title, pageWidth / 2, margin + 15, { align: 'center' });
-            pdf.setFontSize(10);
-            pdf.setTextColor(100, 100, 100);
-            pdf.setFont('helvetica', 'normal');
-            pdf.text(`Année académique : ${textBook.academic_year || ''}`, pageWidth / 2, margin + 23, { align: 'center' });
-            pdf.setDrawColor(139, 92, 246);
-            pdf.setLineWidth(0.5);
-            pdf.line(margin, margin + headerHeight - 5, pageWidth - margin, margin + headerHeight - 5);
-            y = contentStartY + 2;
+            // No header on subsequent pages, start content at margin
+            y = margin + 7;
           }
         };
 
