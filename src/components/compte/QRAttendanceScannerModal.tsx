@@ -182,7 +182,7 @@ const QRAttendanceScannerModal: React.FC<QRAttendanceScannerModalProps> = ({
         throw new Error(result?.error_message || 'Session invalide');
       }
 
-      // Get full session details
+      // Get full session details using a simpler query that works with RLS
       const { data: sheetData, error: sheetError } = await supabase
         .from('attendance_sheets')
         .select(`
@@ -192,17 +192,37 @@ const QRAttendanceScannerModal: React.FC<QRAttendanceScannerModalProps> = ({
           end_time,
           room,
           formation_id,
-          formation:formations(id, title),
-          instructor:users!attendance_sheets_instructor_id_fkey(first_name, last_name)
+          instructor_id
         `)
         .eq('id', result.sheet_id)
-        .single();
+        .maybeSingle();
 
       if (sheetError || !sheetData) {
-        throw new Error('Session non trouvée');
+        console.error('Sheet fetch error:', sheetError);
+        throw new Error('Session non trouvée ou accès refusé');
       }
 
-      const formationData = sheetData.formation as { id: string; title: string } | null;
+      // Get formation details separately
+      const { data: formationData } = await supabase
+        .from('formations')
+        .select('id, title')
+        .eq('id', sheetData.formation_id)
+        .maybeSingle();
+
+      // Get instructor details separately if instructor_id exists
+      let instructorName = 'Non assigné';
+      if (sheetData.instructor_id) {
+        const { data: instructorData } = await supabase
+          .from('users')
+          .select('first_name, last_name')
+          .eq('id', sheetData.instructor_id)
+          .maybeSingle();
+        
+        if (instructorData) {
+          instructorName = `${instructorData.first_name} ${instructorData.last_name}`;
+        }
+      }
+
       const formationId = formationData?.id || sheetData.formation_id;
 
       // Check if user is enrolled in the formation
@@ -235,9 +255,7 @@ const QRAttendanceScannerModal: React.FC<QRAttendanceScannerModalProps> = ({
         date: sheetData.date,
         startTime: sheetData.start_time?.slice(0, 5) || '',
         endTime: sheetData.end_time?.slice(0, 5) || '',
-        instructorName: sheetData.instructor 
-          ? `${(sheetData.instructor as any).first_name} ${(sheetData.instructor as any).last_name}`
-          : 'Non assigné',
+        instructorName: instructorName,
         room: sheetData.room || 'Non définie'
       });
 
