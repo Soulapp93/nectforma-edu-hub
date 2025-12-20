@@ -84,11 +84,48 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
 
     setGeneratingSheet(true);
     try {
-      // Utiliser directement le slot existant (déjà récupéré depuis la BDD)
-      // Ne pas créer de nouveau slot pour éviter les problèmes de RLS
       const scheduleSlotId = slot.id;
 
-      // Vérifier si userId est un UUID valide (pour éviter les erreurs avec les users de demo)
+      // Vérifier si une session existe déjà pour ce créneau
+      const { data: existingSheet, error: checkError } = await supabase
+        .from('attendance_sheets')
+        .select('id, status')
+        .eq('schedule_slot_id', scheduleSlotId)
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+
+      if (existingSheet) {
+        // Une session existe déjà : on l'ouvre directement
+        setAttendanceSessionData({
+          ...existingSheet,
+          formation_id: formationId,
+          formations: { title: formationTitle, color: formationColor },
+          title: slot.formation_modules?.title || formationTitle,
+          date: slot.date,
+          start_time: slot.start_time,
+          end_time: slot.end_time,
+          room: slot.room,
+          instructor_id: userId
+        });
+        
+        // Recharger les données complètes
+        const { data: fullSheet } = await supabase
+          .from('attendance_sheets')
+          .select('*, formations(title, color)')
+          .eq('id', existingSheet.id)
+          .single();
+        
+        if (fullSheet) {
+          setAttendanceSessionData(fullSheet);
+        }
+        
+        setShowQRManager(true);
+        toast.info('Une session d\'émargement existe déjà pour ce cours. Ouverture...');
+        return;
+      }
+
+      // Vérifier si userId est un UUID valide
       const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
       
       // Extraire les données du slot
@@ -124,7 +161,14 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
         `)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // Gérer l'erreur de contrainte unique (doublon)
+        if (error.code === '23505') {
+          toast.error('Une session d\'émargement existe déjà pour ce cours.');
+          return;
+        }
+        throw error;
+      }
 
       if (data) {
         setAttendanceSessionData(data);
@@ -132,7 +176,7 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
         
         toast.success('Session d\'émargement créée avec succès ! Vous pouvez maintenant afficher le QR code aux étudiants.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la génération:', error);
       toast.error(`Erreur lors de la génération: ${error.message}`);
     } finally {

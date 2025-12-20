@@ -64,28 +64,40 @@ const StudentAttendancePortal: React.FC<StudentAttendancePortalProps> = ({
 
       setAttendanceSheet(sheetData as any);
 
-      // Récupérer les étudiants inscrits à la formation (student_formations)
-      const { data: enrollmentData, error: studentsError } = await supabase
+      // Récupérer les étudiants inscrits à la formation
+      let enrolledStudents: any[] = [];
+      
+      // Essai 1: student_formations
+      const { data: sfData, error: sfError } = await supabase
         .from('student_formations')
-        .select(
-          `
+        .select(`
           student_id,
-          users!student_id(
-            id,
-            first_name,
-            last_name,
-            email,
-            role
-          )
-        `
-        )
+          users!student_id(id, first_name, last_name, email, role)
+        `)
         .eq('formation_id', sheetData.formation_id);
 
-      if (studentsError) throw studentsError;
+      if (!sfError && sfData && sfData.length > 0) {
+        enrolledStudents = sfData.filter((e: any) => e.users?.role === 'Étudiant');
+      }
 
-      const enrolledStudents = (enrollmentData || []).filter(
-        (enrollment: any) => enrollment.users?.role === 'Étudiant'
-      );
+      // Fallback: user_formation_assignments
+      if (enrolledStudents.length === 0) {
+        const { data: ufaData } = await supabase
+          .from('user_formation_assignments')
+          .select(`
+            user_id,
+            users!user_id(id, first_name, last_name, email, role)
+          `)
+          .eq('formation_id', sheetData.formation_id);
+
+        if (ufaData) {
+          enrolledStudents = ufaData
+            .filter((e: any) => e.users?.role === 'Étudiant')
+            .map((e: any) => ({ student_id: e.user_id, users: e.users }));
+        }
+      }
+
+      console.log('Portal - Étudiants trouvés:', enrolledStudents.length);
 
       // Récupérer les signatures existantes
       const { data: signatures, error: signaturesError } = await supabase
@@ -100,11 +112,11 @@ const StudentAttendancePortal: React.FC<StudentAttendancePortalProps> = ({
       setSignedStudents(signedUserIds);
 
       const studentsWithSignature: StudentInfo[] = enrolledStudents.map((enrollment: any) => ({
-        id: enrollment.users.id,
-        first_name: enrollment.users.first_name,
-        last_name: enrollment.users.last_name,
-        email: enrollment.users.email,
-        hasSignature: signedUserIds.has(enrollment.users.id)
+        id: enrollment.users?.id || enrollment.student_id,
+        first_name: enrollment.users?.first_name || '',
+        last_name: enrollment.users?.last_name || '',
+        email: enrollment.users?.email || '',
+        hasSignature: signedUserIds.has(enrollment.users?.id || enrollment.student_id)
       }));
 
       setStudents(studentsWithSignature);
