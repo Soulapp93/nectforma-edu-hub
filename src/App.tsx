@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -7,6 +6,7 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import Sidebar from './components/Sidebar';
 import NotificationBell from './components/NotificationBell';
+import { ThemeToggle } from './components/ThemeToggle';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import AdminPrincipalRoute from './components/AdminPrincipalRoute';
@@ -119,20 +119,21 @@ const AppContent = () => {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex h-screen w-full bg-gray-50">
+      <div className="flex h-screen w-full bg-background">
         {/* Sidebar - always visible */}
         <Sidebar />
         
         <div className="flex flex-col flex-1 w-full min-w-0">
           {/* Header - always visible */}
-          <header className="flex h-14 sm:h-16 items-center justify-between border-b bg-white px-4 sm:px-6 sticky top-0 z-40 shadow-sm">
+          <header className="flex h-14 sm:h-16 items-center justify-between border-b bg-card px-4 sm:px-6 sticky top-0 z-40 shadow-sm">
             <SidebarTrigger className="h-9 w-9" />
-            <div className="flex items-center space-x-3 sm:space-x-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <ThemeToggle />
               <NotificationBell />
             </div>
           </header>
           
-          <main className="flex-1 overflow-auto bg-gray-50">
+          <main className="flex-1 overflow-auto bg-background">
             <Routes>
               <Route path="/emargement/signer/:token" element={<SignaturePublique />} />
               <Route path="/dashboard" element={<ProtectedRoute><AdminRoute><Dashboard /></AdminRoute></ProtectedRoute>} />
