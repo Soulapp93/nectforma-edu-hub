@@ -49,25 +49,29 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
   // Charger les statistiques d'émargement
   const loadStats = async () => {
     try {
-      // Récupérer le nombre total d'étudiants inscrits
-      // Essayer d'abord student_formations, puis user_formation_assignments
+      // Récupérer UNIQUEMENT les étudiants inscrits (pas les formateurs/admins)
       let totalStudents = 0;
 
+      // Essai 1: student_formations avec filtre role
       const { data: sfEnrollments, error: sfError } = await supabase
         .from('student_formations')
-        .select('student_id')
+        .select('student_id, users!student_id(role)')
         .eq('formation_id', attendanceSheet.formation_id);
 
       if (!sfError && sfEnrollments && sfEnrollments.length > 0) {
-        totalStudents = sfEnrollments.length;
-      } else {
-        // Fallback: user_formation_assignments
+        // Compter uniquement les étudiants
+        totalStudents = sfEnrollments.filter((e: any) => e.users?.role === 'Étudiant').length;
+      }
+      
+      // Fallback: user_formation_assignments si student_formations ne donne rien
+      if (totalStudents === 0) {
         const { data: ufaEnrollments } = await supabase
           .from('user_formation_assignments')
           .select('user_id, users!user_id(role)')
           .eq('formation_id', attendanceSheet.formation_id);
         
         if (ufaEnrollments) {
+          // STRICTEMENT étudiants uniquement
           totalStudents = ufaEnrollments.filter((e: any) => e.users?.role === 'Étudiant').length;
         }
       }
@@ -75,11 +79,12 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
       // Récupérer les signatures
       const { data: signatures, error: signaturesError } = await supabase
         .from('attendance_signatures')
-        .select('user_id, user_type')
+        .select('user_id, user_type, present')
         .eq('attendance_sheet_id', attendanceSheet.id);
 
       if (signaturesError) throw signaturesError;
 
+      // Compter UNIQUEMENT les signatures d'étudiants (user_type = 'student')
       const studentSignatures = signatures?.filter(s => s.user_type === 'student') || [];
       const instructorSignature = signatures?.find(s => s.user_type === 'instructor' && s.user_id === instructorId);
       
@@ -89,7 +94,7 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
       // Le formateur peut envoyer à l'admin si tous les étudiants ont signé et que lui-même a signé
       const canSendToAdmin = signedStudents === totalStudents && instructorSigned && totalStudents > 0;
 
-      console.log('Stats émargement:', { totalStudents, signedStudents, instructorSigned });
+      console.log('Stats émargement (étudiants uniquement):', { totalStudents, signedStudents, instructorSigned });
 
       setStats({
         totalStudents,
