@@ -49,30 +49,34 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
   // Charger les statistiques d'émargement
   const loadStats = async () => {
     try {
-      // Récupérer UNIQUEMENT les étudiants inscrits (pas les formateurs/admins)
+      // Récupérer UNIQUEMENT les étudiants inscrits (exclure formateur et admins)
       let totalStudents = 0;
 
       // Essai 1: student_formations avec filtre role
       const { data: sfEnrollments, error: sfError } = await supabase
         .from('student_formations')
-        .select('student_id, users!student_id(role)')
+        .select('student_id, users!student_id(id, role)')
         .eq('formation_id', attendanceSheet.formation_id);
 
       if (!sfError && sfEnrollments && sfEnrollments.length > 0) {
-        // Compter uniquement les étudiants
-        totalStudents = sfEnrollments.filter((e: any) => e.users?.role === 'Étudiant').length;
+        // Compter uniquement les étudiants ET exclure le formateur explicitement
+        totalStudents = sfEnrollments.filter(
+          (e: any) => e.users?.role === 'Étudiant' && e.users?.id !== attendanceSheet.instructor_id
+        ).length;
       }
       
       // Fallback: user_formation_assignments si student_formations ne donne rien
       if (totalStudents === 0) {
         const { data: ufaEnrollments } = await supabase
           .from('user_formation_assignments')
-          .select('user_id, users!user_id(role)')
+          .select('user_id, users!user_id(id, role)')
           .eq('formation_id', attendanceSheet.formation_id);
         
         if (ufaEnrollments) {
-          // STRICTEMENT étudiants uniquement
-          totalStudents = ufaEnrollments.filter((e: any) => e.users?.role === 'Étudiant').length;
+          // STRICTEMENT étudiants uniquement ET exclure formateur
+          totalStudents = ufaEnrollments.filter(
+            (e: any) => e.users?.role === 'Étudiant' && e.user_id !== attendanceSheet.instructor_id
+          ).length;
         }
       }
 
@@ -94,7 +98,7 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
       // Le formateur peut envoyer à l'admin si tous les étudiants ont signé et que lui-même a signé
       const canSendToAdmin = signedStudents === totalStudents && instructorSigned && totalStudents > 0;
 
-      console.log('Stats émargement (étudiants uniquement):', { totalStudents, signedStudents, instructorSigned });
+      console.log('Stats émargement (étudiants uniquement):', { totalStudents, signedStudents, instructorSigned, instructorExcluded: attendanceSheet.instructor_id });
 
       setStats({
         totalStudents,
@@ -140,28 +144,55 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
 
     loadModuleInfo();
 
+    const channelName = `qr_manager_${attendanceSheet.id}_${Date.now()}`;
+    console.log('📡 QRManager: Setting up realtime channel:', channelName);
+    
     const channel = supabase
-      .channel('qr_attendance_manager')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
-          table: 'attendance_signatures',
-          filter: `attendance_sheet_id=eq.${attendanceSheet.id}`
+          table: 'attendance_signatures'
         },
-        () => {
-          setLastUpdate(new Date());
-          loadStats();
-          onUpdate();
+        (payload) => {
+          console.log('🔄 QRManager: Signature INSERT:', payload);
+          if (payload.new && (payload.new as any).attendance_sheet_id === attendanceSheet.id) {
+            setLastUpdate(new Date());
+            loadStats();
+            onUpdate();
+          }
         }
       )
-      .subscribe((status) => {
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'attendance_signatures'
+        },
+        (payload) => {
+          if (payload.new && (payload.new as any).attendance_sheet_id === attendanceSheet.id) {
+            setLastUpdate(new Date());
+            loadStats();
+            onUpdate();
+          }
+        }
+      )
+      .subscribe((status, err) => {
+        console.log('📡 QRManager realtime status:', status, err);
         setIsRealtimeConnected(status === 'SUBSCRIBED');
       });
 
+    // Polling de secours toutes les 5 secondes
+    const pollingInterval = setInterval(() => {
+      loadStats();
+    }, 5000);
+
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(pollingInterval);
     };
   }, [attendanceSheet.id, instructorId]);
 

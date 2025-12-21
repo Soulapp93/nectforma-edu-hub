@@ -127,6 +127,7 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
       // Récupérer UNIQUEMENT les étudiants inscrits à la formation
       // IMPORTANT: Le formateur ne doit JAMAIS apparaître dans la liste des participants
       let enrolledStudents: any[] = [];
+      const instructorIdToExclude = sheetData.instructor_id;
       
       // Essai 1: student_formations - filtrer strictement les étudiants
       const { data: studentFormations, error: sfError } = await supabase
@@ -138,9 +139,9 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
         .eq('formation_id', sheetData.formation_id);
 
       if (!sfError && studentFormations && studentFormations.length > 0) {
-        // FILTRER STRICTEMENT : uniquement rôle "Étudiant"
+        // FILTRER STRICTEMENT : uniquement rôle "Étudiant" ET exclure explicitement le formateur
         enrolledStudents = studentFormations.filter(
-          (e: any) => e.users?.role === 'Étudiant'
+          (e: any) => e.users?.role === 'Étudiant' && e.users?.id !== instructorIdToExclude
         );
       }
 
@@ -155,14 +156,14 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
           .eq('formation_id', sheetData.formation_id);
 
         if (!ufaError && ufaData) {
-          // FILTRER STRICTEMENT : uniquement rôle "Étudiant" - exclure formateurs, admins, etc.
+          // FILTRER STRICTEMENT : uniquement rôle "Étudiant" ET exclure le formateur
           enrolledStudents = ufaData
-            .filter((e: any) => e.users?.role === 'Étudiant')
+            .filter((e: any) => e.users?.role === 'Étudiant' && e.user_id !== instructorIdToExclude)
             .map((e: any) => ({ student_id: e.user_id, users: e.users }));
         }
       }
 
-      console.log('Étudiants inscrits trouvés (après filtrage strict):', enrolledStudents.length);
+      console.log('Étudiants inscrits trouvés (après filtrage strict):', enrolledStudents.length, 'Formateur exclu:', instructorIdToExclude);
 
       // Récupérer uniquement les signatures d'étudiants (user_type = 'student')
       const studentSignatures = signatures?.filter((sig: any) => sig.user_type === 'student') || [];
@@ -191,24 +192,29 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
   useEffect(() => {
     loadAttendanceData();
 
-    // Créer un channel unique pour cette feuille
-    const channelName = `attendance_realtime_${attendanceSheetId}`;
+    // Créer un channel unique pour cette feuille avec un timestamp pour éviter les conflits
+    const channelName = `sheet_realtime_${attendanceSheetId}_${Date.now()}`;
     
-    // S'abonner aux changements de signatures ET de la feuille
+    console.log('📡 Setting up realtime channel:', channelName);
+    
+    // S'abonner aux changements de signatures - SANS filtre pour contourner les problèmes RLS
     const channel = supabase
       .channel(channelName)
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
-          table: 'attendance_signatures',
-          filter: `attendance_sheet_id=eq.${attendanceSheetId}`
+          table: 'attendance_signatures'
         },
         (payload) => {
-          console.log('🔄 Signature change detected (realtime):', payload);
-          setLastUpdate(new Date());
-          loadAttendanceData(); // Recharger les données immédiatement
+          console.log('🔄 Signature INSERT detected:', payload);
+          // Vérifier si c'est pour notre feuille
+          if (payload.new && (payload.new as any).attendance_sheet_id === attendanceSheetId) {
+            console.log('✅ Signature pour cette feuille, rechargement...');
+            setLastUpdate(new Date());
+            loadAttendanceData();
+          }
         }
       )
       .on(
@@ -216,22 +222,46 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'attendance_sheets',
-          filter: `id=eq.${attendanceSheetId}`
+          table: 'attendance_signatures'
         },
         (payload) => {
-          console.log('🔄 Attendance sheet updated (realtime):', payload);
-          setLastUpdate(new Date());
-          loadAttendanceData();
+          console.log('🔄 Signature UPDATE detected:', payload);
+          if (payload.new && (payload.new as any).attendance_sheet_id === attendanceSheetId) {
+            setLastUpdate(new Date());
+            loadAttendanceData();
+          }
         }
       )
-      .subscribe((status) => {
-        console.log('Realtime subscription status:', status);
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'attendance_sheets'
+        },
+        (payload) => {
+          console.log('🔄 Attendance sheet UPDATE detected:', payload);
+          if (payload.new && (payload.new as any).id === attendanceSheetId) {
+            setLastUpdate(new Date());
+            loadAttendanceData();
+          }
+        }
+      )
+      .subscribe((status, err) => {
+        console.log('📡 Realtime subscription status:', status, err);
         setIsRealtimeConnected(status === 'SUBSCRIBED');
       });
 
+    // Polling de secours toutes les 5 secondes en cas de problème realtime
+    const pollingInterval = setInterval(() => {
+      console.log('🔄 Polling refresh...');
+      loadAttendanceData();
+    }, 5000);
+
     return () => {
+      console.log('🔌 Cleaning up realtime channel:', channelName);
       supabase.removeChannel(channel);
+      clearInterval(pollingInterval);
     };
   }, [attendanceSheetId]);
 
