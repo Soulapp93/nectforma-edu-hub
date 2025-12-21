@@ -124,11 +124,11 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
         }
       }
 
-      // Récupérer les étudiants inscrits à la formation
-      // Essayer d'abord student_formations, puis user_formation_assignments en fallback
+      // Récupérer UNIQUEMENT les étudiants inscrits à la formation
+      // IMPORTANT: Le formateur ne doit JAMAIS apparaître dans la liste des participants
       let enrolledStudents: any[] = [];
       
-      // Essai 1: student_formations
+      // Essai 1: student_formations - filtrer strictement les étudiants
       const { data: studentFormations, error: sfError } = await supabase
         .from('student_formations')
         .select(`
@@ -138,6 +138,7 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
         .eq('formation_id', sheetData.formation_id);
 
       if (!sfError && studentFormations && studentFormations.length > 0) {
+        // FILTRER STRICTEMENT : uniquement rôle "Étudiant"
         enrolledStudents = studentFormations.filter(
           (e: any) => e.users?.role === 'Étudiant'
         );
@@ -154,22 +155,29 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
           .eq('formation_id', sheetData.formation_id);
 
         if (!ufaError && ufaData) {
+          // FILTRER STRICTEMENT : uniquement rôle "Étudiant" - exclure formateurs, admins, etc.
           enrolledStudents = ufaData
             .filter((e: any) => e.users?.role === 'Étudiant')
             .map((e: any) => ({ student_id: e.user_id, users: e.users }));
         }
       }
 
-      console.log('Étudiants inscrits trouvés:', enrolledStudents.length);
+      console.log('Étudiants inscrits trouvés (après filtrage strict):', enrolledStudents.length);
+
+      // Récupérer uniquement les signatures d'étudiants (user_type = 'student')
+      const studentSignatures = signatures?.filter((sig: any) => sig.user_type === 'student') || [];
 
       // Mapper les étudiants avec leurs signatures
-      const mappedStudents: Student[] = enrolledStudents.map((enrollment: any) => ({
-        id: enrollment.users?.id || enrollment.student_id,
-        firstName: enrollment.users?.first_name || '',
-        lastName: enrollment.users?.last_name || '',
-        formation: sheetData.formations?.title || '',
-        signature: signatures?.find((sig: any) => sig.user_id === (enrollment.users?.id || enrollment.student_id))
-      }));
+      const mappedStudents: Student[] = enrolledStudents.map((enrollment: any) => {
+        const studentId = enrollment.users?.id || enrollment.student_id;
+        return {
+          id: studentId,
+          firstName: enrollment.users?.first_name || '',
+          lastName: enrollment.users?.last_name || '',
+          formation: sheetData.formations?.title || '',
+          signature: studentSignatures.find((sig: any) => sig.user_id === studentId)
+        };
+      });
 
       setStudents(mappedStudents);
     } catch (error) {
@@ -179,13 +187,16 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
     }
   };
 
-  // Écouter les changements en temps réel
+  // Écouter les changements en temps réel (signatures + feuille d'émargement)
   useEffect(() => {
     loadAttendanceData();
 
-    // S'abonner aux changements de signatures
+    // Créer un channel unique pour cette feuille
+    const channelName = `attendance_realtime_${attendanceSheetId}`;
+    
+    // S'abonner aux changements de signatures ET de la feuille
     const channel = supabase
-      .channel('attendance_signatures_changes')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -195,9 +206,23 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
           filter: `attendance_sheet_id=eq.${attendanceSheetId}`
         },
         (payload) => {
-          console.log('Signature change detected:', payload);
+          console.log('🔄 Signature change detected (realtime):', payload);
           setLastUpdate(new Date());
-          loadAttendanceData(); // Recharger les données
+          loadAttendanceData(); // Recharger les données immédiatement
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'attendance_sheets',
+          filter: `id=eq.${attendanceSheetId}`
+        },
+        (payload) => {
+          console.log('🔄 Attendance sheet updated (realtime):', payload);
+          setLastUpdate(new Date());
+          loadAttendanceData();
         }
       )
       .subscribe((status) => {
@@ -412,52 +437,57 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
 
         {/* Signatures des responsables */}
         <div className="p-6 border-t">
-          <div className="grid grid-cols-2 gap-8">
-            <div>
-              <h4 className="font-semibold mb-3">Signature du Formateur</h4>
-              {(() => {
-                const instructorSignature = (attendanceSheet as any).signatures?.find(
-                  (sig: any) => sig.user_type === 'instructor'
-                );
+          <div className={`grid gap-8 ${attendanceSheet.session_type === 'autonomie' ? 'grid-cols-1 max-w-md mx-auto' : 'grid-cols-2'}`}>
+            {/* Zone Signature Formateur - Masquée pour les sessions en autonomie */}
+            {attendanceSheet.session_type !== 'autonomie' && (
+              <div>
+                <h4 className="font-semibold mb-3">Signature du Formateur</h4>
+                {(() => {
+                  const instructorSignature = (attendanceSheet as any).signatures?.find(
+                    (sig: any) => sig.user_type === 'instructor'
+                  );
 
-                const canInstructorSign = !instructorSignature;
+                  const canInstructorSign = !instructorSignature;
 
-                return (
-                  <>
-                    <div
-                      className={`border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-center justify-center p-2 relative ${
-                        canInstructorSign
-                          ? 'cursor-pointer hover:bg-gray-100 transition-colors print:cursor-default print:hover:bg-gray-50'
-                          : ''
-                      }`}
-                      onClick={() => {
-                        if (canInstructorSign) {
-                          setShowInstructorSignModal(true);
-                        }
-                      }}
-                    >
-                      {instructorSignature?.signature_data ? (
-                        <img
-                          src={instructorSignature.signature_data}
-                          alt="Signature formateur"
-                          className="h-16 w-auto"
-                        />
-                      ) : (
-                        <div className="text-xs text-gray-500 text-center flex flex-col items-center gap-2">
-                          <PenTool className="w-5 h-5 print:hidden" />
-                          <span>Cliquez pour signer</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="mt-2 text-center text-sm text-gray-600 border-t pt-2">
-                      {attendanceSheet.instructor
-                        ? `${attendanceSheet.instructor.first_name} ${attendanceSheet.instructor.last_name}`
-                        : 'Formateur non assigné'}
-                    </div>
-                  </>
-                );
-              })()}
-            </div>
+                  return (
+                    <>
+                      <div
+                        className={`border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-center justify-center p-2 relative ${
+                          canInstructorSign
+                            ? 'cursor-pointer hover:bg-gray-100 transition-colors print:cursor-default print:hover:bg-gray-50'
+                            : ''
+                        }`}
+                        onClick={() => {
+                          if (canInstructorSign) {
+                            setShowInstructorSignModal(true);
+                          }
+                        }}
+                      >
+                        {instructorSignature?.signature_data ? (
+                          <img
+                            src={instructorSignature.signature_data}
+                            alt="Signature formateur"
+                            className="h-16 w-auto"
+                          />
+                        ) : (
+                          <div className="text-xs text-gray-500 text-center flex flex-col items-center gap-2">
+                            <PenTool className="w-5 h-5 print:hidden" />
+                            <span>Cliquez pour signer</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="mt-2 text-center text-sm text-gray-600 border-t pt-2">
+                        {attendanceSheet.instructor
+                          ? `${attendanceSheet.instructor.first_name} ${attendanceSheet.instructor.last_name}`
+                          : 'Formateur non assigné'}
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            )}
+            
+            {/* Zone Signature Administration - Toujours visible */}
             <div>
               <h4 className="font-semibold mb-3">Signature de l'Administration</h4>
               <div className="border border-gray-300 rounded-lg h-24 bg-gray-50 flex items-center justify-center p-2">

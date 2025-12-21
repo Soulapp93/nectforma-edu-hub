@@ -23,31 +23,83 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
   onClose,
   attendanceSheet
 }) => {
-  const [currentCode, setCurrentCode] = useState('123456');
-  const [qrCodeData, setQRCodeData] = useState('');
+  const [currentCode, setCurrentCode] = useState('');
   const [qrCodeImage, setQRCodeImage] = useState('');
   const [timeRemaining, setTimeRemaining] = useState(30 * 60); // 30 minutes
   const [signedCount, setSignedCount] = useState(0);
+  const [totalStudents, setTotalStudents] = useState(0);
   const [showCode, setShowCode] = useState(true);
   const [isRegenerating, setIsRegenerating] = useState(false);
 
-  // Simuler les statistiques d'émargement en temps réel
+  // Charger les statistiques réelles d'émargement
+  const loadRealStats = async () => {
+    try {
+      // Récupérer le nombre total d'étudiants (role = 'Étudiant' uniquement)
+      let total = 0;
+      
+      const { data: sfData } = await supabase
+        .from('student_formations')
+        .select('student_id, users!student_id(role)')
+        .eq('formation_id', attendanceSheet.formation_id);
+
+      if (sfData && sfData.length > 0) {
+        total = sfData.filter((e: any) => e.users?.role === 'Étudiant').length;
+      } else {
+        // Fallback
+        const { data: ufaData } = await supabase
+          .from('user_formation_assignments')
+          .select('user_id, users!user_id(role)')
+          .eq('formation_id', attendanceSheet.formation_id);
+        
+        if (ufaData) {
+          total = ufaData.filter((e: any) => e.users?.role === 'Étudiant').length;
+        }
+      }
+
+      setTotalStudents(total);
+
+      // Récupérer le nombre de signatures étudiants
+      const { data: signatures } = await supabase
+        .from('attendance_signatures')
+        .select('user_id')
+        .eq('attendance_sheet_id', attendanceSheet.id)
+        .eq('user_type', 'student');
+
+      setSignedCount(signatures?.length || 0);
+    } catch (error) {
+      console.error('Error loading real stats:', error);
+    }
+  };
+
+  // Écouter les mises à jour en temps réel des signatures
   useEffect(() => {
     if (!isOpen) return;
 
-    const interval = setInterval(() => {
-      // Simuler l'augmentation progressive des signatures
-      setSignedCount(prev => {
-        const max = 25; // Nombre max d'étudiants
-        if (prev < max && Math.random() > 0.7) {
-          return prev + 1;
-        }
-        return prev;
-      });
-    }, 3000);
+    loadRealStats();
 
-    return () => clearInterval(interval);
-  }, [isOpen]);
+    // S'abonner aux nouvelles signatures en temps réel
+    const channel = supabase
+      .channel(`qr_display_${attendanceSheet.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'attendance_signatures',
+          filter: `attendance_sheet_id=eq.${attendanceSheet.id}`
+        },
+        (payload) => {
+          if (payload.new.user_type === 'student') {
+            setSignedCount(prev => prev + 1);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isOpen, attendanceSheet.id]);
 
   // Countdown timer
   useEffect(() => {
@@ -68,7 +120,7 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
       // Générer un nouveau code unique (6 chiffres)
       const newCode = Math.floor(100000 + Math.random() * 900000).toString();
       
-      // Le scanner (Compte > QR) récupère juste le paramètre "code"
+      // URL que le QR code encode
       const qrData = `${window.location.origin}/emargement-qr?code=${newCode}`;
       
       // Générer l'image QR code
@@ -92,19 +144,19 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
       if (error) throw error;
 
       setCurrentCode(newCode);
-      setQRCodeData(qrData);
       setQRCodeImage(qrImageUrl);
       setTimeRemaining(30 * 60); // Reset timer
       
       toast.success('Nouveau code QR généré !');
     } catch (error: any) {
+      console.error('Error generating QR code:', error);
       toast.error('Erreur lors de la génération du code QR');
     } finally {
       setIsRegenerating(false);
     }
   };
 
-  // Initialiser le QR code
+  // Initialiser le QR code à l'ouverture
   useEffect(() => {
     if (isOpen) {
       generateNewCode();
@@ -118,7 +170,7 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
   };
 
   const progressPercentage = (timeRemaining / (30 * 60)) * 100;
-  const attendanceRate = Math.round((signedCount / 25) * 100);
+  const attendanceRate = totalStudents > 0 ? Math.round((signedCount / totalStudents) * 100) : 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -205,7 +257,7 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
             <CardContent className="text-center space-y-4">
               {showCode ? (
                 <div className="text-4xl font-mono font-bold tracking-widest text-primary">
-                  {currentCode}
+                  {currentCode || '------'}
                 </div>
               ) : (
                 <div className="text-4xl font-mono font-bold tracking-widest text-muted-foreground">
@@ -224,13 +276,17 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
               <CardTitle className="text-base flex items-center gap-2">
                 <Users className="w-4 h-4" />
                 Émargement en temps réel
+                <Badge variant="outline" className="ml-auto bg-green-50 text-green-700 border-green-200">
+                  <span className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span>
+                  En direct
+                </Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Étudiants émargés:</span>
                 <Badge variant="secondary">
-                  {signedCount}/25 ({attendanceRate}%)
+                  {signedCount}/{totalStudents} ({attendanceRate}%)
                 </Badge>
               </div>
               
@@ -242,7 +298,7 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
                   <div className="text-xs text-muted-foreground">Présents</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-orange-600">{25 - signedCount}</div>
+                  <div className="text-2xl font-bold text-orange-600">{totalStudents - signedCount}</div>
                   <div className="text-xs text-muted-foreground">En attente</div>
                 </div>
               </div>
