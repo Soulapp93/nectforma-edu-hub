@@ -1,0 +1,2 @@
+-- Drop the problematic policy that references attendance_sheets from user_formation_assignments
+DROP POLICY IF EXISTS "Instructors view assignments for their sessions" ON public.user_formation_assignments;
