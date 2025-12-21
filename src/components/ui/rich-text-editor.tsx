@@ -1,7 +1,24 @@
 import React, { useRef, useState } from 'react';
+import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Bold, Italic, Underline, List, ListOrdered, Type, AlignLeft, AlignCenter, AlignRight, Link, Palette, Undo, Redo, Quote, Code, Strikethrough, Subscript, Superscript } from 'lucide-react';
+
+// Configure DOMPurify with safe defaults - only allow formatting, no scripts/iframes
+const SANITIZE_CONFIG = {
+  ALLOWED_TAGS: ['p', 'br', 'b', 'strong', 'i', 'em', 'u', 's', 'strike', 'sub', 'sup', 
+                  'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote', 
+                  'pre', 'code', 'a', 'span', 'div', 'font'],
+  ALLOWED_ATTR: ['href', 'target', 'style', 'color', 'face', 'size'],
+  FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input', 'button'],
+  FORBID_ATTR: ['onerror', 'onclick', 'onload', 'onmouseover', 'onfocus', 'onblur'],
+  ALLOW_DATA_ATTR: false,
+};
+
+// Export sanitize function for use in other components
+export const sanitizeHtml = (html: string): string => {
+  return DOMPurify.sanitize(html, SANITIZE_CONFIG);
+};
 
 interface RichTextEditorProps {
   value: string;
@@ -447,7 +464,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       {isPreview ? (
         <div 
           className="p-3 min-h-[200px] prose prose-sm max-w-none"
-          dangerouslySetInnerHTML={{ __html: value }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(value) }}
         />
       ) : (
         <div className="relative">
@@ -464,7 +481,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             }}
             className="p-3 min-h-[200px] outline-none prose prose-sm max-w-none focus:bg-muted/10"
             style={{ minHeight: `${rows * 1.5}rem` }}
-            dangerouslySetInnerHTML={{ __html: value }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(value) }}
             suppressContentEditableWarning={true}
             onKeyDown={(e) => {
               // Handle keyboard shortcuts
