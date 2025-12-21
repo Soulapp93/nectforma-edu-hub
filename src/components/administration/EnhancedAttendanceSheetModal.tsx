@@ -87,33 +87,61 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
       if (signaturesError) throw signaturesError;
 
       // Récupérer les étudiants inscrits à la formation
-      const { data: studentData, error: studentsError } = await supabase
-        .from('user_formation_assignments')
+      // IMPORTANT: Exclure le formateur de la liste des participants
+      const instructorIdToExclude = attendanceSheet.instructor_id;
+      
+      let enrolledStudents: any[] = [];
+      
+      // Essai 1: student_formations - filtrer strictement les étudiants
+      const { data: sfData, error: sfError } = await supabase
+        .from('student_formations')
         .select(`
-          user_id,
-          users!user_id(
-            id,
-            first_name,
-            last_name,
-            email
-          )
+          student_id,
+          users!student_id(id, first_name, last_name, email, role)
         `)
         .eq('formation_id', attendanceSheet.formation_id);
 
-      if (studentsError) throw studentsError;
+      if (!sfError && sfData && sfData.length > 0) {
+        // FILTRER STRICTEMENT : uniquement rôle "Étudiant" ET exclure explicitement le formateur
+        enrolledStudents = sfData.filter(
+          (e: any) => e.users?.role === 'Étudiant' && e.users?.id !== instructorIdToExclude
+        );
+      }
 
-      // Mapper les étudiants avec leurs signatures (en ignorant les lignes sans utilisateur lié)
-      const mappedStudents: Student[] = (studentData || [])
-        .filter((assignment: any) => assignment.users)
-        .map((assignment: any) => ({
-          id: assignment.users.id,
-          firstName: assignment.users.first_name,
-          lastName: assignment.users.last_name,
+      // Fallback: user_formation_assignments si student_formations est vide
+      if (enrolledStudents.length === 0) {
+        const { data: ufaData, error: ufaError } = await supabase
+          .from('user_formation_assignments')
+          .select(`
+            user_id,
+            users!user_id(id, first_name, last_name, email, role)
+          `)
+          .eq('formation_id', attendanceSheet.formation_id);
+
+        if (!ufaError && ufaData) {
+          // FILTRER STRICTEMENT : uniquement rôle "Étudiant" ET exclure le formateur
+          enrolledStudents = ufaData
+            .filter((e: any) => e.users?.role === 'Étudiant' && e.user_id !== instructorIdToExclude)
+            .map((e: any) => ({ student_id: e.user_id, users: e.users }));
+        }
+      }
+
+      console.log('Étudiants inscrits (modal admin, après filtrage):', enrolledStudents.length, 'Formateur exclu:', instructorIdToExclude);
+
+      // Récupérer uniquement les signatures d'étudiants (user_type = 'student')
+      const studentSignatures = signatures?.filter((sig: any) => sig.user_type === 'student') || [];
+
+      // Mapper les étudiants avec leurs signatures
+      const mappedStudents: Student[] = enrolledStudents.map((enrollment: any) => {
+        const studentId = enrollment.users?.id || enrollment.student_id;
+        return {
+          id: studentId,
+          firstName: enrollment.users?.first_name || '',
+          lastName: enrollment.users?.last_name || '',
           formation: (attendanceSheet.formations as any)?.title || '',
-          signature: signatures?.find(
-            (sig: any) => sig.user_id === assignment.users.id
-          )
-        }));
+          signature: studentSignatures.find((sig: any) => sig.user_id === studentId)
+        };
+      });
 
       setStudents(mappedStudents);
       
