@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Plus, Clock, Calendar, User, BookOpen, Upload, X, FileText, Edit2, Trash2, AlertCircle } from 'lucide-react';
-import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { RichTextEditor, sanitizeHtml } from '@/components/ui/rich-text-editor';
 import ChromeStyleViewer from '@/components/ui/viewers/ChromeStyleViewer';
 import { textBookService, TextBook, TextBookEntry } from '@/services/textBookService';
 import { moduleService, FormationModule } from '@/services/moduleService';
@@ -537,7 +537,7 @@ const TextBookDetail: React.FC = () => {
                         </div>
                         <div 
                           className="prose prose-sm max-w-none text-gray-700"
-                          dangerouslySetInnerHTML={{ __html: entry.content }}
+                          dangerouslySetInnerHTML={{ __html: sanitizeHtml(entry.content) }}
                         />
                         
                         {/* Files section */}
