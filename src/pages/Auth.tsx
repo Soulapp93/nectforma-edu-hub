@@ -12,7 +12,7 @@ const DEMO_ACCOUNTS = [
     password: 'Demo123!',
     icon: Shield,
     color: 'text-primary',
-    borderColor: 'border-primary/30 hover:border-primary hover:bg-primary/5'
+    borderColor: 'border-primary/40 hover:border-primary hover:bg-primary/5'
   },
   { 
     role: 'Administrateur', 

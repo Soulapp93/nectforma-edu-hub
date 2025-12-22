@@ -3,103 +3,103 @@
 @tailwind components;
 @tailwind utilities;
 
-/* NECTFY Design System - Turquoise Modern Theme */
+/* NECTFY Design System - Digiforma Inspired Theme */
 
 @layer base {
   :root {
-    --background: 180 15% 97%;
-    --foreground: 200 25% 15%;
+    --background: 0 0% 100%;
+    --foreground: 240 15% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 200 25% 15%;
+    --card-foreground: 240 15% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 200 25% 15%;
+    --popover-foreground: 240 15% 15%;
 
-    /* Couleur turquoise principale */
-    --primary: 174 58% 62%;
+    /* Violet/Mauve principal inspiré Digiforma */
+    --primary: 262 83% 58%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 180 15% 94%;
-    --secondary-foreground: 200 25% 25%;
+    --secondary: 270 50% 96%;
+    --secondary-foreground: 262 83% 40%;
 
-    --muted: 180 12% 94%;
-    --muted-foreground: 200 10% 50%;
+    --muted: 260 15% 95%;
+    --muted-foreground: 260 10% 45%;
 
-    --accent: 174 58% 55%;
+    --accent: 280 75% 60%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 180 12% 88%;
-    --input: 180 12% 90%;
-    --ring: 174 58% 62%;
+    --border: 260 15% 90%;
+    --input: 260 15% 92%;
+    --ring: 262 83% 58%;
 
     --radius: 0.75rem;
 
-    /* Enhanced Status Colors */
-    --success: 152 69% 40%;
+    /* Status Colors */
+    --success: 142 76% 42%;
     --success-foreground: 0 0% 100%;
-    --success-muted: 152 69% 95%;
+    --success-muted: 142 76% 95%;
     
     --warning: 38 92% 50%;
-    --warning-foreground: 38 92% 15%;
+    --warning-foreground: 38 92% 10%;
     --warning-muted: 38 92% 95%;
     
-    --info: 199 89% 48%;
+    --info: 217 91% 60%;
     --info-foreground: 0 0% 100%;
-    --info-muted: 199 89% 95%;
+    --info-muted: 217 91% 95%;
 
-    /* Custom Turquoise Theme Colors */
-    --nect-primary-from: 174 58% 62%;
-    --nect-primary-to: 180 55% 50%;
-    --nect-primary-light: 174 58% 92%;
-    --nect-primary-dark: 174 58% 35%;
+    /* Digiforma-inspired theme colors */
+    --nect-primary-from: 262 83% 58%;
+    --nect-primary-to: 280 75% 60%;
+    --nect-primary-light: 262 83% 95%;
+    --nect-primary-dark: 262 83% 40%;
     
-    --nect-sidebar-bg: 174 58% 55%;
+    --nect-sidebar-bg: 262 83% 58%;
     --nect-card-bg: 0 0% 100%;
-    --nect-card-border: 180 12% 88%;
+    --nect-card-border: 260 15% 90%;
     
-    /* Turquoise gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--nect-primary-from)), hsl(var(--nect-primary-to)));
-    --gradient-card: linear-gradient(145deg, hsl(var(--card)), hsl(var(--muted)));
-    --gradient-hero: linear-gradient(135deg, hsl(174 58% 62%), hsl(180 55% 50%));
-    --gradient-soft: linear-gradient(135deg, hsl(174 58% 92%), hsl(180 55% 88%));
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(262 83% 58%), hsl(280 75% 60%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(260 15% 98%));
+    --gradient-hero: linear-gradient(135deg, hsl(262 83% 58%), hsl(280 75% 60%));
+    --gradient-soft: linear-gradient(135deg, hsl(262 83% 97%), hsl(280 75% 95%));
     
-    /* Professional shadows with turquoise tint */
-    --shadow-sm: 0 1px 3px rgba(93, 211, 211, 0.12);
-    --shadow-md: 0 4px 12px rgba(93, 211, 211, 0.18);
-    --shadow-lg: 0 10px 25px rgba(93, 211, 211, 0.22);
-    --shadow-xl: 0 20px 40px rgba(93, 211, 211, 0.28);
+    /* Professional shadows */
+    --shadow-sm: 0 1px 3px rgba(139, 92, 246, 0.08);
+    --shadow-md: 0 4px 16px rgba(139, 92, 246, 0.12);
+    --shadow-lg: 0 12px 32px rgba(139, 92, 246, 0.16);
+    --shadow-xl: 0 24px 48px rgba(139, 92, 246, 0.20);
   }
 
   .dark {
-    --background: 200 20% 8%;
-    --foreground: 180 12% 95%;
-    --card: 200 20% 11%;
-    --card-foreground: 180 12% 95%;
-    --primary: 174 58% 55%;
+    --background: 260 20% 8%;
+    --foreground: 260 10% 95%;
+    --card: 260 20% 11%;
+    --card-foreground: 260 10% 95%;
+    --primary: 262 83% 65%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 200 15% 18%;
-    --secondary-foreground: 180 12% 85%;
+    --secondary: 260 15% 18%;
+    --secondary-foreground: 262 83% 85%;
     
-    --muted: 200 15% 18%;
-    --muted-foreground: 180 10% 60%;
+    --muted: 260 15% 18%;
+    --muted-foreground: 260 10% 60%;
     
-    --accent: 174 58% 50%;
+    --accent: 280 75% 65%;
     --accent-foreground: 0 0% 100%;
     
-    --border: 200 15% 22%;
-    --input: 200 15% 22%;
+    --border: 260 15% 22%;
+    --input: 260 15% 22%;
     
-    --success: 152 69% 48%;
+    --success: 142 76% 50%;
     --warning: 38 92% 55%;
-    --info: 199 89% 55%;
+    --info: 217 91% 65%;
     
-    --nect-card-bg: 200 20% 11%;
-    --nect-card-border: 200 15% 22%;
+    --nect-card-bg: 260 20% 11%;
+    --nect-card-border: 260 15% 22%;
   }
 }
 
@@ -216,20 +216,20 @@ body:has(.fullscreen-container) {
 
 @layer components {
   .nect-gradient {
-    background: linear-gradient(135deg, hsl(var(--nect-primary-from)), hsl(var(--nect-primary-to)));
+    background: linear-gradient(135deg, hsl(262 83% 58%), hsl(280 75% 60%));
   }
   
   .nect-glass {
-    background: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(93, 211, 211, 0.15);
+    border: 1px solid rgba(139, 92, 246, 0.12);
   }
 
   .glass-card {
     background: hsl(var(--card));
     backdrop-filter: blur(20px);
     border: 1px solid hsl(var(--border));
-    box-shadow: 0 2px 8px rgba(93, 211, 211, 0.1);
+    box-shadow: 0 2px 12px rgba(139, 92, 246, 0.08);
   }
 
   .floating-card {
@@ -239,12 +239,12 @@ body:has(.fullscreen-container) {
 
   .floating-card:hover {
     transform: translateY(-6px);
-    box-shadow: 0 12px 28px rgba(93, 211, 211, 0.2);
+    box-shadow: 0 16px 40px rgba(139, 92, 246, 0.18);
   }
 
   .timeline-dot {
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
-    box-shadow: 0 0 20px rgba(93, 211, 211, 0.45);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
   }
 
   .pulse-dot {
@@ -253,11 +253,11 @@ body:has(.fullscreen-container) {
 
   @keyframes pulse-glow {
     0%, 100% {
-      box-shadow: 0 0 20px rgba(93, 211, 211, 0.45);
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
       transform: scale(1);
     }
     50% {
-      box-shadow: 0 0 35px rgba(93, 211, 211, 0.7);
+      box-shadow: 0 0 35px rgba(139, 92, 246, 0.65);
       transform: scale(1.08);
     }
   }
@@ -277,34 +277,34 @@ body:has(.fullscreen-container) {
   }
 
   .kanban-column {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.92));
     backdrop-filter: blur(15px);
-    border: 1px solid rgba(93, 211, 211, 0.15);
+    border: 1px solid rgba(139, 92, 246, 0.1);
   }
 
   .course-card {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.92));
+    background: linear-gradient(145deg, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.95));
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(93, 211, 211, 0.12);
+    border: 1px solid rgba(139, 92, 246, 0.08);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .course-card:hover {
     transform: scale(1.02);
-    box-shadow: 0 8px 24px rgba(93, 211, 211, 0.18);
+    box-shadow: 0 12px 32px rgba(139, 92, 246, 0.15);
   }
 
   .search-bar {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(93, 211, 211, 0.2);
+    border: 1px solid rgba(139, 92, 246, 0.15);
     transition: all 0.3s ease;
   }
 
   .search-bar:focus-within {
     background: rgba(255, 255, 255, 1);
     border-color: hsl(var(--primary));
-    box-shadow: 0 0 0 3px rgba(93, 211, 211, 0.15);
+    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.12);
   }
 
   .animate-float {
@@ -315,12 +315,12 @@ body:has(.fullscreen-container) {
     border-width: 3px;
   }
   
-  /* Turquoise accent utilities */
-  .turquoise-glow {
-    box-shadow: 0 0 20px rgba(93, 211, 211, 0.35);
+  /* Digiforma-inspired utilities */
+  .violet-glow {
+    box-shadow: 0 0 24px rgba(139, 92, 246, 0.3);
   }
   
-  .turquoise-border {
+  .violet-border {
     border-color: hsl(var(--primary));
   }
 
@@ -363,7 +363,7 @@ body:has(.fullscreen-container) {
 
     /* Improve tap feedback */
     .tap-highlight {
-      -webkit-tap-highlight-color: rgba(93, 211, 211, 0.15);
+      -webkit-tap-highlight-color: rgba(139, 92, 246, 0.12);
     }
 
     /* Better scrolling on mobile */

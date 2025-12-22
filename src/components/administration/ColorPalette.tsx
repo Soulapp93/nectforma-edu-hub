@@ -9,17 +9,17 @@ interface ColorPaletteProps {
 
 const ColorPalette: React.FC<ColorPaletteProps> = ({ selectedColor, onColorChange }) => {
   const colors = [
-    '#5DD3D3', // Turquoise (default)
-    '#4ECDC4', // Teal
-    '#45B7B8', // Darker turquoise
-    '#3B82F6', // Blue
+    '#8B5CF6', // Violet (default - Digiforma style)
+    '#A855F7', // Purple
     '#6366F1', // Indigo
-    '#8B5CF6', // Purple
-    '#EC4899', // Pink
-    '#EF4444', // Red
-    '#F59E0B', // Amber
+    '#3B82F6', // Blue
+    '#06B6D4', // Cyan
     '#10B981', // Emerald
     '#84CC16', // Lime
+    '#F59E0B', // Amber
+    '#F97316', // Orange
+    '#EF4444', // Red
+    '#EC4899', // Pink
     '#64748B'  // Slate
   ];
 
