@@ -62,6 +62,24 @@ export const pdfExportService = {
       // Load establishment info for logo
       let establishmentLogo = '';
       let establishmentName = '';
+      let moduleName = '';
+      
+      // Get module name from schedule_slot if available
+      if (attendanceSheet.schedule_slots?.formation_modules?.title) {
+        moduleName = attendanceSheet.schedule_slots.formation_modules.title;
+      } else {
+        // Fallback: load module from database
+        const { data: slotData } = await supabase
+          .from('schedule_slots')
+          .select('module_id, formation_modules(title)')
+          .eq('id', attendanceSheet.schedule_slot_id)
+          .single();
+        
+        if (slotData?.formation_modules) {
+          moduleName = (slotData.formation_modules as any).title || '';
+        }
+      }
+      
       if (attendanceSheet.formation_id) {
         const { data: formationData, error: formationError } = await supabase
           .from('formations')
@@ -266,6 +284,9 @@ export const pdfExportService = {
       pdf.text(`Heure: ${attendanceSheet.start_time.substring(0, 5)} - ${attendanceSheet.end_time.substring(0, 5)}`, 80, detailsY);
       pdf.text(`Salle: ${attendanceSheet.room || 'Non définie'}`, 160, detailsY);
       pdf.text(`Formateur: ${instructorName}`, margin, detailsY + 7);
+      if (moduleName) {
+        pdf.text(`Module: ${moduleName}`, 80, detailsY + 7);
+      }
 
       // Count present and absent
       const presentCount = participants.filter(p => p.present).length;

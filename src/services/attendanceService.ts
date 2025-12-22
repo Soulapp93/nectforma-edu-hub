@@ -31,6 +31,13 @@ export interface AttendanceSheet {
     first_name: string;
     last_name: string;
   } | null;
+  schedule_slots?: {
+    module_id?: string;
+    formation_modules?: {
+      title: string;
+      description?: string;
+    } | null;
+  } | null;
   signatures?: AttendanceSignature[];
 }
 

@@ -373,6 +373,9 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
               )}
               <div className="space-y-2 text-base">
                 <div className="font-semibold text-xl">{attendanceSheet.formations?.title}</div>
+                {(attendanceSheet as any).schedule_slots?.formation_modules?.title && (
+                  <div className="font-medium text-white/90">📚 Module : {(attendanceSheet as any).schedule_slots.formation_modules.title}</div>
+                )}
                 <div className="font-medium">{attendanceSheet.title}</div>
                 <div className="flex items-center justify-center gap-8 text-sm mt-4 flex-wrap">
                   <div>📅 {format(new Date(attendanceSheet.date), 'dd/MM/yyyy', { locale: fr })}</div>
