@@ -120,6 +120,7 @@ export const pdfExportService = {
       }
 
       // Load all students assigned to the formation (using user_formation_assignments for consistency)
+      // Exclude the instructor from the participants list
       let students: { id: string; first_name: string; last_name: string; email: string }[] = [];
       if (attendanceSheet.formation_id) {
         const { data: assignments, error: assignmentsError } = await supabase
@@ -130,7 +131,8 @@ export const pdfExportService = {
               id,
               first_name,
               last_name,
-              email
+              email,
+              role
             )
           `)
           .eq('formation_id', attendanceSheet.formation_id);
@@ -138,6 +140,8 @@ export const pdfExportService = {
         if (!assignmentsError && assignments) {
           students = (assignments as any[])
             .filter((a) => a.users)
+            // Exclude instructors from the participants list (they appear in the signature section)
+            .filter((a) => a.users.role !== 'Formateur' && a.user_id !== attendanceSheet.instructor_id)
             .map((a) => ({
               id: a.users.id,
               first_name: a.users.first_name || '',
