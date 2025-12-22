@@ -142,9 +142,9 @@ const Sidebar = () => {
 
   return (
     <SidebarWrapper 
-      className={`${collapsed ? 'w-16' : 'w-64'} nect-gradient text-primary-foreground shadow-xl transition-all duration-300 bg-opacity-100`}
+      className={`${collapsed ? 'w-16' : 'w-64'} nect-gradient text-primary-foreground shadow-xl transition-all duration-300`}
       collapsible="icon"
-      style={{ backgroundColor: 'hsl(var(--nect-primary-from))' }}
+      style={{ background: 'linear-gradient(135deg, hsl(262, 83%, 58%), hsl(280, 75%, 60%))' }}
     >
       <SidebarHeader className="p-6">
         <div className="flex flex-col gap-4">

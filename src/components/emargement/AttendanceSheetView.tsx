@@ -101,7 +101,7 @@ const AttendanceSheetView: React.FC<AttendanceSheetViewProps> = ({
       <div 
         className="text-white p-6 text-center"
         style={{
-          background: 'linear-gradient(135deg, hsl(174, 58%, 62%), hsl(180, 55%, 50%))',
+          background: 'linear-gradient(135deg, hsl(262, 83%, 58%), hsl(280, 75%, 60%))',
         }}
       >
         <h1 className="text-2xl font-bold mb-4">FEUILLE D'ÉMARGEMENT</h1>
