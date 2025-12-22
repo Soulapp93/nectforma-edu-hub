@@ -91,11 +91,11 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-3 md:py-4">
             <div className="flex items-center space-x-2 md:space-x-3 flex-shrink-0">
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-primary to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center shadow-lg">
                 <span className="text-white font-bold text-sm md:text-lg">N</span>
               </div>
               <div>
-                <h1 className="text-lg md:text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-lg md:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   NECTFY
                 </h1>
               </div>
@@ -122,7 +122,7 @@ const Index = () => {
               </Link>
               <Link 
                 to="/create-establishment" 
-                className="hidden sm:inline-flex px-3 md:px-6 py-1.5 md:py-2 bg-gradient-to-r from-primary to-purple-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 font-medium transition-all text-xs md:text-base whitespace-nowrap"
+                className="hidden sm:inline-flex px-3 md:px-6 py-1.5 md:py-2 bg-gradient-to-r from-primary to-accent text-white rounded-lg hover:shadow-lg transform hover:scale-105 font-medium transition-all text-xs md:text-base whitespace-nowrap"
               >
                 Créer un compte
               </Link>
@@ -133,9 +133,9 @@ const Index = () => {
 
       {/* Hero Section */}
       <section className="relative py-12 md:py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-purple-50 to-white"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/3 to-white"></div>
         <div className="absolute top-20 right-0 w-48 md:w-72 h-48 md:h-72 bg-primary/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-0 w-64 md:w-96 h-64 md:h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-0 w-64 md:w-96 h-64 md:h-96 bg-accent/10 rounded-full blur-3xl"></div>
         
         <div className="relative max-w-7xl mx-auto text-center px-2">
           <div className="inline-flex items-center px-3 md:px-4 py-2 bg-primary/10 rounded-full mb-4 md:mb-6">
@@ -146,7 +146,7 @@ const Index = () => {
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 md:mb-6 leading-tight">
             Simplifiez la gestion de
             <br />
-            <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               vos formations
             </span>
           </h1>
@@ -159,7 +159,7 @@ const Index = () => {
           <div className="flex flex-col gap-3 md:gap-4 mb-8 md:mb-12 px-2">
             <Link 
               to="/create-establishment" 
-              className="group w-full px-6 py-3.5 md:py-4 bg-gradient-to-r from-primary to-purple-600 text-white rounded-lg hover:shadow-xl transform hover:scale-105 font-semibold text-base md:text-lg transition-all flex items-center justify-center"
+              className="group w-full px-6 py-3.5 md:py-4 bg-gradient-to-r from-primary to-accent text-white rounded-lg hover:shadow-xl transform hover:scale-105 font-semibold text-base md:text-lg transition-all flex items-center justify-center"
             >
               Créer un compte établissement
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -209,7 +209,7 @@ const Index = () => {
                   key={index} 
                   className="group p-4 md:p-6 bg-gradient-to-br from-gray-50 to-white rounded-xl md:rounded-2xl hover:shadow-xl hover:scale-105 transition-all duration-300 border border-gray-100"
                 >
-                  <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-primary to-purple-600 rounded-lg md:rounded-xl flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                  <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-primary to-accent rounded-lg md:rounded-xl flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 transition-transform shadow-lg">
                     <Icon className="h-6 w-6 md:h-7 md:w-7 text-white" />
                   </div>
                   <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2 md:mb-3">{solution.title}</h3>
@@ -293,7 +293,7 @@ const Index = () => {
                   key={index} 
                   className="p-8 bg-gradient-to-br from-white to-gray-50 rounded-2xl hover:shadow-xl transition-all border-2 border-gray-100 hover:border-primary"
                 >
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-purple-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center mb-6 shadow-lg">
                     <Icon className="h-8 w-8 text-white" />
                   </div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-3">{target.title}</h3>
@@ -324,7 +324,7 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 md:py-20 bg-gradient-to-br from-primary to-purple-600">
+      <section className="py-12 md:py-20 bg-gradient-to-br from-primary to-accent">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-6">
             Prêt à transformer votre gestion de formation ?
@@ -351,7 +351,7 @@ const Index = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 mb-6 md:mb-8">
             <div className="col-span-2">
               <div className="flex items-center space-x-2 md:space-x-3 mb-3 md:mb-4">
-                <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-primary to-purple-600 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-sm md:text-lg">N</span>
                 </div>
                 <h3 className="text-xl md:text-2xl font-bold">NECTFY</h3>

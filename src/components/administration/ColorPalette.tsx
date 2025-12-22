@@ -9,17 +9,17 @@ interface ColorPaletteProps {
 
 const ColorPalette: React.FC<ColorPaletteProps> = ({ selectedColor, onColorChange }) => {
   const colors = [
-    '#8B5CF6', // Purple (default)
+    '#5DD3D3', // Turquoise (default)
+    '#4ECDC4', // Teal
+    '#45B7B8', // Darker turquoise
+    '#3B82F6', // Blue
+    '#6366F1', // Indigo
+    '#8B5CF6', // Purple
+    '#EC4899', // Pink
     '#EF4444', // Red
     '#F59E0B', // Amber
     '#10B981', // Emerald
-    '#3B82F6', // Blue
-    '#6366F1', // Indigo
-    '#8B5A2B', // Brown
-    '#EC4899', // Pink
     '#84CC16', // Lime
-    '#06B6D4', // Cyan
-    '#F97316', // Orange
     '#64748B'  // Slate
   ];
 
@@ -36,7 +36,7 @@ const ColorPalette: React.FC<ColorPaletteProps> = ({ selectedColor, onColorChang
             onClick={() => onColorChange(color)}
             className={`w-10 h-10 rounded-lg border-2 transition-all hover:scale-105 flex items-center justify-center ${
               selectedColor === color 
-                ? 'border-gray-400 ring-2 ring-purple-500' 
+                ? 'border-gray-400 ring-2 ring-primary' 
                 : 'border-gray-200 hover:border-gray-300'
             }`}
             style={{ backgroundColor: color }}

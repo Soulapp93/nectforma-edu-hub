@@ -11,8 +11,8 @@ const DEMO_ACCOUNTS = [
     email: 'admin.principal@demo.nectfy.fr', 
     password: 'Demo123!',
     icon: Shield,
-    color: 'text-purple-600',
-    borderColor: 'border-purple-200 hover:border-purple-400 hover:bg-purple-50'
+    color: 'text-primary',
+    borderColor: 'border-primary/30 hover:border-primary hover:bg-primary/5'
   },
   { 
     role: 'Administrateur', 
@@ -215,17 +215,17 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-white flex flex-col lg:flex-row">
       {/* Left side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-purple-600 to-purple-800 text-white p-12 flex-col justify-center">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary to-accent text-white p-12 flex-col justify-center">
         <div className="max-w-md">
           <div className="flex items-center space-x-3 mb-8">
             <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-              <span className="text-purple-600 font-bold text-xl">N</span>
+              <span className="text-primary font-bold text-xl">N</span>
             </div>
             <div>
               <h1 className="text-3xl font-bold">NECTFY</h1>
-              <p className="text-purple-200">Plateforme de gestion éducative</p>
+              <p className="text-white/80">Plateforme de gestion éducative</p>
             </div>
           </div>
           
@@ -233,27 +233,27 @@ const Auth = () => {
             Révolutionnez votre gestion de formation
           </h2>
           
-          <p className="text-lg text-purple-100 mb-8">
+          <p className="text-lg text-white/90 mb-8">
             Rejoignez des milliers d'établissements qui font confiance à NECTFY 
             pour digitaliser leur gestion pédagogique et administrative.
           </p>
           
           <div className="space-y-4">
             <div className="flex items-center">
-              <div className="w-2 h-2 bg-purple-300 rounded-full mr-3"></div>
-              <span className="text-purple-100">Gestion complète des formations</span>
+              <div className="w-2 h-2 bg-white/60 rounded-full mr-3"></div>
+              <span className="text-white/90">Gestion complète des formations</span>
             </div>
             <div className="flex items-center">
-              <div className="w-2 h-2 bg-purple-300 rounded-full mr-3"></div>
-              <span className="text-purple-100">Emploi du temps intelligent</span>
+              <div className="w-2 h-2 bg-white/60 rounded-full mr-3"></div>
+              <span className="text-white/90">Emploi du temps intelligent</span>
             </div>
             <div className="flex items-center">
-              <div className="w-2 h-2 bg-purple-300 rounded-full mr-3"></div>
-              <span className="text-purple-100">Coffre-fort numérique sécurisé</span>
+              <div className="w-2 h-2 bg-white/60 rounded-full mr-3"></div>
+              <span className="text-white/90">Coffre-fort numérique sécurisé</span>
             </div>
             <div className="flex items-center">
-              <div className="w-2 h-2 bg-purple-300 rounded-full mr-3"></div>
-              <span className="text-purple-100">Messagerie intégrée</span>
+              <div className="w-2 h-2 bg-white/60 rounded-full mr-3"></div>
+              <span className="text-white/90">Messagerie intégrée</span>
             </div>
           </div>
         </div>
@@ -265,7 +265,7 @@ const Auth = () => {
           <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8">
             {/* Mobile Logo */}
             <div className="lg:hidden flex items-center justify-center space-x-2 mb-6">
-              <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">N</span>
               </div>
               <span className="text-xl font-bold text-gray-900">NECTFY</span>
@@ -296,7 +296,7 @@ const Auth = () => {
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="votre@email.com"
                   required
                 />
@@ -312,7 +312,7 @@ const Auth = () => {
                     type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent pr-12"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent pr-12"
                     placeholder="Votre mot de passe"
                     required
                   />
@@ -328,17 +328,17 @@ const Auth = () => {
 
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <label className="flex items-center">
-                  <input type="checkbox" className="rounded border-gray-300 text-purple-600 focus:ring-purple-500" />
+                  <input type="checkbox" className="rounded border-gray-300 text-primary focus:ring-primary" />
                   <span className="ml-2 text-sm text-gray-600">Se souvenir de moi</span>
                 </label>
-                <a href="#" className="text-sm text-purple-600 hover:text-purple-700">
+                <a href="#" className="text-sm text-primary hover:text-primary/80">
                   Mot de passe oublié ?
                 </a>
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50"
+                className="w-full bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
                 disabled={loading}
               >
                 {loading ? 'Connexion en cours...' : 'Se connecter'}
@@ -390,7 +390,7 @@ const Auth = () => {
               </p>
               <Link 
                 to="/create-establishment" 
-                className="block w-full text-center bg-gray-100 text-purple-600 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                className="block w-full text-center bg-gray-100 text-primary py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
               >
                 Créer un compte établissement
               </Link>
