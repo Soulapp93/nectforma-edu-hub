@@ -3,98 +3,117 @@
 @tailwind components;
 @tailwind utilities;
 
-/* NECTFY Design System - Production-ready unified theme */
+/* NECTFY Design System - FinBix Premium Style */
 
 @layer base {
   :root {
-    --background: 240 12% 97%;
+    /* FinBix-inspired lavender/purple palette */
+    --background: 252 20% 96%;
     --foreground: 240 10% 15%;
 
-    --card: 240 12% 98%;
+    --card: 0 0% 100%;
     --card-foreground: 240 10% 15%;
 
-    --popover: 240 12% 98%;
+    --popover: 0 0% 100%;
     --popover-foreground: 240 10% 15%;
 
-    --primary: 262 83% 58%;
-    --primary-foreground: 240 12% 98%;
+    /* Main purple - FinBix style */
+    --primary: 262 72% 55%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 8% 94%;
-    --secondary-foreground: 240 10% 25%;
+    /* Lavender secondary */
+    --secondary: 262 30% 94%;
+    --secondary-foreground: 262 50% 30%;
 
-    --muted: 240 8% 94%;
-    --muted-foreground: 240 6% 55%;
+    --muted: 252 20% 94%;
+    --muted-foreground: 252 10% 45%;
 
-    --accent: 262 83% 58%;
-    --accent-foreground: 240 12% 98%;
+    --accent: 262 72% 55%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 240 12% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 240 8% 88%;
-    --input: 240 8% 88%;
-    --ring: 262 83% 58%;
+    --border: 252 15% 90%;
+    --input: 252 15% 90%;
+    --ring: 262 72% 55%;
 
-    --radius: 0.5rem;
+    --radius: 1rem;
 
-    /* Enhanced Status Colors - Semantic tokens */
+    /* Status Colors */
     --success: 142 76% 36%;
-    --success-foreground: 210 40% 98%;
+    --success-foreground: 0 0% 100%;
     --success-muted: 142 76% 96%;
     
     --warning: 38 92% 50%;
-    --warning-foreground: 222.2 84% 4.9%;
+    --warning-foreground: 0 0% 100%;
     --warning-muted: 38 92% 95%;
     
     --info: 217 91% 60%;
-    --info-foreground: 210 40% 98%;
+    --info-foreground: 0 0% 100%;
     --info-muted: 217 91% 95%;
 
-    /* Enhanced Custom NECTFY colors */
-    --nect-purple-from: 262 83% 58%;
-    --nect-purple-to: 280 75% 65%;
-    --nect-purple-light: 262 83% 90%;
-    --nect-purple-dark: 262 83% 40%;
+    /* FinBix Custom Colors */
+    --lavender: 262 60% 94%;
+    --lavender-dark: 262 50% 85%;
+    --purple-gradient-from: 262 72% 55%;
+    --purple-gradient-to: 280 75% 60%;
+    --blue-accent: 210 100% 65%;
+    --cyan-accent: 180 80% 60%;
     
-    --nect-sidebar-bg: 262 83% 58%;
-    --nect-card-bg: 240 12% 98%;
-    --nect-card-border: 240 8% 88%;
+    /* Glass effects */
+    --glass-bg: 0 0% 100% / 0.7;
+    --glass-border: 0 0% 100% / 0.3;
+    --glass-blur: 20px;
     
-    /* Production gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--nect-purple-from)), hsl(var(--nect-purple-to)));
-    --gradient-card: linear-gradient(145deg, hsl(var(--card)), hsl(var(--muted)));
-    --gradient-hero: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    /* Premium shadows */
+    --shadow-soft: 0 4px 20px rgba(139, 92, 246, 0.08);
+    --shadow-medium: 0 8px 30px rgba(139, 92, 246, 0.12);
+    --shadow-strong: 0 15px 50px rgba(139, 92, 246, 0.15);
+    --shadow-glow: 0 0 40px rgba(139, 92, 246, 0.25);
     
-    /* Professional shadows */
-    --shadow-sm: 0 1px 3px rgba(124, 58, 237, 0.1);
-    --shadow-md: 0 4px 12px rgba(124, 58, 237, 0.15);
-    --shadow-lg: 0 10px 25px rgba(124, 58, 237, 0.2);
-    --shadow-xl: 0 20px 40px rgba(124, 58, 237, 0.25);
+    /* Sidebar */
+    --sidebar-background: 262 72% 55%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 262 72% 55%;
+    --sidebar-accent: 262 60% 65%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 262 60% 50%;
+    --sidebar-ring: 0 0% 100%;
   }
 
   .dark {
     --background: 240 15% 8%;
-    --foreground: 240 12% 95%;
-    --card: 240 15% 10%;
-    --card-foreground: 240 12% 95%;
-    --primary: 262 83% 65%;
+    --foreground: 0 0% 95%;
+    
+    --card: 240 15% 12%;
+    --card-foreground: 0 0% 95%;
+    
+    --popover: 240 15% 12%;
+    --popover-foreground: 0 0% 95%;
+    
+    --primary: 262 72% 65%;
     --primary-foreground: 240 15% 8%;
     
-    --secondary: 240 12% 18%;
-    --secondary-foreground: 240 12% 85%;
+    --secondary: 262 30% 20%;
+    --secondary-foreground: 262 50% 80%;
     
     --muted: 240 12% 18%;
     --muted-foreground: 240 8% 65%;
     
-    --border: 240 12% 18%;
-    --input: 240 12% 18%;
+    --accent: 262 72% 65%;
+    --accent-foreground: 240 15% 8%;
     
-    --success: 142 76% 45%;
-    --warning: 38 92% 60%;
-    --info: 217 91% 70%;
+    --border: 240 12% 20%;
+    --input: 240 12% 20%;
+    --ring: 262 72% 65%;
     
-    --nect-card-bg: 240 15% 10%;
-    --nect-card-border: 240 12% 18%;
+    --lavender: 262 40% 20%;
+    --lavender-dark: 262 30% 15%;
+    
+    --sidebar-background: 240 15% 10%;
+    --sidebar-foreground: 0 0% 95%;
   }
 }
 
@@ -104,11 +123,12 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 }
 
-/* React-PDF Styles - Required for proper PDF rendering */
+/* React-PDF Styles */
 .react-pdf__Page {
   position: relative;
   background: white;
@@ -165,7 +185,7 @@
   box-shadow: 0px 2px 10px rgba(255, 255, 0, 0.5);
 }
 
-/* Fullscreen styles for Chrome-style viewer - Enhanced for complete fullscreen */
+/* Fullscreen styles */
 .fullscreen-container {
   width: 100vw !important;
   height: 100vh !important;
@@ -180,7 +200,6 @@
   padding: 0 !important;
 }
 
-/* Force fullscreen on all platforms */
 .fullscreen-container:-webkit-full-screen,
 .fullscreen-container:-moz-full-screen,
 .fullscreen-container:-ms-fullscreen,
@@ -194,7 +213,6 @@
   overflow: hidden !important;
 }
 
-/* Hide scrollbars in fullscreen */
 .fullscreen-container::-webkit-scrollbar {
   display: none !important;
 }
@@ -204,62 +222,236 @@
   scrollbar-width: none !important;
 }
 
-/* Ensure body doesn't interfere with fullscreen */
 body:has(.fullscreen-container) {
   overflow: hidden !important;
 }
 
 @layer components {
-  .nect-gradient {
-    background: linear-gradient(135deg, hsl(var(--nect-purple-from)), hsl(var(--nect-purple-to)));
-  }
-  
-  .nect-glass {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-
+  /* FinBix Premium Glassmorphism */
   .glass-card {
-    background: hsl(var(--card));
-    backdrop-filter: blur(20px);
-    border: 1px solid hsl(var(--border));
-    box-shadow: 0 2px 8px rgba(126, 34, 206, 0.08);
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: var(--shadow-soft);
   }
 
-  .floating-card {
+  .glass-card-strong {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: var(--shadow-medium);
+  }
+
+  /* FinBix Gradient Backgrounds */
+  .finbix-hero-bg {
+    background: 
+      radial-gradient(ellipse 120% 80% at 80% 20%, hsl(210 100% 70% / 0.3) 0%, transparent 50%),
+      radial-gradient(ellipse 100% 100% at 20% 80%, hsl(262 72% 65% / 0.2) 0%, transparent 50%),
+      radial-gradient(ellipse 80% 60% at 60% 60%, hsl(180 80% 70% / 0.2) 0%, transparent 40%),
+      linear-gradient(180deg, hsl(var(--lavender)) 0%, hsl(var(--background)) 100%);
+  }
+
+  .finbix-gradient-orb {
+    background: linear-gradient(
+      135deg,
+      hsl(262 72% 65% / 0.8) 0%,
+      hsl(210 100% 65% / 0.6) 50%,
+      hsl(180 80% 65% / 0.4) 100%
+    );
+    filter: blur(60px);
+  }
+
+  /* FinBix Primary Button */
+  .btn-finbix {
+    @apply relative px-6 py-3 rounded-full font-semibold text-white overflow-hidden transition-all duration-300;
+    background: linear-gradient(135deg, hsl(var(--purple-gradient-from)), hsl(var(--purple-gradient-to)));
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+  }
+
+  .btn-finbix:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+  }
+
+  .btn-finbix:active {
     transform: translateY(0);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .floating-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 8px 24px rgba(126, 34, 206, 0.15);
+  /* FinBix Secondary Button */
+  .btn-finbix-outline {
+    @apply px-6 py-3 rounded-full font-semibold border-2 border-foreground/20 bg-transparent transition-all duration-300;
   }
 
-  .timeline-dot {
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
-    box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
+  .btn-finbix-outline:hover {
+    @apply border-primary bg-primary/5;
   }
 
-  .pulse-dot {
-    animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  /* FinBix Feature Card */
+  .finbix-card {
+    @apply relative bg-card rounded-2xl p-6 transition-all duration-300;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid hsl(var(--border));
+  }
+
+  .finbix-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-medium);
+  }
+
+  /* FinBix Floating Card Effect */
+  .floating-card {
+    @apply transition-all duration-500;
+    animation: float 6s ease-in-out infinite;
+  }
+
+  /* FinBix Stats Circle */
+  .stats-circle {
+    @apply relative flex items-center justify-center;
+  }
+
+  .stats-circle-ring {
+    stroke: hsl(var(--primary));
+    stroke-linecap: round;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+  }
+
+  /* FinBix Section Title */
+  .finbix-title {
+    @apply text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight;
+    line-height: 1.1;
+  }
+
+  .finbix-subtitle {
+    @apply text-lg md:text-xl text-muted-foreground max-w-2xl;
+    line-height: 1.6;
+  }
+
+  /* FinBix Sparkle Effect */
+  .sparkle {
+    @apply absolute w-4 h-4;
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(280 75% 60%));
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  }
+
+  /* Navigation */
+  .nav-link-finbix {
+    @apply relative text-foreground/70 font-medium transition-colors duration-200;
+  }
+
+  .nav-link-finbix:hover {
+    @apply text-foreground;
+  }
+
+  .nav-link-finbix::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-200;
+  }
+
+  .nav-link-finbix:hover::after {
+    @apply w-full;
+  }
+
+  /* Animations */
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-15px);
+    }
+  }
+
+  @keyframes float-delayed {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
   }
 
   @keyframes pulse-glow {
     0%, 100% {
-      box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
-      transform: scale(1);
+      opacity: 1;
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
     }
     50% {
-      box-shadow: 0 0 30px rgba(124, 58, 237, 0.7);
-      transform: scale(1.1);
+      opacity: 0.8;
+      box-shadow: 0 0 40px rgba(139, 92, 246, 0.6);
     }
   }
 
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-4px); }
+  @keyframes gradient-shift {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-float-delayed {
+    animation: float-delayed 5s ease-in-out infinite;
+    animation-delay: 1s;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.5s ease-out forwards;
+  }
+
+  /* Legacy compatibility classes */
+  .nect-gradient {
+    background: linear-gradient(135deg, hsl(var(--purple-gradient-from)), hsl(var(--purple-gradient-to)));
+  }
+  
+  .nect-glass {
+    @apply glass-card;
+  }
+
+  .timeline-dot {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+  }
+
+  .pulse-dot {
+    animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
   .morphing-card {
@@ -299,18 +491,14 @@ body:has(.fullscreen-container) {
   .search-bar:focus-within {
     background: rgba(255, 255, 255, 0.15);
     border-color: hsl(var(--primary));
-    box-shadow: 0 0 20px rgba(124, 58, 237, 0.2);
-  }
-
-  .animate-float {
-    animation: float 3s ease-in-out infinite;
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
   }
 
   .border-3 {
     border-width: 3px;
   }
 
-  /* Safe area for mobile devices (iPhone notch, etc.) */
+  /* Safe area for mobile devices */
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
@@ -340,19 +528,16 @@ body:has(.fullscreen-container) {
     @apply h-12 px-4 rounded-xl border border-input bg-background text-base;
   }
 
-  /* Improved touch targets for mobile */
   @media (max-width: 768px) {
     .touch-target {
       min-height: 44px;
       min-width: 44px;
     }
 
-    /* Improve tap feedback */
     .tap-highlight {
-      -webkit-tap-highlight-color: rgba(124, 58, 237, 0.1);
+      -webkit-tap-highlight-color: rgba(139, 92, 246, 0.1);
     }
 
-    /* Better scrolling on mobile */
     .mobile-scroll {
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
