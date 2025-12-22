@@ -10,7 +10,7 @@ interface EmptyStateProps {
   action?: {
     label: string;
     onClick: () => void;
-    variant?: 'default' | 'premium' | 'outline';
+    variant?: 'default' | 'outline' | 'secondary';
   };
   className?: string;
 }
@@ -39,7 +39,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         {action && (
           <Button
             onClick={action.onClick}
-            variant={action.variant || 'premium'}
+            variant={action.variant || 'default'}
             className="px-6 py-2"
           >
             {action.label}

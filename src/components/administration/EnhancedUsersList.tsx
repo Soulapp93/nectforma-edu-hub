@@ -376,12 +376,12 @@ const EnhancedUsersList: React.FC = () => {
             </Button>
             <Button
               onClick={handleCreateAdmin}
-              variant="elegant"
+              variant="secondary"
               size="sm"
               className="flex items-center justify-center gap-1.5 text-xs sm:text-sm"
             >
               <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Ajouter Admin</span>
+              <span className="hidden sm:inline">Ajouter admin</span>
               <span className="sm:hidden">Admin</span>
             </Button>
             <Button
@@ -391,17 +391,17 @@ const EnhancedUsersList: React.FC = () => {
               className="flex items-center justify-center gap-1.5 text-xs sm:text-sm"
             >
               <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Ajouter Formateur</span>
+              <span className="hidden sm:inline">Ajouter formateur</span>
               <span className="sm:hidden">Form.</span>
             </Button>
             <Button
               onClick={handleCreateStudent}
-              variant="premium"
+              variant="default"
               size="sm"
               className="flex items-center justify-center gap-1.5 text-xs sm:text-sm"
             >
               <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Ajouter Étudiant</span>
+              <span className="hidden sm:inline">Ajouter étudiant</span>
               <span className="sm:hidden">Étud.</span>
             </Button>
           </div>

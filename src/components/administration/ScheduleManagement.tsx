@@ -1276,9 +1276,9 @@ const ScheduleManagement = () => {
                   <Button 
                     onClick={handleOpenAddSlotModal}
                     disabled={!selectedSchedule?.id}
-                    variant="premium"
+                    variant="default"
                     size="sm"
-                    className="shadow-lg hover:shadow-xl transition-all text-xs"
+                    className="shadow-sm transition-all text-xs"
                   >
                     <Plus className="h-4 w-4 sm:mr-2" />
                     <span className="hidden sm:inline">Ajouter un créneau</span>
@@ -1300,12 +1300,12 @@ const ScheduleManagement = () => {
                   <Button 
                     onClick={handleOpenExcelImportModal}
                     disabled={!selectedSchedule?.id}
-                    variant="elegant"
+                    variant="outline"
                     size="sm"
-                    className="shadow-md hover:shadow-lg transition-all text-xs"
+                    className="transition-all text-xs"
                   >
                     <Upload className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Import Excel</span>
+                    <span className="hidden sm:inline">Import excel</span>
                   </Button>
 
                   <Button 
@@ -1321,9 +1321,9 @@ const ScheduleManagement = () => {
               ) : (
                 <Button 
                   onClick={() => setIsEditMode(true)}
-                  variant="premium"
+                  variant="default"
                   size="sm"
-                  className="shadow-lg hover:shadow-xl transition-all text-xs"
+                  className="shadow-sm transition-all text-xs"
                 >
                   <Edit className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Modifier l'emploi du temps</span>
