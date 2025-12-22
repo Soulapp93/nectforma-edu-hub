@@ -3,44 +3,46 @@
 @tailwind components;
 @tailwind utilities;
 
-/* NECTFY Design System - FinBix Premium Style */
+/* NECTFY Design System - FinBix Exact Style
+   Only 2 colors: Soft Purple (#A78BFA) + Off-White/Light Gray (#F5F3FF)
+*/
 
 @layer base {
   :root {
-    /* FinBix-inspired lavender/purple palette */
-    --background: 252 20% 96%;
-    --foreground: 240 10% 15%;
+    /* FinBix exact color palette - soft lavender purple */
+    --background: 250 100% 98%;
+    --foreground: 250 20% 20%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 15%;
+    --card-foreground: 250 20% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 15%;
+    --popover-foreground: 250 20% 20%;
 
-    /* Main purple - FinBix style */
-    --primary: 262 72% 55%;
+    /* Main purple - exact FinBix soft purple #A78BFA */
+    --primary: 258 77% 75%;
     --primary-foreground: 0 0% 100%;
 
-    /* Lavender secondary */
-    --secondary: 262 30% 94%;
-    --secondary-foreground: 262 50% 30%;
+    /* Secondary - very light lavender */
+    --secondary: 250 100% 97%;
+    --secondary-foreground: 258 60% 45%;
 
-    --muted: 252 20% 94%;
-    --muted-foreground: 252 10% 45%;
+    --muted: 250 50% 96%;
+    --muted-foreground: 250 15% 50%;
 
-    --accent: 262 72% 55%;
+    --accent: 258 77% 75%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 252 15% 90%;
-    --input: 252 15% 90%;
-    --ring: 262 72% 55%;
+    --border: 250 30% 92%;
+    --input: 250 30% 92%;
+    --ring: 258 77% 75%;
 
-    --radius: 1rem;
+    --radius: 0.75rem;
 
-    /* Status Colors */
+    /* Status Colors - kept minimal */
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
     --success-muted: 142 76% 96%;
@@ -53,66 +55,53 @@
     --info-foreground: 0 0% 100%;
     --info-muted: 217 91% 95%;
 
-    /* FinBix Custom Colors */
-    --lavender: 262 60% 94%;
-    --lavender-dark: 262 50% 85%;
-    --purple-gradient-from: 262 72% 55%;
-    --purple-gradient-to: 280 75% 60%;
-    --blue-accent: 210 100% 65%;
-    --cyan-accent: 180 80% 60%;
+    /* FinBix Custom - only purple tones */
+    --lavender: 258 77% 95%;
+    --lavender-dark: 258 60% 88%;
+    --purple-soft: 258 77% 75%;
+    --purple-light: 258 77% 90%;
     
-    /* Glass effects */
-    --glass-bg: 0 0% 100% / 0.7;
-    --glass-border: 0 0% 100% / 0.3;
-    --glass-blur: 20px;
-    
-    /* Premium shadows */
-    --shadow-soft: 0 4px 20px rgba(139, 92, 246, 0.08);
-    --shadow-medium: 0 8px 30px rgba(139, 92, 246, 0.12);
-    --shadow-strong: 0 15px 50px rgba(139, 92, 246, 0.15);
-    --shadow-glow: 0 0 40px rgba(139, 92, 246, 0.25);
-    
-    /* Sidebar */
-    --sidebar-background: 262 72% 55%;
+    /* Sidebar - soft purple */
+    --sidebar-background: 258 77% 75%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 262 72% 55%;
-    --sidebar-accent: 262 60% 65%;
+    --sidebar-primary-foreground: 258 77% 75%;
+    --sidebar-accent: 258 60% 80%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 262 60% 50%;
+    --sidebar-border: 258 60% 70%;
     --sidebar-ring: 0 0% 100%;
   }
 
   .dark {
-    --background: 240 15% 8%;
+    --background: 250 20% 10%;
     --foreground: 0 0% 95%;
     
-    --card: 240 15% 12%;
+    --card: 250 20% 14%;
     --card-foreground: 0 0% 95%;
     
-    --popover: 240 15% 12%;
+    --popover: 250 20% 14%;
     --popover-foreground: 0 0% 95%;
     
-    --primary: 262 72% 65%;
-    --primary-foreground: 240 15% 8%;
+    --primary: 258 77% 70%;
+    --primary-foreground: 250 20% 10%;
     
-    --secondary: 262 30% 20%;
-    --secondary-foreground: 262 50% 80%;
+    --secondary: 250 20% 18%;
+    --secondary-foreground: 258 50% 80%;
     
-    --muted: 240 12% 18%;
-    --muted-foreground: 240 8% 65%;
+    --muted: 250 15% 20%;
+    --muted-foreground: 250 10% 65%;
     
-    --accent: 262 72% 65%;
-    --accent-foreground: 240 15% 8%;
+    --accent: 258 77% 70%;
+    --accent-foreground: 250 20% 10%;
     
-    --border: 240 12% 20%;
-    --input: 240 12% 20%;
-    --ring: 262 72% 65%;
+    --border: 250 15% 22%;
+    --input: 250 15% 22%;
+    --ring: 258 77% 70%;
     
-    --lavender: 262 40% 20%;
-    --lavender-dark: 262 30% 15%;
+    --lavender: 258 40% 20%;
+    --lavender-dark: 258 30% 15%;
     
-    --sidebar-background: 240 15% 10%;
+    --sidebar-background: 250 20% 12%;
     --sidebar-foreground: 0 0% 95%;
   }
 }
@@ -124,7 +113,7 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 }
 
@@ -227,86 +216,52 @@ body:has(.fullscreen-container) {
 }
 
 @layer components {
-  /* FinBix Premium Glassmorphism */
-  .glass-card {
-    background: hsl(var(--glass-bg));
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
-    border: 1px solid hsl(var(--glass-border));
-    box-shadow: var(--shadow-soft);
+  /* FinBix Card Style */
+  .finbix-card {
+    @apply relative bg-card rounded-xl p-6 transition-all duration-300;
+    box-shadow: 0 2px 8px rgba(167, 139, 250, 0.08);
+    border: 1px solid hsl(var(--border));
   }
 
-  .glass-card-strong {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: var(--shadow-medium);
-  }
-
-  /* FinBix Gradient Backgrounds */
-  .finbix-hero-bg {
-    background: 
-      radial-gradient(ellipse 120% 80% at 80% 20%, hsl(210 100% 70% / 0.3) 0%, transparent 50%),
-      radial-gradient(ellipse 100% 100% at 20% 80%, hsl(262 72% 65% / 0.2) 0%, transparent 50%),
-      radial-gradient(ellipse 80% 60% at 60% 60%, hsl(180 80% 70% / 0.2) 0%, transparent 40%),
-      linear-gradient(180deg, hsl(var(--lavender)) 0%, hsl(var(--background)) 100%);
-  }
-
-  .finbix-gradient-orb {
-    background: linear-gradient(
-      135deg,
-      hsl(262 72% 65% / 0.8) 0%,
-      hsl(210 100% 65% / 0.6) 50%,
-      hsl(180 80% 65% / 0.4) 100%
-    );
-    filter: blur(60px);
+  .finbix-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(167, 139, 250, 0.12);
   }
 
   /* FinBix Primary Button */
   .btn-finbix {
     @apply relative px-6 py-3 rounded-full font-semibold text-white overflow-hidden transition-all duration-300;
-    background: linear-gradient(135deg, hsl(var(--purple-gradient-from)), hsl(var(--purple-gradient-to)));
-    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    background: hsl(var(--primary));
+    box-shadow: 0 4px 12px rgba(167, 139, 250, 0.25);
   }
 
   .btn-finbix:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
-  }
-
-  .btn-finbix:active {
-    transform: translateY(0);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(167, 139, 250, 0.35);
   }
 
   /* FinBix Secondary Button */
   .btn-finbix-outline {
-    @apply px-6 py-3 rounded-full font-semibold border-2 border-foreground/20 bg-transparent transition-all duration-300;
+    @apply px-6 py-3 rounded-full font-semibold border border-border bg-transparent transition-all duration-300;
+    color: hsl(var(--foreground));
   }
 
   .btn-finbix-outline:hover {
-    @apply border-primary bg-primary/5;
+    @apply bg-secondary;
+    border-color: hsl(var(--primary));
   }
 
-  /* FinBix Feature Card */
-  .finbix-card {
-    @apply relative bg-card rounded-2xl p-6 transition-all duration-300;
-    box-shadow: var(--shadow-soft);
-    border: 1px solid hsl(var(--border));
+  /* Navigation link */
+  .nav-link-finbix {
+    @apply relative font-medium transition-colors duration-200;
+    color: hsl(var(--muted-foreground));
   }
 
-  .finbix-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-medium);
+  .nav-link-finbix:hover {
+    color: hsl(var(--foreground));
   }
 
-  /* FinBix Floating Card Effect */
-  .floating-card {
-    @apply transition-all duration-500;
-    animation: float 6s ease-in-out infinite;
-  }
-
-  /* FinBix Stats Circle */
+  /* Stats Circle */
   .stats-circle {
     @apply relative flex items-center justify-center;
   }
@@ -318,85 +273,20 @@ body:has(.fullscreen-container) {
     transform-origin: 50% 50%;
   }
 
-  /* FinBix Section Title */
-  .finbix-title {
-    @apply text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight;
-    line-height: 1.1;
-  }
-
-  .finbix-subtitle {
-    @apply text-lg md:text-xl text-muted-foreground max-w-2xl;
-    line-height: 1.6;
-  }
-
-  /* FinBix Sparkle Effect */
-  .sparkle {
-    @apply absolute w-4 h-4;
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(280 75% 60%));
-    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-  }
-
-  /* Navigation */
-  .nav-link-finbix {
-    @apply relative text-foreground/70 font-medium transition-colors duration-200;
-  }
-
-  .nav-link-finbix:hover {
-    @apply text-foreground;
-  }
-
-  .nav-link-finbix::after {
-    content: '';
-    @apply absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-200;
-  }
-
-  .nav-link-finbix:hover::after {
-    @apply w-full;
-  }
-
   /* Animations */
   @keyframes float {
     0%, 100% {
       transform: translateY(0px);
     }
     50% {
-      transform: translateY(-15px);
-    }
-  }
-
-  @keyframes float-delayed {
-    0%, 100% {
-      transform: translateY(0px);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
-  }
-
-  @keyframes pulse-glow {
-    0%, 100% {
-      opacity: 1;
-      box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
-    }
-    50% {
-      opacity: 0.8;
-      box-shadow: 0 0 40px rgba(139, 92, 246, 0.6);
-    }
-  }
-
-  @keyframes gradient-shift {
-    0%, 100% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
+      transform: translateY(-12px);
     }
   }
 
   @keyframes fade-in-up {
     from {
       opacity: 0;
-      transform: translateY(30px);
+      transform: translateY(20px);
     }
     to {
       opacity: 1;
@@ -407,7 +297,7 @@ body:has(.fullscreen-container) {
   @keyframes scale-in {
     from {
       opacity: 0;
-      transform: scale(0.9);
+      transform: scale(0.95);
     }
     to {
       opacity: 1;
@@ -420,127 +310,51 @@ body:has(.fullscreen-container) {
   }
 
   .animate-float-delayed {
-    animation: float-delayed 5s ease-in-out infinite;
+    animation: float 5s ease-in-out infinite;
     animation-delay: 1s;
   }
 
-  .animate-pulse-glow {
-    animation: pulse-glow 3s ease-in-out infinite;
-  }
-
   .animate-fade-in-up {
-    animation: fade-in-up 0.6s ease-out forwards;
+    animation: fade-in-up 0.5s ease-out forwards;
   }
 
   .animate-scale-in {
-    animation: scale-in 0.5s ease-out forwards;
+    animation: scale-in 0.4s ease-out forwards;
   }
 
-  /* Legacy compatibility classes */
+  /* Legacy compatibility */
   .nect-gradient {
-    background: linear-gradient(135deg, hsl(var(--purple-gradient-from)), hsl(var(--purple-gradient-to)));
+    background: hsl(var(--primary));
   }
   
   .nect-glass {
-    @apply glass-card;
+    @apply bg-card/80 backdrop-blur-sm border border-border;
   }
 
   .timeline-dot {
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+    background: hsl(var(--primary));
+    box-shadow: 0 0 16px rgba(167, 139, 250, 0.4);
   }
 
   .pulse-dot {
-    animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
-  .morphing-card {
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    transform-style: preserve-3d;
-  }
-
-  .morphing-card:hover {
-    transform: rotateY(5deg) rotateX(5deg);
-  }
-
-  .kanban-column {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .course-card {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .course-card:hover {
-    transform: scale(1.02);
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
-  }
-
-  .search-bar {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    transition: all 0.3s ease;
-  }
-
-  .search-bar:focus-within {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: hsl(var(--primary));
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
   }
 
   .border-3 {
     border-width: 3px;
   }
 
-  /* Safe area for mobile devices */
+  /* Safe area for mobile */
   .safe-area-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-  
-  .safe-area-top {
-    padding-top: env(safe-area-inset-top);
-  }
-
-  /* Mobile responsive utilities */
-  .mobile-card {
-    @apply bg-card rounded-xl border border-border p-4 shadow-sm;
-  }
-
-  .mobile-list-item {
-    @apply flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors;
-  }
-
-  .mobile-section-title {
-    @apply text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2;
-  }
-
-  .mobile-btn {
-    @apply h-11 px-4 rounded-xl font-medium transition-all active:scale-95;
-  }
-
-  .mobile-input {
-    @apply h-12 px-4 rounded-xl border border-input bg-background text-base;
-  }
-
-  @media (max-width: 768px) {
-    .touch-target {
-      min-height: 44px;
-      min-width: 44px;
-    }
-
-    .tap-highlight {
-      -webkit-tap-highlight-color: rgba(139, 92, 246, 0.1);
-    }
-
-    .mobile-scroll {
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
-    }
+    padding-bottom: env(safe-area-inset-bottom, 0);
   }
 }

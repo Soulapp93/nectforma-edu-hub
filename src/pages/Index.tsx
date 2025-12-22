@@ -8,12 +8,14 @@ import LandingFooter from '@/components/landing/LandingFooter';
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div className="min-h-screen bg-background">
       <LandingHeader />
-      <HeroSection />
-      <FeaturesSection />
-      <StatsSection />
-      <CTASection />
+      <main>
+        <HeroSection />
+        <FeaturesSection />
+        <StatsSection />
+        <CTASection />
+      </main>
       <LandingFooter />
     </div>
   );
