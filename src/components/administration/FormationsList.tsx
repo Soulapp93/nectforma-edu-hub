@@ -140,7 +140,7 @@ const FormationsList: React.FC = () => {
                 <Button 
                   onClick={handleCreateFormation}
                   className="flex items-center gap-2 text-xs sm:text-sm"
-                  variant="default"
+                  variant="premium"
                   size="sm"
                 >
                   <Plus className="h-4 w-4" />
@@ -203,7 +203,7 @@ const FormationsList: React.FC = () => {
           action={(isAdmin && !searchTerm && selectedLevel === 'all' && selectedStatus === 'all') ? {
             label: 'Créer une formation',
             onClick: handleCreateFormation,
-            variant: 'default'
+            variant: 'premium'
           } : undefined}
         />
       ) : viewMode === 'grid' ? (
