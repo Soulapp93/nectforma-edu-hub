@@ -9,6 +9,7 @@ import { Formation, formationService } from '@/services/formationService';
 import { activationService } from '@/services/activationService';
 import { tutorService, CreateTutorData } from '@/services/tutorService';
 import { Switch } from '@/components/ui/switch';
+import { toast } from 'sonner';
 
 interface SimplifiedUserModalProps {
   isOpen: boolean;
@@ -191,13 +192,13 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
         contract_end_date: tutorData.contract_end_date
       } : undefined;
 
-      // Créer l'utilisateur
+      // Créer / mettre à jour l'utilisateur
       const newUser = await onSave({
         first_name: formData.first_name,
         last_name: formData.last_name,
         email: formData.email,
         role: formData.role,
-        status: formData.status
+        status: formData.status,
       }, selectedFormations, tutorInfo);
 
       // Si c'est un nouvel utilisateur, créer un token d'activation et envoyer l'email
@@ -217,9 +218,11 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
         }
       }
 
+      toast.success(mode === 'create' ? 'Utilisateur créé' : 'Utilisateur mis à jour');
       onClose();
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
+      toast.error(error instanceof Error ? error.message : 'Erreur lors de la sauvegarde');
     } finally {
       setLoading(false);
     }

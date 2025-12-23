@@ -23,7 +23,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 const EnhancedUsersList: React.FC = () => {
-  const { users, loading, error, createUser, updateUser, deleteUser, bulkCreateUsers, getUserFormations: getUserFormationsFromHook } = useUsers();
+  const { users, loading, error, createUser, updateUser, deleteUser, bulkCreateUsers, getUserFormations: getUserFormationsFromHook, refetch } = useUsers();
   const { getUserFormations } = useUserFormations();
   const { getUserTutors } = useUserTutors();
   const [searchTerm, setSearchTerm] = useState('');
@@ -88,9 +88,14 @@ const EnhancedUsersList: React.FC = () => {
 
   const handleSaveUser = async (userData: CreateUserData, formationIds: string[], tutorData?: any) => {
     if (modalMode === 'create') {
-      return await createUser(userData, formationIds, tutorData);
+      const created = await createUser(userData, formationIds, tutorData);
+      // garantir la synchro de la table (et des relations)
+      await refetch();
+      return created;
     } else if (selectedUser) {
-      return await updateUser(selectedUser.id!, userData, formationIds);
+      const updated = await updateUser(selectedUser.id!, userData, formationIds);
+      await refetch();
+      return updated;
     }
     throw new Error('Mode invalide');
   };
