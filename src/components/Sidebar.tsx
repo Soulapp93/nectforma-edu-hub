@@ -1,48 +1,68 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, BookOpen, Calendar, MessageSquare, FileText, Settings, LogOut, ClipboardCheck, Building, ChevronDown, ChevronRight, Clock, UsersRound } from 'lucide-react';
-import { Sidebar as SidebarWrapper, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar } from '@/components/ui/sidebar';
+import { 
+  LayoutDashboard, 
+  Users, 
+  BookOpen, 
+  Calendar, 
+  MessageSquare, 
+  FileText, 
+  Settings, 
+  LogOut, 
+  ClipboardCheck, 
+  Building, 
+  ChevronDown, 
+  ChevronRight, 
+  Clock, 
+  UsersRound,
+  GraduationCap,
+  CalendarDays,
+  Mail,
+  UserCircle,
+  Building2,
+  FileCheck
+} from 'lucide-react';
+import { 
+  Sidebar as SidebarWrapper, 
+  SidebarContent, 
+  SidebarGroup, 
+  SidebarGroupContent, 
+  SidebarGroupLabel, 
+  SidebarMenu, 
+  SidebarMenuButton, 
+  SidebarMenuItem, 
+  SidebarHeader, 
+  SidebarFooter, 
+  useSidebar 
+} from '@/components/ui/sidebar';
 import { Badge } from '@/components/ui/badge';
 import { useCurrentUser, useUserWithRelations } from '@/hooks/useCurrentUser';
 import { useEstablishment } from '@/hooks/useEstablishment';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { supabase } from '@/integrations/supabase/client';
+
 interface NavigationItem {
   name: string;
   href: string;
   icon: React.ComponentType<any>;
   subItems?: NavigationItem[];
 }
+
 const Sidebar = () => {
-  const {
-    state
-  } = useSidebar();
+  const { state } = useSidebar();
   const collapsed = state === 'collapsed';
-  const {
-    userRole,
-    userId
-  } = useCurrentUser();
-  const {
-    userInfo,
-    relationInfo
-  } = useUserWithRelations();
-  const {
-    establishment
-  } = useEstablishment();
-  const {
-    counts: unreadCounts
-  } = useUnreadMessages();
+  const { userRole, userId } = useCurrentUser();
+  const { userInfo, relationInfo } = useUserWithRelations();
+  const { establishment } = useEstablishment();
+  const { counts: unreadCounts } = useUnreadMessages();
   const location = useLocation();
   const [adminExpanded, setAdminExpanded] = useState(location.pathname === '/administration');
-  const handleLogout = async () => {
-    // Déconnexion Supabase
-    await supabase.auth.signOut();
 
-    // Rediriger vers la page d'authentification
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     window.location.href = '/auth';
   };
 
-  // Obtenir les informations utilisateur pour l'affichage
   const getUserDisplayInfo = () => {
     if (userInfo) {
       return {
@@ -59,266 +79,262 @@ const Sidebar = () => {
       relationInfo: null
     };
   };
+
   const userDisplayInfo = getUserDisplayInfo();
 
   // Sous-onglets de l'administration
-  const administrationSubItems = [{
-    name: 'Gestion des utilisateurs',
-    href: '/administration?tab=users',
-    icon: Users
-  }, {
-    name: 'Gestion des formations',
-    href: '/administration?tab=formations',
-    icon: BookOpen
-  }, {
-    name: 'Gestion des Cahiers de Texte',
-    href: '/administration?tab=textbooks',
-    icon: FileText
-  }, {
-    name: 'Gestion des Emplois du Temps',
-    href: '/administration?tab=schedules',
-    icon: Clock
-  }, {
-    name: 'Feuilles d\'émargement',
-    href: '/administration?tab=attendance',
-    icon: ClipboardCheck
-  }];
+  const administrationSubItems = [
+    { name: 'Gestion des utilisateurs', href: '/administration?tab=users', icon: Users },
+    { name: 'Gestion des formations', href: '/administration?tab=formations', icon: GraduationCap },
+    { name: 'Cahiers de Texte', href: '/administration?tab=textbooks', icon: FileText },
+    { name: 'Emplois du Temps', href: '/administration?tab=schedules', icon: CalendarDays },
+    { name: 'Feuilles d\'émargement', href: '/administration?tab=attendance', icon: FileCheck }
+  ];
 
-  // Navigation pour AdminPrincipal uniquement (avec gestion établissement et profil séparés)
-  const principalAdminNavigation: NavigationItem[] = [{
-    name: 'Tableau de bord',
-    href: '/dashboard',
-    icon: LayoutDashboard
-  }, {
-    name: 'Administration',
-    href: '/administration',
-    icon: Users,
-    subItems: administrationSubItems
-  }, {
-    name: 'Formation',
-    href: '/formations',
-    icon: BookOpen
-  }, {
-    name: 'Emploi du temps',
-    href: '/emploi-temps',
-    icon: Calendar
-  }, {
-    name: 'Messagerie',
-    href: '/messagerie',
-    icon: MessageSquare
-  }, {
-    name: 'Groupes',
-    href: '/groupes',
-    icon: UsersRound
-  }, {
-    name: 'Gestion du compte',
-    href: '/gestion-etablissement',
-    icon: Building
-  }, {
-    name: 'Mon Profil',
-    href: '/compte',
-    icon: Settings
-  }];
+  // Navigation pour AdminPrincipal
+  const principalAdminNavigation: NavigationItem[] = [
+    { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Administration', href: '/administration', icon: Users, subItems: administrationSubItems },
+    { name: 'Formations', href: '/formations', icon: GraduationCap },
+    { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarDays },
+    { name: 'Messagerie', href: '/messagerie', icon: Mail },
+    { name: 'Groupes', href: '/groupes', icon: UsersRound },
+    { name: 'Gestion du compte', href: '/gestion-etablissement', icon: Building2 },
+    { name: 'Mon Profil', href: '/compte', icon: UserCircle }
+  ];
 
-  // Navigation pour Admin (SANS gestion du compte - réservé à AdminPrincipal)
-  const adminNavigation: NavigationItem[] = [{
-    name: 'Tableau de bord',
-    href: '/dashboard',
-    icon: LayoutDashboard
-  }, {
-    name: 'Administration',
-    href: '/administration',
-    icon: Users,
-    subItems: administrationSubItems
-  }, {
-    name: 'Formation',
-    href: '/formations',
-    icon: BookOpen
-  }, {
-    name: 'Emploi du temps',
-    href: '/emploi-temps',
-    icon: Calendar
-  }, {
-    name: 'Messagerie',
-    href: '/messagerie',
-    icon: MessageSquare
-  }, {
-    name: 'Groupes',
-    href: '/groupes',
-    icon: UsersRound
-  }, {
-    name: 'Mon Profil',
-    href: '/compte',
-    icon: Settings
-  }];
+  // Navigation pour Admin
+  const adminNavigation: NavigationItem[] = [
+    { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Administration', href: '/administration', icon: Users, subItems: administrationSubItems },
+    { name: 'Formations', href: '/formations', icon: GraduationCap },
+    { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarDays },
+    { name: 'Messagerie', href: '/messagerie', icon: Mail },
+    { name: 'Groupes', href: '/groupes', icon: UsersRound },
+    { name: 'Mon Profil', href: '/compte', icon: UserCircle }
+  ];
 
-  // Navigation pour tuteurs (4 onglets - vue apprenti uniquement, pas de tableau de bord)
-  const tutorNavigation: NavigationItem[] = [{
-    name: 'Formation Apprenti',
-    href: '/formations',
-    icon: BookOpen
-  }, {
-    name: 'Suivi Émargement Apprenti',
-    href: '/suivi-emargement',
-    icon: ClipboardCheck
-  }, {
-    name: 'Emploi du temps Apprenti',
-    href: '/emploi-temps',
-    icon: Calendar
-  }, {
-    name: 'Mon Profil',
-    href: '/compte',
-    icon: Settings
-  }];
+  // Navigation pour tuteurs
+  const tutorNavigation: NavigationItem[] = [
+    { name: 'Formation Apprenti', href: '/formations', icon: GraduationCap },
+    { name: 'Suivi Émargement', href: '/suivi-emargement', icon: FileCheck },
+    { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarDays },
+    { name: 'Mon Profil', href: '/compte', icon: UserCircle }
+  ];
 
-  // Navigation pour les formateurs et étudiants (avec profil)
-  const limitedNavigation: NavigationItem[] = [{
-    name: 'Formation',
-    href: '/formations',
-    icon: BookOpen
-  }, {
-    name: 'Suivi Émargement',
-    href: '/suivi-emargement',
-    icon: ClipboardCheck
-  }, {
-    name: 'Emploi du temps',
-    href: '/emploi-temps',
-    icon: Calendar
-  }, {
-    name: 'Messagerie',
-    href: '/messagerie',
-    icon: MessageSquare
-  }, {
-    name: 'Groupes',
-    href: '/groupes',
-    icon: UsersRound
-  }, {
-    name: 'Mon Profil',
-    href: '/compte',
-    icon: Settings
-  }];
+  // Navigation pour formateurs et étudiants
+  const limitedNavigation: NavigationItem[] = [
+    { name: 'Formations', href: '/formations', icon: GraduationCap },
+    { name: 'Suivi Émargement', href: '/suivi-emargement', icon: FileCheck },
+    { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarDays },
+    { name: 'Messagerie', href: '/messagerie', icon: Mail },
+    { name: 'Groupes', href: '/groupes', icon: UsersRound },
+    { name: 'Mon Profil', href: '/compte', icon: UserCircle }
+  ];
 
-  // Sélectionner la navigation selon le rôle
-  const navigation = userRole === 'AdminPrincipal' ? principalAdminNavigation : userRole === 'Admin' ? adminNavigation : userRole === 'Tuteur' ? tutorNavigation : limitedNavigation;
-  return <SidebarWrapper className={`${collapsed ? 'w-16' : 'w-64'} nect-gradient text-primary-foreground shadow-xl transition-all duration-300`} collapsible="icon" style={{
-    background: 'linear-gradient(135deg, hsl(262, 83%, 58%), hsl(280, 75%, 60%))'
-  }}>
-      <SidebarHeader className="p-6">
+  const navigation = userRole === 'AdminPrincipal' 
+    ? principalAdminNavigation 
+    : userRole === 'Admin' 
+      ? adminNavigation 
+      : userRole === 'Tuteur' 
+        ? tutorNavigation 
+        : limitedNavigation;
+
+  return (
+    <SidebarWrapper 
+      className={`${collapsed ? 'w-16' : 'w-72'} border-r-2 border-sidebar-border shadow-xl transition-all duration-300`}
+      collapsible="icon"
+      style={{
+        background: 'linear-gradient(180deg, hsl(270 60% 98%), hsl(262 50% 96%))',
+        boxShadow: '4px 0 24px rgba(139, 92, 246, 0.08)'
+      }}
+    >
+      <SidebarHeader className="p-5 border-b border-sidebar-border">
         <div className="flex flex-col gap-4">
           {/* NECTFY Logo */}
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-primary-foreground rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="text-primary font-bold text-lg">N</span>
+            <div className="w-11 h-11 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+              <span className="text-white font-bold text-xl font-display">N</span>
             </div>
-            {!collapsed && <div>
-                <h1 className="text-xl font-bold text-primary-foreground">NECTFY</h1>
-              </div>}
+            {!collapsed && (
+              <div>
+                <h1 className="text-2xl font-bold text-primary font-display tracking-tight">NECTFY</h1>
+              </div>
+            )}
           </div>
           
           {/* Establishment Logo and Name */}
-          {establishment && <div className={`flex items-center ${collapsed ? 'justify-center' : 'space-x-3'} pt-2 border-t border-primary-foreground/20`}>
-              {establishment.logo_url ? <img src={establishment.logo_url} alt={establishment.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-white" /> : <div className="w-10 h-10 bg-primary-foreground/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Building className="w-5 h-5 text-primary-foreground" />
-                </div>}
-              {!collapsed && <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-primary-foreground truncate">{establishment.name}</p>
-                </div>}
-            </div>}
+          {establishment && (
+            <div className={`flex items-center ${collapsed ? 'justify-center' : 'space-x-3'} pt-3 border-t border-sidebar-border`}>
+              {establishment.logo_url ? (
+                <img 
+                  src={establishment.logo_url} 
+                  alt={establishment.name} 
+                  className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border-2 border-primary/20 shadow-sm" 
+                />
+              ) : (
+                <div className="w-10 h-10 bg-sidebar-accent rounded-lg flex items-center justify-center flex-shrink-0 border border-sidebar-border">
+                  <Building2 className="w-5 h-5 text-primary" />
+                </div>
+              )}
+              {!collapsed && (
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-primary truncate">{establishment.name}</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="text-primary-foreground px-0 py-[77px] border-2 border-dotted shadow-none border-indigo-800">
+      <SidebarContent className="px-3 py-4">
         {/* User Profile */}
-        <div className="px-6 py-4 border-b border-primary-foreground/20">
+        <div className="px-3 py-4 mb-4 bg-sidebar-accent rounded-xl border border-sidebar-border">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-primary-foreground/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-sm font-medium text-primary-foreground">{userDisplayInfo.initials}</span>
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+              <span className="text-sm font-bold text-white">{userDisplayInfo.initials}</span>
             </div>
-            {!collapsed && <div className="flex-1">
-                <p className="text-sm font-medium text-primary-foreground">{userDisplayInfo.name}</p>
-                <p className="text-xs text-primary-foreground/70">{userDisplayInfo.role}</p>
-                {userDisplayInfo.relationInfo && <div className="text-xs text-primary-foreground/60 mt-1">
-                    {userDisplayInfo.relationInfo.type === 'tutor' ? <span>🏢 Tuteur: {userDisplayInfo.relationInfo.name}</span> : <span>👨‍🎓 Apprenti: {userDisplayInfo.relationInfo.name}</span>}
-                  </div>}
-              </div>}
+            {!collapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-primary truncate">{userDisplayInfo.name}</p>
+                <p className="text-xs text-primary/60 font-medium">{userDisplayInfo.role}</p>
+                {userDisplayInfo.relationInfo && (
+                  <div className="text-xs text-primary/50 mt-0.5">
+                    {userDisplayInfo.relationInfo.type === 'tutor' 
+                      ? <span>🏢 {userDisplayInfo.relationInfo.name}</span> 
+                      : <span>👨‍🎓 {userDisplayInfo.relationInfo.name}</span>
+                    }
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-primary-foreground/70 px-4 py-2">
+          <SidebarGroupLabel className="text-primary/50 px-3 py-2 text-xs font-bold uppercase tracking-wider">
             {!collapsed ? 'Navigation' : ''}
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="px-4 space-y-1">
+            <SidebarMenu className="space-y-1">
               {navigation.map(item => {
-              const Icon = item.icon;
-              const hasSubItems = item.subItems && item.subItems.length > 0;
-              const isAdminRoute = location.pathname === '/administration';
-              if (hasSubItems) {
-                return <SidebarMenuItem key={item.name}>
+                const Icon = item.icon;
+                const hasSubItems = item.subItems && item.subItems.length > 0;
+                const isAdminRoute = location.pathname === '/administration';
+
+                if (hasSubItems) {
+                  return (
+                    <SidebarMenuItem key={item.name}>
                       <div>
-                        <button onClick={() => setAdminExpanded(!adminExpanded)} className={`flex items-center justify-between w-full px-3 py-2 text-sm font-medium rounded-lg transition-colors ${isAdminRoute ? 'nect-glass text-primary-foreground' : 'text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground'}`} title={collapsed ? item.name : undefined}>
+                        <button 
+                          onClick={() => setAdminExpanded(!adminExpanded)} 
+                          className={`flex items-center justify-between w-full px-3 py-3 text-base font-semibold rounded-xl transition-all duration-200 ${
+                            isAdminRoute 
+                              ? 'bg-primary text-white shadow-md' 
+                              : 'text-primary hover:bg-sidebar-accent hover:shadow-sm'
+                          }`}
+                          title={collapsed ? item.name : undefined}
+                        >
                           <div className="flex items-center">
-                            <Icon className={`${collapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0`} />
+                            <Icon className={`${collapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0`} strokeWidth={2.5} />
                             {!collapsed && <span>{item.name}</span>}
                           </div>
-                          {!collapsed && (adminExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />)}
+                          {!collapsed && (
+                            adminExpanded 
+                              ? <ChevronDown className="h-4 w-4" /> 
+                              : <ChevronRight className="h-4 w-4" />
+                          )}
                         </button>
                         
-                        {!collapsed && adminExpanded && <div className="ml-6 mt-1 space-y-1">
-                            {item.subItems.map(subItem => {
-                        const SubIcon = subItem.icon;
-                        const searchParams = new URLSearchParams(subItem.href.split('?')[1]);
-                        const tabParam = searchParams.get('tab');
-                        const currentTab = new URLSearchParams(location.search).get('tab');
-                        const isSubActive = isAdminRoute && currentTab === tabParam;
-                        return <NavLink key={subItem.name} to={subItem.href} className={`flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${isSubActive ? 'bg-primary-foreground/20 text-primary-foreground font-medium' : 'text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-primary-foreground'}`}>
-                                  <SubIcon className="mr-3 h-4 w-4 flex-shrink-0" />
-                                  <span className="text-xs">{subItem.name}</span>
-                                </NavLink>;
-                      })}
-                          </div>}
+                        {!collapsed && adminExpanded && (
+                          <div className="ml-4 mt-2 space-y-1 border-l-2 border-primary/20 pl-3">
+                            {item.subItems?.map(subItem => {
+                              const SubIcon = subItem.icon;
+                              const searchParams = new URLSearchParams(subItem.href.split('?')[1]);
+                              const tabParam = searchParams.get('tab');
+                              const currentTab = new URLSearchParams(location.search).get('tab');
+                              const isSubActive = isAdminRoute && currentTab === tabParam;
+                              
+                              return (
+                                <NavLink 
+                                  key={subItem.name} 
+                                  to={subItem.href} 
+                                  className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                                    isSubActive 
+                                      ? 'bg-primary/10 text-primary border border-primary/30' 
+                                      : 'text-primary/70 hover:bg-sidebar-accent hover:text-primary'
+                                  }`}
+                                >
+                                  <SubIcon className="mr-3 h-4 w-4 flex-shrink-0" strokeWidth={2} />
+                                  <span>{subItem.name}</span>
+                                </NavLink>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
-                    </SidebarMenuItem>;
-              }
+                    </SidebarMenuItem>
+                  );
+                }
 
-              // Déterminer le badge pour cet item
-              const getBadgeCount = () => {
-                if (item.href === '/messagerie') return unreadCounts.messagerie;
-                if (item.href === '/groupes') return unreadCounts.groupes;
-                return 0;
-              };
-              const badgeCount = getBadgeCount();
-              return <SidebarMenuItem key={item.name}>
+                const getBadgeCount = () => {
+                  if (item.href === '/messagerie') return unreadCounts.messagerie;
+                  if (item.href === '/groupes') return unreadCounts.groupes;
+                  return 0;
+                };
+                const badgeCount = getBadgeCount();
+
+                return (
+                  <SidebarMenuItem key={item.name}>
                     <SidebarMenuButton asChild>
-                      <NavLink to={item.href} end={item.href === '/' || item.href === '/dashboard'} className={({
-                    isActive
-                  }) => `flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors ${isActive ? 'nect-glass text-primary-foreground' : 'text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground'}`} title={collapsed ? item.name : undefined}>
+                      <NavLink 
+                        to={item.href} 
+                        end={item.href === '/' || item.href === '/dashboard'} 
+                        className={({ isActive }) => 
+                          `flex items-center justify-between px-3 py-3 text-base font-semibold rounded-xl transition-all duration-200 ${
+                            isActive 
+                              ? 'bg-primary text-white shadow-md' 
+                              : 'text-primary hover:bg-sidebar-accent hover:shadow-sm'
+                          }`
+                        }
+                        title={collapsed ? item.name : undefined}
+                      >
                         <div className="flex items-center">
-                          <Icon className={`${collapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0`} />
+                          <Icon className={`${collapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0`} strokeWidth={2.5} />
                           {!collapsed && <span>{item.name}</span>}
                         </div>
-                        {badgeCount > 0 && !collapsed && <Badge className="ml-auto bg-green-500 text-white hover:bg-green-600 text-xs min-w-[20px] h-5 flex items-center justify-center">
+                        {badgeCount > 0 && !collapsed && (
+                          <Badge className="ml-auto bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600 text-xs min-w-[22px] h-5 flex items-center justify-center shadow-sm border-0">
                             {badgeCount > 99 ? '99+' : badgeCount}
-                          </Badge>}
-                        {badgeCount > 0 && collapsed && <span className="absolute -top-1 -right-1 bg-green-500 text-white text-[10px] min-w-[16px] h-4 rounded-full flex items-center justify-center">
+                          </Badge>
+                        )}
+                        {badgeCount > 0 && collapsed && (
+                          <span className="absolute -top-1 -right-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[10px] min-w-[18px] h-[18px] rounded-full flex items-center justify-center shadow-sm">
                             {badgeCount > 99 ? '99+' : badgeCount}
-                          </span>}
+                          </span>
+                        )}
                       </NavLink>
                     </SidebarMenuButton>
-                  </SidebarMenuItem>;
-            })}
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-primary-foreground/20">
-        <button onClick={handleLogout} className="flex items-center px-3 py-2 text-sm font-medium text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-lg transition-colors w-full" title={collapsed ? 'Déconnexion' : undefined}>
-          <LogOut className={`${collapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0`} />
+      <SidebarFooter className="p-4 border-t border-sidebar-border">
+        <button 
+          onClick={handleLogout} 
+          className="flex items-center px-3 py-3 text-base font-semibold text-red-500 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-200 w-full group"
+          title={collapsed ? 'Déconnexion' : undefined}
+        >
+          <LogOut className={`${collapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0 group-hover:rotate-12 transition-transform`} strokeWidth={2.5} />
           {!collapsed && <span>Déconnexion</span>}
         </button>
       </SidebarFooter>
-    </SidebarWrapper>;
+    </SidebarWrapper>
+  );
 };
+
 export default Sidebar;
