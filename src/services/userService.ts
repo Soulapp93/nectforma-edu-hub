@@ -161,7 +161,7 @@ export const userService = {
     return data;
   },
 
-  async updateUser(id: string, userData: Partial<CreateUserData>): Promise<User> {
+  async updateUser(id: string, userData: Partial<CreateUserData>, formationIds?: string[]): Promise<User> {
     const { data, error } = await supabase
       .from('users')
       .update(userData)
@@ -170,7 +170,47 @@ export const userService = {
       .single();
 
     if (error) throw error;
+
+    // Mettre à jour les formations si fournies
+    if (formationIds !== undefined) {
+      // Supprimer les anciennes assignations
+      await supabase
+        .from('user_formation_assignments')
+        .delete()
+        .eq('user_id', id);
+
+      // Ajouter les nouvelles assignations
+      if (formationIds.length > 0) {
+        const assignments = formationIds.map(formationId => ({
+          user_id: id,
+          formation_id: formationId
+        }));
+
+        const { error: assignmentError } = await supabase
+          .from('user_formation_assignments')
+          .insert(assignments);
+
+        if (assignmentError) {
+          console.error('Erreur lors de l\'assignation aux formations:', assignmentError);
+        }
+      }
+    }
+
     return data;
+  },
+
+  async getUserFormations(userId: string): Promise<string[]> {
+    const { data, error } = await supabase
+      .from('user_formation_assignments')
+      .select('formation_id')
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Erreur lors de la récupération des formations:', error);
+      return [];
+    }
+
+    return data?.map(d => d.formation_id) || [];
   },
 
   async deleteUser(id: string): Promise<void> {

@@ -21,6 +21,7 @@ interface SimplifiedUserModalProps {
   user?: UserType | null;
   mode: 'create' | 'edit';
   preselectedRole?: 'AdminPrincipal' | 'Admin' | 'Formateur' | 'Étudiant' | null;
+  loadUserFormations?: (userId: string) => Promise<string[]>;
 }
 
 const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
@@ -29,7 +30,8 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
   onSave,
   user,
   mode,
-  preselectedRole
+  preselectedRole,
+  loadUserFormations
 }) => {
   const [formData, setFormData] = useState({
     first_name: '',
@@ -61,43 +63,61 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (isOpen) {
-      loadFormations();
-      
-      if (user && mode === 'edit') {
-        setFormData({
-          first_name: user.first_name || '',
-          last_name: user.last_name || '',
-          email: user.email || '',
-          role: user.role || 'Étudiant',
-          status: user.status || 'Actif'
-        });
-      } else {
-        setFormData({
+    const initModal = async () => {
+      if (isOpen) {
+        loadFormations();
+        
+        if (user && mode === 'edit') {
+          setFormData({
+            first_name: user.first_name || '',
+            last_name: user.last_name || '',
+            email: user.email || '',
+            role: user.role || 'Étudiant',
+            status: user.status || 'Actif'
+          });
+          
+          // Charger les formations de l'utilisateur en mode édition
+          if (loadUserFormations) {
+            try {
+              const userFormationIds = await loadUserFormations(user.id);
+              setSelectedFormations(userFormationIds);
+            } catch (error) {
+              console.error('Erreur lors du chargement des formations utilisateur:', error);
+              setSelectedFormations([]);
+            }
+          } else {
+            setSelectedFormations([]);
+          }
+        } else {
+          setFormData({
+            first_name: '',
+            last_name: '',
+            email: '',
+            role: preselectedRole || 'Étudiant',
+            status: 'Actif'
+          });
+          setSelectedFormations([]);
+        }
+        
+        setTutorData({
           first_name: '',
           last_name: '',
           email: '',
-          role: preselectedRole || 'Étudiant',
-          status: 'Actif'
+          phone: '',
+          company_name: '',
+          company_address: '',
+          position: '',
+          contract_type: '',
+          contract_start_date: '',
+          contract_end_date: ''
         });
+        setShowTutorSection(false);
+        setErrors({});
       }
-      setSelectedFormations([]);
-      setTutorData({
-        first_name: '',
-        last_name: '',
-        email: '',
-        phone: '',
-        company_name: '',
-        company_address: '',
-        position: '',
-        contract_type: '',
-        contract_start_date: '',
-        contract_end_date: ''
-      });
-      setShowTutorSection(false);
-      setErrors({});
-    }
-  }, [user, mode, isOpen, preselectedRole]);
+    };
+    
+    initModal();
+  }, [user, mode, isOpen, preselectedRole, loadUserFormations]);
 
   const loadFormations = async () => {
     try {

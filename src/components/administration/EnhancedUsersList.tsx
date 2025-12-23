@@ -23,7 +23,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 const EnhancedUsersList: React.FC = () => {
-  const { users, loading, error, createUser, updateUser, deleteUser, bulkCreateUsers } = useUsers();
+  const { users, loading, error, createUser, updateUser, deleteUser, bulkCreateUsers, getUserFormations: getUserFormationsFromHook } = useUsers();
   const { getUserFormations } = useUserFormations();
   const { getUserTutors } = useUserTutors();
   const [searchTerm, setSearchTerm] = useState('');
@@ -90,9 +90,13 @@ const EnhancedUsersList: React.FC = () => {
     if (modalMode === 'create') {
       return await createUser(userData, formationIds, tutorData);
     } else if (selectedUser) {
-      return await updateUser(selectedUser.id!, userData);
+      return await updateUser(selectedUser.id!, userData, formationIds);
     }
     throw new Error('Mode invalide');
+  };
+
+  const loadUserFormations = async (userId: string): Promise<string[]> => {
+    return await getUserFormationsFromHook(userId);
   };
 
   const handleViewUser = (user: User) => {
@@ -619,6 +623,7 @@ const EnhancedUsersList: React.FC = () => {
         user={selectedUser}
         mode={modalMode}
         preselectedRole={preselectedRole}
+        loadUserFormations={loadUserFormations}
       />
 
       <UserDetailModal

@@ -34,10 +34,10 @@ export const useUsers = () => {
     }
   };
 
-  const updateUser = async (id: string, userData: Partial<CreateUserData>) => {
+  const updateUser = async (id: string, userData: Partial<CreateUserData>, formationIds?: string[]) => {
     try {
       setLoading(true);
-      const updatedUser = await userService.updateUser(id, userData);
+      const updatedUser = await userService.updateUser(id, userData, formationIds);
       setUsers(prev => prev.map(user => user.id === id ? updatedUser : user));
       return updatedUser;
     } catch (err) {
@@ -46,6 +46,10 @@ export const useUsers = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getUserFormations = async (userId: string) => {
+    return userService.getUserFormations(userId);
   };
 
   const deleteUser = async (id: string) => {
@@ -87,6 +91,7 @@ export const useUsers = () => {
     updateUser,
     deleteUser,
     bulkCreateUsers,
+    getUserFormations,
     refetch: fetchUsers
   };
 };
