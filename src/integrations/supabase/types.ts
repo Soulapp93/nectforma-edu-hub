@@ -2265,6 +2265,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      tutor_in_current_establishment: {
+        Args: { _tutor_id: string }
+        Returns: boolean
+      }
       validate_invitation_token: {
         Args: { token_param: string }
         Returns: {
