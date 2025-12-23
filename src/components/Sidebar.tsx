@@ -53,14 +53,10 @@ const Sidebar = () => {
   const [adminExpanded, setAdminExpanded] = useState(location.pathname === '/administration');
 
   const handleLogout = async () => {
-    // Déconnexion Supabase
     await supabase.auth.signOut();
-    
-    // Rediriger vers la page d'authentification
     window.location.href = '/auth';
   };
 
-  // Obtenir les informations utilisateur pour l'affichage
   const getUserDisplayInfo = () => {
     if (userInfo) {
       return {
@@ -81,16 +77,14 @@ const Sidebar = () => {
 
   const userDisplayInfo = getUserDisplayInfo();
   
-  // Sous-onglets de l'administration
   const administrationSubItems = [
-    { name: 'Gestion des utilisateurs', href: '/administration?tab=users', icon: Users },
-    { name: 'Gestion des formations', href: '/administration?tab=formations', icon: BookOpen },
-    { name: 'Gestion des Cahiers de Texte', href: '/administration?tab=textbooks', icon: FileText },
-    { name: 'Gestion des Emplois du Temps', href: '/administration?tab=schedules', icon: Clock },
-    { name: 'Feuilles d\'émargement', href: '/administration?tab=attendance', icon: ClipboardCheck },
+    { name: 'Utilisateurs', href: '/administration?tab=users', icon: Users },
+    { name: 'Formations', href: '/administration?tab=formations', icon: BookOpen },
+    { name: 'Cahiers de Texte', href: '/administration?tab=textbooks', icon: FileText },
+    { name: 'Emplois du Temps', href: '/administration?tab=schedules', icon: Clock },
+    { name: 'Émargement', href: '/administration?tab=attendance', icon: ClipboardCheck },
   ];
   
-  // Navigation pour AdminPrincipal uniquement (avec gestion établissement et profil séparés)
   const principalAdminNavigation: NavigationItem[] = [
     { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Administration', href: '/administration', icon: Users, subItems: administrationSubItems },
@@ -102,7 +96,6 @@ const Sidebar = () => {
     { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
 
-  // Navigation pour Admin (SANS gestion du compte - réservé à AdminPrincipal)
   const adminNavigation: NavigationItem[] = [
     { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Administration', href: '/administration', icon: Users, subItems: administrationSubItems },
@@ -113,15 +106,13 @@ const Sidebar = () => {
     { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
 
-  // Navigation pour tuteurs (4 onglets - vue apprenti uniquement, pas de tableau de bord)
   const tutorNavigation: NavigationItem[] = [
     { name: 'Formation Apprenti', href: '/formations', icon: BookOpen },
-    { name: 'Suivi Émargement Apprenti', href: '/suivi-emargement', icon: ClipboardCheck },
-    { name: 'Emploi du temps Apprenti', href: '/emploi-temps', icon: Calendar },
+    { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck },
+    { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
     { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
 
-  // Navigation pour les formateurs et étudiants (avec profil)
   const limitedNavigation: NavigationItem[] = [
     { name: 'Formation', href: '/formations', icon: BookOpen },
     { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck },
@@ -131,7 +122,6 @@ const Sidebar = () => {
     { name: 'Mon Profil', href: '/compte', icon: Settings },
   ];
 
-  // Sélectionner la navigation selon le rôle
   const navigation = userRole === 'AdminPrincipal' 
     ? principalAdminNavigation 
     : userRole === 'Admin' 
@@ -142,79 +132,68 @@ const Sidebar = () => {
 
   return (
     <SidebarWrapper 
-      className={`${collapsed ? 'w-16' : 'w-64'} nect-gradient text-primary-foreground shadow-xl transition-all duration-300`}
+      className={`${collapsed ? 'w-16' : 'w-72'} bg-background border-r border-border/40 transition-all duration-300 ease-in-out`}
       collapsible="icon"
-      style={{ background: 'linear-gradient(135deg, hsl(262, 83%, 58%), hsl(280, 75%, 60%))' }}
     >
-      <SidebarHeader className="p-6">
-        <div className="flex flex-col gap-4">
-          {/* NECTFY Logo */}
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-primary-foreground rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="text-primary font-bold text-lg">N</span>
-            </div>
-            {!collapsed && (
-              <div>
-                <h1 className="text-xl font-bold text-primary-foreground">NECTFY</h1>
-              </div>
-            )}
+      {/* Header avec logo NECTFY */}
+      <SidebarHeader className="px-6 py-8">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-sm">
+            <span className="text-primary-foreground font-bold text-lg">N</span>
           </div>
-          
-          {/* Establishment Logo and Name */}
-          {establishment && (
-            <div className={`flex items-center ${collapsed ? 'justify-center' : 'space-x-3'} pt-2 border-t border-primary-foreground/20`}>
-              {establishment.logo_url ? (
-                <img 
-                  src={establishment.logo_url} 
-                  alt={establishment.name}
-                  className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-white"
-                />
-              ) : (
-                <div className="w-10 h-10 bg-primary-foreground/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Building className="w-5 h-5 text-primary-foreground" />
-                </div>
-              )}
-              {!collapsed && (
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-primary-foreground truncate">{establishment.name}</p>
-                </div>
-              )}
-            </div>
+          {!collapsed && (
+            <span className="text-xl font-semibold tracking-tight text-foreground">NECTFY</span>
           )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
-        {/* User Profile */}
-        <div className="px-6 py-4 border-b border-primary-foreground/20">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-primary-foreground/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-sm font-medium text-primary-foreground">{userDisplayInfo.initials}</span>
+      <SidebarContent className="px-3">
+        {/* Établissement */}
+        {establishment && (
+          <div className={`mx-3 mb-6 p-3 rounded-xl bg-muted/50 ${collapsed ? 'flex justify-center' : ''}`}>
+            <div className={`flex items-center ${collapsed ? '' : 'gap-3'}`}>
+              {establishment.logo_url ? (
+                <img 
+                  src={establishment.logo_url} 
+                  alt={establishment.name}
+                  className="w-9 h-9 rounded-lg object-cover bg-background shadow-sm"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-lg bg-background flex items-center justify-center shadow-sm">
+                  <Building className="w-4 h-4 text-muted-foreground" />
+                </div>
+              )}
+              {!collapsed && (
+                <p className="text-sm font-medium text-foreground truncate">{establishment.name}</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Profil utilisateur */}
+        <div className={`mx-3 mb-6 ${collapsed ? 'flex justify-center' : ''}`}>
+          <div className={`flex items-center ${collapsed ? '' : 'gap-3'}`}>
+            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+              <span className="text-sm font-medium text-primary">{userDisplayInfo.initials}</span>
             </div>
             {!collapsed && (
-              <div className="flex-1">
-                <p className="text-sm font-medium text-primary-foreground">{userDisplayInfo.name}</p>
-                <p className="text-xs text-primary-foreground/70">{userDisplayInfo.role}</p>
-                {userDisplayInfo.relationInfo && (
-                  <div className="text-xs text-primary-foreground/60 mt-1">
-                    {userDisplayInfo.relationInfo.type === 'tutor' ? (
-                      <span>🏢 Tuteur: {userDisplayInfo.relationInfo.name}</span>
-                    ) : (
-                      <span>👨‍🎓 Apprenti: {userDisplayInfo.relationInfo.name}</span>
-                    )}
-                  </div>
-                )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">{userDisplayInfo.name}</p>
+                <p className="text-xs text-muted-foreground">{userDisplayInfo.role}</p>
               </div>
             )}
           </div>
         </div>
 
+        {/* Navigation */}
         <SidebarGroup>
-          <SidebarGroupLabel className="text-primary-foreground/70 px-4 py-2">
-            {!collapsed ? 'Navigation' : ''}
-          </SidebarGroupLabel>
+          {!collapsed && (
+            <SidebarGroupLabel className="px-3 mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Menu
+            </SidebarGroupLabel>
+          )}
           <SidebarGroupContent>
-            <SidebarMenu className="px-4 space-y-1">
+            <SidebarMenu className="space-y-1">
               {navigation.map((item) => {
                 const Icon = item.icon;
                 const hasSubItems = item.subItems && item.subItems.length > 0;
@@ -226,26 +205,24 @@ const Sidebar = () => {
                       <div>
                         <button
                           onClick={() => setAdminExpanded(!adminExpanded)}
-                          className={`flex items-center justify-between w-full px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                          className={`flex items-center justify-between w-full px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ${
                             isAdminRoute
-                              ? 'nect-glass text-primary-foreground'
-                              : 'text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground'
+                              ? 'bg-primary/10 text-primary'
+                              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                           }`}
                           title={collapsed ? item.name : undefined}
                         >
-                          <div className="flex items-center">
-                            <Icon className={`${collapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0`} />
+                          <div className="flex items-center gap-3">
+                            <Icon className="h-5 w-5 flex-shrink-0" />
                             {!collapsed && <span>{item.name}</span>}
                           </div>
                           {!collapsed && (
-                            adminExpanded ? 
-                              <ChevronDown className="h-4 w-4" /> : 
-                              <ChevronRight className="h-4 w-4" />
+                            <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${adminExpanded ? '' : '-rotate-90'}`} />
                           )}
                         </button>
                         
                         {!collapsed && adminExpanded && (
-                          <div className="ml-6 mt-1 space-y-1">
+                          <div className="mt-1 ml-4 pl-4 border-l border-border/40 space-y-1">
                             {item.subItems.map((subItem) => {
                               const SubIcon = subItem.icon;
                               const searchParams = new URLSearchParams(subItem.href.split('?')[1]);
@@ -257,14 +234,14 @@ const Sidebar = () => {
                                 <NavLink
                                   key={subItem.name}
                                   to={subItem.href}
-                                  className={`flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
+                                  className={`flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
                                     isSubActive
-                                      ? 'bg-primary-foreground/20 text-primary-foreground font-medium'
-                                      : 'text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-primary-foreground'
+                                      ? 'text-primary font-medium'
+                                      : 'text-muted-foreground hover:text-foreground'
                                   }`}
                                 >
-                                  <SubIcon className="mr-3 h-4 w-4 flex-shrink-0" />
-                                  <span className="text-xs">{subItem.name}</span>
+                                  <SubIcon className="h-4 w-4 flex-shrink-0" />
+                                  <span>{subItem.name}</span>
                                 </NavLink>
                               );
                             })}
@@ -275,7 +252,6 @@ const Sidebar = () => {
                   );
                 }
                 
-                // Déterminer le badge pour cet item
                 const getBadgeCount = () => {
                   if (item.href === '/messagerie') return unreadCounts.messagerie;
                   if (item.href === '/groupes') return unreadCounts.groupes;
@@ -290,29 +266,25 @@ const Sidebar = () => {
                         to={item.href}
                         end={item.href === '/' || item.href === '/dashboard'}
                         className={({ isActive }) =>
-                          `flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                          `flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ${
                             isActive
-                              ? 'nect-glass text-primary-foreground'
-                              : 'text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground'
+                              ? 'bg-primary/10 text-primary'
+                              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                           }`
                         }
                         title={collapsed ? item.name : undefined}
                       >
-                        <div className="flex items-center">
-                          <Icon className={`${collapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0`} />
+                        <div className="flex items-center gap-3">
+                          <Icon className="h-5 w-5 flex-shrink-0" />
                           {!collapsed && <span>{item.name}</span>}
                         </div>
                         {badgeCount > 0 && !collapsed && (
-                          <Badge 
-                            className="ml-auto bg-green-500 text-white hover:bg-green-600 text-xs min-w-[20px] h-5 flex items-center justify-center"
-                          >
+                          <Badge className="bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full">
                             {badgeCount > 99 ? '99+' : badgeCount}
                           </Badge>
                         )}
                         {badgeCount > 0 && collapsed && (
-                          <span className="absolute -top-1 -right-1 bg-green-500 text-white text-[10px] min-w-[16px] h-4 rounded-full flex items-center justify-center">
-                            {badgeCount > 99 ? '99+' : badgeCount}
-                          </span>
+                          <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
                         )}
                       </NavLink>
                     </SidebarMenuButton>
@@ -324,15 +296,17 @@ const Sidebar = () => {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-primary-foreground/20">
-        <button 
-          onClick={handleLogout}
-          className="flex items-center px-3 py-2 text-sm font-medium text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-lg transition-colors w-full"
-          title={collapsed ? 'Déconnexion' : undefined}
-        >
-          <LogOut className={`${collapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0`} />
-          {!collapsed && <span>Déconnexion</span>}
-        </button>
+      <SidebarFooter className="p-3 mt-auto">
+        <div className="border-t border-border/40 pt-4">
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all duration-200 w-full"
+            title={collapsed ? 'Déconnexion' : undefined}
+          >
+            <LogOut className="h-5 w-5 flex-shrink-0" />
+            {!collapsed && <span>Déconnexion</span>}
+          </button>
+        </div>
       </SidebarFooter>
     </SidebarWrapper>
   );
