@@ -88,18 +88,17 @@ export const userService = {
 
     // Assigner l'utilisateur aux formations
     if (formationIds.length > 0) {
-      const assignments = formationIds.map(formationId => ({
+      const assignments = formationIds.map((formationId) => ({
         user_id: data.id,
-        formation_id: formationId
+        formation_id: formationId,
       }));
 
       const { error: assignmentError } = await supabase
         .from('user_formation_assignments')
         .insert(assignments);
 
-      if (assignmentError) {
-        console.error('Erreur lors de l\'assignation aux formations:', assignmentError);
-      }
+      // Important: si l'association échoue, on remonte l'erreur pour que l'UI puisse l'afficher
+      if (assignmentError) throw assignmentError;
     }
 
     // Si des données de tuteur sont fournies et que l'utilisateur est un étudiant, créer le tuteur
@@ -174,25 +173,25 @@ export const userService = {
     // Mettre à jour les formations si fournies
     if (formationIds !== undefined) {
       // Supprimer les anciennes assignations
-      await supabase
+      const { error: deleteError } = await supabase
         .from('user_formation_assignments')
         .delete()
         .eq('user_id', id);
 
+      if (deleteError) throw deleteError;
+
       // Ajouter les nouvelles assignations
       if (formationIds.length > 0) {
-        const assignments = formationIds.map(formationId => ({
+        const assignments = formationIds.map((formationId) => ({
           user_id: id,
-          formation_id: formationId
+          formation_id: formationId,
         }));
 
         const { error: assignmentError } = await supabase
           .from('user_formation_assignments')
           .insert(assignments);
 
-        if (assignmentError) {
-          console.error('Erreur lors de l\'assignation aux formations:', assignmentError);
-        }
+        if (assignmentError) throw assignmentError;
       }
     }
 
