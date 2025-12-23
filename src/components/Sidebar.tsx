@@ -173,13 +173,13 @@ const Sidebar = () => {
                   className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border-2 border-primary/20 shadow-sm" 
                 />
               ) : (
-                <div className="w-10 h-10 bg-sidebar-accent rounded-lg flex items-center justify-center flex-shrink-0 border border-sidebar-border">
-                  <Building2 className="w-5 h-5 text-primary" />
+                <div className="w-10 h-10 bg-violet-100 rounded-lg flex items-center justify-center flex-shrink-0 border border-violet-200">
+                  <Building2 className="w-5 h-5 text-violet-600" />
                 </div>
               )}
               {!collapsed && (
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-primary truncate">{establishment.name}</p>
+                  <p className="text-sm font-semibold text-violet-700 truncate">{establishment.name}</p>
                 </div>
               )}
             </div>
@@ -189,17 +189,17 @@ const Sidebar = () => {
 
       <SidebarContent className="px-3 py-4">
         {/* User Profile */}
-        <div className="px-3 py-4 mb-4 bg-sidebar-accent rounded-xl border border-sidebar-border">
+        <div className="px-3 py-4 mb-4 bg-violet-100 rounded-xl border border-violet-200">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+            <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
               <span className="text-sm font-bold text-white">{userDisplayInfo.initials}</span>
             </div>
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-primary truncate">{userDisplayInfo.name}</p>
-                <p className="text-xs text-primary/60 font-medium">{userDisplayInfo.role}</p>
+                <p className="text-sm font-semibold text-violet-700 truncate">{userDisplayInfo.name}</p>
+                <p className="text-xs text-violet-500 font-medium">{userDisplayInfo.role}</p>
                 {userDisplayInfo.relationInfo && (
-                  <div className="text-xs text-primary/50 mt-0.5">
+                  <div className="text-xs text-violet-400 mt-0.5">
                     {userDisplayInfo.relationInfo.type === 'tutor' 
                       ? <span>🏢 {userDisplayInfo.relationInfo.name}</span> 
                       : <span>👨‍🎓 {userDisplayInfo.relationInfo.name}</span>
@@ -212,7 +212,7 @@ const Sidebar = () => {
         </div>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-primary/50 px-3 py-2 text-xs font-bold uppercase tracking-wider">
+          <SidebarGroupLabel className="text-violet-400 px-3 py-2 text-xs font-bold uppercase tracking-wider">
             {!collapsed ? 'Navigation' : ''}
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -231,7 +231,7 @@ const Sidebar = () => {
                           className={`flex items-center justify-between w-full px-3 py-3 text-base font-semibold rounded-xl transition-all duration-200 ${
                             isAdminRoute 
                               ? 'bg-primary text-white shadow-md' 
-                              : 'text-primary hover:bg-sidebar-accent hover:shadow-sm'
+                              : 'text-violet-600 hover:bg-violet-100 hover:shadow-sm'
                           }`}
                           title={collapsed ? item.name : undefined}
                         >
@@ -247,7 +247,7 @@ const Sidebar = () => {
                         </button>
                         
                         {!collapsed && adminExpanded && (
-                          <div className="ml-4 mt-2 space-y-1 border-l-2 border-primary/20 pl-3">
+                          <div className="ml-4 mt-2 space-y-1 border-l-2 border-violet-200 pl-3">
                             {item.subItems?.map(subItem => {
                               const SubIcon = subItem.icon;
                               const searchParams = new URLSearchParams(subItem.href.split('?')[1]);
@@ -259,10 +259,10 @@ const Sidebar = () => {
                                 <NavLink 
                                   key={subItem.name} 
                                   to={subItem.href} 
-                                  className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                              className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
                                     isSubActive 
-                                      ? 'bg-primary/10 text-primary border border-primary/30' 
-                                      : 'text-primary/70 hover:bg-sidebar-accent hover:text-primary'
+                                      ? 'bg-violet-100 text-violet-700 border border-violet-300' 
+                                      : 'text-violet-600 hover:bg-violet-50 hover:text-violet-700'
                                   }`}
                                 >
                                   <SubIcon className="mr-3 h-4 w-4 flex-shrink-0" strokeWidth={2} />
@@ -294,7 +294,7 @@ const Sidebar = () => {
                           `flex items-center justify-between px-3 py-3 text-base font-semibold rounded-xl transition-all duration-200 ${
                             isActive 
                               ? 'bg-primary text-white shadow-md' 
-                              : 'text-primary hover:bg-sidebar-accent hover:shadow-sm'
+                              : 'text-violet-600 hover:bg-violet-100 hover:shadow-sm'
                           }`
                         }
                         title={collapsed ? item.name : undefined}
