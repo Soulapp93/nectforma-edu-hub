@@ -14,36 +14,18 @@ export const useCurrentUser = () => {
     
     const fetchUserRole = async (uid: string) => {
       try {
-        // Vérifier d'abord si c'est un tuteur dans la table tutors (priorité)
-        const { data: tutorData, error: tutorError } = await supabase
-          .from('tutors')
-          .select('id')
-          .eq('id', uid)
-          .maybeSingle();
-        
+        // Utiliser la fonction SQL (SECURITY DEFINER) pour éviter les problèmes RLS côté client
+        const { data, error } = await supabase.rpc('get_current_user_role');
+
         if (!mounted) return;
-        
-        if (!tutorError && tutorData) {
-          setUserRole('Tuteur');
+
+        if (error) {
+          console.error('Erreur lors de la récupération du rôle (rpc get_current_user_role):', error);
+          setUserRole(null);
           return;
         }
-        
-        // Ensuite chercher dans la table users
-        const { data: userData, error } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', uid)
-          .maybeSingle();
-        
-        if (!mounted) return;
-        
-        if (!error && userData?.role) {
-          setUserRole(userData.role);
-          return;
-        }
-        
-        // Aucun rôle trouvé
-        setUserRole(null);
+
+        setUserRole(data ?? null);
       } catch (error) {
         console.error('Erreur lors de la récupération du rôle:', error);
         if (mounted) setUserRole(null);
@@ -129,87 +111,93 @@ export const useUserWithRelations = () => {
       }
 
       try {
-        // Pour les tuteurs, récupérer depuis la table tutors
+        // Pour les tuteurs, on évite les SELECT directs sur tutors (RLS en erreur) et on s'appuie
+        // sur les infos de session + RPCs SECURITY DEFINER.
         if (userRole === 'Tuteur') {
-          const { data: tutorData, error: tutorError } = await supabase
-            .from('tutors')
-            .select('*')
-            .eq('id', userId)
-            .single();
+          const { data: sessionData } = await supabase.auth.getSession();
+          const u = sessionData.session?.user;
 
           if (!mounted) return;
 
-          if (tutorError) {
-            console.error('Erreur lors de la récupération des infos tuteur:', tutorError);
-            setUserInfo(null);
-          } else {
-            // Formater les données tuteur pour être compatibles avec userInfo
-            setUserInfo({
-              id: tutorData.id,
-              first_name: tutorData.first_name,
-              last_name: tutorData.last_name,
-              email: tutorData.email,
-              phone: tutorData.phone,
-              profile_photo_url: tutorData.profile_photo_url,
-              establishment_id: tutorData.establishment_id,
-              role: 'Tuteur'
-            });
-          }
+          setUserInfo({
+            id: userId,
+            email: u?.email ?? null,
+            first_name: (u?.user_metadata as any)?.first_name ?? null,
+            last_name: (u?.user_metadata as any)?.last_name ?? null,
+            phone: (u?.user_metadata as any)?.phone ?? null,
+            profile_photo_url: (u?.user_metadata as any)?.profile_photo_url ?? null,
+            role: 'Tuteur',
+          });
 
-          // Chercher l'apprenti du tuteur
-          const { data: studentData, error: studentError } = await supabase
-            .from('tutor_students_view')
-            .select('*')
-            .eq('tutor_id', userId)
-            .eq('is_active', true)
-            .limit(1)
-            .maybeSingle();
+          // Chercher l'apprenti du tuteur via RPC pour éviter RLS
+          const { data: studentIds, error: studentIdsError } = await supabase.rpc('get_tutor_students', {
+            _tutor_id: userId,
+          });
 
           if (!mounted) return;
 
-          if (!studentError && studentData) {
-            setRelationInfo({
-              type: 'student',
-              name: `${studentData.student_first_name} ${studentData.student_last_name}`,
-              formation: studentData.formation_title
-            });
-          }
-        } else {
-          // Pour les autres rôles, récupérer depuis la table users
-          const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', userId)
-            .single();
+          const firstStudentId = Array.isArray(studentIds) ? studentIds[0] : null;
 
-          if (!mounted) return;
-
-          if (userError) {
-            console.error('Erreur lors de la récupération des infos utilisateur:', userError);
-            setUserInfo(null);
-          } else {
-            setUserInfo(userData);
-          }
-
-          // Si c'est un étudiant, chercher son tuteur
-          if (userRole === 'Étudiant') {
-            const { data: tutorData, error: tutorError } = await supabase
-              .from('tutor_students_view')
-              .select('*')
-              .eq('student_id', userId)
-              .eq('is_active', true)
+          if (!studentIdsError && firstStudentId) {
+            const { data: studentData } = await supabase
+              .from('users')
+              .select('first_name, last_name')
+              .eq('id', firstStudentId)
               .maybeSingle();
 
             if (!mounted) return;
 
-            if (!tutorError && tutorData) {
+            if (studentData) {
               setRelationInfo({
-                type: 'tutor',
-                name: `${tutorData.tutor_first_name} ${tutorData.tutor_last_name}`,
-                company: tutorData.company_name,
-                position: tutorData.position
+                type: 'student',
+                name: `${studentData.first_name} ${studentData.last_name}`,
               });
+            } else {
+              setRelationInfo(null);
             }
+          } else {
+            setRelationInfo(null);
+          }
+
+          return;
+        }
+
+        // Pour les autres rôles, récupérer depuis la table users
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (!mounted) return;
+
+        if (userError) {
+          console.error('Erreur lors de la récupération des infos utilisateur:', userError);
+          setUserInfo(null);
+        } else {
+          setUserInfo(userData ?? null);
+        }
+
+        // Si c'est un étudiant, chercher son tuteur (via la vue)
+        if (userRole === 'Étudiant') {
+          const { data: tutorData, error: tutorError } = await supabase
+            .from('tutor_students_view')
+            .select('*')
+            .eq('student_id', userId)
+            .eq('is_active', true)
+            .maybeSingle();
+
+          if (!mounted) return;
+
+          if (!tutorError && tutorData) {
+            setRelationInfo({
+              type: 'tutor',
+              name: `${tutorData.tutor_first_name} ${tutorData.tutor_last_name}`,
+              company: tutorData.company_name,
+              position: tutorData.position,
+            });
+          } else {
+            setRelationInfo(null);
           }
         }
       } catch (error) {

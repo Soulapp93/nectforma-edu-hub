@@ -142,67 +142,44 @@ const Sidebar = () => {
 
   return (
     <SidebarWrapper 
-      className={`${collapsed ? 'w-16' : 'w-64'} nect-gradient text-primary-foreground shadow-xl transition-all duration-300`}
+      className={`${collapsed ? 'w-16' : 'w-64'} nect-gradient sidebar-glow text-white shadow-2xl transition-all duration-300 overflow-hidden`}
       collapsible="icon"
-      style={{ background: 'linear-gradient(135deg, hsl(262, 83%, 58%), hsl(280, 75%, 60%))' }}
     >
-      <SidebarHeader className="p-6">
-        <div className="flex flex-col gap-4">
-          {/* NECTFY Logo */}
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-primary-foreground rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="text-primary font-bold text-lg">N</span>
-            </div>
-            {!collapsed && (
-              <div>
-                <h1 className="text-xl font-bold text-primary-foreground">NECTFY</h1>
-              </div>
-            )}
+      {/* Header with Logo */}
+      <SidebarHeader className="relative z-10 px-5 pt-6 pb-4">
+        <div className="flex items-center gap-3">
+          {/* Logo Container with glow effect */}
+          <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
+            <span className="text-transparent bg-clip-text bg-gradient-to-br from-violet-600 to-purple-600 font-bold text-xl">NF</span>
           </div>
-          
-          {/* Establishment Logo and Name */}
-          {establishment && (
-            <div className={`flex items-center ${collapsed ? 'justify-center' : 'space-x-3'} pt-2 border-t border-primary-foreground/20`}>
-              {establishment.logo_url ? (
-                <img 
-                  src={establishment.logo_url} 
-                  alt={establishment.name}
-                  className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-white"
-                />
-              ) : (
-                <div className="w-10 h-10 bg-primary-foreground/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Building className="w-5 h-5 text-primary-foreground" />
-                </div>
-              )}
-              {!collapsed && (
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-primary-foreground truncate">{establishment.name}</p>
-                </div>
-              )}
+          {!collapsed && (
+            <div className="flex items-center">
+              <h1 className="text-lg font-semibold text-white tracking-wide">NECTFORMA</h1>
+              {/* Collapse chevron */}
+              <ChevronRight className="ml-auto h-4 w-4 text-white/60" />
             </div>
           )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
-        {/* User Profile */}
-        <div className="px-6 py-4 border-b border-primary-foreground/20">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-primary-foreground/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-sm font-medium text-primary-foreground">{userDisplayInfo.initials}</span>
+      <SidebarContent className="relative z-10">
+        {/* User Profile Card */}
+        <div className="mx-4 mb-6 p-3 rounded-xl bg-white/10 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 border border-white/30">
+              <span className="text-sm font-semibold text-white">{userDisplayInfo.initials}</span>
             </div>
             {!collapsed && (
-              <div className="flex-1">
-                <p className="text-sm font-medium text-primary-foreground">{userDisplayInfo.name}</p>
-                <p className="text-xs text-primary-foreground/70">{userDisplayInfo.role}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-white truncate">{userDisplayInfo.name}</p>
+                <p className="text-xs text-white/70">{userDisplayInfo.role}</p>
                 {userDisplayInfo.relationInfo && (
-                  <div className="text-xs text-primary-foreground/60 mt-1">
-                    {userDisplayInfo.relationInfo.type === 'tutor' ? (
-                      <span>🏢 Tuteur: {userDisplayInfo.relationInfo.name}</span>
-                    ) : (
-                      <span>👨‍🎓 Apprenti: {userDisplayInfo.relationInfo.name}</span>
-                    )}
-                  </div>
+                  <p className="text-xs text-white/60 mt-0.5 truncate">
+                    {userDisplayInfo.relationInfo.type === 'tutor' 
+                      ? `🏢 ${userDisplayInfo.relationInfo.name}`
+                      : `👨‍🎓 ${userDisplayInfo.relationInfo.name}`
+                    }
+                  </p>
                 )}
               </div>
             )}
@@ -210,11 +187,8 @@ const Sidebar = () => {
         </div>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-primary-foreground/70 px-4 py-2">
-            {!collapsed ? 'Navigation' : ''}
-          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="px-4 space-y-1">
+            <SidebarMenu className="px-3 space-y-1">
               {navigation.map((item) => {
                 const Icon = item.icon;
                 const hasSubItems = item.subItems && item.subItems.length > 0;
@@ -226,10 +200,10 @@ const Sidebar = () => {
                       <div>
                         <button
                           onClick={() => setAdminExpanded(!adminExpanded)}
-                          className={`flex items-center justify-between w-full px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                          className={`flex items-center justify-between w-full px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
                             isAdminRoute
-                              ? 'nect-glass text-primary-foreground'
-                              : 'text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground'
+                              ? 'bg-white/20 text-white shadow-lg backdrop-blur-sm'
+                              : 'text-white/90 hover:bg-white/10'
                           }`}
                           title={collapsed ? item.name : undefined}
                         >
@@ -239,13 +213,13 @@ const Sidebar = () => {
                           </div>
                           {!collapsed && (
                             adminExpanded ? 
-                              <ChevronDown className="h-4 w-4" /> : 
-                              <ChevronRight className="h-4 w-4" />
+                              <ChevronDown className="h-4 w-4 text-white/70" /> : 
+                              <ChevronRight className="h-4 w-4 text-white/70" />
                           )}
                         </button>
                         
                         {!collapsed && adminExpanded && (
-                          <div className="ml-6 mt-1 space-y-1">
+                          <div className="ml-6 mt-1 space-y-0.5">
                             {item.subItems.map((subItem) => {
                               const SubIcon = subItem.icon;
                               const searchParams = new URLSearchParams(subItem.href.split('?')[1]);
@@ -257,10 +231,10 @@ const Sidebar = () => {
                                 <NavLink
                                   key={subItem.name}
                                   to={subItem.href}
-                                  className={`flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
+                                  className={`flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
                                     isSubActive
-                                      ? 'bg-primary-foreground/20 text-primary-foreground font-medium'
-                                      : 'text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-primary-foreground'
+                                      ? 'bg-white/15 text-white font-medium'
+                                      : 'text-white/70 hover:bg-white/10 hover:text-white'
                                   }`}
                                 >
                                   <SubIcon className="mr-3 h-4 w-4 flex-shrink-0" />
@@ -290,10 +264,10 @@ const Sidebar = () => {
                         to={item.href}
                         end={item.href === '/' || item.href === '/dashboard'}
                         className={({ isActive }) =>
-                          `flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                          `flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
                             isActive
-                              ? 'nect-glass text-primary-foreground'
-                              : 'text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground'
+                              ? 'bg-white/20 text-white shadow-lg backdrop-blur-sm'
+                              : 'text-white/90 hover:bg-white/10'
                           }`
                         }
                         title={collapsed ? item.name : undefined}
@@ -304,13 +278,13 @@ const Sidebar = () => {
                         </div>
                         {badgeCount > 0 && !collapsed && (
                           <Badge 
-                            className="ml-auto bg-green-500 text-white hover:bg-green-600 text-xs min-w-[20px] h-5 flex items-center justify-center"
+                            className="ml-auto bg-emerald-500 text-white hover:bg-emerald-600 text-xs min-w-[20px] h-5 flex items-center justify-center rounded-full"
                           >
                             {badgeCount > 99 ? '99+' : badgeCount}
                           </Badge>
                         )}
                         {badgeCount > 0 && collapsed && (
-                          <span className="absolute -top-1 -right-1 bg-green-500 text-white text-[10px] min-w-[16px] h-4 rounded-full flex items-center justify-center">
+                          <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[10px] min-w-[16px] h-4 rounded-full flex items-center justify-center">
                             {badgeCount > 99 ? '99+' : badgeCount}
                           </span>
                         )}
@@ -324,10 +298,10 @@ const Sidebar = () => {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-primary-foreground/20">
+      <SidebarFooter className="relative z-10 p-4 border-t border-white/10">
         <button 
           onClick={handleLogout}
-          className="flex items-center px-3 py-2 text-sm font-medium text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-lg transition-colors w-full"
+          className="flex items-center px-4 py-3 text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white rounded-xl transition-all duration-200 w-full"
           title={collapsed ? 'Déconnexion' : undefined}
         >
           <LogOut className={`${collapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0`} />
