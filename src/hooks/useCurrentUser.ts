@@ -14,35 +14,38 @@ export const useCurrentUser = () => {
     
     const fetchUserRole = async (uid: string) => {
       try {
-        // Vérifier d'abord si c'est un tuteur dans la table tutors (priorité)
-        const { data: tutorData, error: tutorError } = await supabase
-          .from('tutors')
-          .select('id')
-          .eq('id', uid)
-          .maybeSingle();
+        // Essayer en parallèle les deux tables pour déterminer le rôle
+        const [tutorResult, userResult] = await Promise.all([
+          supabase
+            .from('tutors')
+            .select('id, first_name, last_name')
+            .eq('id', uid)
+            .maybeSingle(),
+          supabase
+            .from('users')
+            .select('role, first_name, last_name')
+            .eq('id', uid)
+            .maybeSingle()
+        ]);
         
         if (!mounted) return;
         
-        if (!tutorError && tutorData) {
+        // Vérifier d'abord si c'est un tuteur (priorité)
+        if (!tutorResult.error && tutorResult.data) {
+          console.log('Utilisateur identifié comme Tuteur:', tutorResult.data);
           setUserRole('Tuteur');
           return;
         }
         
-        // Ensuite chercher dans la table users
-        const { data: userData, error } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', uid)
-          .maybeSingle();
-        
-        if (!mounted) return;
-        
-        if (!error && userData?.role) {
-          setUserRole(userData.role);
+        // Sinon, utiliser le rôle de la table users
+        if (!userResult.error && userResult.data?.role) {
+          console.log('Utilisateur identifié depuis users:', userResult.data);
+          setUserRole(userResult.data.role);
           return;
         }
         
         // Aucun rôle trouvé
+        console.log('Aucun rôle trouvé pour:', uid);
         setUserRole(null);
       } catch (error) {
         console.error('Erreur lors de la récupération du rôle:', error);
@@ -129,8 +132,11 @@ export const useUserWithRelations = () => {
       }
 
       try {
+        console.log('fetchUserRelations - userId:', userId, 'userRole:', userRole);
+        
         // Pour les tuteurs, récupérer depuis la table tutors
         if (userRole === 'Tuteur') {
+          console.log('Récupération des données tuteur...');
           const { data: tutorData, error: tutorError } = await supabase
             .from('tutors')
             .select('*')
@@ -143,6 +149,7 @@ export const useUserWithRelations = () => {
             console.error('Erreur lors de la récupération des infos tuteur:', tutorError);
             setUserInfo(null);
           } else {
+            console.log('Données tuteur récupérées:', tutorData);
             // Formater les données tuteur pour être compatibles avec userInfo
             setUserInfo({
               id: tutorData.id,
@@ -166,6 +173,8 @@ export const useUserWithRelations = () => {
             .maybeSingle();
 
           if (!mounted) return;
+          
+          console.log('Données apprenti:', studentData, studentError);
 
           if (!studentError && studentData) {
             setRelationInfo({
