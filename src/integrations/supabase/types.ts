@@ -2235,6 +2235,7 @@ export type Database = {
           registered_count: number
         }[]
       }
+      get_tutor_students: { Args: { _tutor_id: string }; Returns: string[] }
       is_attendance_open: {
         Args: { sheet_date: string; start_time: string }
         Returns: boolean
