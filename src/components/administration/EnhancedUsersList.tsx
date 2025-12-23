@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Plus, Search, Filter, Upload, Download, MoreVertical, Edit, Trash2, Mail, X, ChevronDown, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { LoadingState } from '@/components/ui/loading-state';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { RoleBadge } from '@/components/ui/role-badge';
 import { useUsers } from '@/hooks/useUsers';
-import { useUserFormations } from '@/hooks/useUserFormations';
+import { useAllUserFormations } from '@/hooks/useAllUserFormations';
 import { useUserTutors } from '@/hooks/useUserTutors';
 import { User, CreateUserData } from '@/services/userService';
 import SimplifiedUserModal from './SimplifiedUserModal';
@@ -24,8 +24,9 @@ import { supabase } from '@/integrations/supabase/client';
 
 const EnhancedUsersList: React.FC = () => {
   const { users, loading, error, createUser, updateUser, deleteUser, bulkCreateUsers, getUserFormations: getUserFormationsFromHook, refetch } = useUsers();
-  const { getUserFormations } = useUserFormations();
   const { getUserTutors } = useUserTutors();
+  const userIds = useMemo(() => users.map((u) => u.id).filter(Boolean), [users]);
+  const { getUserFormations, refetch: refetchFormations } = useAllUserFormations(userIds);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
@@ -91,10 +92,12 @@ const EnhancedUsersList: React.FC = () => {
       const created = await createUser(userData, formationIds, tutorData);
       // garantir la synchro de la table (et des relations)
       await refetch();
+      await refetchFormations();
       return created;
     } else if (selectedUser) {
       const updated = await updateUser(selectedUser.id!, userData, formationIds);
       await refetch();
+      await refetchFormations();
       return updated;
     }
     throw new Error('Mode invalide');
@@ -115,16 +118,16 @@ const EnhancedUsersList: React.FC = () => {
   const exportUsers = () => {
     const exportData = filteredUsers.map(user => {
       const userFormations = getUserFormations(user.id!);
-      const formationsText = userFormations.map(assignment => 
-        `${assignment.formation.title} (${assignment.formation.level})`
-      ).join(', ');
+      const formationsText = userFormations
+        .map(assignment => `${assignment.formation.title} (${assignment.formation.level})`)
+        .join(', ');
 
       return {
         'Prénom': user.first_name,
         'Nom': user.last_name,
         'Email': user.email,
         'Rôle': user.role,
-        'Formations': formationsText,
+        'Formations': formationsText || 'Aucune formation',
         'Statut': user.status,
         'Date de création': user.created_at ? new Date(user.created_at).toLocaleDateString('fr-FR') : ''
       };
@@ -698,9 +701,9 @@ const EnhancedUsersList: React.FC = () => {
         }}
         users={users.filter(u => selectedUsers.includes(u.id!)).map(u => {
           const userFormations = getUserFormations(u.id!);
-          const formationsText = userFormations.map(assignment => 
-            `${assignment.formation.title} (${assignment.formation.level})`
-          ).join(', ');
+          const formationsText = userFormations
+            .map(assignment => `${assignment.formation.title} (${assignment.formation.level})`)
+            .join(', ');
           
           return {
             id: u.id!,
@@ -710,7 +713,7 @@ const EnhancedUsersList: React.FC = () => {
             role: u.role,
             status: u.status,
             created_at: u.created_at,
-            formations: formationsText
+            formations: formationsText || 'Aucune formation'
           };
         })}
       />
