@@ -142,44 +142,41 @@ const Sidebar = () => {
 
   return (
     <SidebarWrapper 
-      className={`${collapsed ? 'w-16' : 'w-64'} gradient-primary text-primary-foreground transition-all duration-300`}
+      className={`${collapsed ? 'w-16' : 'w-64'} nect-gradient text-primary-foreground shadow-xl transition-all duration-300`}
       collapsible="icon"
-      style={{ 
-        background: 'linear-gradient(165deg, hsl(271, 65%, 58%), hsl(280, 55%, 52%))',
-        boxShadow: '4px 0 24px -8px hsl(271 65% 40% / 0.25)'
-      }}
+      style={{ background: 'linear-gradient(135deg, hsl(262, 83%, 58%), hsl(280, 75%, 60%))' }}
     >
-      <SidebarHeader className="p-5 pb-4">
+      <SidebarHeader className="p-6">
         <div className="flex flex-col gap-4">
           {/* NECTFY Logo */}
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
+            <div className="w-10 h-10 bg-primary-foreground rounded-lg flex items-center justify-center flex-shrink-0">
               <span className="text-primary font-bold text-lg">N</span>
             </div>
             {!collapsed && (
               <div>
-                <h1 className="text-xl font-bold text-white tracking-tight">NECTFY</h1>
+                <h1 className="text-xl font-bold text-primary-foreground">NECTFY</h1>
               </div>
             )}
           </div>
           
           {/* Establishment Logo and Name */}
           {establishment && (
-            <div className={`flex items-center ${collapsed ? 'justify-center' : 'space-x-3'} pt-3 border-t border-white/15`}>
+            <div className={`flex items-center ${collapsed ? 'justify-center' : 'space-x-3'} pt-2 border-t border-primary-foreground/20`}>
               {establishment.logo_url ? (
                 <img 
                   src={establishment.logo_url} 
                   alt={establishment.name}
-                  className="w-10 h-10 rounded-xl object-cover flex-shrink-0 bg-white shadow-sm"
+                  className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-white"
                 />
               ) : (
-                <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center flex-shrink-0 backdrop-blur-sm">
-                  <Building className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 bg-primary-foreground/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Building className="w-5 h-5 text-primary-foreground" />
                 </div>
               )}
               {!collapsed && (
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white/95 truncate">{establishment.name}</p>
+                  <p className="text-sm font-medium text-primary-foreground truncate">{establishment.name}</p>
                 </div>
               )}
             </div>
@@ -187,22 +184,25 @@ const Sidebar = () => {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-2">
+      <SidebarContent>
         {/* User Profile */}
-        <div className="mx-3 my-3 p-3 bg-white/10 rounded-xl backdrop-blur-sm">
+        <div className="px-6 py-4 border-b border-primary-foreground/20">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="text-sm font-semibold text-white">{userDisplayInfo.initials}</span>
+            <div className="w-8 h-8 bg-primary-foreground/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-sm font-medium text-primary-foreground">{userDisplayInfo.initials}</span>
             </div>
             {!collapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{userDisplayInfo.name}</p>
-                <p className="text-xs text-white/70">{userDisplayInfo.role}</p>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-primary-foreground">{userDisplayInfo.name}</p>
+                <p className="text-xs text-primary-foreground/70">{userDisplayInfo.role}</p>
                 {userDisplayInfo.relationInfo && (
-                  <p className="text-xs text-white/60 mt-0.5 truncate">
-                    {userDisplayInfo.relationInfo.type === 'tutor' ? '🏢 ' : '👨‍🎓 '}
-                    {userDisplayInfo.relationInfo.name}
-                  </p>
+                  <div className="text-xs text-primary-foreground/60 mt-1">
+                    {userDisplayInfo.relationInfo.type === 'tutor' ? (
+                      <span>🏢 Tuteur: {userDisplayInfo.relationInfo.name}</span>
+                    ) : (
+                      <span>👨‍🎓 Apprenti: {userDisplayInfo.relationInfo.name}</span>
+                    )}
+                  </div>
                 )}
               </div>
             )}
@@ -210,11 +210,11 @@ const Sidebar = () => {
         </div>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-white/60 px-4 py-2 text-xs font-medium uppercase tracking-wider">
+          <SidebarGroupLabel className="text-primary-foreground/70 px-4 py-2">
             {!collapsed ? 'Navigation' : ''}
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="px-2 space-y-0.5">
+            <SidebarMenu className="px-4 space-y-1">
               {navigation.map((item) => {
                 const Icon = item.icon;
                 const hasSubItems = item.subItems && item.subItems.length > 0;
@@ -226,10 +226,10 @@ const Sidebar = () => {
                       <div>
                         <button
                           onClick={() => setAdminExpanded(!adminExpanded)}
-                          className={`flex items-center justify-between w-full px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ${
+                          className={`flex items-center justify-between w-full px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                             isAdminRoute
-                              ? 'bg-white text-primary shadow-sm'
-                              : 'text-white/85 hover:bg-white/12 hover:text-white'
+                              ? 'nect-glass text-primary-foreground'
+                              : 'text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground'
                           }`}
                           title={collapsed ? item.name : undefined}
                         >
@@ -239,13 +239,13 @@ const Sidebar = () => {
                           </div>
                           {!collapsed && (
                             adminExpanded ? 
-                              <ChevronDown className="h-4 w-4 opacity-70" /> : 
-                              <ChevronRight className="h-4 w-4 opacity-70" />
+                              <ChevronDown className="h-4 w-4" /> : 
+                              <ChevronRight className="h-4 w-4" />
                           )}
                         </button>
                         
                         {!collapsed && adminExpanded && (
-                          <div className="ml-4 mt-1 space-y-0.5 pl-3 border-l-2 border-white/20">
+                          <div className="ml-6 mt-1 space-y-1">
                             {item.subItems.map((subItem) => {
                               const SubIcon = subItem.icon;
                               const searchParams = new URLSearchParams(subItem.href.split('?')[1]);
@@ -257,13 +257,13 @@ const Sidebar = () => {
                                 <NavLink
                                   key={subItem.name}
                                   to={subItem.href}
-                                  className={`flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200 ${
+                                  className={`flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
                                     isSubActive
-                                      ? 'bg-white/20 text-white font-medium'
-                                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                                      ? 'bg-primary-foreground/20 text-primary-foreground font-medium'
+                                      : 'text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-primary-foreground'
                                   }`}
                                 >
-                                  <SubIcon className="mr-2.5 h-4 w-4 flex-shrink-0 opacity-80" />
+                                  <SubIcon className="mr-3 h-4 w-4 flex-shrink-0" />
                                   <span className="text-xs">{subItem.name}</span>
                                 </NavLink>
                               );
@@ -290,10 +290,10 @@ const Sidebar = () => {
                         to={item.href}
                         end={item.href === '/' || item.href === '/dashboard'}
                         className={({ isActive }) =>
-                          `flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ${
+                          `flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                             isActive
-                              ? 'bg-white text-primary shadow-sm'
-                              : 'text-white/85 hover:bg-white/12 hover:text-white'
+                              ? 'nect-glass text-primary-foreground'
+                              : 'text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground'
                           }`
                         }
                         title={collapsed ? item.name : undefined}
@@ -304,13 +304,13 @@ const Sidebar = () => {
                         </div>
                         {badgeCount > 0 && !collapsed && (
                           <Badge 
-                            className="ml-auto bg-accent text-white hover:bg-accent/90 text-xs min-w-[20px] h-5 flex items-center justify-center rounded-full"
+                            className="ml-auto bg-green-500 text-white hover:bg-green-600 text-xs min-w-[20px] h-5 flex items-center justify-center"
                           >
                             {badgeCount > 99 ? '99+' : badgeCount}
                           </Badge>
                         )}
                         {badgeCount > 0 && collapsed && (
-                          <span className="absolute -top-0.5 -right-0.5 bg-accent text-white text-[10px] min-w-[16px] h-4 rounded-full flex items-center justify-center">
+                          <span className="absolute -top-1 -right-1 bg-green-500 text-white text-[10px] min-w-[16px] h-4 rounded-full flex items-center justify-center">
                             {badgeCount > 99 ? '99+' : badgeCount}
                           </span>
                         )}
@@ -324,10 +324,10 @@ const Sidebar = () => {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-white/15">
+      <SidebarFooter className="p-4 border-t border-primary-foreground/20">
         <button 
           onClick={handleLogout}
-          className="flex items-center px-3 py-2.5 text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white rounded-xl transition-all duration-200 w-full"
+          className="flex items-center px-3 py-2 text-sm font-medium text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground rounded-lg transition-colors w-full"
           title={collapsed ? 'Déconnexion' : undefined}
         >
           <LogOut className={`${collapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0`} />

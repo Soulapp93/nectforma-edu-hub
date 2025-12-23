@@ -3,132 +3,103 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Digiforma-inspired design system - Clean, Modern, Professional */
+/* NECTFY Design System - Digiforma Inspired Theme */
+
 @layer base {
   :root {
-    /* Base colors - Light theme */
-    --background: 0 0% 99%;
-    --foreground: 250 25% 15%;
-    
-    /* Card surfaces */
+    --background: 0 0% 100%;
+    --foreground: 240 15% 15%;
+
     --card: 0 0% 100%;
-    --card-foreground: 250 25% 15%;
-    
-    /* Popover */
+    --card-foreground: 240 15% 15%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 250 25% 15%;
-    
-    /* Primary - Violet/Mauve Digiforma style */
-    --primary: 271 65% 58%;
+    --popover-foreground: 240 15% 15%;
+
+    /* Violet/Mauve principal inspiré Digiforma */
+    --primary: 262 83% 58%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 271 65% 52%;
-    
-    /* Secondary - Soft lavender */
-    --secondary: 270 30% 96%;
-    --secondary-foreground: 271 45% 45%;
-    
-    /* Muted */
+
+    --secondary: 270 50% 96%;
+    --secondary-foreground: 262 83% 40%;
+
     --muted: 260 15% 95%;
-    --muted-foreground: 250 10% 45%;
-    
-    /* Accent - Warm coral for CTA */
-    --accent: 15 85% 60%;
+    --muted-foreground: 260 10% 45%;
+
+    --accent: 280 75% 60%;
     --accent-foreground: 0 0% 100%;
-    
-    /* Destructive */
-    --destructive: 0 72% 51%;
+
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    
-    /* Success */
-    --success: 152 60% 45%;
-    --success-foreground: 0 0% 100%;
-    
-    /* Warning */
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    
-    /* Info */
-    --info: 199 89% 48%;
-    --info-foreground: 0 0% 100%;
-    
-    /* Border and input */
-    --border: 260 20% 90%;
-    --input: 260 20% 90%;
-    --ring: 271 65% 58%;
-    
-    /* Chart colors */
-    --chart-1: 271 65% 58%;
-    --chart-2: 15 85% 60%;
-    --chart-3: 152 60% 45%;
-    --chart-4: 199 89% 48%;
-    --chart-5: 38 92% 50%;
-    
-    /* Radius */
+
+    --border: 260 15% 90%;
+    --input: 260 15% 92%;
+    --ring: 262 83% 58%;
+
     --radius: 0.75rem;
+
+    /* Status Colors */
+    --success: 142 76% 42%;
+    --success-foreground: 0 0% 100%;
+    --success-muted: 142 76% 95%;
     
-    /* Sidebar - Gradient violet */
-    --sidebar-background: 271 65% 58%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 271 65% 58%;
-    --sidebar-accent: 271 50% 65%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 271 50% 52%;
-    --sidebar-ring: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 38 92% 10%;
+    --warning-muted: 38 92% 95%;
     
-    /* Shadows */
-    --shadow-soft: 0 2px 8px -2px hsl(271 65% 58% / 0.08);
-    --shadow-medium: 0 4px 16px -4px hsl(271 65% 58% / 0.12);
-    --shadow-elevated: 0 8px 30px -8px hsl(271 65% 58% / 0.18);
-    --shadow-glow: 0 0 20px hsl(271 65% 58% / 0.25);
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+    --info-muted: 217 91% 95%;
+
+    /* Digiforma-inspired theme colors */
+    --nect-primary-from: 262 83% 58%;
+    --nect-primary-to: 280 75% 60%;
+    --nect-primary-light: 262 83% 95%;
+    --nect-primary-dark: 262 83% 40%;
+    
+    --nect-sidebar-bg: 262 83% 58%;
+    --nect-card-bg: 0 0% 100%;
+    --nect-card-border: 260 15% 90%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(262 83% 58%), hsl(280 75% 60%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(260 15% 98%));
+    --gradient-hero: linear-gradient(135deg, hsl(262 83% 58%), hsl(280 75% 60%));
+    --gradient-soft: linear-gradient(135deg, hsl(262 83% 97%), hsl(280 75% 95%));
+    
+    /* Professional shadows */
+    --shadow-sm: 0 1px 3px rgba(139, 92, 246, 0.08);
+    --shadow-md: 0 4px 16px rgba(139, 92, 246, 0.12);
+    --shadow-lg: 0 12px 32px rgba(139, 92, 246, 0.16);
+    --shadow-xl: 0 24px 48px rgba(139, 92, 246, 0.20);
   }
 
   .dark {
-    --background: 250 25% 8%;
-    --foreground: 260 15% 95%;
-    
-    --card: 250 20% 12%;
-    --card-foreground: 260 15% 95%;
-    
-    --popover: 250 20% 12%;
-    --popover-foreground: 260 15% 95%;
-    
-    --primary: 271 65% 62%;
+    --background: 260 20% 8%;
+    --foreground: 260 10% 95%;
+    --card: 260 20% 11%;
+    --card-foreground: 260 10% 95%;
+    --primary: 262 83% 65%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 271 65% 68%;
     
-    --secondary: 250 20% 18%;
-    --secondary-foreground: 260 15% 85%;
+    --secondary: 260 15% 18%;
+    --secondary-foreground: 262 83% 85%;
     
-    --muted: 250 15% 18%;
+    --muted: 260 15% 18%;
     --muted-foreground: 260 10% 60%;
     
-    --accent: 15 85% 55%;
+    --accent: 280 75% 65%;
     --accent-foreground: 0 0% 100%;
     
-    --destructive: 0 72% 55%;
-    --destructive-foreground: 0 0% 100%;
+    --border: 260 15% 22%;
+    --input: 260 15% 22%;
     
-    --success: 152 60% 50%;
+    --success: 142 76% 50%;
     --warning: 38 92% 55%;
-    --info: 199 89% 55%;
+    --info: 217 91% 65%;
     
-    --border: 250 15% 22%;
-    --input: 250 15% 22%;
-    --ring: 271 65% 62%;
-    
-    --sidebar-background: 250 25% 10%;
-    --sidebar-foreground: 260 15% 95%;
-    --sidebar-primary: 271 65% 62%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 250 20% 18%;
-    --sidebar-accent-foreground: 260 15% 95%;
-    --sidebar-border: 250 15% 22%;
-    
-    --shadow-soft: 0 2px 8px -2px hsl(0 0% 0% / 0.25);
-    --shadow-medium: 0 4px 16px -4px hsl(0 0% 0% / 0.35);
-    --shadow-elevated: 0 8px 30px -8px hsl(0 0% 0% / 0.45);
-    --shadow-glow: 0 0 25px hsl(271 65% 58% / 0.3);
+    --nect-card-bg: 260 20% 11%;
+    --nect-card-border: 260 15% 22%;
   }
 }
 
@@ -136,9 +107,9 @@
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    @apply bg-background text-foreground font-sans;
   }
 }
 
@@ -244,110 +215,36 @@ body:has(.fullscreen-container) {
 }
 
 @layer components {
-  /* Digiforma-inspired gradients */
   .nect-gradient {
-    background: linear-gradient(135deg, hsl(271 65% 58%), hsl(280 55% 52%));
+    background: linear-gradient(135deg, hsl(262 83% 58%), hsl(280 75% 60%));
   }
   
-  .gradient-primary {
-    background: linear-gradient(135deg, hsl(271 65% 58%), hsl(290 50% 55%));
-  }
-  
-  .gradient-accent {
-    background: linear-gradient(135deg, hsl(15 85% 60%), hsl(25 90% 55%));
-  }
-  
-  .gradient-surface {
-    background: linear-gradient(180deg, hsl(var(--background)), hsl(260 15% 97%));
-  }
-  
-  /* Glass effect - Digiforma style */
   .nect-glass {
-    background: hsl(var(--card) / 0.95);
-    backdrop-filter: blur(16px);
-    border: 1px solid hsl(var(--border) / 0.6);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(139, 92, 246, 0.12);
   }
 
   .glass-card {
     background: hsl(var(--card));
-    border: 1px solid hsl(var(--border) / 0.5);
-    box-shadow: var(--shadow-soft);
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .glass-card:hover {
-    box-shadow: var(--shadow-medium);
-    border-color: hsl(var(--primary) / 0.2);
+    backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 2px 12px rgba(139, 92, 246, 0.08);
   }
 
-  /* Floating card - Modern elevation */
   .floating-card {
     transform: translateY(0);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .floating-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-elevated);
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(139, 92, 246, 0.18);
   }
 
-  /* Page header styles - Digiforma inspired */
-  .page-header {
-    @apply pb-6 mb-6 border-b border-border/50;
-  }
-  
-  .page-title {
-    @apply text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground;
-  }
-  
-  .page-description {
-    @apply text-base sm:text-lg text-muted-foreground mt-2;
-  }
-
-  /* Stats card - Modern dashboard */
-  .stats-card {
-    @apply relative overflow-hidden rounded-2xl p-5 sm:p-6 transition-all duration-300;
-    background: hsl(var(--card));
-    border: 1px solid hsl(var(--border) / 0.4);
-    box-shadow: var(--shadow-soft);
-  }
-  
-  .stats-card:hover {
-    box-shadow: var(--shadow-medium);
-    border-color: hsl(var(--primary) / 0.25);
-  }
-  
-  .stats-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  
-  .stats-card:hover::before {
-    opacity: 1;
-  }
-
-  /* Icon container */
-  .icon-container {
-    @apply flex items-center justify-center rounded-xl;
-    background: linear-gradient(135deg, hsl(var(--primary) / 0.12), hsl(var(--primary) / 0.06));
-  }
-  
-  .icon-container-accent {
-    @apply flex items-center justify-center rounded-xl;
-    background: linear-gradient(135deg, hsl(var(--accent) / 0.15), hsl(var(--accent) / 0.08));
-  }
-
-  /* Timeline and pulse effects */
   .timeline-dot {
     background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
-    box-shadow: 0 0 16px hsl(var(--primary) / 0.4);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
   }
 
   .pulse-dot {
@@ -356,61 +253,58 @@ body:has(.fullscreen-container) {
 
   @keyframes pulse-glow {
     0%, 100% {
-      box-shadow: 0 0 16px hsl(var(--primary) / 0.35);
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
       transform: scale(1);
     }
     50% {
-      box-shadow: 0 0 28px hsl(var(--primary) / 0.55);
-      transform: scale(1.06);
+      box-shadow: 0 0 35px rgba(139, 92, 246, 0.65);
+      transform: scale(1.08);
     }
   }
 
   @keyframes float {
     0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-4px); }
+    50% { transform: translateY(-5px); }
   }
 
-  /* Card effects */
   .morphing-card {
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     transform-style: preserve-3d;
   }
 
   .morphing-card:hover {
-    transform: rotateY(2deg) rotateX(2deg);
+    transform: rotateY(3deg) rotateX(3deg);
   }
 
-  /* Kanban and course cards */
   .kanban-column {
-    background: hsl(var(--card) / 0.98);
-    backdrop-filter: blur(12px);
-    border: 1px solid hsl(var(--border) / 0.5);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.92));
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(139, 92, 246, 0.1);
   }
 
   .course-card {
-    background: hsl(var(--card));
-    border: 1px solid hsl(var(--border) / 0.4);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.95));
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(139, 92, 246, 0.08);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: var(--shadow-soft);
   }
 
   .course-card:hover {
-    transform: scale(1.015);
-    box-shadow: var(--shadow-medium);
-    border-color: hsl(var(--primary) / 0.2);
+    transform: scale(1.02);
+    box-shadow: 0 12px 32px rgba(139, 92, 246, 0.15);
   }
 
-  /* Search bar - Digiforma style */
   .search-bar {
-    background: hsl(var(--card));
-    border: 1px solid hsl(var(--border));
-    transition: all 0.25s ease;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+    transition: all 0.3s ease;
   }
 
   .search-bar:focus-within {
-    background: hsl(var(--card));
+    background: rgba(255, 255, 255, 1);
     border-color: hsl(var(--primary));
-    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.12);
   }
 
   .animate-float {
@@ -421,22 +315,13 @@ body:has(.fullscreen-container) {
     border-width: 3px;
   }
   
-  /* Digiforma utility classes */
-  .primary-glow {
-    box-shadow: var(--shadow-glow);
+  /* Digiforma-inspired utilities */
+  .violet-glow {
+    box-shadow: 0 0 24px rgba(139, 92, 246, 0.3);
   }
   
-  .text-gradient {
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  /* Section container */
-  .section-container {
-    @apply bg-card rounded-2xl border border-border/50 p-5 sm:p-6;
-    box-shadow: var(--shadow-soft);
+  .violet-border {
+    border-color: hsl(var(--primary));
   }
 
   /* Safe area for mobile devices (iPhone notch, etc.) */
@@ -450,16 +335,11 @@ body:has(.fullscreen-container) {
 
   /* Mobile responsive utilities */
   .mobile-card {
-    @apply bg-card rounded-xl border border-border/50 p-4;
-    box-shadow: var(--shadow-soft);
+    @apply bg-card rounded-xl border border-border p-4 shadow-sm;
   }
 
   .mobile-list-item {
-    @apply flex items-center gap-3 p-3 rounded-xl transition-colors;
-  }
-  
-  .mobile-list-item:hover {
-    background: hsl(var(--muted) / 0.5);
+    @apply flex items-center gap-3 p-3 rounded-xl hover:bg-muted transition-colors;
   }
 
   .mobile-section-title {

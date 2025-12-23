@@ -40,10 +40,10 @@ const Administration = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 min-h-screen gradient-surface">
-      <div className="page-header">
-        <h1 className="page-title">{getPageTitle()}</h1>
-        <p className="page-description">{getPageDescription()}</p>
+    <div className="p-4 sm:p-6 lg:p-8 min-h-screen">
+      <div className="mb-6 sm:mb-8 lg:mb-10">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2 sm:mb-3">{getPageTitle()}</h1>
+        <p className="text-base sm:text-lg text-muted-foreground">{getPageDescription()}</p>
       </div>
 
       {activeTab === 'users' && <EnhancedUsersList />}

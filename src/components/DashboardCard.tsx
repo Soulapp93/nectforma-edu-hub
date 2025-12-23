@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TrendingUp, TrendingDown, LucideIcon } from 'lucide-react';
 
@@ -25,35 +26,31 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
 }) => {
   return (
     <div 
-      className={`stats-card group ${
-        clickable ? 'cursor-pointer hover:scale-[1.02] active:scale-[0.98]' : ''
+      className={`glass-card rounded-xl p-4 sm:p-6 transition-all duration-300 ${
+        clickable ? 'cursor-pointer floating-card hover:shadow-lg active:scale-[0.98]' : ''
       }`}
       onClick={onClick}
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0 space-y-1">
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <p className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">{value}</p>
-          <p className="text-sm text-muted-foreground/80">{description}</p>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-1 truncate">{title}</p>
+          <p className="text-xl sm:text-2xl font-bold text-foreground mb-0.5 sm:mb-1">{value}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">{description}</p>
           {trend && (
-            <div className="flex items-center gap-1.5 pt-1">
-              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                trend.isPositive 
-                  ? 'bg-success/10 text-success' 
-                  : 'bg-destructive/10 text-destructive'
-              }`}>
-                {trend.isPositive ? (
-                  <TrendingUp className="h-3 w-3" />
-                ) : (
-                  <TrendingDown className="h-3 w-3" />
-                )}
-                <span>{trend.value}%</span>
-              </div>
+            <div className="flex items-center mt-1.5 sm:mt-2">
+              {trend.isPositive ? (
+                <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-success mr-1" />
+              ) : (
+                <TrendingDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-destructive mr-1" />
+              )}
+              <span className={`text-xs sm:text-sm ${trend.isPositive ? 'text-success' : 'text-destructive'}`}>
+                {trend.value}%
+              </span>
             </div>
           )}
         </div>
-        <div className="icon-container w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 transition-transform duration-300 group-hover:scale-105">
-          <Icon className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
+          <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
         </div>
       </div>
     </div>
