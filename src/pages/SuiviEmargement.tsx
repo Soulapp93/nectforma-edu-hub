@@ -32,6 +32,8 @@ const SuiviEmargement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('');
+  const [studentInfo, setStudentInfo] = useState<{ name: string; email: string } | null>(null);
+  const [noStudentAssigned, setNoStudentAssigned] = useState(false);
 
   useEffect(() => {
     if (userId && userRole) {
@@ -49,18 +51,43 @@ const SuiviEmargement = () => {
       let targetUserId = userId;
       let targetUserRole = userRole;
       
-      if (userRole === 'Tuteur' && relationInfo?.type === 'student') {
+      if (userRole === 'Tuteur') {
         // Pour les tuteurs, on récupère les données de l'apprenti
-        const { data: studentAssignment } = await supabase
+        console.log('[SuiviEmargement] Tuteur détecté, recherche de l\'apprenti...');
+        const { data: studentAssignment, error: studentError } = await supabase
           .from('tutor_student_assignments')
-          .select('student_id')
+          .select(`
+            student_id,
+            users:student_id (
+              first_name,
+              last_name,
+              email
+            )
+          `)
           .eq('tutor_id', userId)
           .eq('is_active', true)
-          .single();
+          .maybeSingle();
         
-        if (studentAssignment) {
+        if (studentError) {
+          console.error('[SuiviEmargement] Erreur lors de la recherche de l\'apprenti:', studentError);
+        }
+        
+        if (studentAssignment && studentAssignment.student_id) {
+          const student = studentAssignment.users as any;
+          console.log('[SuiviEmargement] Apprenti trouvé:', studentAssignment.student_id, student);
           targetUserId = studentAssignment.student_id;
           targetUserRole = 'Étudiant';
+          setStudentInfo({
+            name: `${student?.first_name || ''} ${student?.last_name || ''}`.trim(),
+            email: student?.email || ''
+          });
+          setNoStudentAssigned(false);
+        } else {
+          console.log('[SuiviEmargement] Aucun apprenti assigné à ce tuteur');
+          setNoStudentAssigned(true);
+          setStudentInfo(null);
+          setLoading(false);
+          return;
         }
       }
       
@@ -251,15 +278,21 @@ const SuiviEmargement = () => {
   };
 
   const getPageTitle = () => {
-    if (userRole === 'Tuteur' && relationInfo?.type === 'student') {
-      return `Suivi Émargement - ${relationInfo.name}`;
+    if (userRole === 'Tuteur') {
+      if (studentInfo) {
+        return `Suivi Émargement - ${studentInfo.name}`;
+      }
+      return 'Suivi Émargement Apprenti';
     }
     return 'Suivi Émargement';
   };
 
   const getPageDescription = () => {
-    if (userRole === 'Tuteur' && relationInfo?.type === 'student') {
-      return `Historique des émargements de votre apprenti ${relationInfo.name}`;
+    if (userRole === 'Tuteur') {
+      if (studentInfo) {
+        return `Historique des émargements de votre apprenti ${studentInfo.name}`;
+      }
+      return 'Aucun apprenti assigné à votre compte';
     } else if (userRole === 'Étudiant') {
       return 'Votre historique de présences et absences aux cours';
     } else if (userRole === 'Formateur') {
@@ -285,12 +318,42 @@ const SuiviEmargement = () => {
     );
   }
 
+  // Affichage spécial pour les tuteurs sans apprenti assigné
+  if (userRole === 'Tuteur' && noStudentAssigned) {
+    return (
+      <div className="p-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Suivi Émargement Apprenti</h1>
+          <p className="text-gray-600">Suivez les émargements de votre apprenti</p>
+        </div>
+        
+        <Card className="max-w-lg mx-auto mt-12">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-orange-100 flex items-center justify-center">
+              <User className="h-8 w-8 text-orange-600" />
+            </div>
+            <CardTitle>Aucun apprenti assigné</CardTitle>
+            <CardDescription className="text-base">
+              Vous n'avez actuellement aucun apprenti assigné à votre compte tuteur. 
+              Contactez l'administrateur de l'établissement pour être associé à un apprenti.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="p-8">
       {/* En-tête */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">{getPageTitle()}</h1>
         <p className="text-gray-600">{getPageDescription()}</p>
+        {userRole === 'Tuteur' && studentInfo && (
+          <div className="mt-2 text-sm text-muted-foreground">
+            Apprenti: <span className="font-medium">{studentInfo.name}</span> ({studentInfo.email})
+          </div>
+        )}
       </div>
 
       {/* Statistiques */}
