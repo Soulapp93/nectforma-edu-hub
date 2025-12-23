@@ -83,11 +83,11 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 lg:space-y-10 min-h-screen">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 min-h-screen gradient-surface">
       {/* Header */}
-      <div className="mb-6 sm:mb-8 lg:mb-10">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2 sm:mb-3">Tableau de bord</h1>
-        <p className="text-base sm:text-lg text-muted-foreground">Bienvenue sur votre espace de gestion NECTFY</p>
+      <div className="page-header">
+        <h1 className="page-title">Tableau de bord</h1>
+        <p className="page-description">Bienvenue sur votre espace de gestion NECTFY</p>
       </div>
 
       {/* Filters */}
