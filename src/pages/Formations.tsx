@@ -10,8 +10,28 @@ import { toast } from 'sonner';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { TutorFormationsView } from '@/components/formations/TutorFormationsView';
 
 const Formations = () => {
+  const { userRole } = useCurrentUser();
+  
+  // Si c'est un tuteur, afficher la vue tuteur spécifique
+  if (userRole === 'Tuteur') {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 min-h-screen">
+        <div>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-3">Formations Apprenti</h1>
+          <p className="text-base sm:text-lg text-gray-600">Suivez les formations de votre apprenti</p>
+        </div>
+        <TutorFormationsView />
+      </div>
+    );
+  }
+  
+  return <FormationsContent userRole={userRole} />;
+};
+
+const FormationsContent = ({ userRole }: { userRole: string | null }) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingFormationId, setEditingFormationId] = useState<string | null>(null);
@@ -24,7 +44,6 @@ const Formations = () => {
   const [selectedFormationId, setSelectedFormationId] = useState<string | null>(null);
   
   const { formations, loading, error, refetch } = useFormations();
-  const { userRole } = useCurrentUser();
   
   const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
 

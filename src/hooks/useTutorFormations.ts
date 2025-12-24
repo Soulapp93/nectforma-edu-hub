@@ -31,50 +31,77 @@ export const useTutorFormations = () => {
       setLoading(true);
       setError(null);
       
-      // Récupérer les formations des apprentis du tuteur
-      const { data, error } = await supabase
-        .from('tutor_students_view')
+      // 1. Récupérer les étudiants assignés au tuteur
+      const { data: studentAssignments, error: assignmentError } = await supabase
+        .from('tutor_student_assignments')
         .select(`
-          formation_id,
-          formation_title,
-          formation_level,
           student_id,
-          student_first_name,
-          student_last_name,
-          student_email
+          users!tutor_student_assignments_student_id_fkey(
+            id,
+            first_name,
+            last_name,
+            email
+          )
         `)
         .eq('tutor_id', userId)
         .eq('is_active', true);
       
-      if (error) throw error;
-
-      // Récupérer les détails complets des formations
-      const formationIds = [...new Set(data?.map(item => item.formation_id).filter(Boolean))];
+      if (assignmentError) throw assignmentError;
       
-      if (formationIds.length > 0) {
-        const { data: formationDetails, error: formationError } = await supabase
-          .from('formations')
-          .select('id, description, start_date, end_date')
-          .in('id', formationIds);
-
-        if (formationError) throw formationError;
-
-        // Combiner les données
-        const enrichedData = data?.map(item => {
-          const formationDetail = formationDetails?.find(f => f.id === item.formation_id);
-          return {
-            ...item,
-            formation_description: formationDetail?.description,
-            formation_start_date: formationDetail?.start_date,
-            formation_end_date: formationDetail?.end_date
-          };
-        }) || [];
-
-        setFormations(enrichedData);
-      } else {
+      if (!studentAssignments || studentAssignments.length === 0) {
         setFormations([]);
+        return;
       }
+      
+      const studentIds = studentAssignments.map(sa => sa.student_id);
+      
+      // 2. Récupérer les formations de ces étudiants via user_formation_assignments
+      const { data: formationAssignments, error: formationError } = await supabase
+        .from('user_formation_assignments')
+        .select(`
+          user_id,
+          formation_id,
+          formations(
+            id,
+            title,
+            level,
+            description,
+            start_date,
+            end_date,
+            color
+          )
+        `)
+        .in('user_id', studentIds);
+      
+      if (formationError) throw formationError;
+
+      // 3. Combiner les données
+      const enrichedData: TutorFormation[] = [];
+      
+      formationAssignments?.forEach(fa => {
+        const studentAssignment = studentAssignments.find(sa => sa.student_id === fa.user_id);
+        const student = studentAssignment?.users as any;
+        const formation = fa.formations as any;
+        
+        if (student && formation) {
+          enrichedData.push({
+            formation_id: formation.id,
+            formation_title: formation.title,
+            formation_level: formation.level,
+            formation_description: formation.description,
+            formation_start_date: formation.start_date,
+            formation_end_date: formation.end_date,
+            student_id: fa.user_id,
+            student_first_name: student.first_name,
+            student_last_name: student.last_name,
+            student_email: student.email
+          });
+        }
+      });
+
+      setFormations(enrichedData);
     } catch (err) {
+      console.error('Erreur lors du chargement des formations tuteur:', err);
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement des formations');
     } finally {
       setLoading(false);
