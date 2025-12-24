@@ -145,18 +145,41 @@ const Sidebar = () => {
       className={`${collapsed ? 'w-16' : 'w-64'} nect-gradient sidebar-glow text-white shadow-2xl transition-all duration-300 overflow-hidden`}
       collapsible="icon"
     >
-      {/* Header with Logo */}
+      {/* Header with Logo and Establishment */}
       <SidebarHeader className="relative z-10 px-5 pt-6 pb-4">
-        <div className="flex items-center gap-3">
-          {/* Logo Container with glow effect */}
-          <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
-            <span className="text-transparent bg-clip-text bg-gradient-to-br from-violet-600 to-purple-600 font-bold text-xl">NF</span>
+        <div className="flex flex-col gap-3">
+          {/* App Logo and Name */}
+          <div className="flex items-center gap-3">
+            {/* Logo Container with glow effect */}
+            <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
+              <span className="text-transparent bg-clip-text bg-gradient-to-br from-violet-600 to-purple-600 font-bold text-xl">NF</span>
+            </div>
+            {!collapsed && (
+              <div className="flex items-center">
+                <h1 className="text-lg font-semibold text-white tracking-wide">NECTFY</h1>
+                {/* Collapse chevron */}
+                <ChevronRight className="ml-auto h-4 w-4 text-white/60" />
+              </div>
+            )}
           </div>
-          {!collapsed && (
-            <div className="flex items-center">
-              <h1 className="text-lg font-semibold text-white tracking-wide">NECTFORMA</h1>
-              {/* Collapse chevron */}
-              <ChevronRight className="ml-auto h-4 w-4 text-white/60" />
+          
+          {/* Establishment info */}
+          {!collapsed && establishment && (
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/10">
+              {establishment.logo_url ? (
+                <img 
+                  src={establishment.logo_url} 
+                  alt={establishment.name}
+                  className="w-8 h-8 rounded-md object-cover"
+                />
+              ) : (
+                <div className="w-8 h-8 bg-white/10 rounded-md flex items-center justify-center">
+                  <Building className="w-4 h-4 text-white/70" />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-white truncate">{establishment.name}</p>
+              </div>
             </div>
           )}
         </div>
