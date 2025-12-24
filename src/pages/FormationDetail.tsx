@@ -134,14 +134,17 @@ const FormationDetail = () => {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-2 lg:mt-0">
-              <Button 
-                variant="secondary" 
-                onClick={() => setShowParticipantsModal(true)}
-                className="bg-white/20 border-white/30 text-white hover:bg-white/30 text-xs sm:text-sm w-full sm:w-auto justify-center"
-              >
-                <Users className="h-4 w-4 mr-2 flex-shrink-0" />
-                <span className="whitespace-nowrap">Voir participants</span>
-              </Button>
+              {/* Masquer "Voir participants" pour les tuteurs */}
+              {userRole !== 'Tuteur' && (
+                <Button 
+                  variant="secondary" 
+                  onClick={() => setShowParticipantsModal(true)}
+                  className="bg-white/20 border-white/30 text-white hover:bg-white/30 text-xs sm:text-sm w-full sm:w-auto justify-center"
+                >
+                  <Users className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <span className="whitespace-nowrap">Voir participants</span>
+                </Button>
+              )}
               <Button 
                 variant="secondary" 
                 onClick={() => navigate(`/cahier-texte/formation/${formation.id}?from=formations&formationId=${formation.id}`)}
