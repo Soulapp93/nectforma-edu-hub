@@ -43,11 +43,11 @@ const FormationParticipantsModal: React.FC<FormationParticipantsModalProps> = ({
       setError(null);
 
       const { data, error } = await supabase
-        .from('student_formations')
+        .from('user_formation_assignments')
         .select(`
           id,
-          enrolled_at,
-          student:users(
+          assigned_at,
+          user:users(
             id,
             first_name,
             last_name,
@@ -60,12 +60,12 @@ const FormationParticipantsModal: React.FC<FormationParticipantsModalProps> = ({
       if (error) throw error;
 
       const formattedParticipants = data?.map(item => ({
-        id: item.student.id,
-        first_name: item.student.first_name,
-        last_name: item.student.last_name,
-        email: item.student.email,
-        phone: item.student.phone,
-        enrolled_at: item.enrolled_at
+        id: item.user.id,
+        first_name: item.user.first_name,
+        last_name: item.user.last_name,
+        email: item.user.email,
+        phone: item.user.phone,
+        enrolled_at: item.assigned_at
       })) || [];
 
       setParticipants(formattedParticipants);
