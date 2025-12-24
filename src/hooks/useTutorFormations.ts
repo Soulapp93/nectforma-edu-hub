@@ -9,6 +9,9 @@ export interface TutorFormation {
   formation_description?: string;
   formation_start_date: string;
   formation_end_date: string;
+  formation_color?: string;
+  formation_duration?: number;
+  modules_count?: number;
   student_id: string;
   student_first_name: string;
   student_last_name: string;
@@ -68,7 +71,9 @@ export const useTutorFormations = () => {
             description,
             start_date,
             end_date,
-            color
+            color,
+            duration,
+            formation_modules(id)
           )
         `)
         .in('user_id', studentIds);
@@ -91,6 +96,9 @@ export const useTutorFormations = () => {
             formation_description: formation.description,
             formation_start_date: formation.start_date,
             formation_end_date: formation.end_date,
+            formation_color: formation.color,
+            formation_duration: formation.duration,
+            modules_count: formation.formation_modules?.length || 0,
             student_id: fa.user_id,
             student_first_name: student.first_name,
             student_last_name: student.last_name,
