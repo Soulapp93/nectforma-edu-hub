@@ -1,25 +1,51 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { 
   BookOpen, 
-  Users, 
   Calendar, 
   GraduationCap,
   Eye,
   Clock,
   Grid3x3,
-  List
+  List,
+  Users
 } from 'lucide-react';
 import { useTutorFormations } from '@/hooks/useTutorFormations';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export const TutorFormationsView: React.FC = () => {
   const { loading, error, getUniqueFormations } = useTutorFormations();
   const navigate = useNavigate();
   const formations = getUniqueFormations();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Actif':
+        return 'bg-green-100 text-green-800';
+      case 'Inactif':
+        return 'bg-red-100 text-red-800';
+      case 'Brouillon':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getLevelColor = (level: string) => {
+    const colors: Record<string, string> = {
+      'BAC+1': 'bg-purple-100 text-purple-800',
+      'BAC+2': 'bg-blue-100 text-blue-800',
+      'BAC+3': 'bg-green-100 text-green-800',
+      'BAC+4': 'bg-orange-100 text-orange-800',
+      'BAC+5': 'bg-red-100 text-red-800',
+      'Intermédiaire': 'bg-purple-100 text-purple-800',
+      'Débutant': 'bg-blue-100 text-blue-800',
+      'Avancé': 'bg-green-100 text-green-800'
+    };
+    return colors[level] || 'bg-gray-100 text-gray-800';
+  };
 
   if (loading) {
     return (
@@ -81,91 +107,103 @@ export const TutorFormationsView: React.FC = () => {
         </div>
       </div>
 
-      {/* Vue Grille */}
+      {/* Vue Grille - Même design que FormationCard étudiant mais SANS bouton participants */}
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {formations.map((formation) => (
-            <Card 
-              key={formation.formation_id} 
-              className="hover:shadow-md transition-shadow overflow-hidden"
-              style={{ borderTopColor: formation.formation_color || '#8B5CF6', borderTopWidth: '4px' }}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      <Badge 
-                        variant="outline"
-                        style={{ borderColor: formation.formation_color, color: formation.formation_color }}
-                      >
-                        {formation.formation_level}
-                      </Badge>
-                      <Badge variant="secondary" className="bg-green-100 text-green-700">
-                        Actif
-                      </Badge>
-                    </div>
-                    <CardTitle className="text-lg">
-                      {formation.formation_title}
-                    </CardTitle>
-                  </div>
-                </div>
-              </CardHeader>
-              
-              <CardContent className="space-y-4">
-                {formation.formation_description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {formation.formation_description}
-                  </p>
-                )}
+          {formations.map((formation) => {
+            const formationColor = formation.formation_color || '#8B5CF6';
+            
+            return (
+              <div 
+                key={formation.formation_id} 
+                className="bg-card rounded-xl shadow-sm border border-border hover:shadow-md transition-shadow duration-200 group"
+              >
+                {/* Barre de couleur en haut */}
+                <div 
+                  className="h-1.5 sm:h-2 rounded-t-xl" 
+                  style={{ backgroundColor: formationColor }}
+                />
                 
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>
-                    Du {new Date(formation.formation_start_date).toLocaleDateString('fr-FR')} au {new Date(formation.formation_end_date).toLocaleDateString('fr-FR')}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2 text-sm">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span>{formation.formation_duration}h de formation</span>
-                </div>
-                
-                <div className="flex items-center gap-2 text-sm">
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
-                  <span>
-                    {formation.modules_count || 0} module{(formation.modules_count || 0) > 1 ? 's' : ''}
-                  </span>
-                </div>
-
-                {/* Liste des apprentis */}
-                <div className="space-y-2 pt-2 border-t">
-                  <h4 className="text-sm font-medium flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Mes apprentis :
-                  </h4>
-                  <div className="space-y-1">
-                    {formation.students.map((student: any) => (
-                      <div key={student.id} className="text-sm text-muted-foreground flex items-center gap-2">
-                        <div className="w-2 h-2 bg-primary rounded-full"></div>
-                        {student.first_name} {student.last_name}
+                <div className="p-3 sm:p-4">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-3 sm:mb-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 sm:gap-2 mb-2 flex-wrap">
+                        <span className={`px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium rounded-full ${getLevelColor(formation.formation_level)}`}>
+                          {formation.formation_level}
+                        </span>
+                        <span className={`px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium rounded-full ${getStatusColor('Actif')}`}>
+                          Actif
+                        </span>
                       </div>
-                    ))}
+                      <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1 line-clamp-2">
+                        {formation.formation_title}
+                      </h3>
+                      {formation.formation_description && (
+                        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
+                          {formation.formation_description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Informations principales */}
+                  <div className="space-y-1.5 sm:space-y-2 mb-3">
+                    <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+                      <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-muted-foreground/70 flex-shrink-0" />
+                      <span className="truncate">
+                        Du {new Date(formation.formation_start_date).toLocaleDateString('fr-FR')} au {new Date(formation.formation_end_date).toLocaleDateString('fr-FR')}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+                      <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-muted-foreground/70 flex-shrink-0" />
+                      <span>{formation.formation_duration}h de formation</span>
+                    </div>
+                  </div>
+
+                  {/* Modules */}
+                  <div className="border-t border-border pt-2 sm:pt-3 mb-2 sm:mb-3">
+                    <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+                      <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-muted-foreground/70 flex-shrink-0" />
+                      <span>{formation.modules_count || 0} module{(formation.modules_count || 0) > 1 ? 's' : ''}</span>
+                    </div>
+                  </div>
+
+                  {/* Liste des apprentis */}
+                  <div className="border-t border-border pt-2 sm:pt-3 mb-2 sm:mb-3">
+                    <span className="text-xs sm:text-sm font-medium text-foreground">
+                      <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 inline mr-1" />
+                      Mes apprentis :
+                    </span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {formation.students.map((student: any) => (
+                        <span 
+                          key={student.id}
+                          className="text-[10px] sm:text-xs bg-muted text-muted-foreground px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full flex items-center gap-1"
+                        >
+                          <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                          {student.first_name} {student.last_name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Action Button - SANS bouton participants pour tuteur */}
+                  <div className="flex gap-2 pt-2 sm:pt-3 border-t border-border">
+                    <button
+                      onClick={() => navigate(`/formations/${formation.formation_id}`)}
+                      className="flex-1 flex items-center justify-center px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-primary-foreground rounded-lg sm:rounded-xl transition-colors active:scale-[0.98]"
+                      style={{ backgroundColor: formationColor }}
+                    >
+                      <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                      Détail
+                    </button>
                   </div>
                 </div>
-                
-                <div className="flex gap-2 pt-2">
-                  <Button
-                    size="sm"
-                    onClick={() => navigate(`/formations/${formation.formation_id}`)}
-                    className="flex-1"
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    Détail
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+            );
+          })}
         </div>
       ) : (
         /* Vue Liste */

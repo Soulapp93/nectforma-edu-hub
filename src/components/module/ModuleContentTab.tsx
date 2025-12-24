@@ -6,6 +6,7 @@ import CreateContentModal from './CreateContentModal';
 import ModuleFileViewerModal from './ModuleFileViewerModal';
 import LinkViewerModal from './LinkViewerModal';
 import { toast } from 'sonner';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface ModuleContentTabProps {
   moduleId: string;
@@ -18,6 +19,10 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
   const [showEditModal, setShowEditModal] = useState<ModuleContent | null>(null);
   const [viewerFile, setViewerFile] = useState<{ url: string; name: string } | null>(null);
   const [viewerLink, setViewerLink] = useState<{ url: string; title: string } | null>(null);
+  const { userRole } = useCurrentUser();
+  
+  // Les tuteurs ne peuvent que consulter (pas d'édition/suppression/ajout)
+  const canEdit = userRole !== 'Tuteur' && userRole !== 'Étudiant';
 
   const fetchContents = async () => {
     try {
@@ -137,10 +142,12 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <h2 className="text-lg sm:text-xl font-semibold">Contenu du Module</h2>
-        <Button onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
-          <Plus className="h-4 w-4 mr-2" />
-          Ajouter un élément
-        </Button>
+        {canEdit && (
+          <Button onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            Ajouter un élément
+          </Button>
+        )}
       </div>
 
       {contents.length > 0 ? (
@@ -216,25 +223,27 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
                     </>
                   ) : null}
                   
-                  <div className="flex items-center gap-1 ml-auto">
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      onClick={() => handleEdit(content)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
-                    </Button>
-                    
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      className="text-red-600 h-8 w-8 p-0"
-                      onClick={() => handleDelete(content.id)}
-                    >
-                      <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                    </Button>
-                  </div>
+                  {canEdit && (
+                    <div className="flex items-center gap-1 ml-auto">
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => handleEdit(content)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                      </Button>
+                      
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="text-red-600 h-8 w-8 p-0"
+                        onClick={() => handleDelete(content.id)}
+                      >
+                        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
