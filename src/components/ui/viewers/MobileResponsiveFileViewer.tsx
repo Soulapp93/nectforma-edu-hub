@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, Download, ExternalLink, Maximize2, Minimize2, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Download, ExternalLink, Maximize2, Minimize2, ZoomIn, ZoomOut, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -20,7 +20,9 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [zoom, setZoom] = useState(100);
+  const [pdfFallback, setPdfFallback] = useState(false);
   const isMobile = useIsMobile();
+  const objectRef = useRef<HTMLObjectElement>(null);
 
   const getFileExtension = (name: string) => {
     return name.split('.').pop()?.toLowerCase() || '';
@@ -50,6 +52,10 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
     if (isOpen) {
       document.addEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'hidden';
+      // Reset states when opening
+      setLoading(true);
+      setError(false);
+      setPdfFallback(false);
     }
     
     return () => {
@@ -58,14 +64,38 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
     };
   }, [isOpen, onClose]);
 
+  // Pour les PDFs, on détecte si l'objet a réussi à charger
+  useEffect(() => {
+    if (fileType === 'pdf' && isOpen && !isMobile) {
+      const timer = setTimeout(() => {
+        // Si après 3 secondes le loading est toujours actif, passer au fallback
+        if (loading) {
+          setPdfFallback(true);
+          setLoading(false);
+        }
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [fileType, isOpen, loading, isMobile]);
+
   const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = fileName;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Utiliser fetch pour forcer le téléchargement
+    fetch(fileUrl)
+      .then(response => response.blob())
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      })
+      .catch(() => {
+        // Fallback: ouvrir dans un nouvel onglet
+        window.open(fileUrl, '_blank');
+      });
   };
 
   const handleOpenNewTab = () => {
@@ -85,7 +115,87 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 25, 200));
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 25, 50));
 
+  const handlePdfLoad = () => {
+    setLoading(false);
+    setError(false);
+  };
+
+  const handlePdfError = () => {
+    // Si l'objet échoue, passer au mode fallback
+    setPdfFallback(true);
+    setLoading(false);
+  };
+
   if (!isOpen) return null;
+
+  const renderPdfContent = () => {
+    // Sur mobile, toujours utiliser Google Docs Viewer
+    if (isMobile) {
+      const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+      return (
+        <div className="flex-1 w-full h-full bg-muted">
+          <iframe
+            src={googleViewerUrl}
+            className="w-full h-full border-0"
+            title={fileName}
+            onLoad={() => setLoading(false)}
+            onError={() => { setLoading(false); setError(true); }}
+          />
+        </div>
+      );
+    }
+
+    // Sur desktop, si fallback activé, afficher les options de téléchargement
+    if (pdfFallback) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 text-center h-full bg-muted/50">
+          <div className="bg-background rounded-xl p-8 max-w-lg w-full shadow-lg border">
+            <div className="flex justify-center mb-6">
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
+                <FileText className="h-10 w-10 text-primary" />
+              </div>
+            </div>
+            <h3 className="text-lg font-semibold mb-2">{fileName}</h3>
+            <p className="text-muted-foreground mb-6 text-sm">
+              La prévisualisation n'est pas disponible pour ce document. 
+              Vous pouvez le télécharger ou l'ouvrir dans un nouvel onglet.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button onClick={handleDownload} className="flex-1">
+                <Download className="h-4 w-4 mr-2" />
+                Télécharger
+              </Button>
+              <Button variant="outline" onClick={handleOpenNewTab} className="flex-1">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Ouvrir dans un nouvel onglet
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Sur desktop, essayer d'abord avec <object> puis <embed>
+    return (
+      <div className="flex-1 w-full h-full bg-muted relative">
+        <object
+          ref={objectRef}
+          data={fileUrl}
+          type="application/pdf"
+          className="w-full h-full"
+          onLoad={handlePdfLoad}
+          onError={handlePdfError}
+        >
+          {/* Fallback si object ne fonctionne pas */}
+          <embed
+            src={fileUrl}
+            type="application/pdf"
+            className="w-full h-full"
+          />
+        </object>
+      </div>
+    );
+  };
 
   const renderContent = () => {
     if (fileType === 'image') {
@@ -94,7 +204,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
           <img
             src={fileUrl}
             alt={fileName}
-            className="max-w-full max-h-full object-contain"
+            className="max-w-full max-h-full object-contain transition-transform duration-200"
             style={{ transform: `scale(${zoom / 100})` }}
             onLoad={() => setLoading(false)}
             onError={() => { setLoading(false); setError(true); }}
@@ -119,22 +229,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
     }
 
     if (fileType === 'pdf') {
-      // Pour mobile, utiliser Google Docs Viewer pour une meilleure compatibilité
-      const viewerUrl = isMobile 
-        ? `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`
-        : fileUrl;
-      
-      return (
-        <div className="flex-1 w-full h-full bg-muted">
-          <iframe
-            src={viewerUrl}
-            className="w-full h-full border-0"
-            title={fileName}
-            onLoad={() => setLoading(false)}
-            onError={() => { setLoading(false); setError(true); }}
-          />
-        </div>
-      );
+      return renderPdfContent();
     }
 
     if (fileType === 'office') {
@@ -209,6 +304,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
             size="icon"
             onClick={handleDownload}
             className="h-8 w-8 sm:h-9 sm:w-9"
+            title="Télécharger"
           >
             <Download className="h-4 w-4" />
           </Button>
@@ -220,6 +316,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
                 size="icon"
                 onClick={handleOpenNewTab}
                 className="h-8 w-8 sm:h-9 sm:w-9"
+                title="Ouvrir dans un nouvel onglet"
               >
                 <ExternalLink className="h-4 w-4" />
               </Button>
@@ -228,6 +325,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
                 size="icon"
                 onClick={toggleFullscreen}
                 className="h-8 w-8 sm:h-9 sm:w-9"
+                title={isFullscreen ? "Quitter le plein écran" : "Plein écran"}
               >
                 {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
               </Button>
@@ -238,9 +336,12 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
 
       {/* Content area */}
       <div className="flex-1 overflow-hidden relative">
-        {loading && (
+        {loading && !pdfFallback && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <div className="flex flex-col items-center gap-3">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <span className="text-sm text-muted-foreground">Chargement...</span>
+            </div>
           </div>
         )}
         
