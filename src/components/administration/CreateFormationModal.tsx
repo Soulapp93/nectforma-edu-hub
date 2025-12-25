@@ -158,30 +158,30 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-border">
-        <div className="flex items-center justify-between p-6 border-b border-border sticky top-0 bg-card/95 backdrop-blur-sm">
+      <div className="bg-background rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border-2 border-primary/20">
+        <div className="flex items-center justify-between p-6 border-b border-border/50 sticky top-0 bg-background/95 backdrop-blur-sm">
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-            <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
               <BookOpen className="h-5 w-5 text-primary-foreground" />
             </div>
             Nouvelle formation
           </h2>
           <button
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground p-2 rounded-lg hover:bg-muted transition-colors"
+            className="text-muted-foreground hover:text-foreground p-2 rounded-xl hover:bg-primary/10 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {error && (
-          <div className="mx-6 mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded-xl">
+          <div className="mx-6 mt-4 p-4 bg-destructive/10 border-2 border-destructive/20 rounded-xl">
             <p className="text-destructive text-sm">{error}</p>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="bg-muted/50 rounded-xl p-5 border border-border/50">
+          <div className="bg-muted/30 rounded-xl p-5 border-2 border-primary/10">
             <h3 className="text-lg font-semibold text-foreground mb-4">Informations générales</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
@@ -193,8 +193,21 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-input rounded-xl bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                  className="w-full px-4 py-2.5 border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary hover:border-primary/50 transition-all"
                   required
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-foreground mb-1.5">
+                  Description
+                </label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  rows={3}
+                  className="w-full px-4 py-2.5 border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary hover:border-primary/50 transition-all resize-none"
                 />
               </div>
 
@@ -279,7 +292,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                   value={formData.duration}
                   onChange={handleChange}
                   min="0"
-                  className="w-full px-4 py-2.5 border border-input rounded-xl bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                  className="w-full px-4 py-2.5 border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary hover:border-primary/50 transition-all"
                 />
               </div>
 
@@ -309,8 +322,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
             </div>
 
             {modules.length === 0 ? (
-              <div className="border-2 border-dashed border-border rounded-xl p-8 text-center bg-muted/30">
-                <BookOpen className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
+              <div className="border-2 border-dashed border-primary/30 rounded-xl p-8 text-center bg-primary/5">
+                <BookOpen className="h-10 w-10 text-primary/50 mx-auto mb-3" />
                 <p className="text-muted-foreground font-medium">Aucun module ajouté</p>
                 <p className="text-sm text-muted-foreground/70 mt-1">Les modules peuvent être ajoutés maintenant ou plus tard</p>
               </div>
@@ -328,11 +341,11 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
             )}  
           </div>
 
-          <div className="flex justify-end space-x-3 pt-6 border-t border-border">
+          <div className="flex justify-end space-x-3 pt-6 border-t border-border/50">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2.5 text-foreground border border-border rounded-xl hover:bg-muted transition-colors font-medium"
+              className="px-6 py-2.5 text-foreground border-2 border-primary/30 rounded-xl hover:bg-primary/10 hover:border-primary/50 transition-colors font-medium"
               disabled={loading}
             >
               Annuler

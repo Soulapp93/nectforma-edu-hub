@@ -53,21 +53,23 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+    <div className="bg-background rounded-2xl shadow-lg border-2 border-primary/20 p-8">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
-          <Building className="h-6 w-6 mr-2 text-purple-600" />
+        <h2 className="text-2xl font-bold text-foreground mb-2 flex items-center">
+          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center mr-3">
+            <Building className="h-5 w-5 text-primary-foreground" />
+          </div>
           Gestion de l'établissement
         </h2>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground ml-12">
           Gérez les informations de l'administrateur principal et de l'établissement
         </p>
       </div>
 
       {/* Informations personnelles de l'administrateur */}
-      <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-          <User className="h-5 w-5 mr-2 text-blue-600" />
+      <div className="mb-8 bg-muted/30 rounded-xl p-6 border-2 border-primary/10">
+        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
+          <User className="h-5 w-5 mr-2 text-primary" />
           Informations personnelles de l'administrateur principal
         </h3>
         
@@ -78,7 +80,7 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
               id="firstName"
               value={adminData.firstName}
               onChange={(e) => handleAdminChange('firstName', e.target.value)}
-              className="mt-1"
+              className="mt-1.5"
             />
           </div>
           
@@ -88,14 +90,14 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
               id="lastName"
               value={adminData.lastName}
               onChange={(e) => handleAdminChange('lastName', e.target.value)}
-              className="mt-1"
+              className="mt-1.5"
             />
           </div>
           
           <div>
             <Label htmlFor="adminEmail">Email</Label>
-            <div className="relative mt-1">
-              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <div className="relative mt-1.5">
+              <Mail className="absolute left-3 top-3.5 h-4 w-4 text-primary/60" />
               <Input
                 id="adminEmail"
                 type="email"
@@ -109,8 +111,8 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
           
           <div>
             <Label htmlFor="adminPhone">Téléphone</Label>
-            <div className="relative mt-1">
-              <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <div className="relative mt-1.5">
+              <Phone className="absolute left-3 top-3.5 h-4 w-4 text-primary/60" />
               <Input
                 id="adminPhone"
                 value={adminData.phone}
@@ -127,7 +129,7 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
               id="role"
               value={adminData.role}
               onChange={(e) => handleAdminChange('role', e.target.value)}
-              className="mt-1"
+              className="mt-1.5"
               placeholder="Ex: Directeur, Responsable pédagogique..."
             />
           </div>
@@ -138,18 +140,18 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
               id="personalAddress"
               value={adminData.personalAddress}
               onChange={(e) => handleAdminChange('personalAddress', e.target.value)}
-              className="mt-1"
+              className="mt-1.5"
             />
           </div>
         </div>
       </div>
 
-      <Separator className="my-8" />
+      <Separator className="my-8 bg-primary/10" />
 
       {/* Informations de l'établissement */}
-      <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-          <Building className="h-5 w-5 mr-2 text-green-600" />
+      <div className="mb-8 bg-muted/30 rounded-xl p-6 border-2 border-primary/10">
+        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
+          <Building className="h-5 w-5 mr-2 text-primary" />
           Informations de l'établissement
         </h3>
         
@@ -163,7 +165,7 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
                   <img
                     src={establishmentData.logoUrl}
                     alt="Logo de l'établissement"
-                    className="h-16 w-16 object-contain rounded-md border border-gray-200"
+                    className="h-16 w-16 object-contain rounded-xl border-2 border-primary/20"
                   />
                 </div>
               )}
@@ -172,7 +174,7 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
                   onFileSelect={onLogoUpload}
                   accept="image/*"
                   maxSize={5}
-                  className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-purple-500 transition-colors"
+                  className="border-2 border-dashed border-primary/30 rounded-xl p-4 hover:border-primary/50 hover:bg-primary/5 transition-colors"
                 />
               </div>
             </div>
@@ -185,14 +187,14 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
                 id="establishmentName"
                 value={establishmentData.name}
                 onChange={(e) => handleEstablishmentChange('name', e.target.value)}
-                className="mt-1"
+                className="mt-1.5"
               />
             </div>
           
           <div>
             <Label htmlFor="establishmentPhone">Téléphone</Label>
-            <div className="relative mt-1">
-              <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <div className="relative mt-1.5">
+              <Phone className="absolute left-3 top-3.5 h-4 w-4 text-primary/60" />
               <Input
                 id="establishmentPhone"
                 value={establishmentData.phone}
@@ -205,8 +207,8 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
           
           <div>
             <Label htmlFor="website">Site web</Label>
-            <div className="relative mt-1">
-              <Globe className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <div className="relative mt-1.5">
+              <Globe className="absolute left-3 top-3.5 h-4 w-4 text-primary/60" />
               <Input
                 id="website"
                 value={establishmentData.website}
@@ -219,8 +221,8 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
           
           <div>
             <Label htmlFor="establishmentAddress">Adresse de l'établissement</Label>
-            <div className="relative mt-1">
-              <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <div className="relative mt-1.5">
+              <MapPin className="absolute left-3 top-3.5 h-4 w-4 text-primary/60" />
               <Input
                 id="establishmentAddress"
                 value={establishmentData.address}
@@ -236,7 +238,7 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
               id="establishmentType"
               value={establishmentData.type}
               onChange={(e) => handleEstablishmentChange('type', e.target.value)}
-              className="mt-1"
+              className="mt-1.5"
               placeholder="Ex: École supérieure, Centre de formation..."
             />
           </div>
@@ -247,14 +249,14 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
               id="director"
               value={establishmentData.director}
               onChange={(e) => handleEstablishmentChange('director', e.target.value)}
-              className="mt-1"
+              className="mt-1.5"
             />
           </div>
           
           <div>
             <Label htmlFor="siret">SIRET</Label>
-            <div className="relative mt-1">
-              <FileText className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <div className="relative mt-1.5">
+              <FileText className="absolute left-3 top-3.5 h-4 w-4 text-primary/60" />
               <Input
                 id="siret"
                 value={establishmentData.siret}
@@ -267,8 +269,8 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
           
           <div>
             <Label htmlFor="numberOfUsers">Nombre d'utilisateurs</Label>
-            <div className="relative mt-1">
-              <Users className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <div className="relative mt-1.5">
+              <Users className="absolute left-3 top-3.5 h-4 w-4 text-primary/60" />
               <Input
                 id="numberOfUsers"
                 type="number"
@@ -284,7 +286,7 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={onSave} className="px-8">
+        <Button onClick={onSave} className="px-8 rounded-xl">
           Sauvegarder les modifications
         </Button>
       </div>
