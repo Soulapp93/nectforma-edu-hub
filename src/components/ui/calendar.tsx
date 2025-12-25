@@ -16,23 +16,23 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-4 pointer-events-auto bg-popover rounded-xl border border-border shadow-lg", className)}
+      className={cn("p-4 pointer-events-auto bg-popover rounded-xl border-2 border-primary/20 shadow-xl", className)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
         caption: "flex justify-center pt-1 relative items-center h-10",
-        caption_label: "text-sm font-semibold text-foreground",
+        caption_label: "text-sm font-semibold text-primary",
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
-          "h-8 w-8 bg-background/80 p-0 opacity-70 hover:opacity-100 hover:bg-muted border border-border/50 transition-all rounded-lg"
+          "h-8 w-8 bg-primary/5 p-0 opacity-80 hover:opacity-100 hover:bg-primary/10 border-2 border-primary/20 transition-all rounded-lg text-primary hover:text-primary"
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
         table: "w-full border-collapse space-y-1",
         head_row: "flex",
         head_cell:
-          "text-muted-foreground rounded-lg w-10 font-semibold text-[0.75rem] uppercase py-2",
+          "text-primary/70 rounded-lg w-10 font-semibold text-[0.75rem] uppercase py-2",
         row: "flex w-full mt-1",
         cell: cn(
           "relative h-10 w-10 text-center text-sm p-0 rounded-lg transition-all",
@@ -49,7 +49,7 @@ function Calendar({
         day_range_end: "day-range-end",
         day_selected:
           "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground shadow-md font-semibold",
-        day_today: "bg-primary/15 text-primary font-bold ring-1 ring-primary/30",
+        day_today: "bg-primary/20 text-primary font-bold ring-2 ring-primary/40",
         day_outside:
           "day-outside text-muted-foreground/40 opacity-50 aria-selected:bg-primary/5 aria-selected:text-muted-foreground/60 aria-selected:opacity-30",
         day_disabled: "text-muted-foreground/30 opacity-50 cursor-not-allowed",
@@ -59,8 +59,8 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
-        IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
+        IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4 text-primary" />,
+        IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4 text-primary" />,
       }}
       {...props}
     />
