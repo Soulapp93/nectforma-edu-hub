@@ -1,18 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { Mail, Send, Inbox, FileText, Clock, Heart, Archive, Trash2, RefreshCw, Menu, X, ChevronLeft, Reply, User, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { 
+  Mail, Send, Inbox, FileText, Clock, Heart, Archive, Trash2, RefreshCw, 
+  Menu, X, ChevronLeft, Reply, Sparkles, Forward, Star, ArchiveRestore, 
+  Printer, AlertTriangle, MoreVertical
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useMessages } from '@/hooks/useMessages';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useUsers } from '@/hooks/useUsers';
 import NewMessageModal from '@/components/messagerie/NewMessageModal';
 import MessageAttachmentsViewer from '@/components/messagerie/MessageAttachmentsViewer';
+import ForwardMessageModal from '@/components/messagerie/ForwardMessageModal';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 type FolderType = 'inbox' | 'sent' | 'drafts' | 'scheduled' | 'favorites' | 'archived' | 'trash';
 
@@ -31,18 +54,54 @@ const Messagerie = () => {
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [replyData, setReplyData] = useState<ReplyData | null>(null);
-  const { messages, loading, refetch } = useMessages();
+  const [forwardModalOpen, setForwardModalOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
+  
+  const { 
+    messages, loading, refetch,
+    toggleFavorite, toggleArchive, moveToTrash, restoreFromTrash,
+    permanentlyDelete, deleteSentMessage, restoreSentMessage,
+    permanentlyDeleteSentMessage, forwardMessage
+  } = useMessages();
   const { userId } = useCurrentUser();
   const { users } = useUsers();
 
+  // Calculate folder counts based on recipient info
+  const inboxMessages = messages.filter(m => 
+    m.sender_id !== userId && 
+    !m.is_draft && 
+    !m.recipientInfo?.is_deleted && 
+    !m.recipientInfo?.is_archived
+  );
+  const sentMessages = messages.filter(m => 
+    m.sender_id === userId && 
+    !m.is_draft && 
+    !m.is_deleted
+  );
+  const draftMessages = messages.filter(m => m.is_draft && m.sender_id === userId);
+  const scheduledMessages = messages.filter(m => m.scheduled_for && !m.is_draft && m.sender_id === userId);
+  const favoriteMessages = messages.filter(m => 
+    m.recipientInfo?.is_favorite && 
+    !m.recipientInfo?.is_deleted
+  );
+  const archivedMessages = messages.filter(m => 
+    m.recipientInfo?.is_archived && 
+    !m.recipientInfo?.is_deleted
+  );
+  const trashMessages = messages.filter(m => 
+    (m.sender_id === userId && m.is_deleted) ||
+    (m.sender_id !== userId && m.recipientInfo?.is_deleted)
+  );
+
   const folders = [
-    { id: 'inbox' as FolderType, label: 'Boîte de réception', icon: Inbox, count: messages.filter(m => m.sender_id !== userId && !m.is_draft).length },
-    { id: 'sent' as FolderType, label: 'Envoyés', icon: Send, count: messages.filter(m => m.sender_id === userId && !m.is_draft).length },
-    { id: 'drafts' as FolderType, label: 'Brouillons', icon: FileText, count: messages.filter(m => m.is_draft).length },
-    { id: 'scheduled' as FolderType, label: 'Programmés', icon: Clock, count: 0 },
-    { id: 'favorites' as FolderType, label: 'Favoris', icon: Heart, count: 0 },
-    { id: 'archived' as FolderType, label: 'Archives', icon: Archive, count: 0 },
-    { id: 'trash' as FolderType, label: 'Corbeille', icon: Trash2, count: 0 },
+    { id: 'inbox' as FolderType, label: 'Boîte de réception', icon: Inbox, count: inboxMessages.length },
+    { id: 'sent' as FolderType, label: 'Envoyés', icon: Send, count: sentMessages.length },
+    { id: 'drafts' as FolderType, label: 'Brouillons', icon: FileText, count: draftMessages.length },
+    { id: 'scheduled' as FolderType, label: 'Programmés', icon: Clock, count: scheduledMessages.length },
+    { id: 'favorites' as FolderType, label: 'Favoris', icon: Heart, count: favoriteMessages.length },
+    { id: 'archived' as FolderType, label: 'Archives', icon: Archive, count: archivedMessages.length },
+    { id: 'trash' as FolderType, label: 'Corbeille', icon: Trash2, count: trashMessages.length },
   ];
 
   const getFilteredMessages = () => {
@@ -50,13 +109,25 @@ const Messagerie = () => {
     
     switch (selectedFolder) {
       case 'inbox':
-        filtered = messages.filter(m => m.sender_id !== userId && !m.is_draft);
+        filtered = inboxMessages;
         break;
       case 'sent':
-        filtered = messages.filter(m => m.sender_id === userId && !m.is_draft);
+        filtered = sentMessages;
         break;
       case 'drafts':
-        filtered = messages.filter(m => m.is_draft);
+        filtered = draftMessages;
+        break;
+      case 'scheduled':
+        filtered = scheduledMessages;
+        break;
+      case 'favorites':
+        filtered = favoriteMessages;
+        break;
+      case 'archived':
+        filtered = archivedMessages;
+        break;
+      case 'trash':
+        filtered = trashMessages;
         break;
       default:
         filtered = [];
@@ -75,7 +146,6 @@ const Messagerie = () => {
   const filteredMessages = getFilteredMessages();
   const selectedMessage = selectedMessageId ? messages.find(m => m.id === selectedMessageId) : null;
 
-  // Get sender info for a message
   const getSenderInfo = (senderId: string) => {
     const sender = users.find(u => u.id === senderId);
     if (sender) {
@@ -113,14 +183,133 @@ const Messagerie = () => {
     setReplyData(null);
   };
 
+  const handleToggleFavorite = async (messageId: string) => {
+    try {
+      await toggleFavorite(messageId);
+      toast.success('Statut favoris mis à jour');
+    } catch {
+      toast.error('Erreur lors de la mise à jour');
+    }
+  };
+
+  const handleToggleArchive = async (messageId: string) => {
+    try {
+      await toggleArchive(messageId);
+      toast.success('Message archivé');
+      if (selectedFolder !== 'archived') {
+        setSelectedMessageId(null);
+      }
+    } catch {
+      toast.error('Erreur lors de l\'archivage');
+    }
+  };
+
+  const handleMoveToTrash = async (messageId: string, isSentMessage: boolean) => {
+    try {
+      if (isSentMessage) {
+        await deleteSentMessage(messageId);
+      } else {
+        await moveToTrash(messageId);
+      }
+      toast.success('Message déplacé vers la corbeille');
+      setSelectedMessageId(null);
+    } catch {
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
+  const handleRestore = async (messageId: string, isSentMessage: boolean) => {
+    try {
+      if (isSentMessage) {
+        await restoreSentMessage(messageId);
+      } else {
+        await restoreFromTrash(messageId);
+      }
+      toast.success('Message restauré');
+    } catch {
+      toast.error('Erreur lors de la restauration');
+    }
+  };
+
+  const handlePermanentDelete = async () => {
+    if (!messageToDelete) return;
+    const message = messages.find(m => m.id === messageToDelete);
+    if (!message) return;
+    
+    try {
+      if (message.sender_id === userId) {
+        await permanentlyDeleteSentMessage(messageToDelete);
+      } else {
+        await permanentlyDelete(messageToDelete);
+      }
+      toast.success('Message supprimé définitivement');
+      setSelectedMessageId(null);
+    } catch {
+      toast.error('Erreur lors de la suppression');
+    } finally {
+      setDeleteConfirmOpen(false);
+      setMessageToDelete(null);
+    }
+  };
+
+  const handleForward = async (recipientIds: string[]) => {
+    if (!selectedMessage) return;
+    try {
+      await forwardMessage(selectedMessage.id, recipientIds);
+      toast.success('Message transféré avec succès');
+    } catch {
+      toast.error('Erreur lors du transfert');
+    }
+  };
+
+  const handlePrint = () => {
+    if (!selectedMessage) return;
+    const senderInfo = getSenderInfo(selectedMessage.sender_id);
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Message - ${selectedMessage.subject}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
+          .header { border-bottom: 2px solid #8B5CF6; padding-bottom: 20px; margin-bottom: 20px; }
+          .subject { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+          .meta { color: #666; font-size: 14px; }
+          .meta span { display: block; margin: 5px 0; }
+          .content { line-height: 1.6; white-space: pre-wrap; margin-top: 30px; }
+          @media print { body { padding: 20px; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="subject">${selectedMessage.subject}</div>
+          <div class="meta">
+            <span><strong>De:</strong> ${senderInfo.name} (${senderInfo.email})</span>
+            <span><strong>Date:</strong> ${new Date(selectedMessage.created_at).toLocaleString('fr-FR')}</span>
+          </div>
+        </div>
+        <div class="content">${selectedMessage.content}</div>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  const isReceivedMessage = selectedMessage && selectedMessage.sender_id !== userId;
+  const isSentMessage = selectedMessage && selectedMessage.sender_id === userId;
+  const isInTrash = selectedFolder === 'trash';
+
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] bg-gradient-to-br from-background via-background to-primary/5">
-      {/* Header modernisé */}
+      {/* Header */}
       <div className="p-4 sm:p-6 border-b border-border/50 bg-card/80 backdrop-blur-sm">
         <div className="flex flex-col gap-4">
           <div className="flex items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              {/* Mobile sidebar toggle */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -176,7 +365,7 @@ const Messagerie = () => {
           />
         )}
 
-        {/* Folders Sidebar - modernisé */}
+        {/* Folders Sidebar */}
         <div className={cn(
           "absolute lg:relative z-50 lg:z-auto h-full w-64 border-r border-border/50 bg-card/95 backdrop-blur-sm overflow-y-auto transition-transform duration-300 ease-in-out",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
@@ -229,9 +418,9 @@ const Messagerie = () => {
         {/* Messages List / Detail */}
         <div className="flex-1 overflow-hidden flex flex-col bg-background/30">
           {selectedMessage ? (
-            // Message Detail View - modernisé
+            // Message Detail View
             <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-6 gap-2">
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -241,19 +430,124 @@ const Messagerie = () => {
                   <ChevronLeft className="h-4 w-4" />
                   Retour
                 </Button>
-                {selectedFolder === 'inbox' && (
-                  <Button 
-                    size="sm" 
-                    onClick={() => handleReply(selectedMessage)}
-                    className="gap-2 shadow-md"
-                  >
-                    <Reply className="h-4 w-4" />
-                    Répondre
-                  </Button>
-                )}
+                
+                <div className="flex items-center gap-2">
+                  {/* Action buttons */}
+                  {isInTrash ? (
+                    <>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleRestore(selectedMessage.id, isSentMessage || false)}
+                        className="gap-2"
+                      >
+                        <ArchiveRestore className="h-4 w-4" />
+                        <span className="hidden sm:inline">Restaurer</span>
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="destructive"
+                        onClick={() => {
+                          setMessageToDelete(selectedMessage.id);
+                          setDeleteConfirmOpen(true);
+                        }}
+                        className="gap-2"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="hidden sm:inline">Supprimer définitivement</span>
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      {isReceivedMessage && (
+                        <>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleToggleFavorite(selectedMessage.id)}
+                            className={cn(
+                              selectedMessage.recipientInfo?.is_favorite && "text-yellow-500"
+                            )}
+                            title="Favoris"
+                          >
+                            <Star className={cn(
+                              "h-4 w-4",
+                              selectedMessage.recipientInfo?.is_favorite && "fill-current"
+                            )} />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleToggleArchive(selectedMessage.id)}
+                            title="Archiver"
+                          >
+                            <Archive className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                      
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={handlePrint}
+                        title="Imprimer"
+                      >
+                        <Printer className="h-4 w-4" />
+                      </Button>
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="icon" variant="ghost">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {isReceivedMessage && (
+                            <>
+                              <DropdownMenuItem onClick={() => handleReply(selectedMessage)}>
+                                <Reply className="h-4 w-4 mr-2" />
+                                Répondre
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setForwardModalOpen(true)}>
+                                <Forward className="h-4 w-4 mr-2" />
+                                Transférer
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                            </>
+                          )}
+                          {isSentMessage && (
+                            <DropdownMenuItem onClick={() => setForwardModalOpen(true)}>
+                              <Forward className="h-4 w-4 mr-2" />
+                              Transférer
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem 
+                            onClick={() => handleMoveToTrash(selectedMessage.id, isSentMessage || false)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Supprimer
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+                      {isReceivedMessage && selectedFolder === 'inbox' && (
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleReply(selectedMessage)}
+                          className="gap-2 shadow-md"
+                        >
+                          <Reply className="h-4 w-4" />
+                          <span className="hidden sm:inline">Répondre</span>
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
+              
               <div className="max-w-4xl mx-auto">
-                {/* Sender info - card améliorée */}
+                {/* Sender info */}
                 {(() => {
                   const senderInfo = getSenderInfo(selectedMessage.sender_id);
                   return (
@@ -265,7 +559,12 @@ const Messagerie = () => {
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
-                        <p className="font-semibold text-foreground">{senderInfo.name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-foreground">{senderInfo.name}</p>
+                          {selectedMessage.recipientInfo?.is_favorite && (
+                            <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                          )}
+                        </div>
                         <p className="text-sm text-muted-foreground">{senderInfo.email}</p>
                       </div>
                     </Card>
@@ -289,33 +588,42 @@ const Messagerie = () => {
                   )}
                 </div>
                 
-                {/* Contenu du message */}
+                {/* Message content */}
                 <Card className="bg-card border-border/50 shadow-sm overflow-hidden">
                   <div className="p-6">
                     <p className="whitespace-pre-wrap text-base leading-relaxed text-foreground/90">{selectedMessage.content}</p>
                   </div>
                 </Card>
                 
-                {/* Pièces jointes avec viewer */}
+                {/* Attachments */}
                 <MessageAttachmentsViewer messageId={selectedMessage.id} />
                 
-                {/* Quick reply button at bottom */}
-                {selectedFolder === 'inbox' && (
-                  <div className="mt-8 pt-6 border-t border-border/50">
+                {/* Bottom actions */}
+                {isReceivedMessage && !isInTrash && (
+                  <div className="mt-8 pt-6 border-t border-border/50 flex flex-wrap gap-3">
                     <Button 
                       onClick={() => handleReply(selectedMessage)}
-                      className="w-full sm:w-auto gap-2 shadow-lg"
+                      className="gap-2 shadow-lg"
                       size="lg"
                     >
                       <Reply className="h-4 w-4" />
-                      Répondre à ce message
+                      Répondre
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => setForwardModalOpen(true)}
+                      className="gap-2"
+                      size="lg"
+                    >
+                      <Forward className="h-4 w-4" />
+                      Transférer
                     </Button>
                   </div>
                 )}
               </div>
             </div>
           ) : (
-            // Messages List View - modernisé
+            // Messages List View
             <div className="flex-1 overflow-y-auto">
               <div className="p-4 sm:p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -344,6 +652,8 @@ const Messagerie = () => {
                   <div className="space-y-3">
                     {filteredMessages.map((message) => {
                       const senderInfo = getSenderInfo(message.sender_id);
+                      const isFavorite = message.recipientInfo?.is_favorite;
+                      
                       return (
                         <Card
                           key={message.id}
@@ -360,6 +670,9 @@ const Messagerie = () => {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="font-semibold text-sm text-foreground truncate">{senderInfo.name}</span>
+                                {isFavorite && (
+                                  <Star className="h-3.5 w-3.5 text-yellow-500 fill-current shrink-0" />
+                                )}
                                 {message.is_draft && (
                                   <Badge variant="secondary" className="text-xs shrink-0 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                                     Brouillon
@@ -406,6 +719,36 @@ const Messagerie = () => {
         onClose={handleCloseModal}
         replyTo={replyData || undefined}
       />
+
+      <ForwardMessageModal
+        isOpen={forwardModalOpen}
+        onClose={() => setForwardModalOpen(false)}
+        onForward={handleForward}
+        messageSubject={selectedMessage?.subject || ''}
+      />
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Supprimer définitivement
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Le message sera supprimé de façon permanente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handlePermanentDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Supprimer définitivement
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
