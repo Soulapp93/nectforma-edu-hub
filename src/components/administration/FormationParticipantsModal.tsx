@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Users, Mail, Phone, Calendar } from 'lucide-react';
+import { X, Users, Mail, Phone } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 
 interface FormationParticipantsModalProps {
@@ -17,7 +18,7 @@ interface Participant {
   last_name: string;
   email: string;
   phone?: string;
-  enrolled_at: string;
+  profile_photo_url?: string;
 }
 
 const FormationParticipantsModal: React.FC<FormationParticipantsModalProps> = ({
@@ -46,13 +47,13 @@ const FormationParticipantsModal: React.FC<FormationParticipantsModalProps> = ({
         .from('user_formation_assignments')
         .select(`
           id,
-          assigned_at,
           user:users(
             id,
             first_name,
             last_name,
             email,
-            phone
+            phone,
+            profile_photo_url
           )
         `)
         .eq('formation_id', formationId);
@@ -65,7 +66,7 @@ const FormationParticipantsModal: React.FC<FormationParticipantsModalProps> = ({
         last_name: item.user.last_name,
         email: item.user.email,
         phone: item.user.phone,
-        enrolled_at: item.assigned_at
+        profile_photo_url: item.user.profile_photo_url
       })) || [];
 
       setParticipants(formattedParticipants);
@@ -136,14 +137,17 @@ const FormationParticipantsModal: React.FC<FormationParticipantsModalProps> = ({
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {participants.map((participant) => (
                   <div key={participant.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center">
                       <div className="flex items-center space-x-4">
-                        <div 
-                          className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm"
-                          style={{ backgroundColor: formationColor }}
-                        >
-                          {participant.first_name.charAt(0)}{participant.last_name.charAt(0)}
-                        </div>
+                        <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
+                          <AvatarImage src={participant.profile_photo_url || ''} alt={`${participant.first_name} ${participant.last_name}`} />
+                          <AvatarFallback 
+                            className="font-semibold text-sm text-white"
+                            style={{ backgroundColor: formationColor }}
+                          >
+                            {participant.first_name.charAt(0)}{participant.last_name.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
                         <div>
                           <h4 className="font-semibold text-gray-900">
                             {participant.first_name} {participant.last_name}
@@ -160,12 +164,6 @@ const FormationParticipantsModal: React.FC<FormationParticipantsModalProps> = ({
                               </div>
                             )}
                           </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="flex items-center text-sm text-gray-500">
-                          <Calendar className="h-4 w-4 mr-1" />
-                          Inscrit le {new Date(participant.enrolled_at).toLocaleDateString()}
                         </div>
                       </div>
                     </div>

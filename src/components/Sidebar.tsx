@@ -30,6 +30,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useCurrentUser, useUserWithRelations } from '@/hooks/useCurrentUser';
 import { useEstablishment } from '@/hooks/useEstablishment';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
@@ -67,6 +68,7 @@ const Sidebar = () => {
         name: `${userInfo.first_name} ${userInfo.last_name}`,
         role: userRole || 'Utilisateur',
         initials: `${userInfo.first_name?.[0] || ''}${userInfo.last_name?.[0] || ''}`.toUpperCase() || 'U',
+        profilePhotoUrl: userInfo.profile_photo_url || null,
         relationInfo
       };
     }
@@ -75,6 +77,7 @@ const Sidebar = () => {
       name: 'Utilisateur',
       role: userRole || 'Utilisateur',
       initials: 'U',
+      profilePhotoUrl: null,
       relationInfo: null
     };
   };
@@ -189,9 +192,12 @@ const Sidebar = () => {
         {/* User Profile Card */}
         <div className="mx-4 mb-6 p-3 rounded-xl bg-white/10 backdrop-blur-sm">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 border border-white/30">
-              <span className="text-sm font-semibold text-white">{userDisplayInfo.initials}</span>
-            </div>
+            <Avatar className="w-10 h-10 flex-shrink-0 border-2 border-white/30">
+              <AvatarImage src={userDisplayInfo.profilePhotoUrl || ''} alt={userDisplayInfo.name} />
+              <AvatarFallback className="bg-white/20 text-white text-sm font-semibold">
+                {userDisplayInfo.initials}
+              </AvatarFallback>
+            </Avatar>
             {!collapsed && (
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-white truncate">{userDisplayInfo.name}</p>
