@@ -388,8 +388,9 @@ const AttendanceManagement = () => {
               <div className="flex gap-2 flex-wrap">
                 <Button
                   onClick={() => setShowSendAttendanceLinkModal(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm"
+                  variant="outline"
                   size="sm"
+                  className="rounded-full border-2 border-blue-500 text-blue-600 hover:bg-blue-50 text-xs sm:text-sm"
                 >
                   <Link className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Envoyer lien d'émargement</span>
@@ -397,8 +398,9 @@ const AttendanceManagement = () => {
                 </Button>
                 <Button
                   onClick={() => setShowSignatureModal(true)}
-                  className="bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm"
+                  variant="outline"
                   size="sm"
+                  className="rounded-full border-2 border-purple-500 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm"
                 >
                   <PenTool className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Enregistrement signature</span>
