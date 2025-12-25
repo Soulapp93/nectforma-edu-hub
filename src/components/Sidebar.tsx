@@ -3,18 +3,20 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
-  BookOpen, 
-  Calendar, 
-  MessageSquare, 
-  FileText, 
-  Settings,
+  GraduationCap,
+  CalendarClock,
+  Mail,
+  BookText, 
+  UserCircle,
   LogOut,
   ClipboardCheck,
-  Building,
+  Building2,
   ChevronDown,
   ChevronRight,
-  Clock,
-  UsersRound
+  CalendarDays,
+  UsersRound,
+  ShieldCheck,
+  Settings
 } from 'lucide-react';
 import {
   Sidebar as SidebarWrapper,
@@ -87,51 +89,51 @@ const Sidebar = () => {
   // Sous-onglets de l'administration
   const administrationSubItems = [
     { name: 'Gestion des utilisateurs', href: '/administration?tab=users', icon: Users },
-    { name: 'Gestion des formations', href: '/administration?tab=formations', icon: BookOpen },
-    { name: 'Gestion des Cahiers de Texte', href: '/administration?tab=textbooks', icon: FileText },
-    { name: 'Gestion des Emplois du Temps', href: '/administration?tab=schedules', icon: Clock },
+    { name: 'Gestion des formations', href: '/administration?tab=formations', icon: GraduationCap },
+    { name: 'Gestion des Cahiers de Texte', href: '/administration?tab=textbooks', icon: BookText },
+    { name: 'Gestion des Emplois du Temps', href: '/administration?tab=schedules', icon: CalendarDays },
     { name: 'Feuilles d\'émargement', href: '/administration?tab=attendance', icon: ClipboardCheck },
   ];
   
   // Navigation pour AdminPrincipal uniquement (avec gestion établissement et profil séparés)
   const principalAdminNavigation: NavigationItem[] = [
     { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Administration', href: '/administration', icon: Users, subItems: administrationSubItems },
-    { name: 'Formation', href: '/formations', icon: BookOpen },
-    { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
-    { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
+    { name: 'Administration', href: '/administration', icon: ShieldCheck, subItems: administrationSubItems },
+    { name: 'Formation', href: '/formations', icon: GraduationCap },
+    { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarClock },
+    { name: 'Messagerie', href: '/messagerie', icon: Mail },
     { name: 'Groupes', href: '/groupes', icon: UsersRound },
-    { name: 'Gestion du compte', href: '/gestion-etablissement', icon: Building },
-    { name: 'Mon Profil', href: '/compte', icon: Settings },
+    { name: 'Gestion du compte', href: '/gestion-etablissement', icon: Settings },
+    { name: 'Mon Profil', href: '/compte', icon: UserCircle },
   ];
 
   // Navigation pour Admin (SANS gestion du compte - réservé à AdminPrincipal)
   const adminNavigation: NavigationItem[] = [
     { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Administration', href: '/administration', icon: Users, subItems: administrationSubItems },
-    { name: 'Formation', href: '/formations', icon: BookOpen },
-    { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
-    { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
+    { name: 'Administration', href: '/administration', icon: ShieldCheck, subItems: administrationSubItems },
+    { name: 'Formation', href: '/formations', icon: GraduationCap },
+    { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarClock },
+    { name: 'Messagerie', href: '/messagerie', icon: Mail },
     { name: 'Groupes', href: '/groupes', icon: UsersRound },
-    { name: 'Mon Profil', href: '/compte', icon: Settings },
+    { name: 'Mon Profil', href: '/compte', icon: UserCircle },
   ];
 
   // Navigation pour tuteurs (4 onglets - vue apprenti uniquement, pas de tableau de bord)
   const tutorNavigation: NavigationItem[] = [
-    { name: 'Formation Apprenti', href: '/formations', icon: BookOpen },
+    { name: 'Formation Apprenti', href: '/formations', icon: GraduationCap },
     { name: 'Suivi Émargement Apprenti', href: '/suivi-emargement', icon: ClipboardCheck },
-    { name: 'Emploi du temps Apprenti', href: '/emploi-temps', icon: Calendar },
-    { name: 'Mon Profil', href: '/compte', icon: Settings },
+    { name: 'Emploi du temps Apprenti', href: '/emploi-temps', icon: CalendarClock },
+    { name: 'Mon Profil', href: '/compte', icon: UserCircle },
   ];
 
   // Navigation pour les formateurs et étudiants (avec profil)
   const limitedNavigation: NavigationItem[] = [
-    { name: 'Formation', href: '/formations', icon: BookOpen },
+    { name: 'Formation', href: '/formations', icon: GraduationCap },
     { name: 'Suivi Émargement', href: '/suivi-emargement', icon: ClipboardCheck },
-    { name: 'Emploi du temps', href: '/emploi-temps', icon: Calendar },
-    { name: 'Messagerie', href: '/messagerie', icon: MessageSquare },
+    { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarClock },
+    { name: 'Messagerie', href: '/messagerie', icon: Mail },
     { name: 'Groupes', href: '/groupes', icon: UsersRound },
-    { name: 'Mon Profil', href: '/compte', icon: Settings },
+    { name: 'Mon Profil', href: '/compte', icon: UserCircle },
   ];
 
   // Sélectionner la navigation selon le rôle
@@ -177,7 +179,7 @@ const Sidebar = () => {
                 />
               ) : (
                 <div className="w-8 h-8 bg-white/10 rounded-md flex items-center justify-center">
-                  <Building className="w-4 h-4 text-white/70" />
+                  <Building2 className="w-4 h-4 text-white/70" />
                 </div>
               )}
               <div className="flex-1 min-w-0">
