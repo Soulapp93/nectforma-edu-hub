@@ -280,7 +280,6 @@ export const messageService = {
     }
   },
 
-  // Toggle favorite status
   async toggleFavorite(messageId: string): Promise<boolean> {
     try {
       const { data: { user } } = await supabase.auth.getUser();

@@ -21,12 +21,14 @@ export const useUnreadMessages = () => {
     }
 
     try {
-      // 1. Compter les messages non lus dans la messagerie
+      // 1. Compter les messages non lus dans la messagerie (non archivés et non supprimés)
       const { data: unreadMessages, error: messagesError } = await supabase
         .from('message_recipients')
         .select('id')
         .eq('recipient_id', userId)
-        .eq('is_read', false);
+        .eq('is_read', false)
+        .eq('is_archived', false)
+        .eq('is_deleted', false);
 
       const messagerieCount = messagesError ? 0 : (unreadMessages?.length || 0);
 
