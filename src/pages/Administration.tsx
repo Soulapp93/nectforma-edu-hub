@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { Users, GraduationCap, BookText, CalendarDays, ClipboardCheck, ShieldCheck } from 'lucide-react';
 import EnhancedUsersList from '../components/administration/EnhancedUsersList';
 import FormationsList from '../components/administration/FormationsList';
 import TextBooksList from '../components/administration/TextBooksList';
 import ScheduleManagement from '../components/administration/ScheduleManagement';
 import AttendanceManagement from '../components/administration/AttendanceManagement';
+import { PageHeader } from '@/components/ui/page-header';
+import { LucideIcon } from 'lucide-react';
 
 const Administration = () => {
   const [searchParams] = useSearchParams();
@@ -17,34 +20,56 @@ const Administration = () => {
     }
   }, [searchParams]);
 
-  const getPageTitle = () => {
+  const getPageInfo = (): { title: string; description: string; icon: LucideIcon } => {
     switch (activeTab) {
-      case 'users': return 'Gestion des Utilisateurs';
-      case 'formations': return 'Gestion des Formations';
-      case 'textbooks': return 'Gestion des Cahiers de Texte';
-      case 'schedules': return 'Gestion des Emplois du Temps';
-      case 'attendance': return 'Feuilles d\'émargement';
-      default: return 'Administration';
+      case 'users': 
+        return {
+          title: 'Gestion des Utilisateurs',
+          description: 'Gérez les comptes utilisateurs de la plateforme.',
+          icon: Users
+        };
+      case 'formations': 
+        return {
+          title: 'Gestion des Formations',
+          description: 'Créez et gérez les formations proposées.',
+          icon: GraduationCap
+        };
+      case 'textbooks': 
+        return {
+          title: 'Gestion des Cahiers de Texte',
+          description: 'Consultez et gérez les cahiers de texte.',
+          icon: BookText
+        };
+      case 'schedules': 
+        return {
+          title: 'Gestion des Emplois du Temps',
+          description: 'Organisez les emplois du temps des formations.',
+          icon: CalendarDays
+        };
+      case 'attendance': 
+        return {
+          title: 'Feuilles d\'émargement',
+          description: 'Validez et gérez les feuilles d\'émargement.',
+          icon: ClipboardCheck
+        };
+      default: 
+        return {
+          title: 'Administration',
+          description: 'Gérez les utilisateurs, formations, rôles et emplois du temps de la plateforme.',
+          icon: ShieldCheck
+        };
     }
   };
 
-  const getPageDescription = () => {
-    switch (activeTab) {
-      case 'users': return 'Gérez les comptes utilisateurs de la plateforme.';
-      case 'formations': return 'Créez et gérez les formations proposées.';
-      case 'textbooks': return 'Consultez et gérez les cahiers de texte.';
-      case 'schedules': return 'Organisez les emplois du temps des formations.';
-      case 'attendance': return 'Validez et gérez les feuilles d\'émargement.';
-      default: return 'Gérez les utilisateurs, formations, rôles et emplois du temps de la plateforme.';
-    }
-  };
+  const pageInfo = getPageInfo();
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 min-h-screen">
-      <div className="mb-6 sm:mb-8 lg:mb-10">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2 sm:mb-3">{getPageTitle()}</h1>
-        <p className="text-base sm:text-lg text-muted-foreground">{getPageDescription()}</p>
-      </div>
+      <PageHeader 
+        title={pageInfo.title}
+        description={pageInfo.description}
+        icon={pageInfo.icon}
+      />
 
       {activeTab === 'users' && <EnhancedUsersList />}
 

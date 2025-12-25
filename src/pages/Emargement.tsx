@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, CheckCircle2, FileText } from 'lucide-react';
+import { Calendar, Clock, Users, CheckCircle2, FileText, ClipboardCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ import InstructorSigningModal from '../components/emargement/InstructorSigningMo
 import EnhancedAttendanceSheetModal from '../components/administration/EnhancedAttendanceSheetModal';
 import AttendanceHistory from '../components/emargement/AttendanceHistory';
 import SignatureManagementModal from '../components/ui/signature-management-modal';
+import { PageHeader } from '@/components/ui/page-header';
 
 const Emargement = () => {
   const [attendanceSheets, setAttendanceSheets] = useState<AttendanceSheet[]>([]);
@@ -96,20 +97,21 @@ const Emargement = () => {
 
   if (userLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white py-4 sm:py-8 px-4 sm:px-8">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Gestion des Émargements</h1>
-          <p className="text-sm sm:text-base text-purple-100">Suivez, signez et analysez les présences.</p>
-        </div>
+      <div className="p-4 sm:p-6 lg:p-8 border-b border-border/50 bg-card/80 backdrop-blur-sm">
+        <PageHeader 
+          title="Gestion des Émargements"
+          description="Suivez, signez et analysez les présences"
+          icon={ClipboardCheck}
+        />
       </div>
 
       <div className="max-w-4xl mx-auto p-4 sm:p-6">

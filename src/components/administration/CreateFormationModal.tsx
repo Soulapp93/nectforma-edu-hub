@@ -155,33 +155,35 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
-          <h2 className="text-xl font-semibold text-gray-900">
-            <BookOpen className="h-5 w-5 inline mr-2" />
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-border">
+        <div className="flex items-center justify-between p-6 border-b border-border sticky top-0 bg-card/95 backdrop-blur-sm">
+          <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+            <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+              <BookOpen className="h-5 w-5 text-primary-foreground" />
+            </div>
             Nouvelle formation
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 p-1"
+            className="text-muted-foreground hover:text-foreground p-2 rounded-lg hover:bg-muted transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {error && (
-          <div className="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-800 text-sm">{error}</p>
+          <div className="mx-6 mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded-xl">
+            <p className="text-destructive text-sm">{error}</p>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Informations générales</h3>
+          <div className="bg-muted/50 rounded-xl p-5 border border-border/50">
+            <h3 className="text-lg font-semibold text-foreground mb-4">Informations générales</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1.5">
                   Titre de la formation *
                 </label>
                 <input
@@ -189,13 +191,13 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 border border-input rounded-xl bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                   required
                 />
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1.5">
                   Description
                 </label>
                 <textarea
@@ -203,17 +205,17 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                   value={formData.description}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 border border-input rounded-xl bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Niveau</label>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Niveau</label>
                 <select
                   name="level"
                   value={formData.level}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 border border-input rounded-xl bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 >
                   <option value="BAC+1">BAC+1</option>
                   <option value="BAC+2">BAC+2</option>
@@ -224,12 +226,12 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Statut</label>
                 <select
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 border border-input rounded-xl bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 >
                   <option value="Actif">Actif</option>
                   <option value="Inactif">Inactif</option>
@@ -238,8 +240,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  <Calendar className="h-4 w-4 inline mr-1" />
+                <label className="block text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5">
+                  <Calendar className="h-4 w-4 text-primary" />
                   Date de début (optionnel)
                 </label>
                 <input
@@ -247,14 +249,14 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                   name="start_date"
                   value={formData.start_date}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 border border-input rounded-xl bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 />
-                <p className="text-xs text-gray-500 mt-1">Si vide, la date d'aujourd'hui sera utilisée</p>
+                <p className="text-xs text-muted-foreground mt-1.5">Si vide, la date d'aujourd'hui sera utilisée</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  <Calendar className="h-4 w-4 inline mr-1" />
+                <label className="block text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5">
+                  <Calendar className="h-4 w-4 text-primary" />
                   Date de fin (optionnel)
                 </label>
                 <input
@@ -262,13 +264,13 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                   name="end_date"
                   value={formData.end_date}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 border border-input rounded-xl bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 />
-                <p className="text-xs text-gray-500 mt-1">Si vide, une date dans un an sera utilisée</p>
+                <p className="text-xs text-muted-foreground mt-1.5">Si vide, une date dans un an sera utilisée</p>
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1.5">
                   Durée de la formation (nombre d'heures)
                 </label>
                 <input
@@ -277,7 +279,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                   value={formData.duration}
                   onChange={handleChange}
                   min="0"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 border border-input rounded-xl bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
                 />
               </div>
 
@@ -293,24 +295,24 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
           {/* Modules */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg font-semibold text-foreground">
                 Modules de formation ({modules.length})
               </h3>
               <button
                 type="button"
                 onClick={addModule}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center text-sm"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-xl flex items-center text-sm font-medium transition-all shadow-sm hover:shadow-md"
               >
-                <Plus className="h-4 w-4 mr-1" />
+                <Plus className="h-4 w-4 mr-1.5" />
                 Ajouter un module
               </button>
             </div>
 
             {modules.length === 0 ? (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <BookOpen className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500">Aucun module ajouté</p>
-                <p className="text-sm text-gray-400">Les modules peuvent être ajoutés maintenant ou plus tard</p>
+              <div className="border-2 border-dashed border-border rounded-xl p-8 text-center bg-muted/30">
+                <BookOpen className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
+                <p className="text-muted-foreground font-medium">Aucun module ajouté</p>
+                <p className="text-sm text-muted-foreground/70 mt-1">Les modules peuvent être ajoutés maintenant ou plus tard</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -326,11 +328,11 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
             )}  
           </div>
 
-          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+          <div className="flex justify-end space-x-3 pt-6 border-t border-border">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="px-6 py-2.5 text-foreground border border-border rounded-xl hover:bg-muted transition-colors font-medium"
               disabled={loading}
             >
               Annuler
@@ -338,7 +340,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
             <button
               type="submit"
               disabled={loading || !formData.title.trim()}
-              className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed font-medium shadow-sm hover:shadow-md transition-all"
             >
               {loading ? 'Création...' : 'Créer la formation'}
             </button>
