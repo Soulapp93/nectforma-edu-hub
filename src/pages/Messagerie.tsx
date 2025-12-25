@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, Send, Inbox, FileText, Clock, Heart, Archive, Trash2, RefreshCw, Menu, X, ChevronLeft, Reply, User } from 'lucide-react';
+import { Mail, Send, Inbox, FileText, Clock, Heart, Archive, Trash2, RefreshCw, Menu, X, ChevronLeft, Reply, User, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { useMessages } from '@/hooks/useMessages';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useUsers } from '@/hooks/useUsers';
 import NewMessageModal from '@/components/messagerie/NewMessageModal';
+import MessageAttachmentsViewer from '@/components/messagerie/MessageAttachmentsViewer';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -113,12 +114,12 @@ const Messagerie = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)]">
-      {/* Header */}
-      <div className="p-3 sm:p-4 lg:p-6 border-b border-border bg-card">
-        <div className="flex flex-col gap-3 sm:gap-4">
-          <div className="flex items-start sm:items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-gradient-to-br from-background via-background to-primary/5">
+      {/* Header modernisé */}
+      <div className="p-4 sm:p-6 border-b border-border/50 bg-card/80 backdrop-blur-sm">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
               {/* Mobile sidebar toggle */}
               <Button
                 variant="ghost"
@@ -128,19 +129,24 @@ const Messagerie = () => {
               >
                 {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
-              <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">Messagerie</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1 hidden sm:block">
-                  Communiquez avec les formateurs, étudiants et l'administration
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg">
+                  <Mail className="h-5 w-5 text-primary-foreground" />
+                </div>
+                <div>
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">Messagerie</h1>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 hidden sm:block">
+                    Communiquez avec les formateurs, étudiants et l'administration
+                  </p>
+                </div>
               </div>
             </div>
             <Button 
               onClick={() => setIsNewMessageOpen(true)} 
-              className="gap-1.5 sm:gap-2 text-xs sm:text-sm shrink-0"
-              size="sm"
+              className="gap-2 shadow-lg hover:shadow-xl transition-all shrink-0"
+              size="default"
             >
-              <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <Sparkles className="h-4 w-4" />
               <span className="hidden sm:inline">Nouveau message</span>
               <span className="sm:hidden">Nouveau</span>
             </Button>
@@ -148,13 +154,13 @@ const Messagerie = () => {
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Input
-                placeholder="Rechercher..."
+                placeholder="Rechercher un message..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full text-sm"
+                className="w-full text-sm bg-background/50 border-border/50 focus:border-primary/50"
               />
             </div>
-            <Button variant="outline" size="icon" onClick={refetch} disabled={loading} className="shrink-0">
+            <Button variant="outline" size="icon" onClick={refetch} disabled={loading} className="shrink-0 bg-background/50">
               <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
             </Button>
           </div>
@@ -165,67 +171,72 @@ const Messagerie = () => {
         {/* Mobile Overlay */}
         {isSidebarOpen && (
           <div 
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
             onClick={() => setIsSidebarOpen(false)}
           />
         )}
 
-        {/* Folders Sidebar */}
+        {/* Folders Sidebar - modernisé */}
         <div className={cn(
-          "absolute lg:relative z-50 lg:z-auto h-full w-64 border-r border-border bg-card overflow-y-auto transition-transform duration-300 ease-in-out",
+          "absolute lg:relative z-50 lg:z-auto h-full w-64 border-r border-border/50 bg-card/95 backdrop-blur-sm overflow-y-auto transition-transform duration-300 ease-in-out",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}>
-          <div className="p-2">
-            <div className="flex items-center justify-between mb-2 lg:hidden">
-              <span className="text-sm font-medium text-muted-foreground px-2">Dossiers</span>
+          <div className="p-3">
+            <div className="flex items-center justify-between mb-3 lg:hidden">
+              <span className="text-sm font-semibold text-foreground px-2">Dossiers</span>
               <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            {folders.map((folder) => {
-              const Icon = folder.icon;
-              const isActive = selectedFolder === folder.id;
-              
-              return (
-                <button
-                  key={folder.id}
-                  onClick={() => handleFolderSelect(folder.id)}
-                  className={cn(
-                    'w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-left transition-colors mb-1',
-                    isActive 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'hover:bg-accent text-foreground'
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <Icon className="h-4 w-4" />
-                    <span className="text-sm font-medium">{folder.label}</span>
-                  </div>
-                  {folder.count > 0 && (
-                    <Badge 
-                      variant={isActive ? "secondary" : "outline"}
-                      className="text-xs"
-                    >
-                      {folder.count}
-                    </Badge>
-                  )}
-                </button>
-              );
-            })}
+            <div className="space-y-1">
+              {folders.map((folder) => {
+                const Icon = folder.icon;
+                const isActive = selectedFolder === folder.id;
+                
+                return (
+                  <button
+                    key={folder.id}
+                    onClick={() => handleFolderSelect(folder.id)}
+                    className={cn(
+                      'w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200',
+                      isActive 
+                        ? 'bg-primary text-primary-foreground shadow-md' 
+                        : 'hover:bg-accent/50 text-foreground hover:translate-x-1'
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className="h-4 w-4" />
+                      <span className="text-sm font-medium">{folder.label}</span>
+                    </div>
+                    {folder.count > 0 && (
+                      <Badge 
+                        variant={isActive ? "secondary" : "outline"}
+                        className={cn(
+                          "text-xs font-semibold",
+                          isActive && "bg-primary-foreground/20 text-primary-foreground border-none"
+                        )}
+                      >
+                        {folder.count}
+                      </Badge>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
         {/* Messages List / Detail */}
-        <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 overflow-hidden flex flex-col bg-background/30">
           {selectedMessage ? (
-            // Message Detail View
+            // Message Detail View - modernisé
             <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-6">
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => setSelectedMessageId(null)}
-                  className="gap-1"
+                  className="gap-2 hover:bg-accent/50"
                 >
                   <ChevronLeft className="h-4 w-4" />
                   Retour
@@ -234,58 +245,67 @@ const Messagerie = () => {
                   <Button 
                     size="sm" 
                     onClick={() => handleReply(selectedMessage)}
-                    className="gap-2"
+                    className="gap-2 shadow-md"
                   >
                     <Reply className="h-4 w-4" />
                     Répondre
                   </Button>
                 )}
               </div>
-              <div className="max-w-4xl">
-                {/* Sender info */}
+              <div className="max-w-4xl mx-auto">
+                {/* Sender info - card améliorée */}
                 {(() => {
                   const senderInfo = getSenderInfo(selectedMessage.sender_id);
                   return (
-                    <div className="flex items-center gap-3 mb-4 p-3 bg-muted/50 rounded-lg">
-                      <Avatar className="h-10 w-10">
+                    <Card className="flex items-center gap-4 mb-6 p-4 bg-gradient-to-r from-muted/50 to-muted/30 border-border/50 shadow-sm">
+                      <Avatar className="h-12 w-12 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
                         <AvatarImage src={senderInfo.photo || undefined} />
-                        <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                        <AvatarFallback className="bg-primary/10 text-primary font-semibold text-lg">
                           {senderInfo.initials}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <p className="font-medium text-sm">{senderInfo.name}</p>
-                        <p className="text-xs text-muted-foreground">{senderInfo.email}</p>
+                      <div className="flex-1">
+                        <p className="font-semibold text-foreground">{senderInfo.name}</p>
+                        <p className="text-sm text-muted-foreground">{senderInfo.email}</p>
                       </div>
-                    </div>
+                    </Card>
                   );
                 })()}
                 
-                <h2 className="text-lg sm:text-2xl font-bold mb-3 sm:mb-4">{selectedMessage.subject}</h2>
-                <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6">
-                  <span>
+                <h2 className="text-xl sm:text-2xl font-bold mb-4 text-foreground">{selectedMessage.subject}</h2>
+                <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-6">
+                  <span className="flex items-center gap-1.5 bg-muted/50 px-3 py-1 rounded-full">
+                    <Clock className="h-3.5 w-3.5" />
                     {formatDistanceToNow(new Date(selectedMessage.created_at), {
                       addSuffix: true,
                       locale: fr,
                     })}
                   </span>
                   {selectedMessage.attachment_count > 0 && (
-                    <span className="flex items-center gap-1">
-                      • <FileText className="h-3 w-3" />
+                    <span className="flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1 rounded-full">
+                      <FileText className="h-3.5 w-3.5" />
                       {selectedMessage.attachment_count} pièce(s) jointe(s)
                     </span>
                   )}
                 </div>
-                <div className="prose prose-sm max-w-none bg-card border rounded-lg p-4">
-                  <p className="whitespace-pre-wrap text-sm sm:text-base">{selectedMessage.content}</p>
-                </div>
+                
+                {/* Contenu du message */}
+                <Card className="bg-card border-border/50 shadow-sm overflow-hidden">
+                  <div className="p-6">
+                    <p className="whitespace-pre-wrap text-base leading-relaxed text-foreground/90">{selectedMessage.content}</p>
+                  </div>
+                </Card>
+                
+                {/* Pièces jointes avec viewer */}
+                <MessageAttachmentsViewer messageId={selectedMessage.id} />
                 
                 {/* Quick reply button at bottom */}
                 {selectedFolder === 'inbox' && (
-                  <div className="mt-6 pt-4 border-t">
+                  <div className="mt-8 pt-6 border-t border-border/50">
                     <Button 
                       onClick={() => handleReply(selectedMessage)}
-                      className="w-full sm:w-auto gap-2"
+                      className="w-full sm:w-auto gap-2 shadow-lg"
+                      size="lg"
                     >
                       <Reply className="h-4 w-4" />
                       Répondre à ce message
@@ -295,71 +315,80 @@ const Messagerie = () => {
               </div>
             </div>
           ) : (
-            // Messages List View
+            // Messages List View - modernisé
             <div className="flex-1 overflow-y-auto">
-              <div className="p-3 sm:p-4">
-                <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
-                  {folders.find(f => f.id === selectedFolder)?.label}
-                </h2>
+              <div className="p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg sm:text-xl font-semibold text-foreground">
+                    {folders.find(f => f.id === selectedFolder)?.label}
+                  </h2>
+                  <Badge variant="secondary" className="text-xs">
+                    {filteredMessages.length} message{filteredMessages.length !== 1 ? 's' : ''}
+                  </Badge>
+                </div>
                 
                 {loading ? (
-                  <div className="text-center py-8 sm:py-12 text-muted-foreground text-sm">
-                    Chargement des messages...
+                  <div className="text-center py-12">
+                    <RefreshCw className="h-8 w-8 mx-auto text-primary animate-spin mb-3" />
+                    <p className="text-muted-foreground">Chargement des messages...</p>
                   </div>
                 ) : filteredMessages.length === 0 ? (
-                  <div className="text-center py-8 sm:py-12">
-                    <Mail className="h-12 w-12 sm:h-16 sm:w-16 mx-auto text-muted-foreground mb-3 sm:mb-4 opacity-50" />
-                    <p className="text-lg sm:text-xl font-semibold mb-2">Aucun message</p>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Aucun message pour ce dossier.</p>
+                  <div className="text-center py-16">
+                    <div className="h-20 w-20 mx-auto bg-muted/50 rounded-full flex items-center justify-center mb-4">
+                      <Mail className="h-10 w-10 text-muted-foreground/50" />
+                    </div>
+                    <p className="text-xl font-semibold mb-2 text-foreground">Aucun message</p>
+                    <p className="text-sm text-muted-foreground">Aucun message dans ce dossier.</p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {filteredMessages.map((message) => {
                       const senderInfo = getSenderInfo(message.sender_id);
                       return (
                         <Card
                           key={message.id}
-                          className="p-3 sm:p-4 hover:shadow-md transition-shadow cursor-pointer"
+                          className="p-4 hover:shadow-lg transition-all duration-200 cursor-pointer border-border/50 hover:border-primary/30 bg-card/80 backdrop-blur-sm group"
                           onClick={() => setSelectedMessageId(message.id)}
                         >
-                          <div className="flex items-start gap-3">
-                            <Avatar className="h-9 w-9 shrink-0">
+                          <div className="flex items-start gap-4">
+                            <Avatar className="h-11 w-11 shrink-0 ring-2 ring-transparent group-hover:ring-primary/20 transition-all">
                               <AvatarImage src={senderInfo.photo || undefined} />
-                              <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+                              <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                                 {senderInfo.initials}
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
-                                <span className="font-medium text-sm truncate">{senderInfo.name}</span>
+                                <span className="font-semibold text-sm text-foreground truncate">{senderInfo.name}</span>
                                 {message.is_draft && (
-                                  <Badge variant="secondary" className="text-xs shrink-0">
+                                  <Badge variant="secondary" className="text-xs shrink-0 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                                     Brouillon
                                   </Badge>
                                 )}
                               </div>
-                              <h3 className="font-semibold text-foreground truncate text-sm sm:text-base mb-1">
+                              <h3 className="font-semibold text-foreground truncate text-base mb-1.5 group-hover:text-primary transition-colors">
                                 {message.subject}
                               </h3>
-                              <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 mb-1.5 sm:mb-2">
+                              <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                                 {message.content}
                               </p>
-                              <div className="flex items-center gap-2 sm:gap-3 text-xs text-muted-foreground">
-                                <span>
+                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
                                   {formatDistanceToNow(new Date(message.created_at), {
                                     addSuffix: true,
                                     locale: fr,
                                   })}
                                 </span>
                                 {message.attachment_count > 0 && (
-                                  <span className="flex items-center gap-1">
+                                  <span className="flex items-center gap-1 text-primary">
                                     <FileText className="h-3 w-3" />
-                                    <span className="hidden sm:inline">{message.attachment_count} pièce(s)</span>
-                                    <span className="sm:hidden">{message.attachment_count}</span>
+                                    {message.attachment_count}
                                   </span>
                                 )}
                               </div>
                             </div>
+                            <ChevronLeft className="h-5 w-5 text-muted-foreground/50 rotate-180 group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
                           </div>
                         </Card>
                       );
