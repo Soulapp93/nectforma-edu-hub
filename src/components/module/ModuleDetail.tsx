@@ -61,28 +61,28 @@ const ModuleDetail: React.FC<ModuleDetailProps> = ({ module, formationColor, onB
             <TabsList className="inline-flex flex-wrap gap-2 sm:gap-3 bg-transparent h-auto p-0 justify-center">
               <TabsTrigger 
                 value="content"
-                className="rounded-full border-2 border-primary text-primary bg-transparent hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary px-4 sm:px-6 py-2 text-sm font-medium transition-all"
+                className="rounded-full border-2 border-purple-500 text-purple-600 bg-white hover:bg-purple-50 data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:border-purple-500 px-5 sm:px-6 py-2.5 text-sm font-medium transition-all shadow-sm"
               >
                 <BookOpen className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Contenu</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="assignments"
-                className="rounded-full border-2 border-primary text-primary bg-transparent hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary px-4 sm:px-6 py-2 text-sm font-medium transition-all"
+                className="rounded-full border-2 border-purple-500 text-purple-600 bg-white hover:bg-purple-50 data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:border-purple-500 px-5 sm:px-6 py-2.5 text-sm font-medium transition-all shadow-sm"
               >
                 <FileText className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Devoirs</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="corrections"
-                className="rounded-full border-2 border-primary text-primary bg-transparent hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary px-4 sm:px-6 py-2 text-sm font-medium transition-all"
+                className="rounded-full border-2 border-purple-500 text-purple-600 bg-white hover:bg-purple-50 data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:border-purple-500 px-5 sm:px-6 py-2.5 text-sm font-medium transition-all shadow-sm"
               >
                 <Edit className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Corr.</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="documents"
-                className="rounded-full border-2 border-primary text-primary bg-transparent hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary px-4 sm:px-6 py-2 text-sm font-medium transition-all"
+                className="rounded-full border-2 border-purple-500 text-purple-600 bg-white hover:bg-purple-50 data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:border-purple-500 px-5 sm:px-6 py-2.5 text-sm font-medium transition-all shadow-sm"
               >
                 <FolderOpen className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Docs</span>
