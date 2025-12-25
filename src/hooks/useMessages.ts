@@ -27,6 +27,16 @@ export const useMessages = () => {
     fetchMessages();
   }, []);
 
+  const markAsRead = async (messageId: string) => {
+    try {
+      await messageService.markAsRead(messageId);
+      await fetchMessages();
+    } catch (err) {
+      // Silently handle - not critical
+      console.error('Error marking as read:', err);
+    }
+  };
+
   const sendMessage = async (messageData: any) => {
     try {
       await messageService.createMessage(messageData);
@@ -132,6 +142,7 @@ export const useMessages = () => {
     loading,
     error,
     sendMessage,
+    markAsRead,
     toggleFavorite,
     toggleArchive,
     moveToTrash,

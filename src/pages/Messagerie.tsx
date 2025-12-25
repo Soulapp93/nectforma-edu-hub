@@ -59,7 +59,7 @@ const Messagerie = () => {
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
   
   const { 
-    messages, loading, refetch,
+    messages, loading, refetch, markAsRead,
     toggleFavorite, toggleArchive, moveToTrash, restoreFromTrash,
     permanentlyDelete, deleteSentMessage, restoreSentMessage,
     permanentlyDeleteSentMessage, forwardMessage
@@ -74,6 +74,9 @@ const Messagerie = () => {
     !m.recipientInfo?.is_deleted && 
     !m.recipientInfo?.is_archived
   );
+  // Count only unread messages for inbox badge
+  const unreadInboxCount = inboxMessages.filter(m => !m.recipientInfo?.is_read).length;
+  
   const sentMessages = messages.filter(m => 
     m.sender_id === userId && 
     !m.is_draft && 
@@ -95,12 +98,12 @@ const Messagerie = () => {
   );
 
   const folders = [
-    { id: 'inbox' as FolderType, label: 'Boîte de réception', icon: Inbox, count: inboxMessages.length },
-    { id: 'sent' as FolderType, label: 'Envoyés', icon: Send, count: sentMessages.length },
+    { id: 'inbox' as FolderType, label: 'Boîte de réception', icon: Inbox, count: unreadInboxCount },
+    { id: 'sent' as FolderType, label: 'Envoyés', icon: Send, count: 0 },
     { id: 'drafts' as FolderType, label: 'Brouillons', icon: FileText, count: draftMessages.length },
     { id: 'scheduled' as FolderType, label: 'Programmés', icon: Clock, count: scheduledMessages.length },
     { id: 'favorites' as FolderType, label: 'Favoris', icon: Heart, count: favoriteMessages.length },
-    { id: 'archived' as FolderType, label: 'Archives', icon: Archive, count: archivedMessages.length },
+    { id: 'archived' as FolderType, label: 'Archives', icon: Archive, count: 0 },
     { id: 'trash' as FolderType, label: 'Corbeille', icon: Trash2, count: trashMessages.length },
   ];
 
@@ -163,6 +166,14 @@ const Messagerie = () => {
     setSelectedFolder(folderId);
     setSelectedMessageId(null);
     setIsSidebarOpen(false);
+  };
+
+  const handleSelectMessage = async (message: typeof messages[0]) => {
+    setSelectedMessageId(message.id);
+    // Mark as read if it's a received message and not already read
+    if (message.sender_id !== userId && message.recipientInfo && !message.recipientInfo.is_read) {
+      await markAsRead(message.id);
+    }
   };
 
   const handleReply = (message: typeof selectedMessage) => {
@@ -658,7 +669,7 @@ const Messagerie = () => {
                         <Card
                           key={message.id}
                           className="p-4 hover:shadow-lg transition-all duration-200 cursor-pointer border-border/50 hover:border-primary/30 bg-card/80 backdrop-blur-sm group"
-                          onClick={() => setSelectedMessageId(message.id)}
+                          onClick={() => handleSelectMessage(message)}
                         >
                           <div className="flex items-start gap-4">
                             <Avatar className="h-11 w-11 shrink-0 ring-2 ring-transparent group-hover:ring-primary/20 transition-all">
