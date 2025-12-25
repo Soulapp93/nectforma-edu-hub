@@ -56,39 +56,37 @@ const ModuleDetail: React.FC<ModuleDetailProps> = ({ module, formationColor, onB
       {/* Content Tabs */}
       <div className="px-4 py-4">
         <Tabs defaultValue="content" className="space-y-4">
-          {/* Tab buttons with rounded outline design */}
-          <div className="flex justify-center">
-            <TabsList className="inline-flex flex-wrap gap-2 sm:gap-3 bg-transparent h-auto p-0 justify-center">
-              <TabsTrigger 
-                value="content"
-                className="rounded-full border-2 border-purple-500 text-purple-600 bg-white hover:bg-purple-50 data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:border-purple-500 px-5 sm:px-6 py-2.5 text-sm font-medium transition-all shadow-sm"
-              >
-                <BookOpen className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Contenu</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="assignments"
-                className="rounded-full border-2 border-purple-500 text-purple-600 bg-white hover:bg-purple-50 data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:border-purple-500 px-5 sm:px-6 py-2.5 text-sm font-medium transition-all shadow-sm"
-              >
-                <FileText className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Devoirs</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="corrections"
-                className="rounded-full border-2 border-purple-500 text-purple-600 bg-white hover:bg-purple-50 data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:border-purple-500 px-5 sm:px-6 py-2.5 text-sm font-medium transition-all shadow-sm"
-              >
-                <Edit className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Corr.</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="documents"
-                className="rounded-full border-2 border-purple-500 text-purple-600 bg-white hover:bg-purple-50 data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:border-purple-500 px-5 sm:px-6 py-2.5 text-sm font-medium transition-all shadow-sm"
-              >
-                <FolderOpen className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Docs</span>
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          {/* Tab buttons with rounded outline design - grid layout like reference */}
+          <TabsList className="grid grid-cols-2 gap-3 bg-transparent h-auto p-0 w-full max-w-md mx-auto">
+            <TabsTrigger 
+              value="content"
+              className="rounded-full border-2 border-[#8B5CF6] text-[#8B5CF6] bg-white hover:bg-purple-50 data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:border-[#8B5CF6] px-4 py-3 text-sm font-medium transition-all"
+            >
+              <BookOpen className="h-4 w-4 mr-2" />
+              Contenu
+            </TabsTrigger>
+            <TabsTrigger 
+              value="assignments"
+              className="rounded-full border-2 border-[#8B5CF6] text-[#8B5CF6] bg-white hover:bg-purple-50 data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:border-[#8B5CF6] px-4 py-3 text-sm font-medium transition-all"
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Devoirs
+            </TabsTrigger>
+            <TabsTrigger 
+              value="corrections"
+              className="rounded-full border-2 border-[#8B5CF6] text-[#8B5CF6] bg-white hover:bg-purple-50 data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:border-[#8B5CF6] px-4 py-3 text-sm font-medium transition-all"
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Corr.
+            </TabsTrigger>
+            <TabsTrigger 
+              value="documents"
+              className="rounded-full border-2 border-[#8B5CF6] text-[#8B5CF6] bg-white hover:bg-purple-50 data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:border-[#8B5CF6] px-4 py-3 text-sm font-medium transition-all"
+            >
+              <FolderOpen className="h-4 w-4 mr-2" />
+              Docs
+            </TabsTrigger>
+          </TabsList>
 
           <TabsContent value="content" className="mt-4">
             <ModuleContentTab moduleId={module.id} />
