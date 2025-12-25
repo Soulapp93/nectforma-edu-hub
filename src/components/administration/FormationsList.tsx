@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Filter, Grid3x3, List } from 'lucide-react';
+import { Search, Plus, Grid3x3, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LoadingState } from '@/components/ui/loading-state';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import CreateFormationModal from './CreateFormationModal';
 import EditFormationModal from './EditFormationModal';
 import FormationCard from './FormationCard';
@@ -164,28 +165,31 @@ const FormationsList: React.FC = () => {
                 />
               </div>
             </div>
-            <select 
-              value={selectedLevel}
-              onChange={(e) => setSelectedLevel(e.target.value)}
-              className="px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-            >
-              <option value="all">Tous les niveaux</option>
-              <option value="BAC+1">BAC+1</option>
-              <option value="BAC+2">BAC+2</option>
-              <option value="BAC+3">BAC+3</option>
-              <option value="BAC+4">BAC+4</option>
-              <option value="BAC+5">BAC+5</option>
-            </select>
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
-            >
-              <option value="all">Tous les statuts</option>
-              <option value="Actif">Actif</option>
-              <option value="Inactif">Inactif</option>
-              <option value="Brouillon">Brouillon</option>
-            </select>
+            <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+              <SelectTrigger className="w-full sm:w-[210px]">
+                <SelectValue placeholder="Tous les niveaux" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les niveaux</SelectItem>
+                <SelectItem value="BAC+1">BAC+1</SelectItem>
+                <SelectItem value="BAC+2">BAC+2</SelectItem>
+                <SelectItem value="BAC+3">BAC+3</SelectItem>
+                <SelectItem value="BAC+4">BAC+4</SelectItem>
+                <SelectItem value="BAC+5">BAC+5</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <SelectTrigger className="w-full sm:w-[210px]">
+                <SelectValue placeholder="Tous les statuts" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="Actif">Actif</SelectItem>
+                <SelectItem value="Inactif">Inactif</SelectItem>
+                <SelectItem value="Brouillon">Brouillon</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
