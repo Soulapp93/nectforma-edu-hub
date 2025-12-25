@@ -10,6 +10,8 @@ import { useFormations } from '@/hooks/useFormations';
 import { useInstructors } from '@/hooks/useInstructors';
 import { scheduleService } from '@/services/scheduleService';
 import { toast } from 'sonner';
+import { DatePicker } from '@/components/ui/date-picker';
+import { TimePicker } from '@/components/ui/time-picker';
 
 interface AddSlotModalProps {
   isOpen: boolean;
@@ -219,42 +221,38 @@ const AddSlotModal: React.FC<AddSlotModalProps> = ({
               </div>
             )}
 
-            {/* Date et heures */}
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="date" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                   Date *
                 </Label>
-                <Input
+                <DatePicker
                   id="date"
-                  type="date"
                   value={formData.date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                  className="h-11 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                  onChange={(value) => setFormData(prev => ({ ...prev, date: value }))}
+                  placeholder="Sélectionner"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="start_time" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                   Début *
                 </Label>
-                <Input
+                <TimePicker
                   id="start_time"
-                  type="time"
                   value={formData.start_time}
-                  onChange={(e) => setFormData(prev => ({ ...prev, start_time: e.target.value }))}
-                  className="h-11 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                  onChange={(value) => setFormData(prev => ({ ...prev, start_time: value }))}
+                  placeholder="Début"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="end_time" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                   Fin *
                 </Label>
-                <Input
+                <TimePicker
                   id="end_time"
-                  type="time"
                   value={formData.end_time}
-                  onChange={(e) => setFormData(prev => ({ ...prev, end_time: e.target.value }))}
-                  className="h-11 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                  onChange={(value) => setFormData(prev => ({ ...prev, end_time: value }))}
+                  placeholder="Fin"
                 />
               </div>
             </div>

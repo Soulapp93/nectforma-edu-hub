@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, User, Mail, Building, Users, UserCheck, Phone, MapPin, FileText, Calendar } from 'lucide-react';
+import { X, User, Mail, Building, Users, UserCheck, Phone, MapPin, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,8 @@ import { activationService } from '@/services/activationService';
 import { tutorService, CreateTutorData } from '@/services/tutorService';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DatePicker } from '@/components/ui/date-picker';
 
 interface SimplifiedUserModalProps {
   isOpen: boolean;
@@ -336,34 +338,38 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="role">Rôle</Label>
-                <select
-                  id="role"
+                <Select
                   value={formData.role}
-                  onChange={(e) => handleChange('role', e.target.value)}
+                  onValueChange={(value) => handleChange('role', value)}
                   disabled={!!preselectedRole && mode === 'create'}
-                  className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-                    !!preselectedRole && mode === 'create' ? 'opacity-60 cursor-not-allowed' : ''
-                  }`}
                 >
-                  <option value="Étudiant">Étudiant</option>
-                  <option value="Formateur">Formateur</option>
-                  <option value="Admin">Administrateur</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un rôle" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Étudiant">Étudiant</SelectItem>
+                    <SelectItem value="Formateur">Formateur</SelectItem>
+                    <SelectItem value="Admin">Administrateur</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="status">Statut</Label>
-                <select
-                  id="status"
+                <Select
                   value={formData.status}
-                  onChange={(e) => handleChange('status', e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  onValueChange={(value) => handleChange('status', value)}
                 >
-                  <option value="Actif">Actif</option>
-                  <option value="Inactif">Inactif</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un statut" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Actif">Actif</SelectItem>
+                    <SelectItem value="Inactif">Inactif</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -488,20 +494,22 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
                         />
                       </div>
 
-                      <div>
+                      <div className="space-y-2">
                         <Label htmlFor="tutor_contract_type">Type de contrat</Label>
-                        <select
-                          id="tutor_contract_type"
+                        <Select
                           value={tutorData.contract_type}
-                          onChange={(e) => handleTutorChange('contract_type', e.target.value)}
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          onValueChange={(value) => handleTutorChange('contract_type', value)}
                         >
-                          <option value="">Sélectionner</option>
-                          <option value="Apprentissage">Apprentissage</option>
-                          <option value="Professionnalisation">Professionnalisation</option>
-                          <option value="Stage">Stage</option>
-                          <option value="Autre">Autre</option>
-                        </select>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Apprentissage">Apprentissage</SelectItem>
+                            <SelectItem value="Professionnalisation">Professionnalisation</SelectItem>
+                            <SelectItem value="Stage">Stage</SelectItem>
+                            <SelectItem value="Autre">Autre</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
@@ -520,32 +528,24 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
+                      <div className="space-y-2">
                         <Label htmlFor="tutor_contract_start_date">Date de début</Label>
-                        <div className="relative">
-                          <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                          <Input
-                            id="tutor_contract_start_date"
-                            type="date"
-                            value={tutorData.contract_start_date}
-                            onChange={(e) => handleTutorChange('contract_start_date', e.target.value)}
-                            className="pl-10"
-                          />
-                        </div>
+                        <DatePicker
+                          id="tutor_contract_start_date"
+                          value={tutorData.contract_start_date}
+                          onChange={(value) => handleTutorChange('contract_start_date', value)}
+                          placeholder="Sélectionner une date"
+                        />
                       </div>
 
-                      <div>
+                      <div className="space-y-2">
                         <Label htmlFor="tutor_contract_end_date">Date de fin</Label>
-                        <div className="relative">
-                          <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                          <Input
-                            id="tutor_contract_end_date"
-                            type="date"
-                            value={tutorData.contract_end_date}
-                            onChange={(e) => handleTutorChange('contract_end_date', e.target.value)}
-                            className="pl-10"
-                          />
-                        </div>
+                        <DatePicker
+                          id="tutor_contract_end_date"
+                          value={tutorData.contract_end_date}
+                          onChange={(value) => handleTutorChange('contract_end_date', value)}
+                          placeholder="Sélectionner une date"
+                        />
                       </div>
                     </div>
                   </div>
