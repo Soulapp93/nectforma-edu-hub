@@ -203,10 +203,10 @@ const Sidebar = () => {
                 <p className="text-sm font-semibold text-white truncate">{userDisplayInfo.name}</p>
                 <p className="text-xs text-white/70">{userDisplayInfo.role}</p>
                 {userDisplayInfo.relationInfo && (
-                  <p className="text-xs text-white/60 mt-0.5 truncate">
+                  <p className="text-xs text-white/60 mt-0.5 truncate flex items-center gap-1">
                     {userDisplayInfo.relationInfo.type === 'tutor' 
-                      ? `🏢 ${userDisplayInfo.relationInfo.name}`
-                      : `👨‍🎓 ${userDisplayInfo.relationInfo.name}`
+                      ? <>👨‍🏫 Tuteur : {userDisplayInfo.relationInfo.name}</>
+                      : <>👨‍🎓 Apprenti : {userDisplayInfo.relationInfo.name}</>
                     }
                   </p>
                 )}
