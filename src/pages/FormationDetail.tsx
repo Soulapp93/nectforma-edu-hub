@@ -214,26 +214,34 @@ const FormationDetail = () => {
                     <AccordionContent className="px-0 pb-0">
                       <div className="border-t border-gray-200">
                         <Tabs defaultValue="content" className="w-full">
-                          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 bg-gray-50 p-1 rounded-none gap-1">
-                            <TabsTrigger value="content" className="data-[state=active]:bg-white text-xs sm:text-sm px-2 py-1.5">
-                              <BookOpen className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                              <span className="hidden sm:inline">Contenu</span>
-                              <span className="sm:hidden">Contenu</span>
+                          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-3 bg-transparent p-3">
+                            <TabsTrigger
+                              value="content"
+                              className="rounded-full border-2 border-primary bg-card text-primary shadow-sm hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary px-4 py-3 text-xs sm:text-sm font-medium"
+                            >
+                              <BookOpen className="h-4 w-4 mr-2" />
+                              Contenu
                             </TabsTrigger>
-                            <TabsTrigger value="assignments" className="data-[state=active]:bg-white text-xs sm:text-sm px-2 py-1.5">
-                              <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                              <span className="hidden sm:inline">Devoirs</span>
-                              <span className="sm:hidden">Devoirs</span>
+                            <TabsTrigger
+                              value="assignments"
+                              className="rounded-full border-2 border-primary bg-card text-primary shadow-sm hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary px-4 py-3 text-xs sm:text-sm font-medium"
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Devoirs
                             </TabsTrigger>
-                            <TabsTrigger value="corrections" className="data-[state=active]:bg-white text-xs sm:text-sm px-2 py-1.5">
-                              <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                              <span className="hidden sm:inline">Corrections</span>
-                              <span className="sm:hidden">Corr.</span>
+                            <TabsTrigger
+                              value="corrections"
+                              className="rounded-full border-2 border-primary bg-card text-primary shadow-sm hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary px-4 py-3 text-xs sm:text-sm font-medium"
+                            >
+                              <Users className="h-4 w-4 mr-2" />
+                              Corr.
                             </TabsTrigger>
-                            <TabsTrigger value="documents" className="data-[state=active]:bg-white text-xs sm:text-sm px-2 py-1.5">
-                              <BookOpen className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                              <span className="hidden sm:inline">Documents</span>
-                              <span className="sm:hidden">Docs</span>
+                            <TabsTrigger
+                              value="documents"
+                              className="rounded-full border-2 border-primary bg-card text-primary shadow-sm hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary px-4 py-3 text-xs sm:text-sm font-medium"
+                            >
+                              <BookOpen className="h-4 w-4 mr-2" />
+                              Docs
                             </TabsTrigger>
                           </TabsList>
                           
