@@ -48,22 +48,34 @@ const ModuleDetail: React.FC<ModuleDetailProps> = ({ module, formationColor, onB
       {/* Content Tabs */}
       <div className="px-6 py-6">
         <Tabs defaultValue="content" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="content">
+          <TabsList className="flex flex-wrap gap-2 bg-transparent h-auto p-0">
+            <TabsTrigger 
+              value="content"
+              className="rounded-full border-2 border-purple-500 text-purple-600 bg-transparent hover:bg-purple-50 data-[state=active]:bg-purple-500 data-[state=active]:text-white px-4 py-2"
+            >
               <BookOpen className="h-4 w-4 mr-2" />
-              Contenu du Module
+              <span className="hidden sm:inline">Contenu</span>
             </TabsTrigger>
-            <TabsTrigger value="assignments">
+            <TabsTrigger 
+              value="assignments"
+              className="rounded-full border-2 border-purple-500 text-purple-600 bg-transparent hover:bg-purple-50 data-[state=active]:bg-purple-500 data-[state=active]:text-white px-4 py-2"
+            >
               <FileText className="h-4 w-4 mr-2" />
-              Devoirs & Évaluations
+              <span className="hidden sm:inline">Devoirs</span>
             </TabsTrigger>
-            <TabsTrigger value="corrections">
+            <TabsTrigger 
+              value="corrections"
+              className="rounded-full border-2 border-purple-500 text-purple-600 bg-transparent hover:bg-purple-50 data-[state=active]:bg-purple-500 data-[state=active]:text-white px-4 py-2"
+            >
               <Edit className="h-4 w-4 mr-2" />
-              Corrections
+              <span className="hidden sm:inline">Corr.</span>
             </TabsTrigger>
-            <TabsTrigger value="documents">
+            <TabsTrigger 
+              value="documents"
+              className="rounded-full border-2 border-purple-500 text-purple-600 bg-transparent hover:bg-purple-50 data-[state=active]:bg-purple-500 data-[state=active]:text-white px-4 py-2"
+            >
               <FolderOpen className="h-4 w-4 mr-2" />
-              Documents
+              <span className="hidden sm:inline">Docs</span>
             </TabsTrigger>
           </TabsList>
 
