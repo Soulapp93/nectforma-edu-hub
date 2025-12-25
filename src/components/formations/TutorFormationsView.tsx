@@ -172,20 +172,22 @@ export const TutorFormationsView: React.FC = () => {
 
                   {/* Liste des apprentis */}
                   <div className="border-t border-border pt-2 sm:pt-3 mb-2 sm:mb-3">
-                    <span className="text-xs sm:text-sm font-medium text-foreground">
-                      <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 inline mr-1" />
-                      Mes apprentis :
-                    </span>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {formation.students.map((student: any) => (
-                        <span 
-                          key={student.id}
-                          className="text-[10px] sm:text-xs bg-muted text-muted-foreground px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full flex items-center gap-1"
-                        >
-                          <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                          {student.first_name} {student.last_name}
-                        </span>
-                      ))}
+                    <div className="flex items-start gap-1">
+                      <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground/70 flex-shrink-0 mt-0.5" />
+                      <div className="flex flex-col gap-1">
+                        {formation.students.map((student: any) => (
+                          <span 
+                            key={student.id}
+                            className="text-xs sm:text-sm text-foreground flex items-center gap-1.5"
+                          >
+                            <span className="font-medium">Apprenti :</span>
+                            <span className="flex items-center gap-1">
+                              <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                              {student.first_name} {student.last_name}
+                            </span>
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
