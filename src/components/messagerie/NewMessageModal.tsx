@@ -15,13 +15,21 @@ import { toast } from 'sonner';
 interface NewMessageModalProps {
   isOpen: boolean;
   onClose: () => void;
+  replyTo?: {
+    messageId: string;
+    subject: string;
+    senderName: string;
+    senderId: string;
+    originalContent: string;
+  };
 }
 
-const NewMessageModal = ({ isOpen, onClose }: NewMessageModalProps) => {
+const NewMessageModal = ({ isOpen, onClose, replyTo }: NewMessageModalProps) => {
   const [activeTab, setActiveTab] = useState('individual');
   const [recipient, setRecipient] = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
+  const [isReplyMode, setIsReplyMode] = useState(false);
   const [scheduleDelivery, setScheduleDelivery] = useState(false);
   const [scheduledDate, setScheduledDate] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -37,18 +45,35 @@ const NewMessageModal = ({ isOpen, onClose }: NewMessageModalProps) => {
   const { users } = useUsers();
   const { sendMessage } = useMessages();
 
+  // Initialize reply mode when replyTo changes
+  useEffect(() => {
+    if (replyTo && isOpen) {
+      setIsReplyMode(true);
+      setActiveTab('individual');
+      setSubject(replyTo.subject.startsWith('Re: ') ? replyTo.subject : `Re: ${replyTo.subject}`);
+      setRecipient(replyTo.senderName);
+      setSearchTerm(replyTo.senderName);
+      setMessage(`\n\n---\nMessage original de ${replyTo.senderName}:\n${replyTo.originalContent}`);
+      // Find user to set filtered users
+      const sender = users.find(u => u.id === replyTo.senderId);
+      if (sender) {
+        setFilteredUsers([sender]);
+      }
+    }
+  }, [replyTo, isOpen, users]);
+
   // Filter users based on search term for individual messages
   useEffect(() => {
-    if (activeTab === 'individual' && searchTerm) {
+    if (activeTab === 'individual' && searchTerm && !isReplyMode) {
       const filtered = users.filter(user => 
         `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredUsers(filtered.slice(0, 5)); // Limit to 5 suggestions
-    } else {
+    } else if (!isReplyMode) {
       setFilteredUsers([]);
     }
-  }, [searchTerm, users, activeTab]);
+  }, [searchTerm, users, activeTab, isReplyMode]);
 
   // Get instructors
   const instructors = users.filter(user => user.role === 'Formateur');
@@ -66,6 +91,7 @@ const NewMessageModal = ({ isOpen, onClose }: NewMessageModalProps) => {
     setAllFormations(false);
     setSearchTerm('');
     setSending(false);
+    setIsReplyMode(false);
   };
 
   const handleClose = () => {
@@ -90,15 +116,20 @@ const NewMessageModal = ({ isOpen, onClose }: NewMessageModalProps) => {
       let recipients: { type: 'user' | 'formation' | 'all_instructors'; ids?: string[] } = { type: 'user' };
 
       if (activeTab === 'individual') {
-        // Find selected user
-        const selectedUser = filteredUsers.find(user => 
-          `${user.first_name} ${user.last_name}` === recipient || user.email === recipient
-        );
-        if (!selectedUser) {
-          toast.error('Veuillez sélectionner un destinataire valide');
-          return;
+        // For reply mode, use the reply sender directly
+        if (isReplyMode && replyTo) {
+          recipients = { type: 'user', ids: [replyTo.senderId] };
+        } else {
+          // Find selected user
+          const selectedUser = filteredUsers.find(user => 
+            `${user.first_name} ${user.last_name}` === recipient || user.email === recipient
+          );
+          if (!selectedUser) {
+            toast.error('Veuillez sélectionner un destinataire valide');
+            return;
+          }
+          recipients = { type: 'user', ids: [selectedUser.id] };
         }
-        recipients = { type: 'user', ids: [selectedUser.id] };
       } else if (activeTab === 'groups') {
         if (!allFormations && selectedFormations.length === 0) {
           toast.error('Veuillez sélectionner au moins une formation');
@@ -181,7 +212,7 @@ const NewMessageModal = ({ isOpen, onClose }: NewMessageModalProps) => {
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2 text-base sm:text-lg">
-            <span>Nouveau message</span>
+            <span>{isReplyMode ? `Répondre à ${replyTo?.senderName}` : 'Nouveau message'}</span>
           </DialogTitle>
         </DialogHeader>
 
