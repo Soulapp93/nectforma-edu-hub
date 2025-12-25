@@ -1,6 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, BookOpen, User, Clock, Calendar } from 'lucide-react';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Formation {
   id?: number;
@@ -54,7 +60,7 @@ const FormationModal: React.FC<FormationModalProps> = ({ isOpen, onClose, onSave
     onClose();
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
@@ -62,15 +68,15 @@ const FormationModal: React.FC<FormationModalProps> = ({ isOpen, onClose, onSave
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-background rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-border">
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <h2 className="text-xl font-semibold text-foreground">
             {mode === 'create' ? 'Nouvelle formation' : 'Modifier la formation'}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 p-1"
+            className="text-muted-foreground hover:text-foreground p-1"
           >
             <X className="h-5 w-5" />
           </button>
@@ -78,124 +84,108 @@ const FormationModal: React.FC<FormationModalProps> = ({ isOpen, onClose, onSave
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                <BookOpen className="h-4 w-4 inline mr-2" />
+            <div className="space-y-2">
+              <Label htmlFor="title" className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4" />
                 Titre de la formation
-              </label>
-              <input
-                type="text"
+              </Label>
+              <Input
+                id="title"
                 name="title"
                 value={formData.title}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 required
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Niveau</label>
-              <select
-                name="level"
-                value={formData.level}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                <option value="BAC+1">BAC+1</option>
-                <option value="BAC+2">BAC+2</option>
-                <option value="BAC+3">BAC+3</option>
-                <option value="BAC+4">BAC+4</option>
-                <option value="BAC+5">BAC+5</option>
-              </select>
+            <div className="space-y-2">
+              <Label htmlFor="level">Niveau</Label>
+              <Select value={formData.level} onValueChange={(value) => setFormData(prev => ({ ...prev, level: value }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un niveau" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="BAC+1">BAC+1</SelectItem>
+                  <SelectItem value="BAC+2">BAC+2</SelectItem>
+                  <SelectItem value="BAC+3">BAC+3</SelectItem>
+                  <SelectItem value="BAC+4">BAC+4</SelectItem>
+                  <SelectItem value="BAC+5">BAC+5</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                <User className="h-4 w-4 inline mr-2" />
+            <div className="space-y-2">
+              <Label htmlFor="instructor" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
                 Formateur
-              </label>
-              <input
-                type="text"
+              </Label>
+              <Input
+                id="instructor"
                 name="instructor"
                 value={formData.instructor}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 required
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                <Clock className="h-4 w-4 inline mr-2" />
+            <div className="space-y-2">
+              <Label htmlFor="duration" className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
                 Durée (heures)
-              </label>
-              <input
+              </Label>
+              <Input
+                id="duration"
                 type="number"
                 name="duration"
                 value={formData.duration}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 required
               />
             </div>
 
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                <Calendar className="h-4 w-4 inline mr-2" />
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
                 Date de début
-              </label>
-              <input
-                type="date"
-                name="startDate"
+              </Label>
+              <DatePicker
                 value={formData.startDate}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                required
+                onChange={(value) => setFormData(prev => ({ ...prev, startDate: value }))}
+                placeholder="Sélectionner une date"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                <Calendar className="h-4 w-4 inline mr-2" />
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
                 Date de fin
-              </label>
-              <input
-                type="date"
-                name="endDate"
+              </Label>
+              <DatePicker
                 value={formData.endDate}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                required
+                onChange={(value) => setFormData(prev => ({ ...prev, endDate: value }))}
+                placeholder="Sélectionner une date"
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
               name="description"
               value={formData.description}
               onChange={handleInputChange}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           </div>
 
           <div className="flex justify-end space-x-4 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
+            <Button type="button" variant="outline" onClick={onClose}>
               Annuler
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-            >
+            </Button>
+            <Button type="submit">
               {mode === 'create' ? 'Créer' : 'Enregistrer'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

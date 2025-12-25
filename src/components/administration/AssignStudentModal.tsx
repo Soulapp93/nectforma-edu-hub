@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Loader2 } from 'lucide-react';
 import { Tutor } from '@/services/tutorService';
 import { useTutors } from '@/hooks/useTutors';
@@ -146,21 +146,21 @@ export const AssignStudentModal: React.FC<AssignStudentModalProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="contract_start_date">Date de début</Label>
-              <Input
+              <DatePicker
                 id="contract_start_date"
-                type="date"
                 value={formData.contract_start_date}
-                onChange={(e) => handleChange('contract_start_date', e.target.value)}
+                onChange={(value) => handleChange('contract_start_date', value)}
+                placeholder="Sélectionner une date"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="contract_end_date">Date de fin</Label>
-              <Input
+              <DatePicker
                 id="contract_end_date"
-                type="date"
                 value={formData.contract_end_date}
-                onChange={(e) => handleChange('contract_end_date', e.target.value)}
+                onChange={(value) => handleChange('contract_end_date', value)}
+                placeholder="Sélectionner une date"
               />
             </div>
           </div>
