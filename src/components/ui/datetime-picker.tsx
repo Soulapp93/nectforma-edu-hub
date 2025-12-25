@@ -99,8 +99,8 @@ export function DateTimePicker({
           {displayValue || <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <div className="flex flex-col sm:flex-row pointer-events-auto">
+      <PopoverContent className="w-auto max-w-[95vw] p-0" align="start" side="bottom" sideOffset={4}>
+        <div className="flex flex-col pointer-events-auto">
           <Calendar
             mode="single"
             selected={selectedDate}
@@ -110,19 +110,19 @@ export function DateTimePicker({
             locale={fr}
             className="p-3 pointer-events-auto"
           />
-          <div className="flex border-t sm:border-t-0 sm:border-l">
-            <div className="border-r">
-              <div className="px-3 py-2 text-sm font-medium text-center border-b bg-muted flex items-center gap-1">
+          <div className="flex border-t">
+            <div className="flex-1 border-r">
+              <div className="px-3 py-2 text-sm font-medium text-center border-b bg-muted flex items-center justify-center gap-1">
                 <Clock className="h-3 w-3" />
                 Heure
               </div>
-              <ScrollArea className="h-[200px]">
-                <div className="p-1">
+              <ScrollArea className="h-[120px]">
+                <div className="p-1 grid grid-cols-4 gap-1">
                   {hours.map((hour) => (
                     <Button
                       key={hour}
                       variant={selectedHour === hour ? "default" : "ghost"}
-                      className="w-full justify-center px-3 py-1.5 text-sm"
+                      className="justify-center px-2 py-1.5 text-sm h-8"
                       onClick={() => handleHourSelect(hour)}
                     >
                       {hour}
@@ -131,17 +131,17 @@ export function DateTimePicker({
                 </div>
               </ScrollArea>
             </div>
-            <div>
+            <div className="flex-1">
               <div className="px-3 py-2 text-sm font-medium text-center border-b bg-muted">
                 Min
               </div>
-              <ScrollArea className="h-[200px]">
-                <div className="p-1">
+              <ScrollArea className="h-[120px]">
+                <div className="p-1 grid grid-cols-2 gap-1">
                   {minutes.map((minute) => (
                     <Button
                       key={minute}
                       variant={selectedMinute === minute ? "default" : "ghost"}
-                      className="w-full justify-center px-3 py-1.5 text-sm"
+                      className="justify-center px-2 py-1.5 text-sm h-8"
                       onClick={() => handleMinuteSelect(minute)}
                     >
                       {minute}
