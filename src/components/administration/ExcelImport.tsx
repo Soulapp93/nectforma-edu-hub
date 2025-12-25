@@ -250,13 +250,13 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-      <div className="p-6 border-b border-gray-200">
-        <h2 className="text-xl font-semibold text-gray-900">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-background rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto border-2 border-primary/20">
+      <div className="p-6 border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent">
+        <h2 className="text-xl font-semibold text-foreground">
           Import Excel des {preselectedRole === 'Étudiant' ? 'étudiants' : preselectedRole === 'Formateur' ? 'formateurs' : 'utilisateurs'}
         </h2>
-        <p className="text-gray-600 mt-1">
+        <p className="text-muted-foreground mt-1">
           Importez plusieurs {preselectedRole === 'Étudiant' ? 'étudiants' : preselectedRole === 'Formateur' ? 'formateurs' : 'utilisateurs'} à partir d'un fichier Excel
         </p>
       </div>
@@ -264,26 +264,26 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
         <div className="p-6">
           {!file ? (
             <div className="text-center py-8">
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8">
-                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <div className="border-2 border-dashed border-primary/30 rounded-xl p-8 bg-primary/5 hover:bg-primary/10 transition-colors">
+                <FileText className="h-12 w-12 text-primary/60 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2">
                   Sélectionnez un fichier Excel
                 </h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-muted-foreground mb-4">
                   Formats acceptés : .xlsx, .xls
                 </p>
-                <div className="flex gap-4 justify-center">
+                <div className="flex gap-4 justify-center flex-wrap">
                   <Button
                     onClick={downloadTemplate}
                     variant="outline"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 rounded-xl border-2 border-primary/30 hover:border-primary/50 hover:bg-primary/10"
                   >
                     <Download className="h-4 w-4" />
                     Télécharger le modèle
                   </Button>
                   <Button
                     onClick={triggerFileSelect}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 rounded-xl"
                   >
                     <Upload className="h-4 w-4" />
                     Sélectionner un fichier
@@ -299,9 +299,9 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
               </div>
 
               {/* Instructions d'utilisation */}
-              <div className="mt-6 text-left bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-medium text-blue-900 mb-2">Instructions :</h4>
-                <ul className="text-sm text-blue-800 space-y-1">
+              <div className="mt-6 text-left bg-primary/5 p-4 rounded-xl border-2 border-primary/20">
+                <h4 className="font-medium text-primary mb-2">Instructions :</h4>
+                <ul className="text-sm text-primary/80 space-y-1">
                   <li>• Les colonnes requises sont : Prénom, Nom, Email{!preselectedRole && ', Rôle'}, Formation(s)</li>
                   <li>• Dans la colonne "Formation(s)", séparez les formations par des virgules</li>
                   <li>• Exemple : "Formation Web, Formation Mobile, Formation Design"</li>
@@ -315,10 +315,10 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
             </div>
           ) : (
             <div>
-              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="mb-4 p-4 bg-primary/5 border-2 border-primary/20 rounded-xl">
                 <div className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-blue-600" />
-                  <span className="font-medium text-blue-900">{file.name}</span>
+                  <FileText className="h-5 w-5 text-primary" />
+                  <span className="font-medium text-foreground">{file.name}</span>
                   <Button
                     variant="outline"
                     size="sm"
@@ -327,7 +327,7 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
                       setPreviewData([]);
                       setError(null);
                     }}
-                    className="ml-auto"
+                    className="ml-auto rounded-xl border-2 border-primary/30 hover:border-primary/50"
                   >
                     Changer de fichier
                   </Button>
@@ -336,39 +336,39 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
 
               {previewData.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  <h3 className="text-lg font-medium text-foreground mb-4">
                     Aperçu des données ({previewData.length} {preselectedRole === 'Étudiant' ? 'étudiants' : preselectedRole === 'Formateur' ? 'formateurs' : 'utilisateurs'})
                   </h3>
                   
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
-                       <thead className="bg-gray-50">
+                    <table className="min-w-full divide-y divide-border border-2 border-primary/20 rounded-xl overflow-hidden">
+                       <thead className="bg-muted/50">
                          <tr>
-                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                           <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                              Prénom
                            </th>
-                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                           <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                              Nom
                            </th>
-                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                           <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                              Email
                            </th>
-                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                           <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                              Rôle
                            </th>
-                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                           <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">
                              Formations
                            </th>
                          </tr>
                        </thead>
-                       <tbody className="bg-white divide-y divide-gray-200">
+                       <tbody className="bg-background divide-y divide-border">
                          {previewData.slice(0, 10).map((user: any, index) => (
-                           <tr key={index}>
-                             <td className="px-4 py-3 text-sm text-gray-900">{user.first_name}</td>
-                             <td className="px-4 py-3 text-sm text-gray-900">{user.last_name}</td>
-                             <td className="px-4 py-3 text-sm text-gray-900">{user.email}</td>
-                             <td className="px-4 py-3 text-sm text-gray-900">{user.role}</td>
-                             <td className="px-4 py-3 text-sm text-gray-900 max-w-xs truncate" title={user.formationIds}>
+                           <tr key={index} className="hover:bg-muted/30 transition-colors">
+                             <td className="px-4 py-3 text-sm text-foreground">{user.first_name}</td>
+                             <td className="px-4 py-3 text-sm text-foreground">{user.last_name}</td>
+                             <td className="px-4 py-3 text-sm text-foreground">{user.email}</td>
+                             <td className="px-4 py-3 text-sm text-foreground">{user.role}</td>
+                             <td className="px-4 py-3 text-sm text-foreground max-w-xs truncate" title={user.formationIds}>
                                {user.formationIds || '-'}
                              </td>
                            </tr>
@@ -376,7 +376,7 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
                        </tbody>
                     </table>
                     {previewData.length > 10 && (
-                      <p className="text-sm text-gray-500 mt-2 text-center">
+                      <p className="text-sm text-muted-foreground mt-2 text-center">
                         ... et {previewData.length - 10} utilisateurs de plus
                       </p>
                     )}
@@ -385,20 +385,21 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
               )}
 
               {error && (
-                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5 text-red-600" />
-                  <span className="text-red-800">{error}</span>
+                <div className="mt-4 p-4 bg-destructive/10 border-2 border-destructive/20 rounded-xl flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-destructive" />
+                  <span className="text-destructive">{error}</span>
                 </div>
               )}
             </div>
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+        <div className="px-6 py-4 border-t border-border/50 flex justify-end gap-3">
           <Button
             variant="outline"
             onClick={onClose}
             disabled={importing}
+            className="rounded-xl border-2 border-primary/30 hover:border-primary/50"
           >
             Annuler
           </Button>
@@ -406,7 +407,7 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
             <Button
               onClick={handleImport}
               disabled={importing}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 rounded-xl"
             >
               {importing ? (
                 <>
