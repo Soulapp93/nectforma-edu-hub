@@ -18,6 +18,7 @@ import { useUsers } from '@/hooks/useUsers';
 import { useMessages } from '@/hooks/useMessages';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { DateTimePicker } from '@/components/ui/datetime-picker';
 
 interface NewMessageModalProps {
   isOpen: boolean;
@@ -465,12 +466,10 @@ const NewMessageModal = ({ isOpen, onClose, replyTo }: NewMessageModalProps) => 
 
             {scheduleDelivery && (
               <div className="mt-4 pl-7">
-                <Input
-                  type="datetime-local"
+                <DateTimePicker
                   value={scheduledDate}
-                  onChange={(e) => setScheduledDate(e.target.value)}
-                  min={new Date().toISOString().slice(0, 16)}
-                  className="bg-background border-border/50"
+                  onChange={(value) => setScheduledDate(value)}
+                  placeholder="Sélectionner date et heure"
                 />
                 <p className="text-xs text-muted-foreground mt-2">
                   Le message sera envoyé automatiquement à la date sélectionnée

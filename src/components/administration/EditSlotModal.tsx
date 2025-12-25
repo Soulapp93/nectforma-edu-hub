@@ -9,6 +9,8 @@ import { ScheduleSlot, scheduleService } from '@/services/scheduleService';
 import { useFormations } from '@/hooks/useFormations';
 import { useInstructors } from '@/hooks/useInstructors';
 import { toast } from 'sonner';
+import { DatePicker } from '@/components/ui/date-picker';
+import { TimePicker } from '@/components/ui/time-picker';
 
 interface EditSlotModalProps {
   isOpen: boolean;
@@ -118,11 +120,11 @@ const EditSlotModal = ({ isOpen, onClose, onSuccess, slot, formationId }: EditSl
 
           <div className="space-y-2">
             <Label htmlFor="date">Date</Label>
-            <Input
+            <DatePicker
               id="date"
-              type="date"
               value={formData.date}
-              onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+              onChange={(value) => setFormData(prev => ({ ...prev, date: value }))}
+              placeholder="Sélectionner une date"
               required
             />
           </div>
@@ -130,23 +132,21 @@ const EditSlotModal = ({ isOpen, onClose, onSuccess, slot, formationId }: EditSl
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="start_time">Heure de début</Label>
-              <Input
+              <TimePicker
                 id="start_time"
-                type="time"
                 value={formData.start_time}
-                onChange={(e) => setFormData(prev => ({ ...prev, start_time: e.target.value }))}
-                required
+                onChange={(value) => setFormData(prev => ({ ...prev, start_time: value }))}
+                placeholder="Début"
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="end_time">Heure de fin</Label>
-              <Input
+              <TimePicker
                 id="end_time"
-                type="time"
                 value={formData.end_time}
-                onChange={(e) => setFormData(prev => ({ ...prev, end_time: e.target.value }))}
-                required
+                onChange={(value) => setFormData(prev => ({ ...prev, end_time: value }))}
+                placeholder="Fin"
               />
             </div>
           </div>

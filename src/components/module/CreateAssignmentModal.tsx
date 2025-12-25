@@ -6,6 +6,11 @@ import { assignmentService, Assignment } from '@/services/assignmentService';
 import { fileUploadService } from '@/services/fileUploadService';
 import FileUpload from '@/components/ui/file-upload';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { DateTimePicker } from '@/components/ui/datetime-picker';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface CreateAssignmentModalProps {
   isOpen: boolean;
@@ -151,39 +156,32 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
-            </label>
-            <textarea
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date d'échéance
-              </label>
-              <input
-                type="datetime-local"
+            <div className="space-y-2">
+              <Label>Date d'échéance</Label>
+              <DateTimePicker
                 value={formData.due_date}
-                onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onChange={(value) => setFormData({ ...formData, due_date: value })}
+                placeholder="Sélectionner date et heure"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Points maximum
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="max_points">Points maximum</Label>
+              <Input
+                id="max_points"
                 type="number"
                 value={formData.max_points}
                 onChange={(e) => setFormData({ ...formData, max_points: parseInt(e.target.value) || 0 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 min="1"
               />
             </div>

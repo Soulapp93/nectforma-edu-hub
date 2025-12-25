@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { X, BookOpen, Calendar, Save, Plus } from 'lucide-react';
+import { X, BookOpen, Save, Plus } from 'lucide-react';
 import ColorPalette from './ColorPalette';
 import ModuleForm, { ModuleFormData } from './ModuleForm';
 import { formationService, Formation } from '@/services/formationService';
 import { moduleService } from '@/services/moduleService';
 import { toast } from 'sonner';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 
 interface EditFormationModalProps {
   isOpen: boolean;
@@ -224,101 +230,83 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
               <h3 className="text-lg font-medium text-gray-900 mb-4">Informations générales</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Titre de la formation *
-                  </label>
-                  <input
-                    type="text"
+                  <Label htmlFor="title">Titre de la formation *</Label>
+                  <Input
+                    id="title"
                     name="title"
                     value={formData.title}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     required
                   />
                 </div>
-
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
-                  <textarea
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Niveau</label>
-                  <select
-                    name="level"
-                    value={formData.level}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  >
-                    <option value="BAC+1">BAC+1</option>
-                    <option value="BAC+2">BAC+2</option>
-                    <option value="BAC+3">BAC+3</option>
-                    <option value="BAC+4">BAC+4</option>
-                    <option value="BAC+5">BAC+5</option>
-                  </select>
+                <div className="space-y-2">
+                  <Label htmlFor="level">Niveau</Label>
+                  <Select value={formData.level} onValueChange={(value) => setFormData(prev => ({ ...prev, level: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="BAC+1">BAC+1</SelectItem>
+                      <SelectItem value="BAC+2">BAC+2</SelectItem>
+                      <SelectItem value="BAC+3">BAC+3</SelectItem>
+                      <SelectItem value="BAC+4">BAC+4</SelectItem>
+                      <SelectItem value="BAC+5">BAC+5</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  >
-                    <option value="Actif">Actif</option>
-                    <option value="Inactif">Inactif</option>
-                    <option value="Brouillon">Brouillon</option>
-                  </select>
+                <div className="space-y-2">
+                  <Label htmlFor="status">Statut</Label>
+                  <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Actif">Actif</SelectItem>
+                      <SelectItem value="Inactif">Inactif</SelectItem>
+                      <SelectItem value="Brouillon">Brouillon</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <Calendar className="h-4 w-4 inline mr-1" />
-                    Date de début
-                  </label>
-                  <input
-                    type="date"
-                    name="start_date"
+                <div className="space-y-2">
+                  <Label>Date de début</Label>
+                  <DatePicker
                     value={formData.start_date}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    onChange={(value) => setFormData(prev => ({ ...prev, start_date: value }))}
+                    placeholder="Sélectionner une date"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <Calendar className="h-4 w-4 inline mr-1" />
-                    Date de fin
-                  </label>
-                  <input
-                    type="date"
-                    name="end_date"
+                <div className="space-y-2">
+                  <Label>Date de fin</Label>
+                  <DatePicker
                     value={formData.end_date}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    onChange={(value) => setFormData(prev => ({ ...prev, end_date: value }))}
+                    placeholder="Sélectionner une date"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Durée (heures)
-                  </label>
-                  <input
+                <div className="space-y-2">
+                  <Label htmlFor="duration">Durée (heures)</Label>
+                  <Input
+                    id="duration"
                     type="number"
                     name="duration"
                     value={formData.duration}
                     onChange={handleChange}
                     min="0"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>
 

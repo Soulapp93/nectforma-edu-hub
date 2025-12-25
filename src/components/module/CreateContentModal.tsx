@@ -7,6 +7,9 @@ import { moduleDocumentService, ModuleDocument } from '@/services/moduleDocument
 import { assignmentService } from '@/services/assignmentService';
 import { fileUploadService } from '@/services/fileUploadService';
 import FileUpload from '@/components/ui/file-upload';
+import { DateTimePicker } from '@/components/ui/datetime-picker';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 interface CreateContentModalProps {
   isOpen: boolean;
@@ -328,26 +331,21 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
           {/* Champs spécifiques aux devoirs et évaluations */}
           {(formData.content_type === 'devoir' || formData.content_type === 'evaluation') && (
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Date d'échéance
-                </label>
-                <input
-                  type="datetime-local"
+              <div className="space-y-2">
+                <Label>Date d'échéance</Label>
+                <DateTimePicker
                   value={formData.due_date}
-                  onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={(value) => setFormData({ ...formData, due_date: value })}
+                  placeholder="Sélectionner date et heure"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Points maximum
-                </label>
-                <input
+              <div className="space-y-2">
+                <Label htmlFor="max_points">Points maximum</Label>
+                <Input
+                  id="max_points"
                   type="number"
                   value={formData.max_points}
                   onChange={(e) => setFormData({ ...formData, max_points: parseInt(e.target.value) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   min="1"
                 />
               </div>
