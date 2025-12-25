@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { UserCircle } from 'lucide-react';
 import ProfileSettings from '../components/compte/ProfileSettings';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { userService } from '@/services/userService';
 import { fileUploadService } from '@/services/fileUploadService';
 import { toast } from 'sonner';
+import { PageHeader } from '@/components/ui/page-header';
 
 const Compte = () => {
   const { userId } = useCurrentUser();
@@ -110,15 +112,13 @@ const Compte = () => {
     }
   };
 
-  const pageTitle = 'Mon Profil';
-  const pageDescription = 'Gérez vos informations personnelles et les paramètres de votre profil';
-
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{pageTitle}</h1>
-        <p className="text-gray-600">{pageDescription}</p>
-      </div>
+    <div className="p-4 sm:p-6 lg:p-8">
+      <PageHeader 
+        title="Mon Profil"
+        description="Gérez vos informations personnelles et les paramètres de votre profil"
+        icon={UserCircle}
+      />
 
       <div className="max-w-4xl">
         <ProfileSettings

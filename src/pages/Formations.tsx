@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Filter, BookOpen, Users, Clock, Star, Grid3x3, List } from 'lucide-react';
+import { Plus, Search, Filter, BookOpen, Users, Clock, Star, Grid3x3, List, GraduationCap } from 'lucide-react';
 import FormationCard from '../components/administration/FormationCard';
 import CreateFormationModal from '@/components/administration/CreateFormationModal';
 import EditFormationModal from '@/components/administration/EditFormationModal';
@@ -11,6 +11,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TutorFormationsView } from '@/components/formations/TutorFormationsView';
+import { PageHeader } from '@/components/ui/page-header';
 
 const Formations = () => {
   const { userRole } = useCurrentUser();
@@ -19,10 +20,11 @@ const Formations = () => {
   if (userRole === 'Tuteur') {
     return (
       <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 min-h-screen">
-        <div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-3">Formations Apprenti</h1>
-          <p className="text-base sm:text-lg text-gray-600">Suivez les formations de votre apprenti</p>
-        </div>
+        <PageHeader 
+          title="Formations Apprenti"
+          description="Suivez les formations de votre apprenti"
+          icon={GraduationCap}
+        />
         <TutorFormationsView />
       </div>
     );
@@ -136,12 +138,11 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 min-h-screen">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-3">Formations</h1>
-          <p className="text-base sm:text-lg text-gray-600">Découvrez notre catalogue de formations</p>
-        </div>
-      </div>
+      <PageHeader 
+        title="Formations"
+        description="Découvrez notre catalogue de formations"
+        icon={GraduationCap}
+      />
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sm:p-6 lg:p-8">

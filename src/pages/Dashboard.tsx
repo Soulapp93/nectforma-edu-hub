@@ -1,12 +1,12 @@
-
 import React, { useState } from 'react';
-import { Users, BookOpen, Calendar, TrendingUp, Clock, FileText, AlertCircle, UserCheck, UsersIcon, Trophy, User2 } from 'lucide-react';
+import { Users, BookOpen, Calendar, TrendingUp, Clock, FileText, AlertCircle, UserCheck, UsersIcon, Trophy, User2, LayoutDashboard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardCard from '../components/DashboardCard';
 import EnhancedDashboardCard from '../components/EnhancedDashboardCard';
 import DashboardFilters from '../components/DashboardFilters';
 import MissingTextBookEntriesModal from '../components/dashboard/MissingTextBookEntriesModal';
 import { useDashboardStats } from '../hooks/useDashboardStats';
+import { PageHeader } from '@/components/ui/page-header';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -85,10 +85,11 @@ const Dashboard = () => {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 lg:space-y-10 min-h-screen">
       {/* Header */}
-      <div className="mb-6 sm:mb-8 lg:mb-10">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2 sm:mb-3">Tableau de bord</h1>
-        <p className="text-base sm:text-lg text-muted-foreground">Bienvenue sur votre espace de gestion NECTFY</p>
-      </div>
+      <PageHeader 
+        title="Tableau de bord"
+        description="Bienvenue sur votre espace de gestion NECTFY"
+        icon={LayoutDashboard}
+      />
 
       {/* Filters */}
       <DashboardFilters 
