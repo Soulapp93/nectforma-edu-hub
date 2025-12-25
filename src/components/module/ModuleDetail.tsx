@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
-import { ArrowLeft, BookOpen, FileText, Edit, FolderOpen } from 'lucide-react';
+import React from 'react';
+import { ArrowLeft, BookOpen, FileText, Edit, FolderOpen, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
 import ModuleContentTab from './ModuleContentTab';
 import ModuleAssignmentsTab from './ModuleAssignmentsTab';
 import ModuleCorrectionsTab from './ModuleCorrectionsTab';
@@ -21,77 +22,87 @@ interface ModuleDetailProps {
 
 const ModuleDetail: React.FC<ModuleDetailProps> = ({ module, formationColor, onBack }) => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+    <div className="min-h-screen bg-background">
+      {/* Header compact */}
+      <div className="bg-card border-b border-border px-4 py-3">
         <Button 
           variant="ghost" 
           onClick={onBack}
-          className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
+          className="flex items-center text-muted-foreground hover:text-foreground mb-3 -ml-2"
+          size="sm"
         >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Retour aux modules
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Retour
         </Button>
         
-        <div 
-          className="rounded-xl p-6 text-white"
-          style={{ backgroundColor: formationColor }}
-        >
-          <h1 className="text-2xl font-bold mb-2">{module.title}</h1>
-          {module.description && (
-            <p className="text-white/90 mb-3">{module.description}</p>
-          )}
-          <span className="text-sm text-white/80">{module.duration_hours}h de formation</span>
-        </div>
+        {/* Module card header */}
+        <Card className="border-0 shadow-sm overflow-hidden">
+          <div 
+            className="p-4"
+            style={{ backgroundColor: formationColor }}
+          >
+            <h1 className="text-lg sm:text-xl font-bold text-white mb-1">{module.title}</h1>
+            {module.description && (
+              <p className="text-white/80 text-sm mb-2 line-clamp-2">{module.description}</p>
+            )}
+            <div className="flex items-center text-white/70 text-sm">
+              <Clock className="h-3.5 w-3.5 mr-1" />
+              {module.duration_hours}h
+            </div>
+          </div>
+        </Card>
       </div>
 
       {/* Content Tabs */}
-      <div className="px-6 py-6">
-        <Tabs defaultValue="content" className="space-y-6">
-          <TabsList className="flex flex-wrap gap-2 bg-transparent h-auto p-0">
-            <TabsTrigger 
-              value="content"
-              className="rounded-full border-2 border-purple-500 text-purple-600 bg-transparent hover:bg-purple-50 data-[state=active]:bg-purple-500 data-[state=active]:text-white px-4 py-2"
-            >
-              <BookOpen className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Contenu</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="assignments"
-              className="rounded-full border-2 border-purple-500 text-purple-600 bg-transparent hover:bg-purple-50 data-[state=active]:bg-purple-500 data-[state=active]:text-white px-4 py-2"
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Devoirs</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="corrections"
-              className="rounded-full border-2 border-purple-500 text-purple-600 bg-transparent hover:bg-purple-50 data-[state=active]:bg-purple-500 data-[state=active]:text-white px-4 py-2"
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Corr.</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="documents"
-              className="rounded-full border-2 border-purple-500 text-purple-600 bg-transparent hover:bg-purple-50 data-[state=active]:bg-purple-500 data-[state=active]:text-white px-4 py-2"
-            >
-              <FolderOpen className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Docs</span>
-            </TabsTrigger>
-          </TabsList>
+      <div className="px-4 py-4">
+        <Tabs defaultValue="content" className="space-y-4">
+          {/* Tab buttons with rounded outline design */}
+          <div className="flex justify-center">
+            <TabsList className="inline-flex flex-wrap gap-2 sm:gap-3 bg-transparent h-auto p-0 justify-center">
+              <TabsTrigger 
+                value="content"
+                className="rounded-full border-2 border-primary text-primary bg-transparent hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary px-4 sm:px-6 py-2 text-sm font-medium transition-all"
+              >
+                <BookOpen className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Contenu</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="assignments"
+                className="rounded-full border-2 border-primary text-primary bg-transparent hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary px-4 sm:px-6 py-2 text-sm font-medium transition-all"
+              >
+                <FileText className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Devoirs</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="corrections"
+                className="rounded-full border-2 border-primary text-primary bg-transparent hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary px-4 sm:px-6 py-2 text-sm font-medium transition-all"
+              >
+                <Edit className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Corr.</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="documents"
+                className="rounded-full border-2 border-primary text-primary bg-transparent hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary px-4 sm:px-6 py-2 text-sm font-medium transition-all"
+              >
+                <FolderOpen className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Docs</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          <TabsContent value="content">
+          <TabsContent value="content" className="mt-4">
             <ModuleContentTab moduleId={module.id} />
           </TabsContent>
 
-          <TabsContent value="assignments">
+          <TabsContent value="assignments" className="mt-4">
             <ModuleAssignmentsTab moduleId={module.id} />
           </TabsContent>
 
-          <TabsContent value="corrections">
+          <TabsContent value="corrections" className="mt-4">
             <ModuleCorrectionsTab moduleId={module.id} />
           </TabsContent>
 
-          <TabsContent value="documents">
+          <TabsContent value="documents" className="mt-4">
             <ModuleDocumentsTab moduleId={module.id} />
           </TabsContent>
         </Tabs>
