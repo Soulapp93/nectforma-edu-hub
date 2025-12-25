@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { messageService } from '@/services/messageService';
 import { fileUploadService } from '@/services/fileUploadService';
+import { DateTimePicker } from '@/components/ui/datetime-picker';
 
 interface SendMessageModalProps {
   isOpen: boolean;
@@ -207,11 +208,10 @@ const SendMessageModal: React.FC<SendMessageModalProps> = ({
                 {scheduleEnabled && (
                   <div className="flex items-center gap-2 pl-6">
                     <Clock className="h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="datetime-local"
+                    <DateTimePicker
                       value={scheduledDate}
-                      onChange={(e) => setScheduledDate(e.target.value)}
-                      min={new Date().toISOString().slice(0, 16)}
+                      onChange={(value) => setScheduledDate(value)}
+                      placeholder="Sélectionner date et heure"
                       className="max-w-xs"
                     />
                   </div>

@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { DatePicker } from '@/components/ui/date-picker';
+import { TimePicker } from '@/components/ui/time-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Plus, Clock, Calendar, User, BookOpen, Upload, X, FileText, Edit2, Trash2, AlertCircle } from 'lucide-react';
 import { RichTextEditor, sanitizeHtml } from '@/components/ui/rich-text-editor';
@@ -592,23 +593,21 @@ const TextBookDetail: React.FC = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="start_time">Heure début</Label>
-                <Input
+                <TimePicker
                   id="start_time"
-                  type="time"
                   value={newEntry.start_time}
-                  onChange={(e) => setNewEntry(prev => ({ ...prev, start_time: e.target.value }))}
-                  required
+                  onChange={(value) => setNewEntry(prev => ({ ...prev, start_time: value }))}
+                  placeholder="Début"
                 />
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="end_time">Heure fin</Label>
-                <Input
+                <TimePicker
                   id="end_time"
-                  type="time"
                   value={newEntry.end_time}
-                  onChange={(e) => setNewEntry(prev => ({ ...prev, end_time: e.target.value }))}
-                  required
+                  onChange={(value) => setNewEntry(prev => ({ ...prev, end_time: value }))}
+                  placeholder="Fin"
                 />
               </div>
             </div>
@@ -765,23 +764,21 @@ const TextBookDetail: React.FC = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="edit-start-time">Heure début</Label>
-                <Input
+                <TimePicker
                   id="edit-start-time"
-                  type="time"
                   value={editEntry.start_time}
-                  onChange={(e) => setEditEntry(prev => ({ ...prev, start_time: e.target.value }))}
-                  required
+                  onChange={(value) => setEditEntry(prev => ({ ...prev, start_time: value }))}
+                  placeholder="Début"
                 />
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="edit-end-time">Heure fin</Label>
-                <Input
+                <TimePicker
                   id="edit-end-time"
-                  type="time"
                   value={editEntry.end_time}
-                  onChange={(e) => setEditEntry(prev => ({ ...prev, end_time: e.target.value }))}
-                  required
+                  onChange={(value) => setEditEntry(prev => ({ ...prev, end_time: value }))}
+                  placeholder="Fin"
                 />
               </div>
             </div>

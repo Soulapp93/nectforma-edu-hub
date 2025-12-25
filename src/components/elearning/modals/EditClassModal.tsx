@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, Video } from 'lucide-react';
+import { Calendar, Clock, Video } from 'lucide-react';
 import { useUpdateVirtualClass, useInstructors, useFormationsForSelect } from '@/hooks/useVirtualClasses';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { moduleService } from '@/services/moduleService';
@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { DatePicker } from '@/components/ui/date-picker';
+import { TimePicker } from '@/components/ui/time-picker';
 
 interface EditClassModalProps {
   isOpen: boolean;
@@ -190,43 +192,41 @@ const EditClassModal: React.FC<EditClassModalProps> = ({ isOpen, onClose, virtua
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="date" className="flex items-center">
                   <Calendar className="h-4 w-4 mr-1" />
                   Date
                 </Label>
-                <Input
+                <DatePicker
                   id="date"
-                  type="date"
                   value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  onChange={(value) => setFormData({ ...formData, date: value })}
+                  placeholder="Sélectionner"
                   required
                 />
               </div>
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="start_time" className="flex items-center">
                   <Clock className="h-4 w-4 mr-1" />
                   Heure de début
                 </Label>
-                <Input
+                <TimePicker
                   id="start_time"
-                  type="time"
                   value={formData.start_time}
-                  onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
-                  required
+                  onChange={(value) => setFormData({ ...formData, start_time: value })}
+                  placeholder="Début"
                 />
               </div>
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="end_time" className="flex items-center">
                   <Clock className="h-4 w-4 mr-1" />
                   Heure de fin
                 </Label>
-                <Input
+                <TimePicker
                   id="end_time"
-                  type="time"
                   value={formData.end_time}
-                  onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
-                  required
+                  onChange={(value) => setFormData({ ...formData, end_time: value })}
+                  placeholder="Fin"
                 />
               </div>
             </div>
