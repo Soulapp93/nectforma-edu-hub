@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
-import { Mail, Send, Inbox, FileText, Clock, Heart, Archive, Trash2, RefreshCw, Menu, X, ChevronLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Mail, Send, Inbox, FileText, Clock, Heart, Archive, Trash2, RefreshCw, Menu, X, ChevronLeft, Reply, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useMessages } from '@/hooks/useMessages';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useUsers } from '@/hooks/useUsers';
 import NewMessageModal from '@/components/messagerie/NewMessageModal';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -13,14 +15,24 @@ import { cn } from '@/lib/utils';
 
 type FolderType = 'inbox' | 'sent' | 'drafts' | 'scheduled' | 'favorites' | 'archived' | 'trash';
 
+interface ReplyData {
+  messageId: string;
+  subject: string;
+  senderName: string;
+  senderId: string;
+  originalContent: string;
+}
+
 const Messagerie = () => {
   const [isNewMessageOpen, setIsNewMessageOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFolder, setSelectedFolder] = useState<FolderType>('inbox');
   const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [replyData, setReplyData] = useState<ReplyData | null>(null);
   const { messages, loading, refetch } = useMessages();
   const { userId } = useCurrentUser();
+  const { users } = useUsers();
 
   const folders = [
     { id: 'inbox' as FolderType, label: 'Boîte de réception', icon: Inbox, count: messages.filter(m => m.sender_id !== userId && !m.is_draft).length },
@@ -62,10 +74,42 @@ const Messagerie = () => {
   const filteredMessages = getFilteredMessages();
   const selectedMessage = selectedMessageId ? messages.find(m => m.id === selectedMessageId) : null;
 
+  // Get sender info for a message
+  const getSenderInfo = (senderId: string) => {
+    const sender = users.find(u => u.id === senderId);
+    if (sender) {
+      return {
+        name: `${sender.first_name} ${sender.last_name}`,
+        email: sender.email,
+        photo: sender.profile_photo_url,
+        initials: `${sender.first_name[0]}${sender.last_name[0]}`
+      };
+    }
+    return { name: 'Utilisateur inconnu', email: '', photo: null, initials: '?' };
+  };
+
   const handleFolderSelect = (folderId: FolderType) => {
     setSelectedFolder(folderId);
     setSelectedMessageId(null);
     setIsSidebarOpen(false);
+  };
+
+  const handleReply = (message: typeof selectedMessage) => {
+    if (!message) return;
+    const senderInfo = getSenderInfo(message.sender_id);
+    setReplyData({
+      messageId: message.id,
+      subject: message.subject,
+      senderName: senderInfo.name,
+      senderId: message.sender_id,
+      originalContent: message.content
+    });
+    setIsNewMessageOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsNewMessageOpen(false);
+    setReplyData(null);
   };
 
   return (
@@ -176,16 +220,47 @@ const Messagerie = () => {
           {selectedMessage ? (
             // Message Detail View
             <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setSelectedMessageId(null)}
-                className="mb-4 gap-1"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Retour
-              </Button>
+              <div className="flex items-center justify-between mb-4">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setSelectedMessageId(null)}
+                  className="gap-1"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Retour
+                </Button>
+                {selectedFolder === 'inbox' && (
+                  <Button 
+                    size="sm" 
+                    onClick={() => handleReply(selectedMessage)}
+                    className="gap-2"
+                  >
+                    <Reply className="h-4 w-4" />
+                    Répondre
+                  </Button>
+                )}
+              </div>
               <div className="max-w-4xl">
+                {/* Sender info */}
+                {(() => {
+                  const senderInfo = getSenderInfo(selectedMessage.sender_id);
+                  return (
+                    <div className="flex items-center gap-3 mb-4 p-3 bg-muted/50 rounded-lg">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={senderInfo.photo || undefined} />
+                        <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                          {senderInfo.initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium text-sm">{senderInfo.name}</p>
+                        <p className="text-xs text-muted-foreground">{senderInfo.email}</p>
+                      </div>
+                    </div>
+                  );
+                })()}
+                
                 <h2 className="text-lg sm:text-2xl font-bold mb-3 sm:mb-4">{selectedMessage.subject}</h2>
                 <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6">
                   <span>
@@ -201,9 +276,22 @@ const Messagerie = () => {
                     </span>
                   )}
                 </div>
-                <div className="prose prose-sm max-w-none">
+                <div className="prose prose-sm max-w-none bg-card border rounded-lg p-4">
                   <p className="whitespace-pre-wrap text-sm sm:text-base">{selectedMessage.content}</p>
                 </div>
+                
+                {/* Quick reply button at bottom */}
+                {selectedFolder === 'inbox' && (
+                  <div className="mt-6 pt-4 border-t">
+                    <Button 
+                      onClick={() => handleReply(selectedMessage)}
+                      className="w-full sm:w-auto gap-2"
+                    >
+                      <Reply className="h-4 w-4" />
+                      Répondre à ce message
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
@@ -226,46 +314,56 @@ const Messagerie = () => {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {filteredMessages.map((message) => (
-                      <Card
-                        key={message.id}
-                        className="p-3 sm:p-4 hover:shadow-md transition-shadow cursor-pointer"
-                        onClick={() => setSelectedMessageId(message.id)}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
-                              <h3 className="font-semibold text-foreground truncate text-sm sm:text-base">
+                    {filteredMessages.map((message) => {
+                      const senderInfo = getSenderInfo(message.sender_id);
+                      return (
+                        <Card
+                          key={message.id}
+                          className="p-3 sm:p-4 hover:shadow-md transition-shadow cursor-pointer"
+                          onClick={() => setSelectedMessageId(message.id)}
+                        >
+                          <div className="flex items-start gap-3">
+                            <Avatar className="h-9 w-9 shrink-0">
+                              <AvatarImage src={senderInfo.photo || undefined} />
+                              <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+                                {senderInfo.initials}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-medium text-sm truncate">{senderInfo.name}</span>
+                                {message.is_draft && (
+                                  <Badge variant="secondary" className="text-xs shrink-0">
+                                    Brouillon
+                                  </Badge>
+                                )}
+                              </div>
+                              <h3 className="font-semibold text-foreground truncate text-sm sm:text-base mb-1">
                                 {message.subject}
                               </h3>
-                              {message.is_draft && (
-                                <Badge variant="secondary" className="text-xs shrink-0">
-                                  Brouillon
-                                </Badge>
-                              )}
-                            </div>
-                            <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 mb-1.5 sm:mb-2">
-                              {message.content}
-                            </p>
-                            <div className="flex items-center gap-2 sm:gap-3 text-xs text-muted-foreground">
-                              <span>
-                                {formatDistanceToNow(new Date(message.created_at), {
-                                  addSuffix: true,
-                                  locale: fr,
-                                })}
-                              </span>
-                              {message.attachment_count > 0 && (
-                                <span className="flex items-center gap-1">
-                                  <FileText className="h-3 w-3" />
-                                  <span className="hidden sm:inline">{message.attachment_count} pièce(s)</span>
-                                  <span className="sm:hidden">{message.attachment_count}</span>
+                              <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 mb-1.5 sm:mb-2">
+                                {message.content}
+                              </p>
+                              <div className="flex items-center gap-2 sm:gap-3 text-xs text-muted-foreground">
+                                <span>
+                                  {formatDistanceToNow(new Date(message.created_at), {
+                                    addSuffix: true,
+                                    locale: fr,
+                                  })}
                                 </span>
-                              )}
+                                {message.attachment_count > 0 && (
+                                  <span className="flex items-center gap-1">
+                                    <FileText className="h-3 w-3" />
+                                    <span className="hidden sm:inline">{message.attachment_count} pièce(s)</span>
+                                    <span className="sm:hidden">{message.attachment_count}</span>
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </Card>
-                    ))}
+                        </Card>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -276,7 +374,8 @@ const Messagerie = () => {
 
       <NewMessageModal
         isOpen={isNewMessageOpen}
-        onClose={() => setIsNewMessageOpen(false)}
+        onClose={handleCloseModal}
+        replyTo={replyData || undefined}
       />
     </div>
   );
