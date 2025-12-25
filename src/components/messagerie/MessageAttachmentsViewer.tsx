@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Download, Eye, File, Image, Film, Music, Archive, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import UniversalFileViewer from '@/components/ui/viewers/UniversalFileViewer';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import MobileResponsiveFileViewer from '@/components/ui/viewers/MobileResponsiveFileViewer';
 
 interface Attachment {
   id: string;
@@ -151,18 +150,14 @@ const MessageAttachmentsViewer: React.FC<MessageAttachmentsViewerProps> = ({ mes
         </div>
       </div>
 
-      <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
-        <DialogContent className="max-w-6xl h-[90vh] p-0">
-          <DialogTitle className="sr-only">{selectedFile?.file_name}</DialogTitle>
-          {selectedFile && (
-            <UniversalFileViewer
-              fileUrl={selectedFile.file_url}
-              fileName={selectedFile.file_name}
-              onClose={() => setViewerOpen(false)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      {selectedFile && (
+        <MobileResponsiveFileViewer
+          fileUrl={selectedFile.file_url}
+          fileName={selectedFile.file_name}
+          isOpen={viewerOpen}
+          onClose={() => setViewerOpen(false)}
+        />
+      )}
     </>
   );
 };
