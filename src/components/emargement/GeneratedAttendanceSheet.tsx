@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,8 @@ interface Student {
   };
 }
 
+const MIN_REFRESH_MS = 120_000; // 2 minutes
+
 const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
   attendanceSheetId,
   onClose
@@ -52,11 +54,17 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [adminSignature, setAdminSignature] = useState<string | null>(null);
   const [establishmentInfo, setEstablishmentInfo] = useState<{ logo_url: string | null; name: string } | null>(null);
+
+  const isInteractionLocked = showInstructorSignModal;
+  const lastLoadAtRef = useRef<number>(0);
+  const refreshTimerRef = useRef<number | null>(null);
+  const queuedRefreshRef = useRef<boolean>(false);
+
   // Charger les données de la feuille d'émargement
   const loadAttendanceData = async () => {
     try {
       setLoading(true);
-      
+
       // Récupérer la feuille d'émargement avec les signatures
       const { data: sheetData, error: sheetError } = await supabase
         .from('attendance_sheets')
@@ -110,14 +118,14 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
           .select('establishment_id')
           .eq('id', sheetData.formation_id)
           .single();
-        
+
         if (!formationError && formationData?.establishment_id) {
           const { data: establishmentData, error: establishmentError } = await supabase
             .from('establishments')
             .select('logo_url, name')
             .eq('id', formationData.establishment_id)
             .single();
-          
+
           if (!establishmentError && establishmentData) {
             setEstablishmentInfo(establishmentData);
           }
@@ -128,7 +136,7 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
       // IMPORTANT: Le formateur ne doit JAMAIS apparaître dans la liste des participants
       let enrolledStudents: any[] = [];
       const instructorIdToExclude = sheetData.instructor_id;
-      
+
       // Essai 1: student_formations - filtrer strictement les étudiants
       const { data: studentFormations, error: sfError } = await supabase
         .from('student_formations')
@@ -188,15 +196,46 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
     }
   };
 
+  const scheduleRefresh = () => {
+    if (isInteractionLocked) {
+      queuedRefreshRef.current = true;
+      return;
+    }
+
+    const now = Date.now();
+    const elapsed = now - lastLoadAtRef.current;
+
+    const doRefresh = () => {
+      lastLoadAtRef.current = Date.now();
+      setLastUpdate(new Date());
+      loadAttendanceData();
+    };
+
+    if (elapsed >= MIN_REFRESH_MS || lastLoadAtRef.current === 0) {
+      doRefresh();
+      return;
+    }
+
+    if (refreshTimerRef.current) return;
+
+    const waitMs = Math.max(0, MIN_REFRESH_MS - elapsed);
+    refreshTimerRef.current = window.setTimeout(() => {
+      refreshTimerRef.current = null;
+      doRefresh();
+    }, waitMs);
+  };
+
   // Écouter les changements en temps réel (signatures + feuille d'émargement)
   useEffect(() => {
+    // Premier chargement immédiat
+    lastLoadAtRef.current = Date.now();
     loadAttendanceData();
 
     // Créer un channel unique pour cette feuille avec un timestamp pour éviter les conflits
     const channelName = `sheet_realtime_${attendanceSheetId}_${Date.now()}`;
-    
+
     console.log('📡 Setting up realtime channel:', channelName);
-    
+
     // S'abonner aux changements de signatures - SANS filtre pour contourner les problèmes RLS
     const channel = supabase
       .channel(channelName)
@@ -211,9 +250,7 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
           console.log('🔄 Signature INSERT detected:', payload);
           // Vérifier si c'est pour notre feuille
           if (payload.new && (payload.new as any).attendance_sheet_id === attendanceSheetId) {
-            console.log('✅ Signature pour cette feuille, rechargement...');
-            setLastUpdate(new Date());
-            loadAttendanceData();
+            scheduleRefresh();
           }
         }
       )
@@ -227,8 +264,7 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
         (payload) => {
           console.log('🔄 Signature UPDATE detected:', payload);
           if (payload.new && (payload.new as any).attendance_sheet_id === attendanceSheetId) {
-            setLastUpdate(new Date());
-            loadAttendanceData();
+            scheduleRefresh();
           }
         }
       )
@@ -242,8 +278,22 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
         (payload) => {
           console.log('🔄 Attendance sheet UPDATE detected:', payload);
           if (payload.new && (payload.new as any).id === attendanceSheetId) {
-            setLastUpdate(new Date());
-            loadAttendanceData();
+            // Ne recharger que si changement utile (réduit fortement les rafraîchissements)
+            const next = payload.new as any;
+            const prev = payload.old as any;
+
+            const meaningfulChange =
+              next.status !== prev?.status ||
+              next.is_open_for_signing !== prev?.is_open_for_signing ||
+              next.qr_code !== prev?.qr_code ||
+              next.validated_at !== prev?.validated_at ||
+              next.validated_by !== prev?.validated_by ||
+              next.closed_at !== prev?.closed_at ||
+              next.opened_at !== prev?.opened_at;
+
+            if (meaningfulChange) {
+              scheduleRefresh();
+            }
           }
         }
       )
@@ -252,18 +302,30 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
         setIsRealtimeConnected(status === 'SUBSCRIBED');
       });
 
-    // Polling de secours toutes les 5 secondes en cas de problème realtime
-    const pollingInterval = setInterval(() => {
-      console.log('🔄 Polling refresh...');
-      loadAttendanceData();
-    }, 5000);
+    // Polling de secours toutes les 2 minutes
+    const pollingInterval = window.setInterval(() => {
+      console.log('🔄 Polling refresh (2min)...');
+      scheduleRefresh();
+    }, MIN_REFRESH_MS);
 
     return () => {
       console.log('🔌 Cleaning up realtime channel:', channelName);
       supabase.removeChannel(channel);
-      clearInterval(pollingInterval);
+      window.clearInterval(pollingInterval);
+      if (refreshTimerRef.current) {
+        window.clearTimeout(refreshTimerRef.current);
+        refreshTimerRef.current = null;
+      }
     };
   }, [attendanceSheetId]);
+
+  // Reprise du refresh après interaction (signature formateur)
+  useEffect(() => {
+    if (!isInteractionLocked && queuedRefreshRef.current) {
+      queuedRefreshRef.current = false;
+      scheduleRefresh();
+    }
+  }, [isInteractionLocked]);
 
   const handlePrint = () => {
     window.print();
