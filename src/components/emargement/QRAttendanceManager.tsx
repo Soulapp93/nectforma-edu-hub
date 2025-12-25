@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { QrCode, Users, Send, CheckCircle, ArrowRight, PenTool } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,8 @@ interface AttendanceStats {
   canSendToAdmin: boolean;
 }
 
+const MIN_REFRESH_MS = 120_000; // 2 minutes
+
 const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
   attendanceSheet,
   instructorId,
@@ -45,6 +47,12 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [moduleInfo, setModuleInfo] = useState<{ title: string } | null>(null);
+
+  // Throttle helpers
+  const isInteractionLocked = showInstructorSignModal;
+  const lastLoadAtRef = useRef<number>(0);
+  const refreshTimerRef = useRef<number | null>(null);
+  const queuedRefreshRef = useRef<boolean>(false);
 
   // Charger les statistiques d'émargement
   const loadStats = async () => {
@@ -111,8 +119,44 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
     }
   };
 
+  // Fonction de throttle pour éviter les rafraîchissements trop fréquents
+  const scheduleRefresh = () => {
+    // Ne pas rafraîchir si une interaction (signature) est en cours
+    if (isInteractionLocked) {
+      queuedRefreshRef.current = true;
+      return;
+    }
+
+    const now = Date.now();
+    const elapsed = now - lastLoadAtRef.current;
+
+    const doRefresh = () => {
+      lastLoadAtRef.current = Date.now();
+      setLastUpdate(new Date());
+      loadStats();
+      onUpdate();
+    };
+
+    // Si assez de temps s'est écoulé, rafraîchir immédiatement
+    if (elapsed >= MIN_REFRESH_MS || lastLoadAtRef.current === 0) {
+      doRefresh();
+      return;
+    }
+
+    // Sinon, planifier un refresh différé (si pas déjà planifié)
+    if (refreshTimerRef.current) return;
+
+    const waitMs = Math.max(0, MIN_REFRESH_MS - elapsed);
+    refreshTimerRef.current = window.setTimeout(() => {
+      refreshTimerRef.current = null;
+      doRefresh();
+    }, waitMs);
+  };
+
   // Écouter les mises à jour temps réel
   useEffect(() => {
+    // Premier chargement immédiat
+    lastLoadAtRef.current = Date.now();
     loadStats();
 
     // Charger les informations du module
@@ -159,9 +203,7 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
         (payload) => {
           console.log('🔄 QRManager: Signature INSERT:', payload);
           if (payload.new && (payload.new as any).attendance_sheet_id === attendanceSheet.id) {
-            setLastUpdate(new Date());
-            loadStats();
-            onUpdate();
+            scheduleRefresh();
           }
         }
       )
@@ -174,9 +216,7 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
         },
         (payload) => {
           if (payload.new && (payload.new as any).attendance_sheet_id === attendanceSheet.id) {
-            setLastUpdate(new Date());
-            loadStats();
-            onUpdate();
+            scheduleRefresh();
           }
         }
       )
@@ -185,16 +225,29 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
         setIsRealtimeConnected(status === 'SUBSCRIBED');
       });
 
-    // Polling de secours toutes les 5 secondes
-    const pollingInterval = setInterval(() => {
-      loadStats();
-    }, 5000);
+    // Polling de secours toutes les 2 minutes
+    const pollingInterval = window.setInterval(() => {
+      console.log('🔄 QRManager: Polling refresh (2min)...');
+      scheduleRefresh();
+    }, MIN_REFRESH_MS);
 
     return () => {
       supabase.removeChannel(channel);
-      clearInterval(pollingInterval);
+      window.clearInterval(pollingInterval);
+      if (refreshTimerRef.current) {
+        window.clearTimeout(refreshTimerRef.current);
+        refreshTimerRef.current = null;
+      }
     };
   }, [attendanceSheet.id, instructorId]);
+
+  // Reprise du refresh après interaction (signature formateur)
+  useEffect(() => {
+    if (!isInteractionLocked && queuedRefreshRef.current) {
+      queuedRefreshRef.current = false;
+      scheduleRefresh();
+    }
+  }, [isInteractionLocked]);
 
   const handleStartQRSession = async () => {
     try {
