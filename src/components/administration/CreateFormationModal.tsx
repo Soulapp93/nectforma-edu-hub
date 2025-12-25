@@ -1,6 +1,8 @@
 
 import React, { useState } from 'react';
 import { X, BookOpen, Calendar, Plus } from 'lucide-react';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ModuleForm, { ModuleFormData } from './ModuleForm';
 import ColorPalette from './ColorPalette';
 import { formationService } from '@/services/formationService';
@@ -211,32 +213,32 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Niveau</label>
-                <select
-                  name="level"
-                  value={formData.level}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-input rounded-xl bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-                >
-                  <option value="BAC+1">BAC+1</option>
-                  <option value="BAC+2">BAC+2</option>
-                  <option value="BAC+3">BAC+3</option>
-                  <option value="BAC+4">BAC+4</option>
-                  <option value="BAC+5">BAC+5</option>
-                </select>
+                <Select value={formData.level} onValueChange={(v) => setFormData((p) => ({ ...p, level: v }))}>
+                  <SelectTrigger className="h-11 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="BAC+1">BAC+1</SelectItem>
+                    <SelectItem value="BAC+2">BAC+2</SelectItem>
+                    <SelectItem value="BAC+3">BAC+3</SelectItem>
+                    <SelectItem value="BAC+4">BAC+4</SelectItem>
+                    <SelectItem value="BAC+5">BAC+5</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Statut</label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-input rounded-xl bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
-                >
-                  <option value="Actif">Actif</option>
-                  <option value="Inactif">Inactif</option>
-                  <option value="Brouillon">Brouillon</option>
-                </select>
+                <Select value={formData.status} onValueChange={(v) => setFormData((p) => ({ ...p, status: v }))}>
+                  <SelectTrigger className="h-11 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Actif">Actif</SelectItem>
+                    <SelectItem value="Inactif">Inactif</SelectItem>
+                    <SelectItem value="Brouillon">Brouillon</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
@@ -244,12 +246,11 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                   <Calendar className="h-4 w-4 text-primary" />
                   Date de début (optionnel)
                 </label>
-                <input
-                  type="date"
+                <DatePicker
                   name="start_date"
                   value={formData.start_date}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-input rounded-xl bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                  onChange={(v) => setFormData((p) => ({ ...p, start_date: v }))}
+                  placeholder="jj/mm/aaaa"
                 />
                 <p className="text-xs text-muted-foreground mt-1.5">Si vide, la date d'aujourd'hui sera utilisée</p>
               </div>
@@ -259,12 +260,11 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                   <Calendar className="h-4 w-4 text-primary" />
                   Date de fin (optionnel)
                 </label>
-                <input
-                  type="date"
+                <DatePicker
                   name="end_date"
                   value={formData.end_date}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-input rounded-xl bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                  onChange={(v) => setFormData((p) => ({ ...p, end_date: v }))}
+                  placeholder="jj/mm/aaaa"
                 />
                 <p className="text-xs text-muted-foreground mt-1.5">Si vide, une date dans un an sera utilisée</p>
               </div>

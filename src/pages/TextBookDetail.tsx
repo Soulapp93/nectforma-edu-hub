@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Plus, Clock, Calendar, User, BookOpen, Upload, X, FileText, Edit2, Trash2, AlertCircle } from 'lucide-react';
 import { RichTextEditor, sanitizeHtml } from '@/components/ui/rich-text-editor';
@@ -579,11 +580,12 @@ const TextBookDetail: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="date">Date</Label>
-                <Input
+                <DatePicker
                   id="date"
-                  type="date"
+                  name="date"
                   value={newEntry.date}
-                  onChange={(e) => setNewEntry(prev => ({ ...prev, date: e.target.value }))}
+                  onChange={(v) => setNewEntry((prev) => ({ ...prev, date: v }))}
+                  placeholder="jj/mm/aaaa"
                   required
                 />
               </div>
@@ -751,11 +753,12 @@ const TextBookDetail: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="edit-date">Date</Label>
-                <Input
+                <DatePicker
                   id="edit-date"
-                  type="date"
+                  name="edit-date"
                   value={editEntry.date}
-                  onChange={(e) => setEditEntry(prev => ({ ...prev, date: e.target.value }))}
+                  onChange={(v) => setEditEntry((prev) => ({ ...prev, date: v }))}
+                  placeholder="jj/mm/aaaa"
                   required
                 />
               </div>

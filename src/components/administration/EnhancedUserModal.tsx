@@ -3,6 +3,8 @@ import { X, Mail, Phone, User, MapPin, Calendar, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { User as UserType, CreateUserData } from '@/services/userService';
 
 interface EnhancedUserModalProps {
@@ -174,14 +176,17 @@ const EnhancedUserModal: React.FC<EnhancedUserModalProps> = ({
             <div>
               <Label htmlFor="birth_date">Date de naissance</Label>
               <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="birth_date"
-                  type="date"
-                  value={formData.birth_date}
-                  onChange={(e) => handleChange('birth_date', e.target.value)}
-                  className="pl-10"
-                />
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <div className="pl-8">
+                  <DatePicker
+                    id="birth_date"
+                    name="birth_date"
+                    value={formData.birth_date}
+                    onChange={(v) => handleChange('birth_date', v)}
+                    placeholder="jj/mm/aaaa"
+                    className="w-full"
+                  />
+                </div>
               </div>
             </div>
 
@@ -281,30 +286,30 @@ const EnhancedUserModal: React.FC<EnhancedUserModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="role">Rôle</Label>
-                <select
-                  id="role"
-                  value={formData.role}
-                  onChange={(e) => handleChange('role', e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <option value="Étudiant">Étudiant</option>
-                  <option value="Formateur">Formateur</option>
-                  <option value="Admin">Administrateur</option>
-                </select>
+                <Select value={formData.role} onValueChange={(v) => handleChange('role', v)}>
+                  <SelectTrigger id="role">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Étudiant">Étudiant</SelectItem>
+                    <SelectItem value="Formateur">Formateur</SelectItem>
+                    <SelectItem value="Admin">Administrateur</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
                 <Label htmlFor="status">Statut</Label>
-                <select
-                  id="status"
-                  value={formData.status}
-                  onChange={(e) => handleChange('status', e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  <option value="En attente">En attente</option>
-                  <option value="Actif">Actif</option>
-                  <option value="Inactif">Inactif</option>
-                </select>
+                <Select value={formData.status} onValueChange={(v) => handleChange('status', v)}>
+                  <SelectTrigger id="status">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="En attente">En attente</SelectItem>
+                    <SelectItem value="Actif">Actif</SelectItem>
+                    <SelectItem value="Inactif">Inactif</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
