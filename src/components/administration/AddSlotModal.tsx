@@ -5,13 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { CalendarDays, Users, UserX, Info } from 'lucide-react';
+import { CalendarDays, Users, UserX, Info, Clock, MapPin, Palette } from 'lucide-react';
 import { useFormations } from '@/hooks/useFormations';
 import { useInstructors } from '@/hooks/useInstructors';
 import { scheduleService } from '@/services/scheduleService';
 import { toast } from 'sonner';
 import { DatePicker } from '@/components/ui/date-picker';
 import { TimePicker } from '@/components/ui/time-picker';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface AddSlotModalProps {
   isOpen: boolean;
@@ -64,12 +65,11 @@ const AddSlotModal: React.FC<AddSlotModalProps> = ({
         ...prev,
         date: selectedSlot.date,
         start_time: selectedSlot.time,
-        end_time: selectedSlot.time // Will be updated by user
+        end_time: selectedSlot.time
       }));
     }
   }, [selectedSlot]);
 
-  // Clear instructor and module when switching to autonomy mode
   React.useEffect(() => {
     if (formData.session_type === 'autonomie') {
       setFormData(prev => ({ ...prev, instructor_id: '', module_id: '', room: '' }));
@@ -79,7 +79,6 @@ const AddSlotModal: React.FC<AddSlotModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // For autonomy sessions, module is not required
     if (formData.session_type === 'encadree' && !formData.module_id) {
       toast.error('Veuillez sélectionner un module');
       return;
@@ -135,223 +134,235 @@ const AddSlotModal: React.FC<AddSlotModalProps> = ({
         onClose();
       }
     }}>
-      <DialogContent className="sm:max-w-lg overflow-hidden p-0">
-        {/* En-tête moderne avec gradient violet */}
-        <div className="bg-gradient-to-r from-violet-500 to-purple-600 text-white p-6 rounded-t-lg">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-              <CalendarDays className="h-5 w-5 text-white" />
+      <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-hidden p-0">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-primary to-accent text-primary-foreground p-4 sm:p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+              <CalendarDays className="h-5 w-5" />
             </div>
-            <div>
-              <DialogTitle className="text-xl font-bold text-white">Ajouter un créneau</DialogTitle>
-              <p className="text-violet-100 text-sm mt-1">
-                Créer un nouveau créneau dans votre emploi du temps
+            <div className="min-w-0">
+              <DialogTitle className="text-lg sm:text-xl font-bold text-white">Ajouter un créneau</DialogTitle>
+              <p className="text-white/80 text-xs sm:text-sm mt-0.5 truncate">
+                Créer un nouveau créneau
               </p>
             </div>
           </div>
         </div>
 
-        <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Type de session */}
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Type de session *
-              </Label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, session_type: 'encadree' }))}
-                  className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-2 ${
-                    formData.session_type === 'encadree'
-                      ? 'border-violet-500 bg-violet-50 dark:bg-violet-900/20'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-violet-300'
-                  }`}
-                >
-                  <Users className={`h-6 w-6 ${formData.session_type === 'encadree' ? 'text-violet-600' : 'text-gray-400'}`} />
-                  <span className={`font-medium text-sm ${formData.session_type === 'encadree' ? 'text-violet-700 dark:text-violet-300' : 'text-gray-600 dark:text-gray-400'}`}>
-                    Session encadrée
-                  </span>
-                  <span className="text-xs text-gray-500 text-center">Avec formateur • QR Code autorisé</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, session_type: 'autonomie' }))}
-                  className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-2 ${
-                    formData.session_type === 'autonomie'
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-blue-300'
-                  }`}
-                >
-                  <UserX className={`h-6 w-6 ${formData.session_type === 'autonomie' ? 'text-blue-600' : 'text-gray-400'}`} />
-                  <span className={`font-medium text-sm ${formData.session_type === 'autonomie' ? 'text-blue-700 dark:text-blue-300' : 'text-gray-600 dark:text-gray-400'}`}>
-                    Session en autonomie
-                  </span>
-                  <span className="text-xs text-gray-500 text-center">Sans formateur • Lien uniquement</span>
-                </button>
-              </div>
-              {formData.session_type === 'autonomie' && (
-                <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm">
-                  <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-blue-700 dark:text-blue-300">
-                    Les sessions en autonomie ne permettent pas l'utilisation du QR Code. L'émargement se fait uniquement via l'envoi de liens par l'administration.
-                  </span>
+        <ScrollArea className="max-h-[calc(90vh-140px)]">
+          <div className="p-4 sm:p-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Type de session */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-foreground">
+                  Type de session *
+                </Label>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, session_type: 'encadree' }))}
+                    className={`p-3 sm:p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-1.5 ${
+                      formData.session_type === 'encadree'
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border hover:border-primary/50 bg-card'
+                    }`}
+                  >
+                    <Users className={`h-5 w-5 sm:h-6 sm:w-6 ${formData.session_type === 'encadree' ? 'text-primary' : 'text-muted-foreground'}`} />
+                    <span className={`font-medium text-xs sm:text-sm ${formData.session_type === 'encadree' ? 'text-primary' : 'text-foreground'}`}>
+                      Session encadrée
+                    </span>
+                    <span className="text-[10px] sm:text-xs text-muted-foreground text-center leading-tight">
+                      Avec formateur • QR Code
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, session_type: 'autonomie' }))}
+                    className={`p-3 sm:p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-1.5 ${
+                      formData.session_type === 'autonomie'
+                        ? 'border-info bg-info/10'
+                        : 'border-border hover:border-info/50 bg-card'
+                    }`}
+                  >
+                    <UserX className={`h-5 w-5 sm:h-6 sm:w-6 ${formData.session_type === 'autonomie' ? 'text-info' : 'text-muted-foreground'}`} />
+                    <span className={`font-medium text-xs sm:text-sm ${formData.session_type === 'autonomie' ? 'text-info' : 'text-foreground'}`}>
+                      Session autonomie
+                    </span>
+                    <span className="text-[10px] sm:text-xs text-muted-foreground text-center leading-tight">
+                      Sans formateur • Lien
+                    </span>
+                  </button>
                 </div>
-              )}
-            </div>
+                {formData.session_type === 'autonomie' && (
+                  <div className="flex items-start gap-2 p-3 bg-info/10 rounded-lg text-xs sm:text-sm">
+                    <Info className="h-4 w-4 text-info mt-0.5 shrink-0" />
+                    <span className="text-info">
+                      Sessions en autonomie : émargement via lien uniquement.
+                    </span>
+                  </div>
+                )}
+              </div>
 
-            {/* Nom du module - uniquement pour sessions encadrées */}
-            {formData.session_type === 'encadree' && (
-              <div className="space-y-2">
-                <Label htmlFor="module" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  Nom du module *
-                </Label>
-                <Select value={formData.module_id} onValueChange={(value) => setFormData(prev => ({ ...prev, module_id: value }))}>
-                  <SelectTrigger className="h-11 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                    <SelectValue placeholder="Sélectionner un module" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {modules.map((module) => (
-                      <SelectItem key={module.id} value={module.id}>
-                        {module.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="date" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  Date *
-                </Label>
-                <DatePicker
-                  id="date"
-                  value={formData.date}
-                  onChange={(value) => setFormData(prev => ({ ...prev, date: value }))}
-                  placeholder="Sélectionner"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="start_time" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  Début *
-                </Label>
-                <TimePicker
-                  id="start_time"
-                  value={formData.start_time}
-                  onChange={(value) => setFormData(prev => ({ ...prev, start_time: value }))}
-                  placeholder="Début"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="end_time" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  Fin *
-                </Label>
-                <TimePicker
-                  id="end_time"
-                  value={formData.end_time}
-                  onChange={(value) => setFormData(prev => ({ ...prev, end_time: value }))}
-                  placeholder="Fin"
-                />
-              </div>
-            </div>
-
-            {/* Salle et Formateur - uniquement pour sessions encadrées */}
-            {formData.session_type === 'encadree' && (
-              <div className="grid grid-cols-2 gap-4">
+              {/* Module */}
+              {formData.session_type === 'encadree' && (
                 <div className="space-y-2">
-                  <Label htmlFor="room" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Salle
+                  <Label className="text-sm font-semibold text-foreground">
+                    Nom du module *
                   </Label>
-                  <Input
-                    id="room"
-                    value={formData.room}
-                    onChange={(e) => setFormData(prev => ({ ...prev, room: e.target.value }))}
-                    placeholder="Salle A1"
-                    className="h-11 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="instructor" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Formateur
-                  </Label>
-                  <Select value={formData.instructor_id} onValueChange={(value) => setFormData(prev => ({ ...prev, instructor_id: value }))}>
-                    <SelectTrigger className="h-11 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                      <SelectValue placeholder="Choisir un formateur" />
+                  <Select value={formData.module_id} onValueChange={(value) => setFormData(prev => ({ ...prev, module_id: value }))}>
+                    <SelectTrigger className="h-11 bg-card">
+                      <SelectValue placeholder="Sélectionner un module" />
                     </SelectTrigger>
                     <SelectContent>
-                      {instructors.map((instructor) => (
-                        <SelectItem key={instructor.id} value={instructor.id}>
-                          {instructor.first_name} {instructor.last_name}
+                      {modules.map((module) => (
+                        <SelectItem key={module.id} value={module.id}>
+                          {module.title}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
+              )}
+
+              {/* Date et heures */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  Date et horaires *
+                </Label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1.5">
+                    <span className="text-xs text-muted-foreground">Date</span>
+                    <DatePicker
+                      id="date"
+                      value={formData.date}
+                      onChange={(value) => setFormData(prev => ({ ...prev, date: value }))}
+                      placeholder="Sélectionner"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-3 sm:contents">
+                    <div className="space-y-1.5">
+                      <span className="text-xs text-muted-foreground">Début</span>
+                      <TimePicker
+                        id="start_time"
+                        value={formData.start_time}
+                        onChange={(value) => setFormData(prev => ({ ...prev, start_time: value }))}
+                        placeholder="00:00"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <span className="text-xs text-muted-foreground">Fin</span>
+                      <TimePicker
+                        id="end_time"
+                        value={formData.end_time}
+                        onChange={(value) => setFormData(prev => ({ ...prev, end_time: value }))}
+                        placeholder="00:00"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
-            )}
 
-            {/* Couleur du créneau */}
-            <div className="space-y-3">
-              <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Couleur du créneau
-              </Label>
-              <div className="flex space-x-3 p-2">
-                {colors.map((color) => (
-                  <button
-                    key={color.value}
-                    type="button"
-                    className={`w-10 h-10 rounded-xl transition-all duration-200 hover:scale-110 hover:shadow-lg ${
-                      color.bgClass
-                    } ${
-                      formData.color === color.value 
-                        ? 'ring-4 ring-gray-300 dark:ring-gray-600 scale-110' 
-                        : 'ring-2 ring-gray-200 dark:ring-gray-700 hover:ring-gray-300'
-                    }`}
-                    onClick={() => setFormData(prev => ({ ...prev, color: color.value }))}
-                    title={color.label}
-                  />
-                ))}
+              {/* Salle et Formateur */}
+              {formData.session_type === 'encadree' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      Salle
+                    </Label>
+                    <Input
+                      id="room"
+                      value={formData.room}
+                      onChange={(e) => setFormData(prev => ({ ...prev, room: e.target.value }))}
+                      placeholder="Ex: Salle A1"
+                      className="h-11 bg-card"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      Formateur
+                    </Label>
+                    <Select value={formData.instructor_id} onValueChange={(value) => setFormData(prev => ({ ...prev, instructor_id: value }))}>
+                      <SelectTrigger className="h-11 bg-card">
+                        <SelectValue placeholder="Choisir" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {instructors.map((instructor) => (
+                          <SelectItem key={instructor.id} value={instructor.id}>
+                            {instructor.first_name} {instructor.last_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+
+              {/* Couleur */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Palette className="h-4 w-4 text-muted-foreground" />
+                  Couleur
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {colors.map((color) => (
+                    <button
+                      key={color.value}
+                      type="button"
+                      className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl transition-all ${
+                        color.bgClass
+                      } ${
+                        formData.color === color.value 
+                          ? 'ring-2 ring-offset-2 ring-foreground/30 scale-105' 
+                          : 'hover:scale-105 opacity-80 hover:opacity-100'
+                      }`}
+                      onClick={() => setFormData(prev => ({ ...prev, color: color.value }))}
+                      title={color.label}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Notes complémentaires */}
-            <div className="space-y-2">
-              <Label htmlFor="notes" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Notes complémentaires
-              </Label>
-              <Textarea
-                id="notes"
-                value={formData.notes}
-                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder="Ajouter des informations supplémentaires sur ce cours..."
-                rows={3}
-                className="border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 resize-none"
-              />
-            </div>
+              {/* Notes */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-foreground">
+                  Notes (optionnel)
+                </Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Informations complémentaires..."
+                  rows={2}
+                  className="bg-card resize-none text-sm"
+                />
+              </div>
 
-            {/* Boutons d'action */}
-            <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={onClose}
-                className="px-6 h-11 border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
-              >
-                Annuler
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={loading}
-                className="px-6 h-11 bg-violet-600 hover:bg-violet-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-              >
-                {loading ? 'Ajout...' : 'Ajouter le créneau'}
-              </Button>
-            </div>
-          </form>
-        </div>
+              {/* Actions */}
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t border-border">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={onClose}
+                  className="h-11 px-6 rounded-full"
+                >
+                  Annuler
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={loading}
+                  className="h-11 px-6 rounded-full bg-primary hover:bg-primary/90"
+                >
+                  {loading ? 'Ajout...' : 'Ajouter le créneau'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

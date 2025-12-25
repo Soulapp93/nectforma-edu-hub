@@ -24,7 +24,7 @@ const minutes = ['00', '15', '30', '45']
 export function TimePicker({
   value,
   onChange,
-  placeholder = "Sélectionner l'heure",
+  placeholder = "Heure",
   className,
   disabled,
   id
@@ -68,51 +68,68 @@ export function TimePicker({
           variant="outline"
           disabled={disabled}
           className={cn(
-            "w-full justify-start text-left font-normal h-10",
+            "w-full justify-start text-left font-normal h-11 bg-card",
             !displayValue && "text-muted-foreground",
             className
           )}
         >
-          <Clock className="mr-2 h-4 w-4" />
-          {displayValue || <span>{placeholder}</span>}
+          <Clock className="mr-2 h-4 w-4 shrink-0" />
+          <span className="truncate">{displayValue || placeholder}</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <div className="flex pointer-events-auto">
-          <div className="border-r">
-            <div className="px-3 py-2 text-sm font-medium text-center border-b bg-muted">
+      <PopoverContent 
+        className="w-auto p-0 z-[100]" 
+        align="start"
+        side="bottom"
+        sideOffset={4}
+      >
+        <div className="flex pointer-events-auto bg-popover rounded-lg border shadow-lg">
+          {/* Hours */}
+          <div className="border-r border-border">
+            <div className="px-4 py-2 text-xs font-semibold text-center border-b border-border bg-muted/50 text-muted-foreground">
               Heure
             </div>
-            <ScrollArea className="h-[200px]">
-              <div className="p-1">
+            <ScrollArea className="h-[180px] w-[70px]">
+              <div className="p-1 space-y-0.5">
                 {hours.map((hour) => (
-                  <Button
+                  <button
                     key={hour}
-                    variant={selectedHour === hour ? "default" : "ghost"}
-                    className="w-full justify-center px-3 py-1.5 text-sm"
+                    type="button"
                     onClick={() => handleHourSelect(hour)}
+                    className={cn(
+                      "w-full px-3 py-2 text-sm rounded-md transition-colors text-center",
+                      selectedHour === hour 
+                        ? "bg-primary text-primary-foreground" 
+                        : "hover:bg-muted text-foreground"
+                    )}
                   >
                     {hour}
-                  </Button>
+                  </button>
                 ))}
               </div>
             </ScrollArea>
           </div>
+          {/* Minutes */}
           <div>
-            <div className="px-3 py-2 text-sm font-medium text-center border-b bg-muted">
+            <div className="px-4 py-2 text-xs font-semibold text-center border-b border-border bg-muted/50 text-muted-foreground">
               Min
             </div>
-            <ScrollArea className="h-[200px]">
-              <div className="p-1">
+            <ScrollArea className="h-[180px] w-[70px]">
+              <div className="p-1 space-y-0.5">
                 {minutes.map((minute) => (
-                  <Button
+                  <button
                     key={minute}
-                    variant={selectedMinute === minute ? "default" : "ghost"}
-                    className="w-full justify-center px-3 py-1.5 text-sm"
+                    type="button"
                     onClick={() => handleMinuteSelect(minute)}
+                    className={cn(
+                      "w-full px-3 py-2 text-sm rounded-md transition-colors text-center",
+                      selectedMinute === minute 
+                        ? "bg-primary text-primary-foreground" 
+                        : "hover:bg-muted text-foreground"
+                    )}
                   >
                     {minute}
-                  </Button>
+                  </button>
                 ))}
               </div>
             </ScrollArea>
