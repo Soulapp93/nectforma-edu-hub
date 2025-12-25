@@ -1036,7 +1036,11 @@ export type Database = {
       message_recipients: {
         Row: {
           created_at: string
+          deleted_at: string | null
           id: string
+          is_archived: boolean | null
+          is_deleted: boolean | null
+          is_favorite: boolean | null
           is_read: boolean | null
           message_id: string
           read_at: string | null
@@ -1045,7 +1049,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           id?: string
+          is_archived?: boolean | null
+          is_deleted?: boolean | null
+          is_favorite?: boolean | null
           is_read?: boolean | null
           message_id: string
           read_at?: string | null
@@ -1054,7 +1062,11 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           id?: string
+          is_archived?: boolean | null
+          is_deleted?: boolean | null
+          is_favorite?: boolean | null
           is_read?: boolean | null
           message_id?: string
           read_at?: string | null
@@ -1076,7 +1088,9 @@ export type Database = {
           attachment_count: number | null
           content: string
           created_at: string
+          deleted_at: string | null
           id: string
+          is_deleted: boolean | null
           is_draft: boolean
           scheduled_for: string | null
           sender_id: string
@@ -1087,7 +1101,9 @@ export type Database = {
           attachment_count?: number | null
           content: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
+          is_deleted?: boolean | null
           is_draft?: boolean
           scheduled_for?: string | null
           sender_id: string
@@ -1098,7 +1114,9 @@ export type Database = {
           attachment_count?: number | null
           content?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
+          is_deleted?: boolean | null
           is_draft?: boolean
           scheduled_for?: string | null
           sender_id?: string

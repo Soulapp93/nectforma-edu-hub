@@ -9,6 +9,8 @@ export interface Message {
   updated_at: string;
   scheduled_for?: string;
   is_draft: boolean;
+  is_deleted?: boolean;
+  deleted_at?: string;
   attachment_count: number;
 }
 
@@ -19,6 +21,10 @@ export interface MessageRecipient {
   recipient_type: 'user' | 'formation' | 'all_instructors';
   is_read: boolean;
   read_at?: string;
+  is_favorite: boolean;
+  is_archived: boolean;
+  is_deleted: boolean;
+  deleted_at?: string;
   created_at: string;
 }
 
@@ -249,7 +255,6 @@ export const messageService = {
           { message_id: message.id }
         );
       } else if (recipients.type === 'formation' && recipients.ids) {
-        // Notifier tous les utilisateurs des formations sélectionnées
         for (const formationId of recipients.ids) {
           await notificationService.notifyFormationUsers(
             formationId,
@@ -260,7 +265,6 @@ export const messageService = {
           );
         }
       } else if (recipients.type === 'user' && recipients.ids) {
-        // Notifier les utilisateurs individuellement
         for (const userId of recipients.ids) {
           await notificationService.notifyUser(
             userId,
@@ -273,7 +277,324 @@ export const messageService = {
       }
     } catch (error) {
       console.error('Error sending message notifications:', error);
-      // Ne pas faire échouer l'envoi du message si les notifications échouent
+    }
+  },
+
+  // Toggle favorite status
+  async toggleFavorite(messageId: string): Promise<boolean> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Non authentifié');
+
+      // Get current status
+      const { data: current } = await supabase
+        .from('message_recipients')
+        .select('is_favorite')
+        .eq('message_id', messageId)
+        .eq('recipient_id', user.id)
+        .single();
+
+      const newStatus = !current?.is_favorite;
+
+      const { error } = await supabase
+        .from('message_recipients')
+        .update({ is_favorite: newStatus })
+        .eq('message_id', messageId)
+        .eq('recipient_id', user.id);
+
+      if (error) throw error;
+      return newStatus;
+    } catch (error) {
+      console.error('Erreur lors du toggle favoris:', error);
+      throw error;
+    }
+  },
+
+  // Toggle archive status
+  async toggleArchive(messageId: string): Promise<boolean> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Non authentifié');
+
+      const { data: current } = await supabase
+        .from('message_recipients')
+        .select('is_archived')
+        .eq('message_id', messageId)
+        .eq('recipient_id', user.id)
+        .single();
+
+      const newStatus = !current?.is_archived;
+
+      const { error } = await supabase
+        .from('message_recipients')
+        .update({ is_archived: newStatus })
+        .eq('message_id', messageId)
+        .eq('recipient_id', user.id);
+
+      if (error) throw error;
+      return newStatus;
+    } catch (error) {
+      console.error('Erreur lors de l\'archivage:', error);
+      throw error;
+    }
+  },
+
+  // Move to trash (soft delete)
+  async moveToTrash(messageId: string): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Non authentifié');
+
+      const { error } = await supabase
+        .from('message_recipients')
+        .update({ 
+          is_deleted: true,
+          deleted_at: new Date().toISOString()
+        })
+        .eq('message_id', messageId)
+        .eq('recipient_id', user.id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      throw error;
+    }
+  },
+
+  // Restore from trash
+  async restoreFromTrash(messageId: string): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Non authentifié');
+
+      const { error } = await supabase
+        .from('message_recipients')
+        .update({ 
+          is_deleted: false,
+          deleted_at: null
+        })
+        .eq('message_id', messageId)
+        .eq('recipient_id', user.id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Erreur lors de la restauration:', error);
+      throw error;
+    }
+  },
+
+  // Permanently delete
+  async permanentlyDelete(messageId: string): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Non authentifié');
+
+      const { error } = await supabase
+        .from('message_recipients')
+        .delete()
+        .eq('message_id', messageId)
+        .eq('recipient_id', user.id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Erreur lors de la suppression définitive:', error);
+      throw error;
+    }
+  },
+
+  // Delete sent message (for sender)
+  async deleteSentMessage(messageId: string): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Non authentifié');
+
+      const { error } = await supabase
+        .from('messages')
+        .update({ 
+          is_deleted: true,
+          deleted_at: new Date().toISOString()
+        })
+        .eq('id', messageId)
+        .eq('sender_id', user.id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      throw error;
+    }
+  },
+
+  // Restore sent message
+  async restoreSentMessage(messageId: string): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Non authentifié');
+
+      const { error } = await supabase
+        .from('messages')
+        .update({ 
+          is_deleted: false,
+          deleted_at: null
+        })
+        .eq('id', messageId)
+        .eq('sender_id', user.id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Erreur lors de la restauration:', error);
+      throw error;
+    }
+  },
+
+  // Permanently delete sent message
+  async permanentlyDeleteSentMessage(messageId: string): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Non authentifié');
+
+      // Delete attachments first
+      await supabase
+        .from('message_attachments')
+        .delete()
+        .eq('message_id', messageId);
+
+      // Delete recipients
+      await supabase
+        .from('message_recipients')
+        .delete()
+        .eq('message_id', messageId);
+
+      // Delete message
+      const { error } = await supabase
+        .from('messages')
+        .delete()
+        .eq('id', messageId)
+        .eq('sender_id', user.id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Erreur lors de la suppression définitive:', error);
+      throw error;
+    }
+  },
+
+  // Get message recipient info for current user
+  async getMessageRecipientInfo(messageId: string): Promise<MessageRecipient | null> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data, error } = await supabase
+        .from('message_recipients')
+        .select('*')
+        .eq('message_id', messageId)
+        .eq('recipient_id', user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as MessageRecipient | null;
+    } catch (error) {
+      console.error('Erreur:', error);
+      return null;
+    }
+  },
+
+  // Forward message to other users
+  async forwardMessage(originalMessageId: string, recipientIds: string[]): Promise<Message> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Non authentifié');
+
+      // Get original message
+      const originalMessage = await this.getMessageById(originalMessageId);
+      if (!originalMessage) throw new Error('Message original non trouvé');
+
+      // Get original attachments
+      const { data: attachments } = await supabase
+        .from('message_attachments')
+        .select('*')
+        .eq('message_id', originalMessageId);
+
+      // Create forwarded message
+      const { data: newMessage, error: messageError } = await supabase
+        .from('messages')
+        .insert({
+          sender_id: user.id,
+          subject: `Tr: ${originalMessage.subject}`,
+          content: `---------- Message transféré ----------\n\n${originalMessage.content}`,
+          is_draft: false,
+          attachment_count: attachments?.length || 0
+        })
+        .select()
+        .single();
+
+      if (messageError) throw messageError;
+
+      // Create recipients
+      const recipients = recipientIds.map(id => ({
+        message_id: newMessage.id,
+        recipient_id: id,
+        recipient_type: 'user' as const
+      }));
+
+      const { error: recipientsError } = await supabase
+        .from('message_recipients')
+        .insert(recipients);
+
+      if (recipientsError) throw recipientsError;
+
+      // Copy attachments if any
+      if (attachments && attachments.length > 0) {
+        const newAttachments = attachments.map(att => ({
+          message_id: newMessage.id,
+          file_name: att.file_name,
+          file_url: att.file_url,
+          file_size: att.file_size,
+          content_type: att.content_type
+        }));
+
+        await supabase.from('message_attachments').insert(newAttachments);
+      }
+
+      // Notify recipients
+      await this.notifyMessageRecipients(newMessage, { type: 'user', ids: recipientIds });
+
+      return newMessage;
+    } catch (error) {
+      console.error('Erreur lors du transfert:', error);
+      throw error;
+    }
+  },
+
+  // Get messages with recipient info
+  async getMessagesWithRecipientInfo(): Promise<(Message & { recipientInfo?: MessageRecipient })[]> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data: messages, error: messagesError } = await supabase
+        .from('messages')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (messagesError) throw messagesError;
+
+      const { data: recipientInfos } = await supabase
+        .from('message_recipients')
+        .select('*')
+        .eq('recipient_id', user.id);
+
+      const recipientMap = new Map(
+        (recipientInfos || []).map(r => [r.message_id, r as MessageRecipient])
+      );
+
+      return (messages || []).map(msg => ({
+        ...msg,
+        recipientInfo: recipientMap.get(msg.id)
+      })) as (Message & { recipientInfo?: MessageRecipient })[];
+    } catch (error) {
+      console.error('Erreur:', error);
+      throw error;
     }
   }
 };
