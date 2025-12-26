@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Plus, Search, Filter, Upload, Download, MoreVertical, Edit, Trash2, Mail, X, ChevronDown, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -49,8 +50,8 @@ const EnhancedUsersList: React.FC = () => {
       user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesRole = selectedRole === '' || user.role === selectedRole;
-    const matchesStatus = selectedStatus === '' || user.status === selectedStatus;
+    const matchesRole = selectedRole === '' || selectedRole === 'all' || user.role === selectedRole;
+    const matchesStatus = selectedStatus === '' || selectedStatus === 'all' || user.status === selectedStatus;
     
     return matchesSearch && matchesRole && matchesStatus;
   });
@@ -432,27 +433,29 @@ const EnhancedUsersList: React.FC = () => {
           </div>
           
           <div className="grid grid-cols-2 gap-2 sm:gap-3">
-            <select
-              value={selectedRole}
-              onChange={(e) => setSelectedRole(e.target.value)}
-              className="flex h-9 sm:h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              <option value="">Tous les rôles</option>
-              <option value="Admin">Administrateur</option>
-              <option value="Formateur">Formateur</option>
-              <option value="Étudiant">Étudiant</option>
-            </select>
+            <Select value={selectedRole} onValueChange={setSelectedRole}>
+              <SelectTrigger className="w-full h-9 sm:h-10 text-xs sm:text-sm">
+                <SelectValue placeholder="Tous les rôles" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les rôles</SelectItem>
+                <SelectItem value="Admin">Administrateur</SelectItem>
+                <SelectItem value="Formateur">Formateur</SelectItem>
+                <SelectItem value="Étudiant">Étudiant</SelectItem>
+              </SelectContent>
+            </Select>
             
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="flex h-9 sm:h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-xs sm:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              <option value="">Tous les statuts</option>
-              <option value="Actif">Actif</option>
-              <option value="Inactif">Inactif</option>
-              <option value="En attente">En attente</option>
-            </select>
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <SelectTrigger className="w-full h-9 sm:h-10 text-xs sm:text-sm">
+                <SelectValue placeholder="Tous les statuts" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="Actif">Actif</SelectItem>
+                <SelectItem value="Inactif">Inactif</SelectItem>
+                <SelectItem value="En attente">En attente</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
