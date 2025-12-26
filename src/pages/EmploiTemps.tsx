@@ -546,7 +546,7 @@ const EmploiTemps = () => {
       return (
         <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 bg-card p-3 sm:p-4 rounded-lg border border-border shadow-sm">
           <div className="flex items-center gap-2">
-            <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+            <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
             <span className="text-xs sm:text-sm font-medium text-muted-foreground">
               Formation de {studentInfo.studentName} :
             </span>
