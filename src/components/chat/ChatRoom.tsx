@@ -162,29 +162,43 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-background to-muted/20">
+    <div className="flex flex-col h-full bg-gradient-to-b from-background via-background to-muted/10">
       {/* Header */}
-      <div className="border-b border-border/50 p-4 bg-card/50 backdrop-blur-sm">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <span className="text-lg font-bold text-primary">{groupName[0]}</span>
+      <div className="border-b border-primary/10 p-4 bg-gradient-to-r from-card via-card/95 to-card/90 backdrop-blur-md shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg ring-2 ring-primary/20">
+            <span className="text-xl font-bold text-primary-foreground">{groupName[0]}</span>
           </div>
-          <div>
-            <h2 className="text-lg font-semibold text-foreground">{groupName}</h2>
-            <p className="text-xs text-muted-foreground">{messages.length} messages</p>
+          <div className="flex-1">
+            <h2 className="text-lg font-bold text-foreground">{groupName}</h2>
+            <div className="flex items-center gap-2">
+              <span className="inline-block h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+              <p className="text-xs text-muted-foreground">{messages.length} messages</p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4 bg-transparent" ref={scrollRef}>
+      <ScrollArea className="flex-1 p-4 bg-gradient-to-b from-transparent to-muted/5" ref={scrollRef}>
         {loading && messages.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8">
-            Chargement des messages...
+          <div className="text-center py-12">
+            <div className="inline-block p-6 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/30 shadow-md">
+              <div className="h-12 w-12 mx-auto rounded-xl bg-primary/10 flex items-center justify-center mb-3 animate-pulse">
+                <Send className="h-6 w-6 text-primary" />
+              </div>
+              <p className="text-muted-foreground font-medium">Chargement des messages...</p>
+            </div>
           </div>
         ) : messages.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8">
-            Aucun message pour le moment. Soyez le premier à écrire !
+          <div className="text-center py-12">
+            <div className="inline-block p-8 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/30 shadow-md max-w-sm">
+              <div className="h-16 w-16 mx-auto rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-4">
+                <Send className="h-8 w-8 text-primary" />
+              </div>
+              <p className="text-foreground font-semibold mb-1">Aucun message</p>
+              <p className="text-muted-foreground text-sm">Soyez le premier à écrire !</p>
+            </div>
           </div>
         ) : (
           <div className="space-y-4">
@@ -431,23 +445,25 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
       </ScrollArea>
 
       {/* Input */}
-      <div className="border-t border-border/50 p-4 bg-card/50 backdrop-blur-sm">
+      <div className="border-t border-primary/10 p-4 bg-gradient-to-r from-card via-card/95 to-card/90 backdrop-blur-md shadow-lg">
         {/* Reply Preview */}
         {replyingTo && (
-          <div className="mb-3 flex items-start gap-2 bg-muted/50 px-3 py-2 rounded-lg border-l-2 border-primary">
-            <Reply className="h-4 w-4 mt-0.5 text-primary" />
+          <div className="mb-3 flex items-start gap-3 bg-gradient-to-r from-primary/10 to-primary/5 px-4 py-3 rounded-xl border-l-4 border-primary shadow-sm">
+            <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
+              <Reply className="h-4 w-4 text-primary" />
+            </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-foreground">
+              <p className="text-sm font-semibold text-foreground">
                 Répondre à {replyingTo.sender?.first_name || 'Utilisateur'}
               </p>
-              <p className="text-xs text-muted-foreground truncate">
+              <p className="text-xs text-muted-foreground truncate mt-0.5">
                 {replyingTo.content}
               </p>
             </div>
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6"
+              className="h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive"
               onClick={() => setReplyingTo(null)}
             >
               <X className="h-4 w-4" />
@@ -499,7 +515,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
           </div>
         )}
 
-        <div className="flex items-end gap-2">
+        <div className="flex items-end gap-3">
           <input
             ref={fileInputRef}
             type="file"
@@ -508,15 +524,15 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
             onChange={handleFileSelect}
           />
           <Button
-            variant="ghost"
+            variant="outline"
             size="icon"
-            className="shrink-0 h-10 w-10 rounded-full hover:bg-primary/10"
+            className="shrink-0 h-11 w-11 rounded-xl border-primary/20 hover:bg-primary/10 hover:border-primary/30 transition-all shadow-sm"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
           >
-            <Paperclip className="h-5 w-5" />
+            <Paperclip className="h-5 w-5 text-primary" />
           </Button>
-          <div className="flex-1 bg-background border border-border/50 rounded-2xl shadow-sm focus-within:ring-2 focus-within:ring-ring/20 transition-all">
+          <div className="flex-1 bg-background border border-primary/20 rounded-2xl shadow-md focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/40 transition-all">
             <Textarea
               ref={textareaRef}
               placeholder="Écrivez votre message..."
@@ -528,7 +544,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
                   handleSend();
                 }
               }}
-              className="min-h-[44px] max-h-[120px] resize-none border-0 bg-transparent px-4 py-3 focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="min-h-[48px] max-h-[120px] resize-none border-0 bg-transparent px-4 py-3.5 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60"
               disabled={uploading}
               rows={1}
             />
@@ -536,7 +552,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
           <Button
             onClick={handleSend}
             disabled={(!messageText.trim() && selectedFiles.length === 0) || uploading}
-            className="shrink-0 h-10 w-10 rounded-full p-0"
+            className="shrink-0 h-11 w-11 rounded-xl p-0 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 shadow-lg transition-all"
             size="icon"
           >
             <Send className="h-5 w-5" />
