@@ -134,11 +134,10 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Devoirs & Évaluations</h2>
+        <h2 className="text-xl font-bold text-foreground">Devoirs & Évaluations</h2>
         
-        {/* Bouton Créer - FORMATEUR et ADMIN */}
         {canCreateAssignment && (
-          <Button onClick={() => setShowCreateModal(true)}>
+          <Button onClick={() => setShowCreateModal(true)} className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 shadow-lg">
             <Plus className="h-4 w-4 mr-2" />
             Créer un devoir
           </Button>
@@ -155,7 +154,7 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
             return (
               <div 
                 key={assignment.id} 
-                className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                className="bg-card border border-primary/10 rounded-xl p-4 sm:p-5 hover:shadow-lg hover:border-primary/20 transition-all"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -267,10 +266,12 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
           })}
         </div>
       ) : (
-        <div className="text-center py-8">
-          <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun devoir</h3>
-          <p className="text-gray-600">
+        <div className="text-center py-10 sm:py-12">
+          <div className="inline-block p-6 rounded-2xl bg-muted/30 mb-4">
+            <FileText className="h-12 w-12 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold text-foreground mb-2">Aucun devoir</h3>
+          <p className="text-muted-foreground">
             {canCreateAssignment 
               ? "Créez votre premier devoir pour cette formation."
               : "Aucun devoir n'a encore été publié pour ce module."}
