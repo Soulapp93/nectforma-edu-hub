@@ -89,13 +89,13 @@ const FormationDetail = () => {
   const formationColor = formation.color || '#8B5CF6';
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Back Button */}
-      <div className="bg-white border-b border-gray-200 px-8 py-4">
+      <div className="bg-card/80 backdrop-blur-md border-b border-primary/10 px-8 py-4 shadow-sm">
         <Button 
           variant="ghost" 
           onClick={() => navigate(backNav.path)}
-          className="flex items-center text-gray-600 hover:text-gray-900"
+          className="flex items-center text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           {backNav.label}
@@ -160,34 +160,39 @@ const FormationDetail = () => {
 
       {/* Modules Section */}
       <div className="px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="p-4 sm:p-6 border-b border-gray-200">
+        <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-lg border border-primary/10">
+          <div className="p-4 sm:p-6 border-b border-primary/10">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Modules de la formation</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-foreground">Modules de la formation</h2>
             </div>
           </div>
           
           <div className="p-4 sm:p-6">
             {formation.formation_modules && formation.formation_modules.length > 0 ? (
-              <Accordion type="multiple" className="space-y-2">
+              <Accordion type="multiple" className="space-y-3">
                 {formation.formation_modules.map((module, index) => (
-                  <AccordionItem key={module.id} value={`module-${module.id}`} className="border border-gray-200 rounded-lg">
-                    <AccordionTrigger className="px-3 sm:px-4 py-3 sm:py-4 hover:bg-gray-50 rounded-lg [&[data-state=open]]:rounded-b-none">
-                      <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 w-full">
+                  <AccordionItem key={module.id} value={`module-${module.id}`} className="border border-primary/10 rounded-xl bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
+                    <AccordionTrigger className="px-4 sm:px-5 py-4 sm:py-5 hover:bg-muted/30 rounded-xl [&[data-state=open]]:rounded-b-none transition-colors">
+                      <div className="flex items-start sm:items-center space-x-4 w-full">
                         <div 
-                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center text-white font-semibold flex-shrink-0"
-                          style={{ backgroundColor: formationColor }}
+                          className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center text-white font-semibold flex-shrink-0 shadow-lg ring-2 ring-white/20"
+                          style={{ 
+                            background: `linear-gradient(135deg, ${formationColor}, ${formationColor}dd)`,
+                            boxShadow: `0 4px 20px ${formationColor}40`
+                          }}
                         >
-                          <BookOpen className="h-5 w-5 sm:h-6 sm:w-6" />
+                          <BookOpen className="h-6 w-6 sm:h-7 sm:w-7" />
                         </div>
                         <div className="text-left flex-1 min-w-0">
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-2">
                             <div className="min-w-0">
-                              <h3 className="font-semibold text-gray-900 text-sm sm:text-base break-words">{module.title}</h3>
-                              <div className="flex flex-wrap items-center text-xs sm:text-sm text-gray-600 mt-1 gap-1 sm:gap-0">
-                                <span className="mr-2">Formateur: Marie Dubois</span>
-                                <span className="flex items-center">
-                                  <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                              <h3 className="font-bold text-foreground text-sm sm:text-base break-words">{module.title}</h3>
+                              <div className="flex flex-wrap items-center text-xs sm:text-sm text-muted-foreground mt-1.5 gap-2 sm:gap-3">
+                                <span className="flex items-center text-primary font-medium">
+                                  Formateur: Marie Dubois
+                                </span>
+                                <span className="flex items-center bg-muted/50 px-2 py-0.5 rounded-full">
+                                  <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-primary" />
                                   <span>{module.duration_hours}h</span>
                                 </span>
                               </div>
@@ -200,7 +205,7 @@ const FormationDetail = () => {
                                   e.stopPropagation();
                                   setShowAttendanceModal(true);
                                 }}
-                                className="mt-2 sm:mt-0 sm:ml-4 shrink-0 text-xs sm:text-sm w-full sm:w-auto"
+                                className="mt-2 sm:mt-0 sm:ml-4 shrink-0 text-xs sm:text-sm w-full sm:w-auto border-primary/30 hover:bg-primary/5 hover:border-primary/50"
                               >
                                 <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                                 <span className="hidden sm:inline">Créer une session d'émargement</span>
@@ -212,26 +217,26 @@ const FormationDetail = () => {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="px-0 pb-0">
-                      <div className="border-t border-gray-200">
+                      <div className="border-t border-primary/10 bg-gradient-to-b from-muted/20 to-transparent">
                         <Tabs defaultValue="content" className="w-full">
-                          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-3 !bg-transparent !p-3 !h-auto !rounded-none !border-0 !shadow-none">
+                          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-3 !bg-transparent !p-4 !h-auto !rounded-none !border-0 !shadow-none">
                             <TabsTrigger
                               value="content"
-                              className="!rounded-full !border-2 !border-primary !bg-background !text-primary shadow-sm hover:bg-primary/5 hover:text-primary data-[state=active]:!bg-background data-[state=active]:!text-primary data-[state=active]:!border-primary data-[state=active]:shadow-sm px-4 py-3 text-xs sm:text-sm font-medium"
+                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-4 py-3 text-xs sm:text-sm font-medium transition-all"
                             >
                               <BookOpen className="h-4 w-4 mr-2" />
                               Contenu
                             </TabsTrigger>
                             <TabsTrigger
                               value="assignments"
-                              className="!rounded-full !border-2 !border-primary !bg-background !text-primary shadow-sm hover:bg-primary/5 hover:text-primary data-[state=active]:!bg-background data-[state=active]:!text-primary data-[state=active]:!border-primary data-[state=active]:shadow-sm px-4 py-3 text-xs sm:text-sm font-medium"
+                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-4 py-3 text-xs sm:text-sm font-medium transition-all"
                             >
                               <Edit className="h-4 w-4 mr-2" />
                               Devoirs
                             </TabsTrigger>
                             <TabsTrigger
                               value="corrections"
-                              className="!rounded-full !border-2 !border-primary !bg-background !text-primary shadow-sm hover:bg-primary/5 hover:text-primary data-[state=active]:!bg-background data-[state=active]:!text-primary data-[state=active]:!border-primary data-[state=active]:shadow-sm px-4 py-3 text-xs sm:text-sm font-medium"
+                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-4 py-3 text-xs sm:text-sm font-medium transition-all"
                             >
                               <Users className="h-4 w-4 mr-2" />
                               Corrections
@@ -239,14 +244,14 @@ const FormationDetail = () => {
                             
                             <TabsTrigger
                               value="documents"
-                              className="!rounded-full !border-2 !border-primary !bg-background !text-primary shadow-sm hover:bg-primary/5 hover:text-primary data-[state=active]:!bg-background data-[state=active]:!text-primary data-[state=active]:!border-primary data-[state=active]:shadow-sm px-4 py-3 text-xs sm:text-sm font-medium"
+                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-4 py-3 text-xs sm:text-sm font-medium transition-all"
                             >
                               <BookOpen className="h-4 w-4 mr-2" />
                               Documents
                             </TabsTrigger>
                           </TabsList>
                           
-                          <div className="p-4">
+                          <div className="p-4 sm:p-5 bg-card/30">
                             <TabsContent value="content" className="mt-0">
                               <ModuleContentTab moduleId={module.id} />
                             </TabsContent>
@@ -270,10 +275,12 @@ const FormationDetail = () => {
                 ))}
               </Accordion>
             ) : (
-              <div className="text-center py-8">
-                <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun module</h3>
-                <p className="text-gray-600">Cette formation n'a pas encore de modules.</p>
+              <div className="text-center py-12">
+                <div className="inline-block p-6 rounded-2xl bg-muted/30 mb-4">
+                  <GraduationCap className="h-12 w-12 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">Aucun module</h3>
+                <p className="text-muted-foreground">Cette formation n'a pas encore de modules.</p>
               </div>
             )}
           </div>

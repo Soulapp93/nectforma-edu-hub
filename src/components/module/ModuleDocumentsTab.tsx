@@ -131,8 +131,8 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-        <h2 className="text-lg sm:text-xl font-semibold">Documents</h2>
-        <Button onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
+        <h2 className="text-lg sm:text-xl font-bold text-foreground">Documents</h2>
+        <Button onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 shadow-lg">
           <Plus className="h-4 w-4 mr-2" />
           Ajouter un document
         </Button>
@@ -141,7 +141,7 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
       {documents.length > 0 ? (
         <div className="space-y-3 sm:space-y-4">
           {documents.map((document) => (
-            <div key={document.id} className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow">
+            <div key={document.id} className="bg-card border border-primary/10 rounded-xl p-4 sm:p-5 hover:shadow-lg hover:border-primary/20 transition-all">
               <div className="flex flex-col gap-3">
                 {/* Header avec titre et type */}
                 <div className="flex items-start gap-2 sm:gap-3">
@@ -216,10 +216,12 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
           ))}
         </div>
       ) : (
-        <div className="text-center py-6 sm:py-8">
-          <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
-          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">Aucun document</h3>
-          <p className="text-sm sm:text-base text-gray-600">Aucun document n'a encore été ajouté à ce module.</p>
+        <div className="text-center py-10 sm:py-12">
+          <div className="inline-block p-6 rounded-2xl bg-muted/30 mb-4">
+            <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground" />
+          </div>
+          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">Aucun document</h3>
+          <p className="text-sm sm:text-base text-muted-foreground">Aucun document n'a encore été ajouté à ce module.</p>
         </div>
       )}
 

@@ -141,9 +141,9 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-        <h2 className="text-lg sm:text-xl font-semibold">Contenu du Module</h2>
+        <h2 className="text-lg sm:text-xl font-bold text-foreground">Contenu du Module</h2>
         {canEdit && (
-          <Button onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
+          <Button onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 shadow-lg">
             <Plus className="h-4 w-4 mr-2" />
             Ajouter un élément
           </Button>
@@ -153,27 +153,29 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
       {contents.length > 0 ? (
         <div className="space-y-3 sm:space-y-4">
           {contents.map((content) => (
-            <div key={content.id} className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow">
+            <div key={content.id} className="bg-card border border-primary/10 rounded-xl p-4 sm:p-5 hover:shadow-lg hover:border-primary/20 transition-all">
               <div className="flex flex-col gap-3">
                 {/* Header avec titre et type */}
-                <div className="flex items-start gap-2 sm:gap-3">
-                  <span className="text-xl sm:text-2xl flex-shrink-0">{getFileIcon(content.file_name, content.content_type)}</span>
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl sm:text-2xl">{getFileIcon(content.file_name, content.content_type)}</span>
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-900 text-sm sm:text-base truncate">{content.title}</h3>
-                    <span className={`inline-block text-xs px-2 py-0.5 rounded-full mt-1 ${getContentTypeColor(content.content_type)}`}>
+                    <h3 className="font-semibold text-foreground text-sm sm:text-base truncate">{content.title}</h3>
+                    <span className={`inline-block text-xs px-2.5 py-1 rounded-full mt-1.5 font-medium ${getContentTypeColor(content.content_type)}`}>
                       {content.content_type}
                     </span>
                   </div>
                 </div>
                 
                 {content.description && (
-                  <p className="text-gray-600 text-xs sm:text-sm">{content.description}</p>
+                  <p className="text-muted-foreground text-xs sm:text-sm">{content.description}</p>
                 )}
                 
                 {content.content_type === 'lien' && content.file_url && (
                   <button
                     onClick={() => handleOpenLink(content.file_url, content.title)}
-                    className="flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer truncate"
+                    className="flex items-center text-xs sm:text-sm text-primary hover:text-primary/80 hover:underline cursor-pointer truncate"
                   >
                     <ExternalLink className="h-3 w-3 mr-1 flex-shrink-0" />
                     <span className="truncate">{content.file_url}</span>
@@ -181,20 +183,20 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
                 )}
                 
                 {content.content_type !== 'lien' && content.file_name && (
-                  <div className="flex items-center text-xs sm:text-sm text-gray-500">
-                    <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
+                  <div className="flex items-center text-xs sm:text-sm text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-lg w-fit">
+                    <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 flex-shrink-0 text-primary" />
                     <span className="truncate">{content.file_name}</span>
                   </div>
                 )}
                 
                 {/* Boutons d'action - responsive */}
-                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100">
+                <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-primary/10">
                   {content.content_type === 'lien' && content.file_url ? (
                     <Button 
                       size="sm" 
                       variant="default"
                       onClick={() => handleOpenLink(content.file_url, content.title)}
-                      className="flex-1 sm:flex-none text-xs sm:text-sm"
+                      className="flex-1 sm:flex-none text-xs sm:text-sm bg-gradient-to-r from-primary to-primary/90"
                     >
                       <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                       Accéder
@@ -205,7 +207,7 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
                         size="sm" 
                         variant="default"
                         onClick={() => handleOpenFile(content.file_url, content.file_name || 'fichier')}
-                        className="flex-1 sm:flex-none text-xs sm:text-sm"
+                        className="flex-1 sm:flex-none text-xs sm:text-sm bg-gradient-to-r from-primary to-primary/90"
                       >
                         <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                         <span>Voir</span>
@@ -214,7 +216,7 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
                         size="sm" 
                         variant="outline"
                         onClick={() => handleDownloadFile(content.file_url, content.file_name || 'fichier')}
-                        className="flex-1 sm:flex-none text-xs sm:text-sm"
+                        className="flex-1 sm:flex-none text-xs sm:text-sm border-primary/30 hover:bg-primary/5"
                       >
                         <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                         <span className="hidden sm:inline">Télécharger</span>
@@ -229,18 +231,18 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
                         size="sm" 
                         variant="ghost"
                         onClick={() => handleEdit(content)}
-                        className="h-8 w-8 p-0"
+                        className="h-9 w-9 p-0 hover:bg-primary/10"
                       >
-                        <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <Edit className="h-4 w-4 text-primary" />
                       </Button>
                       
                       <Button 
                         size="sm" 
                         variant="ghost" 
-                        className="text-red-600 h-8 w-8 p-0"
+                        className="text-destructive h-9 w-9 p-0 hover:bg-destructive/10"
                         onClick={() => handleDelete(content.id)}
                       >
-                        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   )}
@@ -250,10 +252,12 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-6 sm:py-8">
-          <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
-          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">Aucun contenu</h3>
-          <p className="text-sm sm:text-base text-gray-600">Aucun contenu n'a encore été ajouté à ce module.</p>
+        <div className="text-center py-10 sm:py-12">
+          <div className="inline-block p-6 rounded-2xl bg-muted/30 mb-4">
+            <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground" />
+          </div>
+          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">Aucun contenu</h3>
+          <p className="text-sm sm:text-base text-muted-foreground">Aucun contenu n'a encore été ajouté à ce module.</p>
         </div>
       )}
 
