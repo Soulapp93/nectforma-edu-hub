@@ -348,7 +348,9 @@ const SuiviEmargement = () => {
       {/* En-tête */}
       <div className="space-y-1">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
-          <ClipboardCheck className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
+          <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg">
+            <ClipboardCheck className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
+          </div>
           {getPageTitle()}
         </h1>
         <p className="text-muted-foreground">{getPageDescription()}</p>
