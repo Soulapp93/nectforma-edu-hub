@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, Grid3X3, Calendar, List } from 'lucide-react';
+import { CalendarClock, Calendar, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 type ViewMode = 'day' | 'week' | 'month' | 'list';
@@ -14,8 +14,8 @@ export const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({
   onViewModeChange
 }) => {
   const viewModes = [
-    { id: 'day' as ViewMode, label: 'Jour', icon: Eye },
-    { id: 'week' as ViewMode, label: 'Semaine', icon: Grid3X3 },
+    { id: 'day' as ViewMode, label: 'Jour', icon: CalendarClock },
+    { id: 'week' as ViewMode, label: 'Semaine', icon: CalendarClock },
     { id: 'month' as ViewMode, label: 'Mois', icon: Calendar },
     { id: 'list' as ViewMode, label: 'Liste', icon: List }
   ];
