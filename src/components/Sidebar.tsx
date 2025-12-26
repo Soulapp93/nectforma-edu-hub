@@ -103,7 +103,7 @@ const Sidebar = () => {
     { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarClock },
     { name: 'Messagerie', href: '/messagerie', icon: Mail },
     { name: 'Groupes', href: '/groupes', icon: UsersRound },
-    { name: 'Gestion du compte', href: '/gestion-etablissement', icon: Settings },
+    { name: 'Gestion du compte', href: '/gestion-etablissement', icon: Building2 },
     { name: 'Mon Profil', href: '/compte', icon: UserCircle },
   ];
 

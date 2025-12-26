@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Building2 } from 'lucide-react';
 import EstablishmentSettings from '../components/compte/EstablishmentSettings';
 import { toast } from 'sonner';
 import { establishmentService, Establishment } from '@/services/establishmentService';
@@ -199,8 +200,13 @@ const GestionEtablissement = () => {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestion de l'établissement</h1>
-        <p className="text-gray-600">Gérez les informations de l'établissement et les paramètres administrateur</p>
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2.5 bg-primary/10 rounded-xl">
+            <Building2 className="h-6 w-6 text-primary" />
+          </div>
+          <h1 className="text-3xl font-bold text-foreground">Gestion de l'établissement</h1>
+        </div>
+        <p className="text-muted-foreground ml-14">Gérez les informations de l'établissement et les paramètres administrateur</p>
       </div>
 
       <div className="max-w-4xl">
