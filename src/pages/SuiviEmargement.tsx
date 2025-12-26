@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, User, CheckCircle, XCircle, AlertCircle, Filter, Search, ClipboardCheck } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, CheckCircle, XCircle, AlertCircle, Filter, Search, ClipboardCheck, CalendarIcon } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useCurrentUser, useUserWithRelations } from '@/hooks/useCurrentUser';
 import { supabase } from '@/integrations/supabase/client';
 import { attendanceService } from '@/services/attendanceService';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface AttendanceRecord {
   id: string;
@@ -418,12 +421,74 @@ const SuiviEmargement = () => {
               </SelectContent>
             </Select>
             
-            <Input
-              type="month"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="w-full lg:w-48"
-            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full lg:w-56 justify-start text-left font-normal"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateFilter ? format(new Date(dateFilter + '-01'), 'MMMM yyyy', { locale: fr }) : <span className="text-muted-foreground">Sélectionner un mois</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-4 bg-card border border-border shadow-lg z-50" align="start">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const currentYear = dateFilter ? parseInt(dateFilter.split('-')[0]) : new Date().getFullYear();
+                        setDateFilter(`${currentYear - 1}-01`);
+                      }}
+                    >
+                      ←
+                    </Button>
+                    <span className="font-semibold text-foreground">
+                      {dateFilter ? dateFilter.split('-')[0] : new Date().getFullYear()}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const currentYear = dateFilter ? parseInt(dateFilter.split('-')[0]) : new Date().getFullYear();
+                        setDateFilter(`${currentYear + 1}-01`);
+                      }}
+                    >
+                      →
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'].map((month) => {
+                      const year = dateFilter ? dateFilter.split('-')[0] : new Date().getFullYear().toString();
+                      const monthValue = `${year}-${month}`;
+                      const isSelected = dateFilter === monthValue;
+                      const monthName = format(new Date(`${year}-${month}-01`), 'MMM', { locale: fr });
+                      
+                      return (
+                        <Button
+                          key={month}
+                          variant={isSelected ? "default" : "outline"}
+                          size="sm"
+                          className={`capitalize ${isSelected ? 'bg-primary text-primary-foreground' : 'hover:bg-primary/10'}`}
+                          onClick={() => setDateFilter(monthValue)}
+                        >
+                          {monthName}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-muted-foreground"
+                    onClick={() => setDateFilter('')}
+                  >
+                    Effacer
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
             
             <Button 
               variant="outline" 
