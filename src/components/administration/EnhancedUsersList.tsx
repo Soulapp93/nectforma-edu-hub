@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Plus, Search, Filter, Upload, Download, MoreVertical, Edit, Trash2, Mail, X, ChevronDown, KeyRound } from 'lucide-react';
+import { Plus, Search, Filter, Upload, Download, MoreVertical, Edit, Trash2, Mail, X, ChevronDown, KeyRound, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -267,7 +267,7 @@ const EnhancedUsersList: React.FC = () => {
   const isSomeSelected = selectedUsers.length > 0 && selectedUsers.length < filteredUsers.length;
 
   return (
-    <div className="glass-card rounded-xl">
+    <div className="bg-card rounded-2xl shadow-lg border-2 border-primary/20">
       {/* Bandeau de sélection */}
       {selectedUsers.length > 0 && (
         <div className="bg-primary/10 border-b border-primary/20 px-6 py-4">
@@ -345,15 +345,20 @@ const EnhancedUsersList: React.FC = () => {
       )}
 
       {/* En-tête */}
-      <div className="p-3 sm:p-4 lg:p-6 border-b border-border">
+      <div className="p-3 sm:p-4 lg:p-6 border-b border-primary/10">
         <div className="flex flex-col gap-3 sm:gap-4">
-          <div>
-            <h2 className="text-lg sm:text-xl font-semibold text-foreground">
-              Gestion des utilisateurs
-            </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
-              {filteredUsers.length} utilisateur{filteredUsers.length > 1 ? 's' : ''} trouvé{filteredUsers.length > 1 ? 's' : ''}
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-primary/10 rounded-xl">
+              <Users className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground">
+                Gestion des utilisateurs
+              </h2>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                {filteredUsers.length} utilisateur{filteredUsers.length > 1 ? 's' : ''} trouvé{filteredUsers.length > 1 ? 's' : ''}
+              </p>
+            </div>
           </div>
           
           {/* Action buttons - responsive grid */}
@@ -428,13 +433,13 @@ const EnhancedUsersList: React.FC = () => {
               placeholder="Rechercher par nom ou email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 text-sm"
+              className="pl-10 text-sm border-2 border-primary/30 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </div>
           
           <div className="grid grid-cols-2 gap-2 sm:gap-3">
             <Select value={selectedRole} onValueChange={setSelectedRole}>
-              <SelectTrigger className="w-full h-9 sm:h-10 text-xs sm:text-sm">
+              <SelectTrigger className="w-full h-9 sm:h-10 text-xs sm:text-sm border-2 border-primary/30 rounded-xl">
                 <SelectValue placeholder="Tous les rôles" />
               </SelectTrigger>
               <SelectContent>
@@ -446,7 +451,7 @@ const EnhancedUsersList: React.FC = () => {
             </Select>
             
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger className="w-full h-9 sm:h-10 text-xs sm:text-sm">
+              <SelectTrigger className="w-full h-9 sm:h-10 text-xs sm:text-sm border-2 border-primary/30 rounded-xl">
                 <SelectValue placeholder="Tous les statuts" />
               </SelectTrigger>
               <SelectContent>
