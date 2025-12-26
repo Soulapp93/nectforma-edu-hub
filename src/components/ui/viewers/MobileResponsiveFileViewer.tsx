@@ -12,8 +12,11 @@ import ArchiveViewer from './ArchiveViewer';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
-// Configuration de PDF.js (worker) - Using cdnjs for better reliability
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+import { configurePdfJsWorker } from '@/lib/pdfWorker';
+
+// Configuration de PDF.js (worker) - local/bundled for reliability (mobile-safe)
+configurePdfJsWorker(pdfjs);
+
 
 interface MobileResponsiveFileViewerProps {
   fileUrl: string;

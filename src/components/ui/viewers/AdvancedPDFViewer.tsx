@@ -27,13 +27,11 @@ import {
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
-// Configure PDF.js worker with fallback options
-const configurePdfWorker = () => {
-  // Try cdnjs first (most reliable)
-  pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
-};
+import { configurePdfJsWorker } from '@/lib/pdfWorker';
 
-configurePdfWorker();
+// Configure PDF.js worker using a local/bundled worker (avoids CDN issues)
+configurePdfJsWorker(pdfjs);
+
 
 interface Annotation {
   id: string;
@@ -191,16 +189,7 @@ const AdvancedPDFViewer: React.FC<AdvancedPDFViewerProps> = ({
 
   const onDocumentLoadError = (error: Error) => {
     console.error('PDF load error:', error);
-    // Try alternative worker source
-    if (!pdfjs.GlobalWorkerOptions.workerSrc?.includes('unpkg')) {
-      console.log('Trying alternative PDF worker source...');
-      pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
-      // Reset loading to trigger retry
-      setLoading(true);
-      setError(null);
-      return;
-    }
-    setError('Impossible de charger le document PDF. Essayez d\'ouvrir dans un nouvel onglet.');
+    setError("Impossible de charger le document PDF. Essayez d'ouvrir dans un nouvel onglet.");
     setLoading(false);
     toast.error('Erreur lors du chargement du document');
   };
