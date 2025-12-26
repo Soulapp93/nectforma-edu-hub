@@ -80,7 +80,12 @@ export const TutorFormationsView: React.FC = () => {
       {/* Header avec toggle vue */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">Formations de mes apprentis</h2>
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <div className="p-2 bg-primary/10 rounded-xl">
+              <GraduationCap className="h-5 w-5 text-primary" />
+            </div>
+            Formation de mon apprenti
+          </h2>
           <p className="text-muted-foreground text-sm">
             Suivez les formations de vos apprentis et accédez aux détails
           </p>
