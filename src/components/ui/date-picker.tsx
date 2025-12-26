@@ -45,16 +45,16 @@ export function DatePicker({
           variant="outline"
           disabled={disabled}
           className={cn(
-            "w-full justify-start text-left font-normal",
+            "w-full justify-start text-left font-normal h-11 rounded-xl border-2 border-primary/30 bg-background hover:border-primary/50 hover:bg-primary/5 transition-all duration-200",
             !selected && "text-muted-foreground",
             className
           )}
         >
-          <CalendarIcon className="mr-2 h-4 w-4" />
+          <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
           {selected ? format(selected, "PPP", { locale: fr }) : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent className="w-auto p-0 border-2 border-primary/20 rounded-xl shadow-xl" align="start">
         <Calendar
           mode="single"
           selected={selected}

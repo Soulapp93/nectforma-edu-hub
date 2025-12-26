@@ -344,33 +344,35 @@ const SuiviEmargement = () => {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
       {/* En-tête */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{getPageTitle()}</h1>
-        <p className="text-gray-600">{getPageDescription()}</p>
+      <div className="space-y-1">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{getPageTitle()}</h1>
+        <p className="text-muted-foreground">{getPageDescription()}</p>
         {userRole === 'Tuteur' && studentInfo && (
           <div className="mt-2 text-sm text-muted-foreground">
-            Apprenti: <span className="font-medium">{studentInfo.name}</span> ({studentInfo.email})
+            Apprenti: <span className="font-medium text-primary">{studentInfo.name}</span> ({studentInfo.email})
           </div>
         )}
       </div>
 
       {/* Statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         {getStatsCards().map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card key={index}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
+            <Card key={index} className="overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-br from-primary/5 to-transparent">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
                   {stat.title}
                 </CardTitle>
-                <Icon className={`h-4 w-4 ${stat.color}`} />
+                <div className={`h-8 w-8 rounded-full bg-background flex items-center justify-center shadow-sm`}>
+                  <Icon className={`h-4 w-4 ${stat.color}`} />
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-muted-foreground">
+              <CardContent className="pt-4">
+                <div className="text-3xl font-bold text-foreground">{stat.value}</div>
+                <p className="text-xs text-muted-foreground mt-1">
                   {stat.description}
                 </p>
               </CardContent>
@@ -380,17 +382,17 @@ const SuiviEmargement = () => {
       </div>
 
       {/* Filtres */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
+      <Card className="overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent py-4">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Filter className="h-5 w-5 text-primary" />
             Filtres
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col lg:flex-row gap-4">
+        <CardContent className="pt-4">
+          <div className="flex flex-col lg:flex-row gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Rechercher par cours, formation ou formateur..."
                 value={searchTerm}
@@ -425,6 +427,7 @@ const SuiviEmargement = () => {
                 setStatusFilter('all');
                 setDateFilter('');
               }}
+              className="rounded-xl border-2 border-primary/30 hover:border-primary/50 hover:bg-primary/5"
             >
               Réinitialiser
             </Button>
@@ -434,13 +437,13 @@ const SuiviEmargement = () => {
 
       {/* Tableau des émargements */}
       <Card>
-        <CardHeader>
-          <CardTitle>Historique des émargements</CardTitle>
+        <CardHeader className="border-b border-border/30">
+          <CardTitle className="text-lg">Historique des émargements</CardTitle>
           <CardDescription>
             {filteredRecords.length} enregistrement{filteredRecords.length > 1 ? 's' : ''} trouvé{filteredRecords.length > 1 ? 's' : ''}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -460,30 +463,34 @@ const SuiviEmargement = () => {
                   <TableRow key={record.id}>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-gray-400" />
-                        {new Date(record.date).toLocaleDateString('fr-FR')}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{record.title}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{record.formation_title}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-gray-400" />
-                        {record.start_time.substring(0, 5)} - {record.end_time.substring(0, 5)}
+                        <Calendar className="h-4 w-4 text-primary/60" />
+                        <span className="font-medium">{new Date(record.date).toLocaleDateString('fr-FR')}</span>
                       </div>
                     </TableCell>
                     <TableCell>
+                      <span className="font-medium text-primary">{record.title}</span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="bg-primary/5 border-primary/20 text-primary">
+                        {record.formation_title}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-gray-400" />
-                        {record.room || '-'}
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <span>{record.start_time.substring(0, 5)} - {record.end_time.substring(0, 5)}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-gray-400" />
-                        {record.instructor_name || '-'}
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <span>{record.room || '-'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span>{record.instructor_name || '-'}</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -491,12 +498,12 @@ const SuiviEmargement = () => {
                     </TableCell>
                     <TableCell>
                       {record.absence_reason && (
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-muted-foreground">
                           {record.absence_reason}
                         </span>
                       )}
                       {record.signed_at && record.status === 'Présent' && (
-                        <span className="text-xs text-green-600">
+                        <span className="text-xs text-green-600 font-medium">
                           Signé le {new Date(record.signed_at).toLocaleString('fr-FR')}
                         </span>
                       )}
@@ -507,8 +514,8 @@ const SuiviEmargement = () => {
             </Table>
             
             {filteredRecords.length === 0 && (
-              <div className="text-center py-8">
-                <div className="text-gray-500">Aucun enregistrement trouvé</div>
+              <div className="text-center py-12">
+                <div className="text-muted-foreground">Aucun enregistrement trouvé</div>
               </div>
             )}
           </div>
