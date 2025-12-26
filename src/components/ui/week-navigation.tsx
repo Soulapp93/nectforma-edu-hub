@@ -109,10 +109,10 @@ const WeekNavigation: React.FC<WeekNavigationProps> = ({
   const weeks = getYearWeeks();
 
   return (
-    <div className={cn("bg-white rounded-xl shadow-sm border border-gray-100", className)}>
-      <div className="p-3 sm:p-4 border-b border-gray-200">
+    <div className={cn("bg-card rounded-xl shadow-sm border-2 border-primary/40", className)}>
+      <div className="p-3 sm:p-4 border-b border-primary/20">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3">
-          <h2 className="text-xs sm:text-sm font-semibold text-gray-700">Navigation par semaines</h2>
+          <h2 className="text-xs sm:text-sm font-semibold text-foreground">Navigation par semaines</h2>
           
           <div className="flex items-center space-x-2">
             {/* Year Navigation */}
@@ -121,12 +121,12 @@ const WeekNavigation: React.FC<WeekNavigationProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => handleYearChange('prev')}
-                className="h-7 w-7 sm:h-8 sm:w-8 p-0"
+                className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-primary hover:text-primary hover:bg-primary/10"
               >
                 <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
               
-              <span className="text-xs sm:text-sm font-medium text-gray-700 min-w-[50px] sm:min-w-[60px] text-center">
+              <span className="text-xs sm:text-sm font-medium text-foreground min-w-[50px] sm:min-w-[60px] text-center">
                 {selectedYear}
               </span>
               
@@ -134,7 +134,7 @@ const WeekNavigation: React.FC<WeekNavigationProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => handleYearChange('next')}
-                className="h-7 w-7 sm:h-8 sm:w-8 p-0"
+                className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-primary hover:text-primary hover:bg-primary/10"
               >
                 <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
@@ -169,10 +169,10 @@ const WeekNavigation: React.FC<WeekNavigationProps> = ({
               <button
                 key={week.number}
                 onClick={() => navigateToWeek(week.startDate)}
-                className={`flex-shrink-0 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 min-w-[40px] sm:min-w-[50px] ${
+                className={`flex-shrink-0 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 min-w-[40px] sm:min-w-[50px] border ${
                   isCurrentWeek
-                    ? 'bg-primary text-white shadow-md transform scale-105'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800'
+                    ? 'bg-primary text-primary-foreground shadow-md transform scale-105 border-primary'
+                    : 'bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary border-primary/30 hover:border-primary/50'
                 }`}
                 title={`${week.label}: du ${format(week.startDate, 'dd/MM/yyyy')} au ${format(weekEndDate, 'dd/MM/yyyy')}`}
               >
