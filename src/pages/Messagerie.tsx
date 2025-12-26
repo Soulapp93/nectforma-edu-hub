@@ -378,17 +378,17 @@ const Messagerie = () => {
 
         {/* Folders Sidebar */}
         <div className={cn(
-          "absolute lg:relative z-50 lg:z-auto h-full w-64 border-r border-border/50 bg-card/95 backdrop-blur-sm overflow-y-auto transition-transform duration-300 ease-in-out",
+          "absolute lg:relative z-50 lg:z-auto h-full w-64 border-r border-primary/20 bg-gradient-to-b from-card to-card/95 backdrop-blur-sm overflow-y-auto transition-transform duration-300 ease-in-out shadow-lg lg:shadow-none",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}>
-          <div className="p-3">
-            <div className="flex items-center justify-between mb-3 lg:hidden">
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-4 lg:hidden">
               <span className="text-sm font-semibold text-foreground px-2">Dossiers</span>
               <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               {folders.map((folder) => {
                 const Icon = folder.icon;
                 const isActive = selectedFolder === folder.id;
@@ -398,22 +398,30 @@ const Messagerie = () => {
                     key={folder.id}
                     onClick={() => handleFolderSelect(folder.id)}
                     className={cn(
-                      'w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200',
+                      'w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 border',
                       isActive 
-                        ? 'bg-primary text-primary-foreground shadow-md' 
-                        : 'hover:bg-accent/50 text-foreground hover:translate-x-1'
+                        ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg border-primary/50' 
+                        : 'hover:bg-primary/5 text-foreground hover:border-primary/30 border-transparent'
                     )}
                   >
                     <div className="flex items-center gap-3">
-                      <Icon className="h-4 w-4" />
+                      <div className={cn(
+                        "h-8 w-8 rounded-lg flex items-center justify-center transition-all",
+                        isActive 
+                          ? "bg-primary-foreground/20" 
+                          : "bg-primary/10"
+                      )}>
+                        <Icon className={cn("h-4 w-4", isActive ? "text-primary-foreground" : "text-primary")} />
+                      </div>
                       <span className="text-sm font-medium">{folder.label}</span>
                     </div>
                     {folder.count > 0 && (
                       <Badge 
-                        variant={isActive ? "secondary" : "outline"}
                         className={cn(
-                          "text-xs font-semibold",
-                          isActive && "bg-primary-foreground/20 text-primary-foreground border-none"
+                          "text-xs font-semibold min-w-[22px] justify-center",
+                          isActive 
+                            ? "bg-primary-foreground/20 text-primary-foreground border-none" 
+                            : "bg-primary/10 text-primary border-primary/30"
                         )}
                       >
                         {folder.count}
