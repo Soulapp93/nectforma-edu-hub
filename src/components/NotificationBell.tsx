@@ -74,24 +74,26 @@ const NotificationBell = () => {
     <>
       <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="relative h-9 w-9 p-0">
+          <Button variant="ghost" size="sm" className="relative h-9 w-9 p-0 hover:bg-primary/10">
             <Bell className="h-5 w-5 text-muted-foreground" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 h-5 min-w-5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center px-1">
+              <span className="absolute -top-1 -right-1 h-5 min-w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center px-1 shadow-lg">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
           </Button>
         </DropdownMenuTrigger>
         
-        <DropdownMenuContent align="end" className="w-96 p-0 shadow-lg border-border/50">
+        <DropdownMenuContent align="end" className="w-96 p-0 shadow-xl border-primary/20 bg-card rounded-xl overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 bg-muted/30 border-b border-border/50">
-            <div className="flex items-center gap-2">
-              <Bell className="h-4 w-4 text-primary" />
-              <h3 className="font-semibold text-sm">Notifications</h3>
+          <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-primary/10 to-primary/5 border-b border-primary/20">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-md">
+                <Bell className="h-4 w-4 text-primary-foreground" />
+              </div>
+              <h3 className="font-semibold text-sm text-foreground">Notifications</h3>
               {unreadCount > 0 && (
-                <Badge variant="secondary" className="h-5 px-1.5 text-[10px] font-bold">
+                <Badge className="h-5 px-2 text-[10px] font-bold bg-primary/10 text-primary border border-primary/30">
                   {unreadCount} nouveau{unreadCount > 1 ? 'x' : ''}
                 </Badge>
               )}
@@ -101,7 +103,7 @@ const NotificationBell = () => {
                 variant="ghost"
                 size="sm"
                 onClick={markAllAsRead}
-                className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                className="h-7 text-xs text-primary hover:text-primary hover:bg-primary/10"
               >
                 <CheckCheck className="h-3.5 w-3.5 mr-1" />
                 Tout lire
@@ -118,56 +120,58 @@ const NotificationBell = () => {
               </div>
             ) : notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full py-12 text-muted-foreground">
-                <div className="h-16 w-16 rounded-full bg-muted/50 flex items-center justify-center mb-3">
-                  <Bell className="h-8 w-8 opacity-40" />
+                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                  <Bell className="h-8 w-8 text-primary/40" />
                 </div>
                 <p className="text-sm font-medium">Aucune notification</p>
                 <p className="text-xs text-muted-foreground/70 mt-1">Vous êtes à jour !</p>
               </div>
             ) : (
-              <div className="py-1">
-                {notifications.map((notification, index) => (
-                  <div key={notification.id}>
-                    <div
-                      className={`px-4 py-3 cursor-pointer transition-all duration-200 ${getNotificationBgColor(notification.type, notification.is_read)}`}
-                      onClick={() => handleNotificationClick(notification)}
-                    >
-                      <div className="flex items-start gap-3">
-                        {/* Icon */}
-                        <div className={`flex-shrink-0 h-9 w-9 rounded-full flex items-center justify-center ${
-                          notification.is_read ? 'bg-muted' : 'bg-background shadow-sm'
-                        }`}>
-                          {getNotificationIcon(notification.type)}
-                        </div>
-                        
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <p className={`text-sm leading-tight ${!notification.is_read ? 'font-semibold text-foreground' : 'font-medium text-foreground/80'}`}>
-                              {notification.title}
-                            </p>
-                            {!notification.is_read && (
-                              <div className="flex-shrink-0 h-2 w-2 rounded-full bg-primary mt-1.5" />
-                            )}
-                          </div>
-                          <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5 leading-relaxed">
-                            {notification.message}
+              <div className="py-2 px-2 space-y-1">
+                {notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={`px-3 py-3 cursor-pointer transition-all duration-200 rounded-xl border ${
+                      notification.is_read 
+                        ? 'bg-background hover:bg-muted/50 border-transparent hover:border-border/50' 
+                        : 'bg-gradient-to-r from-primary/5 to-transparent hover:from-primary/10 border-primary/20 shadow-sm'
+                    }`}
+                    onClick={() => handleNotificationClick(notification)}
+                  >
+                    <div className="flex items-start gap-3">
+                      {/* Icon */}
+                      <div className={`flex-shrink-0 h-10 w-10 rounded-xl flex items-center justify-center ${
+                        notification.is_read 
+                          ? 'bg-muted' 
+                          : 'bg-gradient-to-br from-primary/20 to-primary/10 shadow-sm'
+                      }`}>
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className={`text-sm leading-tight ${!notification.is_read ? 'font-semibold text-foreground' : 'font-medium text-foreground/80'}`}>
+                            {notification.title}
                           </p>
-                          <div className="flex items-center gap-1.5 mt-1.5">
-                            <Clock className="h-3 w-3 text-muted-foreground/60" />
-                            <p className="text-[10px] text-muted-foreground/70">
-                              {formatDistanceToNow(new Date(notification.created_at), {
-                                addSuffix: true,
-                                locale: fr
-                              })}
-                            </p>
-                          </div>
+                          {!notification.is_read && (
+                            <div className="flex-shrink-0 h-2.5 w-2.5 rounded-full bg-primary mt-1 shadow-sm shadow-primary/50" />
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+                          {notification.message}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-2">
+                          <Clock className="h-3 w-3 text-primary/50" />
+                          <p className="text-[10px] text-muted-foreground">
+                            {formatDistanceToNow(new Date(notification.created_at), {
+                              addSuffix: true,
+                              locale: fr
+                            })}
+                          </p>
                         </div>
                       </div>
                     </div>
-                    {index < notifications.length - 1 && (
-                      <Separator className="opacity-50" />
-                    )}
                   </div>
                 ))}
               </div>
@@ -176,11 +180,11 @@ const NotificationBell = () => {
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="p-2 border-t border-border/50 bg-muted/20">
+            <div className="p-3 border-t border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full h-8 text-xs text-muted-foreground hover:text-foreground"
+                className="w-full h-9 text-xs text-primary hover:text-primary hover:bg-primary/10 font-medium"
                 onClick={() => setIsOpen(false)}
               >
                 Voir toutes les notifications
