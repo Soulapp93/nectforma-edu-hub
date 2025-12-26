@@ -200,13 +200,13 @@ const GestionEtablissement = () => {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2.5 bg-primary/10 rounded-xl">
-            <Building2 className="h-6 w-6 text-primary" />
+        <div className="flex items-center gap-4 mb-2">
+          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 flex items-center justify-center shadow-lg shadow-primary/30 ring-4 ring-primary/20">
+            <Building2 className="h-6 w-6 text-primary-foreground" />
           </div>
           <h1 className="text-3xl font-bold text-foreground">Gestion de l'établissement</h1>
         </div>
-        <p className="text-muted-foreground ml-14">Gérez les informations de l'établissement et les paramètres administrateur</p>
+        <p className="text-muted-foreground ml-16">Gérez les informations de l'établissement et les paramètres administrateur</p>
       </div>
 
       <div className="max-w-4xl">
