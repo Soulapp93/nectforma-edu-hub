@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, User, CheckCircle, XCircle, AlertCircle, Filter, Search } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, CheckCircle, XCircle, AlertCircle, Filter, Search, ClipboardCheck } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -347,7 +347,10 @@ const SuiviEmargement = () => {
     <div className="p-4 sm:p-6 lg:p-8 space-y-6">
       {/* En-tête */}
       <div className="space-y-1">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{getPageTitle()}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
+          <ClipboardCheck className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
+          {getPageTitle()}
+        </h1>
         <p className="text-muted-foreground">{getPageDescription()}</p>
         {userRole === 'Tuteur' && studentInfo && (
           <div className="mt-2 text-sm text-muted-foreground">
