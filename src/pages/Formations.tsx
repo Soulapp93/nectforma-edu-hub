@@ -146,17 +146,22 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
       />
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sm:p-6 lg:p-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Catalogue des formations</h2>
+      <div className="bg-card rounded-2xl shadow-lg border-2 border-primary/20 p-5 sm:p-6 lg:p-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-primary/10 rounded-xl">
+              <GraduationCap className="h-5 w-5 text-primary" />
+            </div>
+            <h2 className="text-lg font-semibold text-foreground">Catalogue des formations</h2>
+          </div>
           
           {/* Toggle vue grille/liste */}
-          <div className="flex items-center bg-gray-100 rounded-lg p-1">
+          <div className="flex items-center bg-muted rounded-xl p-1 border border-primary/10">
             <Button
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('grid')}
-              className="h-8 px-3"
+              className="h-8 px-3 rounded-lg"
             >
               <Grid3x3 className="h-4 w-4" />
             </Button>
@@ -164,7 +169,7 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
               variant={viewMode === 'list' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('list')}
-              className="h-8 px-3"
+              className="h-8 px-3 rounded-lg"
             >
               <List className="h-4 w-4" />
             </Button>
@@ -174,18 +179,18 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Rechercher une formation..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 text-base border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full pl-12 pr-4 py-3 text-base border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               />
             </div>
           </div>
           <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px] border-2 border-primary/30 rounded-xl">
               <SelectValue placeholder="Tous les niveaux" />
             </SelectTrigger>
             <SelectContent>
@@ -196,7 +201,7 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
             </SelectContent>
           </Select>
           <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px] border-2 border-primary/30 rounded-xl">
               <SelectValue placeholder="Tous les statuts" />
             </SelectTrigger>
             <SelectContent>
