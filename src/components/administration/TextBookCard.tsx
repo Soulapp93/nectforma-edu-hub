@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Download, Archive } from 'lucide-react';
+import { BookText, Download, Archive } from 'lucide-react';
 import { TextBook, TextBookEntry, textBookService } from '@/services/textBookService';
 import { pdfExportService } from '@/services/pdfExportService';
 import { useToast } from '@/hooks/use-toast';
@@ -129,7 +129,7 @@ const TextBookCard: React.FC<TextBookCardProps> = ({ textBook, onUpdate }) => {
             disabled={loading}
             size="sm"
           >
-            <BookOpen className="h-4 w-4 mr-2" />
+            <BookText className="h-4 w-4 mr-2" />
             Ouvrir
           </Button>
 

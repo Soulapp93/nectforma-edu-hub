@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { DatePicker } from '@/components/ui/date-picker';
 import { TimePicker } from '@/components/ui/time-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Plus, Clock, Calendar, User, BookOpen, Upload, X, FileText, Edit2, Trash2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Clock, Calendar, User, BookText, Upload, X, FileText, Edit2, Trash2, AlertCircle } from 'lucide-react';
 import { RichTextEditor, sanitizeHtml } from '@/components/ui/rich-text-editor';
 import ChromeStyleViewer from '@/components/ui/viewers/ChromeStyleViewer';
 import { textBookService, TextBook, TextBookEntry } from '@/services/textBookService';
@@ -441,7 +441,7 @@ const TextBookDetail: React.FC = () => {
             </div>
           )}
           <div className="flex items-center space-x-3 mb-2">
-            <BookOpen className="h-6 w-6" />
+            <BookText className="h-6 w-6" />
             <h1 className="text-2xl font-bold">
               Cahier de texte - {textBook.formations?.title}
             </h1>
@@ -457,7 +457,7 @@ const TextBookDetail: React.FC = () => {
             <CardContent className="p-8 text-center">
               <div className="max-w-md mx-auto">
                 <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <BookOpen className="h-8 w-8 text-purple-600" />
+                  <BookText className="h-8 w-8 text-purple-600" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   Aucune entrée dans ce cahier de texte

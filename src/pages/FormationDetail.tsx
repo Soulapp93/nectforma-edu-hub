@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Clock, Users, Eye, Edit, FileText } from 'lucide-react';
+import { ArrowLeft, BookOpen, Clock, Users, Eye, Edit, FileText, GraduationCap, BookText } from 'lucide-react';
 import { formationService, Formation } from '@/services/formationService';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -150,7 +150,7 @@ const FormationDetail = () => {
                 onClick={() => navigate(`/cahier-texte/formation/${formation.id}?from=formations&formationId=${formation.id}`)}
                 className="bg-white/20 border-white/30 text-white hover:bg-white/30 text-xs sm:text-sm w-full sm:w-auto justify-center"
               >
-                <BookOpen className="h-4 w-4 mr-2 flex-shrink-0" />
+                <BookText className="h-4 w-4 mr-2 flex-shrink-0" />
                 <span className="whitespace-nowrap">Cahier de Texte</span>
               </Button>
             </div>
@@ -271,7 +271,7 @@ const FormationDetail = () => {
               </Accordion>
             ) : (
               <div className="text-center py-8">
-                <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun module</h3>
                 <p className="text-gray-600">Cette formation n'a pas encore de modules.</p>
               </div>

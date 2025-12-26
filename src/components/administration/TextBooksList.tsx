@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, BookOpen, Grid, List, Download, Archive } from 'lucide-react';
+import { Plus, Search, BookText, Grid, List, Download, Archive, BookOpen } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -138,7 +138,7 @@ const TextBooksList: React.FC = () => {
       {/* Header with title and create button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center space-x-3">
-          <BookOpen className="h-5 sm:h-6 w-5 sm:w-6 text-purple-600" />
+          <BookText className="h-5 sm:h-6 w-5 sm:w-6 text-purple-600" />
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Gestion des Cahiers de Texte</h2>
         </div>
         <div className="flex items-center space-x-2 flex-wrap">
@@ -220,7 +220,7 @@ const TextBooksList: React.FC = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
           <div className="max-w-md mx-auto">
             <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <BookOpen className="h-8 w-8 text-purple-600" />
+              <BookText className="h-8 w-8 text-purple-600" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               {searchTerm || selectedFormation !== 'all' || selectedYear !== 'all' 
