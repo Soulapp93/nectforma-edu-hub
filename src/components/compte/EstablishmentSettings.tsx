@@ -4,7 +4,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Separator } from '../ui/separator';
 import FileUpload from '../ui/file-upload';
-import { Building, User, Phone, Globe, MapPin, Users, FileText, Mail, Upload } from 'lucide-react';
+import { Building2, User, Phone, Globe, MapPin, Users, FileText, Mail, Upload } from 'lucide-react';
 
 interface AdminData {
   firstName: string;
@@ -57,7 +57,7 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-foreground mb-2 flex items-center">
           <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center mr-3">
-            <Building className="h-5 w-5 text-primary-foreground" />
+            <Building2 className="h-5 w-5 text-primary-foreground" />
           </div>
           Gestion de l'établissement
         </h2>
@@ -151,7 +151,7 @@ const EstablishmentSettings: React.FC<EstablishmentSettingsProps> = ({
       {/* Informations de l'établissement */}
       <div className="mb-8 bg-muted/30 rounded-xl p-6 border-2 border-primary/10">
         <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
-          <Building className="h-5 w-5 mr-2 text-primary" />
+          <Building2 className="h-5 w-5 mr-2 text-primary" />
           Informations de l'établissement
         </h3>
         
