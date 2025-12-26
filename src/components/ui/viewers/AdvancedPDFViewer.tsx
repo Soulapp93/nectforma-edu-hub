@@ -27,7 +27,13 @@ import {
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+// Configure PDF.js worker with fallback options
+const configurePdfWorker = () => {
+  // Try cdnjs first (most reliable)
+  pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+};
+
+configurePdfWorker();
 
 interface Annotation {
   id: string;
@@ -185,7 +191,16 @@ const AdvancedPDFViewer: React.FC<AdvancedPDFViewerProps> = ({
 
   const onDocumentLoadError = (error: Error) => {
     console.error('PDF load error:', error);
-    setError('Impossible de charger le document PDF');
+    // Try alternative worker source
+    if (!pdfjs.GlobalWorkerOptions.workerSrc?.includes('unpkg')) {
+      console.log('Trying alternative PDF worker source...');
+      pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+      // Reset loading to trigger retry
+      setLoading(true);
+      setError(null);
+      return;
+    }
+    setError('Impossible de charger le document PDF. Essayez d\'ouvrir dans un nouvel onglet.');
     setLoading(false);
     toast.error('Erreur lors du chargement du document');
   };
@@ -944,11 +959,22 @@ const AdvancedPDFViewer: React.FC<AdvancedPDFViewerProps> = ({
             {error && (
               <div className="flex flex-col items-center justify-center h-full p-8">
                 <FileWarning className="w-16 h-16 mb-4 text-destructive" />
-                <div className="text-lg mb-2 text-destructive">{error}</div>
-                <Button onClick={() => window.open(fileUrl, '_blank')} variant="outline">
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Ouvrir dans un nouvel onglet
-                </Button>
+                <div className="text-lg mb-2 text-destructive font-medium">Erreur de chargement</div>
+                <p className="text-sm text-muted-foreground mb-4 text-center max-w-md">{error}</p>
+                <div className="flex gap-2">
+                  <Button onClick={() => { setError(null); setLoading(true); }} variant="outline">
+                    <RotateCw className="h-4 w-4 mr-2" />
+                    Réessayer
+                  </Button>
+                  <Button onClick={() => window.open(fileUrl, '_blank')} variant="outline">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Ouvrir dans un nouvel onglet
+                  </Button>
+                  <Button onClick={handleDownload}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Télécharger
+                  </Button>
+                </div>
               </div>
             )}
 
