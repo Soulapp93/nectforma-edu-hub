@@ -1,8 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Download, ExternalLink, Maximize2, Minimize2, ZoomIn, ZoomOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Download, ExternalLink, Maximize2, Minimize2, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, Share2 } from 'lucide-react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { toast } from 'sonner';
+import AdvancedPDFViewer from './AdvancedPDFViewer';
+import AudioViewer from './AudioViewer';
+import TextViewer from './TextViewer';
+import ArchiveViewer from './ArchiveViewer';
 
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -29,6 +34,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
   const [zoom, setZoom] = useState(100);
   const [pdfPages, setPdfPages] = useState(0);
   const [pdfPage, setPdfPage] = useState(1);
+  const [useAdvancedPdfViewer, setUseAdvancedPdfViewer] = useState(true);
   const isMobile = useIsMobile();
   const pdfContainerRef = useRef<HTMLDivElement>(null);
 
@@ -41,11 +47,20 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
     const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'];
     const pdfExtensions = ['pdf'];
     const officeExtensions = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+    const audioExtensions = ['mp3', 'wav', 'ogg', 'aac', 'flac', 'm4a', 'wma'];
+    const textExtensions = ['txt', 'md', 'markdown', 'log', 'json', 'xml', 'yaml', 'yml', 
+                           'js', 'jsx', 'ts', 'tsx', 'py', 'java', 'c', 'cpp', 'h', 'hpp',
+                           'css', 'scss', 'less', 'html', 'sh', 'bash', 'sql', 'php', 'rb', 
+                           'go', 'rs', 'swift', 'csv'];
+    const archiveExtensions = ['zip', 'rar', '7z', 'tar', 'gz'];
     
     if (pdfExtensions.includes(extension)) return 'pdf';
     if (videoExtensions.includes(extension)) return 'video';
     if (imageExtensions.includes(extension)) return 'image';
     if (officeExtensions.includes(extension)) return 'office';
+    if (audioExtensions.includes(extension)) return 'audio';
+    if (textExtensions.includes(extension)) return 'text';
+    if (archiveExtensions.includes(extension)) return 'archive';
     return 'other';
   };
 
@@ -77,7 +92,6 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
   }, [isOpen, onClose, fileType]);
 
   const handleDownload = () => {
-    // Utiliser fetch pour forcer le téléchargement
     fetch(fileUrl)
       .then((response) => response.blob())
       .then((blob) => {
@@ -89,15 +103,23 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
+        toast.success('Téléchargement démarré');
       })
       .catch(() => {
-        // Fallback: ouvrir dans un nouvel onglet
         window.open(fileUrl, '_blank', 'noopener,noreferrer');
       });
   };
 
   const handleOpenNewTab = () => {
     window.open(fileUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(fileUrl).then(() => {
+      toast.success('Lien copié dans le presse-papier');
+    }).catch(() => {
+      toast.error('Impossible de copier le lien');
+    });
   };
 
   const toggleFullscreen = () => {
@@ -114,6 +136,55 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
   const handleZoomOut = () => setZoom((prev) => Math.max(prev - 25, 50));
 
   if (!isOpen) return null;
+
+  // Use specialized viewers for specific file types
+  if (fileType === 'pdf' && useAdvancedPdfViewer) {
+    return (
+      <AdvancedPDFViewer
+        fileUrl={fileUrl}
+        fileName={fileName}
+        isOpen={isOpen}
+        onClose={onClose}
+        onShare={handleShare}
+      />
+    );
+  }
+
+  if (fileType === 'audio') {
+    return (
+      <AudioViewer
+        fileUrl={fileUrl}
+        fileName={fileName}
+        isOpen={isOpen}
+        onClose={onClose}
+        onShare={handleShare}
+      />
+    );
+  }
+
+  if (fileType === 'text') {
+    return (
+      <TextViewer
+        fileUrl={fileUrl}
+        fileName={fileName}
+        isOpen={isOpen}
+        onClose={onClose}
+        onShare={handleShare}
+      />
+    );
+  }
+
+  if (fileType === 'archive') {
+    return (
+      <ArchiveViewer
+        fileUrl={fileUrl}
+        fileName={fileName}
+        isOpen={isOpen}
+        onClose={onClose}
+        onShare={handleShare}
+      />
+    );
+  }
 
   const renderPdfContent = () => {
     const scale = zoom / 100;
@@ -278,6 +349,18 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
               </Button>
             </>
           )}
+
+          {/* Share button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleShare}
+            className="h-8 w-8 sm:h-9 sm:w-9"
+            title="Partager le lien"
+          >
+            <Share2 className="h-4 w-4" />
+          </Button>
+
           <Button
             variant="ghost"
             size="icon"
