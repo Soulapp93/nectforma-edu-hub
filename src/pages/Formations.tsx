@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Filter, BookOpen, Users, Clock, Star, Grid3x3, List, GraduationCap } from 'lucide-react';
+import { Plus, Search, Filter, Users, Clock, Star, Grid3x3, List, GraduationCap } from 'lucide-react';
 import FormationCard from '../components/administration/FormationCard';
 import CreateFormationModal from '@/components/administration/CreateFormationModal';
 import EditFormationModal from '@/components/administration/EditFormationModal';
@@ -215,7 +215,7 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 sm:p-10 lg:p-12 text-center">
           <div className="max-w-md mx-auto">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <BookOpen className="h-8 w-8 sm:h-10 sm:w-10 text-purple-600" />
+              <GraduationCap className="h-8 w-8 sm:h-10 sm:w-10 text-purple-600" />
             </div>
             <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">
               {searchTerm || selectedLevel !== 'all' || selectedStatus !== 'all' 

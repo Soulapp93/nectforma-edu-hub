@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, BookOpen, Calendar, Plus } from 'lucide-react';
+import { X, GraduationCap, Calendar, Plus, BookOpen } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ModuleForm, { ModuleFormData } from './ModuleForm';
@@ -162,7 +162,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         <div className="flex items-center justify-between p-6 border-b border-border/50 sticky top-0 bg-background/95 backdrop-blur-sm">
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-              <BookOpen className="h-5 w-5 text-primary-foreground" />
+              <GraduationCap className="h-5 w-5 text-primary-foreground" />
             </div>
             Nouvelle formation
           </h2>

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CalendarDays } from 'lucide-react';
 import { useFormations } from '@/hooks/useFormations';
 import { scheduleService } from '@/services/scheduleService';
 import { toast } from 'sonner';
@@ -70,7 +71,12 @@ const CreateScheduleModal: React.FC<CreateScheduleModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Créer un Emploi du Temps</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+              <CalendarDays className="h-4 w-4 text-primary-foreground" />
+            </div>
+            Créer un Emploi du Temps
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, BookOpen, Save, Plus } from 'lucide-react';
+import { X, GraduationCap, Save, Plus, BookOpen } from 'lucide-react';
 import ColorPalette from './ColorPalette';
 import ModuleForm, { ModuleFormData } from './ModuleForm';
 import { formationService, Formation } from '@/services/formationService';
@@ -202,7 +202,7 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
           <h2 className="text-xl font-semibold text-gray-900">
-            <BookOpen className="h-5 w-5 inline mr-2" />
+            <GraduationCap className="h-5 w-5 inline mr-2" />
             Modifier la formation
           </h2>
           <button
