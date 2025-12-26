@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Clock, Users, BookOpen, GraduationCap, Briefcase } from 'lucide-react';
+import { CalendarClock, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -40,22 +40,6 @@ export const ScheduleViewHeader: React.FC<ScheduleViewHeaderProps> = ({
     }
   };
 
-  const getRoleIcon = () => {
-    switch (userRole) {
-      case 'Étudiant':
-        return GraduationCap;
-      case 'Formateur':
-        return Users;
-      case 'Tuteur':
-        return Briefcase;
-      case 'Admin':
-      case 'AdminPrincipal':
-        return Calendar;
-      default:
-        return Clock;
-    }
-  };
-
   const getTitle = () => {
     // Pour les étudiants avec une formation sélectionnée, afficher le titre de la formation
     if (userRole === 'Étudiant' && formationTitle) {
@@ -76,15 +60,13 @@ export const ScheduleViewHeader: React.FC<ScheduleViewHeaderProps> = ({
     return 'Emploi du Temps';
   };
 
-  const Icon = getRoleIcon();
-
   return (
     <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border shadow-sm">
       <div className="w-full px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25 flex-shrink-0">
-              <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
+              <CalendarClock className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
             </div>
             <div className="min-w-0 flex-1">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">
