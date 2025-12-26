@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Grid3x3, List } from 'lucide-react';
+import { Search, Plus, Grid3x3, List, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LoadingState } from '@/components/ui/loading-state';
@@ -112,18 +112,23 @@ const FormationsList: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="glass-card rounded-xl">
-        <div className="p-4 sm:p-6 border-b border-border">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-            <h2 className="text-lg sm:text-xl font-semibold text-foreground">Gestion des formations</h2>
+      <div className="bg-card rounded-2xl shadow-lg border-2 border-primary/20">
+        <div className="p-5 sm:p-6 lg:p-8 border-b border-primary/10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-primary/10 rounded-xl">
+                <GraduationCap className="h-5 w-5 text-primary" />
+              </div>
+              <h2 className="text-lg font-semibold text-foreground">Gestion des formations</h2>
+            </div>
             <div className="flex items-center gap-2 flex-wrap">
               {/* Toggle vue grille/liste */}
-              <div className="flex items-center bg-muted rounded-lg p-1">
+              <div className="flex items-center bg-muted rounded-xl p-1 border border-primary/10">
                 <Button
                   variant={viewMode === 'grid' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('grid')}
-                  className="h-8 px-2 sm:px-3"
+                  className="h-8 px-3 rounded-lg"
                 >
                   <Grid3x3 className="h-4 w-4" />
                 </Button>
@@ -131,7 +136,7 @@ const FormationsList: React.FC = () => {
                   variant={viewMode === 'list' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('list')}
-                  className="h-8 px-2 sm:px-3"
+                  className="h-8 px-3 rounded-lg"
                 >
                   <List className="h-4 w-4" />
                 </Button>
@@ -145,7 +150,7 @@ const FormationsList: React.FC = () => {
                   size="sm"
                 >
                   <Plus className="h-4 w-4" />
-                  <span className="hidden xs:inline">Nouvelle formation</span>
+                  <span className="hidden xs:inline">Nouveau</span>
                   <span className="xs:hidden">Nouveau</span>
                 </Button>
               )}
@@ -155,18 +160,18 @@ const FormationsList: React.FC = () => {
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <input
                   type="text"
                   placeholder="Rechercher une formation..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                  className="w-full pl-12 pr-4 py-3 text-base border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 />
               </div>
             </div>
             <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-              <SelectTrigger className="w-full sm:w-[210px]">
+              <SelectTrigger className="w-[180px] border-2 border-primary/30 rounded-xl">
                 <SelectValue placeholder="Tous les niveaux" />
               </SelectTrigger>
               <SelectContent>
@@ -180,7 +185,7 @@ const FormationsList: React.FC = () => {
             </Select>
 
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger className="w-full sm:w-[210px]">
+              <SelectTrigger className="w-[180px] border-2 border-primary/30 rounded-xl">
                 <SelectValue placeholder="Tous les statuts" />
               </SelectTrigger>
               <SelectContent>
