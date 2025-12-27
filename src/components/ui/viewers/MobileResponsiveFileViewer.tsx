@@ -196,7 +196,8 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
       <div className="flex-1 w-full h-full bg-muted overflow-auto" ref={pdfContainerRef}>
         <div className="min-h-full w-full flex items-start justify-center p-4 sm:p-6">
           <Document
-            file={fileUrl}
+            file={{ url: fileUrl }}
+            options={{ disableRange: true, disableStream: true }}
             onLoadSuccess={({ numPages }) => {
               setPdfPages(numPages);
               setLoading(false);
