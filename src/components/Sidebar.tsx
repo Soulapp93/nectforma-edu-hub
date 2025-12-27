@@ -145,28 +145,30 @@ const Sidebar = () => {
     ? tutorNavigation
     : limitedNavigation;
 
+  const { toggleSidebar } = useSidebar();
+
   return (
     <SidebarWrapper 
-      className={`${collapsed ? 'w-16' : 'w-64'} nect-gradient sidebar-glow text-white shadow-2xl transition-all duration-300 overflow-hidden`}
+      className={`${collapsed ? 'w-[72px]' : 'w-64'} nect-gradient sidebar-glow text-white shadow-2xl transition-all duration-300 overflow-hidden`}
       collapsible="icon"
     >
       {/* Header with Logo and Establishment */}
-      <SidebarHeader className="relative z-10 px-5 pt-6 pb-4">
+      <SidebarHeader className="relative z-10 px-3 pt-6 pb-4">
         <div className="flex flex-col gap-3">
-          {/* App Logo and Name */}
-          <div className="flex items-center gap-3">
+          {/* App Logo and Name - Clickable to toggle sidebar */}
+          <button
+            onClick={toggleSidebar}
+            className="flex items-center gap-3 hover:opacity-90 transition-opacity cursor-pointer w-full"
+            title={collapsed ? "Ouvrir le menu" : "Réduire le menu"}
+          >
             {/* Logo Container with glow effect */}
             <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
               <span className="text-transparent bg-clip-text bg-gradient-to-br from-violet-600 to-purple-600 font-bold text-xl">NF</span>
             </div>
             {!collapsed && (
-              <div className="flex items-center">
-                <h1 className="text-lg font-semibold text-white tracking-wide">NECTFY</h1>
-                {/* Collapse chevron */}
-                <ChevronRight className="ml-auto h-4 w-4 text-white/60" />
-              </div>
+              <h1 className="text-lg font-semibold text-white tracking-wide">NECTFY</h1>
             )}
-          </div>
+          </button>
           
           {/* Establishment info */}
           {!collapsed && establishment && (
@@ -187,14 +189,32 @@ const Sidebar = () => {
               </div>
             </div>
           )}
+          
+          {/* Mini establishment logo when collapsed */}
+          {collapsed && establishment && (
+            <div className="flex justify-center">
+              {establishment.logo_url ? (
+                <img 
+                  src={establishment.logo_url} 
+                  alt={establishment.name}
+                  className="w-9 h-9 rounded-lg object-cover border border-white/20"
+                  title={establishment.name}
+                />
+              ) : (
+                <div className="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center border border-white/20" title={establishment.name}>
+                  <Building2 className="w-4 h-4 text-white/70" />
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </SidebarHeader>
 
       <SidebarContent className="relative z-10">
         {/* User Profile Card */}
-        <div className="mx-4 mb-6 p-3 rounded-xl bg-white/10 backdrop-blur-sm">
-          <div className="flex items-center gap-3">
-            <Avatar className="w-10 h-10 flex-shrink-0 border-2 border-white/30">
+        <div className={`mx-3 mb-6 p-3 rounded-xl bg-white/10 backdrop-blur-sm ${collapsed ? 'flex justify-center' : ''}`}>
+          <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
+            <Avatar className="w-10 h-10 flex-shrink-0 border-2 border-white/30" title={collapsed ? userDisplayInfo.name : undefined}>
               <AvatarImage src={userDisplayInfo.profilePhotoUrl || ''} alt={userDisplayInfo.name} />
               <AvatarFallback className="bg-white/20 text-white text-sm font-semibold">
                 {userDisplayInfo.initials}
@@ -219,7 +239,7 @@ const Sidebar = () => {
 
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className="px-3 space-y-1">
+            <SidebarMenu className="px-2 space-y-1">
               {navigation.map((item) => {
                 const Icon = item.icon;
                 const hasSubItems = item.subItems && item.subItems.length > 0;
@@ -231,15 +251,15 @@ const Sidebar = () => {
                       <div>
                         <button
                           onClick={() => setAdminExpanded(!adminExpanded)}
-                          className={`flex items-center justify-between w-full px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+                          className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'} w-full px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
                             isAdminRoute
                               ? 'bg-white/20 text-white shadow-lg backdrop-blur-sm'
                               : 'text-white/90 hover:bg-white/10'
                           }`}
                           title={collapsed ? item.name : undefined}
                         >
-                          <div className="flex items-center">
-                            <Icon className={`${collapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0`} />
+                          <div className={`flex items-center ${collapsed ? 'justify-center' : ''}`}>
+                            <Icon className={`h-5 w-5 flex-shrink-0 ${collapsed ? '' : 'mr-3'}`} />
                             {!collapsed && <span>{item.name}</span>}
                           </div>
                           {!collapsed && (
@@ -295,7 +315,7 @@ const Sidebar = () => {
                         to={item.href}
                         end={item.href === '/' || item.href === '/dashboard'}
                         className={({ isActive }) =>
-                          `flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+                          `flex items-center ${collapsed ? 'justify-center' : 'justify-between'} px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
                             isActive
                               ? 'bg-white/20 text-white shadow-lg backdrop-blur-sm'
                               : 'text-white/90 hover:bg-white/10'
@@ -303,8 +323,8 @@ const Sidebar = () => {
                         }
                         title={collapsed ? item.name : undefined}
                       >
-                        <div className="flex items-center">
-                          <Icon className={`${collapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0`} />
+                        <div className={`flex items-center ${collapsed ? 'justify-center' : ''}`}>
+                          <Icon className={`h-5 w-5 flex-shrink-0 ${collapsed ? '' : 'mr-3'}`} />
                           {!collapsed && <span>{item.name}</span>}
                         </div>
                         {badgeCount > 0 && !collapsed && (
@@ -329,13 +349,13 @@ const Sidebar = () => {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="relative z-10 p-4 border-t border-white/10">
+      <SidebarFooter className="relative z-10 p-3 border-t border-white/10">
         <button 
           onClick={handleLogout}
-          className="flex items-center px-4 py-3 text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white rounded-xl transition-all duration-200 w-full"
+          className={`flex items-center ${collapsed ? 'justify-center' : ''} px-3 py-3 text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white rounded-xl transition-all duration-200 w-full`}
           title={collapsed ? 'Déconnexion' : undefined}
         >
-          <LogOut className={`${collapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0`} />
+          <LogOut className={`h-5 w-5 flex-shrink-0 ${collapsed ? '' : 'mr-3'}`} />
           {!collapsed && <span>Déconnexion</span>}
         </button>
       </SidebarFooter>
