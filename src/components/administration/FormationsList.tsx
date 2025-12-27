@@ -229,12 +229,11 @@ const FormationsList: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="glass-card rounded-xl overflow-hidden">
+        <div className="bg-card rounded-2xl overflow-hidden border-2 border-primary/20 shadow-lg">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-muted/50 border-b border-border">
+              <thead className="bg-gradient-to-r from-primary/10 to-accent/10 border-b-2 border-primary/20">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Niveau</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Formation</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Dates</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Durée</th>
@@ -248,25 +247,31 @@ const FormationsList: React.FC = () => {
                 {filteredFormations.map((formation, index) => (
                   <tr 
                     key={formation.id} 
-                    className={`border-b border-border hover:bg-muted/30 transition-colors ${index % 2 === 0 ? 'bg-background' : 'bg-muted/10'}`}
+                    className={`border-b border-primary/10 hover:bg-primary/5 transition-colors ${index % 2 === 0 ? 'bg-background' : 'bg-muted/20'}`}
                   >
                     <td className="px-6 py-4">
-                      <Badge 
-                        variant="outline"
-                        className="font-medium"
-                        style={{ borderColor: formation.color, color: formation.color }}
-                      >
-                        {formation.level}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div>
-                        <div className="font-medium text-foreground">{formation.title}</div>
-                        {formation.description && (
-                          <div className="text-sm text-muted-foreground line-clamp-1 mt-1">
-                            {formation.description}
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="w-1.5 h-12 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: formation.color }}
+                        />
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge 
+                              variant="outline"
+                              className="font-medium text-xs"
+                              style={{ borderColor: formation.color, color: formation.color }}
+                            >
+                              {formation.level}
+                            </Badge>
                           </div>
-                        )}
+                          <div className="font-medium text-foreground">{formation.title}</div>
+                          {formation.description && (
+                            <div className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                              {formation.description}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -283,21 +288,25 @@ const FormationsList: React.FC = () => {
                       <span className="text-sm text-muted-foreground">{formation.duration}h</span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">
-                          {formation.participantsCount || 0} / {formation.max_students}
-                        </Badge>
-                      </div>
+                      <Badge 
+                        variant="secondary"
+                        className="bg-primary/10 text-primary border border-primary/20"
+                      >
+                        {formation.participantsCount || 0} / {formation.max_students}
+                      </Badge>
                     </td>
                     <td className="px-6 py-4">
-                      <Badge variant="outline">
+                      <Badge 
+                        variant="outline"
+                        className="border-primary/30 text-primary/80"
+                      >
                         {formation.formation_modules?.length || 0} modules
                       </Badge>
                     </td>
                     <td className="px-6 py-4">
                       <Badge 
                         variant={formation.status === 'Actif' ? 'default' : 'secondary'}
-                        className={formation.status === 'Actif' ? 'bg-success/10 text-success border-success/20' : ''}
+                        className={formation.status === 'Actif' ? 'bg-success/10 text-success border border-success/30' : 'bg-muted text-muted-foreground'}
                       >
                         {formation.status}
                       </Badge>
@@ -308,6 +317,7 @@ const FormationsList: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => window.location.href = `/formations/${formation.id}`}
+                          className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary"
                         >
                           Voir détail
                         </Button>
@@ -315,6 +325,7 @@ const FormationsList: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleViewParticipants(formation.id)}
+                          className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary"
                         >
                           Voir les participants ({formation.participantsCount || 0})
                         </Button>
@@ -324,6 +335,7 @@ const FormationsList: React.FC = () => {
                               variant="outline"
                               size="sm"
                               onClick={() => handleEditFormation(formation.id)}
+                              className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary"
                             >
                               Modifier
                             </Button>
