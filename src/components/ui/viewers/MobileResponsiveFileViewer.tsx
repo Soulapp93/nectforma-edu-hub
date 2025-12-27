@@ -46,6 +46,13 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
   const { resolvedUrl, isResolving } = useResolvedFileUrl(fileUrl, { enabled: isOpen });
   const effectiveUrl = resolvedUrl;
 
+  // Important: on first render, the hook hasn’t had time to swap the public URL for a signed URL yet.
+  // Avoid probing/loading the public URL (can fail) and wait for the signed URL when applicable.
+  const shouldWaitForSignedUrl =
+    isOpen &&
+    fileUrl.includes('/storage/v1/object/public/') &&
+    effectiveUrl === fileUrl;
+
   const getFileExtension = (name: string) => {
     return name.split('.').pop()?.toLowerCase() || '';
   };
@@ -103,6 +110,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
   useEffect(() => {
     if (!isOpen) return;
     if (isResolving) return;
+    if (shouldWaitForSignedUrl) return;
 
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), 15000);
@@ -139,7 +147,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
       if (watchdogRef.current) window.clearTimeout(watchdogRef.current);
       watchdogRef.current = null;
     };
-  }, [isOpen, isResolving, effectiveUrl]);
+  }, [isOpen, isResolving, shouldWaitForSignedUrl, effectiveUrl]);
 
   // Clear watchdog as soon as something finishes (success or error)
   useEffect(() => {
@@ -457,7 +465,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
 
       {/* Content area */}
       <div className="flex-1 overflow-hidden relative">
-        {(loading || isResolving) && (
+        {(loading || isResolving || shouldWaitForSignedUrl) && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
             <div className="flex flex-col items-center gap-3">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
