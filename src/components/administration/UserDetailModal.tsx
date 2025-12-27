@@ -58,7 +58,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ isOpen, onClose, user
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 border-2 border-primary/20 rounded-2xl">
         {/* En-tête avec gradient violet */}
-        <div className="relative bg-gradient-to-r from-primary to-accent p-6 pb-12">
+        <div className="relative bg-gradient-to-r from-primary to-accent p-6 pb-6">
           {/* Bouton fermer */}
           <Button
             variant="ghost"
@@ -74,12 +74,10 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ isOpen, onClose, user
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
             <div className="absolute -bottom-20 -left-10 w-60 h-60 bg-white/5 rounded-full blur-3xl" />
           </div>
-        </div>
 
-        {/* Avatar et infos principales - chevauchant l'en-tête */}
-        <div className="relative px-6 -mt-10">
-          <div className="flex items-end gap-4">
-            <div className="h-20 w-20 bg-background rounded-2xl border-4 border-background shadow-lg flex items-center justify-center overflow-hidden">
+          {/* Avatar et infos principales - entièrement sur le violet */}
+          <div className="relative flex items-center gap-4 mt-4">
+            <div className="h-16 w-16 bg-white/20 rounded-2xl border-2 border-white/30 shadow-lg flex items-center justify-center overflow-hidden">
               {user.profile_photo_url ? (
                 <img 
                   src={user.profile_photo_url} 
@@ -87,20 +85,24 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ isOpen, onClose, user
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="h-full w-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-primary">
+                <div className="h-full w-full bg-white/20 flex items-center justify-center">
+                  <span className="text-xl font-bold text-white">
                     {user.first_name[0]}{user.last_name[0]}
                   </span>
                 </div>
               )}
             </div>
-            <div className="pb-2">
-              <h2 className="text-2xl font-bold text-foreground">
+            <div>
+              <h2 className="text-2xl font-bold text-white">
                 {user.first_name} {user.last_name}
               </h2>
               <div className="flex items-center gap-2 mt-2">
-                {getRoleBadge(user.role)}
-                {getStatusBadge(user.status)}
+                <span className="px-3 py-1 text-sm font-medium rounded-full bg-white/20 text-white">
+                  {user.role}
+                </span>
+                <span className="px-3 py-1 text-sm font-medium rounded-full bg-white/20 text-white">
+                  {user.status}
+                </span>
               </div>
             </div>
           </div>
