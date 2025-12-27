@@ -87,10 +87,10 @@ const FormationCard: React.FC<FormationCardProps> = ({
 
   return (
     <>
-      <div className="bg-card rounded-xl shadow-sm border border-border hover:shadow-md transition-shadow duration-200 group">
+      <div className="bg-card rounded-2xl shadow-sm border-2 border-primary/20 hover:shadow-lg hover:border-primary/40 transition-all duration-200 group overflow-hidden">
         {/* Barre de couleur en haut */}
         <div 
-          className="h-1.5 sm:h-2 rounded-t-xl" 
+          className="h-2 sm:h-2.5" 
           style={{ backgroundColor: color }}
         />
         
