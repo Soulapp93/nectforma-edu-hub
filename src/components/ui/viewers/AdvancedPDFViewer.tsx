@@ -542,7 +542,11 @@ const AdvancedPDFViewer: React.FC<AdvancedPDFViewerProps> = ({
                         : 'border-transparent hover:border-muted-foreground/30'
                     }`}
                   >
-                    <Document file={fileUrl} loading="">
+                    <Document
+                      file={{ url: fileUrl }}
+                      options={{ disableRange: true, disableStream: true }}
+                      loading=""
+                    >
                       <Page
                         pageNumber={index + 1}
                         width={220}
@@ -609,7 +613,8 @@ const AdvancedPDFViewer: React.FC<AdvancedPDFViewerProps> = ({
         {/* PDF Content */}
         <div className="flex-1 flex items-center justify-center overflow-hidden">
           <Document
-            file={fileUrl}
+            file={{ url: fileUrl }}
+            options={{ disableRange: true, disableStream: true }}
             onLoadSuccess={onDocumentLoadSuccess}
             onLoadError={onDocumentLoadError}
             loading={
@@ -976,7 +981,8 @@ const AdvancedPDFViewer: React.FC<AdvancedPDFViewerProps> = ({
                 >
                   <Document
                     ref={documentRef}
-                    file={fileUrl}
+                    file={{ url: fileUrl }}
+                    options={{ disableRange: true, disableStream: true }}
                     onLoadSuccess={onDocumentLoadSuccess}
                     onLoadError={onDocumentLoadError}
                     loading=""
