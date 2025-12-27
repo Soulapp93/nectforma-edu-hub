@@ -3,9 +3,11 @@ import { X, Download, ZoomIn, ZoomOut, RotateCw, Maximize2, Minimize2, ChevronLe
 import { Button } from '../button';
 import { toast } from 'sonner';
 import * as pdfjsLib from 'pdfjs-dist';
+import { configurePdfJsWorker } from '@/lib/pdfWorker';
 
-// Configure PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Configure PDF.js worker: bundled/same-origin for reliability
+configurePdfJsWorker(pdfjsLib);
+
 
 interface ChromeStylePDFViewerProps {
   fileUrl: string;

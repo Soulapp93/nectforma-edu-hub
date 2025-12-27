@@ -40,6 +40,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
   const [useAdvancedPdfViewer, setUseAdvancedPdfViewer] = useState(true);
   const isMobile = useIsMobile();
   const pdfContainerRef = useRef<HTMLDivElement>(null);
+  const watchdogRef = useRef<number | null>(null);
 
   const getFileExtension = (name: string) => {
     return name.split('.').pop()?.toLowerCase() || '';
@@ -93,6 +94,55 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
       document.body.style.overflow = '';
     };
   }, [isOpen, onClose, fileType]);
+
+  // Network probe + watchdog to avoid infinite "Chargement..." when the file is unreachable or blocked
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 15000);
+
+    if (watchdogRef.current) window.clearTimeout(watchdogRef.current);
+    watchdogRef.current = window.setTimeout(() => {
+      setLoading(false);
+      setError(true);
+      toast.error('Le fichier met trop de temps à charger. Essayez de l’ouvrir dans un nouvel onglet.');
+    }, 20000);
+
+    // Tiny fetch to verify the URL is actually reachable (avoids downloading the whole file)
+    fetch(fileUrl, {
+      method: 'GET',
+      headers: { Range: 'bytes=0-0' },
+      signal: controller.signal,
+    })
+      .then((res) => {
+        // Some servers don’t support Range and may return 200
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      })
+      .catch(() => {
+        setLoading(false);
+        setError(true);
+        toast.error('Impossible de charger le fichier.');
+      })
+      .finally(() => {
+        window.clearTimeout(timeoutId);
+      });
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+      if (watchdogRef.current) window.clearTimeout(watchdogRef.current);
+      watchdogRef.current = null;
+    };
+  }, [isOpen, fileUrl]);
+
+  // Clear watchdog as soon as something finishes (success or error)
+  useEffect(() => {
+    if (!isOpen) return;
+    if (loading) return;
+    if (watchdogRef.current) window.clearTimeout(watchdogRef.current);
+    watchdogRef.current = null;
+  }, [isOpen, loading]);
 
   const handleDownload = () => {
     fetch(fileUrl)

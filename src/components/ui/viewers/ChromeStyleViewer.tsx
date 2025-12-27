@@ -3,9 +3,11 @@ import { X, ZoomIn, ZoomOut, Download, Maximize2, Minimize2, RotateCw, Menu, Che
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { configurePdfJsWorker } from '@/lib/pdfWorker';
 
-// Configuration de PDF.js
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+// Configuration PDF.js worker: bundled/same-origin for reliability
+configurePdfJsWorker(pdfjs);
+
 
 interface ChromeStyleViewerProps {
   fileUrl: string;
