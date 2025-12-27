@@ -8,6 +8,7 @@ import AdvancedPDFViewer from './AdvancedPDFViewer';
 import AudioViewer from './AudioViewer';
 import TextViewer from './TextViewer';
 import ArchiveViewer from './ArchiveViewer';
+import { useResolvedFileUrl } from '@/hooks/useResolvedFileUrl';
 
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -41,6 +42,9 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
   const isMobile = useIsMobile();
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const watchdogRef = useRef<number | null>(null);
+
+  const { resolvedUrl, isResolving } = useResolvedFileUrl(fileUrl, { enabled: isOpen });
+  const effectiveUrl = resolvedUrl;
 
   const getFileExtension = (name: string) => {
     return name.split('.').pop()?.toLowerCase() || '';
@@ -98,6 +102,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
   // Network probe + watchdog to avoid infinite "Chargement..." when the file is unreachable or blocked
   useEffect(() => {
     if (!isOpen) return;
+    if (isResolving) return;
 
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), 15000);
@@ -110,7 +115,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
     }, 20000);
 
     // Tiny fetch to verify the URL is actually reachable (avoids downloading the whole file)
-    fetch(fileUrl, {
+    fetch(effectiveUrl, {
       method: 'GET',
       headers: { Range: 'bytes=0-0' },
       signal: controller.signal,
@@ -134,7 +139,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
       if (watchdogRef.current) window.clearTimeout(watchdogRef.current);
       watchdogRef.current = null;
     };
-  }, [isOpen, fileUrl]);
+  }, [isOpen, isResolving, effectiveUrl]);
 
   // Clear watchdog as soon as something finishes (success or error)
   useEffect(() => {
@@ -145,7 +150,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
   }, [isOpen, loading]);
 
   const handleDownload = () => {
-    fetch(fileUrl)
+    fetch(effectiveUrl)
       .then((response) => response.blob())
       .then((blob) => {
         const url = window.URL.createObjectURL(blob);
@@ -159,12 +164,12 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
         toast.success('Téléchargement démarré');
       })
       .catch(() => {
-        window.open(fileUrl, '_blank', 'noopener,noreferrer');
+        window.open(effectiveUrl, '_blank', 'noopener,noreferrer');
       });
   };
 
   const handleOpenNewTab = () => {
-    window.open(fileUrl, '_blank', 'noopener,noreferrer');
+    window.open(effectiveUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleShare = () => {
@@ -194,7 +199,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
   if (fileType === 'pdf' && useAdvancedPdfViewer) {
     return (
       <AdvancedPDFViewer
-        fileUrl={fileUrl}
+        fileUrl={effectiveUrl}
         fileName={fileName}
         isOpen={isOpen}
         onClose={onClose}
@@ -206,7 +211,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
   if (fileType === 'audio') {
     return (
       <AudioViewer
-        fileUrl={fileUrl}
+        fileUrl={effectiveUrl}
         fileName={fileName}
         isOpen={isOpen}
         onClose={onClose}
@@ -218,7 +223,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
   if (fileType === 'text') {
     return (
       <TextViewer
-        fileUrl={fileUrl}
+        fileUrl={effectiveUrl}
         fileName={fileName}
         isOpen={isOpen}
         onClose={onClose}
@@ -230,7 +235,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
   if (fileType === 'archive') {
     return (
       <ArchiveViewer
-        fileUrl={fileUrl}
+        fileUrl={effectiveUrl}
         fileName={fileName}
         isOpen={isOpen}
         onClose={onClose}
@@ -246,7 +251,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
       <div className="flex-1 w-full h-full bg-muted overflow-auto" ref={pdfContainerRef}>
         <div className="min-h-full w-full flex items-start justify-center p-4 sm:p-6">
           <Document
-            file={{ url: fileUrl }}
+            file={{ url: effectiveUrl }}
             options={{ disableRange: true, disableStream: true }}
             onLoadSuccess={({ numPages }) => {
               setPdfPages(numPages);
@@ -278,7 +283,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
       return (
         <div className="flex-1 flex items-center justify-center overflow-auto p-2 sm:p-4 bg-black/90">
           <img
-            src={fileUrl}
+            src={effectiveUrl}
             alt={fileName}
             className="max-w-full max-h-full object-contain transition-transform duration-200"
             style={{ transform: `scale(${zoom / 100})` }}
@@ -293,7 +298,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
       return (
         <div className="flex-1 flex items-center justify-center bg-black p-2 sm:p-4">
           <video
-            src={fileUrl}
+            src={effectiveUrl}
             controls
             autoPlay
             className="max-w-full max-h-full"
@@ -309,7 +314,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
     }
 
     if (fileType === 'office') {
-      const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`;
+      const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(effectiveUrl)}`;
       return (
         <div className="flex-1 w-full h-full bg-muted">
           <iframe
@@ -452,7 +457,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
 
       {/* Content area */}
       <div className="flex-1 overflow-hidden relative">
-        {loading && (
+        {(loading || isResolving) && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
             <div className="flex flex-col items-center gap-3">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

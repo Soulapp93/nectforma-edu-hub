@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Download, ExternalLink, RefreshCw, AlertCircle, Eye, Maximize2, Presentation, ChevronLeft, ChevronRight, Share2 } from 'lucide-react';
 import { Button } from '../button';
 import { toast } from 'sonner';
+import { useResolvedFileUrl } from '@/hooks/useResolvedFileUrl';
 
 interface UniversalFileViewerProps {
   fileUrl: string;
@@ -22,6 +23,9 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
   isPresentationMode = false,
   onTogglePresentationMode
 }) => {
+  const { resolvedUrl, isResolving } = useResolvedFileUrl(fileUrl);
+  const effectiveUrl = resolvedUrl;
+
   const [loadError, setLoadError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [viewerMethod, setViewerMethod] = useState(0);
@@ -36,9 +40,8 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
 
   const fileExtension = getFileExtension(fileName);
 
-  // Différentes méthodes de visualisation selon le type de fichier
   const getViewerOptions = () => {
-    const encodedUrl = encodeURIComponent(fileUrl);
+    const encodedUrl = encodeURIComponent(effectiveUrl);
     
     if (fileExtension === 'pdf') {
       return [
@@ -54,7 +57,7 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
         },
         {
           name: 'Iframe Direct',
-          url: fileUrl,
+          url: effectiveUrl,
           description: 'Chargement direct'
         }
       ];
@@ -79,7 +82,7 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
     return [
       {
         name: 'Direct View',
-        url: fileUrl,
+        url: effectiveUrl,
         description: 'Affichage direct'
       }
     ];
@@ -119,7 +122,7 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
   const handleDownload = async () => {
     try {
       // Télécharger le fichier via fetch pour éviter les problèmes CORS
-      const response = await fetch(fileUrl);
+      const response = await fetch(effectiveUrl);
       
       if (!response.ok) {
         throw new Error('Erreur lors du téléchargement');
@@ -146,7 +149,7 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
       // Vérifier si l'API Web Share est disponible
       if (navigator.share) {
         // Télécharger le fichier pour le partager
-        const response = await fetch(fileUrl);
+        const response = await fetch(effectiveUrl);
         const blob = await response.blob();
         const file = new File([blob], fileName, { type: blob.type });
         
@@ -177,7 +180,7 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
   const openInNewTab = async () => {
     try {
       // Utiliser fetch pour télécharger et ouvrir dans un nouvel onglet via un lien <a>
-      const response = await fetch(fileUrl);
+      const response = await fetch(effectiveUrl);
       
       if (!response.ok) {
         throw new Error('Erreur lors de l\'ouverture');
@@ -238,7 +241,7 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
     setIsLoading(true);
     setLoadError(false);
     setRetryCount(0);
-  }, [fileUrl]);
+  }, [effectiveUrl]);
 
   // Auto-hide controls in presentation mode
   useEffect(() => {
@@ -369,7 +372,7 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
 
       {/* Content */}
       <div className={`flex-1 relative ${isPresentationMode ? 'bg-black' : 'bg-gray-100'}`}>
-        {isLoading && (
+        {(isLoading || isResolving) && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-white bg-opacity-90 z-10">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
             <p className="text-sm text-gray-600">Chargement du document...</p>
