@@ -217,18 +217,18 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
 
       {/* Formations Grid ou Liste */}
       {filteredFormations.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 sm:p-10 lg:p-12 text-center">
+        <div className="bg-card rounded-xl shadow-sm border border-border p-8 sm:p-10 lg:p-12 text-center">
           <div className="max-w-md mx-auto">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <GraduationCap className="h-8 w-8 sm:h-10 sm:w-10 text-purple-600" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <GraduationCap className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
             </div>
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">
+            <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-3">
               {searchTerm || selectedLevel !== 'all' || selectedStatus !== 'all' 
                 ? 'Aucune formation trouvée' 
                 : 'Aucune formation'
               }
             </h3>
-            <p className="text-base sm:text-lg text-gray-600 mb-6">
+            <p className="text-base sm:text-lg text-muted-foreground mb-6">
               {searchTerm || selectedLevel !== 'all' || selectedStatus !== 'all'
                 ? 'Essayez de modifier vos critères de recherche.'
                 : 'Aucune formation disponible pour le moment.'
@@ -250,75 +250,87 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-card rounded-xl overflow-hidden border border-border">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-muted/30 border-b border-border">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Niveau</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Formation</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Dates</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Durée</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Participants</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Modules</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Statut</th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">Actions</th>
+                  <th className="px-6 py-3.5 text-left text-sm font-medium text-muted-foreground">Formation</th>
+                  <th className="px-6 py-3.5 text-left text-sm font-medium text-muted-foreground">Dates</th>
+                  <th className="px-6 py-3.5 text-left text-sm font-medium text-muted-foreground">Durée</th>
+                  <th className="px-6 py-3.5 text-left text-sm font-medium text-muted-foreground">Participants</th>
+                  <th className="px-6 py-3.5 text-left text-sm font-medium text-muted-foreground">Modules</th>
+                  <th className="px-6 py-3.5 text-left text-sm font-medium text-muted-foreground">Statut</th>
+                  <th className="px-6 py-3.5 text-right text-sm font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                {filteredFormations.map((formation, index) => (
+              <tbody className="divide-y divide-border">
+                {filteredFormations.map((formation) => (
                   <tr 
                     key={formation.id} 
-                    className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}
+                    className="hover:bg-muted/20 transition-colors"
                   >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="w-1 h-14 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: formation.color }}
+                        />
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge 
+                              variant="outline"
+                              className="font-medium text-xs rounded-md px-2 py-0.5"
+                              style={{ 
+                                borderColor: formation.color, 
+                                color: formation.color,
+                                backgroundColor: `${formation.color}10`
+                              }}
+                            >
+                              {formation.level}
+                            </Badge>
+                          </div>
+                          <div className="font-medium text-foreground">{formation.title}</div>
+                          {formation.description && (
+                            <div className="text-xs text-muted-foreground line-clamp-1 mt-0.5 max-w-[250px]">
+                              {formation.description}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-muted-foreground">
+                        <div>Du {new Date(formation.start_date).toLocaleDateString('fr-FR')}</div>
+                        <div>au {new Date(formation.end_date).toLocaleDateString('fr-FR')}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm font-medium text-foreground">{formation.duration}h</span>
+                    </td>
                     <td className="px-6 py-4">
                       <Badge 
                         variant="outline"
-                        className="font-medium"
-                        style={{ borderColor: formation.color, color: formation.color }}
+                        className="bg-primary/5 text-primary border-primary/20 rounded-md"
                       >
-                        {formation.level}
+                        {formation.participantsCount || 0} / {formation.max_students}
                       </Badge>
                     </td>
                     <td className="px-6 py-4">
-                      <div>
-                        <div className="font-medium text-gray-900">{formation.title}</div>
-                        {formation.description && (
-                          <div className="text-sm text-gray-600 line-clamp-1 mt-1">
-                            {formation.description}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm">
-                        <div className="text-gray-900">
-                          Du {new Date(formation.start_date).toLocaleDateString('fr-FR')}
-                        </div>
-                        <div className="text-gray-600">
-                          au {new Date(formation.end_date).toLocaleDateString('fr-FR')}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-gray-600">{formation.duration}h</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">
-                          {formation.participantsCount || 0} / {formation.max_students}
-                        </Badge>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge variant="outline">
+                      <Badge 
+                        variant="outline"
+                        className="bg-muted/50 text-muted-foreground border-border rounded-md"
+                      >
                         {formation.formation_modules?.length || 0} modules
                       </Badge>
                     </td>
                     <td className="px-6 py-4">
                       <Badge 
-                        variant={formation.status === 'Actif' ? 'default' : 'secondary'}
-                        className={formation.status === 'Actif' ? 'bg-green-100 text-green-700 border-green-200' : ''}
+                        variant="outline"
+                        className={formation.status === 'Actif' 
+                          ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30 rounded-md' 
+                          : 'bg-muted text-muted-foreground border-border rounded-md'
+                        }
                       >
                         {formation.status}
                       </Badge>
@@ -329,6 +341,7 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
                           variant="outline"
                           size="sm"
                           onClick={() => window.location.href = `/formations/${formation.id}`}
+                          className="text-xs h-8 border-border hover:bg-muted"
                         >
                           Voir détail
                         </Button>
@@ -336,6 +349,7 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleViewParticipants(formation.id)}
+                          className="text-xs h-8 border-border hover:bg-muted"
                         >
                           Voir les participants ({formation.participantsCount || 0})
                         </Button>
@@ -345,6 +359,7 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
                               variant="outline"
                               size="sm"
                               onClick={() => handleEditFormation(formation)}
+                              className="text-xs h-8 border-border hover:bg-muted"
                             >
                               Modifier
                             </Button>
@@ -352,6 +367,7 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
                               variant="destructive"
                               size="sm"
                               onClick={() => handleDeleteFormation(formation.id)}
+                              className="text-xs h-8"
                             >
                               Supprimer
                             </Button>
@@ -366,7 +382,6 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
           </div>
         </div>
       )}
-
       {/* Modals */}
       <CreateFormationModal
         isOpen={isCreateModalOpen}
