@@ -964,16 +964,7 @@ const AdvancedPDFViewer: React.FC<AdvancedPDFViewerProps> = ({
 
           {/* PDF Content */}
           <div className="flex-1 overflow-auto bg-muted/30" ref={contentRef}>
-            {loading && (
-              <div className="flex items-center justify-center h-full">
-                <div className="flex flex-col items-center gap-3">
-                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                  <span className="text-sm text-muted-foreground">Chargement du document...</span>
-                </div>
-              </div>
-            )}
-
-            {error && (
+            {error ? (
               <div className="flex flex-col items-center justify-center h-full p-8">
                 <FileWarning className="w-16 h-16 mb-4 text-destructive" />
                 <div className="text-lg mb-2 text-destructive font-medium">Erreur de chargement</div>
@@ -993,9 +984,7 @@ const AdvancedPDFViewer: React.FC<AdvancedPDFViewerProps> = ({
                   </Button>
                 </div>
               </div>
-            )}
-
-            {!loading && !error && (
+            ) : (
               <div className="min-h-full flex items-start justify-center p-8">
                 <div
                   className="relative"
@@ -1008,7 +997,20 @@ const AdvancedPDFViewer: React.FC<AdvancedPDFViewerProps> = ({
                     options={{ disableRange: true, disableStream: true }}
                     onLoadSuccess={onDocumentLoadSuccess}
                     onLoadError={onDocumentLoadError}
-                    loading=""
+                    loading={
+                      <div className="flex items-center justify-center h-[70vh]">
+                        <div className="flex flex-col items-center gap-3">
+                          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                          <span className="text-sm text-muted-foreground">Chargement du document...</span>
+                        </div>
+                      </div>
+                    }
+                    error={
+                      <div className="flex flex-col items-center justify-center h-[70vh] p-8">
+                        <FileWarning className="w-16 h-16 mb-4 text-destructive" />
+                        <div className="text-lg mb-2 text-destructive font-medium">Erreur de chargement</div>
+                      </div>
+                    }
                   >
                     <Page
                       pageNumber={pageNumber}
@@ -1017,11 +1019,17 @@ const AdvancedPDFViewer: React.FC<AdvancedPDFViewerProps> = ({
                       renderTextLayer={true}
                       renderAnnotationLayer={true}
                       className="shadow-2xl rounded-lg overflow-hidden"
+                      loading={
+                        <div className="flex items-center justify-center p-8">
+                          <Loader2 className="w-6 h-6 animate-spin text-primary mr-2" />
+                          <span className="text-sm text-muted-foreground">Chargement de la page...</span>
+                        </div>
+                      }
                     />
                   </Document>
-                  
+
                   {/* Annotations overlay */}
-                  {renderAnnotations(pageNumber)}
+                  {!loading && renderAnnotations(pageNumber)}
                 </div>
               </div>
             )}
