@@ -232,15 +232,15 @@ const FormationsList: React.FC = () => {
         <div className="bg-card rounded-xl overflow-hidden border border-border">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-muted/30 border-b border-border">
+              <thead className="bg-primary/5 border-b border-primary/10">
                 <tr>
-                  <th className="px-6 py-3.5 text-left text-sm font-medium text-muted-foreground">Formation</th>
-                  <th className="px-6 py-3.5 text-left text-sm font-medium text-muted-foreground">Dates</th>
-                  <th className="px-6 py-3.5 text-left text-sm font-medium text-muted-foreground">Durée</th>
-                  <th className="px-6 py-3.5 text-left text-sm font-medium text-muted-foreground">Participants</th>
-                  <th className="px-6 py-3.5 text-left text-sm font-medium text-muted-foreground">Modules</th>
-                  <th className="px-6 py-3.5 text-left text-sm font-medium text-muted-foreground">Statut</th>
-                  <th className="px-6 py-3.5 text-right text-sm font-medium text-muted-foreground">Actions</th>
+                  <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Formation</th>
+                  <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Dates</th>
+                  <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Durée</th>
+                  <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Participants</th>
+                  <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Modules</th>
+                  <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Statut</th>
+                  <th className="px-6 py-3.5 text-right text-sm font-medium text-primary/80">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
