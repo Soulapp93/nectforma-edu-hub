@@ -232,39 +232,40 @@ const FormationsList: React.FC = () => {
         <div className="bg-card rounded-2xl overflow-hidden border-2 border-primary/20 shadow-lg">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gradient-to-r from-primary/10 to-accent/10 border-b-2 border-primary/20">
+              <thead className="bg-gradient-to-r from-primary to-accent">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Formation</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Dates</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Durée</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Participants</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Modules</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Statut</th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-foreground">Actions</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">Niveau</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">Formation</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">Dates</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">Durée</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">Participants</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">Modules</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">Statut</th>
+                  <th className="px-6 py-4 text-right text-sm font-semibold text-white">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredFormations.map((formation, index) => (
                   <tr 
                     key={formation.id} 
-                    className={`border-b border-primary/10 hover:bg-primary/5 transition-colors ${index % 2 === 0 ? 'bg-background' : 'bg-muted/20'}`}
+                    className={`border-b border-primary/10 hover:bg-primary/5 transition-colors ${index % 2 === 0 ? 'bg-background' : 'bg-primary/5'}`}
                   >
+                    <td className="px-6 py-4">
+                      <Badge 
+                        variant="outline"
+                        className="font-medium text-xs border-2"
+                        style={{ borderColor: formation.color, color: formation.color, backgroundColor: `${formation.color}15` }}
+                      >
+                        {formation.level}
+                      </Badge>
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div 
-                          className="w-1.5 h-12 rounded-full flex-shrink-0"
+                          className="w-1 h-10 rounded-full flex-shrink-0"
                           style={{ backgroundColor: formation.color }}
                         />
                         <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <Badge 
-                              variant="outline"
-                              className="font-medium text-xs"
-                              style={{ borderColor: formation.color, color: formation.color }}
-                            >
-                              {formation.level}
-                            </Badge>
-                          </div>
                           <div className="font-medium text-foreground">{formation.title}</div>
                           {formation.description && (
                             <div className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
