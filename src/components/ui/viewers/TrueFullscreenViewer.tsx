@@ -38,6 +38,7 @@ const TrueFullscreenViewer: React.FC<TrueFullscreenViewerProps> = ({
   const [zoom, setZoom] = useState(100);
   const [pdfPages, setPdfPages] = useState(0);
   const [pdfPage, setPdfPage] = useState(1);
+  const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
   const [showControls, setShowControls] = useState(true);
   const [loadProgress, setLoadProgress] = useState(0);
   
@@ -147,6 +148,8 @@ const TrueFullscreenViewer: React.FC<TrueFullscreenViewerProps> = ({
       document.body.style.overflow = 'hidden';
       setLoading(true);
       setError(false);
+      setLoadProgress(0);
+      setPdfData(null);
       if (fileType === 'pdf') {
         setPdfPages(0);
         setPdfPage(1);
@@ -159,7 +162,7 @@ const TrueFullscreenViewer: React.FC<TrueFullscreenViewerProps> = ({
     };
   }, [isOpen, onClose, fileType, isFullscreen]);
 
-  // Network probe + watchdog
+  // Network probe + watchdog (avoid infinite loading)
   useEffect(() => {
     if (!isOpen) return;
     if (isResolving) return;
@@ -169,10 +172,10 @@ const TrueFullscreenViewer: React.FC<TrueFullscreenViewerProps> = ({
     const timeoutId = window.setTimeout(() => controller.abort(), 15000);
 
     if (watchdogRef.current) window.clearTimeout(watchdogRef.current);
-    
+
     // Simulate progress
     const progressInterval = window.setInterval(() => {
-      setLoadProgress(prev => Math.min(prev + 10, 90));
+      setLoadProgress((prev) => Math.min(prev + 10, 90));
     }, 200);
 
     watchdogRef.current = window.setTimeout(() => {
@@ -190,7 +193,8 @@ const TrueFullscreenViewer: React.FC<TrueFullscreenViewerProps> = ({
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         setLoadProgress(100);
       })
-      .catch(() => {
+      .catch((e) => {
+        console.error('File probe failed:', e);
         setLoading(false);
         setError(true);
         toast.error('Impossible de charger le fichier.');
@@ -208,6 +212,41 @@ const TrueFullscreenViewer: React.FC<TrueFullscreenViewerProps> = ({
       watchdogRef.current = null;
     };
   }, [isOpen, isResolving, shouldWaitForSignedUrl, effectiveUrl]);
+
+  // For PDFs: prefetch as ArrayBuffer (more reliable + faster subsequent renders)
+  useEffect(() => {
+    if (!isOpen) return;
+    if (fileType !== 'pdf') return;
+    if (isResolving) return;
+    if (shouldWaitForSignedUrl) return;
+
+    let cancelled = false;
+    const controller = new AbortController();
+
+    (async () => {
+      try {
+        // If another page opened before we start, bail.
+        setPdfData(null);
+
+        const res = await fetch(effectiveUrl, { signal: controller.signal });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const buf = await res.arrayBuffer();
+        if (cancelled) return;
+        setPdfData(buf);
+      } catch (e) {
+        if (cancelled) return;
+        console.error('PDF prefetch failed:', e);
+        setLoading(false);
+        setError(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [isOpen, fileType, isResolving, shouldWaitForSignedUrl, effectiveUrl]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -321,17 +360,23 @@ const TrueFullscreenViewer: React.FC<TrueFullscreenViewerProps> = ({
   const renderPdfContent = () => {
     const scale = zoom / 100;
 
+    if (!pdfData) {
+      // Keep showing the loader overlay until pdfData is ready
+      return <div className="flex-1 w-full h-full bg-muted" />;
+    }
+
     return (
       <div className="flex-1 w-full h-full bg-muted overflow-auto flex items-start justify-center p-4">
         <Document
-          file={{ url: effectiveUrl }}
+          file={{ data: pdfData }}
           options={{ disableRange: true, disableStream: true }}
           onLoadSuccess={({ numPages }) => {
             setPdfPages(numPages);
             setLoading(false);
             setError(false);
           }}
-          onLoadError={() => {
+          onLoadError={(e) => {
+            console.error('PDF render error:', e);
             setLoading(false);
             setError(true);
           }}
