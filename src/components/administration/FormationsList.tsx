@@ -230,46 +230,46 @@ const FormationsList: React.FC = () => {
         </div>
       ) : (
         <div className="bg-card rounded-2xl shadow-lg border-2 border-primary/20 overflow-hidden">
-          {/* Header row */}
-          <div className="bg-primary/10 border-b-2 border-primary/20">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[900px]">
-                <thead>
-                  <tr>
-                    <th className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-primary w-[100px]">Niveau</th>
-                    <th className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-primary">Formation</th>
-                    <th className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-primary w-[140px]">Dates</th>
-                    <th className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-primary w-[80px]">Durée</th>
-                    <th className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-primary w-[110px]">Participants</th>
-                    <th className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-primary w-[90px]">Modules</th>
-                    <th className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-primary w-[80px]">Statut</th>
-                    <th className="px-4 py-4 text-right text-xs font-semibold uppercase tracking-wider text-primary">Actions</th>
-                  </tr>
-                </thead>
-              </table>
-            </div>
-          </div>
-          
-          {/* Data rows */}
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px]">
+            <table className="w-full min-w-[980px] table-fixed">
+              <colgroup>
+                <col className="w-[100px]" />
+                <col />
+                <col className="w-[160px]" />
+                <col className="w-[90px]" />
+                <col className="w-[120px]" />
+                <col className="w-[100px]" />
+                <col className="w-[90px]" />
+                <col className="w-[260px]" />
+              </colgroup>
+
+              <thead className="bg-primary/10 border-b-2 border-primary/20">
+                <tr>
+                  <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-primary">Niveau</th>
+                  <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-primary">Formation</th>
+                  <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-primary">Dates</th>
+                  <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-primary">Durée</th>
+                  <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-primary">Participants</th>
+                  <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-primary">Modules</th>
+                  <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-primary">Statut</th>
+                  <th scope="col" className="px-4 py-4 text-right text-xs font-semibold uppercase tracking-wider text-primary">Actions</th>
+                </tr>
+              </thead>
+
               <tbody className="divide-y divide-primary/10">
                 {filteredFormations.map((formation) => (
-                  <tr 
-                    key={formation.id} 
-                    className="hover:bg-primary/5 transition-colors bg-background border-l-4 border-primary"
-                  >
-                    <td className="px-4 py-4 w-[100px]">
-                      <Badge 
+                  <tr key={formation.id} className="bg-background hover:bg-primary/5 transition-colors">
+                    <td className="px-4 py-4 align-middle border-l-4 border-primary">
+                      <Badge
                         variant="outline"
                         className="font-medium text-xs border-primary/40 text-primary bg-transparent rounded-full px-3 py-1"
                       >
                         {formation.level}
                       </Badge>
                     </td>
-                    <td className="px-4 py-4">
-                      <div className="flex flex-col gap-1">
-                        <Badge 
+                    <td className="px-4 py-4 align-middle">
+                      <div className="flex flex-col gap-1 min-w-0">
+                        <Badge
                           variant="outline"
                           className="font-medium text-xs px-3 py-1 w-fit rounded-full"
                           style={{ borderColor: formation.color, color: formation.color, backgroundColor: `${formation.color}10` }}
@@ -283,39 +283,39 @@ const FormationsList: React.FC = () => {
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-4 w-[140px]">
+                    <td className="px-4 py-4 align-middle">
                       <div className="text-xs text-muted-foreground">
                         <div>Du {new Date(formation.start_date).toLocaleDateString('fr-FR')}</div>
                         <div>au {new Date(formation.end_date).toLocaleDateString('fr-FR')}</div>
                       </div>
                     </td>
-                    <td className="px-4 py-4 w-[80px]">
+                    <td className="px-4 py-4 align-middle">
                       <span className="text-sm text-muted-foreground font-medium">{formation.duration}h</span>
                     </td>
-                    <td className="px-4 py-4 w-[110px]">
+                    <td className="px-4 py-4 align-middle">
                       <span className="text-sm font-medium text-foreground">
                         {formation.participantsCount || 0} / {formation.max_students}
                       </span>
                     </td>
-                    <td className="px-4 py-4 w-[90px]">
+                    <td className="px-4 py-4 align-middle">
                       <span className="text-sm text-muted-foreground">
                         {formation.formation_modules?.length || 0} module{(formation.formation_modules?.length || 0) > 1 ? 's' : ''}
                       </span>
                     </td>
-                    <td className="px-4 py-4 w-[80px]">
-                      <Badge 
+                    <td className="px-4 py-4 align-middle">
+                      <Badge
                         variant="outline"
                         className="bg-green-50 text-green-600 border-green-300 text-xs rounded-full px-3 py-1"
                       >
                         {formation.status}
                       </Badge>
                     </td>
-                    <td className="px-4 py-4 text-right">
+                    <td className="px-4 py-4 align-middle">
                       <div className="flex items-center justify-end gap-2 flex-wrap">
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => window.location.href = `/formations/${formation.id}`}
+                          onClick={() => (window.location.href = `/formations/${formation.id}`)}
                           className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary text-xs h-7 px-3 rounded-full"
                         >
                           Voir détail
