@@ -229,74 +229,68 @@ const FormationsList: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="bg-card rounded-2xl shadow-lg border-2 border-primary/20 overflow-hidden">
-          {/* Header row */}
-          <div className="grid grid-cols-[100px_1fr_140px_80px_100px_100px_80px_auto] gap-3 px-4 py-4 text-xs font-semibold text-primary uppercase tracking-wide border-b-2 border-primary/20 bg-primary/5">
-            <div>Niveau</div>
-            <div>Formation</div>
-            <div>Dates</div>
-            <div>Durée</div>
-            <div>Participants</div>
-            <div>Modules</div>
-            <div>Statut</div>
-            <div className="text-right">Actions</div>
+        <div className="bg-card rounded-2xl shadow-lg border border-primary/20 overflow-hidden">
+          {/* Header row - style épuré avec fond violet */}
+          <div className="grid grid-cols-[90px_1fr_150px_70px_100px_80px_70px_auto] gap-4 px-6 py-4 text-xs font-semibold uppercase tracking-wider bg-primary/10 border-b border-primary/20">
+            <div className="text-primary">Niveau</div>
+            <div className="text-primary">Formation</div>
+            <div className="text-primary">Dates</div>
+            <div className="text-primary">Durée</div>
+            <div className="text-primary">Participants</div>
+            <div className="text-primary">Modules</div>
+            <div className="text-primary">Statut</div>
+            <div className="text-primary text-right">Actions</div>
           </div>
           
           {/* Data rows */}
           <div className="divide-y divide-primary/10">
-            {filteredFormations.map((formation, index) => (
+            {filteredFormations.map((formation) => (
               <div 
                 key={formation.id} 
-                className={`grid grid-cols-[100px_1fr_140px_80px_100px_100px_80px_auto] gap-3 px-4 py-4 items-center hover:bg-primary/5 transition-colors border-l-4 border-primary ${index % 2 === 0 ? 'bg-background' : 'bg-primary/5'}`}
+                className="grid grid-cols-[90px_1fr_150px_70px_100px_80px_70px_auto] gap-4 px-6 py-4 items-center hover:bg-primary/5 transition-colors border-l-4 border-primary bg-background"
               >
                 <div>
                   <Badge 
                     variant="outline"
-                    className="font-medium text-xs border border-primary/30 text-primary bg-primary/10"
+                    className="font-medium text-xs border-primary/40 text-primary bg-transparent rounded-full px-3 py-1"
                   >
                     {formation.level}
                   </Badge>
                 </div>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col gap-1">
                     <Badge 
                       variant="outline"
-                      className="font-medium text-xs px-2 py-0.5 truncate max-w-[200px]"
-                      style={{ borderColor: formation.color, color: formation.color, backgroundColor: `${formation.color}15` }}
+                      className="font-medium text-xs px-3 py-1 w-fit rounded-full"
+                      style={{ borderColor: formation.color, color: formation.color, backgroundColor: `${formation.color}10` }}
                     >
                       {formation.title}
                     </Badge>
-                  </div>
-                  {formation.description && (
-                    <div className="text-xs text-muted-foreground line-clamp-1 mt-1">
-                      {formation.description}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground">
-                    Du {new Date(formation.start_date).toLocaleDateString('fr-FR')}
-                    <br />
-                    au {new Date(formation.end_date).toLocaleDateString('fr-FR')}
+                    {formation.description && (
+                      <span className="text-xs text-muted-foreground line-clamp-1">
+                        {formation.description}
+                      </span>
+                    )}
                   </div>
                 </div>
-                <div>
-                  <span className="text-sm text-muted-foreground">{formation.duration}h</span>
+                <div className="text-xs text-muted-foreground">
+                  <span>Du {new Date(formation.start_date).toLocaleDateString('fr-FR')}</span>
+                  <br />
+                  <span>au {new Date(formation.end_date).toLocaleDateString('fr-FR')}</span>
                 </div>
-                <div>
-                  <span className="text-sm text-primary font-medium">
-                    {formation.participantsCount || 0} / {formation.max_students}
-                  </span>
+                <div className="text-sm text-muted-foreground font-medium">
+                  {formation.duration}h
                 </div>
-                <div>
-                  <span className="text-xs text-muted-foreground">
-                    {formation.formation_modules?.length || 0} module{(formation.formation_modules?.length || 0) > 1 ? 's' : ''}
-                  </span>
+                <div className="text-sm font-medium text-foreground">
+                  {formation.participantsCount || 0} / {formation.max_students}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {formation.formation_modules?.length || 0} module{(formation.formation_modules?.length || 0) > 1 ? 's' : ''}
                 </div>
                 <div>
                   <Badge 
                     variant="outline"
-                    className={formation.status === 'Actif' ? 'bg-yellow-100 text-yellow-700 border-yellow-300 text-xs' : 'bg-muted text-muted-foreground text-xs'}
+                    className="bg-green-50 text-green-600 border-green-300 text-xs rounded-full px-3 py-1"
                   >
                     {formation.status}
                   </Badge>
@@ -306,7 +300,7 @@ const FormationsList: React.FC = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => window.location.href = `/formations/${formation.id}`}
-                    className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary text-xs h-8 px-2"
+                    className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary text-xs h-7 px-3 rounded-full"
                   >
                     Voir détail
                   </Button>
@@ -314,7 +308,7 @@ const FormationsList: React.FC = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => handleViewParticipants(formation.id)}
-                    className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary text-xs h-8 px-2"
+                    className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary text-xs h-7 px-3 rounded-full"
                   >
                     Participants ({formation.participantsCount || 0})
                   </Button>
@@ -324,7 +318,7 @@ const FormationsList: React.FC = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleEditFormation(formation.id)}
-                        className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary text-xs h-8 px-2"
+                        className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary text-xs h-7 px-3 rounded-full"
                       >
                         Modifier
                       </Button>
@@ -332,7 +326,7 @@ const FormationsList: React.FC = () => {
                         variant="destructive"
                         size="sm"
                         onClick={() => handleDeleteFormation(formation.id)}
-                        className="text-xs h-8 px-2"
+                        className="text-xs h-7 px-3 rounded-full"
                       >
                         Supprimer
                       </Button>
