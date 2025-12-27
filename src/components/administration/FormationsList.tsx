@@ -229,132 +229,120 @@ const FormationsList: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="bg-card rounded-2xl overflow-hidden border-2 border-primary/20 shadow-lg">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gradient-to-r from-primary to-accent">
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">Niveau</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">Formation</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">Dates</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">Durée</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">Participants</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">Modules</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">Statut</th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-white">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredFormations.map((formation, index) => (
-                  <tr 
-                    key={formation.id} 
-                    className={`border-b border-primary/10 hover:bg-primary/5 transition-colors ${index % 2 === 0 ? 'bg-background' : 'bg-primary/5'}`}
+        <div className="space-y-0">
+          {/* Header row */}
+          <div className="grid grid-cols-12 gap-4 px-6 py-4 text-sm font-semibold text-primary uppercase tracking-wide border-b-2 border-primary/20">
+            <div className="col-span-1">Niveau</div>
+            <div className="col-span-3">Formation</div>
+            <div className="col-span-2">Dates</div>
+            <div className="col-span-1">Durée</div>
+            <div className="col-span-1">Participants</div>
+            <div className="col-span-1">Modules</div>
+            <div className="col-span-1">Statut</div>
+            <div className="col-span-2 text-right">Actions</div>
+          </div>
+          
+          {/* Data rows */}
+          <div className="divide-y divide-primary/10">
+            {filteredFormations.map((formation, index) => (
+              <div 
+                key={formation.id} 
+                className={`grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-primary/5 transition-colors border-l-4 border-primary ${index % 2 === 0 ? 'bg-background' : 'bg-primary/5'}`}
+              >
+                <div className="col-span-1">
+                  <Badge 
+                    variant="outline"
+                    className="font-medium text-xs border border-primary/30 text-primary bg-primary/10"
                   >
-                    <td className="px-6 py-4">
-                      <Badge 
-                        variant="outline"
-                        className="font-medium text-xs border-2"
-                        style={{ borderColor: formation.color, color: formation.color, backgroundColor: `${formation.color}15` }}
-                      >
-                        {formation.level}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div 
-                          className="w-1 h-10 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: formation.color }}
-                        />
-                        <div>
-                          <div className="font-medium text-foreground">{formation.title}</div>
-                          {formation.description && (
-                            <div className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
-                              {formation.description}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm">
-                        <div className="text-foreground">
-                          Du {new Date(formation.start_date).toLocaleDateString('fr-FR')}
-                        </div>
-                        <div className="text-muted-foreground">
-                          au {new Date(formation.end_date).toLocaleDateString('fr-FR')}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-muted-foreground">{formation.duration}h</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge 
-                        variant="secondary"
-                        className="bg-primary/10 text-primary border border-primary/20"
-                      >
-                        {formation.participantsCount || 0} / {formation.max_students}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge 
-                        variant="outline"
-                        className="border-primary/30 text-primary/80"
-                      >
-                        {formation.formation_modules?.length || 0} modules
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge 
-                        variant={formation.status === 'Actif' ? 'default' : 'secondary'}
-                        className={formation.status === 'Actif' ? 'bg-success/10 text-success border border-success/30' : 'bg-muted text-muted-foreground'}
-                      >
-                        {formation.status}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    {formation.level}
+                  </Badge>
+                </div>
+                <div className="col-span-3">
+                  <div className="flex items-center gap-3">
+                    <Badge 
+                      variant="outline"
+                      className="font-medium text-xs px-2 py-0.5"
+                      style={{ borderColor: formation.color, color: formation.color, backgroundColor: `${formation.color}15` }}
+                    >
+                      {formation.title}
+                    </Badge>
+                  </div>
+                  {formation.description && (
+                    <div className="text-xs text-muted-foreground line-clamp-1 mt-1">
+                      {formation.description}
+                    </div>
+                  )}
+                </div>
+                <div className="col-span-2">
+                  <div className="text-sm text-muted-foreground">
+                    Du {new Date(formation.start_date).toLocaleDateString('fr-FR')}
+                    <br />
+                    au {new Date(formation.end_date).toLocaleDateString('fr-FR')}
+                  </div>
+                </div>
+                <div className="col-span-1">
+                  <span className="text-sm text-muted-foreground">{formation.duration}h</span>
+                </div>
+                <div className="col-span-1">
+                  <span className="text-sm text-primary font-medium">
+                    {formation.participantsCount || 0} / {formation.max_students}
+                  </span>
+                </div>
+                <div className="col-span-1">
+                  <span className="text-sm text-muted-foreground">
+                    {formation.formation_modules?.length || 0} modules
+                  </span>
+                </div>
+                <div className="col-span-1">
+                  <Badge 
+                    variant="outline"
+                    className={formation.status === 'Actif' ? 'bg-yellow-100 text-yellow-700 border-yellow-300' : 'bg-muted text-muted-foreground'}
+                  >
+                    {formation.status}
+                  </Badge>
+                </div>
+                <div className="col-span-2 text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.location.href = `/formations/${formation.id}`}
+                      className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary text-xs"
+                    >
+                      Voir détail
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleViewParticipants(formation.id)}
+                      className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary text-xs"
+                    >
+                      Voir les participants ({formation.participantsCount || 0})
+                    </Button>
+                    {isAdmin && (
+                      <>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => window.location.href = `/formations/${formation.id}`}
-                          className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary"
+                          onClick={() => handleEditFormation(formation.id)}
+                          className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary text-xs"
                         >
-                          Voir détail
+                          Modifier
                         </Button>
                         <Button
-                          variant="outline"
+                          variant="destructive"
                           size="sm"
-                          onClick={() => handleViewParticipants(formation.id)}
-                          className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary"
+                          onClick={() => handleDeleteFormation(formation.id)}
+                          className="text-xs"
                         >
-                          Voir les participants ({formation.participantsCount || 0})
+                          Supprimer
                         </Button>
-                        {isAdmin && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEditFormation(formation.id)}
-                              className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary"
-                            >
-                              Modifier
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDeleteFormation(formation.id)}
-                            >
-                              Supprimer
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
