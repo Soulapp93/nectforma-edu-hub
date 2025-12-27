@@ -128,26 +128,55 @@ const AdvancedPDFViewer: React.FC<AdvancedPDFViewerProps> = ({
   // Colors for annotations
   const annotationColors = ['#FFEB3B', '#4CAF50', '#2196F3', '#F44336', '#E91E63', '#9C27B0'];
 
+  // LocalStorage can throw in some environments (Safari private mode, blocked storage, quota exceeded).
+  const safeStorage = {
+    getItem: (key: string) => {
+      try {
+        return window.localStorage.getItem(key);
+      } catch {
+        return null;
+      }
+    },
+    setItem: (key: string, value: string) => {
+      try {
+        window.localStorage.setItem(key, value);
+      } catch {
+        // ignore
+      }
+    },
+    removeItem: (key: string) => {
+      try {
+        window.localStorage.removeItem(key);
+      } catch {
+        // ignore
+      }
+    },
+  };
+
   // Load annotations from localStorage
   useEffect(() => {
     if (isOpen && fileName) {
-      const savedAnnotations = localStorage.getItem(`pdf-annotations-${fileName}`);
-      const savedBookmarks = localStorage.getItem(`pdf-bookmarks-${fileName}`);
-      if (savedAnnotations) setAnnotations(JSON.parse(savedAnnotations));
-      if (savedBookmarks) setBookmarks(JSON.parse(savedBookmarks));
+      const savedAnnotations = safeStorage.getItem(`pdf-annotations-${fileName}`);
+      const savedBookmarks = safeStorage.getItem(`pdf-bookmarks-${fileName}`);
+      try {
+        if (savedAnnotations) setAnnotations(JSON.parse(savedAnnotations));
+        if (savedBookmarks) setBookmarks(JSON.parse(savedBookmarks));
+      } catch {
+        // Ignore corrupted storage payloads
+      }
     }
   }, [isOpen, fileName]);
 
   // Save annotations to localStorage
   useEffect(() => {
     if (fileName && annotations.length > 0) {
-      localStorage.setItem(`pdf-annotations-${fileName}`, JSON.stringify(annotations));
+      safeStorage.setItem(`pdf-annotations-${fileName}`, JSON.stringify(annotations));
     }
   }, [annotations, fileName]);
 
   useEffect(() => {
     if (fileName && bookmarks.length > 0) {
-      localStorage.setItem(`pdf-bookmarks-${fileName}`, JSON.stringify(bookmarks));
+      safeStorage.setItem(`pdf-bookmarks-${fileName}`, JSON.stringify(bookmarks));
     }
   }, [bookmarks, fileName]);
 
@@ -406,7 +435,7 @@ const AdvancedPDFViewer: React.FC<AdvancedPDFViewerProps> = ({
 
   const clearAllAnnotations = () => {
     setAnnotations([]);
-    localStorage.removeItem(`pdf-annotations-${fileName}`);
+    safeStorage.removeItem(`pdf-annotations-${fileName}`);
     toast.success('Toutes les annotations supprimées');
   };
 

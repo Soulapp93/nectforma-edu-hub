@@ -23,7 +23,7 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
   isPresentationMode = false,
   onTogglePresentationMode
 }) => {
-  const { resolvedUrl, isResolving } = useResolvedFileUrl(fileUrl);
+  const { resolvedUrl, isResolving, resolveError } = useResolvedFileUrl(fileUrl);
   const effectiveUrl = resolvedUrl;
 
   const [loadError, setLoadError] = useState(false);
@@ -242,6 +242,14 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
     setLoadError(false);
     setRetryCount(0);
   }, [effectiveUrl]);
+
+  // If URL resolution fails (private buckets, expired links, etc.), fail fast instead of crashing/looping.
+  useEffect(() => {
+    if (!resolveError) return;
+    setIsLoading(false);
+    setLoadError(true);
+    toast.error('Impossible de charger le fichier (accès refusé ou lien expiré).');
+  }, [resolveError]);
 
   // Auto-hide controls in presentation mode
   useEffect(() => {
