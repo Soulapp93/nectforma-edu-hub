@@ -77,6 +77,29 @@ const AdvancedPDFViewer: React.FC<AdvancedPDFViewerProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Prevent infinite loading states
+  const loadingRef = useRef<boolean>(true);
+  useEffect(() => {
+    loadingRef.current = loading;
+  }, [loading]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Reset when file changes / viewer opens
+    setLoading(true);
+    setError(null);
+
+    const watchdogId = window.setTimeout(() => {
+      if (!loadingRef.current) return;
+      setLoading(false);
+      setError('Le document met trop de temps à charger. Essayez de l’ouvrir dans un nouvel onglet ou de le télécharger.');
+      toast.error('Chargement trop long');
+    }, 20000);
+
+    return () => window.clearTimeout(watchdogId);
+  }, [isOpen, fileUrl]);
+
   // State for features
   const [showThumbnails, setShowThumbnails] = useState(true);
   const [showAnnotations, setShowAnnotations] = useState(true);
