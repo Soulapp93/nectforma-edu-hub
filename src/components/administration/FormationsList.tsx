@@ -229,17 +229,17 @@ const FormationsList: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="space-y-0">
+        <div className="bg-card rounded-2xl shadow-lg border-2 border-primary/20 overflow-hidden">
           {/* Header row */}
-          <div className="grid grid-cols-12 gap-4 px-6 py-4 text-sm font-semibold text-primary uppercase tracking-wide border-b-2 border-primary/20">
-            <div className="col-span-1">Niveau</div>
-            <div className="col-span-3">Formation</div>
-            <div className="col-span-2">Dates</div>
-            <div className="col-span-1">Durée</div>
-            <div className="col-span-1">Participants</div>
-            <div className="col-span-1">Modules</div>
-            <div className="col-span-1">Statut</div>
-            <div className="col-span-2 text-right">Actions</div>
+          <div className="grid grid-cols-[100px_1fr_140px_80px_100px_100px_80px_auto] gap-3 px-4 py-4 text-xs font-semibold text-primary uppercase tracking-wide border-b-2 border-primary/20 bg-primary/5">
+            <div>Niveau</div>
+            <div>Formation</div>
+            <div>Dates</div>
+            <div>Durée</div>
+            <div>Participants</div>
+            <div>Modules</div>
+            <div>Statut</div>
+            <div className="text-right">Actions</div>
           </div>
           
           {/* Data rows */}
@@ -247,9 +247,9 @@ const FormationsList: React.FC = () => {
             {filteredFormations.map((formation, index) => (
               <div 
                 key={formation.id} 
-                className={`grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-primary/5 transition-colors border-l-4 border-primary ${index % 2 === 0 ? 'bg-background' : 'bg-primary/5'}`}
+                className={`grid grid-cols-[100px_1fr_140px_80px_100px_100px_80px_auto] gap-3 px-4 py-4 items-center hover:bg-primary/5 transition-colors border-l-4 border-primary ${index % 2 === 0 ? 'bg-background' : 'bg-primary/5'}`}
               >
-                <div className="col-span-1">
+                <div>
                   <Badge 
                     variant="outline"
                     className="font-medium text-xs border border-primary/30 text-primary bg-primary/10"
@@ -257,11 +257,11 @@ const FormationsList: React.FC = () => {
                     {formation.level}
                   </Badge>
                 </div>
-                <div className="col-span-3">
-                  <div className="flex items-center gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
                     <Badge 
                       variant="outline"
-                      className="font-medium text-xs px-2 py-0.5"
+                      className="font-medium text-xs px-2 py-0.5 truncate max-w-[200px]"
                       style={{ borderColor: formation.color, color: formation.color, backgroundColor: `${formation.color}15` }}
                     >
                       {formation.title}
@@ -273,73 +273,71 @@ const FormationsList: React.FC = () => {
                     </div>
                   )}
                 </div>
-                <div className="col-span-2">
-                  <div className="text-sm text-muted-foreground">
+                <div>
+                  <div className="text-xs text-muted-foreground">
                     Du {new Date(formation.start_date).toLocaleDateString('fr-FR')}
                     <br />
                     au {new Date(formation.end_date).toLocaleDateString('fr-FR')}
                   </div>
                 </div>
-                <div className="col-span-1">
+                <div>
                   <span className="text-sm text-muted-foreground">{formation.duration}h</span>
                 </div>
-                <div className="col-span-1">
+                <div>
                   <span className="text-sm text-primary font-medium">
                     {formation.participantsCount || 0} / {formation.max_students}
                   </span>
                 </div>
-                <div className="col-span-1">
-                  <span className="text-sm text-muted-foreground">
-                    {formation.formation_modules?.length || 0} modules
+                <div>
+                  <span className="text-xs text-muted-foreground">
+                    {formation.formation_modules?.length || 0} module{(formation.formation_modules?.length || 0) > 1 ? 's' : ''}
                   </span>
                 </div>
-                <div className="col-span-1">
+                <div>
                   <Badge 
                     variant="outline"
-                    className={formation.status === 'Actif' ? 'bg-yellow-100 text-yellow-700 border-yellow-300' : 'bg-muted text-muted-foreground'}
+                    className={formation.status === 'Actif' ? 'bg-yellow-100 text-yellow-700 border-yellow-300 text-xs' : 'bg-muted text-muted-foreground text-xs'}
                   >
                     {formation.status}
                   </Badge>
                 </div>
-                <div className="col-span-2 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => window.location.href = `/formations/${formation.id}`}
-                      className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary text-xs"
-                    >
-                      Voir détail
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleViewParticipants(formation.id)}
-                      className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary text-xs"
-                    >
-                      Voir les participants ({formation.participantsCount || 0})
-                    </Button>
-                    {isAdmin && (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditFormation(formation.id)}
-                          className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary text-xs"
-                        >
-                          Modifier
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteFormation(formation.id)}
-                          className="text-xs"
-                        >
-                          Supprimer
-                        </Button>
-                      </>
-                    )}
-                  </div>
+                <div className="flex items-center justify-end gap-2 flex-wrap">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.location.href = `/formations/${formation.id}`}
+                    className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary text-xs h-8 px-2"
+                  >
+                    Voir détail
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleViewParticipants(formation.id)}
+                    className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary text-xs h-8 px-2"
+                  >
+                    Participants ({formation.participantsCount || 0})
+                  </Button>
+                  {isAdmin && (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditFormation(formation.id)}
+                        className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary text-xs h-8 px-2"
+                      >
+                        Modifier
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteFormation(formation.id)}
+                        className="text-xs h-8 px-2"
+                      >
+                        Supprimer
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
