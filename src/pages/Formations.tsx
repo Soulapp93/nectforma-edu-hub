@@ -250,94 +250,85 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
           ))}
         </div>
       ) : (
-        <div className="bg-card rounded-2xl shadow-lg border-2 border-primary/20 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[980px] table-fixed">
-              <colgroup>
-                <col className="w-[100px]" />
-                <col />
-                <col className="w-[160px]" />
-                <col className="w-[90px]" />
-                <col className="w-[120px]" />
-                <col className="w-[100px]" />
-                <col className="w-[90px]" />
-                <col className="w-[260px]" />
-              </colgroup>
-
-              <thead className="bg-primary/10 border-b-2 border-primary/20">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-primary">Niveau</th>
-                  <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-primary">Formation</th>
-                  <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-primary">Dates</th>
-                  <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-primary">Durée</th>
-                  <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-primary">Participants</th>
-                  <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-primary">Modules</th>
-                  <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-primary">Statut</th>
-                  <th scope="col" className="px-4 py-4 text-right text-xs font-semibold uppercase tracking-wider text-primary">Actions</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Niveau</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Formation</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Dates</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Durée</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Participants</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Modules</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Statut</th>
+                  <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">Actions</th>
                 </tr>
               </thead>
-
-              <tbody className="divide-y divide-primary/10">
-                {filteredFormations.map((formation) => (
-                  <tr key={formation.id} className="bg-background hover:bg-primary/5 transition-colors">
-                    <td className="px-4 py-4 align-middle border-l-4 border-primary">
-                      <Badge
+              <tbody>
+                {filteredFormations.map((formation, index) => (
+                  <tr 
+                    key={formation.id} 
+                    className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}
+                  >
+                    <td className="px-6 py-4">
+                      <Badge 
                         variant="outline"
-                        className="font-medium text-xs border-primary/40 text-primary bg-transparent rounded-full px-3 py-1"
+                        className="font-medium"
+                        style={{ borderColor: formation.color, color: formation.color }}
                       >
                         {formation.level}
                       </Badge>
                     </td>
-                    <td className="px-4 py-4 align-middle">
-                      <div className="flex flex-col gap-1 min-w-0">
-                        <Badge
-                          variant="outline"
-                          className="font-medium text-xs px-3 py-1 w-fit rounded-full"
-                          style={{ borderColor: formation.color, color: formation.color, backgroundColor: `${formation.color}10` }}
-                        >
-                          {formation.title}
-                        </Badge>
+                    <td className="px-6 py-4">
+                      <div>
+                        <div className="font-medium text-gray-900">{formation.title}</div>
                         {formation.description && (
-                          <span className="text-xs text-muted-foreground line-clamp-1">
+                          <div className="text-sm text-gray-600 line-clamp-1 mt-1">
                             {formation.description}
-                          </span>
+                          </div>
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-4 align-middle">
-                      <div className="text-xs text-muted-foreground">
-                        <div>Du {new Date(formation.start_date).toLocaleDateString('fr-FR')}</div>
-                        <div>au {new Date(formation.end_date).toLocaleDateString('fr-FR')}</div>
+                    <td className="px-6 py-4">
+                      <div className="text-sm">
+                        <div className="text-gray-900">
+                          Du {new Date(formation.start_date).toLocaleDateString('fr-FR')}
+                        </div>
+                        <div className="text-gray-600">
+                          au {new Date(formation.end_date).toLocaleDateString('fr-FR')}
+                        </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4 align-middle">
-                      <span className="text-sm text-muted-foreground font-medium">{formation.duration}h</span>
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-gray-600">{formation.duration}h</span>
                     </td>
-                    <td className="px-4 py-4 align-middle">
-                      <span className="text-sm font-medium text-foreground">
-                        {formation.participantsCount || 0} / {formation.max_students}
-                      </span>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary">
+                          {formation.participantsCount || 0} / {formation.max_students}
+                        </Badge>
+                      </div>
                     </td>
-                    <td className="px-4 py-4 align-middle">
-                      <span className="text-sm text-muted-foreground">
-                        {formation.formation_modules?.length || 0} module{(formation.formation_modules?.length || 0) > 1 ? 's' : ''}
-                      </span>
+                    <td className="px-6 py-4">
+                      <Badge variant="outline">
+                        {formation.formation_modules?.length || 0} modules
+                      </Badge>
                     </td>
-                    <td className="px-4 py-4 align-middle">
-                      <Badge
-                        variant="outline"
-                        className="bg-green-50 text-green-600 border-green-300 text-xs rounded-full px-3 py-1"
+                    <td className="px-6 py-4">
+                      <Badge 
+                        variant={formation.status === 'Actif' ? 'default' : 'secondary'}
+                        className={formation.status === 'Actif' ? 'bg-green-100 text-green-700 border-green-200' : ''}
                       >
                         {formation.status}
                       </Badge>
                     </td>
-                    <td className="px-4 py-4 align-middle">
-                      <div className="flex items-center justify-end gap-2 flex-wrap">
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => (window.location.href = `/formations/${formation.id}`)}
-                          className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary text-xs h-7 px-3 rounded-full"
+                          onClick={() => window.location.href = `/formations/${formation.id}`}
                         >
                           Voir détail
                         </Button>
@@ -345,9 +336,8 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleViewParticipants(formation.id)}
-                          className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary text-xs h-7 px-3 rounded-full"
                         >
-                          Participants ({formation.participantsCount || 0})
+                          Voir les participants ({formation.participantsCount || 0})
                         </Button>
                         {isAdmin && (
                           <>
@@ -355,7 +345,6 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
                               variant="outline"
                               size="sm"
                               onClick={() => handleEditFormation(formation)}
-                              className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary text-xs h-7 px-3 rounded-full"
                             >
                               Modifier
                             </Button>
@@ -363,7 +352,6 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
                               variant="destructive"
                               size="sm"
                               onClick={() => handleDeleteFormation(formation.id)}
-                              className="text-xs h-7 px-3 rounded-full"
                             >
                               Supprimer
                             </Button>
