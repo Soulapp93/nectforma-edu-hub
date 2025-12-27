@@ -229,45 +229,49 @@ const FormationsList: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="bg-card rounded-2xl overflow-hidden border-2 border-primary/20 shadow-lg">
+        <div className="bg-card rounded-xl overflow-hidden border border-border">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gradient-to-r from-primary/10 to-accent/10 border-b-2 border-primary/20">
+              <thead className="bg-muted/30 border-b border-border">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Formation</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Dates</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Durée</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Participants</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Modules</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Statut</th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-foreground">Actions</th>
+                  <th className="px-6 py-3.5 text-left text-sm font-medium text-muted-foreground">Formation</th>
+                  <th className="px-6 py-3.5 text-left text-sm font-medium text-muted-foreground">Dates</th>
+                  <th className="px-6 py-3.5 text-left text-sm font-medium text-muted-foreground">Durée</th>
+                  <th className="px-6 py-3.5 text-left text-sm font-medium text-muted-foreground">Participants</th>
+                  <th className="px-6 py-3.5 text-left text-sm font-medium text-muted-foreground">Modules</th>
+                  <th className="px-6 py-3.5 text-left text-sm font-medium text-muted-foreground">Statut</th>
+                  <th className="px-6 py-3.5 text-right text-sm font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                {filteredFormations.map((formation, index) => (
+              <tbody className="divide-y divide-border">
+                {filteredFormations.map((formation) => (
                   <tr 
                     key={formation.id} 
-                    className={`border-b border-primary/10 hover:bg-primary/5 transition-colors ${index % 2 === 0 ? 'bg-background' : 'bg-muted/20'}`}
+                    className="hover:bg-muted/20 transition-colors"
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div 
-                          className="w-1.5 h-12 rounded-full flex-shrink-0"
+                          className="w-1 h-14 rounded-full flex-shrink-0"
                           style={{ backgroundColor: formation.color }}
                         />
                         <div>
                           <div className="flex items-center gap-2 mb-1">
                             <Badge 
                               variant="outline"
-                              className="font-medium text-xs"
-                              style={{ borderColor: formation.color, color: formation.color }}
+                              className="font-medium text-xs rounded-md px-2 py-0.5"
+                              style={{ 
+                                borderColor: formation.color, 
+                                color: formation.color,
+                                backgroundColor: `${formation.color}10`
+                              }}
                             >
                               {formation.level}
                             </Badge>
                           </div>
                           <div className="font-medium text-foreground">{formation.title}</div>
                           {formation.description && (
-                            <div className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                            <div className="text-xs text-muted-foreground line-clamp-1 mt-0.5 max-w-[250px]">
                               {formation.description}
                             </div>
                           )}
@@ -275,22 +279,18 @@ const FormationsList: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm">
-                        <div className="text-foreground">
-                          Du {new Date(formation.start_date).toLocaleDateString('fr-FR')}
-                        </div>
-                        <div className="text-muted-foreground">
-                          au {new Date(formation.end_date).toLocaleDateString('fr-FR')}
-                        </div>
+                      <div className="text-sm text-muted-foreground">
+                        <div>Du {new Date(formation.start_date).toLocaleDateString('fr-FR')}</div>
+                        <div>au {new Date(formation.end_date).toLocaleDateString('fr-FR')}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm text-muted-foreground">{formation.duration}h</span>
+                      <span className="text-sm font-medium text-foreground">{formation.duration}h</span>
                     </td>
                     <td className="px-6 py-4">
                       <Badge 
-                        variant="secondary"
-                        className="bg-primary/10 text-primary border border-primary/20"
+                        variant="outline"
+                        className="bg-primary/5 text-primary border-primary/20 rounded-md"
                       >
                         {formation.participantsCount || 0} / {formation.max_students}
                       </Badge>
@@ -298,15 +298,18 @@ const FormationsList: React.FC = () => {
                     <td className="px-6 py-4">
                       <Badge 
                         variant="outline"
-                        className="border-primary/30 text-primary/80"
+                        className="bg-muted/50 text-muted-foreground border-border rounded-md"
                       >
                         {formation.formation_modules?.length || 0} modules
                       </Badge>
                     </td>
                     <td className="px-6 py-4">
                       <Badge 
-                        variant={formation.status === 'Actif' ? 'default' : 'secondary'}
-                        className={formation.status === 'Actif' ? 'bg-success/10 text-success border border-success/30' : 'bg-muted text-muted-foreground'}
+                        variant="outline"
+                        className={formation.status === 'Actif' 
+                          ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30 rounded-md' 
+                          : 'bg-muted text-muted-foreground border-border rounded-md'
+                        }
                       >
                         {formation.status}
                       </Badge>
@@ -317,7 +320,7 @@ const FormationsList: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => window.location.href = `/formations/${formation.id}`}
-                          className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary"
+                          className="text-xs h-8 border-border hover:bg-muted"
                         >
                           Voir détail
                         </Button>
@@ -325,7 +328,7 @@ const FormationsList: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleViewParticipants(formation.id)}
-                          className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary"
+                          className="text-xs h-8 border-border hover:bg-muted"
                         >
                           Voir les participants ({formation.participantsCount || 0})
                         </Button>
@@ -335,7 +338,7 @@ const FormationsList: React.FC = () => {
                               variant="outline"
                               size="sm"
                               onClick={() => handleEditFormation(formation.id)}
-                              className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary"
+                              className="text-xs h-8 border-border hover:bg-muted"
                             >
                               Modifier
                             </Button>
@@ -343,6 +346,7 @@ const FormationsList: React.FC = () => {
                               variant="destructive"
                               size="sm"
                               onClick={() => handleDeleteFormation(formation.id)}
+                              className="text-xs h-8"
                             >
                               Supprimer
                             </Button>
