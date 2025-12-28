@@ -1,6 +1,5 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import UniversalFileViewer from '@/components/ui/viewers/UniversalFileViewer';
+import ProductionFileViewer from '@/components/ui/viewers/ProductionFileViewer';
 
 interface FileViewerModalProps {
   isOpen: boolean;
@@ -16,16 +15,12 @@ const FileViewerModal: React.FC<FileViewerModalProps> = ({
   fileName,
 }) => {
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl h-[90vh] p-0">
-        <DialogTitle className="sr-only">{fileName}</DialogTitle>
-        <UniversalFileViewer
-          fileUrl={fileUrl}
-          fileName={fileName}
-          onClose={onClose}
-        />
-      </DialogContent>
-    </Dialog>
+    <ProductionFileViewer
+      fileUrl={fileUrl}
+      fileName={fileName}
+      isOpen={isOpen}
+      onClose={onClose}
+    />
   );
 };
 

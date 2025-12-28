@@ -1,5 +1,5 @@
 import React from 'react';
-import TrueFullscreenViewer from './TrueFullscreenViewer';
+import ProductionFileViewer from './ProductionFileViewer';
 
 interface MobileResponsiveFileViewerProps {
   fileUrl: string;
@@ -15,7 +15,7 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
   onClose
 }) => {
   return (
-    <TrueFullscreenViewer
+    <ProductionFileViewer
       fileUrl={fileUrl}
       fileName={fileName}
       isOpen={isOpen}
@@ -25,3 +25,4 @@ const MobileResponsiveFileViewer: React.FC<MobileResponsiveFileViewerProps> = ({
 };
 
 export default MobileResponsiveFileViewer;
+

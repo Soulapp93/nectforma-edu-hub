@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, FileText, CheckCircle, Download, Eye, Calendar, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { assignmentService, AssignmentSubmission } from '@/services/assignmentService';
-import ChromeStyleViewer from '@/components/ui/viewers/ChromeStyleViewer';
+import ProductionFileViewer from '@/components/ui/viewers/ProductionFileViewer';
 import { toast } from 'sonner';
 
 interface StudentCorrectionViewModalProps {
@@ -191,7 +191,7 @@ const StudentCorrectionViewModal: React.FC<StudentCorrectionViewModalProps> = ({
 
       {/* Document Viewer */}
       {viewerFile && (
-        <ChromeStyleViewer
+        <ProductionFileViewer
           fileUrl={viewerFile.url}
           fileName={viewerFile.name}
           isOpen={true}

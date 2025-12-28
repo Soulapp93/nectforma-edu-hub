@@ -12,7 +12,7 @@ import { TimePicker } from '@/components/ui/time-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Plus, Clock, Calendar, User, BookText, Upload, X, FileText, Edit2, Trash2, AlertCircle } from 'lucide-react';
 import { RichTextEditor, sanitizeHtml } from '@/components/ui/rich-text-editor';
-import ChromeStyleViewer from '@/components/ui/viewers/ChromeStyleViewer';
+import ProductionFileViewer from '@/components/ui/viewers/ProductionFileViewer';
 import { textBookService, TextBook, TextBookEntry } from '@/services/textBookService';
 import { moduleService, FormationModule } from '@/services/moduleService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -961,7 +961,7 @@ const TextBookDetail: React.FC = () => {
 
       {/* Document Viewer */}
       {selectedFile && (
-        <ChromeStyleViewer
+        <ProductionFileViewer
           fileUrl={selectedFile.url}
           fileName={selectedFile.name}
           isOpen={isFileViewerOpen}
