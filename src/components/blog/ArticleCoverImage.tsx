@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar, Clock, User } from 'lucide-react';
 import logoNf from '@/assets/logo-nf.png';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ArticleCoverImageProps {
   title: string;
@@ -10,17 +11,65 @@ interface ArticleCoverImageProps {
   size?: 'card' | 'hero';
   publishedAt?: string | null;
   readTime?: number | null;
+  coverImageUrl?: string | null;
 }
 
 /**
- * Branded cover image component inspired by Digiforma.
- * Renders a consistent visual with Nectforma branding + article title overlay.
+ * Branded cover image component with AI-generated illustration.
+ * Renders a consistent visual with Nectforma branding + article title overlay + contextual illustration.
  */
-const ArticleCoverImage: React.FC<ArticleCoverImageProps> = ({ title, className = '', size = 'hero', publishedAt, readTime }) => {
+const ArticleCoverImage: React.FC<ArticleCoverImageProps> = ({ title, className = '', size = 'hero', publishedAt, readTime, coverImageUrl }) => {
   const isCard = size === 'card';
+  const [illustrationUrl, setIllustrationUrl] = useState<string | null>(coverImageUrl || null);
+
+  useEffect(() => {
+    if (coverImageUrl) {
+      setIllustrationUrl(coverImageUrl);
+      return;
+    }
+    // Try to find cover image in storage based on a hash of the title
+    const findCoverImage = async () => {
+      try {
+        const { data } = await supabase.storage
+          .from('blog-assets')
+          .list('cover-images', { limit: 100 });
+        
+        if (data && data.length > 0) {
+          // Try to match by title slug
+          const slug = title.toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-')
+            .substring(0, 40);
+          
+          const match = data.find(f => f.name.includes(slug));
+          if (match) {
+            const { data: urlData } = supabase.storage
+              .from('blog-assets')
+              .getPublicUrl(`cover-images/${match.name}`);
+            setIllustrationUrl(urlData.publicUrl);
+          }
+        }
+      } catch (e) {
+        // Silently fail - just use gradient background
+      }
+    };
+    findCoverImage();
+  }, [title, coverImageUrl]);
 
   return (
     <div className={`relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-primary/70 ${className}`}>
+      {/* Background illustration if available */}
+      {illustrationUrl && (
+        <div className="absolute inset-0">
+          <img 
+            src={illustrationUrl} 
+            alt="" 
+            className="w-full h-full object-cover opacity-25 mix-blend-luminosity"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/80 to-primary/60" />
+        </div>
+      )}
+
       {/* Decorative shapes */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-[20%] -left-[10%] w-[55%] h-[80%] rounded-full bg-white/10 blur-sm" />
@@ -41,7 +90,7 @@ const ArticleCoverImage: React.FC<ArticleCoverImageProps> = ({ title, className 
       <div className="relative z-10 flex flex-col justify-between h-full p-4 sm:p-6 md:p-8">
         {/* Title area — centered */}
         <div className="flex-1 flex items-center justify-center text-center">
-          <h2 className={`font-bold text-white leading-tight ${
+          <h2 className={`font-bold text-white leading-tight drop-shadow-lg ${
             isCard 
               ? 'text-sm sm:text-base line-clamp-3 max-w-[90%]' 
               : 'text-xl sm:text-2xl md:text-3xl lg:text-4xl line-clamp-4 max-w-[90%]'
