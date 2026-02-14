@@ -297,7 +297,8 @@ export async function createPost(post: Partial<BlogPost>): Promise<BlogPost> {
     canonical_url: post.canonical_url || null,
     status: post.status || 'draft',
     published_at: post.published_at || null,
-    scheduled_for: post.scheduled_for || null
+    scheduled_for: post.scheduled_for || null,
+    read_time_minutes: post.read_time_minutes || Math.max(1, Math.ceil((post.content || '').replace(/<[^>]*>/g, '').split(/\s+/).length / 200))
   };
 
   const { data, error } = await supabase
@@ -311,9 +312,21 @@ export async function createPost(post: Partial<BlogPost>): Promise<BlogPost> {
 }
 
 export async function updatePost(id: string, post: Partial<BlogPost>): Promise<BlogPost> {
+  // Sanitize empty strings to null for UUID and optional fields
+  const sanitized: Record<string, unknown> = { ...post };
+  const nullableFields = ['category_id', 'excerpt', 'cover_image_url', 'seo_title', 'seo_description', 'canonical_url', 'published_at', 'scheduled_for'];
+  for (const field of nullableFields) {
+    if (field in sanitized && (sanitized[field] === '' || sanitized[field] === undefined)) {
+      sanitized[field] = null;
+    }
+  }
+  // Remove fields that shouldn't be sent to the database
+  delete sanitized['category'];
+  delete sanitized['tags'];
+
   const { data, error } = await supabase
     .from('blog_posts')
-    .update(post)
+    .update(sanitized)
     .eq('id', id)
     .select()
     .single();
