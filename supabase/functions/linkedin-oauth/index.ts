@@ -14,8 +14,8 @@ const supabaseAdmin = () => createClient(
 const LINKEDIN_CLIENT_ID = () => Deno.env.get('LINKEDIN_CLIENT_ID')!;
 const LINKEDIN_CLIENT_SECRET = () => Deno.env.get('LINKEDIN_CLIENT_SECRET')!;
 
-// Scopes needed for posting on behalf of organization
-const SCOPES = 'openid profile email w_member_social w_organization_social r_organization_social rw_organization_admin r_basicprofile';
+// Scopes for posting on personal profile
+const SCOPES = 'openid profile email w_member_social';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
