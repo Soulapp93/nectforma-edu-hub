@@ -133,6 +133,20 @@ async function generateMultiChannelContent(topic: string, context: string, scrap
           content: `Tu es un expert en content marketing multi-canal pour Nectforma, une plateforme SaaS de gestion de formation professionnelle.
 Ton: ${tone}.
 Tu dois générer SIMULTANÉMENT un article de blog ET du contenu adapté pour chaque réseau social.
+
+RÈGLES DE CAPITALISATION STRICTES:
+- Utilise la capitalisation de type "phrase" (sentence-case) PARTOUT
+- Seule la première lettre de chaque phrase/titre est en majuscule
+- JAMAIS de majuscule en milieu de phrase sauf noms propres (Nectforma, France, Qualiopi, etc.)
+- Exemples corrects: "Comment digitaliser votre gestion de formation", "Les tendances clés de la formation en 2025"
+- Exemples incorrects: "Comment Digitaliser Votre Gestion De Formation", "Les Tendances Clés"
+
+RÈGLES POUR L'ILLUSTRATION DE COUVERTURE:
+- Chaque article DOIT avoir un champ "cover_image_prompt" UNIQUE et DIFFÉRENT
+- VARIE les types d'illustrations: infographies, schémas de processus, cartographies conceptuelles, tableaux de bord, diagrammes, mind maps, graphiques comparatifs, flux de données, architectures système, illustrations de personnages, icônes 3D thématiques
+- NE RÉPÈTE JAMAIS le même style d'illustration entre les articles
+- Utilise des couleurs vives et une palette violette/bleue cohérente avec Nectforma
+
 Tu dois TOUJOURS répondre en JSON valide.`
         },
         {
@@ -149,13 +163,14 @@ ${scrapedContent ? `SOURCES WEB RÉCENTES:\n${scrapedContent.substring(0, 2000)}
 Réponds en JSON avec cette structure EXACTE:
 {
   "article": {
-    "title": "Titre optimisé SEO (max 60 chars)",
+    "title": "Titre optimisé SEO en sentence-case (max 60 chars)",
     "seo_title": "Meta title (max 60 chars)",
     "seo_description": "Meta description (max 160 chars)",
     "slug": "url-slug-optimise",
     "excerpt": "Résumé accrocheur (max 200 chars)",
-    "content": "<article HTML complet avec h2, h3, p, ul, li, strong, em - min 1000 mots>",
-    "seo_keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"]
+    "content": "<article HTML TRÈS LONG avec h2, h3, p, ul, li, strong, em, highlight-box, stat-box, info-box, warning-box, schema-box, tableaux - min 2000 mots>",
+    "seo_keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
+    "cover_image_prompt": "Description UNIQUE et DÉTAILLÉE pour générer une illustration originale. VARIE le style: infographie, schéma de processus, cartographie, mind map, diagramme, tableau de bord, illustration 3D isométrique, graphique comparatif. Palette violette et bleue, style SaaS moderne."
   },
   "linkedin": {
     "caption": "Post LinkedIn professionnel (max 1500 chars) avec emojis et hashtags",
@@ -591,7 +606,57 @@ async function saveMultiChannelContent(
   const authorId = superAdmin?.user_id;
   if (!authorId) throw new Error('No super admin found for authoring');
 
-  // Save blog post
+  // Generate cover image if prompt available
+  let coverImageUrl: string | null = null;
+  const coverPrompt = article.cover_image_prompt;
+  if (coverPrompt) {
+    try {
+      const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+      if (LOVABLE_API_KEY) {
+        console.log('🎨 Generating cover image...');
+        const imgResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash-image',
+            messages: [{ role: 'user', content: `Generate a professional blog cover image: ${coverPrompt}. Ultra high resolution, 16:9 aspect ratio, modern SaaS aesthetic with purple and blue palette.` }],
+            modalities: ['image', 'text'],
+          }),
+        });
+
+        if (imgResponse.ok) {
+          const imgData = await imgResponse.json();
+          const imageUrl = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+          
+          if (imageUrl?.startsWith('data:')) {
+            const base64Match = imageUrl.match(/^data:image\/(\w+);base64,(.+)$/);
+            if (base64Match) {
+              const ext = base64Match[1] === 'jpeg' ? 'jpg' : base64Match[1];
+              const binaryData = Uint8Array.from(atob(base64Match[2]), (c: string) => c.charCodeAt(0));
+              const fileName = `cover-images/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+              
+              const { error: uploadError } = await sb.storage
+                .from('blog-assets')
+                .upload(fileName, binaryData, { contentType: `image/${base64Match[1]}`, upsert: false });
+
+              if (!uploadError) {
+                const { data: publicUrlData } = sb.storage.from('blog-assets').getPublicUrl(fileName);
+                coverImageUrl = publicUrlData.publicUrl;
+                console.log('✅ Cover image generated:', coverImageUrl);
+              }
+            }
+          }
+        }
+      }
+    } catch (imgErr) {
+      console.error('Cover image generation failed (non-blocking):', imgErr);
+    }
+  }
+
+  // Always auto-publish when autopilot is active
   const postData: any = {
     title: article.title,
     slug: generateSlug(article.title || 'article-auto'),
@@ -601,8 +666,9 @@ async function saveMultiChannelContent(
     seo_description: article.seo_description,
     seo_keywords: article.seo_keywords || [],
     author_id: authorId,
-    status: autoPublish ? 'published' : 'draft',
-    published_at: autoPublish ? new Date().toISOString() : null,
+    status: 'published',
+    published_at: new Date().toISOString(),
+    cover_image_url: coverImageUrl,
   };
 
   const { data: savedPost, error: postError } = await sb

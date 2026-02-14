@@ -88,16 +88,15 @@ const ArticleCoverImage: React.FC<ArticleCoverImageProps> = ({ title, className 
 
       {/* Content */}
       <div className="relative z-10 flex flex-col justify-between h-full p-4 sm:p-6 md:p-8">
-        {/* Title area — centered */}
-        <div className="flex-1 flex items-center justify-center text-center">
-          <h2 className={`font-bold text-white leading-tight drop-shadow-lg ${
-            isCard 
-              ? 'text-sm sm:text-base line-clamp-3 max-w-[90%]' 
-              : 'text-xl sm:text-2xl md:text-3xl lg:text-4xl line-clamp-4 max-w-[90%]'
-          }`}>
-            {title}
-          </h2>
-        </div>
+        {/* Title area — centered, hidden on card size to avoid overlap */}
+        {!isCard && (
+          <div className="flex-1 flex items-center justify-center text-center">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight drop-shadow-lg line-clamp-4 max-w-[90%]">
+              {title}
+            </h2>
+          </div>
+        )}
+        {isCard && <div className="flex-1" />}
 
         {/* Bottom bar: metadata left + logo right */}
         <div className="flex items-end justify-between mt-3">
