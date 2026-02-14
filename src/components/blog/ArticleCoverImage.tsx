@@ -64,9 +64,9 @@ const ArticleCoverImage: React.FC<ArticleCoverImageProps> = ({ title, className 
           <img 
             src={illustrationUrl} 
             alt="" 
-            className="w-full h-full object-cover opacity-40"
+            className="w-full h-full object-cover opacity-70"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/60 to-primary/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/40 to-primary/20" />
         </div>
       )}
 
