@@ -24,13 +24,40 @@ interface AIRequest {
 }
 
 const SYSTEM_PROMPTS = {
-  'generate-article': `Tu es un expert en rédaction de contenu SEO pour Nectforma, une plateforme SaaS de gestion de formation. 
+  'generate-article': `Tu es un expert en rédaction de contenu SEO long format pour Nectforma, une plateforme SaaS de gestion de formation. 
 
 Ton style d'écriture:
 - Éducatif et professionnel
 - Orienté SaaS et EdTech
 - Engageant avec des CTAs clairs
 - Optimisé pour le référencement
+- Articles TRÈS LONGS et détaillés (minimum 3000 mots, idéalement 4000-5000 mots)
+
+RÈGLES DE MISE EN FORME OBLIGATOIRES pour le champ "content":
+1. STRUCTURE HIÉRARCHIQUE CLAIRE:
+   - Utilise des <h2> pour les grandes sections (5-8 sections minimum)
+   - Utilise des <h3> pour les sous-sections (2-4 par section h2)
+   - JAMAIS de texte en bloc continu, toujours des paragraphes courts (3-4 phrases max)
+
+2. ESPACEMENT ET SÉPARATION:
+   - Ajoute un <div class="section-divider"></div> entre chaque grande section (avant chaque h2)
+   - Chaque argument ou idée doit être dans son propre paragraphe <p>
+
+3. ÉLÉMENTS VISUELS ET ENRICHISSEMENT (OBLIGATOIRE, au moins 6-8 dans l'article):
+   - Encarts de mise en avant: <div class="highlight-box"><h4>💡 Point clé</h4><p>Contenu important</p></div>
+   - Encarts statistiques: <div class="stat-box"><span class="stat-number">85%</span><span class="stat-label">des organismes utilisent...</span></div>
+   - Citations/Témoignages: <blockquote><p>Citation pertinente</p><cite>Source</cite></blockquote>
+   - Listes à puces structurées avec <ul><li><strong>Titre point:</strong> explication détaillée</li></ul>
+   - Tableaux comparatifs: <table><thead><tr><th>Critère</th><th>Avant</th><th>Après</th></tr></thead><tbody>...</tbody></table>
+   - Encarts d'information: <div class="info-box"><h4>📌 À retenir</h4><p>Information clé</p></div>
+   - Encarts d'avertissement: <div class="warning-box"><h4>⚠️ Attention</h4><p>Point de vigilance</p></div>
+   - Schémas textuels: <div class="schema-box"><h4>🔄 Processus</h4><div class="schema-steps"><div class="schema-step"><span class="step-number">1</span><span class="step-text">Étape 1</span></div><div class="schema-step"><span class="step-number">2</span><span class="step-text">Étape 2</span></div></div></div>
+
+4. CTA INTÉGRÉS dans l'article:
+   - Au milieu de l'article: <div class="article-cta"><h4>🚀 Envie de moderniser votre gestion ?</h4><p>Découvrez comment Nectforma peut transformer votre organisme.</p></div>
+   - En fin d'article: même format avec un message de conclusion
+
+5. FAQ en fin d'article avec la classe: <div class="faq-section"><h2>Questions fréquentes</h2><div class="faq-item"><h3>Question ?</h3><p>Réponse détaillée</p></div></div>
 
 Tu dois TOUJOURS répondre en JSON valide avec cette structure exacte:
 {
@@ -43,18 +70,19 @@ Tu dois TOUJOURS répondre en JSON valide avec cette structure exacte:
     {"level": "h2", "text": "Sous-titre 1"},
     {"level": "h3", "text": "Sous-sous-titre"}
   ],
-  "content": "<article complet en HTML avec h2, h3, p, ul, li, strong, em>",
+  "content": "<article complet en HTML TRÈS LONG avec h2, h3, p, ul, li, strong, em, highlight-box, stat-box, info-box, schema-box, tableaux, etc.>",
   "faq": [
     {"question": "Question 1?", "answer": "Réponse 1"}
   ],
   "suggested_tags": ["tag1", "tag2"],
   "suggested_category": "Nom de catégorie",
-  "estimated_read_time": 5,
+  "estimated_read_time": 12,
   "cta": {
     "text": "Texte du bouton CTA",
     "description": "Description avant le CTA"
   },
-  "seo_keywords": ["keyword1", "keyword2", "keyword3"]
+  "seo_keywords": ["keyword1", "keyword2", "keyword3"],
+  "cover_image_prompt": "Description détaillée pour générer une illustration isométrique 3D adaptée au sujet de l'article, style SaaS moderne avec palette violette et bleue"
 }`,
 
   'optimize-seo': `Tu es un expert SEO spécialisé dans le SaaS EdTech. Analyse le contenu fourni et donne des recommandations détaillées.
@@ -439,14 +467,20 @@ serve(async (req) => {
     
     switch (action) {
       case 'generate-article':
-        userMessage = `Génère un article de blog complet avec ces paramètres:
+        userMessage = `Génère un article de blog TRÈS LONG et TRÈS DÉTAILLÉ (minimum 3000 mots, idéalement 4000-5000 mots) avec ces paramètres:
 - Sujet: ${payload.topic}
 - Audience cible: ${payload.audience || 'Responsables formation, RH, dirigeants de centres de formation'}
 - Ton: ${payload.tone || 'Professionnel et éducatif'}
-- Longueur: ${payload.length || 'Moyen (1000-1500 mots)'}
+- Longueur: TRÈS LONG - minimum 3000 mots avec au moins 5-8 sections h2, des sous-sections h3, des encarts visuels (highlight-box, stat-box, info-box, schema-box, warning-box), des tableaux comparatifs, des listes structurées, des citations, et des CTAs intégrés
 - Langue: ${payload.language || 'Français'}
 - Mots-clés cibles: ${(payload.keywords as string[])?.join(', ') || 'gestion formation, digitalisation'}
 - Catégorie: ${payload.category || 'Formation professionnelle'}
+
+IMPORTANT: 
+- L'article doit être TRÈS RICHE visuellement avec des encarts colorés, des schémas, des statistiques mises en avant
+- Chaque section doit être bien séparée avec des espaces
+- Pas de blocs de texte continus - toujours des paragraphes courts
+- Inclus un champ "cover_image_prompt" dans ta réponse JSON pour décrire une illustration isométrique 3D adaptée au sujet
 
 Instructions supplémentaires: ${payload.instructions || 'Aucune'}`;
         break;

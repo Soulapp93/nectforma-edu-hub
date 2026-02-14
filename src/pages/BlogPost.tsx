@@ -274,6 +274,7 @@ const BlogPostPage = () => {
                   className="aspect-[16/7] rounded-xl shadow-md"
                   publishedAt={post.published_at}
                   readTime={post.read_time_minutes}
+                  coverImageUrl={post.cover_image_url}
                 />
               </div>
 
@@ -284,21 +285,38 @@ const BlogPostPage = () => {
                   ref={contentRef}
                   className="prose prose-lg max-w-none dark:prose-invert 
                     prose-headings:scroll-mt-20
-                    prose-h1:text-3xl prose-h1:font-bold prose-h1:mt-8 prose-h1:mb-4
-                    prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-10 prose-h2:mb-4 prose-h2:text-primary
-                    prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-primary/80
-                    prose-p:text-foreground/80 prose-p:leading-relaxed prose-p:mb-4
+                    prose-h1:text-3xl prose-h1:font-bold prose-h1:mt-10 prose-h1:mb-6
+                    prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-14 prose-h2:mb-5 prose-h2:text-primary prose-h2:border-l-4 prose-h2:border-primary prose-h2:pl-4
+                    prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-10 prose-h3:mb-4 prose-h3:text-primary/80
+                    prose-h4:text-lg prose-h4:font-semibold prose-h4:mt-6 prose-h4:mb-3 prose-h4:text-primary/70
+                    prose-p:text-foreground/80 prose-p:leading-relaxed prose-p:mb-5
                     prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-                    prose-img:rounded-xl prose-img:shadow-md prose-img:my-8 prose-img:border-2 prose-img:border-primary/10
-                    prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:bg-primary/5 prose-blockquote:py-4 prose-blockquote:px-6 prose-blockquote:rounded-r-xl prose-blockquote:not-italic prose-blockquote:text-primary/90
+                    prose-img:rounded-xl prose-img:shadow-md prose-img:my-10 prose-img:border-2 prose-img:border-primary/10
+                    prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:bg-primary/5 prose-blockquote:py-5 prose-blockquote:px-6 prose-blockquote:rounded-r-xl prose-blockquote:not-italic prose-blockquote:text-primary/90 prose-blockquote:my-8
                     prose-code:bg-muted prose-code:px-2 prose-code:py-1 prose-code:rounded prose-code:text-sm
                     prose-pre:bg-muted prose-pre:border prose-pre:rounded-xl
-                    prose-ul:text-foreground/80 prose-ol:text-foreground/80
-                    prose-li:mb-2
+                    prose-ul:text-foreground/80 prose-ol:text-foreground/80 prose-ul:my-6 prose-ol:my-6
+                    prose-li:mb-3
                     prose-strong:text-foreground prose-strong:font-semibold
-                    prose-table:border prose-table:rounded-lg prose-table:overflow-hidden
-                    prose-th:bg-muted prose-th:p-3 prose-th:text-left
-                    prose-td:p-3 prose-td:border-t
+                    prose-table:border prose-table:rounded-xl prose-table:overflow-hidden prose-table:my-8 prose-table:shadow-sm
+                    prose-th:bg-primary/10 prose-th:p-4 prose-th:text-left prose-th:text-primary prose-th:font-semibold
+                    prose-td:p-4 prose-td:border-t
+                    [&_.section-divider]:h-px [&_.section-divider]:bg-gradient-to-r [&_.section-divider]:from-transparent [&_.section-divider]:via-primary/30 [&_.section-divider]:to-transparent [&_.section-divider]:my-12
+                    [&_.highlight-box]:bg-primary/5 [&_.highlight-box]:border-l-4 [&_.highlight-box]:border-primary [&_.highlight-box]:rounded-r-xl [&_.highlight-box]:p-6 [&_.highlight-box]:my-8 [&_.highlight-box_h4]:text-primary [&_.highlight-box_h4]:font-bold [&_.highlight-box_h4]:mb-2 [&_.highlight-box_h4]:mt-0 [&_.highlight-box_p]:mb-0
+                    [&_.stat-box]:bg-gradient-to-br [&_.stat-box]:from-primary/10 [&_.stat-box]:to-primary/5 [&_.stat-box]:rounded-2xl [&_.stat-box]:p-6 [&_.stat-box]:my-8 [&_.stat-box]:text-center [&_.stat-box]:border [&_.stat-box]:border-primary/20
+                    [&_.stat-number]:text-4xl [&_.stat-number]:font-bold [&_.stat-number]:text-primary [&_.stat-number]:block [&_.stat-number]:mb-2
+                    [&_.stat-label]:text-sm [&_.stat-label]:text-muted-foreground [&_.stat-label]:block
+                    [&_.info-box]:bg-blue-50 [&_.info-box]:dark:bg-blue-950/30 [&_.info-box]:border [&_.info-box]:border-blue-200 [&_.info-box]:dark:border-blue-800 [&_.info-box]:rounded-xl [&_.info-box]:p-6 [&_.info-box]:my-8 [&_.info-box_h4]:text-blue-700 [&_.info-box_h4]:dark:text-blue-300 [&_.info-box_h4]:font-bold [&_.info-box_h4]:mb-2 [&_.info-box_h4]:mt-0 [&_.info-box_p]:mb-0
+                    [&_.warning-box]:bg-amber-50 [&_.warning-box]:dark:bg-amber-950/30 [&_.warning-box]:border [&_.warning-box]:border-amber-200 [&_.warning-box]:dark:border-amber-800 [&_.warning-box]:rounded-xl [&_.warning-box]:p-6 [&_.warning-box]:my-8 [&_.warning-box_h4]:text-amber-700 [&_.warning-box_h4]:dark:text-amber-300 [&_.warning-box_h4]:font-bold [&_.warning-box_h4]:mb-2 [&_.warning-box_h4]:mt-0 [&_.warning-box_p]:mb-0
+                    [&_.article-cta]:bg-gradient-to-r [&_.article-cta]:from-primary [&_.article-cta]:to-primary/80 [&_.article-cta]:text-white [&_.article-cta]:rounded-2xl [&_.article-cta]:p-8 [&_.article-cta]:my-10 [&_.article-cta]:text-center [&_.article-cta_h4]:text-white [&_.article-cta_h4]:font-bold [&_.article-cta_h4]:text-xl [&_.article-cta_h4]:mb-3 [&_.article-cta_h4]:mt-0 [&_.article-cta_p]:text-white/90 [&_.article-cta_p]:mb-0
+                    [&_.schema-box]:bg-card [&_.schema-box]:border-2 [&_.schema-box]:border-primary/20 [&_.schema-box]:rounded-2xl [&_.schema-box]:p-6 [&_.schema-box]:my-8 [&_.schema-box_h4]:text-primary [&_.schema-box_h4]:font-bold [&_.schema-box_h4]:mb-4 [&_.schema-box_h4]:mt-0
+                    [&_.schema-steps]:flex [&_.schema-steps]:flex-wrap [&_.schema-steps]:gap-3 [&_.schema-steps]:items-center [&_.schema-steps]:justify-center
+                    [&_.schema-step]:flex [&_.schema-step]:items-center [&_.schema-step]:gap-2 [&_.schema-step]:bg-primary/10 [&_.schema-step]:rounded-xl [&_.schema-step]:px-4 [&_.schema-step]:py-3
+                    [&_.step-number]:w-8 [&_.step-number]:h-8 [&_.step-number]:rounded-full [&_.step-number]:bg-primary [&_.step-number]:text-white [&_.step-number]:flex [&_.step-number]:items-center [&_.step-number]:justify-center [&_.step-number]:font-bold [&_.step-number]:text-sm [&_.step-number]:shrink-0
+                    [&_.step-text]:text-sm [&_.step-text]:font-medium
+                    [&_.faq-section]:mt-12 [&_.faq-section]:pt-8 [&_.faq-section]:border-t-2 [&_.faq-section]:border-primary/20
+                    [&_.faq-item]:bg-card [&_.faq-item]:border [&_.faq-item]:border-primary/15 [&_.faq-item]:rounded-xl [&_.faq-item]:p-6 [&_.faq-item]:my-4
+                    [&_.faq-item_h3]:text-primary [&_.faq-item_h3]:mt-0 [&_.faq-item_h3]:mb-3
                     [&_.carousel-slide]:rounded-xl [&_.carousel-slide]:shadow-lg
                     [&_div[style*='background']]:rounded-xl [&_div[style*='background']]:my-4"
                   dangerouslySetInnerHTML={{ __html: processContent(post.content) }}
