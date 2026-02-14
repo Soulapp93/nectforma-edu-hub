@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Settings, Link2, RefreshCw, Unlink, Check, AlertCircle,
   ExternalLink, Clock, Shield
@@ -86,10 +87,21 @@ const ConnectDialog = ({ platform, onClose, onConnect }: ConnectDialogProps) => 
   const handleConnect = async () => {
     setConnecting(true);
     try {
+      // LinkedIn uses OAuth flow
+      if (platform === 'linkedin') {
+        const redirectUri = `${window.location.origin}/linkedin-callback`;
+        const { data, error } = await supabase.functions.invoke('linkedin-oauth', {
+          body: { action: 'get-auth-url', redirect_uri: redirectUri },
+        });
+        if (error || !data?.success) throw new Error(data?.error || 'Failed to get auth URL');
+        window.location.href = data.auth_url;
+        return;
+      }
       await onConnect(platform, credentials);
       onClose();
     } catch (error) {
       console.error('Connection error:', error);
+      toast.error('Erreur lors de la connexion');
     } finally {
       setConnecting(false);
     }

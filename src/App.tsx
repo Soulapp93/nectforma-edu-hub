@@ -50,6 +50,7 @@ import BlogPost from './pages/BlogPost';
 import BlogAdmin from './pages/BlogAdmin';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import CookieConsent from '@/components/CookieConsent';
+import LinkedInCallback from '@/pages/LinkedInCallback';
 
 
 const queryClient = new QueryClient({
@@ -82,11 +83,14 @@ const AppContent = () => {
   // IMPORTANT: La page de signature doit être vérifiée EN PREMIER pour éviter les 404
   // après redirection depuis /auth
   const isSignaturePage = location.pathname.startsWith('/emargement/signer/');
-  if (isSignaturePage) {
+  const isLinkedInCallback = location.pathname === '/linkedin-callback';
+
+  if (isSignaturePage || isLinkedInCallback) {
     return (
       <div className="min-h-screen w-full">
         <Routes>
           <Route path="/emargement/signer/:token" element={<SignaturePublique />} />
+          <Route path="/linkedin-callback" element={<LinkedInCallback />} />
         </Routes>
         <Toaster />
       </div>
