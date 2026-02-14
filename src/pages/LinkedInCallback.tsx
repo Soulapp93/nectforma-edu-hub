@@ -33,7 +33,8 @@ const LinkedInCallback = () => {
 
   const exchangeCode = async (code: string) => {
     try {
-      const redirectUri = `${window.location.origin}/linkedin-callback`;
+      // Always use production domain for LinkedIn OAuth
+      const redirectUri = 'https://nectforma.com/linkedin-callback';
 
       const { data, error } = await supabase.functions.invoke('linkedin-oauth', {
         body: {

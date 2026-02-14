@@ -575,7 +575,8 @@ export const SocialContentGallery = () => {
   const handleConnectLinkedin = async () => {
     setConnectingLinkedin(true);
     try {
-      const redirectUri = `${window.location.origin}/linkedin-callback`;
+      // Always use production domain for LinkedIn OAuth redirect
+      const redirectUri = 'https://nectforma.com/linkedin-callback';
       const { data, error } = await supabase.functions.invoke('linkedin-oauth', {
         body: { action: 'get-auth-url', redirect_uri: redirectUri },
       });
