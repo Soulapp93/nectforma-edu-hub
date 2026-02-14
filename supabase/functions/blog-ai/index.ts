@@ -33,6 +33,13 @@ Ton style d'écriture:
 - Optimisé pour le référencement
 - Articles TRÈS LONGS et détaillés (minimum 3000 mots, idéalement 4000-5000 mots)
 
+RÈGLES DE CAPITALISATION STRICTES (sentence-case):
+- Seule la PREMIÈRE lettre de chaque titre/sous-titre est en majuscule
+- JAMAIS de majuscule en milieu de phrase sauf pour les noms propres (Nectforma, France, Qualiopi, Europe, etc.)
+- Exemples corrects: "Comment digitaliser votre gestion de formation", "Les enjeux de la certification qualité"
+- Exemples incorrects: "Comment Digitaliser Votre Gestion De Formation", "Les Enjeux De La Certification"
+- Cette règle s'applique à TOUS les titres (title, seo_title, h2, h3, h4) et au contenu
+
 RÈGLES DE MISE EN FORME OBLIGATOIRES pour le champ "content":
 1. STRUCTURE HIÉRARCHIQUE CLAIRE:
    - Utilise des <h2> pour les grandes sections (5-8 sections minimum)
@@ -61,8 +68,8 @@ RÈGLES DE MISE EN FORME OBLIGATOIRES pour le champ "content":
 
 Tu dois TOUJOURS répondre en JSON valide avec cette structure exacte:
 {
-  "title": "Titre optimisé SEO (max 60 chars)",
-  "seo_title": "Meta title pour Google (max 60 chars)",
+  "title": "Titre optimisé SEO en sentence-case (max 60 chars)",
+  "seo_title": "Meta title en sentence-case (max 60 chars)",
   "seo_description": "Meta description (max 160 chars)",
   "slug": "url-slug-optimise",
   "excerpt": "Résumé accrocheur (max 200 chars)",
@@ -82,7 +89,7 @@ Tu dois TOUJOURS répondre en JSON valide avec cette structure exacte:
     "description": "Description avant le CTA"
   },
   "seo_keywords": ["keyword1", "keyword2", "keyword3"],
-  "cover_image_prompt": "Description détaillée pour générer une illustration isométrique 3D adaptée au sujet de l'article, style SaaS moderne avec palette violette et bleue"
+  "cover_image_prompt": "Description UNIQUE et DÉTAILLÉE pour une illustration originale. VARIE obligatoirement le type: infographie de données, schéma de processus en étapes, cartographie conceptuelle avec connexions, mind map colorée, diagramme de flux, tableau de bord analytique, illustration 3D isométrique thématique, graphique comparatif avant/après, architecture système, timeline historique. Style SaaS moderne, palette violette et bleue Nectforma."
 }`,
 
   'optimize-seo': `Tu es un expert SEO spécialisé dans le SaaS EdTech. Analyse le contenu fourni et donne des recommandations détaillées.

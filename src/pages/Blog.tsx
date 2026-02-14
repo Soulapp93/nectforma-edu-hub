@@ -54,7 +54,7 @@ const BlogFooter = () => (
 
 const ArticleCard = ({ post }: { post: BlogPost }) => (
   <div className="group bg-card rounded-2xl border-2 border-primary/20 overflow-hidden hover:shadow-xl hover:border-primary/40 transition-all duration-300">
-    <ArticleCoverImage title={post.title} size="card" className="aspect-[4/3]" coverImageUrl={post.cover_image_url} />
+    <ArticleCoverImage title={post.title} size="card" className="aspect-[16/9]" coverImageUrl={post.cover_image_url} />
     <div className="p-5">
       <div className="flex items-center gap-2 mb-3">
         {post.category && (
@@ -66,7 +66,7 @@ const ArticleCard = ({ post }: { post: BlogPost }) => (
           <span className="text-xs text-muted-foreground">•</span>
         )}
         {post.published_at && (
-          <span className="text-xs text-muted-foreground uppercase tracking-wide">
+          <span className="text-xs text-muted-foreground tracking-wide">
             {format(new Date(post.published_at), 'dd/MM/yyyy', { locale: fr })}
           </span>
         )}
