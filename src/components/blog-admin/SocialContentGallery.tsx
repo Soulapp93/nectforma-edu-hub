@@ -580,7 +580,11 @@ export const SocialContentGallery = () => {
         body: { action: 'get-auth-url', redirect_uri: redirectUri },
       });
       if (error || !data?.success) throw new Error(data?.error || 'Failed to get auth URL');
-      window.location.href = data.auth_url;
+      // Use window.open for iframe compatibility (preview), fallback to location.href
+      const opened = window.open(data.auth_url, '_blank');
+      if (!opened) {
+        window.location.href = data.auth_url;
+      }
     } catch (err: any) {
       console.error('LinkedIn connect error:', err);
       toast.error('Erreur lors de la connexion LinkedIn');
