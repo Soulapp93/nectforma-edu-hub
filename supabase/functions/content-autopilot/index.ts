@@ -451,6 +451,114 @@ async function generateTikTokVideo(videoScript: any, topic: string): Promise<str
   }
 }
 
+// ─── STEP 3c: Auto-publish LinkedIn post ───
+async function autoPublishLinkedIn(postId: string): Promise<{ success: boolean; url?: string }> {
+  const sb = supabaseAdmin();
+
+  // Check if LinkedIn is connected
+  const { data: connection } = await sb
+    .from('social_media_connections')
+    .select('access_token, token_expires_at, connection_status, page_id, account_id, metadata')
+    .eq('platform', 'linkedin')
+    .eq('connection_status', 'connected')
+    .single();
+
+  if (!connection?.access_token) {
+    console.log('⚠️ LinkedIn not connected, skipping auto-publish');
+    return { success: false };
+  }
+
+  // Check token expiry
+  if (connection.token_expires_at && new Date(connection.token_expires_at) < new Date()) {
+    console.log('⚠️ LinkedIn token expired, skipping auto-publish');
+    return { success: false };
+  }
+
+  // Get post data
+  const { data: post } = await sb
+    .from('social_posts')
+    .select('*')
+    .eq('id', postId)
+    .single();
+
+  if (!post) return { success: false };
+
+  const metadata = connection.metadata as any;
+  const organizationId = metadata?.organization_id || connection.page_id;
+  const personUrn = metadata?.person_urn;
+
+  const author = organizationId
+    ? `urn:li:organization:${organizationId}`
+    : personUrn || `urn:li:person:${connection.account_id}`;
+
+  const caption = post.caption + (post.hashtags?.length ? '\n\n' + post.hashtags.join(' ') : '');
+
+  const linkedinPayload: any = {
+    author,
+    lifecycleState: 'PUBLISHED',
+    specificContent: {
+      'com.linkedin.ugc.ShareContent': {
+        shareCommentary: { text: caption },
+        shareMediaCategory: 'NONE',
+      },
+    },
+    visibility: {
+      'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC',
+    },
+  };
+
+  try {
+    const publishResponse = await fetch('https://api.linkedin.com/v2/ugcPosts', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${connection.access_token}`,
+        'Content-Type': 'application/json',
+        'X-Restli-Protocol-Version': '2.0.0',
+      },
+      body: JSON.stringify(linkedinPayload),
+    });
+
+    if (!publishResponse.ok) {
+      const errText = await publishResponse.text();
+      console.error('LinkedIn auto-publish error:', publishResponse.status, errText);
+      await sb.from('social_publication_logs').insert({
+        social_post_id: postId,
+        platform: 'linkedin',
+        action: 'auto_publish',
+        status: 'failed',
+        error_message: `${publishResponse.status}: ${errText}`,
+      });
+      return { success: false };
+    }
+
+    const publishData = await publishResponse.json();
+    const externalPostId = publishData.id || publishResponse.headers.get('x-restli-id') || '';
+    const postUrl = `https://www.linkedin.com/feed/update/${externalPostId}`;
+
+    await sb.from('social_posts').update({
+      status: 'published',
+      published_at: new Date().toISOString(),
+      external_post_id: externalPostId,
+      external_post_url: postUrl,
+      auto_published: true,
+    }).eq('id', postId);
+
+    await sb.from('social_publication_logs').insert({
+      social_post_id: postId,
+      platform: 'linkedin',
+      action: 'auto_publish',
+      status: 'success',
+      details: { external_post_id: externalPostId, post_url: postUrl },
+    });
+
+    console.log('✅ LinkedIn post auto-published:', postUrl);
+    return { success: true, url: postUrl };
+  } catch (e) {
+    console.error('LinkedIn auto-publish error:', e);
+    return { success: false };
+  }
+}
+
 // ─── STEP 4: Save article + ALL social posts to DB ───
 async function saveMultiChannelContent(
   generated: any,
@@ -812,6 +920,24 @@ serve(async (req) => {
       const result = await saveMultiChannelContent(generated, trends.topic, trends.sources, runId, !!autoPublish);
       console.log('✅ Multi-channel autopilot run completed!', result);
 
+      // Step 5: Auto-publish LinkedIn if enabled
+      let linkedinPublishResult = { success: false, url: undefined as string | undefined };
+      if (autoPublish) {
+        console.log('📤 Step 5: Auto-publishing to LinkedIn...');
+        // Find the LinkedIn social post we just created
+        const { data: linkedinPost } = await sb
+          .from('social_posts')
+          .select('id')
+          .eq('blog_post_id', result.articleId)
+          .eq('platform', 'linkedin')
+          .single();
+
+        if (linkedinPost) {
+          linkedinPublishResult = await autoPublishLinkedIn(linkedinPost.id);
+          console.log('📤 LinkedIn auto-publish result:', linkedinPublishResult.success);
+        }
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -820,6 +946,8 @@ serve(async (req) => {
           socialPostsGenerated: result.socialCount,
           topic: trends.topic,
           autoPublished: !!autoPublish,
+          linkedinPublished: linkedinPublishResult.success,
+          linkedinUrl: linkedinPublishResult.url,
           channels: ['article', 'linkedin', 'instagram', 'tiktok', 'twitter'],
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
