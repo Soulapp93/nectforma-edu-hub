@@ -4,7 +4,7 @@ import {
   LayoutDashboard, ShieldCheck, Users, GraduationCap, BookText, CalendarDays, 
   ClipboardCheck, Mail, UsersRound, Building2, UserCircle, Briefcase,
   ArrowRight, CheckCircle2, Sparkles, Play, Shield, Zap, Clock, Monitor,
-  Send, Phone, MapPin, ChevronDown
+  Send, Phone, MapPin, ChevronDown, Download
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -344,6 +344,14 @@ const Index = () => {
               icon={<Play className="h-5 w-5" />}
             >
               Découvrir nos fonctionnalités
+            </AnimatedButton>
+            <AnimatedButton
+              to="/install"
+              variant="outline"
+              size="lg"
+              icon={<Download className="h-5 w-5" />}
+            >
+              Installer l'application
             </AnimatedButton>
           </AnimatedSection>
 
