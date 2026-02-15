@@ -990,7 +990,6 @@ serve(async (req) => {
       let linkedinPublishResult = { success: false, url: undefined as string | undefined };
       if (autoPublish) {
         console.log('📤 Step 5: Auto-publishing to LinkedIn...');
-        // Find the LinkedIn social post we just created
         const { data: linkedinPost } = await sb
           .from('social_posts')
           .select('id')
@@ -1004,6 +1003,57 @@ serve(async (req) => {
         }
       }
 
+      // Step 6: Send newsletter to all subscribers
+      console.log('📧 Step 6: Sending newsletter to subscribers...');
+      try {
+        const { data: subscribers } = await sb
+          .from('newsletter_subscribers')
+          .select('email')
+          .eq('is_active', true);
+
+        if (subscribers && subscribers.length > 0) {
+          const article = generated.article || generated;
+          const articleUrl = `https://nectforme.lovable.app/blog/${article.slug || 'article'}`;
+          const emails = subscribers.map((s: any) => s.email);
+
+          // Send in batches of 50
+          for (let i = 0; i < emails.length; i += 50) {
+            const batch = emails.slice(i, i + 50);
+            const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+            const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
+
+            await fetch(`${SUPABASE_URL}/functions/v1/send-email-brevo`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              },
+              body: JSON.stringify({
+                to: batch,
+                subject: `📰 Nouvel article : ${article.title}`,
+                htmlContent: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;">
+                  <div style="text-align:center;margin-bottom:30px;">
+                    <div style="display:inline-block;background:linear-gradient(135deg,#8B5CF6,#A855F7);padding:12px 20px;border-radius:12px;">
+                      <span style="color:white;font-weight:800;font-size:20px;">NF</span>
+                    </div>
+                  </div>
+                  <h1 style="text-align:center;color:#1f2937;font-size:22px;margin-bottom:16px;">${article.title}</h1>
+                  <p style="color:#6b7280;text-align:center;font-size:15px;line-height:1.6;margin-bottom:24px;">${article.excerpt || ''}</p>
+                  <div style="text-align:center;">
+                    <a href="${articleUrl}" style="display:inline-block;background:linear-gradient(135deg,#8B5CF6,#A855F7);color:white;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;">Lire l'article</a>
+                  </div>
+                  <p style="color:#9ca3af;text-align:center;font-size:12px;margin-top:30px;">Vous recevez cet email car vous êtes inscrit à la newsletter Nectforma.</p>
+                </div>`,
+                tags: ['newsletter', 'autopilot'],
+              }),
+            });
+            console.log(`📧 Newsletter batch sent to ${batch.length} subscribers`);
+          }
+        }
+      } catch (newsletterErr) {
+        console.error('Newsletter sending failed (non-blocking):', newsletterErr);
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -1015,6 +1065,7 @@ serve(async (req) => {
           linkedinPublished: linkedinPublishResult.success,
           linkedinUrl: linkedinPublishResult.url,
           channels: ['article', 'linkedin', 'instagram', 'tiktok', 'twitter'],
+          newsletterSent: true,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
