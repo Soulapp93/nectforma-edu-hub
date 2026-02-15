@@ -117,9 +117,10 @@ const RelatedPosts = ({ currentSlug }: { currentSlug: string }) => {
       <div className="grid md:grid-cols-3 gap-6">
         {posts.map(post => (
           <Link key={post.id} to={`/blog/${post.slug}`} className="group">
-            <ArticleCoverImage title={post.title} size="card" className="aspect-video rounded-xl" />
-            <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-              <ArrowRight className="h-3 w-3 text-primary" />
+            <ArticleCoverImage title={post.title} size="card" coverImageUrl={post.cover_image_url} className="aspect-video rounded-xl" />
+            <h4 className="text-sm font-semibold mt-3 line-clamp-2 group-hover:text-primary transition-colors">{post.title}</h4>
+            <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
+              <ArrowRight className="h-3 w-3 text-primary group-hover:translate-x-0.5 transition-transform" />
               Lire l'article
             </p>
           </Link>
