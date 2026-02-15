@@ -1014,39 +1014,59 @@ serve(async (req) => {
         if (subscribers && subscribers.length > 0) {
           const article = generated.article || generated;
           const articleUrl = `https://nectforme.lovable.app/blog/${article.slug || 'article'}`;
-          const emails = subscribers.map((s: any) => s.email);
+          const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+          const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 
-          // Send in batches of 50
-          for (let i = 0; i < emails.length; i += 50) {
-            const batch = emails.slice(i, i + 50);
-            const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-            const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
-
-            await fetch(`${SUPABASE_URL}/functions/v1/send-email-brevo`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-              },
-              body: JSON.stringify({
-                to: batch,
-                subject: `📰 Nouvel article : ${article.title}`,
-                htmlContent: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;">
-                  <div style="text-align:center;margin-bottom:30px;">
-                    <div style="display:inline-block;background:linear-gradient(135deg,#8B5CF6,#A855F7);padding:12px 20px;border-radius:12px;">
-                      <span style="color:white;font-weight:800;font-size:20px;">NF</span>
-                    </div>
-                  </div>
-                  <h1 style="text-align:center;color:#1f2937;font-size:22px;margin-bottom:16px;">${article.title}</h1>
-                  <p style="color:#6b7280;text-align:center;font-size:15px;line-height:1.6;margin-bottom:24px;">${article.excerpt || ''}</p>
-                  <div style="text-align:center;">
-                    <a href="${articleUrl}" style="display:inline-block;background:linear-gradient(135deg,#8B5CF6,#A855F7);color:white;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;">Lire l'article</a>
-                  </div>
-                  <p style="color:#9ca3af;text-align:center;font-size:12px;margin-top:30px;">Vous recevez cet email car vous êtes inscrit à la newsletter Nectforma.</p>
-                </div>`,
-                tags: ['newsletter', 'autopilot'],
-              }),
-            });
+          // Send individually to include personalized unsubscribe link
+          for (let i = 0; i < subscribers.length; i += 50) {
+            const batch = subscribers.slice(i, i + 50);
+            
+            for (const subscriber of batch) {
+              const unsubscribeUrl = `${SUPABASE_URL}/functions/v1/unsubscribe-newsletter?email=${encodeURIComponent(subscriber.email)}`;
+              
+              await fetch(`${SUPABASE_URL}/functions/v1/send-email-brevo`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                },
+                body: JSON.stringify({
+                  to: subscriber.email,
+                  subject: `📰 Nouvel article : ${article.title}`,
+                  htmlContent: `<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:Arial,Helvetica,sans-serif;">
+  <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;margin-top:20px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#7c3aed,#a855f7);padding:28px 20px;text-align:center;">
+      <div style="display:inline-block;background:rgba(255,255,255,0.2);padding:10px 18px;border-radius:10px;margin-bottom:8px;">
+        <span style="color:white;font-weight:800;font-size:22px;letter-spacing:1px;">NF</span>
+      </div>
+      <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:8px 0 0;">La newsletter de Nectforma</p>
+    </div>
+    <!-- Content -->
+    <div style="padding:32px 28px;">
+      <h1 style="color:#1f2937;font-size:21px;line-height:1.4;margin:0 0 16px;text-align:center;">${article.title}</h1>
+      <div style="width:40px;height:3px;background:linear-gradient(135deg,#8B5CF6,#A855F7);margin:0 auto 20px;border-radius:2px;"></div>
+      <p style="color:#6b7280;font-size:15px;line-height:1.7;text-align:center;margin:0 0 28px;">${article.excerpt || ''}</p>
+      <div style="text-align:center;">
+        <a href="${articleUrl}" style="display:inline-block;background:linear-gradient(135deg,#8B5CF6,#A855F7);color:white;padding:14px 36px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">Lire l'article</a>
+      </div>
+    </div>
+    <!-- Footer -->
+    <div style="background:#f9fafb;padding:20px 28px;border-top:1px solid #e5e7eb;text-align:center;">
+      <p style="color:#9ca3af;font-size:12px;margin:0 0 8px;line-height:1.5;">Vous recevez cet email car vous êtes inscrit à la newsletter Nectforma.</p>
+      <a href="${unsubscribeUrl}" style="color:#8B5CF6;font-size:12px;text-decoration:underline;">Se désinscrire de la newsletter</a>
+      <p style="color:#d1d5db;font-size:11px;margin:12px 0 0;">© ${new Date().getFullYear()} Nectforma — Tous droits réservés</p>
+    </div>
+  </div>
+</body>
+</html>`,
+                  tags: ['newsletter', 'autopilot'],
+                }),
+              });
+            }
             console.log(`📧 Newsletter batch sent to ${batch.length} subscribers`);
           }
         }
