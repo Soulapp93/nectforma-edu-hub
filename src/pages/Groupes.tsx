@@ -5,7 +5,10 @@ import ChatRoom from '@/components/chat/ChatRoom';
 
 const Groupes = () => {
   const { groups, loading } = useChatGroups();
-  const establishmentGroup = groups.find(g => g.group_type === 'establishment');
+  // Pick the establishment group with the most members (safeguard against duplicates)
+  const establishmentGroup = groups
+    .filter(g => g.group_type === 'establishment')
+    .sort((a, b) => (b.member_count || 0) - (a.member_count || 0))[0] || null;
 
   console.log('📍 Groupes page - loading:', loading, 'groups:', groups.length, 'establishment group:', establishmentGroup);
 
