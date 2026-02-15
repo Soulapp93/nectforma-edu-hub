@@ -46,6 +46,7 @@ import Activation from './pages/Activation';
 import Notifications from './pages/Notifications';
 import Documentation from './pages/Documentation';
 import Blog from './pages/Blog';
+import Install from './pages/Install';
 import BlogPost from './pages/BlogPost';
 import BlogAdmin from './pages/BlogAdmin';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
@@ -227,7 +228,7 @@ const AppContent = () => {
 
   // Pages publiques (sans authentification)
   // IMPORTANT: /blog-admin est volontairement EXCLU (guard dédié ci-dessus)
-  const publicPages = ['/', '/fonctionnalites', '/pourquoi-nous', '/cgu', '/politique-confidentialite', '/documentation', '/blog'];
+  const publicPages = ['/', '/fonctionnalites', '/pourquoi-nous', '/cgu', '/politique-confidentialite', '/documentation', '/blog', '/install'];
   // Pages légales accessibles même connecté (CGU, Politique de Confidentialité)
   const legalPages = ['/cgu', '/politique-confidentialite'];
    const isPublicPage = publicPages.includes(location.pathname) || location.pathname.startsWith('/blog/');
@@ -290,6 +291,7 @@ const AppContent = () => {
           <Route path="/documentation" element={<Documentation />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
+          <Route path="/install" element={<Install />} />
         </Routes>
         <CookieConsent />
       </>
