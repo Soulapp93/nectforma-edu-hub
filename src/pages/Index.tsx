@@ -698,6 +698,87 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Newsletter Section */}
+      <section className="py-16 md:py-20 bg-gradient-to-br from-primary/5 via-accent/5 to-primary/5">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <AnimatedSection animation="fade-up">
+            <div className="inline-flex items-center px-4 py-2 bg-primary/10 rounded-full mb-6">
+              <Mail className="h-4 w-4 text-primary mr-2" />
+              <span className="text-primary font-medium text-sm">Newsletter</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Restez informé des <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">dernières actualités</span>
+            </h2>
+            <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
+              Recevez nos articles, conseils et actualités sur la formation professionnelle directement dans votre boîte mail.
+            </p>
+            <form
+              className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const form = e.currentTarget;
+                const emailInput = form.querySelector('input[type="email"]') as HTMLInputElement;
+                const email = emailInput?.value?.trim();
+                if (!email) return;
+
+                try {
+                  const response = await fetch(
+                    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email-brevo`,
+                    {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                      },
+                      body: JSON.stringify({
+                        to: email,
+                        subject: 'Bienvenue dans la newsletter Nectforma !',
+                        htmlContent: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;"><div style="text-align:center;margin-bottom:30px;"><div style="display:inline-block;background:linear-gradient(135deg,#8B5CF6,#A855F7);padding:12px 20px;border-radius:12px;"><span style="color:white;font-weight:800;font-size:20px;">NF</span></div></div><h1 style="text-align:center;color:#1f2937;font-size:24px;">Bienvenue dans la newsletter Nectforma !</h1><p style="color:#6b7280;text-align:center;font-size:16px;line-height:1.6;">Merci de votre inscription. Vous recevrez désormais nos derniers articles, conseils et actualités sur la formation professionnelle.</p><div style="text-align:center;margin-top:30px;"><a href="https://nectforme.lovable.app/blog" style="display:inline-block;background:linear-gradient(135deg,#8B5CF6,#A855F7);color:white;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;">Découvrir nos articles</a></div></div>`,
+                      }),
+                    }
+                  );
+
+                  // Save subscriber via a simple insert
+                  const { supabase } = await import('@/integrations/supabase/client');
+                  await supabase.from('newsletter_subscribers').upsert(
+                    { email, is_active: true },
+                    { onConflict: 'email' }
+                  );
+
+                  if (response.ok) {
+                    toast.success('Inscription réussie ! Vérifiez votre boîte mail.');
+                    form.reset();
+                  } else {
+                    toast.success('Inscription enregistrée !');
+                    form.reset();
+                  }
+                } catch (error) {
+                  console.error('Newsletter subscription error:', error);
+                  toast.error("Erreur lors de l'inscription. Veuillez réessayer.");
+                }
+              }}
+            >
+              <input
+                type="email"
+                required
+                placeholder="votre@email.com"
+                className="flex-1 px-4 py-3 bg-background border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-colors text-foreground placeholder:text-muted-foreground"
+              />
+              <button
+                type="submit"
+                className="px-6 py-3 bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-xl hover:shadow-lg font-semibold transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+              >
+                <Send className="h-4 w-4" />
+                S'inscrire
+              </button>
+            </form>
+            <p className="text-xs text-muted-foreground mt-4">
+              En vous inscrivant, vous acceptez de recevoir nos communications. Désabonnement possible à tout moment.
+            </p>
+          </AnimatedSection>
+        </div>
+      </section>
+
       {/* FAQ Section */}
       <FAQSection />
 
