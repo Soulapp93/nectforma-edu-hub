@@ -2,12 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { workspaceService, WorkspaceDocument, WorkspaceFolder } from '@/services/workspaceService';
 import { toast } from 'sonner';
-import { Plus, FileText, Table2, Presentation, Image, FolderPlus, Folder, ArrowLeft, Trash2, MoreVertical, Search, LayoutGrid, List, Share2 } from 'lucide-react';
+import { Plus, FileText, Table2, Presentation, Image, FolderPlus, Folder, ArrowLeft, Trash2, MoreVertical, Search, LayoutGrid, List, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/ui/page-header';
 import WorkspaceTextEditor from '@/components/workspace/WorkspaceTextEditor';
 
@@ -41,11 +43,13 @@ const getDocColor = (type: string) => {
 const EspaceTravail = () => {
   const { userId } = useCurrentUser();
   const [documents, setDocuments] = useState<WorkspaceDocument[]>([]);
+  const [sharedDocuments, setSharedDocuments] = useState<WorkspaceDocument[]>([]);
   const [folders, setFolders] = useState<WorkspaceFolder[]>([]);
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [tab, setTab] = useState<'mine' | 'shared'>('mine');
   const [showNewDocModal, setShowNewDocModal] = useState(false);
   const [showNewFolderModal, setShowNewFolderModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
@@ -56,12 +60,14 @@ const EspaceTravail = () => {
     if (!userId) return;
     setLoading(true);
     try {
-      const [foldersData, docsData] = await Promise.all([
+      const [foldersData, docsData, sharedData] = await Promise.all([
         workspaceService.getFolders(userId),
         workspaceService.getDocuments(userId, currentFolderId),
+        workspaceService.getSharedDocuments(userId),
       ]);
       setFolders(foldersData.filter(f => f.parent_id === currentFolderId));
       setDocuments(docsData);
+      setSharedDocuments(sharedData);
     } catch (err) {
       console.error(err);
       toast.error('Erreur lors du chargement');
@@ -146,13 +152,14 @@ const EspaceTravail = () => {
 
   const handleSaveDocument = async (doc: WorkspaceDocument) => {
     try {
-      await workspaceService.updateDocument(doc.id, { title: doc.title, content: doc.content });
+      await workspaceService.updateDocument(doc.id, { title: doc.title, content: doc.content, last_edited_by: userId });
       setEditingDoc(doc);
     } catch { toast.error('Erreur de sauvegarde'); }
   };
 
-  const filteredDocs = documents.filter(d => d.title.toLowerCase().includes(search.toLowerCase()));
-  const filteredFolders = folders.filter(f => f.name.toLowerCase().includes(search.toLowerCase()));
+  const displayDocs = tab === 'mine' ? documents : sharedDocuments;
+  const filteredDocs = displayDocs.filter(d => d.title.toLowerCase().includes(search.toLowerCase()));
+  const filteredFolders = tab === 'mine' ? folders.filter(f => f.name.toLowerCase().includes(search.toLowerCase())) : [];
 
   if (editingDoc) {
     if (editingDoc.document_type === 'text') {
@@ -180,14 +187,29 @@ const EspaceTravail = () => {
     <div className="p-4 md:p-6 space-y-6 pb-24 md:pb-6">
       <PageHeader title="Espace de travail" description="Créez et gérez vos documents, tableaux et présentations" />
 
-      {/* Actions */}
-      <div className="flex items-center justify-end gap-2">
-        <Button size="sm" onClick={() => setShowNewDocModal(true)} className="gap-1.5">
-          <Plus className="h-4 w-4" /> Nouveau document
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => setShowNewFolderModal(true)} className="gap-1.5">
-          <FolderPlus className="h-4 w-4" /> Dossier
-        </Button>
+      {/* Tabs + actions */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="w-full sm:w-auto">
+          <TabsList>
+            <TabsTrigger value="mine">Mes documents</TabsTrigger>
+            <TabsTrigger value="shared" className="gap-1.5">
+              <Users className="h-3.5 w-3.5" /> Partagés avec moi
+              {sharedDocuments.length > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">{sharedDocuments.length}</Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+        {tab === 'mine' && (
+          <div className="flex items-center gap-2">
+            <Button size="sm" onClick={() => setShowNewDocModal(true)} className="gap-1.5">
+              <Plus className="h-4 w-4" /> Nouveau document
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setShowNewFolderModal(true)} className="gap-1.5">
+              <FolderPlus className="h-4 w-4" /> Dossier
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Search + view mode */}
@@ -207,7 +229,7 @@ const EspaceTravail = () => {
       </div>
 
       {/* Breadcrumb */}
-      {folderPath.length > 0 && (
+      {tab === 'mine' && folderPath.length > 0 && (
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <button onClick={navigateToRoot} className="hover:text-foreground transition-colors font-medium">Racine</button>
           {folderPath.map((f, i) => (
@@ -219,7 +241,7 @@ const EspaceTravail = () => {
         </div>
       )}
 
-      {currentFolderId && (
+      {tab === 'mine' && currentFolderId && (
         <Button variant="ghost" size="sm" onClick={navigateBack} className="gap-1.5">
           <ArrowLeft className="h-4 w-4" /> Retour
         </Button>
@@ -231,6 +253,7 @@ const EspaceTravail = () => {
         </div>
       ) : (
         <>
+          {/* Folders */}
           {filteredFolders.length > 0 && (
             <div>
               <h3 className="text-sm font-semibold text-muted-foreground mb-3">Dossiers</h3>
@@ -259,6 +282,7 @@ const EspaceTravail = () => {
             </div>
           )}
 
+          {/* Documents */}
           <div>
             {filteredFolders.length > 0 && filteredDocs.length > 0 && (
               <h3 className="text-sm font-semibold text-muted-foreground mb-3">Documents</h3>
@@ -266,37 +290,50 @@ const EspaceTravail = () => {
             {filteredDocs.length === 0 && filteredFolders.length === 0 ? (
               <div className="flex flex-col items-center justify-center min-h-[40vh] gap-4">
                 <div className="p-6 rounded-full bg-muted">
-                  <FileText className="h-12 w-12 text-muted-foreground" />
+                  {tab === 'shared' ? <Users className="h-12 w-12 text-muted-foreground" /> : <FileText className="h-12 w-12 text-muted-foreground" />}
                 </div>
-                <h3 className="text-lg font-semibold">Aucun document</h3>
-                <p className="text-muted-foreground text-center max-w-sm">Créez votre premier document pour commencer à travailler</p>
-                <Button onClick={() => setShowNewDocModal(true)} className="gap-1.5">
-                  <Plus className="h-4 w-4" /> Créer un document
-                </Button>
+                <h3 className="text-lg font-semibold">{tab === 'shared' ? 'Aucun document partagé' : 'Aucun document'}</h3>
+                <p className="text-muted-foreground text-center max-w-sm">
+                  {tab === 'shared' ? 'Les documents partagés avec vous apparaîtront ici' : 'Créez votre premier document pour commencer à travailler'}
+                </p>
+                {tab === 'mine' && (
+                  <Button onClick={() => setShowNewDocModal(true)} className="gap-1.5">
+                    <Plus className="h-4 w-4" /> Créer un document
+                  </Button>
+                )}
               </div>
             ) : (
               <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3' : 'space-y-2'}>
                 {filteredDocs.map(doc => (
                   <Card key={doc.id} className={`cursor-pointer border-2 transition-all group ${getDocColor(doc.document_type)} ${viewMode === 'list' ? 'flex items-center p-3 gap-3' : 'p-4'}`} onClick={() => setEditingDoc(doc)}>
                     <div className={`flex ${viewMode === 'grid' ? 'flex-col items-center gap-3' : 'items-center gap-3 flex-1'}`}>
-                      {getDocIcon(doc.document_type)}
+                      <div className="relative">
+                        {getDocIcon(doc.document_type)}
+                        {(doc.is_shared || tab === 'shared') && (
+                          <div className="absolute -top-1 -right-1 bg-primary rounded-full p-0.5">
+                            <Users className="h-2.5 w-2.5 text-primary-foreground" />
+                          </div>
+                        )}
+                      </div>
                       <div className={viewMode === 'grid' ? 'text-center' : 'flex-1 min-w-0'}>
                         <p className="text-sm font-medium truncate">{doc.title}</p>
                         <p className="text-xs text-muted-foreground">{new Date(doc.updated_at).toLocaleDateString('fr-FR')}</p>
                       </div>
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDeleteDoc(doc.id); }} className="text-destructive">
-                          <Trash2 className="h-4 w-4 mr-2" /> Supprimer
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {tab === 'mine' && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDeleteDoc(doc.id); }} className="text-destructive">
+                            <Trash2 className="h-4 w-4 mr-2" /> Supprimer
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </Card>
                 ))}
               </div>

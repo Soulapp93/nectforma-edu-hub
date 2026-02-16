@@ -1,14 +1,20 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { WorkspaceDocument } from '@/services/workspaceService';
+import { WorkspaceDocument, workspaceService } from '@/services/workspaceService';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useMyContext } from '@/hooks/useMyContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import {
   ArrowLeft, Save, Bold, Italic, Underline, Strikethrough,
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   List, ListOrdered, Heading1, Heading2, Heading3,
   Undo2, Redo2, Link, Image, Code, Quote, Minus,
-  Type, Palette
+  Type, Palette, Share2, Users, Trash2, UserPlus
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -27,8 +33,15 @@ const FONT_SIZES = ['12px', '14px', '16px', '18px', '20px', '24px', '28px', '32p
 const COLORS = ['#000000', '#374151', '#6B7280', '#DC2626', '#EA580C', '#D97706', '#16A34A', '#2563EB', '#7C3AED', '#DB2777'];
 
 const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }) => {
+  const { userId } = useCurrentUser();
+  const { establishment } = useMyContext();
   const [title, setTitle] = useState(doc.title);
   const [saving, setSaving] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareEmail, setShareEmail] = useState('');
+  const [sharePermission, setSharePermission] = useState<'view' | 'edit'>('edit');
+  const [shares, setShares] = useState<any[]>([]);
+  const [sharesUsers, setSharesUsers] = useState<Record<string, string>>({});
   const editorRef = useRef<HTMLDivElement>(null);
   const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -37,6 +50,23 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
       editorRef.current.innerHTML = doc.content.html;
     }
   }, []);
+
+  // Realtime subscription
+  useEffect(() => {
+    const channel = workspaceService.subscribeToDocument(doc.id, (payload) => {
+      if (payload.new && payload.new.content?.html && editorRef.current) {
+        // Only update if change came from someone else
+        if (payload.new.last_edited_by && payload.new.last_edited_by !== userId) {
+          const currentScroll = editorRef.current.scrollTop;
+          editorRef.current.innerHTML = payload.new.content.html;
+          editorRef.current.scrollTop = currentScroll;
+          if (payload.new.title !== title) setTitle(payload.new.title);
+          toast.info('Document mis à jour par un collaborateur');
+        }
+      }
+    });
+    return () => { supabase.removeChannel(channel); };
+  }, [doc.id, userId]);
 
   const execCommand = (command: string, value?: string) => {
     window.document.execCommand(command, false, value);
@@ -51,6 +81,7 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
         ...doc,
         title,
         content: { html: editorRef.current.innerHTML },
+        last_edited_by: userId || null,
       });
       toast.success('Document sauvegardé');
     } catch {
@@ -58,7 +89,7 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
     } finally {
       setSaving(false);
     }
-  }, [doc, title, onSave]);
+  }, [doc, title, onSave, userId]);
 
   const handleAutoSave = useCallback(() => {
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
@@ -82,6 +113,85 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
     const url = prompt("URL de l'image :");
     if (url) execCommand('insertImage', url);
   };
+
+  // Share functions
+  const loadShares = useCallback(async () => {
+    try {
+      const data = await workspaceService.getDocumentShares(doc.id);
+      setShares(data);
+      // Fetch user names for shares
+      if (data.length > 0) {
+        const userIds = [...new Set(data.map((s: any) => s.shared_with_id))];
+        const { data: users } = await (supabase as any)
+          .from('users')
+          .select('id, first_name, last_name, email')
+          .in('id', userIds);
+        if (users) {
+          const map: Record<string, string> = {};
+          users.forEach((u: any) => { map[u.id] = `${u.first_name} ${u.last_name} (${u.email})`; });
+          setSharesUsers(map);
+        }
+      }
+    } catch { /* ignore */ }
+  }, [doc.id]);
+
+  useEffect(() => { if (showShareModal) loadShares(); }, [showShareModal, loadShares]);
+
+  const handleShare = async () => {
+    if (!shareEmail.trim() || !userId) return;
+    try {
+      // Find user by email in same establishment
+      const { data: users } = await (supabase as any)
+        .from('users')
+        .select('id, first_name, last_name')
+        .eq('email', shareEmail.trim())
+        .eq('establishment_id', establishment?.id);
+
+      let targetUserId: string | null = null;
+      if (users && users.length > 0) {
+        targetUserId = users[0].id;
+      } else {
+        // Check tutors table
+        const { data: tutors } = await (supabase as any)
+          .from('tutors')
+          .select('id, first_name, last_name')
+          .eq('email', shareEmail.trim())
+          .eq('establishment_id', establishment?.id);
+        if (tutors && tutors.length > 0) {
+          targetUserId = tutors[0].id;
+        }
+      }
+
+      if (!targetUserId) {
+        toast.error('Utilisateur non trouvé dans votre établissement');
+        return;
+      }
+
+      if (targetUserId === userId) {
+        toast.error('Vous ne pouvez pas partager avec vous-même');
+        return;
+      }
+
+      await workspaceService.shareDocument(doc.id, targetUserId, userId, sharePermission);
+      setShareEmail('');
+      loadShares();
+      toast.success('Document partagé avec succès');
+    } catch (err) {
+      toast.error('Erreur lors du partage');
+    }
+  };
+
+  const handleRemoveShare = async (shareId: string) => {
+    try {
+      await workspaceService.removeShare(shareId);
+      loadShares();
+      toast.success('Partage supprimé');
+    } catch {
+      toast.error('Erreur');
+    }
+  };
+
+  const isOwner = doc.owner_id === userId;
 
   const ToolbarButton = ({ onClick, active, children, title: t }: { onClick: () => void; active?: boolean; children: React.ReactNode; title?: string }) => (
     <button
@@ -107,9 +217,19 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
           placeholder="Titre du document"
         />
         <div className="flex-1" />
+        {doc.is_shared && (
+          <Badge variant="secondary" className="gap-1">
+            <Users className="h-3 w-3" /> Partagé
+          </Badge>
+        )}
         <span className="text-xs text-muted-foreground hidden sm:block">
           {saving ? 'Sauvegarde...' : 'Auto-sauvegarde activée'}
         </span>
+        {isOwner && (
+          <Button size="sm" variant="outline" onClick={() => setShowShareModal(true)} className="gap-1.5">
+            <Share2 className="h-4 w-4" /> Partager
+          </Button>
+        )}
         <Button size="sm" onClick={handleSave} disabled={saving} className="gap-1.5">
           <Save className="h-4 w-4" /> Sauvegarder
         </Button>
@@ -121,7 +241,6 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
         <ToolbarButton onClick={() => execCommand('redo')} title="Rétablir"><Redo2 className="h-4 w-4" /></ToolbarButton>
         <div className="w-px h-5 bg-border mx-1" />
 
-        {/* Font size */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-1 px-2 py-1.5 rounded-md hover:bg-muted text-sm">
@@ -138,14 +257,12 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
         </DropdownMenu>
 
         <div className="w-px h-5 bg-border mx-1" />
-
         <ToolbarButton onClick={() => execCommand('bold')} title="Gras"><Bold className="h-4 w-4" /></ToolbarButton>
         <ToolbarButton onClick={() => execCommand('italic')} title="Italique"><Italic className="h-4 w-4" /></ToolbarButton>
         <ToolbarButton onClick={() => execCommand('underline')} title="Souligné"><Underline className="h-4 w-4" /></ToolbarButton>
         <ToolbarButton onClick={() => execCommand('strikeThrough')} title="Barré"><Strikethrough className="h-4 w-4" /></ToolbarButton>
         <div className="w-px h-5 bg-border mx-1" />
 
-        {/* Text color */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-1 px-2 py-1.5 rounded-md hover:bg-muted text-sm">
@@ -162,22 +279,18 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
         </DropdownMenu>
 
         <div className="w-px h-5 bg-border mx-1" />
-
         <ToolbarButton onClick={() => execCommand('formatBlock', '<h1>')} title="Titre 1"><Heading1 className="h-4 w-4" /></ToolbarButton>
         <ToolbarButton onClick={() => execCommand('formatBlock', '<h2>')} title="Titre 2"><Heading2 className="h-4 w-4" /></ToolbarButton>
         <ToolbarButton onClick={() => execCommand('formatBlock', '<h3>')} title="Titre 3"><Heading3 className="h-4 w-4" /></ToolbarButton>
         <div className="w-px h-5 bg-border mx-1" />
-
         <ToolbarButton onClick={() => execCommand('justifyLeft')} title="Gauche"><AlignLeft className="h-4 w-4" /></ToolbarButton>
         <ToolbarButton onClick={() => execCommand('justifyCenter')} title="Centrer"><AlignCenter className="h-4 w-4" /></ToolbarButton>
         <ToolbarButton onClick={() => execCommand('justifyRight')} title="Droite"><AlignRight className="h-4 w-4" /></ToolbarButton>
         <ToolbarButton onClick={() => execCommand('justifyFull')} title="Justifier"><AlignJustify className="h-4 w-4" /></ToolbarButton>
         <div className="w-px h-5 bg-border mx-1" />
-
         <ToolbarButton onClick={() => execCommand('insertUnorderedList')} title="Liste"><List className="h-4 w-4" /></ToolbarButton>
         <ToolbarButton onClick={() => execCommand('insertOrderedList')} title="Liste numérotée"><ListOrdered className="h-4 w-4" /></ToolbarButton>
         <div className="w-px h-5 bg-border mx-1" />
-
         <ToolbarButton onClick={insertLink} title="Lien"><Link className="h-4 w-4" /></ToolbarButton>
         <ToolbarButton onClick={insertImage} title="Image"><Image className="h-4 w-4" /></ToolbarButton>
         <ToolbarButton onClick={() => execCommand('formatBlock', '<blockquote>')} title="Citation"><Quote className="h-4 w-4" /></ToolbarButton>
@@ -208,6 +321,60 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
           />
         </div>
       </div>
+
+      {/* Share Modal */}
+      <Dialog open={showShareModal} onOpenChange={setShowShareModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Share2 className="h-5 w-5" /> Partager le document
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Email de l'utilisateur"
+                value={shareEmail}
+                onChange={e => setShareEmail(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleShare()}
+                className="flex-1"
+              />
+              <Select value={sharePermission} onValueChange={(v) => setSharePermission(v as 'view' | 'edit')}>
+                <SelectTrigger className="w-28">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="view">Lecture</SelectItem>
+                  <SelectItem value="edit">Édition</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button onClick={handleShare} size="icon">
+                <UserPlus className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {shares.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-muted-foreground">Partagé avec</h4>
+                {shares.map(share => (
+                  <div key={share.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="text-sm truncate">{sharesUsers[share.shared_with_id] || share.shared_with_id}</span>
+                      <Badge variant="outline" className="text-xs shrink-0">
+                        {share.permission === 'edit' ? 'Édition' : 'Lecture'}
+                      </Badge>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleRemoveShare(share.id)}>
+                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
