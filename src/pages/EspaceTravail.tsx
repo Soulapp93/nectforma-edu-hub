@@ -93,9 +93,10 @@ const EspaceTravail = () => {
       setShowNewDocModal(false);
       setEditingDoc(doc);
       toast.success('Document créé');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Create document error:', err);
-      toast.error('Erreur lors de la création');
+      console.error('Create document error details:', JSON.stringify(err));
+      toast.error(`Erreur: ${err?.message || err?.details || 'Erreur inconnue'}`);
     }
   };
 
