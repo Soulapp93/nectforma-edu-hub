@@ -298,30 +298,70 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
         <ToolbarButton onClick={() => execCommand('formatBlock', '<pre>')} title="Code"><Code className="h-4 w-4" /></ToolbarButton>
       </div>
 
-      {/* Editor area */}
-      <div className="flex-1 overflow-auto bg-muted/20 flex justify-center py-8 px-4">
-        <div className="w-full max-w-[816px] min-h-[1056px] bg-white dark:bg-card shadow-lg rounded-sm p-16 border">
+      {/* Editor area - Word-like paginated view */}
+      <div className="flex-1 overflow-auto bg-muted/30 py-8 px-4">
+        <div className="flex flex-col items-center gap-8">
           <div
-            ref={editorRef}
-            contentEditable
-            suppressContentEditableWarning
-            onInput={handleAutoSave}
-            className="outline-none min-h-full prose prose-sm max-w-none dark:prose-invert
-              [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mb-4
-              [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:mb-3
-              [&_h3]:text-xl [&_h3]:font-medium [&_h3]:mb-2
-              [&_p]:mb-2 [&_p]:leading-relaxed
-              [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground
-              [&_pre]:bg-muted [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:font-mono [&_pre]:text-sm [&_pre]:whitespace-pre-wrap
-              [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6
-              [&_a]:text-primary [&_a]:underline
-              [&_img]:max-w-full [&_img]:rounded-lg [&_img]:my-4
-              [&_hr]:my-6 [&_hr]:border-border
-              [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-border [&_td]:p-2 [&_th]:border [&_th]:border-border [&_th]:p-2
-              [&_div]:mb-1"
-            style={{ fontSize: '14px', lineHeight: '1.7', wordWrap: 'break-word', overflowWrap: 'break-word', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
-          />
+            className="word-page bg-white dark:bg-card shadow-[0_2px_10px_rgba(0,0,0,0.12)] border border-border/40"
+            style={{
+              width: '816px',
+              maxWidth: '100%',
+              minHeight: '1056px',
+              padding: '96px 72px',
+              position: 'relative',
+              boxSizing: 'border-box',
+            }}
+          >
+            <div
+              ref={editorRef}
+              contentEditable
+              suppressContentEditableWarning
+              onInput={handleAutoSave}
+              className="outline-none prose prose-sm max-w-none dark:prose-invert
+                [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:mt-2
+                [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:mb-3 [&_h2]:mt-2
+                [&_h3]:text-xl [&_h3]:font-medium [&_h3]:mb-2 [&_h3]:mt-1
+                [&_p]:mb-2 [&_p]:leading-relaxed
+                [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground
+                [&_pre]:bg-muted [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:font-mono [&_pre]:text-sm [&_pre]:whitespace-pre-wrap
+                [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6
+                [&_a]:text-primary [&_a]:underline
+                [&_img]:max-w-full [&_img]:rounded-lg [&_img]:my-4
+                [&_hr]:my-6 [&_hr]:border-border
+                [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-border [&_td]:p-2 [&_th]:border [&_th]:border-border [&_th]:p-2
+                [&_div]:mb-1"
+              style={{
+                fontSize: '14px',
+                lineHeight: '1.7',
+                wordWrap: 'break-word',
+                overflowWrap: 'break-word',
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                minHeight: 'calc(1056px - 192px)',
+                columnFill: 'auto',
+              }}
+            />
+          </div>
         </div>
+        {/* CSS for Word-like pagination on print and visual page breaks */}
+        <style>{`
+          .word-page {
+            break-after: page;
+          }
+          @media print {
+            .word-page {
+              page-break-after: always;
+              box-shadow: none !important;
+              border: none !important;
+              margin: 0 !important;
+              padding: 2.54cm !important;
+            }
+          }
+          [contenteditable] hr {
+            page-break-after: always;
+            break-after: page;
+          }
+        `}</style>
       </div>
 
       {/* Share Modal */}
