@@ -312,12 +312,14 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
               [&_h3]:text-xl [&_h3]:font-medium [&_h3]:mb-2
               [&_p]:mb-2 [&_p]:leading-relaxed
               [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground
-              [&_pre]:bg-muted [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:font-mono [&_pre]:text-sm
+              [&_pre]:bg-muted [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:font-mono [&_pre]:text-sm [&_pre]:whitespace-pre-wrap
               [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6
               [&_a]:text-primary [&_a]:underline
               [&_img]:max-w-full [&_img]:rounded-lg [&_img]:my-4
-              [&_hr]:my-6 [&_hr]:border-border"
-            style={{ fontSize: '14px', lineHeight: '1.7' }}
+              [&_hr]:my-6 [&_hr]:border-border
+              [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-border [&_td]:p-2 [&_th]:border [&_th]:border-border [&_th]:p-2
+              [&_div]:mb-1"
+            style={{ fontSize: '14px', lineHeight: '1.7', wordWrap: 'break-word', overflowWrap: 'break-word', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
           />
         </div>
       </div>
