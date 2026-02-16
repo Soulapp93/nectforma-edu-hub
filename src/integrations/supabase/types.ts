@@ -2217,6 +2217,149 @@ export type Database = {
           },
         ]
       }
+      workspace_document_shares: {
+        Row: {
+          created_at: string
+          document_id: string
+          id: string
+          permission: string
+          shared_by: string
+          shared_with_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          id?: string
+          permission?: string
+          shared_by: string
+          shared_with_id: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          id?: string
+          permission?: string
+          shared_by?: string
+          shared_with_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_document_shares_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_documents: {
+        Row: {
+          content: Json | null
+          created_at: string
+          document_type: string
+          establishment_id: string | null
+          folder_id: string | null
+          id: string
+          is_shared: boolean
+          last_edited_by: string | null
+          owner_id: string
+          owner_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: Json | null
+          created_at?: string
+          document_type?: string
+          establishment_id?: string | null
+          folder_id?: string | null
+          id?: string
+          is_shared?: boolean
+          last_edited_by?: string | null
+          owner_id: string
+          owner_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json | null
+          created_at?: string
+          document_type?: string
+          establishment_id?: string | null
+          folder_id?: string | null
+          id?: string
+          is_shared?: boolean
+          last_edited_by?: string | null
+          owner_id?: string
+          owner_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_documents_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_documents_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_folders: {
+        Row: {
+          created_at: string
+          establishment_id: string | null
+          id: string
+          name: string
+          owner_id: string
+          owner_type: string
+          parent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          establishment_id?: string | null
+          id?: string
+          name: string
+          owner_id: string
+          owner_type?: string
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          establishment_id?: string | null
+          id?: string
+          name?: string
+          owner_id?: string
+          owner_type?: string
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_folders_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_folders_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       tutor_students_view: {
