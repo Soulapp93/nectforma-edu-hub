@@ -28,8 +28,17 @@ export interface WorkspaceDocument {
   updated_at: string;
 }
 
+export interface WorkspaceDocumentShare {
+  id: string;
+  document_id: string;
+  shared_with_id: string;
+  shared_by: string;
+  permission: 'view' | 'edit';
+  created_at: string;
+}
+
 export const workspaceService = {
-  // Folders - simplified: always user-owned
+  // Folders
   async getFolders(ownerId: string): Promise<WorkspaceFolder[]> {
     const { data, error } = await db
       .from('workspace_folders')
@@ -57,7 +66,7 @@ export const workspaceService = {
     if (error) throw error;
   },
 
-  // Documents - simplified: always user-owned
+  // Documents
   async getDocuments(ownerId: string, folderId?: string | null): Promise<WorkspaceDocument[]> {
     let query = db
       .from('workspace_documents')
@@ -70,6 +79,25 @@ export const workspaceService = {
       query = query.eq('folder_id', folderId);
     }
     const { data, error } = await query.order('updated_at', { ascending: false });
+    if (error) throw error;
+    return (data || []) as WorkspaceDocument[];
+  },
+
+  async getSharedDocuments(userId: string): Promise<WorkspaceDocument[]> {
+    // Get document IDs shared with this user
+    const { data: shares, error: sharesError } = await db
+      .from('workspace_document_shares')
+      .select('document_id')
+      .eq('shared_with_id', userId);
+    if (sharesError) throw sharesError;
+    if (!shares || shares.length === 0) return [];
+
+    const docIds = shares.map((s: any) => s.document_id);
+    const { data, error } = await db
+      .from('workspace_documents')
+      .select('*')
+      .in('id', docIds)
+      .order('updated_at', { ascending: false });
     if (error) throw error;
     return (data || []) as WorkspaceDocument[];
   },
@@ -95,5 +123,51 @@ export const workspaceService = {
     const { data, error } = await db.from('workspace_documents').select('*').eq('id', id).single();
     if (error) throw error;
     return data as WorkspaceDocument;
+  },
+
+  // Sharing
+  async shareDocument(documentId: string, sharedWithId: string, sharedBy: string, permission: 'view' | 'edit' = 'edit'): Promise<WorkspaceDocumentShare> {
+    // Update document is_shared flag
+    await db.from('workspace_documents').update({ is_shared: true }).eq('id', documentId);
+
+    const { data, error } = await db
+      .from('workspace_document_shares')
+      .insert({ document_id: documentId, shared_with_id: sharedWithId, shared_by: sharedBy, permission })
+      .select()
+      .single();
+    if (error) throw error;
+    return data as WorkspaceDocumentShare;
+  },
+
+  async getDocumentShares(documentId: string): Promise<WorkspaceDocumentShare[]> {
+    const { data, error } = await db
+      .from('workspace_document_shares')
+      .select('*')
+      .eq('document_id', documentId);
+    if (error) throw error;
+    return (data || []) as WorkspaceDocumentShare[];
+  },
+
+  async removeShare(shareId: string): Promise<void> {
+    const { error } = await db.from('workspace_document_shares').delete().eq('id', shareId);
+    if (error) throw error;
+  },
+
+  // Realtime subscription for a document
+  subscribeToDocument(documentId: string, callback: (payload: any) => void) {
+    const channel = supabase
+      .channel(`workspace-doc-${documentId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'workspace_documents',
+          filter: `id=eq.${documentId}`,
+        },
+        callback
+      )
+      .subscribe();
+    return channel;
   },
 };
