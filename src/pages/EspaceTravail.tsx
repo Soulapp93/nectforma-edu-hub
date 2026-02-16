@@ -1,16 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useMyContext } from '@/hooks/useMyContext';
 import { workspaceService, WorkspaceDocument, WorkspaceFolder } from '@/services/workspaceService';
 import { toast } from 'sonner';
-import { Plus, FileText, Table2, Presentation, Image, FolderPlus, Folder, ArrowLeft, Trash2, MoreVertical, Pencil, Search, LayoutGrid, List } from 'lucide-react';
+import { Plus, FileText, Table2, Presentation, Image, FolderPlus, Folder, ArrowLeft, Trash2, MoreVertical, Search, LayoutGrid, List, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/ui/page-header';
 import WorkspaceTextEditor from '@/components/workspace/WorkspaceTextEditor';
 
@@ -42,32 +39,26 @@ const getDocColor = (type: string) => {
 };
 
 const EspaceTravail = () => {
-  const { userId, userRole } = useCurrentUser();
-  const { establishment } = useMyContext();
+  const { userId } = useCurrentUser();
   const [documents, setDocuments] = useState<WorkspaceDocument[]>([]);
   const [folders, setFolders] = useState<WorkspaceFolder[]>([]);
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [scope, setScope] = useState<'personal' | 'establishment'>('personal');
   const [showNewDocModal, setShowNewDocModal] = useState(false);
   const [showNewFolderModal, setShowNewFolderModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [editingDoc, setEditingDoc] = useState<WorkspaceDocument | null>(null);
   const [folderPath, setFolderPath] = useState<WorkspaceFolder[]>([]);
 
-  const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
-
   const loadData = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
     try {
-      const ownerType = scope === 'personal' ? 'user' : 'establishment';
-      const estabId = establishment?.id;
       const [foldersData, docsData] = await Promise.all([
-        workspaceService.getFolders(userId, ownerType, estabId),
-        workspaceService.getDocuments(userId, ownerType, currentFolderId, estabId),
+        workspaceService.getFolders(userId),
+        workspaceService.getDocuments(userId, currentFolderId),
       ]);
       setFolders(foldersData.filter(f => f.parent_id === currentFolderId));
       setDocuments(docsData);
@@ -77,7 +68,7 @@ const EspaceTravail = () => {
     } finally {
       setLoading(false);
     }
-  }, [userId, scope, currentFolderId, establishment]);
+  }, [userId, currentFolderId]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -91,13 +82,13 @@ const EspaceTravail = () => {
         content: defaultContent,
         folder_id: currentFolderId,
         owner_id: userId,
-        owner_type: scope === 'personal' ? 'user' : 'establishment',
-        establishment_id: scope === 'establishment' ? establishment?.id : undefined,
+        owner_type: 'user',
       });
       setShowNewDocModal(false);
       setEditingDoc(doc);
       toast.success('Document créé');
     } catch (err) {
+      console.error('Create document error:', err);
       toast.error('Erreur lors de la création');
     }
   };
@@ -109,8 +100,7 @@ const EspaceTravail = () => {
         name: newFolderName.trim(),
         parent_id: currentFolderId,
         owner_id: userId,
-        owner_type: scope === 'personal' ? 'user' : 'establishment',
-        establishment_id: scope === 'establishment' ? establishment?.id : undefined,
+        owner_type: 'user',
       });
       setNewFolderName('');
       setShowNewFolderModal(false);
@@ -164,7 +154,6 @@ const EspaceTravail = () => {
   const filteredDocs = documents.filter(d => d.title.toLowerCase().includes(search.toLowerCase()));
   const filteredFolders = folders.filter(f => f.name.toLowerCase().includes(search.toLowerCase()));
 
-  // If editing a document, show the editor
   if (editingDoc) {
     if (editingDoc.document_type === 'text') {
       return (
@@ -175,12 +164,11 @@ const EspaceTravail = () => {
         />
       );
     }
-    // For other types, show a coming soon message
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-6">
         <div className="p-4 rounded-2xl bg-muted">{getDocIcon(editingDoc.document_type)}</div>
         <h2 className="text-xl font-semibold">Éditeur {editingDoc.document_type === 'spreadsheet' ? 'de tableaux' : editingDoc.document_type === 'presentation' ? 'de présentations' : 'de visuels'}</h2>
-        <p className="text-muted-foreground text-center max-w-md">Cette fonctionnalité sera disponible très prochainement. L'éditeur de documents texte est déjà opérationnel !</p>
+        <p className="text-muted-foreground text-center max-w-md">Cette fonctionnalité sera disponible très prochainement.</p>
         <Button variant="outline" onClick={() => { setEditingDoc(null); loadData(); }}>
           <ArrowLeft className="h-4 w-4 mr-2" /> Retour
         </Button>
@@ -192,22 +180,14 @@ const EspaceTravail = () => {
     <div className="p-4 md:p-6 space-y-6 pb-24 md:pb-6">
       <PageHeader title="Espace de travail" description="Créez et gérez vos documents, tableaux et présentations" />
 
-      {/* Scope tabs + actions */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <Tabs value={scope} onValueChange={(v) => { setScope(v as any); setCurrentFolderId(null); setFolderPath([]); }} className="w-full sm:w-auto">
-          <TabsList>
-            <TabsTrigger value="personal">Mon espace</TabsTrigger>
-            {establishment && <TabsTrigger value="establishment">Établissement</TabsTrigger>}
-          </TabsList>
-        </Tabs>
-        <div className="flex items-center gap-2">
-          <Button size="sm" onClick={() => setShowNewDocModal(true)} className="gap-1.5">
-            <Plus className="h-4 w-4" /> Nouveau document
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => setShowNewFolderModal(true)} className="gap-1.5">
-            <FolderPlus className="h-4 w-4" /> Dossier
-          </Button>
-        </div>
+      {/* Actions */}
+      <div className="flex items-center justify-end gap-2">
+        <Button size="sm" onClick={() => setShowNewDocModal(true)} className="gap-1.5">
+          <Plus className="h-4 w-4" /> Nouveau document
+        </Button>
+        <Button size="sm" variant="outline" onClick={() => setShowNewFolderModal(true)} className="gap-1.5">
+          <FolderPlus className="h-4 w-4" /> Dossier
+        </Button>
       </div>
 
       {/* Search + view mode */}
@@ -251,7 +231,6 @@ const EspaceTravail = () => {
         </div>
       ) : (
         <>
-          {/* Folders */}
           {filteredFolders.length > 0 && (
             <div>
               <h3 className="text-sm font-semibold text-muted-foreground mb-3">Dossiers</h3>
@@ -280,7 +259,6 @@ const EspaceTravail = () => {
             </div>
           )}
 
-          {/* Documents */}
           <div>
             {filteredFolders.length > 0 && filteredDocs.length > 0 && (
               <h3 className="text-sm font-semibold text-muted-foreground mb-3">Documents</h3>
@@ -327,7 +305,6 @@ const EspaceTravail = () => {
         </>
       )}
 
-      {/* New document modal */}
       <Dialog open={showNewDocModal} onOpenChange={setShowNewDocModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -349,7 +326,6 @@ const EspaceTravail = () => {
         </DialogContent>
       </Dialog>
 
-      {/* New folder modal */}
       <Dialog open={showNewFolderModal} onOpenChange={setShowNewFolderModal}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
