@@ -2437,6 +2437,15 @@ export type Database = {
         Returns: boolean
       }
       is_current_user_admin: { Args: never; Returns: boolean }
+      is_document_owner: { Args: { _document_id: string }; Returns: boolean }
+      is_document_shared_with_me: {
+        Args: { _document_id: string }
+        Returns: boolean
+      }
+      is_document_shared_with_me_edit: {
+        Args: { _document_id: string }
+        Returns: boolean
+      }
       is_group_admin: {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
