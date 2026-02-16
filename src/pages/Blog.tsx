@@ -8,14 +8,15 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getPublishedPosts, getCategories, BlogPost, BlogCategory } from '@/services/blogService';
 import LandingHeader from '@/components/landing/LandingHeader';
-import NectformaLogo from '@/components/NectformaLogo';
+import logoNf from '@/assets/logo-nf.png';
 const BlogFooter = () => (
   <footer className="border-t bg-muted/30 py-12 mt-16">
     <div className="container mx-auto px-4">
       <div className="grid md:grid-cols-4 gap-8">
         <div>
           <Link to="/" className="flex items-center gap-2 mb-4">
-            <NectformaLogo variant="dark" size="sm" />
+            <img src={logoNf} alt="Nectforma" className="h-8" />
+            <span className="font-semibold">Nectforma</span>
           </Link>
           <p className="text-sm text-muted-foreground">
             La plateforme de gestion pour les établissements d'enseignement supérieur.

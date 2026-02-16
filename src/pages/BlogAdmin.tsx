@@ -47,7 +47,7 @@ import { BlogCalendarView } from '@/components/blog-admin/BlogCalendarView';
 import { MonthlyArticleGenerator } from '@/components/blog-admin/MonthlyArticleGenerator';
 import { AIAutopilotPanel } from '@/components/blog-admin/AIAutopilotPanel';
 import { SocialContentGallery } from '@/components/blog-admin/SocialContentGallery';
-import NectformaLogo from '@/components/NectformaLogo';
+import logoNf from '@/assets/logo-nf.png';
 
 // ============================================
 // STAT CARD
@@ -997,7 +997,7 @@ const BlogAdmin = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-8">
         <div className="max-w-md w-full text-center space-y-4">
-          <div className="flex justify-center"><NectformaLogo variant="dark" size="lg" /></div>
+          <img src={logoNf} alt="Nectforma" className="h-10 mx-auto" />
           <h1 className="text-xl font-semibold">Accès refusé</h1>
           <p className="text-sm text-muted-foreground">
             Vous n'avez pas les droits nécessaires pour accéder à l'administration du blog.
@@ -1023,7 +1023,7 @@ const BlogAdmin = () => {
       <header className="bg-background/95 backdrop-blur-sm border-b sticky top-0 z-40">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <NectformaLogo variant="dark" size="sm" showIcon={true} />
+            <img src={logoNf} alt="Nectforma" className="h-7" />
             <div>
               <h1 className="text-base font-bold flex items-center gap-2">
                 Blog Admin
