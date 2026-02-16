@@ -10,7 +10,7 @@ interface NectformaLogoProps {
 }
 
 const BookIcon: React.FC<{ size: string; variant: string }> = ({ size, variant }) => {
-  const sizeMap: Record<string, number> = { sm: 28, md: 34, lg: 42, xl: 52 };
+  const sizeMap: Record<string, number> = { sm: 28, md: 34, lg: 42, xl: 52, '2xl': 120 };
   const s = sizeMap[size] || 34;
 
   return (
@@ -109,4 +109,5 @@ const NectformaLogo: React.FC<NectformaLogoProps> = ({
   return content;
 };
 
+export { BookIcon };
 export default NectformaLogo;

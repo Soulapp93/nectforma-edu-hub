@@ -25,6 +25,7 @@ import { useEstablishment } from '@/hooks/useEstablishment';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { BookIcon as NectformaLogoIcon } from '@/components/NectformaLogo';
 
 interface MobileDrawerMenuProps {
   isOpen: boolean;
@@ -162,9 +163,7 @@ const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({ isOpen, onClose }) 
             {/* Logo Row with Close Button */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg ring-2 ring-white/20">
-                  <span className="text-transparent bg-clip-text bg-gradient-to-br from-primary to-accent font-extrabold text-base tracking-tight">NF</span>
-                </div>
+                <NectformaLogoIcon size="md" variant="light" />
                 <span className="text-lg font-bold text-white tracking-tight">
                   Nectf<span className="text-white/70 font-extrabold">o</span>rma
                 </span>

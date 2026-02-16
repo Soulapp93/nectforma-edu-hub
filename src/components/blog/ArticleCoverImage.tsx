@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Calendar, Clock, User } from 'lucide-react';
-import logoNf from '@/assets/logo-nf.png';
+import { BookIcon as NectformaLogoIcon } from '@/components/NectformaLogo';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ArticleCoverImageProps {
@@ -128,7 +128,7 @@ const ArticleCoverImage: React.FC<ArticleCoverImageProps> = ({ title, className 
 
           {/* Logo */}
           <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-lg px-2.5 py-1.5">
-            <img src={logoNf} alt="Nectforma" className={isCard ? 'h-4' : 'h-5 sm:h-6'} />
+            <NectformaLogoIcon size={isCard ? 'sm' : 'md'} variant="light" />
             <span className={`font-semibold text-white ${isCard ? 'text-xs' : 'text-sm sm:text-base'}`}>
               Nectforma
             </span>

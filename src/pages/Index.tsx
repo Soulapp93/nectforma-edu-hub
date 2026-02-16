@@ -22,8 +22,8 @@ import SectionDivider from '@/components/landing/SectionDivider';
 import GradientBackground from '@/components/landing/GradientBackground';
 import LandingHeader from '@/components/landing/LandingHeader';
 
-// Import du logo NF stylé
-import nfLogo from '@/assets/logo-nf-styled.png';
+// Import du logo NF
+import NectformaLogo, { BookIcon as NectformaLogoIcon } from '@/components/NectformaLogo';
 
 // Imports des illustrations
 import tableauDeBordImg from '@/assets/illustrations/tableau-de-bord.png';
@@ -434,14 +434,7 @@ const Index = () => {
                        style={{
                          boxShadow: '0 20px 60px rgba(139, 92, 246, 0.3), 0 10px 30px rgba(139, 92, 246, 0.2)'
                        }}>
-                    <img 
-                      src={nfLogo} 
-                      alt="NF Logo" 
-                      className="w-20 h-20 md:w-32 md:h-32 lg:w-40 lg:h-40 object-contain"
-                      style={{
-                        filter: 'drop-shadow(0 4px 8px rgba(139, 92, 246, 0.3))'
-                      }}
-                    />
+                    <NectformaLogoIcon size="2xl" variant="dark" />
                   </div>
                 </div>
                 

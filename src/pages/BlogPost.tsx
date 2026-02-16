@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { getPostBySlug, trackPageView, trackScrollDepth, trackTimeOnPage, BlogPost as BlogPostType, getPublishedPosts } from '@/services/blogService';
-import logoNf from '@/assets/logo-nf.png';
+import NectformaLogo from '@/components/NectformaLogo';
 import ArticleCoverImage from '@/components/blog/ArticleCoverImage';
 import LandingHeader from '@/components/landing/LandingHeader';
 const TableOfContents = ({ content }: { content: string }) => {
@@ -366,8 +366,7 @@ const BlogPostPage = () => {
       <footer className="border-t bg-background py-12 mt-16">
         <div className="container mx-auto px-4 text-center">
           <Link to="/" className="flex items-center gap-2 justify-center mb-4">
-            <img src={logoNf} alt="Nectforma" className="h-8" />
-            <span className="font-semibold text-lg">Nectforma</span>
+            <NectformaLogo variant="dark" size="md" />
           </Link>
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} Nectforma. Tous droits réservés.
