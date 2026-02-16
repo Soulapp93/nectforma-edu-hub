@@ -52,6 +52,7 @@ import BlogAdmin from './pages/BlogAdmin';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import CookieConsent from '@/components/CookieConsent';
 import LinkedInCallback from '@/pages/LinkedInCallback';
+import EspaceTravail from './pages/EspaceTravail';
 
 
 const queryClient = new QueryClient({
@@ -404,6 +405,7 @@ const AppContent = () => {
             <Route path="/gestion-etablissement" element={<ProtectedRoute><AdminPrincipalRoute><GestionEtablissement /></AdminPrincipalRoute></ProtectedRoute>} />
             <Route path="/compte" element={<ProtectedRoute><Compte /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+            <Route path="/espace-travail" element={<ProtectedRoute><EspaceTravail /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
