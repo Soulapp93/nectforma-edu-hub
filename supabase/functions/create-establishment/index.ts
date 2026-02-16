@@ -253,40 +253,35 @@ serve(async (req) => {
 
     console.log('✓ User profile configured');
 
-    // Step 4: Create default chat group for establishment
-    const { data: chatGroupData, error: chatGroupError } = await supabaseAdmin
+    // Step 4: The establishment group is auto-created by the DB trigger
+    // (auto_create_establishment_group). We just need to add the admin as a member.
+    // Wait briefly for the trigger to complete, then find the group.
+    const { data: chatGroupData } = await supabaseAdmin
       .from('chat_groups')
-      .insert({
-        name: `${establishment.name.trim()} - Général`,
-        description: `Groupe de discussion général de l'établissement ${establishment.name.trim()}`,
-        establishment_id: establishmentId,
-        created_by: authUserId,
-        is_private: false,
-        group_type: 'establishment'
-      })
-      .select()
-      .single();
+      .select('id')
+      .eq('establishment_id', establishmentId)
+      .eq('group_type', 'establishment')
+      .maybeSingle();
 
-    if (chatGroupError) {
-      console.error('Chat group creation error:', chatGroupError);
-      // Non-fatal error, continue
-    } else {
-      console.log('✓ Default chat group created:', chatGroupData.id);
+    if (chatGroupData) {
+      console.log('✓ Establishment group found (created by trigger):', chatGroupData.id);
 
       // Add admin as first member of the group
       const { error: memberError } = await supabaseAdmin
         .from('chat_group_members')
-        .insert({
+        .upsert({
           group_id: chatGroupData.id,
           user_id: authUserId,
           role: 'admin'
-        });
+        }, { onConflict: 'group_id,user_id', ignoreDuplicates: true });
 
       if (memberError) {
         console.error('Chat group member error:', memberError);
       } else {
         console.log('✓ Admin added to chat group');
       }
+    } else {
+      console.warn('⚠ Establishment group not found after trigger — it will be created on next user join');
     }
 
     console.log('=== Establishment creation completed successfully ===');
