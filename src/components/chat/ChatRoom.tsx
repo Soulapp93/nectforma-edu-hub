@@ -27,7 +27,8 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const [viewerFile, setViewerFile] = useState<{ url: string; name: string } | null>(null);
   const { messages, loading, sendMessage, deleteMessage, updateMessageAttachments, refetch } = useChatMessages(groupId);
-  const { userId } = useCurrentUser();
+  const { userId, userRole } = useCurrentUser();
+  const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -338,7 +339,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
                                 <Reply className="h-4 w-4 mr-2" />
                                 Répondre
                               </DropdownMenuItem>
-                              {isOwnMessage && (
+                              {(isOwnMessage || isAdmin) && (
                                 <DropdownMenuItem 
                                   onClick={() => handleDelete(message.id)}
                                   className="text-destructive focus:text-destructive"
