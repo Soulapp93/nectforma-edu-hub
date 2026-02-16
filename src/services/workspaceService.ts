@@ -29,15 +29,14 @@ export interface WorkspaceDocument {
 }
 
 export const workspaceService = {
-  // Folders
-  async getFolders(ownerId: string, ownerType: 'user' | 'establishment', establishmentId?: string): Promise<WorkspaceFolder[]> {
-    let query = db.from('workspace_folders').select('*').eq('owner_type', ownerType);
-    if (ownerType === 'user') {
-      query = query.eq('owner_id', ownerId);
-    } else if (establishmentId) {
-      query = query.eq('establishment_id', establishmentId);
-    }
-    const { data, error } = await query.order('name');
+  // Folders - simplified: always user-owned
+  async getFolders(ownerId: string): Promise<WorkspaceFolder[]> {
+    const { data, error } = await db
+      .from('workspace_folders')
+      .select('*')
+      .eq('owner_id', ownerId)
+      .eq('owner_type', 'user')
+      .order('name');
     if (error) throw error;
     return (data || []) as WorkspaceFolder[];
   },
@@ -58,14 +57,13 @@ export const workspaceService = {
     if (error) throw error;
   },
 
-  // Documents
-  async getDocuments(ownerId: string, ownerType: 'user' | 'establishment', folderId?: string | null, establishmentId?: string): Promise<WorkspaceDocument[]> {
-    let query = db.from('workspace_documents').select('*').eq('owner_type', ownerType);
-    if (ownerType === 'user') {
-      query = query.eq('owner_id', ownerId);
-    } else if (establishmentId) {
-      query = query.eq('establishment_id', establishmentId);
-    }
+  // Documents - simplified: always user-owned
+  async getDocuments(ownerId: string, folderId?: string | null): Promise<WorkspaceDocument[]> {
+    let query = db
+      .from('workspace_documents')
+      .select('*')
+      .eq('owner_id', ownerId)
+      .eq('owner_type', 'user');
     if (folderId === null) {
       query = query.is('folder_id', null);
     } else if (folderId) {
