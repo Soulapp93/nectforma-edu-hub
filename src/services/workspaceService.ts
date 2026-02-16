@@ -51,8 +51,17 @@ export const workspaceService = {
   },
 
   async createFolder(folder: Partial<WorkspaceFolder>): Promise<WorkspaceFolder> {
-    const { data, error } = await db.from('workspace_folders').insert(folder).select().single();
-    if (error) throw error;
+    const cleanFolder: Record<string, any> = {};
+    for (const [key, value] of Object.entries(folder)) {
+      if (value !== undefined && value !== null) {
+        cleanFolder[key] = value;
+      }
+    }
+    const { data, error } = await db.from('workspace_folders').insert(cleanFolder).select().single();
+    if (error) {
+      console.error('Supabase createFolder error:', error);
+      throw error;
+    }
     return data as WorkspaceFolder;
   },
 
@@ -103,8 +112,18 @@ export const workspaceService = {
   },
 
   async createDocument(doc: Partial<WorkspaceDocument>): Promise<WorkspaceDocument> {
-    const { data, error } = await db.from('workspace_documents').insert(doc).select().single();
-    if (error) throw error;
+    // Remove null/undefined keys to let DB defaults apply
+    const cleanDoc: Record<string, any> = {};
+    for (const [key, value] of Object.entries(doc)) {
+      if (value !== undefined && value !== null) {
+        cleanDoc[key] = value;
+      }
+    }
+    const { data, error } = await db.from('workspace_documents').insert(cleanDoc).select().single();
+    if (error) {
+      console.error('Supabase createDocument error:', error);
+      throw error;
+    }
     return data as WorkspaceDocument;
   },
 
