@@ -298,18 +298,15 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
         <ToolbarButton onClick={() => execCommand('formatBlock', '<pre>')} title="Code"><Code className="h-4 w-4" /></ToolbarButton>
       </div>
 
-      {/* Editor area - Word-like paginated view */}
-      <div className="flex-1 overflow-auto bg-muted/30 py-8 px-4">
-        <div className="flex flex-col items-center gap-8">
+      {/* Editor area - Word-like multi-page view */}
+      <div className="flex-1 overflow-auto py-8 px-4" style={{ backgroundColor: '#e8e8e8' }}>
+        <div className="flex flex-col items-center">
           <div
-            className="word-page bg-white dark:bg-card shadow-[0_2px_10px_rgba(0,0,0,0.12)] border border-border/40"
+            className="word-pages-container"
             style={{
               width: '816px',
               maxWidth: '100%',
-              minHeight: '1056px',
-              padding: '96px 72px',
               position: 'relative',
-              boxSizing: 'border-box',
             }}
           >
             <div
@@ -317,7 +314,7 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
               contentEditable
               suppressContentEditableWarning
               onInput={handleAutoSave}
-              className="outline-none prose prose-sm max-w-none dark:prose-invert
+              className="outline-none prose prose-sm max-w-none dark:prose-invert word-editable-area
                 [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:mt-2
                 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:mb-3 [&_h2]:mt-2
                 [&_h3]:text-xl [&_h3]:font-medium [&_h3]:mb-2 [&_h3]:mt-1
@@ -337,29 +334,97 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
                 overflowWrap: 'break-word',
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word',
-                minHeight: 'calc(1056px - 192px)',
-                columnFill: 'auto',
               }}
             />
           </div>
         </div>
-        {/* CSS for Word-like pagination on print and visual page breaks */}
         <style>{`
-          .word-page {
-            break-after: page;
+          .word-pages-container {
+            --page-height: 1056px;
+            --page-padding-y: 96px;
+            --page-padding-x: 72px;
+            --page-gap: 32px;
+            --content-height: calc(var(--page-height) - 2 * var(--page-padding-y));
           }
+
+          .word-editable-area {
+            padding: var(--page-padding-y) var(--page-padding-x);
+            min-height: var(--page-height);
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+            border: 1px solid rgba(0,0,0,0.08);
+            /* Use background to create visual page separators */
+            background-image:
+              linear-gradient(to bottom,
+                white calc(var(--page-height) - var(--page-padding-y)),
+                transparent calc(var(--page-height) - var(--page-padding-y)),
+                transparent calc(var(--page-height)),
+                #e8e8e8 calc(var(--page-height)),
+                #e8e8e8 calc(var(--page-height) + var(--page-gap)),
+                transparent calc(var(--page-height) + var(--page-gap))
+              );
+            background-size: 100% calc(var(--page-height) + var(--page-gap));
+            background-repeat: repeat-y;
+            background-color: white;
+            /* Add shadow lines at page breaks */
+            position: relative;
+          }
+
+          /* Visual page break overlay shadows */
+          .word-pages-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            background-image:
+              repeating-linear-gradient(
+                to bottom,
+                transparent 0px,
+                transparent calc(var(--page-height) - 4px),
+                rgba(0,0,0,0.06) calc(var(--page-height) - 4px),
+                rgba(0,0,0,0.1) var(--page-height),
+                rgba(0,0,0,0.06) calc(var(--page-height) + 1px),
+                transparent calc(var(--page-height) + var(--page-gap) - 1px),
+                rgba(0,0,0,0.06) calc(var(--page-height) + var(--page-gap) - 1px),
+                rgba(0,0,0,0.1) calc(var(--page-height) + var(--page-gap)),
+                rgba(0,0,0,0.06) calc(var(--page-height) + var(--page-gap) + 1px),
+                transparent calc(var(--page-height) + var(--page-gap) + 4px)
+              );
+            background-size: 100% calc(var(--page-height) + var(--page-gap));
+          }
+
+          /* Add extra padding at page breaks so text doesn't sit on the gap */
+          .word-editable-area {
+            padding-bottom: var(--page-padding-y);
+          }
+
           @media print {
-            .word-page {
-              page-break-after: always;
+            .word-editable-area {
+              background-image: none !important;
               box-shadow: none !important;
               border: none !important;
-              margin: 0 !important;
               padding: 2.54cm !important;
             }
+            .word-pages-container::after {
+              display: none;
+            }
           }
-          [contenteditable] hr {
-            page-break-after: always;
-            break-after: page;
+
+          .dark .word-editable-area {
+            background-color: hsl(var(--card));
+            background-image:
+              linear-gradient(to bottom,
+                hsl(var(--card)) calc(var(--page-height) - var(--page-padding-y)),
+                transparent calc(var(--page-height) - var(--page-padding-y)),
+                transparent calc(var(--page-height)),
+                #333 calc(var(--page-height)),
+                #333 calc(var(--page-height) + var(--page-gap)),
+                transparent calc(var(--page-height) + var(--page-gap))
+              );
+            background-size: 100% calc(var(--page-height) + var(--page-gap));
           }
         `}</style>
       </div>
