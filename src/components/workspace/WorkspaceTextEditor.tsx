@@ -350,27 +350,24 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
           .word-editable-area {
             padding: var(--page-padding-y) var(--page-padding-x);
             min-height: var(--page-height);
-            background: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.12);
-            border: 1px solid rgba(0,0,0,0.08);
-            /* Use background to create visual page separators */
+            position: relative;
+            /* Gray background as base, white pages painted via gradient */
+            background-color: #e8e8e8;
             background-image:
-              linear-gradient(to bottom,
-                white calc(var(--page-height) - var(--page-padding-y)),
-                transparent calc(var(--page-height) - var(--page-padding-y)),
-                transparent calc(var(--page-height)),
-                #e8e8e8 calc(var(--page-height)),
-                #e8e8e8 calc(var(--page-height) + var(--page-gap)),
-                transparent calc(var(--page-height) + var(--page-gap))
+              repeating-linear-gradient(
+                to bottom,
+                white 0px,
+                white var(--page-height),
+                #e8e8e8 var(--page-height),
+                #e8e8e8 calc(var(--page-height) + var(--page-gap))
               );
             background-size: 100% calc(var(--page-height) + var(--page-gap));
             background-repeat: repeat-y;
-            background-color: white;
-            /* Add shadow lines at page breaks */
-            position: relative;
+            /* Shadow for first page */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.12);
           }
 
-          /* Visual page break overlay shadows */
+          /* Overlay for page-break shadows between pages */
           .word-pages-container::after {
             content: '';
             position: absolute;
@@ -383,20 +380,17 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
               repeating-linear-gradient(
                 to bottom,
                 transparent 0px,
-                transparent calc(var(--page-height) - 4px),
-                rgba(0,0,0,0.06) calc(var(--page-height) - 4px),
-                rgba(0,0,0,0.1) var(--page-height),
-                rgba(0,0,0,0.06) calc(var(--page-height) + 1px),
-                transparent calc(var(--page-height) + var(--page-gap) - 1px),
-                rgba(0,0,0,0.06) calc(var(--page-height) + var(--page-gap) - 1px),
-                rgba(0,0,0,0.1) calc(var(--page-height) + var(--page-gap)),
-                rgba(0,0,0,0.06) calc(var(--page-height) + var(--page-gap) + 1px),
-                transparent calc(var(--page-height) + var(--page-gap) + 4px)
+                transparent calc(var(--page-height) - 2px),
+                rgba(0,0,0,0.08) var(--page-height),
+                transparent calc(var(--page-height) + 2px),
+                transparent calc(var(--page-height) + var(--page-gap) - 2px),
+                rgba(0,0,0,0.08) calc(var(--page-height) + var(--page-gap)),
+                transparent calc(var(--page-height) + var(--page-gap) + 2px)
               );
             background-size: 100% calc(var(--page-height) + var(--page-gap));
           }
 
-          /* Add extra padding at page breaks so text doesn't sit on the gap */
+          /* Bottom padding for last page content */
           .word-editable-area {
             padding-bottom: var(--page-padding-y);
           }
