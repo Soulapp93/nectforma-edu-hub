@@ -1,26 +1,35 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { WorkspaceDocument, workspaceService } from '@/services/workspaceService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useMyContext } from '@/hooks/useMyContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import {
   ArrowLeft, Save, Bold, Italic, Underline, Strikethrough,
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  List, ListOrdered, Heading1, Heading2, Heading3,
-  Undo2, Redo2, Link, Image, Code, Quote, Minus,
-  Type, Palette, Share2, Users, Trash2, UserPlus
+  List, ListOrdered, Undo2, Redo2, Link, Image, Code, Quote, Minus,
+  Type, Palette, Share2, Users, Trash2, UserPlus, Printer,
+  Search, Replace, Table, Indent, Outdent, Superscript, Subscript,
+  Highlighter, ZoomIn, ZoomOut, FileDown, ChevronDown, MoreHorizontal,
+  PaintBucket, Pilcrow, Heading1, Heading2, Heading3, Heading4,
+  RemoveFormatting, Copy, Clipboard, Scissors, RotateCcw, RotateCw,
+  Maximize, SpellCheck, ListChecks, SeparatorHorizontal
 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu';
 
 interface Props {
@@ -29,8 +38,52 @@ interface Props {
   onClose: () => void;
 }
 
-const FONT_SIZES = ['12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px', '36px', '48px'];
-const COLORS = ['#000000', '#374151', '#6B7280', '#DC2626', '#EA580C', '#D97706', '#16A34A', '#2563EB', '#7C3AED', '#DB2777'];
+const FONT_FAMILIES = [
+  'Arial', 'Times New Roman', 'Courier New', 'Georgia', 'Verdana',
+  'Trebuchet MS', 'Garamond', 'Comic Sans MS', 'Impact', 'Lucida Console',
+  'Tahoma', 'Palatino Linotype', 'Century Gothic', 'Bookman Old Style',
+  'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Oswald', 'Raleway',
+];
+
+const FONT_SIZES = [
+  { label: '8', value: '1' },
+  { label: '10', value: '2' },
+  { label: '12', value: '3' },
+  { label: '14', value: '4' },
+  { label: '18', value: '5' },
+  { label: '24', value: '6' },
+  { label: '36', value: '7' },
+];
+
+const COLORS = [
+  '#000000', '#434343', '#666666', '#999999', '#B7B7B7', '#CCCCCC', '#D9D9D9', '#EFEFEF', '#F3F3F3', '#FFFFFF',
+  '#980000', '#FF0000', '#FF9900', '#FFFF00', '#00FF00', '#00FFFF', '#4A86E8', '#0000FF', '#9900FF', '#FF00FF',
+  '#E6B8AF', '#F4CCCC', '#FCE5CD', '#FFF2CC', '#D9EAD3', '#D0E0E3', '#C9DAF8', '#CFE2F3', '#D9D2E9', '#EAD1DC',
+  '#DD7E6B', '#EA9999', '#F9CB9C', '#FFE599', '#B6D7A8', '#A2C4C9', '#A4C2F4', '#9FC5E8', '#B4A7D6', '#D5A6BD',
+  '#CC4125', '#E06666', '#F6B26B', '#FFD966', '#93C47D', '#76A5AF', '#6D9EEB', '#6FA8DC', '#8E7CC3', '#C27BA0',
+  '#A61C00', '#CC0000', '#E69138', '#F1C232', '#6AA84F', '#45818E', '#3C78D8', '#3D85C6', '#674EA7', '#A64D79',
+  '#85200C', '#990000', '#B45F06', '#BF9000', '#38761D', '#134F5C', '#1155CC', '#0B5394', '#351C75', '#741B47',
+  '#5B0F00', '#660000', '#783F04', '#7F6000', '#274E13', '#0C343D', '#1C4587', '#073763', '#20124D', '#4C1130',
+];
+
+const LINE_SPACINGS = [
+  { label: 'Simple', value: '1' },
+  { label: '1,15', value: '1.15' },
+  { label: '1,5', value: '1.5' },
+  { label: 'Double', value: '2' },
+  { label: '2,5', value: '2.5' },
+  { label: 'Triple', value: '3' },
+];
+
+const HEADING_OPTIONS = [
+  { label: 'Texte normal', tag: 'p' },
+  { label: 'Titre 1', tag: 'h1' },
+  { label: 'Titre 2', tag: 'h2' },
+  { label: 'Titre 3', tag: 'h3' },
+  { label: 'Titre 4', tag: 'h4' },
+  { label: 'Titre 5', tag: 'h5' },
+  { label: 'Titre 6', tag: 'h6' },
+];
 
 const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }) => {
   const { userId } = useCurrentUser();
@@ -44,10 +97,25 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
   const [sharesUsers, setSharesUsers] = useState<Record<string, string>>({});
   const editorRef = useRef<HTMLDivElement>(null);
   const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // UI state
+  const [zoom, setZoom] = useState(100);
+  const [currentFont, setCurrentFont] = useState('Arial');
+  const [currentSize, setCurrentSize] = useState('3');
+  const [currentHeading, setCurrentHeading] = useState('p');
+  const [showFindReplace, setShowFindReplace] = useState(false);
+  const [findText, setFindText] = useState('');
+  const [replaceText, setReplaceText] = useState('');
+  const [wordCount, setWordCount] = useState({ words: 0, chars: 0, pages: 1 });
+  const [showRuler, setShowRuler] = useState(true);
+  const [lineSpacing, setLineSpacing] = useState('1.15');
+  const [showWordCount, setShowWordCount] = useState(true);
 
   useEffect(() => {
     if (editorRef.current && doc.content?.html) {
       editorRef.current.innerHTML = doc.content.html;
+      updateWordCount();
     }
   }, []);
 
@@ -55,7 +123,6 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
   useEffect(() => {
     const channel = workspaceService.subscribeToDocument(doc.id, (payload) => {
       if (payload.new && payload.new.content?.html && editorRef.current) {
-        // Only update if change came from someone else
         if (payload.new.last_edited_by && payload.new.last_edited_by !== userId) {
           const currentScroll = editorRef.current.scrollTop;
           editorRef.current.innerHTML = payload.new.content.html;
@@ -68,10 +135,35 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
     return () => { supabase.removeChannel(channel); };
   }, [doc.id, userId]);
 
-  const execCommand = (command: string, value?: string) => {
+  const execCommand = useCallback((command: string, value?: string) => {
     window.document.execCommand(command, false, value);
     editorRef.current?.focus();
-  };
+    updateSelectionState();
+  }, []);
+
+  const updateWordCount = useCallback(() => {
+    if (!editorRef.current) return;
+    const text = editorRef.current.innerText || '';
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    const chars = text.length;
+    const pages = Math.max(1, Math.ceil((editorRef.current.scrollHeight || 1) / 1056));
+    setWordCount({ words, chars, pages });
+  }, []);
+
+  const updateSelectionState = useCallback(() => {
+    try {
+      const font = window.document.queryCommandValue('fontName')?.replace(/["']/g, '') || 'Arial';
+      const size = window.document.queryCommandValue('fontSize') || '3';
+      setCurrentFont(font);
+      setCurrentSize(size);
+
+      const block = window.document.queryCommandValue('formatBlock');
+      if (block) {
+        const tag = block.toLowerCase().replace(/[<>]/g, '');
+        setCurrentHeading(tag || 'p');
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   const handleSave = useCallback(async () => {
     if (!editorRef.current) return;
@@ -92,26 +184,180 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
   }, [doc, title, onSave, userId]);
 
   const handleAutoSave = useCallback(() => {
+    updateWordCount();
+    updateSelectionState();
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(() => {
       handleSave();
     }, 3000);
-  }, [handleSave]);
+  }, [handleSave, updateWordCount, updateSelectionState]);
 
   useEffect(() => {
-    return () => {
-      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    };
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
   }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        handleSave();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+        e.preventDefault();
+        handlePrint();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'h') {
+        e.preventDefault();
+        setShowFindReplace(true);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        setShowFindReplace(true);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [handleSave]);
+
+  // Selection change tracker
+  useEffect(() => {
+    const handler = () => updateSelectionState();
+    window.document.addEventListener('selectionchange', handler);
+    return () => window.document.removeEventListener('selectionchange', handler);
+  }, [updateSelectionState]);
 
   const insertLink = () => {
     const url = prompt('URL du lien :');
     if (url) execCommand('createLink', url);
   };
 
-  const insertImage = () => {
+  const insertImageFromUrl = () => {
     const url = prompt("URL de l'image :");
     if (url) execCommand('insertImage', url);
+  };
+
+  const insertImageFromFile = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (reader.result) {
+        execCommand('insertImage', reader.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const insertTable = (rows: number, cols: number) => {
+    let html = '<table style="width:100%;border-collapse:collapse;margin:12px 0;">';
+    for (let r = 0; r < rows; r++) {
+      html += '<tr>';
+      for (let c = 0; c < cols; c++) {
+        const tag = r === 0 ? 'th' : 'td';
+        html += `<${tag} style="border:1px solid #d1d5db;padding:8px 12px;min-width:80px;${r === 0 ? 'background:#f3f4f6;font-weight:600;' : ''}">${r === 0 ? `Col ${c + 1}` : '&nbsp;'}</${tag}>`;
+      }
+      html += '</tr>';
+    }
+    html += '</table><p><br></p>';
+    window.document.execCommand('insertHTML', false, html);
+    editorRef.current?.focus();
+  };
+
+  const insertCheckList = () => {
+    const html = `
+      <div style="display:flex;align-items:flex-start;gap:8px;margin:4px 0;">
+        <input type="checkbox" style="margin-top:4px;cursor:pointer;width:16px;height:16px;" />
+        <span>Élément de la liste</span>
+      </div>`;
+    window.document.execCommand('insertHTML', false, html);
+    editorRef.current?.focus();
+  };
+
+  const setLineSpacingValue = (value: string) => {
+    setLineSpacing(value);
+    if (editorRef.current) {
+      editorRef.current.style.lineHeight = value;
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleExportPDF = () => {
+    // Use print dialog as PDF export
+    window.print();
+  };
+
+  const handleFind = () => {
+    if (!findText || !editorRef.current) return;
+    const selection = window.getSelection();
+    if (!selection) return;
+    
+    // Clear previous highlights
+    const content = editorRef.current.innerHTML;
+    const cleaned = content.replace(/<mark class="find-highlight"[^>]*>(.*?)<\/mark>/g, '$1');
+    
+    // Highlight matches
+    if (findText.trim()) {
+      const regex = new RegExp(`(${findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+      const highlighted = cleaned.replace(regex, '<mark class="find-highlight" style="background:#FBBC04;padding:0 1px;border-radius:2px;">$1</mark>');
+      editorRef.current.innerHTML = highlighted;
+    } else {
+      editorRef.current.innerHTML = cleaned;
+    }
+  };
+
+  const handleReplace = () => {
+    if (!editorRef.current || !findText) return;
+    const content = editorRef.current.innerHTML;
+    const cleaned = content.replace(/<mark class="find-highlight"[^>]*>(.*?)<\/mark>/g, '$1');
+    const regex = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    editorRef.current.innerHTML = cleaned.replace(regex, replaceText);
+    handleFind();
+  };
+
+  const handleReplaceAll = () => {
+    if (!editorRef.current || !findText) return;
+    const content = editorRef.current.innerHTML;
+    const cleaned = content.replace(/<mark class="find-highlight"[^>]*>(.*?)<\/mark>/g, '$1');
+    const regex = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+    editorRef.current.innerHTML = cleaned.replace(regex, replaceText);
+    toast.success('Toutes les occurrences remplacées');
+  };
+
+  const closeFindReplace = () => {
+    setShowFindReplace(false);
+    if (editorRef.current) {
+      editorRef.current.innerHTML = editorRef.current.innerHTML.replace(
+        /<mark class="find-highlight"[^>]*>(.*?)<\/mark>/g, '$1'
+      );
+    }
+  };
+
+  const clearFormatting = () => {
+    execCommand('removeFormat');
+    execCommand('formatBlock', '<p>');
+  };
+
+  const insertPageBreak = () => {
+    const html = '<div style="page-break-after:always;border-bottom:2px dashed #d1d5db;margin:24px 0;"></div><p><br></p>';
+    window.document.execCommand('insertHTML', false, html);
+    editorRef.current?.focus();
+  };
+
+  const insertDate = () => {
+    const date = new Date().toLocaleDateString('fr-FR', { 
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+    });
+    window.document.execCommand('insertText', false, date);
+    editorRef.current?.focus();
   };
 
   // Share functions
@@ -119,13 +365,10 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
     try {
       const data = await workspaceService.getDocumentShares(doc.id);
       setShares(data);
-      // Fetch user names for shares
       if (data.length > 0) {
         const userIds = [...new Set(data.map((s: any) => s.shared_with_id))];
         const { data: users } = await (supabase as any)
-          .from('users')
-          .select('id, first_name, last_name, email')
-          .in('id', userIds);
+          .from('users').select('id, first_name, last_name, email').in('id', userIds);
         if (users) {
           const map: Record<string, string> = {};
           users.forEach((u: any) => { map[u.id] = `${u.first_name} ${u.last_name} (${u.email})`; });
@@ -140,45 +383,21 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
   const handleShare = async () => {
     if (!shareEmail.trim() || !userId) return;
     try {
-      // Find user by email in same establishment
       const { data: users } = await (supabase as any)
-        .from('users')
-        .select('id, first_name, last_name')
-        .eq('email', shareEmail.trim())
-        .eq('establishment_id', establishment?.id);
-
-      let targetUserId: string | null = null;
-      if (users && users.length > 0) {
-        targetUserId = users[0].id;
-      } else {
-        // Check tutors table
-        const { data: tutors } = await (supabase as any)
-          .from('tutors')
-          .select('id, first_name, last_name')
-          .eq('email', shareEmail.trim())
-          .eq('establishment_id', establishment?.id);
-        if (tutors && tutors.length > 0) {
-          targetUserId = tutors[0].id;
-        }
-      }
-
+        .from('users').select('id').eq('email', shareEmail.trim()).eq('establishment_id', establishment?.id);
+      let targetUserId = users?.[0]?.id;
       if (!targetUserId) {
-        toast.error('Utilisateur non trouvé dans votre établissement');
-        return;
+        const { data: tutors } = await (supabase as any)
+          .from('tutors').select('id').eq('email', shareEmail.trim()).eq('establishment_id', establishment?.id);
+        targetUserId = tutors?.[0]?.id;
       }
-
-      if (targetUserId === userId) {
-        toast.error('Vous ne pouvez pas partager avec vous-même');
-        return;
-      }
-
+      if (!targetUserId) { toast.error('Utilisateur non trouvé'); return; }
+      if (targetUserId === userId) { toast.error('Vous ne pouvez pas partager avec vous-même'); return; }
       await workspaceService.shareDocument(doc.id, targetUserId, userId, sharePermission);
       setShareEmail('');
       loadShares();
-      toast.success('Document partagé avec succès');
-    } catch (err) {
-      toast.error('Erreur lors du partage');
-    }
+      toast.success('Document partagé');
+    } catch { toast.error('Erreur lors du partage'); }
   };
 
   const handleRemoveShare = async (shareId: string) => {
@@ -186,127 +405,417 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
       await workspaceService.removeShare(shareId);
       loadShares();
       toast.success('Partage supprimé');
-    } catch {
-      toast.error('Erreur');
-    }
+    } catch { toast.error('Erreur'); }
   };
 
   const isOwner = doc.owner_id === userId;
 
-  const ToolbarButton = ({ onClick, active, children, title: t }: { onClick: () => void; active?: boolean; children: React.ReactNode; title?: string }) => (
+  // Tiny toolbar button
+  const TB = ({ onClick, active, children, title: t }: { onClick: () => void; active?: boolean; children: React.ReactNode; title?: string }) => (
     <button
       onMouseDown={e => { e.preventDefault(); onClick(); }}
-      className={`p-1.5 rounded-md transition-colors ${active ? 'bg-primary/10 text-primary' : 'hover:bg-muted text-foreground'}`}
+      className={`p-1 rounded transition-colors ${active ? 'bg-primary/15 text-primary' : 'hover:bg-muted text-foreground/80'}`}
       title={t}
+      type="button"
     >
       {children}
     </button>
   );
 
+  // Color picker grid
+  const ColorPicker = ({ onSelect, title: t }: { onSelect: (c: string) => void; title: string }) => (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button className="p-1 rounded hover:bg-muted text-foreground/80 transition-colors" title={t} type="button">
+          {t === 'Couleur du texte' ? <Type className="h-3.5 w-3.5" /> : <Highlighter className="h-3.5 w-3.5" />}
+          <div className="h-0.5 w-3.5 mx-auto mt-px rounded" style={{ backgroundColor: t === 'Couleur du texte' ? '#000' : '#FBBC04' }} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-2" align="start">
+        <div className="grid grid-cols-10 gap-0.5">
+          {COLORS.map(c => (
+            <button
+              key={c}
+              className="w-5 h-5 rounded-sm border border-border/50 hover:scale-125 transition-transform"
+              style={{ backgroundColor: c }}
+              onClick={() => onSelect(c)}
+              type="button"
+            />
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+
+  const rulerMarks = useMemo(() => {
+    const marks = [];
+    for (let i = 0; i <= 21; i++) {
+      marks.push(
+        <span key={i} className="text-[9px] text-muted-foreground/60 select-none" style={{ position: 'absolute', left: `${(i / 21) * 100}%`, transform: 'translateX(-50%)' }}>
+          {i}
+        </span>
+      );
+    }
+    return marks;
+  }, []);
+
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-background">
-      {/* Top bar */}
-      <div className="flex items-center gap-3 px-4 py-2 border-b bg-card">
-        <Button variant="ghost" size="icon" onClick={onClose} className="h-9 w-9">
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-background print:h-auto print:overflow-visible">
+      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+
+      {/* Google Docs style menu bar */}
+      <div className="flex items-center gap-1 px-2 py-1 border-b bg-card print:hidden">
+        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 shrink-0">
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <Input
           value={title}
           onChange={e => setTitle(e.target.value)}
-          className="max-w-md border-none shadow-none text-lg font-semibold focus-visible:ring-0 px-1"
-          placeholder="Titre du document"
+          className="max-w-xs border-none shadow-none text-base font-semibold focus-visible:ring-0 px-1 h-8"
+          placeholder="Sans titre"
         />
         <div className="flex-1" />
         {doc.is_shared && (
-          <Badge variant="secondary" className="gap-1">
+          <Badge variant="secondary" className="gap-1 text-xs h-6">
             <Users className="h-3 w-3" /> Partagé
           </Badge>
         )}
-        <span className="text-xs text-muted-foreground hidden sm:block">
-          {saving ? 'Sauvegarde...' : 'Auto-sauvegarde activée'}
+        <span className="text-[11px] text-muted-foreground hidden sm:block">
+          {saving ? 'Enregistrement...' : '✓ Enregistré'}
         </span>
         {isOwner && (
-          <Button size="sm" variant="outline" onClick={() => setShowShareModal(true)} className="gap-1.5">
-            <Share2 className="h-4 w-4" /> Partager
+          <Button size="sm" variant="outline" onClick={() => setShowShareModal(true)} className="gap-1 h-7 text-xs">
+            <Share2 className="h-3.5 w-3.5" /> Partager
           </Button>
         )}
-        <Button size="sm" onClick={handleSave} disabled={saving} className="gap-1.5">
-          <Save className="h-4 w-4" /> Sauvegarder
-        </Button>
       </div>
 
-      {/* Toolbar */}
-      <div className="flex items-center flex-wrap gap-0.5 px-4 py-1.5 border-b bg-card/50 overflow-x-auto">
-        <ToolbarButton onClick={() => execCommand('undo')} title="Annuler"><Undo2 className="h-4 w-4" /></ToolbarButton>
-        <ToolbarButton onClick={() => execCommand('redo')} title="Rétablir"><Redo2 className="h-4 w-4" /></ToolbarButton>
-        <div className="w-px h-5 bg-border mx-1" />
+      {/* Menu bar - Google Docs style */}
+      <div className="flex items-center gap-0.5 px-3 py-0.5 border-b bg-card text-xs print:hidden">
+        {/* Fichier */}
+        <DropdownMenu>
+          <DropdownMenuTrigger className="px-2 py-1 rounded hover:bg-muted transition-colors">Fichier</DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[200px]">
+            <DropdownMenuItem onClick={handleSave}><Save className="h-3.5 w-3.5 mr-2" />Enregistrer <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+S</span></DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handlePrint}><Printer className="h-3.5 w-3.5 mr-2" />Imprimer <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+P</span></DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExportPDF}><FileDown className="h-3.5 w-3.5 mr-2" />Exporter en PDF</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onClose}><ArrowLeft className="h-3.5 w-3.5 mr-2" />Fermer</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
+        {/* Édition */}
+        <DropdownMenu>
+          <DropdownMenuTrigger className="px-2 py-1 rounded hover:bg-muted transition-colors">Édition</DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[200px]">
+            <DropdownMenuItem onClick={() => execCommand('undo')}><Undo2 className="h-3.5 w-3.5 mr-2" />Annuler <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+Z</span></DropdownMenuItem>
+            <DropdownMenuItem onClick={() => execCommand('redo')}><Redo2 className="h-3.5 w-3.5 mr-2" />Rétablir <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+Y</span></DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => execCommand('cut')}><Scissors className="h-3.5 w-3.5 mr-2" />Couper <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+X</span></DropdownMenuItem>
+            <DropdownMenuItem onClick={() => execCommand('copy')}><Copy className="h-3.5 w-3.5 mr-2" />Copier <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+C</span></DropdownMenuItem>
+            <DropdownMenuItem onClick={() => execCommand('paste')}><Clipboard className="h-3.5 w-3.5 mr-2" />Coller <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+V</span></DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setShowFindReplace(true)}><Search className="h-3.5 w-3.5 mr-2" />Rechercher et remplacer <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+H</span></DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => execCommand('selectAll')}>Tout sélectionner <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+A</span></DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Affichage */}
+        <DropdownMenu>
+          <DropdownMenuTrigger className="px-2 py-1 rounded hover:bg-muted transition-colors">Affichage</DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[200px]">
+            <DropdownMenuItem onClick={() => setShowRuler(!showRuler)}>
+              {showRuler ? '✓ ' : '  '}Règle
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowWordCount(!showWordCount)}>
+              {showWordCount ? '✓ ' : '  '}Compteur de mots
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger><ZoomIn className="h-3.5 w-3.5 mr-2" />Zoom</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {[50, 75, 90, 100, 110, 125, 150, 200].map(z => (
+                  <DropdownMenuItem key={z} onClick={() => setZoom(z)}>{zoom === z ? '✓ ' : '  '}{z}%</DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => { if (editorRef.current) editorRef.current.requestFullscreen?.(); }}>
+              <Maximize className="h-3.5 w-3.5 mr-2" />Plein écran
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Insertion */}
+        <DropdownMenu>
+          <DropdownMenuTrigger className="px-2 py-1 rounded hover:bg-muted transition-colors">Insertion</DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[200px]">
+            <DropdownMenuItem onClick={insertImageFromFile}><Image className="h-3.5 w-3.5 mr-2" />Image (fichier)</DropdownMenuItem>
+            <DropdownMenuItem onClick={insertImageFromUrl}><Image className="h-3.5 w-3.5 mr-2" />Image (URL)</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger><Table className="h-3.5 w-3.5 mr-2" />Tableau</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <div className="p-2">
+                  <p className="text-xs text-muted-foreground mb-2">Taille du tableau</p>
+                  <div className="grid grid-cols-5 gap-0.5">
+                    {[1,2,3,4,5].map(r => [1,2,3,4,5].map(c => (
+                      <button
+                        key={`${r}-${c}`}
+                        className="w-6 h-6 border border-border rounded-sm hover:bg-primary/20 transition-colors text-[9px]"
+                        onClick={() => insertTable(r, c)}
+                        title={`${r}×${c}`}
+                        type="button"
+                      />
+                    )))}
+                  </div>
+                  <div className="mt-2 flex gap-1">
+                    <button className="text-xs px-2 py-1 rounded bg-muted hover:bg-muted/80" onClick={() => insertTable(3, 3)} type="button">3×3</button>
+                    <button className="text-xs px-2 py-1 rounded bg-muted hover:bg-muted/80" onClick={() => insertTable(5, 5)} type="button">5×5</button>
+                    <button className="text-xs px-2 py-1 rounded bg-muted hover:bg-muted/80" onClick={() => insertTable(10, 5)} type="button">10×5</button>
+                  </div>
+                </div>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={insertLink}><Link className="h-3.5 w-3.5 mr-2" />Lien</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => execCommand('insertHorizontalRule')}><SeparatorHorizontal className="h-3.5 w-3.5 mr-2" />Ligne horizontale</DropdownMenuItem>
+            <DropdownMenuItem onClick={insertPageBreak}><Minus className="h-3.5 w-3.5 mr-2" />Saut de page</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={insertCheckList}><ListChecks className="h-3.5 w-3.5 mr-2" />Liste de tâches</DropdownMenuItem>
+            <DropdownMenuItem onClick={insertDate}><Type className="h-3.5 w-3.5 mr-2" />Date du jour</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => { const c = prompt('Caractère spécial :'); if (c) window.document.execCommand('insertText', false, c); }}>
+              Caractère spécial
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Format */}
+        <DropdownMenu>
+          <DropdownMenuTrigger className="px-2 py-1 rounded hover:bg-muted transition-colors">Format</DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[200px]">
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Texte</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem onClick={() => execCommand('bold')}>Gras <span className="ml-auto text-[10px] text-muted-foreground">Ctrl+B</span></DropdownMenuItem>
+                <DropdownMenuItem onClick={() => execCommand('italic')}>Italique <span className="ml-auto text-[10px] text-muted-foreground">Ctrl+I</span></DropdownMenuItem>
+                <DropdownMenuItem onClick={() => execCommand('underline')}>Souligné <span className="ml-auto text-[10px] text-muted-foreground">Ctrl+U</span></DropdownMenuItem>
+                <DropdownMenuItem onClick={() => execCommand('strikeThrough')}>Barré</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => execCommand('superscript')}>Exposant</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => execCommand('subscript')}>Indice</DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Style de paragraphe</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {HEADING_OPTIONS.map(h => (
+                  <DropdownMenuItem key={h.tag} onClick={() => execCommand('formatBlock', `<${h.tag}>`)}>{h.label}</DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Alignement</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem onClick={() => execCommand('justifyLeft')}>Gauche</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => execCommand('justifyCenter')}>Centrer</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => execCommand('justifyRight')}>Droite</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => execCommand('justifyFull')}>Justifier</DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Interligne</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {LINE_SPACINGS.map(s => (
+                  <DropdownMenuItem key={s.value} onClick={() => setLineSpacingValue(s.value)}>
+                    {lineSpacing === s.value ? '✓ ' : '  '}{s.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={clearFormatting}><RemoveFormatting className="h-3.5 w-3.5 mr-2" />Effacer la mise en forme</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Outils */}
+        <DropdownMenu>
+          <DropdownMenuTrigger className="px-2 py-1 rounded hover:bg-muted transition-colors">Outils</DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[200px]">
+            <DropdownMenuItem onClick={() => setShowFindReplace(true)}><Search className="h-3.5 w-3.5 mr-2" />Rechercher et remplacer</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => {
+              const text = editorRef.current?.innerText || '';
+              const wc = text.trim() ? text.trim().split(/\s+/).length : 0;
+              toast.info(`${wc} mots · ${text.length} caractères · ~${wordCount.pages} pages`);
+            }}>
+              <Type className="h-3.5 w-3.5 mr-2" />Nombre de mots
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Main Toolbar - Google Docs style */}
+      <div className="flex items-center flex-wrap gap-0.5 px-2 py-1 border-b bg-muted/30 overflow-x-auto print:hidden">
+        <TB onClick={() => execCommand('undo')} title="Annuler (Ctrl+Z)"><Undo2 className="h-3.5 w-3.5" /></TB>
+        <TB onClick={() => execCommand('redo')} title="Rétablir (Ctrl+Y)"><Redo2 className="h-3.5 w-3.5" /></TB>
+        <TB onClick={handlePrint} title="Imprimer"><Printer className="h-3.5 w-3.5" /></TB>
+        <div className="w-px h-5 bg-border mx-0.5" />
+
+        {/* Zoom */}
+        <div className="flex items-center gap-0.5">
+          <TB onClick={() => setZoom(Math.max(25, zoom - 10))} title="Zoom -"><ZoomOut className="h-3.5 w-3.5" /></TB>
+          <span className="text-[11px] text-muted-foreground w-8 text-center select-none">{zoom}%</span>
+          <TB onClick={() => setZoom(Math.min(200, zoom + 10))} title="Zoom +"><ZoomIn className="h-3.5 w-3.5" /></TB>
+        </div>
+        <div className="w-px h-5 bg-border mx-0.5" />
+
+        {/* Heading selector */}
+        <select
+          value={currentHeading}
+          onChange={e => execCommand('formatBlock', `<${e.target.value}>`)}
+          className="h-6 text-[11px] bg-transparent border border-border/50 rounded px-1 hover:bg-muted focus:outline-none focus:ring-1 focus:ring-primary/30 min-w-[100px]"
+        >
+          {HEADING_OPTIONS.map(h => (
+            <option key={h.tag} value={h.tag}>{h.label}</option>
+          ))}
+        </select>
+        <div className="w-px h-5 bg-border mx-0.5" />
+
+        {/* Font family */}
+        <select
+          value={currentFont}
+          onChange={e => { setCurrentFont(e.target.value); execCommand('fontName', e.target.value); }}
+          className="h-6 text-[11px] bg-transparent border border-border/50 rounded px-1 hover:bg-muted focus:outline-none focus:ring-1 focus:ring-primary/30 min-w-[110px]"
+        >
+          {FONT_FAMILIES.map(f => (
+            <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>
+          ))}
+        </select>
+        <div className="w-px h-5 bg-border mx-0.5" />
+
+        {/* Font size */}
+        <select
+          value={currentSize}
+          onChange={e => { setCurrentSize(e.target.value); execCommand('fontSize', e.target.value); }}
+          className="h-6 text-[11px] bg-transparent border border-border/50 rounded px-1 hover:bg-muted focus:outline-none focus:ring-1 focus:ring-primary/30 w-12"
+        >
+          {FONT_SIZES.map(s => (
+            <option key={s.value} value={s.value}>{s.label}</option>
+          ))}
+        </select>
+        <div className="w-px h-5 bg-border mx-0.5" />
+
+        {/* Text formatting */}
+        <TB onClick={() => execCommand('bold')} title="Gras (Ctrl+B)"><Bold className="h-3.5 w-3.5" /></TB>
+        <TB onClick={() => execCommand('italic')} title="Italique (Ctrl+I)"><Italic className="h-3.5 w-3.5" /></TB>
+        <TB onClick={() => execCommand('underline')} title="Souligné (Ctrl+U)"><Underline className="h-3.5 w-3.5" /></TB>
+        <TB onClick={() => execCommand('strikeThrough')} title="Barré"><Strikethrough className="h-3.5 w-3.5" /></TB>
+
+        {/* Text & highlight color */}
+        <ColorPicker onSelect={(c) => execCommand('foreColor', c)} title="Couleur du texte" />
+        <ColorPicker onSelect={(c) => execCommand('hiliteColor', c)} title="Surlignage" />
+        <div className="w-px h-5 bg-border mx-0.5" />
+
+        {/* Superscript / Subscript */}
+        <TB onClick={() => execCommand('superscript')} title="Exposant"><Superscript className="h-3.5 w-3.5" /></TB>
+        <TB onClick={() => execCommand('subscript')} title="Indice"><Subscript className="h-3.5 w-3.5" /></TB>
+        <div className="w-px h-5 bg-border mx-0.5" />
+
+        {/* Links & Images */}
+        <TB onClick={insertLink} title="Lien"><Link className="h-3.5 w-3.5" /></TB>
+        <TB onClick={insertImageFromFile} title="Image"><Image className="h-3.5 w-3.5" /></TB>
+        <div className="w-px h-5 bg-border mx-0.5" />
+
+        {/* Alignment */}
+        <TB onClick={() => execCommand('justifyLeft')} title="Aligner à gauche"><AlignLeft className="h-3.5 w-3.5" /></TB>
+        <TB onClick={() => execCommand('justifyCenter')} title="Centrer"><AlignCenter className="h-3.5 w-3.5" /></TB>
+        <TB onClick={() => execCommand('justifyRight')} title="Aligner à droite"><AlignRight className="h-3.5 w-3.5" /></TB>
+        <TB onClick={() => execCommand('justifyFull')} title="Justifier"><AlignJustify className="h-3.5 w-3.5" /></TB>
+        <div className="w-px h-5 bg-border mx-0.5" />
+
+        {/* Line spacing */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-1 px-2 py-1.5 rounded-md hover:bg-muted text-sm">
-              <Type className="h-4 w-4" /> Taille
+            <button className="p-1 rounded hover:bg-muted text-foreground/80 transition-colors flex items-center gap-0.5" title="Interligne" type="button">
+              <Pilcrow className="h-3.5 w-3.5" />
+              <ChevronDown className="h-2.5 w-2.5" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            {FONT_SIZES.map(size => (
-              <DropdownMenuItem key={size} onClick={() => execCommand('fontSize', '7')} style={{ fontSize: size }}>
-                {size}
+            {LINE_SPACINGS.map(s => (
+              <DropdownMenuItem key={s.value} onClick={() => setLineSpacingValue(s.value)}>
+                {lineSpacing === s.value ? '✓ ' : '  '}{s.label}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+        <div className="w-px h-5 bg-border mx-0.5" />
 
-        <div className="w-px h-5 bg-border mx-1" />
-        <ToolbarButton onClick={() => execCommand('bold')} title="Gras"><Bold className="h-4 w-4" /></ToolbarButton>
-        <ToolbarButton onClick={() => execCommand('italic')} title="Italique"><Italic className="h-4 w-4" /></ToolbarButton>
-        <ToolbarButton onClick={() => execCommand('underline')} title="Souligné"><Underline className="h-4 w-4" /></ToolbarButton>
-        <ToolbarButton onClick={() => execCommand('strikeThrough')} title="Barré"><Strikethrough className="h-4 w-4" /></ToolbarButton>
-        <div className="w-px h-5 bg-border mx-1" />
+        {/* Lists */}
+        <TB onClick={() => execCommand('insertUnorderedList')} title="Liste à puces"><List className="h-3.5 w-3.5" /></TB>
+        <TB onClick={() => execCommand('insertOrderedList')} title="Liste numérotée"><ListOrdered className="h-3.5 w-3.5" /></TB>
+        <TB onClick={insertCheckList} title="Liste de tâches"><ListChecks className="h-3.5 w-3.5" /></TB>
+        <div className="w-px h-5 bg-border mx-0.5" />
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-1 px-2 py-1.5 rounded-md hover:bg-muted text-sm">
-              <Palette className="h-4 w-4" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <div className="grid grid-cols-5 gap-1 p-2">
-              {COLORS.map(color => (
-                <button key={color} onClick={() => execCommand('foreColor', color)} className="w-6 h-6 rounded-full border" style={{ backgroundColor: color }} />
-              ))}
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* Indent */}
+        <TB onClick={() => execCommand('outdent')} title="Diminuer le retrait"><Outdent className="h-3.5 w-3.5" /></TB>
+        <TB onClick={() => execCommand('indent')} title="Augmenter le retrait"><Indent className="h-3.5 w-3.5" /></TB>
+        <div className="w-px h-5 bg-border mx-0.5" />
 
-        <div className="w-px h-5 bg-border mx-1" />
-        <ToolbarButton onClick={() => execCommand('formatBlock', '<h1>')} title="Titre 1"><Heading1 className="h-4 w-4" /></ToolbarButton>
-        <ToolbarButton onClick={() => execCommand('formatBlock', '<h2>')} title="Titre 2"><Heading2 className="h-4 w-4" /></ToolbarButton>
-        <ToolbarButton onClick={() => execCommand('formatBlock', '<h3>')} title="Titre 3"><Heading3 className="h-4 w-4" /></ToolbarButton>
-        <div className="w-px h-5 bg-border mx-1" />
-        <ToolbarButton onClick={() => execCommand('justifyLeft')} title="Gauche"><AlignLeft className="h-4 w-4" /></ToolbarButton>
-        <ToolbarButton onClick={() => execCommand('justifyCenter')} title="Centrer"><AlignCenter className="h-4 w-4" /></ToolbarButton>
-        <ToolbarButton onClick={() => execCommand('justifyRight')} title="Droite"><AlignRight className="h-4 w-4" /></ToolbarButton>
-        <ToolbarButton onClick={() => execCommand('justifyFull')} title="Justifier"><AlignJustify className="h-4 w-4" /></ToolbarButton>
-        <div className="w-px h-5 bg-border mx-1" />
-        <ToolbarButton onClick={() => execCommand('insertUnorderedList')} title="Liste"><List className="h-4 w-4" /></ToolbarButton>
-        <ToolbarButton onClick={() => execCommand('insertOrderedList')} title="Liste numérotée"><ListOrdered className="h-4 w-4" /></ToolbarButton>
-        <div className="w-px h-5 bg-border mx-1" />
-        <ToolbarButton onClick={insertLink} title="Lien"><Link className="h-4 w-4" /></ToolbarButton>
-        <ToolbarButton onClick={insertImage} title="Image"><Image className="h-4 w-4" /></ToolbarButton>
-        <ToolbarButton onClick={() => execCommand('formatBlock', '<blockquote>')} title="Citation"><Quote className="h-4 w-4" /></ToolbarButton>
-        <ToolbarButton onClick={() => execCommand('insertHorizontalRule')} title="Ligne horizontale"><Minus className="h-4 w-4" /></ToolbarButton>
-        <ToolbarButton onClick={() => execCommand('formatBlock', '<pre>')} title="Code"><Code className="h-4 w-4" /></ToolbarButton>
+        {/* Block format */}
+        <TB onClick={() => execCommand('formatBlock', '<blockquote>')} title="Citation"><Quote className="h-3.5 w-3.5" /></TB>
+        <TB onClick={() => execCommand('formatBlock', '<pre>')} title="Code"><Code className="h-3.5 w-3.5" /></TB>
+        <TB onClick={() => execCommand('insertHorizontalRule')} title="Ligne horizontale"><Minus className="h-3.5 w-3.5" /></TB>
+        <TB onClick={clearFormatting} title="Effacer la mise en forme"><RemoveFormatting className="h-3.5 w-3.5" /></TB>
       </div>
 
-      {/* Editor area - Word-like multi-page view */}
-      <div className="flex-1 overflow-auto py-8 px-4" style={{ backgroundColor: '#e8e8e8' }}>
+      {/* Find & Replace bar */}
+      {showFindReplace && (
+        <div className="flex items-center gap-2 px-4 py-2 border-b bg-card/80 print:hidden">
+          <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+          <Input
+            value={findText}
+            onChange={e => setFindText(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleFind()}
+            placeholder="Rechercher..."
+            className="h-7 text-sm max-w-[200px]"
+          />
+          <Input
+            value={replaceText}
+            onChange={e => setReplaceText(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleReplace()}
+            placeholder="Remplacer par..."
+            className="h-7 text-sm max-w-[200px]"
+          />
+          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleFind}>Rechercher</Button>
+          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleReplace}>Remplacer</Button>
+          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleReplaceAll}>Tout remplacer</Button>
+          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={closeFindReplace}>✕</Button>
+        </div>
+      )}
+
+      {/* Ruler */}
+      {showRuler && (
+        <div className="h-5 bg-muted/20 border-b relative print:hidden" style={{ maxWidth: `${816 * (zoom / 100)}px`, margin: '0 auto', width: '100%' }}>
+          <div className="relative h-full w-full">
+            {rulerMarks}
+          </div>
+        </div>
+      )}
+
+      {/* Editor area - Google Docs page view */}
+      <div className="flex-1 overflow-auto py-6 px-4 print:py-0 print:px-0 print:overflow-visible" style={{ backgroundColor: '#f0f0f0' }}>
         <div className="flex flex-col items-center">
           <div
             className="word-pages-container"
             style={{
-              width: '816px',
+              width: `${816 * (zoom / 100)}px`,
               maxWidth: '100%',
               position: 'relative',
+              transform: `scale(1)`,
+              transformOrigin: 'top center',
             }}
           >
             <div
@@ -314,22 +823,29 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
               contentEditable
               suppressContentEditableWarning
               onInput={handleAutoSave}
+              onClick={updateSelectionState}
+              onKeyUp={updateSelectionState}
               className="outline-none prose prose-sm max-w-none dark:prose-invert word-editable-area
-                [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:mt-2
+                [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:mt-2 [&_h1]:leading-tight
                 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:mb-3 [&_h2]:mt-2
                 [&_h3]:text-xl [&_h3]:font-medium [&_h3]:mb-2 [&_h3]:mt-1
+                [&_h4]:text-lg [&_h4]:font-medium [&_h4]:mb-2
+                [&_h5]:text-base [&_h5]:font-medium [&_h5]:mb-1
+                [&_h6]:text-sm [&_h6]:font-medium [&_h6]:mb-1
                 [&_p]:mb-2 [&_p]:leading-relaxed
-                [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground
-                [&_pre]:bg-muted [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:font-mono [&_pre]:text-sm [&_pre]:whitespace-pre-wrap
+                [&_blockquote]:border-l-4 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground [&_blockquote]:my-4 [&_blockquote]:bg-muted/30 [&_blockquote]:py-2 [&_blockquote]:rounded-r
+                [&_pre]:bg-muted [&_pre]:p-4 [&_pre]:rounded-lg [&_pre]:font-mono [&_pre]:text-sm [&_pre]:whitespace-pre-wrap [&_pre]:my-4
                 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6
-                [&_a]:text-primary [&_a]:underline
-                [&_img]:max-w-full [&_img]:rounded-lg [&_img]:my-4
+                [&_a]:text-primary [&_a]:underline [&_a]:cursor-pointer
+                [&_img]:max-w-full [&_img]:rounded-lg [&_img]:my-4 [&_img]:cursor-pointer [&_img]:hover:shadow-lg [&_img]:transition-shadow
                 [&_hr]:my-6 [&_hr]:border-border
-                [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-border [&_td]:p-2 [&_th]:border [&_th]:border-border [&_th]:p-2
-                [&_div]:mb-1"
+                [&_table]:w-full [&_table]:border-collapse [&_table]:my-4 
+                [&_td]:border [&_td]:border-border [&_td]:p-2 [&_td]:min-w-[60px]
+                [&_th]:border [&_th]:border-border [&_th]:p-2 [&_th]:bg-muted/50 [&_th]:font-semibold
+                [&_div]:mb-0.5"
               style={{
                 fontSize: '14px',
-                lineHeight: '1.7',
+                lineHeight: lineSpacing,
                 wordWrap: 'break-word',
                 overflowWrap: 'break-word',
                 whiteSpace: 'pre-wrap',
@@ -344,81 +860,52 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
             --page-padding-y: 96px;
             --page-padding-x: 72px;
             --page-gap: 32px;
-            --content-height: calc(var(--page-height) - 2 * var(--page-padding-y));
           }
 
           .word-editable-area {
             padding: 0 var(--page-padding-x);
             min-height: var(--page-height);
             position: relative;
-            background-color: #e8e8e8;
-            /* 
-              Repeating gradient that creates white pages separated by gray gaps.
-              Each "page unit" = page-height + page-gap.
-              The white area IS the page, the gray gap IS the space between pages.
-            */
+            background-color: #f0f0f0;
             background-image:
               repeating-linear-gradient(
                 to bottom,
                 white 0px,
                 white var(--page-height),
-                #e8e8e8 var(--page-height),
-                #e8e8e8 calc(var(--page-height) + var(--page-gap))
+                #f0f0f0 var(--page-height),
+                #f0f0f0 calc(var(--page-height) + var(--page-gap))
               );
             background-size: 100% calc(var(--page-height) + var(--page-gap));
             background-repeat: repeat-y;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.12);
-            /*
-              Use border-image to create repeating top/bottom margin illusion.
-              Instead, we use a transparent "text mask" via background-clip.
-              The trick: pad only left/right with CSS padding.
-              Top/bottom margins are simulated by making the text invisible
-              in the margin zones via a foreground masking gradient on ::before.
-            */
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.06);
           }
 
-          /* 
-            Pseudo-element overlay that blocks text rendering in margin zones 
-            and draws page-break shadows. This creates the visual effect of 
-            margins at top and bottom of each page.
-          */
           .word-pages-container::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             pointer-events: none;
             z-index: 1;
             background-image:
               repeating-linear-gradient(
                 to bottom,
-                /* Top margin area - paint over with white to hide text */
                 white 0px,
                 white var(--page-padding-y),
-                /* Content area - transparent to show text */
                 transparent var(--page-padding-y),
                 transparent calc(var(--page-height) - var(--page-padding-y)),
-                /* Bottom margin area - paint over with white */
                 white calc(var(--page-height) - var(--page-padding-y)),
                 white var(--page-height),
-                /* Gap between pages - paint with gray + shadow lines */
-                #e8e8e8 var(--page-height),
-                #e8e8e8 calc(var(--page-height) + var(--page-gap))
+                #f0f0f0 var(--page-height),
+                #f0f0f0 calc(var(--page-height) + var(--page-gap))
               );
             background-size: 100% calc(var(--page-height) + var(--page-gap));
             background-repeat: repeat-y;
           }
 
-          /* Shadow lines at page boundaries for depth */
           .word-pages-container::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             pointer-events: none;
             z-index: 2;
             background-image:
@@ -426,10 +913,10 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
                 to bottom,
                 transparent 0px,
                 transparent calc(var(--page-height) - 1px),
-                rgba(0,0,0,0.10) var(--page-height),
+                rgba(0,0,0,0.08) var(--page-height),
                 transparent calc(var(--page-height) + 1px),
                 transparent calc(var(--page-height) + var(--page-gap) - 1px),
-                rgba(0,0,0,0.10) calc(var(--page-height) + var(--page-gap)),
+                rgba(0,0,0,0.06) calc(var(--page-height) + var(--page-gap)),
                 transparent calc(var(--page-height) + var(--page-gap) + 1px)
               );
             background-size: 100% calc(var(--page-height) + var(--page-gap));
@@ -444,22 +931,19 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
               padding: 2.54cm !important;
             }
             .word-pages-container::after,
-            .word-pages-container::before {
-              display: none;
-            }
+            .word-pages-container::before { display: none; }
           }
 
           .dark .word-editable-area {
-            background-color: #333;
+            background-color: #2a2a2a;
             background-image:
               repeating-linear-gradient(
                 to bottom,
                 hsl(var(--card)) 0px,
                 hsl(var(--card)) var(--page-height),
-                #333 var(--page-height),
-                #333 calc(var(--page-height) + var(--page-gap))
+                #2a2a2a var(--page-height),
+                #2a2a2a calc(var(--page-height) + var(--page-gap))
               );
-            background-size: 100% calc(var(--page-height) + var(--page-gap));
           }
 
           .dark .word-pages-container::after {
@@ -472,13 +956,27 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
                 transparent calc(var(--page-height) - var(--page-padding-y)),
                 hsl(var(--card)) calc(var(--page-height) - var(--page-padding-y)),
                 hsl(var(--card)) var(--page-height),
-                #333 var(--page-height),
-                #333 calc(var(--page-height) + var(--page-gap))
+                #2a2a2a var(--page-height),
+                #2a2a2a calc(var(--page-height) + var(--page-gap))
               );
-            background-size: 100% calc(var(--page-height) + var(--page-gap));
           }
         `}</style>
       </div>
+
+      {/* Bottom status bar - Google Docs style */}
+      {showWordCount && (
+        <div className="flex items-center justify-between px-4 py-1 border-t bg-card text-[11px] text-muted-foreground print:hidden">
+          <div className="flex items-center gap-4">
+            <span>{wordCount.words} mots</span>
+            <span>{wordCount.chars} caractères</span>
+            <span>Page {wordCount.pages}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span>Zoom: {zoom}%</span>
+            <span>Interligne: {lineSpacing}</span>
+          </div>
+        </div>
+      )}
 
       {/* Share Modal */}
       <Dialog open={showShareModal} onOpenChange={setShowShareModal}>
@@ -510,7 +1008,6 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
                 <UserPlus className="h-4 w-4" />
               </Button>
             </div>
-
             {shares.length > 0 && (
               <div className="space-y-2">
                 <h4 className="text-sm font-medium text-muted-foreground">Partagé avec</h4>
