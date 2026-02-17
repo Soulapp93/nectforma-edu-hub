@@ -453,14 +453,80 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
     </Popover>
   );
 
-  // Apply indents to editor
-  useEffect(() => {
-    if (editorRef.current) {
-      editorRef.current.style.paddingLeft = `${leftIndent * (816 / 21)}px`;
-      editorRef.current.style.paddingRight = `${rightIndent * (816 / 21)}px`;
-      editorRef.current.style.textIndent = `${firstLineIndent * (816 / 21)}px`;
+  // Apply indents to selected paragraph(s) only
+  const applyIndentsToSelection = useCallback(() => {
+    const pxPerCm = 816 / 21;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || !editorRef.current) return;
+
+    // Find all block-level elements (paragraphs/divs) that intersect the selection
+    const range = sel.getRangeAt(0);
+    const container = editorRef.current;
+
+    // Get the ancestor block element of a node
+    const getBlockParent = (node: Node): HTMLElement | null => {
+      let current: Node | null = node;
+      while (current && current !== container) {
+        if (current instanceof HTMLElement) {
+          const display = window.getComputedStyle(current).display;
+          if (display === 'block' || display === 'list-item') {
+            return current;
+          }
+        }
+        current = current.parentNode;
+      }
+      return null;
+    };
+
+    const startBlock = getBlockParent(range.startContainer);
+    const endBlock = getBlockParent(range.endContainer);
+
+    // Collect all block elements in range
+    const blocks = new Set<HTMLElement>();
+    if (startBlock) blocks.add(startBlock);
+    if (endBlock) blocks.add(endBlock);
+
+    // If selection spans multiple blocks, find all in between
+    if (startBlock && endBlock && startBlock !== endBlock) {
+      const walker = document.createTreeWalker(container, NodeFilter.SHOW_ELEMENT, {
+        acceptNode: (node) => {
+          if (node instanceof HTMLElement) {
+            const display = window.getComputedStyle(node).display;
+            if ((display === 'block' || display === 'list-item') && node.parentElement === container) {
+              return NodeFilter.FILTER_ACCEPT;
+            }
+          }
+          return NodeFilter.FILTER_SKIP;
+        }
+      });
+      let inRange = false;
+      let current = walker.nextNode();
+      while (current) {
+        if (current === startBlock) inRange = true;
+        if (inRange && current instanceof HTMLElement) blocks.add(current);
+        if (current === endBlock) break;
+        current = walker.nextNode();
+      }
     }
+
+    // If no block found (e.g. text directly in editor), apply to container as fallback
+    if (blocks.size === 0) {
+      container.style.paddingLeft = `${leftIndent * pxPerCm}px`;
+      container.style.paddingRight = `${rightIndent * pxPerCm}px`;
+      container.style.textIndent = `${firstLineIndent * pxPerCm}px`;
+      return;
+    }
+
+    blocks.forEach(block => {
+      block.style.marginLeft = `${leftIndent * pxPerCm}px`;
+      block.style.marginRight = `${rightIndent * pxPerCm}px`;
+      block.style.textIndent = `${firstLineIndent * pxPerCm}px`;
+    });
   }, [leftIndent, rightIndent, firstLineIndent]);
+
+  useEffect(() => {
+    applyIndentsToSelection();
+  }, [leftIndent, rightIndent, firstLineIndent, applyIndentsToSelection]);
 
   const RULER_PAGE_WIDTH_CM = 21;
 
