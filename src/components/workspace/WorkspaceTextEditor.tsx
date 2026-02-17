@@ -112,6 +112,12 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
   const [lineSpacing, setLineSpacing] = useState('1.15');
   const [showWordCount, setShowWordCount] = useState(true);
 
+  // Ruler indent state (in cm, page width = 21cm)
+  const [leftIndent, setLeftIndent] = useState(1.5); // marge gauche
+  const [rightIndent, setRightIndent] = useState(1.5); // marge droite
+  const [firstLineIndent, setFirstLineIndent] = useState(0); // retrait première ligne (relatif à leftIndent)
+  const rulerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (editorRef.current && doc.content?.html) {
       editorRef.current.innerHTML = doc.content.html;
@@ -447,13 +453,79 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
     </Popover>
   );
 
+  // Apply indents to editor
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.style.paddingLeft = `${leftIndent * (816 / 21)}px`;
+      editorRef.current.style.paddingRight = `${rightIndent * (816 / 21)}px`;
+      editorRef.current.style.textIndent = `${firstLineIndent * (816 / 21)}px`;
+    }
+  }, [leftIndent, rightIndent, firstLineIndent]);
+
+  const RULER_PAGE_WIDTH_CM = 21;
+
+  const handleRulerDrag = useCallback((type: 'left' | 'right' | 'firstLine', e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const rulerEl = rulerRef.current;
+    if (!rulerEl) return;
+
+    const startX = e.clientX;
+    const startValue = type === 'left' ? leftIndent : type === 'right' ? rightIndent : firstLineIndent;
+    const rulerRect = rulerEl.getBoundingClientRect();
+    const pxPerCm = rulerRect.width / RULER_PAGE_WIDTH_CM;
+
+    const onMove = (ev: MouseEvent) => {
+      const dx = ev.clientX - startX;
+      let newVal: number;
+
+      if (type === 'right') {
+        newVal = Math.max(0, Math.min(RULER_PAGE_WIDTH_CM / 2, startValue - dx / pxPerCm));
+      } else if (type === 'left') {
+        newVal = Math.max(0, Math.min(RULER_PAGE_WIDTH_CM / 2, startValue + dx / pxPerCm));
+      } else {
+        // firstLine is relative offset
+        newVal = Math.max(-5, Math.min(10, startValue + dx / pxPerCm));
+      }
+      newVal = Math.round(newVal * 4) / 4; // snap to 0.25cm
+
+      if (type === 'left') setLeftIndent(newVal);
+      else if (type === 'right') setRightIndent(newVal);
+      else setFirstLineIndent(newVal);
+    };
+
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  }, [leftIndent, rightIndent, firstLineIndent]);
+
   const rulerMarks = useMemo(() => {
     const marks = [];
     for (let i = 0; i <= 21; i++) {
       marks.push(
-        <span key={i} className="text-[9px] text-muted-foreground/60 select-none" style={{ position: 'absolute', left: `${(i / 21) * 100}%`, transform: 'translateX(-50%)' }}>
-          {i}
-        </span>
+        <React.Fragment key={i}>
+          {/* Main number */}
+          <div className="absolute select-none flex flex-col items-center" style={{ left: `${(i / 21) * 100}%`, transform: 'translateX(-50%)', top: 0, height: '100%' }}>
+            <span className="text-[8px] text-muted-foreground/70 leading-none mt-px">{i}</span>
+            <div className="w-px h-1.5 bg-muted-foreground/40 mt-auto" />
+          </div>
+          {/* Half marks */}
+          {i < 21 && (
+            <div className="absolute" style={{ left: `${((i + 0.5) / 21) * 100}%`, bottom: 0, transform: 'translateX(-50%)' }}>
+              <div className="w-px h-1 bg-muted-foreground/25" />
+            </div>
+          )}
+          {/* Quarter marks */}
+          {i < 21 && [0.25, 0.75].map(q => (
+            <div key={q} className="absolute" style={{ left: `${((i + q) / 21) * 100}%`, bottom: 0, transform: 'translateX(-50%)' }}>
+              <div className="w-px h-0.5 bg-muted-foreground/15" />
+            </div>
+          ))}
+        </React.Fragment>
       );
     }
     return marks;
@@ -796,11 +868,72 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
         </div>
       )}
 
-      {/* Ruler */}
+      {/* Ruler with draggable indent markers */}
       {showRuler && (
-        <div className="h-5 bg-muted/20 border-b relative print:hidden" style={{ maxWidth: `${816 * (zoom / 100)}px`, margin: '0 auto', width: '100%' }}>
-          <div className="relative h-full w-full">
-            {rulerMarks}
+        <div className="bg-muted/20 border-b print:hidden" style={{ maxWidth: `${816 * (zoom / 100)}px`, margin: '0 auto', width: '100%' }}>
+          <div ref={rulerRef} className="relative h-6 w-full select-none">
+            {/* Ruler background with marks */}
+            <div className="absolute inset-0">
+              {rulerMarks}
+            </div>
+
+            {/* Active area highlight (between margins) */}
+            <div
+              className="absolute top-0 bottom-0 bg-background/60"
+              style={{
+                left: `${(leftIndent / 21) * 100}%`,
+                right: `${(rightIndent / 21) * 100}%`,
+              }}
+            />
+
+            {/* First-line indent marker (downward triangle) */}
+            <div
+              className="absolute cursor-ew-resize z-20 group"
+              style={{
+                left: `${((leftIndent + firstLineIndent) / 21) * 100}%`,
+                top: 0,
+                transform: 'translateX(-50%)',
+              }}
+              onMouseDown={(e) => handleRulerDrag('firstLine', e)}
+              title="Retrait de première ligne"
+            >
+              <svg width="12" height="8" viewBox="0 0 12 8" className="text-primary group-hover:text-primary/80">
+                <polygon points="6,8 0,0 12,0" fill="currentColor" />
+              </svg>
+            </div>
+
+            {/* Left indent marker (upward triangle + rectangle) */}
+            <div
+              className="absolute cursor-ew-resize z-20 group"
+              style={{
+                left: `${(leftIndent / 21) * 100}%`,
+                bottom: 0,
+                transform: 'translateX(-50%)',
+              }}
+              onMouseDown={(e) => handleRulerDrag('left', e)}
+              title="Retrait gauche"
+            >
+              <svg width="12" height="12" viewBox="0 0 12 12" className="text-primary group-hover:text-primary/80">
+                <polygon points="0,0 12,0 6,6" fill="currentColor" />
+                <rect x="3" y="7" width="6" height="4" rx="0.5" fill="currentColor" />
+              </svg>
+            </div>
+
+            {/* Right indent marker (upward triangle) */}
+            <div
+              className="absolute cursor-ew-resize z-20 group"
+              style={{
+                left: `${((21 - rightIndent) / 21) * 100}%`,
+                bottom: 0,
+                transform: 'translateX(-50%)',
+              }}
+              onMouseDown={(e) => handleRulerDrag('right', e)}
+              title="Retrait droit"
+            >
+              <svg width="12" height="8" viewBox="0 0 12 8" className="text-primary group-hover:text-primary/80">
+                <polygon points="0,0 12,0 6,8" fill="currentColor" />
+              </svg>
+            </div>
           </div>
         </div>
       )}
