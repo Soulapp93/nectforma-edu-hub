@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { workspaceService, WorkspaceDocument, WorkspaceFolder } from '@/services/workspaceService';
 import { toast } from 'sonner';
-import { Plus, FileText, Table2, Presentation, Image, FolderPlus, Folder, ArrowLeft, Trash2, MoreVertical, Search, LayoutGrid, List, Users } from 'lucide-react';
+import { Plus, FileText, Table2, Presentation, Image, FolderPlus, Folder, ArrowLeft, Trash2, MoreVertical, Search, LayoutGrid, List, Users, ChevronLeft } from 'lucide-react';
+import { getTemplatesByType, getTemplateCategories, DocumentTemplate } from '@/data/workspaceTemplates';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -58,6 +60,8 @@ const EspaceTravail = () => {
   const [newFolderName, setNewFolderName] = useState('');
   const [editingDoc, setEditingDoc] = useState<WorkspaceDocument | null>(null);
   const [folderPath, setFolderPath] = useState<WorkspaceFolder[]>([]);
+  const [selectedDocType, setSelectedDocType] = useState<WorkspaceDocument['document_type'] | null>(null);
+  const [templateCategory, setTemplateCategory] = useState<string>('all');
 
   const loadData = useCallback(async () => {
     if (!userId) return;
@@ -81,12 +85,12 @@ const EspaceTravail = () => {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  const handleCreateDocument = async (type: WorkspaceDocument['document_type']) => {
+  const handleCreateDocument = async (type: WorkspaceDocument['document_type'], template?: DocumentTemplate) => {
     if (!userId) return;
     try {
-      const defaultContent = type === 'text' ? { html: '' } : type === 'spreadsheet' ? { rows: Array(20).fill(null).map(() => Array(10).fill('')) } : type === 'presentation' ? { slides: [{ id: '1', elements: [], background: '#ffffff' }] } : { elements: [] };
+      const defaultContent = template?.content || (type === 'text' ? { html: '' } : type === 'spreadsheet' ? { cells: {}, numRows: 50, numCols: 26 } : type === 'presentation' ? { slides: [{ id: '1', elements: [], background: '#ffffff' }] } : { width: 1080, height: 1080, background: '#ffffff', elements: [] });
       const doc = await workspaceService.createDocument({
-        title: 'Sans titre',
+        title: template?.name && template.id.indexOf('blank') === -1 ? template.name : 'Sans titre',
         document_type: type,
         content: defaultContent,
         folder_id: currentFolderId,
@@ -94,12 +98,13 @@ const EspaceTravail = () => {
         owner_type: 'user',
       });
       setShowNewDocModal(false);
+      setSelectedDocType(null);
+      setTemplateCategory('all');
       setEditingDoc(doc);
       toast.success('Document créé');
     } catch (err: any) {
       console.error('Create document error:', err);
-      console.error('Create document error details:', JSON.stringify(err));
-      toast.error(`Erreur: ${err?.message || err?.details || 'Erreur inconnue'}`);
+      toast.error(`Erreur: ${err?.message || 'Erreur inconnue'}`);
     }
   };
 
@@ -340,24 +345,71 @@ const EspaceTravail = () => {
         </>
       )}
 
-      <Dialog open={showNewDocModal} onOpenChange={setShowNewDocModal}>
-        <DialogContent className="max-w-md">
+      <Dialog open={showNewDocModal} onOpenChange={(v) => { setShowNewDocModal(v); if (!v) { setSelectedDocType(null); setTemplateCategory('all'); } }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle>Nouveau document</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              {selectedDocType && (
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setSelectedDocType(null); setTemplateCategory('all'); }}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+              )}
+              {selectedDocType ? `Choisir un modèle — ${DOC_TYPES.find(d => d.type === selectedDocType)?.label}` : 'Nouveau document'}
+            </DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-3 py-4">
-            {DOC_TYPES.map(dt => (
-              <button key={dt.type} onClick={() => handleCreateDocument(dt.type)} className="flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-transparent hover:border-primary/30 hover:bg-muted/50 transition-all group">
-                <div className={`p-3 rounded-xl ${dt.color} text-white`}>
-                  <dt.icon className="h-6 w-6" />
+
+          {!selectedDocType ? (
+            <div className="grid grid-cols-2 gap-3 py-4">
+              {DOC_TYPES.map(dt => (
+                <button key={dt.type} onClick={() => setSelectedDocType(dt.type)} className="flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-transparent hover:border-primary/30 hover:bg-muted/50 transition-all">
+                  <div className={`p-3 rounded-xl ${dt.color} text-white`}>
+                    <dt.icon className="h-6 w-6" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium">{dt.label}</p>
+                    <p className="text-xs text-muted-foreground">{dt.desc}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3 flex-1 min-h-0">
+              {/* Category filter */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <button onClick={() => setTemplateCategory('all')} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${templateCategory === 'all' ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-muted/80 text-muted-foreground'}`}>
+                  Tous
+                </button>
+                {getTemplateCategories(selectedDocType).map(cat => (
+                  <button key={cat} onClick={() => setTemplateCategory(cat)} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${templateCategory === cat ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-muted/80 text-muted-foreground'}`}>
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              {/* Templates grid */}
+              <ScrollArea className="flex-1 max-h-[50vh]">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pr-3">
+                  {getTemplatesByType(selectedDocType)
+                    .filter(t => templateCategory === 'all' || t.category === templateCategory)
+                    .map(template => (
+                      <button
+                        key={template.id}
+                        onClick={() => handleCreateDocument(selectedDocType, template)}
+                        className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-transparent hover:border-primary/30 hover:bg-muted/50 transition-all text-left group"
+                      >
+                        <div className="w-full aspect-[4/3] rounded-lg flex items-center justify-center text-4xl" style={{ backgroundColor: template.color + '15' }}>
+                          {template.thumbnail}
+                        </div>
+                        <div className="w-full">
+                          <p className="text-sm font-medium truncate">{template.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{template.description}</p>
+                        </div>
+                      </button>
+                    ))}
                 </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium">{dt.label}</p>
-                  <p className="text-xs text-muted-foreground">{dt.desc}</p>
-                </div>
-              </button>
-            ))}
-          </div>
+              </ScrollArea>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
