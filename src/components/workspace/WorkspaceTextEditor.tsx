@@ -453,25 +453,23 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
     </Popover>
   );
 
-  // Apply indents to selected paragraph(s) only
-  const applyIndentsToSelection = useCallback(() => {
-    const pxPerCm = 816 / 21;
+  // Store targeted blocks so ruler drag doesn't lose them when focus moves
+  const targetBlocksRef = useRef<Set<HTMLElement>>(new Set());
+
+  // Capture selected blocks from current selection
+  const captureSelectedBlocks = useCallback(() => {
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0 || !editorRef.current) return;
-
-    // Find all block-level elements (paragraphs/divs) that intersect the selection
     const range = sel.getRangeAt(0);
     const container = editorRef.current;
+    if (!container.contains(range.startContainer)) return;
 
-    // Get the ancestor block element of a node
     const getBlockParent = (node: Node): HTMLElement | null => {
       let current: Node | null = node;
       while (current && current !== container) {
         if (current instanceof HTMLElement) {
           const display = window.getComputedStyle(current).display;
-          if (display === 'block' || display === 'list-item') {
-            return current;
-          }
+          if (display === 'block' || display === 'list-item') return current;
         }
         current = current.parentNode;
       }
@@ -480,13 +478,10 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
 
     const startBlock = getBlockParent(range.startContainer);
     const endBlock = getBlockParent(range.endContainer);
-
-    // Collect all block elements in range
     const blocks = new Set<HTMLElement>();
     if (startBlock) blocks.add(startBlock);
     if (endBlock) blocks.add(endBlock);
 
-    // If selection spans multiple blocks, find all in between
     if (startBlock && endBlock && startBlock !== endBlock) {
       const walker = document.createTreeWalker(container, NodeFilter.SHOW_ELEMENT, {
         acceptNode: (node) => {
@@ -509,30 +504,32 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
       }
     }
 
-    // If no block found (e.g. text directly in editor), apply to container as fallback
-    if (blocks.size === 0) {
-      container.style.paddingLeft = `${leftIndent * pxPerCm}px`;
-      container.style.paddingRight = `${rightIndent * pxPerCm}px`;
-      container.style.textIndent = `${firstLineIndent * pxPerCm}px`;
-      return;
+    if (blocks.size > 0) {
+      targetBlocksRef.current = blocks;
     }
+  }, []);
 
+  // Apply indents to the saved target blocks
+  const applyIndentsToTargetBlocks = useCallback((li: number, ri: number, fli: number) => {
+    const pxPerCm = 816 / 21;
+    const blocks = targetBlocksRef.current;
+    if (blocks.size === 0) return;
     blocks.forEach(block => {
-      block.style.marginLeft = `${leftIndent * pxPerCm}px`;
-      block.style.marginRight = `${rightIndent * pxPerCm}px`;
-      block.style.textIndent = `${firstLineIndent * pxPerCm}px`;
+      block.style.marginLeft = `${li * pxPerCm}px`;
+      block.style.marginRight = `${ri * pxPerCm}px`;
+      block.style.textIndent = `${fli * pxPerCm}px`;
     });
-  }, [leftIndent, rightIndent, firstLineIndent]);
-
-  useEffect(() => {
-    applyIndentsToSelection();
-  }, [leftIndent, rightIndent, firstLineIndent, applyIndentsToSelection]);
+  }, []);
 
   const RULER_PAGE_WIDTH_CM = 21;
 
   const handleRulerDrag = useCallback((type: 'left' | 'right' | 'firstLine', e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // Capture the currently selected blocks BEFORE focus is lost
+    captureSelectedBlocks();
+
     const rulerEl = rulerRef.current;
     if (!rulerEl) return;
 
@@ -540,6 +537,10 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
     const startValue = type === 'left' ? leftIndent : type === 'right' ? rightIndent : firstLineIndent;
     const rulerRect = rulerEl.getBoundingClientRect();
     const pxPerCm = rulerRect.width / RULER_PAGE_WIDTH_CM;
+
+    let currentLeft = leftIndent;
+    let currentRight = rightIndent;
+    let currentFirst = firstLineIndent;
 
     const onMove = (ev: MouseEvent) => {
       const dx = ev.clientX - startX;
@@ -550,14 +551,16 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
       } else if (type === 'left') {
         newVal = Math.max(0, Math.min(RULER_PAGE_WIDTH_CM / 2, startValue + dx / pxPerCm));
       } else {
-        // firstLine is relative offset
         newVal = Math.max(-5, Math.min(10, startValue + dx / pxPerCm));
       }
-      newVal = Math.round(newVal * 4) / 4; // snap to 0.25cm
+      newVal = Math.round(newVal * 4) / 4;
 
-      if (type === 'left') setLeftIndent(newVal);
-      else if (type === 'right') setRightIndent(newVal);
-      else setFirstLineIndent(newVal);
+      if (type === 'left') { currentLeft = newVal; setLeftIndent(newVal); }
+      else if (type === 'right') { currentRight = newVal; setRightIndent(newVal); }
+      else { currentFirst = newVal; setFirstLineIndent(newVal); }
+
+      // Apply in real-time to saved blocks
+      applyIndentsToTargetBlocks(currentLeft, currentRight, currentFirst);
     };
 
     const onUp = () => {
@@ -567,7 +570,7 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
 
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
-  }, [leftIndent, rightIndent, firstLineIndent]);
+  }, [leftIndent, rightIndent, firstLineIndent, captureSelectedBlocks, applyIndentsToTargetBlocks]);
 
   const rulerMarks = useMemo(() => {
     const marks = [];
