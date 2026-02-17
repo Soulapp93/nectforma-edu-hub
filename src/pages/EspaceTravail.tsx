@@ -12,6 +12,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/ui/page-header';
 import WorkspaceTextEditor from '@/components/workspace/WorkspaceTextEditor';
+import WorkspaceSpreadsheetEditor from '@/components/workspace/WorkspaceSpreadsheetEditor';
+import WorkspacePresentationEditor from '@/components/workspace/WorkspacePresentationEditor';
+import WorkspaceVisualEditor from '@/components/workspace/WorkspaceVisualEditor';
 
 const DOC_TYPES = [
   { type: 'text' as const, label: 'Document texte', icon: FileText, color: 'bg-blue-500', desc: 'Comme Word' },
@@ -163,25 +166,19 @@ const EspaceTravail = () => {
   const filteredFolders = tab === 'mine' ? folders.filter(f => f.name.toLowerCase().includes(search.toLowerCase())) : [];
 
   if (editingDoc) {
-    if (editingDoc.document_type === 'text') {
-      return (
-        <WorkspaceTextEditor
-          document={editingDoc}
-          onSave={handleSaveDocument}
-          onClose={() => { setEditingDoc(null); loadData(); }}
-        />
-      );
+    const editorProps = {
+      document: editingDoc,
+      onSave: handleSaveDocument,
+      onClose: () => { setEditingDoc(null); loadData(); },
+    };
+
+    switch (editingDoc.document_type) {
+      case 'text': return <WorkspaceTextEditor {...editorProps} />;
+      case 'spreadsheet': return <WorkspaceSpreadsheetEditor {...editorProps} />;
+      case 'presentation': return <WorkspacePresentationEditor {...editorProps} />;
+      case 'visual': return <WorkspaceVisualEditor {...editorProps} />;
+      default: return <WorkspaceTextEditor {...editorProps} />;
     }
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-6">
-        <div className="p-4 rounded-2xl bg-muted">{getDocIcon(editingDoc.document_type)}</div>
-        <h2 className="text-xl font-semibold">Éditeur {editingDoc.document_type === 'spreadsheet' ? 'de tableaux' : editingDoc.document_type === 'presentation' ? 'de présentations' : 'de visuels'}</h2>
-        <p className="text-muted-foreground text-center max-w-md">Cette fonctionnalité sera disponible très prochainement.</p>
-        <Button variant="outline" onClick={() => { setEditingDoc(null); loadData(); }}>
-          <ArrowLeft className="h-4 w-4 mr-2" /> Retour
-        </Button>
-      </div>
-    );
   }
 
   return (
