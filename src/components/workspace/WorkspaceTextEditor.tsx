@@ -348,11 +348,15 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
           }
 
           .word-editable-area {
-            padding: var(--page-padding-y) var(--page-padding-x);
+            padding: 0 var(--page-padding-x);
             min-height: var(--page-height);
             position: relative;
-            /* Gray background as base, white pages painted via gradient */
             background-color: #e8e8e8;
+            /* 
+              Repeating gradient that creates white pages separated by gray gaps.
+              Each "page unit" = page-height + page-gap.
+              The white area IS the page, the gray gap IS the space between pages.
+            */
             background-image:
               repeating-linear-gradient(
                 to bottom,
@@ -363,11 +367,21 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
               );
             background-size: 100% calc(var(--page-height) + var(--page-gap));
             background-repeat: repeat-y;
-            /* Shadow for first page */
             box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+            /*
+              Use border-image to create repeating top/bottom margin illusion.
+              Instead, we use a transparent "text mask" via background-clip.
+              The trick: pad only left/right with CSS padding.
+              Top/bottom margins are simulated by making the text invisible
+              in the margin zones via a foreground masking gradient on ::before.
+            */
           }
 
-          /* Overlay for page-break shadows between pages */
+          /* 
+            Pseudo-element overlay that blocks text rendering in margin zones 
+            and draws page-break shadows. This creates the visual effect of 
+            margins at top and bottom of each page.
+          */
           .word-pages-container::after {
             content: '';
             position: absolute;
@@ -376,23 +390,50 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
             right: 0;
             bottom: 0;
             pointer-events: none;
+            z-index: 1;
+            background-image:
+              repeating-linear-gradient(
+                to bottom,
+                /* Top margin area - paint over with white to hide text */
+                white 0px,
+                white var(--page-padding-y),
+                /* Content area - transparent to show text */
+                transparent var(--page-padding-y),
+                transparent calc(var(--page-height) - var(--page-padding-y)),
+                /* Bottom margin area - paint over with white */
+                white calc(var(--page-height) - var(--page-padding-y)),
+                white var(--page-height),
+                /* Gap between pages - paint with gray + shadow lines */
+                #e8e8e8 var(--page-height),
+                #e8e8e8 calc(var(--page-height) + var(--page-gap))
+              );
+            background-size: 100% calc(var(--page-height) + var(--page-gap));
+            background-repeat: repeat-y;
+          }
+
+          /* Shadow lines at page boundaries for depth */
+          .word-pages-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 2;
             background-image:
               repeating-linear-gradient(
                 to bottom,
                 transparent 0px,
-                transparent calc(var(--page-height) - 2px),
-                rgba(0,0,0,0.08) var(--page-height),
-                transparent calc(var(--page-height) + 2px),
-                transparent calc(var(--page-height) + var(--page-gap) - 2px),
-                rgba(0,0,0,0.08) calc(var(--page-height) + var(--page-gap)),
-                transparent calc(var(--page-height) + var(--page-gap) + 2px)
+                transparent calc(var(--page-height) - 1px),
+                rgba(0,0,0,0.10) var(--page-height),
+                transparent calc(var(--page-height) + 1px),
+                transparent calc(var(--page-height) + var(--page-gap) - 1px),
+                rgba(0,0,0,0.10) calc(var(--page-height) + var(--page-gap)),
+                transparent calc(var(--page-height) + var(--page-gap) + 1px)
               );
             background-size: 100% calc(var(--page-height) + var(--page-gap));
-          }
-
-          /* Bottom padding for last page content */
-          .word-editable-area {
-            padding-bottom: var(--page-padding-y);
+            background-repeat: repeat-y;
           }
 
           @media print {
@@ -402,21 +443,37 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
               border: none !important;
               padding: 2.54cm !important;
             }
-            .word-pages-container::after {
+            .word-pages-container::after,
+            .word-pages-container::before {
               display: none;
             }
           }
 
           .dark .word-editable-area {
-            background-color: hsl(var(--card));
+            background-color: #333;
             background-image:
-              linear-gradient(to bottom,
-                hsl(var(--card)) calc(var(--page-height) - var(--page-padding-y)),
+              repeating-linear-gradient(
+                to bottom,
+                hsl(var(--card)) 0px,
+                hsl(var(--card)) var(--page-height),
+                #333 var(--page-height),
+                #333 calc(var(--page-height) + var(--page-gap))
+              );
+            background-size: 100% calc(var(--page-height) + var(--page-gap));
+          }
+
+          .dark .word-pages-container::after {
+            background-image:
+              repeating-linear-gradient(
+                to bottom,
+                hsl(var(--card)) 0px,
+                hsl(var(--card)) var(--page-padding-y),
+                transparent var(--page-padding-y),
                 transparent calc(var(--page-height) - var(--page-padding-y)),
-                transparent calc(var(--page-height)),
-                #333 calc(var(--page-height)),
-                #333 calc(var(--page-height) + var(--page-gap)),
-                transparent calc(var(--page-height) + var(--page-gap))
+                hsl(var(--card)) calc(var(--page-height) - var(--page-padding-y)),
+                hsl(var(--card)) var(--page-height),
+                #333 var(--page-height),
+                #333 calc(var(--page-height) + var(--page-gap))
               );
             background-size: 100% calc(var(--page-height) + var(--page-gap));
           }
