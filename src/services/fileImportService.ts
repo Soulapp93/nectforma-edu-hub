@@ -10,7 +10,21 @@ export interface ImportedSpreadsheetContent {
   sheets: Array<{
     id: string;
     name: string;
-    data: Record<string, { value: string; formula?: string }>;
+    data: Record<string, {
+      value: string;
+      formula?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      align?: 'left' | 'center' | 'right';
+      bgColor?: string;
+      textColor?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      wrap?: boolean;
+      border?: { top?: boolean; right?: boolean; bottom?: boolean; left?: boolean };
+      numberFormat?: string;
+    }>;
     numRows: number;
     numCols: number;
     frozenRows: number;
@@ -19,6 +33,7 @@ export interface ImportedSpreadsheetContent {
     rowHeights: Record<number, number>;
     hiddenRows: number[];
     hiddenCols: number[];
+    merges?: Array<{ s: { r: number; c: number }; e: { r: number; c: number } }>;
   }>;
 }
 
@@ -35,11 +50,23 @@ export interface ImportedSlide {
     src?: string;
     fontSize?: number;
     fontWeight?: string;
+    fontStyle?: string;
+    fontFamily?: string;
     color?: string;
     backgroundColor?: string;
     textAlign?: string;
+    letterSpacing?: number;
+    lineHeight?: number;
+    textDecoration?: string;
+    borderRadius?: number;
+    borderColor?: string;
+    borderWidth?: number;
+    opacity?: number;
+    rotation?: number;
+    zIndex?: number;
   }>;
   background: string;
+  backgroundImage?: string;
 }
 
 export interface ImportedPresentationContent {
@@ -78,26 +105,121 @@ const colLetter = (col: number) => {
   return s;
 };
 
+// ============= XLSX color helpers =============
+function xlsxColorToHex(color: any): string | undefined {
+  if (!color) return undefined;
+  // Themed or RGB color
+  if (color.rgb) {
+    const rgb = color.rgb.length === 8 ? color.rgb.slice(2) : color.rgb;
+    return `#${rgb}`;
+  }
+  if (color.theme !== undefined) {
+    // Theme colors approximate mapping (standard Office theme)
+    const themeColors: Record<number, string> = {
+      0: '#ffffff', 1: '#000000', 2: '#e7e6e6', 3: '#44546a',
+      4: '#4472c4', 5: '#ed7d31', 6: '#a5a5a5', 7: '#ffc000',
+      8: '#5b9bd5', 9: '#70ad47',
+    };
+    return themeColors[color.theme] || undefined;
+  }
+  return undefined;
+}
+
+function getHAlignment(ha: number | undefined): 'left' | 'center' | 'right' | undefined {
+  // XLSX alignment enum: 0=general, 1=left, 2=center, 3=right
+  if (ha === 1) return 'left';
+  if (ha === 2) return 'center';
+  if (ha === 3) return 'right';
+  return undefined;
+}
+
+// ============= PPTX XML color helpers =============
+function pptxColorFromNode(node: Element | null): string | undefined {
+  if (!node) return undefined;
+  // Direct srgbClr
+  const srgb = node.querySelector('srgbClr');
+  if (srgb) {
+    const val = srgb.getAttribute('val');
+    if (val) return `#${val}`;
+  }
+  // schemeClr — approximate standard scheme
+  const scheme = node.querySelector('schemeClr');
+  if (scheme) {
+    const schemeMap: Record<string, string> = {
+      'tx1': '#000000', 'tx2': '#44546a', 'bg1': '#ffffff', 'bg2': '#e7e6e6',
+      'accent1': '#4472c4', 'accent2': '#ed7d31', 'accent3': '#a5a5a5',
+      'accent4': '#ffc000', 'accent5': '#5b9bd5', 'accent6': '#70ad47',
+      'dk1': '#000000', 'dk2': '#44546a', 'lt1': '#ffffff', 'lt2': '#e7e6e6',
+      'hlink': '#0563c1', 'folHlink': '#954f72',
+    };
+    const val = scheme.getAttribute('val');
+    if (val && schemeMap[val]) return schemeMap[val];
+  }
+  return undefined;
+}
+
+function emuToPx(emu: string | null): number {
+  return emu ? parseInt(emu) / 12700 : 0;
+}
+
 export const fileImportService = {
   /**
-   * Parse a .docx file into HTML
+   * Parse a .docx file into HTML — preserving styles, colors, indentation
    */
   async importDocx(file: File): Promise<ImportedTextContent> {
     const arrayBuffer = await file.arrayBuffer();
-    const result = await mammoth.convertToHtml({ arrayBuffer });
-    return { html: result.value };
+
+    // mammoth with style map to preserve formatting
+    const result = await mammoth.convertToHtml({
+      arrayBuffer,
+    }, {
+      styleMap: [
+        "p[style-name='Title'] => h1:fresh",
+        "p[style-name='Heading 1'] => h1:fresh",
+        "p[style-name='Heading 2'] => h2:fresh",
+        "p[style-name='Heading 3'] => h3:fresh",
+        "p[style-name='Heading 4'] => h4:fresh",
+        "p[style-name='List Paragraph'] => li:fresh",
+        "r[style-name='Strong'] => strong",
+        "r[style-name='Emphasis'] => em",
+      ],
+      includeDefaultStyleMap: true,
+    } as any);
+
+    // Wrap in container preserving original styles
+    const html = `<div style="font-family: Calibri, Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #000000;">${result.value}</div>`;
+    return { html };
   },
 
   /**
-   * Parse a .xlsx file into spreadsheet data
+   * Parse a .xlsx file into spreadsheet data — preserving cell styles
    */
   async importXlsx(file: File): Promise<ImportedSpreadsheetContent> {
     const arrayBuffer = await file.arrayBuffer();
-    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+    const workbook = XLSX.read(arrayBuffer, {
+      type: 'array',
+      cellStyles: true,
+      cellNF: true,
+      cellFormula: true,
+    });
 
-    const sheets = workbook.SheetNames.map((name, idx) => {
+    const sheets = workbook.SheetNames.map((name) => {
       const ws = workbook.Sheets[name];
-      const data: Record<string, { value: string; formula?: string }> = {};
+      const data: Record<string, {
+        value: string;
+        formula?: string;
+        bold?: boolean;
+        italic?: boolean;
+        underline?: boolean;
+        align?: 'left' | 'center' | 'right';
+        bgColor?: string;
+        textColor?: string;
+        fontSize?: number;
+        fontFamily?: string;
+        wrap?: boolean;
+        border?: { top?: boolean; right?: boolean; bottom?: boolean; left?: boolean };
+        numberFormat?: string;
+      }> = {};
       const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
       
       let maxRow = 0;
@@ -109,9 +231,32 @@ export const fileImportService = {
           const cell = ws[cellAddr];
           if (cell) {
             const key = `${colLetter(c)}${r + 1}`;
+            
+            const style = cell.s || {};
+            const font = style.font || {};
+            const fill = style.fill || {};
+            const alignment = style.alignment || {};
+            const border = style.border || {};
+
             data[key] = {
               value: cell.v !== undefined ? String(cell.v) : '',
               formula: cell.f ? `=${cell.f}` : undefined,
+              bold: font.bold || false,
+              italic: font.italic || false,
+              underline: !!font.underline,
+              align: getHAlignment(alignment.horizontal),
+              bgColor: xlsxColorToHex(fill.fgColor) || xlsxColorToHex(fill.bgColor),
+              textColor: xlsxColorToHex(font.color),
+              fontSize: font.sz || undefined,
+              fontFamily: font.name || undefined,
+              wrap: alignment.wrapText || false,
+              border: {
+                top: !!border.top,
+                right: !!border.right,
+                bottom: !!border.bottom,
+                left: !!border.left,
+              },
+              numberFormat: cell.z || undefined,
             };
             maxRow = Math.max(maxRow, r + 1);
             maxCol = Math.max(maxCol, c + 1);
@@ -128,18 +273,43 @@ export const fileImportService = {
         });
       }
 
+      // Parse row heights
+      const rowHeights: Record<number, number> = {};
+      if (ws['!rows']) {
+        ws['!rows'].forEach((row: any, i: number) => {
+          if (row?.hpx) rowHeights[i] = Math.max(20, row.hpx);
+          else if (row?.hpt) rowHeights[i] = Math.max(20, row.hpt * 1.33);
+        });
+      }
+
+      // Parse merges
+      const merges = ws['!merges']?.map((m: any) => ({
+        s: { r: m.s.r, c: m.s.c },
+        e: { r: m.e.r, c: m.e.c },
+      })) || [];
+
+      // Parse frozen panes
+      let frozenRows = 0;
+      let frozenCols = 0;
+      if ((ws as any)['!freeze']) {
+        const f = (ws as any)['!freeze'];
+        frozenRows = f.ySplit || 0;
+        frozenCols = f.xSplit || 0;
+      }
+
       return {
         id: crypto.randomUUID(),
         name,
         data,
         numRows: Math.max(100, maxRow + 20),
         numCols: Math.max(26, maxCol + 5),
-        frozenRows: 0,
-        frozenCols: 0,
+        frozenRows,
+        frozenCols,
         colWidths,
-        rowHeights: {},
+        rowHeights,
         hiddenRows: [],
         hiddenCols: [],
+        merges,
       };
     });
 
@@ -147,13 +317,36 @@ export const fileImportService = {
   },
 
   /**
-   * Parse a .pptx file into presentation slides
+   * Parse a .pptx file into presentation slides — preserving colors, fonts, backgrounds
    */
   async importPptx(file: File): Promise<ImportedPresentationContent> {
     const arrayBuffer = await file.arrayBuffer();
     const zip = await JSZip.loadAsync(arrayBuffer);
     
     const slides: ImportedSlide[] = [];
+
+    // Extract images from the pptx
+    const imageCache: Record<string, string> = {};
+    const mediaFiles = Object.keys(zip.files).filter(n => n.startsWith('ppt/media/'));
+    for (const mf of mediaFiles) {
+      try {
+        const blob = await zip.file(mf)?.async('blob');
+        if (blob) {
+          const ext = mf.split('.').pop()?.toLowerCase() || 'png';
+          const mimeType = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg'
+            : ext === 'png' ? 'image/png'
+            : ext === 'gif' ? 'image/gif'
+            : ext === 'svg' ? 'image/svg+xml'
+            : 'image/png';
+          const dataUrl = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(new Blob([blob], { type: mimeType }));
+          });
+          imageCache[mf.split('/').pop()!] = dataUrl;
+        }
+      } catch { /* skip */ }
+    }
     
     // Find all slide XML files
     const slideFiles = Object.keys(zip.files)
@@ -172,60 +365,223 @@ export const fileImportService = {
       const doc = parser.parseFromString(xmlStr, 'text/xml');
       
       const elements: ImportedSlide['elements'] = [];
+
+      // Extract slide background color
+      let slideBg = '#ffffff';
+      const bgFill = doc.querySelector('cSld bg bgPr solidFill');
+      if (bgFill) {
+        const c = pptxColorFromNode(bgFill);
+        if (c) slideBg = c;
+      }
+      // Check for gradient background
+      const bgGrad = doc.querySelector('cSld bg bgPr gradFill');
+      if (bgGrad) {
+        const stops = bgGrad.querySelectorAll('gs');
+        if (stops.length >= 2) {
+          const c1 = pptxColorFromNode(stops[0]);
+          const c2 = pptxColorFromNode(stops[stops.length - 1]);
+          if (c1 && c2) slideBg = c1; // Use first gradient stop as solid fallback
+        }
+      }
+
+      // Try to get slide background image
+      let slideBgImage: string | undefined;
       
-      // Extract text from shape tree
-      const spNodes = doc.querySelectorAll('sp');
-      spNodes.forEach((sp) => {
-        const txBody = sp.querySelector('txBody');
-        if (txBody) {
-          let text = '';
-          const paragraphs = txBody.querySelectorAll('p');
-          paragraphs.forEach((p, pi) => {
-            const runs = p.querySelectorAll('r');
-            runs.forEach(r => {
-              const t = r.querySelector('t');
-              if (t?.textContent) text += t.textContent;
-            });
-            if (pi < paragraphs.length - 1) text += '\n';
-          });
+      // Parse relationships to resolve image references
+      const relsFile = slideFile.replace('ppt/slides/', 'ppt/slides/_rels/') + '.rels';
+      const relsXml = await zip.file(relsFile)?.async('string');
+      const relsMap: Record<string, string> = {};
+      if (relsXml) {
+        const relsDoc = parser.parseFromString(relsXml, 'text/xml');
+        const rels = relsDoc.querySelectorAll('Relationship');
+        rels.forEach(rel => {
+          const id = rel.getAttribute('Id');
+          const target = rel.getAttribute('Target');
+          if (id && target) {
+            const fileName = target.split('/').pop();
+            if (fileName) relsMap[id] = fileName;
+          }
+        });
+      }
 
-          if (text.trim()) {
-            // Try to get position from sp > spPr > xfrm
-            const off = sp.querySelector('spPr xfrm off');
-            const ext = sp.querySelector('spPr xfrm ext');
+      // Extract all shapes
+      const spTree = doc.querySelector('cSld spTree');
+      if (spTree) {
+        const shapeNodes = spTree.children;
+        let zIdx = 0;
+        
+        for (let si = 0; si < shapeNodes.length; si++) {
+          const sp = shapeNodes[si];
+          const tagName = sp.tagName?.split(':').pop();
+          
+          if (tagName === 'sp') {
+            // Text shape
+            const txBody = sp.querySelector('txBody');
+            const spPr = sp.querySelector('spPr');
+
+            // Position
+            const off = spPr?.querySelector('xfrm off');
+            const ext = spPr?.querySelector('xfrm ext');
+            const rot = spPr?.querySelector('xfrm')?.getAttribute('rot');
             
-            const x = off ? parseInt(off.getAttribute('x') || '0') / 12700 : 50;
-            const y = off ? parseInt(off.getAttribute('y') || '0') / 12700 : 50;
-            const w = ext ? parseInt(ext.getAttribute('cx') || '0') / 12700 : 400;
-            const h = ext ? parseInt(ext.getAttribute('cy') || '0') / 12700 : 60;
+            const x = emuToPx(off?.getAttribute('x') || null);
+            const y = emuToPx(off?.getAttribute('y') || null);
+            const w = emuToPx(ext?.getAttribute('cx') || null);
+            const h = emuToPx(ext?.getAttribute('cy') || null);
 
-            // Check for bold/size
-            const rPr = txBody.querySelector('r rPr');
-            const isBold = rPr?.getAttribute('b') === '1';
-            const szAttr = rPr?.getAttribute('sz');
-            const fontSize = szAttr ? parseInt(szAttr) / 100 : (text.length < 50 ? 28 : 16);
+            // Shape fill color
+            let shapeBg: string | undefined;
+            const solidFill = spPr?.querySelector('solidFill');
+            if (solidFill) {
+              shapeBg = pptxColorFromNode(solidFill);
+            }
 
-            elements.push({
-              id: newId(),
-              type: 'text',
-              x: Math.max(0, x),
-              y: Math.max(0, y),
-              width: Math.max(100, Math.min(900, w)),
-              height: Math.max(30, Math.min(500, h)),
-              content: text,
-              fontSize: Math.max(10, Math.min(72, fontSize)),
-              fontWeight: isBold ? 'bold' : 'normal',
-              color: '#000000',
-              textAlign: 'left',
-            });
+            // Shape border
+            let borderColor: string | undefined;
+            let borderWidth: number | undefined;
+            const ln = spPr?.querySelector('ln');
+            if (ln) {
+              const lnFill = ln.querySelector('solidFill');
+              borderColor = pptxColorFromNode(lnFill || null);
+              const lnW = ln.getAttribute('w');
+              if (lnW) borderWidth = parseInt(lnW) / 12700;
+            }
+
+            if (txBody) {
+              // Extract rich text with per-run formatting
+              let fullText = '';
+              let dominantFontSize = 16;
+              let dominantBold = false;
+              let dominantItalic = false;
+              let dominantColor = '#000000';
+              let dominantFont: string | undefined;
+              let dominantAlign = 'left';
+              let dominantUnderline: string | undefined;
+              let runCount = 0;
+
+              const paragraphs = txBody.querySelectorAll('p');
+              paragraphs.forEach((p, pi) => {
+                // Paragraph alignment
+                const pPr = p.querySelector('pPr');
+                const algn = pPr?.getAttribute('algn');
+                if (algn === 'ctr') dominantAlign = 'center';
+                else if (algn === 'r') dominantAlign = 'right';
+                else if (algn === 'just') dominantAlign = 'justify';
+
+                const runs = p.querySelectorAll('r');
+                runs.forEach(r => {
+                  const t = r.querySelector('t');
+                  if (t?.textContent) {
+                    fullText += t.textContent;
+                    runCount++;
+
+                    const rPr = r.querySelector('rPr');
+                    if (rPr) {
+                      const b = rPr.getAttribute('b');
+                      if (b === '1') dominantBold = true;
+                      const i = rPr.getAttribute('i');
+                      if (i === '1') dominantItalic = true;
+                      const u = rPr.getAttribute('u');
+                      if (u && u !== 'none') dominantUnderline = 'underline';
+                      const sz = rPr.getAttribute('sz');
+                      if (sz) dominantFontSize = parseInt(sz) / 100;
+                      
+                      // Font color
+                      const solidFillR = rPr.querySelector('solidFill');
+                      const rc = pptxColorFromNode(solidFillR || null);
+                      if (rc) dominantColor = rc;
+
+                      // Font family
+                      const latin = rPr.querySelector('latin');
+                      if (latin) {
+                        const typeface = latin.getAttribute('typeface');
+                        if (typeface && !typeface.startsWith('+')) dominantFont = typeface;
+                      }
+                    }
+                  }
+                });
+                if (pi < paragraphs.length - 1) fullText += '\n';
+              });
+
+              if (fullText.trim()) {
+                elements.push({
+                  id: newId(),
+                  type: 'text',
+                  x: Math.max(0, x),
+                  y: Math.max(0, y),
+                  width: Math.max(50, Math.min(960, w)),
+                  height: Math.max(20, Math.min(600, h)),
+                  content: fullText,
+                  fontSize: Math.max(8, Math.min(120, dominantFontSize)),
+                  fontWeight: dominantBold ? 'bold' : 'normal',
+                  fontStyle: dominantItalic ? 'italic' : 'normal',
+                  fontFamily: dominantFont,
+                  color: dominantColor,
+                  backgroundColor: shapeBg,
+                  textAlign: dominantAlign,
+                  textDecoration: dominantUnderline,
+                  borderColor,
+                  borderWidth,
+                  rotation: rot ? parseInt(rot) / 60000 : undefined,
+                  opacity: 1,
+                  zIndex: zIdx++,
+                });
+              } else if (shapeBg) {
+                // Empty shape with fill — render as colored rectangle
+                elements.push({
+                  id: newId(),
+                  type: 'shape',
+                  x: Math.max(0, x),
+                  y: Math.max(0, y),
+                  width: Math.max(10, Math.min(960, w)),
+                  height: Math.max(10, Math.min(600, h)),
+                  backgroundColor: shapeBg,
+                  borderColor,
+                  borderWidth,
+                  rotation: rot ? parseInt(rot) / 60000 : undefined,
+                  opacity: 1,
+                  zIndex: zIdx++,
+                });
+              }
+            }
+          } else if (tagName === 'pic') {
+            // Image
+            const spPr = sp.querySelector('spPr');
+            const off = spPr?.querySelector('xfrm off');
+            const ext = spPr?.querySelector('xfrm ext');
+            
+            const x = emuToPx(off?.getAttribute('x') || null);
+            const y = emuToPx(off?.getAttribute('y') || null);
+            const w = emuToPx(ext?.getAttribute('cx') || null);
+            const h = emuToPx(ext?.getAttribute('cy') || null);
+
+            // Get image reference
+            const blipFill = sp.querySelector('blipFill');
+            const blip = blipFill?.querySelector('blip');
+            const embedId = blip?.getAttribute('r:embed') || blip?.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed');
+            
+            if (embedId && relsMap[embedId] && imageCache[relsMap[embedId]]) {
+              elements.push({
+                id: newId(),
+                type: 'image',
+                x: Math.max(0, x),
+                y: Math.max(0, y),
+                width: Math.max(20, Math.min(960, w)),
+                height: Math.max(20, Math.min(600, h)),
+                src: imageCache[relsMap[embedId]],
+                opacity: 1,
+                zIndex: zIdx++,
+              });
+            }
           }
         }
-      });
+      }
 
       slides.push({
         id: newId(),
         elements,
-        background: '#ffffff',
+        background: slideBg,
+        backgroundImage: slideBgImage,
       });
     }
 
@@ -238,22 +594,18 @@ export const fileImportService = {
   },
 
   /**
-   * Parse a PDF file into presentation slides (one slide per page)
+   * Parse a PDF file into presentation slides (one slide per page) — full fidelity rendering
    */
   async importPdfAsPresentation(file: File): Promise<ImportedPresentationContent> {
-    // Use pdfjs-dist to render each page as an image
     const pdfjsLib = await import('pdfjs-dist');
-    
-    // Set worker
-    if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
-    }
+    const { configurePdfJsWorker } = await import('@/lib/pdfWorker');
+    configurePdfJsWorker(pdfjsLib);
 
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
     
     const slides: ImportedSlide[] = [];
-    const maxPages = Math.min(pdf.numPages, 50); // Limit to 50 pages
+    const maxPages = Math.min(pdf.numPages, 50);
 
     for (let i = 1; i <= maxPages; i++) {
       const page = await pdf.getPage(i);
@@ -266,7 +618,7 @@ export const fileImportService = {
       
       if (ctx) {
         await page.render({ canvasContext: ctx, viewport }).promise;
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        const dataUrl = canvas.toDataURL('image/png');
         
         slides.push({
           id: newId(),
@@ -276,7 +628,7 @@ export const fileImportService = {
             x: 0,
             y: 0,
             width: 960,
-            height: 540,
+            height: Math.round(960 * (viewport.height / viewport.width)),
             src: dataUrl,
           }],
           background: '#ffffff',
@@ -296,10 +648,8 @@ export const fileImportService = {
    */
   async importPdfAsVisual(file: File): Promise<ImportedVisualContent> {
     const pdfjsLib = await import('pdfjs-dist');
-    
-    if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
-    }
+    const { configurePdfJsWorker } = await import('@/lib/pdfWorker');
+    configurePdfJsWorker(pdfjsLib);
 
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -314,7 +664,7 @@ export const fileImportService = {
     let dataUrl = '';
     if (ctx) {
       await page.render({ canvasContext: ctx, viewport }).promise;
-      dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      dataUrl = canvas.toDataURL('image/png');
     }
 
     return {
@@ -345,7 +695,6 @@ export const fileImportService = {
         const dataUrl = e.target?.result as string;
         const img = new window.Image();
         img.onload = () => {
-          // Scale to fit within reasonable bounds
           const maxDim = 1920;
           let w = img.width;
           let h = img.height;
