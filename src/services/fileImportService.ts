@@ -22,7 +22,7 @@ export interface ImportedSpreadsheetContent {
       fontSize?: number;
       fontFamily?: string;
       wrap?: boolean;
-      border?: { top?: boolean; right?: boolean; bottom?: boolean; left?: boolean };
+      border?: { top?: string; right?: string; bottom?: string; left?: string };
       numberFormat?: string;
     }>;
     numRows: number;
@@ -217,7 +217,7 @@ export const fileImportService = {
         fontSize?: number;
         fontFamily?: string;
         wrap?: boolean;
-        border?: { top?: boolean; right?: boolean; bottom?: boolean; left?: boolean };
+        border?: { top?: string; right?: string; bottom?: string; left?: string };
         numberFormat?: string;
       }> = {};
       const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
@@ -251,10 +251,10 @@ export const fileImportService = {
               fontFamily: font.name || undefined,
               wrap: alignment.wrapText || false,
               border: {
-                top: !!border.top,
-                right: !!border.right,
-                bottom: !!border.bottom,
-                left: !!border.left,
+                top: border.top ? '1px solid #000' : undefined,
+                right: border.right ? '1px solid #000' : undefined,
+                bottom: border.bottom ? '1px solid #000' : undefined,
+                left: border.left ? '1px solid #000' : undefined,
               },
               numberFormat: cell.z || undefined,
             };

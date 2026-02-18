@@ -10,7 +10,10 @@ import {
   PaintBucket, Type, Download, Undo2, Redo2, BarChart3, Trash2, Copy, Clipboard,
   Scissors, Search, FileSpreadsheet, ChevronDown, Merge, SplitSquareHorizontal,
   Lock, Unlock, Filter, SortAsc, SortDesc, WrapText, Grid3X3, Eye, EyeOff,
-  PlusCircle, MinusCircle, ArrowUpDown, Columns, Rows, MoreHorizontal, X, Upload
+  PlusCircle, MinusCircle, ArrowUpDown, Columns, Rows, MoreHorizontal, X, Upload,
+  Strikethrough, MessageSquare, List, Palette, ArrowDownUp, Replace, Square,
+  AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
+  RotateCcw, IndentIncrease, IndentDecrease
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -18,9 +21,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Textarea } from '@/components/ui/textarea';
 import {
   SheetData, CellData, cellKey, colLetter, parseCellRef, getCellValue,
-  evaluateFormula, FORMULA_LIST, FORMULA_CATEGORIES
+  evaluateFormula, evaluateConditionalFormat, FORMULA_LIST, FORMULA_CATEGORIES,
+  DataValidation, ConditionalFormatRule
 } from '@/utils/spreadsheetFormulas';
 import SpreadsheetChart, { ChartType } from './SpreadsheetChart';
 
@@ -154,6 +160,30 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
   const [resizingCol, setResizingCol] = useState<number | null>(null);
   const [resizeStartX, setResizeStartX] = useState(0);
   const [resizeStartWidth, setResizeStartWidth] = useState(0);
+  const [showFindReplace, setShowFindReplace] = useState(false);
+  const [replaceText, setReplaceText] = useState('');
+  const [showConditionalFormat, setShowConditionalFormat] = useState(false);
+  const [showDataValidation, setShowDataValidation] = useState(false);
+  const [commentCell, setCommentCell] = useState<string | null>(null);
+  const [commentText, setCommentText] = useState('');
+  const [activeFilters, setActiveFilters] = useState<Record<number, string>>({});
+  const [showFilterDropdown, setShowFilterDropdown] = useState<number | null>(null);
+  const [autoFillStart, setAutoFillStart] = useState<string | null>(null);
+  const [isAutoFilling, setIsAutoFilling] = useState(false);
+  const [autoFillEnd, setAutoFillEnd] = useState<string | null>(null);
+
+  // Conditional format panel state
+  const [cfType, setCfType] = useState<'greaterThan' | 'lessThan' | 'equal' | 'between' | 'text' | 'blank' | 'notBlank'>('greaterThan');
+  const [cfValue, setCfValue] = useState('');
+  const [cfValue2, setCfValue2] = useState('');
+  const [cfBgColor, setCfBgColor] = useState('#dcfce7');
+  const [cfTextColor, setCfTextColor] = useState('#000000');
+
+  // Data validation panel state
+  const [dvType, setDvType] = useState<'list' | 'number' | 'text'>('list');
+  const [dvValues, setDvValues] = useState('');
+  const [dvMin, setDvMin] = useState('');
+  const [dvMax, setDvMax] = useState('');
 
   const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
   const tableRef = useRef<HTMLDivElement>(null);
@@ -733,6 +763,268 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
     scheduleAutoSave();
   };
 
+  // --- Find & Replace ---
+  const findAndReplace = (findAll: boolean = false) => {
+    if (!searchTerm) return;
+    pushHistory();
+    let count = 0;
+    const newData = { ...data };
+    Object.entries(newData).forEach(([key, cell]) => {
+      if (!cell) return;
+      const val = cell.value || '';
+      if (val.includes(searchTerm)) {
+        if (findAll || (selectedCell === key)) {
+          newData[key] = { ...cell, value: val.split(searchTerm).join(replaceText) };
+          count++;
+        }
+      }
+    });
+    if (count > 0) {
+      setSheets(prev => prev.map((s, i) => i === activeSheetIdx ? { ...s, data: newData } : s));
+      toast.success(`${count} remplacement(s) effectué(s)`);
+      scheduleAutoSave();
+    } else {
+      toast.info('Aucune correspondance trouvée');
+    }
+  };
+
+  // --- Strikethrough ---
+  const toggleStrikethrough = () => {
+    const b = getSelectionBounds();
+    if (!b && selectedCell) {
+      pushHistory();
+      const cell = data[selectedCell] || { value: '' };
+      updateSheetData(selectedCell, { strikethrough: !cell.strikethrough });
+      scheduleAutoSave();
+      return;
+    }
+    if (b) {
+      pushHistory();
+      for (let r = b.r1; r <= b.r2; r++) {
+        for (let c = b.c1; c <= b.c2; c++) {
+          const key = cellKey(r, c);
+          const cell = data[key] || { value: '' };
+          updateSheetData(key, { strikethrough: !cell.strikethrough });
+        }
+      }
+      scheduleAutoSave();
+    }
+  };
+
+  // --- Borders ---
+  const setBordersForSelection = (borderStyle: 'all' | 'outer' | 'none' | 'top' | 'bottom' | 'left' | 'right') => {
+    const b = getSelectionBounds();
+    if (!b && selectedCell) {
+      pushHistory();
+      const bdr = borderStyle === 'none' ? {} : borderStyle === 'all'
+        ? { top: '1px solid #d1d5db', right: '1px solid #d1d5db', bottom: '1px solid #d1d5db', left: '1px solid #d1d5db' }
+        : { [borderStyle]: '1px solid #d1d5db' };
+      updateSheetData(selectedCell, { border: bdr as any });
+      scheduleAutoSave();
+      return;
+    }
+    if (!b) return;
+    pushHistory();
+    for (let r = b.r1; r <= b.r2; r++) {
+      for (let c = b.c1; c <= b.c2; c++) {
+        const key = cellKey(r, c);
+        let bdr: any = {};
+        if (borderStyle === 'none') {
+          bdr = {};
+        } else if (borderStyle === 'all') {
+          bdr = { top: '1px solid #d1d5db', right: '1px solid #d1d5db', bottom: '1px solid #d1d5db', left: '1px solid #d1d5db' };
+        } else if (borderStyle === 'outer') {
+          bdr = {};
+          if (r === b.r1) bdr.top = '2px solid #374151';
+          if (r === b.r2) bdr.bottom = '2px solid #374151';
+          if (c === b.c1) bdr.left = '2px solid #374151';
+          if (c === b.c2) bdr.right = '2px solid #374151';
+        } else {
+          bdr = { [borderStyle]: '1px solid #d1d5db' };
+        }
+        updateSheetData(key, { border: bdr });
+      }
+    }
+    scheduleAutoSave();
+  };
+
+  // --- Comments ---
+  const addComment = (key: string, comment: string) => {
+    pushHistory();
+    updateSheetData(key, { comment: comment || undefined });
+    setCommentCell(null);
+    setCommentText('');
+    scheduleAutoSave();
+  };
+
+  // --- Conditional formatting ---
+  const applyConditionalFormat = () => {
+    const b = getSelectionBounds();
+    if (!b && !selectedCell) return;
+    pushHistory();
+    const rule: ConditionalFormatRule = {
+      id: crypto.randomUUID(),
+      type: cfType,
+      value: cfValue,
+      value2: cfValue2,
+      bgColor: cfBgColor,
+      textColor: cfTextColor,
+    };
+    const applyTo = (key: string) => {
+      const cell = data[key] || { value: '' };
+      const existing = cell.conditionalFormats || [];
+      updateSheetData(key, { conditionalFormats: [...existing, rule] });
+    };
+    if (b) {
+      for (let r = b.r1; r <= b.r2; r++) {
+        for (let c = b.c1; c <= b.c2; c++) applyTo(cellKey(r, c));
+      }
+    } else if (selectedCell) {
+      applyTo(selectedCell);
+    }
+    setShowConditionalFormat(false);
+    scheduleAutoSave();
+    toast.success('Mise en forme conditionnelle appliquée');
+  };
+
+  const clearConditionalFormats = () => {
+    const b = getSelectionBounds();
+    if (!b && selectedCell) {
+      pushHistory();
+      updateSheetData(selectedCell, { conditionalFormats: undefined });
+      scheduleAutoSave();
+      return;
+    }
+    if (b) {
+      pushHistory();
+      for (let r = b.r1; r <= b.r2; r++) {
+        for (let c = b.c1; c <= b.c2; c++) updateSheetData(cellKey(r, c), { conditionalFormats: undefined });
+      }
+      scheduleAutoSave();
+    }
+  };
+
+  // --- Data validation ---
+  const applyDataValidation = () => {
+    const b = getSelectionBounds();
+    if (!b && !selectedCell) return;
+    pushHistory();
+    const validation: DataValidation = {
+      type: dvType,
+      values: dvType === 'list' ? dvValues.split(',').map(v => v.trim()) : undefined,
+      min: dvType === 'number' && dvMin ? parseFloat(dvMin) : undefined,
+      max: dvType === 'number' && dvMax ? parseFloat(dvMax) : undefined,
+      allowBlank: true,
+    };
+    const applyTo = (key: string) => updateSheetData(key, { validation });
+    if (b) {
+      for (let r = b.r1; r <= b.r2; r++) {
+        for (let c = b.c1; c <= b.c2; c++) applyTo(cellKey(r, c));
+      }
+    } else if (selectedCell) applyTo(selectedCell);
+    setShowDataValidation(false);
+    scheduleAutoSave();
+    toast.success('Validation de données appliquée');
+  };
+
+  const clearDataValidation = () => {
+    const b = getSelectionBounds();
+    if (!b && selectedCell) { pushHistory(); updateSheetData(selectedCell, { validation: undefined }); scheduleAutoSave(); return; }
+    if (b) {
+      pushHistory();
+      for (let r = b.r1; r <= b.r2; r++) for (let c = b.c1; c <= b.c2; c++) updateSheetData(cellKey(r, c), { validation: undefined });
+      scheduleAutoSave();
+    }
+  };
+
+  // --- Column filters ---
+  const toggleFilter = (col: number) => {
+    setShowFilterDropdown(showFilterDropdown === col ? null : col);
+  };
+
+  const applyFilter = (col: number, filterValue: string) => {
+    if (filterValue === '') {
+      setActiveFilters(prev => { const n = { ...prev }; delete n[col]; return n; });
+    } else {
+      setActiveFilters(prev => ({ ...prev, [col]: filterValue }));
+    }
+    setShowFilterDropdown(null);
+  };
+
+  const getColumnUniqueValues = (col: number): string[] => {
+    const values = new Set<string>();
+    for (let r = 1; r < sheet.numRows; r++) { // Skip header
+      const val = getCellValue(cellKey(r, col), data);
+      if (val.trim()) values.add(val);
+    }
+    return Array.from(values).sort();
+  };
+
+  const isRowFiltered = (row: number): boolean => {
+    if (Object.keys(activeFilters).length === 0) return false;
+    if (row === 0) return false; // Never filter header row
+    for (const [col, filterValue] of Object.entries(activeFilters)) {
+      const val = getCellValue(cellKey(row, parseInt(col)), data);
+      if (val !== filterValue) return true;
+    }
+    return false;
+  };
+
+  // --- Auto-fill ---
+  const handleAutoFill = () => {
+    if (!autoFillStart || !autoFillEnd) return;
+    const startRef = parseCellRef(autoFillStart);
+    const endRef = parseCellRef(autoFillEnd);
+    if (!startRef || !endRef) return;
+    pushHistory();
+    const srcCell = data[autoFillStart];
+    if (!srcCell) return;
+    const srcVal = getCellValue(autoFillStart, data);
+    const srcNum = parseFloat(srcVal);
+    // Detect series
+    const isNumber = !isNaN(srcNum);
+    for (let r = startRef[0] + 1; r <= endRef[0]; r++) {
+      const key = cellKey(r, startRef[1]);
+      if (isNumber) {
+        updateSheetData(key, { ...srcCell, value: (srcNum + (r - startRef[0])).toString(), formula: undefined });
+      } else {
+        updateSheetData(key, { ...srcCell });
+      }
+    }
+    for (let c = startRef[1] + 1; c <= endRef[1]; c++) {
+      const key = cellKey(startRef[0], c);
+      if (isNumber) {
+        updateSheetData(key, { ...srcCell, value: (srcNum + (c - startRef[1])).toString(), formula: undefined });
+      } else {
+        updateSheetData(key, { ...srcCell });
+      }
+    }
+    setAutoFillStart(null);
+    setAutoFillEnd(null);
+    setIsAutoFilling(false);
+    scheduleAutoSave();
+  };
+
+  // --- Vertical align ---
+  const setVerticalAlignForSelection = (align: 'top' | 'middle' | 'bottom') => {
+    pushHistory();
+    const b = getSelectionBounds();
+    if (!b && selectedCell) updateSheetData(selectedCell, { verticalAlign: align });
+    else if (b) {
+      for (let r = b.r1; r <= b.r2; r++) for (let c = b.c1; c <= b.c2; c++) updateSheetData(cellKey(r, c), { verticalAlign: align });
+    }
+    scheduleAutoSave();
+  };
+
+  // --- Indent ---
+  const changeIndent = (delta: number) => {
+    if (!selectedCell) return;
+    pushHistory();
+    const cell = data[selectedCell] || { value: '' };
+    updateSheetData(selectedCell, { indent: Math.max(0, (cell.indent || 0) + delta) });
+    scheduleAutoSave();
+  };
+
   // --- Charts ---
   const createChart = () => {
     const b = getSelectionBounds();
@@ -957,6 +1249,9 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
         <button onClick={() => toggleFormat('underline')} className={`p-1.5 rounded ${selectedCellData?.underline ? 'bg-primary/10 text-primary' : 'hover:bg-muted'}`} title="Souligné (Ctrl+U)">
           <Underline className="h-3.5 w-3.5" />
         </button>
+        <button onClick={toggleStrikethrough} className={`p-1.5 rounded ${selectedCellData?.strikethrough ? 'bg-primary/10 text-primary' : 'hover:bg-muted'}`} title="Barré">
+          <Strikethrough className="h-3.5 w-3.5" />
+        </button>
         <div className="w-px h-5 bg-border mx-0.5" />
 
         {/* Alignment */}
@@ -968,6 +1263,28 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
         </button>
         <button onClick={() => setAlignForSelection('right')} className={`p-1.5 rounded ${selectedCellData?.align === 'right' ? 'bg-primary/10 text-primary' : 'hover:bg-muted'}`}>
           <AlignRight className="h-3.5 w-3.5" />
+        </button>
+
+        {/* Vertical align */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-1.5 rounded hover:bg-muted" title="Alignement vertical">
+              <AlignVerticalJustifyCenter className="h-3.5 w-3.5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => setVerticalAlignForSelection('top')}><AlignVerticalJustifyStart className="h-3.5 w-3.5 mr-2" /> Haut</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setVerticalAlignForSelection('middle')}><AlignVerticalJustifyCenter className="h-3.5 w-3.5 mr-2" /> Milieu</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setVerticalAlignForSelection('bottom')}><AlignVerticalJustifyEnd className="h-3.5 w-3.5 mr-2" /> Bas</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Indent */}
+        <button onClick={() => changeIndent(1)} className="p-1.5 rounded hover:bg-muted" title="Augmenter le retrait">
+          <IndentIncrease className="h-3.5 w-3.5" />
+        </button>
+        <button onClick={() => changeIndent(-1)} className="p-1.5 rounded hover:bg-muted" title="Diminuer le retrait">
+          <IndentDecrease className="h-3.5 w-3.5" />
         </button>
         <div className="w-px h-5 bg-border mx-0.5" />
 
@@ -1001,6 +1318,32 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
                 <button key={c} onClick={() => setColorForSelection('textColor', c)} className="w-5 h-5 rounded-full border border-border hover:scale-110 transition-transform" style={{ backgroundColor: c }} />
               ))}
             </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Borders */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-1.5 rounded hover:bg-muted" title="Bordures">
+              <Square className="h-3.5 w-3.5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => setBordersForSelection('all')}>
+              <Grid3X3 className="h-3.5 w-3.5 mr-2" /> Toutes les bordures
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setBordersForSelection('outer')}>
+              <Square className="h-3.5 w-3.5 mr-2" /> Bordure extérieure
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setBordersForSelection('top')}>Bordure supérieure</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setBordersForSelection('bottom')}>Bordure inférieure</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setBordersForSelection('left')}>Bordure gauche</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setBordersForSelection('right')}>Bordure droite</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setBordersForSelection('none')}>
+              <X className="h-3.5 w-3.5 mr-2" /> Supprimer les bordures
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <div className="w-px h-5 bg-border mx-0.5" />
@@ -1040,14 +1383,81 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
         </DropdownMenu>
         <div className="w-px h-5 bg-border mx-0.5" />
 
+        {/* Conditional formatting */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-1.5 rounded hover:bg-muted" title="Mise en forme conditionnelle">
+              <Palette className="h-3.5 w-3.5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => setShowConditionalFormat(true)}>
+              <Palette className="h-3.5 w-3.5 mr-2" /> Nouvelle règle...
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={clearConditionalFormats}>
+              <X className="h-3.5 w-3.5 mr-2" /> Effacer les règles
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Data validation */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-1.5 rounded hover:bg-muted" title="Validation de données">
+              <List className="h-3.5 w-3.5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => setShowDataValidation(true)}>
+              <List className="h-3.5 w-3.5 mr-2" /> Configurer...
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={clearDataValidation}>
+              <X className="h-3.5 w-3.5 mr-2" /> Supprimer validation
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Filter */}
+        <button
+          onClick={() => {
+            if (Object.keys(activeFilters).length > 0) {
+              setActiveFilters({});
+              toast.success('Filtres supprimés');
+            } else {
+              toast.info('Cliquez sur les en-têtes de colonnes pour filtrer');
+            }
+          }}
+          className={`p-1.5 rounded ${Object.keys(activeFilters).length > 0 ? 'bg-primary/10 text-primary' : 'hover:bg-muted'}`}
+          title="Filtres"
+        >
+          <Filter className="h-3.5 w-3.5" />
+        </button>
+
         {/* Chart */}
         <button onClick={createChart} className="p-1.5 rounded hover:bg-muted" title="Insérer un graphique">
           <BarChart3 className="h-3.5 w-3.5" />
         </button>
 
-        {/* Search */}
-        <button onClick={() => setShowSearch(!showSearch)} className="p-1.5 rounded hover:bg-muted" title="Rechercher (Ctrl+F)">
+        {/* Search / Find & Replace */}
+        <button onClick={() => { setShowSearch(!showSearch); setShowFindReplace(false); }} className="p-1.5 rounded hover:bg-muted" title="Rechercher (Ctrl+F)">
           <Search className="h-3.5 w-3.5" />
+        </button>
+        <button onClick={() => { setShowFindReplace(!showFindReplace); setShowSearch(true); }} className="p-1.5 rounded hover:bg-muted" title="Rechercher et remplacer">
+          <Replace className="h-3.5 w-3.5" />
+        </button>
+
+        {/* Comment */}
+        <button
+          onClick={() => {
+            if (selectedCell) {
+              setCommentCell(selectedCell);
+              setCommentText(data[selectedCell]?.comment || '');
+            }
+          }}
+          className={`p-1.5 rounded ${selectedCellData?.comment ? 'bg-primary/10 text-primary' : 'hover:bg-muted'}`}
+          title="Commentaire"
+        >
+          <MessageSquare className="h-3.5 w-3.5" />
         </button>
 
         {/* More */}
@@ -1060,26 +1470,112 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
             <DropdownMenuItem onClick={() => updateSheet({ numCols: Math.min(sheet.numCols + 5, 52) })}><Plus className="h-3.5 w-3.5 mr-2" /> Ajouter 5 colonnes</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setShowFormulaHelper(!showFormulaHelper)}>
-              <FileSpreadsheet className="h-3.5 w-3.5 mr-2" /> Aide formules
+              <FileSpreadsheet className="h-3.5 w-3.5 mr-2" /> Aide formules ({FORMULA_LIST.length})
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      {/* Search bar */}
+      {/* Search & Replace bar */}
       {showSearch && (
-        <div className="flex items-center gap-2 px-3 py-1.5 border-b bg-muted/30">
+        <div className="flex items-center gap-2 px-3 py-1.5 border-b bg-muted/30 flex-wrap">
           <Search className="h-3.5 w-3.5 text-muted-foreground" />
           <Input
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            placeholder="Rechercher dans le tableur..."
-            className="h-7 text-xs max-w-sm"
+            placeholder="Rechercher..."
+            className="h-7 text-xs max-w-[200px]"
             autoFocus
           />
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setShowSearch(false); setSearchTerm(''); }}>
+          {showFindReplace && (
+            <>
+              <Replace className="h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                value={replaceText}
+                onChange={e => setReplaceText(e.target.value)}
+                placeholder="Remplacer par..."
+                className="h-7 text-xs max-w-[200px]"
+              />
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => findAndReplace(false)}>Remplacer</Button>
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => findAndReplace(true)}>Tout remplacer</Button>
+            </>
+          )}
+          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setShowFindReplace(!showFindReplace)}>
+            {showFindReplace ? 'Masquer' : 'Remplacer'}
+          </Button>
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setShowSearch(false); setShowFindReplace(false); setSearchTerm(''); setReplaceText(''); }}>
             <X className="h-3 w-3" />
           </Button>
+        </div>
+      )}
+
+      {/* Conditional Format Panel */}
+      {showConditionalFormat && (
+        <div className="border-b bg-card/80 p-3 flex items-center gap-3 flex-wrap">
+          <span className="text-xs font-semibold">Mise en forme conditionnelle :</span>
+          <Select value={cfType} onValueChange={(v: any) => setCfType(v)}>
+            <SelectTrigger className="h-7 w-36 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="greaterThan">Supérieur à</SelectItem>
+              <SelectItem value="lessThan">Inférieur à</SelectItem>
+              <SelectItem value="equal">Égal à</SelectItem>
+              <SelectItem value="between">Entre</SelectItem>
+              <SelectItem value="text">Contient le texte</SelectItem>
+              <SelectItem value="blank">Est vide</SelectItem>
+              <SelectItem value="notBlank">N'est pas vide</SelectItem>
+            </SelectContent>
+          </Select>
+          {!['blank', 'notBlank'].includes(cfType) && (
+            <Input value={cfValue} onChange={e => setCfValue(e.target.value)} placeholder="Valeur" className="h-7 w-24 text-xs" />
+          )}
+          {cfType === 'between' && (
+            <Input value={cfValue2} onChange={e => setCfValue2(e.target.value)} placeholder="Valeur 2" className="h-7 w-24 text-xs" />
+          )}
+          <div className="flex items-center gap-1">
+            <span className="text-[10px]">Fond:</span>
+            <input type="color" value={cfBgColor} onChange={e => setCfBgColor(e.target.value)} className="w-6 h-6 rounded cursor-pointer" />
+            <span className="text-[10px]">Texte:</span>
+            <input type="color" value={cfTextColor} onChange={e => setCfTextColor(e.target.value)} className="w-6 h-6 rounded cursor-pointer" />
+          </div>
+          <Button size="sm" className="h-7 text-xs" onClick={applyConditionalFormat}>Appliquer</Button>
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowConditionalFormat(false)}><X className="h-3 w-3" /></Button>
+        </div>
+      )}
+
+      {/* Data Validation Panel */}
+      {showDataValidation && (
+        <div className="border-b bg-card/80 p-3 flex items-center gap-3 flex-wrap">
+          <span className="text-xs font-semibold">Validation :</span>
+          <Select value={dvType} onValueChange={(v: any) => setDvType(v)}>
+            <SelectTrigger className="h-7 w-28 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="list">Liste déroulante</SelectItem>
+              <SelectItem value="number">Nombre</SelectItem>
+              <SelectItem value="text">Texte</SelectItem>
+            </SelectContent>
+          </Select>
+          {dvType === 'list' && (
+            <Input value={dvValues} onChange={e => setDvValues(e.target.value)} placeholder="Option1, Option2, Option3" className="h-7 w-64 text-xs" />
+          )}
+          {dvType === 'number' && (
+            <>
+              <Input value={dvMin} onChange={e => setDvMin(e.target.value)} placeholder="Min" className="h-7 w-20 text-xs" />
+              <Input value={dvMax} onChange={e => setDvMax(e.target.value)} placeholder="Max" className="h-7 w-20 text-xs" />
+            </>
+          )}
+          <Button size="sm" className="h-7 text-xs" onClick={applyDataValidation}>Appliquer</Button>
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setShowDataValidation(false)}><X className="h-3 w-3" /></Button>
+        </div>
+      )}
+
+      {/* Comment popover */}
+      {commentCell && (
+        <div className="border-b bg-card/80 p-3 flex items-center gap-3">
+          <MessageSquare className="h-4 w-4 text-muted-foreground" />
+          <span className="text-xs font-semibold">Commentaire ({commentCell}) :</span>
+          <Input value={commentText} onChange={e => setCommentText(e.target.value)} placeholder="Ajouter un commentaire..." className="h-7 text-xs flex-1 max-w-sm" />
+          <Button size="sm" className="h-7 text-xs" onClick={() => addComment(commentCell, commentText)}>Enregistrer</Button>
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setCommentCell(null)}><X className="h-3 w-3" /></Button>
         </div>
       )}
 
@@ -1206,7 +1702,10 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
                       className="bg-muted border border-border text-[10px] font-medium text-center py-0.5 relative select-none group"
                       style={{ width: w, minWidth: w }}
                     >
-                      {colLetter(c)}
+                      <div className="flex items-center justify-center gap-0.5">
+                        {colLetter(c)}
+                        {activeFilters[c] !== undefined && <Filter className="h-2.5 w-2.5 text-primary" />}
+                      </div>
                       <div
                         className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize opacity-0 group-hover:opacity-100 bg-primary/30"
                         onMouseDown={e => handleColResizeStart(c, e)}
