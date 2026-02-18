@@ -1,4 +1,5 @@
-// Professional presentation templates - 300+ templates across all categories
+// Professional presentation templates with 10+ slides each
+// Designs inspired by Canva/Envato with diverse layouts, gradients, and professional compositions
 
 export interface PresentationTemplate {
   id: string;
@@ -53,718 +54,1109 @@ let _uid = 0;
 const uid = () => `el_${++_uid}_${Math.random().toString(36).slice(2, 6)}`;
 
 // ═══════════════════════════════════════════
-// HELPER: Generate template variations
+// PROFESSIONAL SLIDE BUILDERS
 // ═══════════════════════════════════════════
 
-type SlideFactory = (bg: string, accent: string, text: string, muted: string) => PresentationSlide[];
+interface Theme {
+  bg: string; bg2: string; accent: string; accent2: string;
+  text: string; muted: string; card: string; cardText: string;
+  light: string; lightText: string; lightMuted: string;
+  gradient: string; gradient2: string;
+}
 
-const makeTemplate = (
-  id: string, name: string, desc: string, cat: string, thumb: string, color: string,
-  factory: SlideFactory, bg: string, accent: string, text: string, muted: string
-): PresentationTemplate => ({
-  id, name, description: desc, category: cat, thumbnail: thumb, color,
-  slides: factory(bg, accent, text, muted),
-});
-
-// ═══════════════════════════════════════════
-// SLIDE LAYOUTS (reusable across themes)
-// ═══════════════════════════════════════════
-
-const titleSlide = (bg: string, accent: string, text: string, muted: string, title: string, subtitle: string): PresentationSlide => ({
-  id: uid(), background: bg, elements: [
-    { id: uid(), type: 'shape', x: 0, y: 0, width: 960, height: 540, backgroundColor: bg, shape: 'rectangle' },
-    { id: uid(), type: 'shape', x: 600, y: -80, width: 500, height: 500, backgroundColor: accent, shape: 'circle', opacity: 0.1 },
-    { id: uid(), type: 'shape', x: -50, y: 350, width: 300, height: 300, backgroundColor: accent, shape: 'circle', opacity: 0.07 },
-    { id: uid(), type: 'text', x: 80, y: 150, width: 550, height: 80, content: title, fontSize: 52, fontWeight: 'bold', color: text, fontFamily: 'Inter' },
-    { id: uid(), type: 'shape', x: 80, y: 240, width: 60, height: 4, backgroundColor: accent, shape: 'rectangle' },
-    { id: uid(), type: 'text', x: 80, y: 260, width: 500, height: 50, content: subtitle, fontSize: 20, color: muted },
+// --- SLIDE 1: Hero / Cover ---
+const heroSlide = (t: Theme, title: string, subtitle: string): PresentationSlide => ({
+  id: uid(), background: t.bg, elements: [
+    // Large gradient accent shape
+    { id: uid(), type: 'shape', x: 500, y: -100, width: 600, height: 700, shape: 'circle', gradient: t.gradient, opacity: 0.15 },
+    { id: uid(), type: 'shape', x: -80, y: 380, width: 350, height: 350, shape: 'circle', gradient: t.gradient2, opacity: 0.1 },
+    // Accent bar left
+    { id: uid(), type: 'shape', x: 0, y: 0, width: 8, height: 540, gradient: t.gradient, shape: 'rectangle' },
+    // Title
+    { id: uid(), type: 'text', x: 60, y: 120, width: 600, height: 120, content: title, fontSize: 56, fontWeight: 'bold', color: t.text, fontFamily: 'Plus Jakarta Sans', lineHeight: 1.15, letterSpacing: -1 },
+    // Divider line
+    { id: uid(), type: 'shape', x: 60, y: 260, width: 80, height: 4, gradient: t.gradient, shape: 'rectangle', borderRadius: 2 },
+    // Subtitle
+    { id: uid(), type: 'text', x: 60, y: 285, width: 500, height: 60, content: subtitle, fontSize: 20, color: t.muted, fontFamily: 'Plus Jakarta Sans', lineHeight: 1.6 },
+    // Bottom tag
+    { id: uid(), type: 'shape', x: 60, y: 460, width: 140, height: 36, gradient: t.gradient, shape: 'rounded', borderRadius: 18 },
+    { id: uid(), type: 'text', x: 60, y: 466, width: 140, height: 24, content: 'PRÉSENTATION', fontSize: 11, fontWeight: 'bold', color: '#ffffff', textAlign: 'center', letterSpacing: 2, fontFamily: 'Plus Jakarta Sans' },
+    // Decorative dots grid
+    ...Array.from({ length: 9 }, (_, i) => ({
+      id: uid(), type: 'shape' as const,
+      x: 780 + (i % 3) * 20, y: 440 + Math.floor(i / 3) * 20,
+      width: 6, height: 6, shape: 'circle' as const, backgroundColor: t.accent, opacity: 0.3,
+    })),
   ]
 });
 
-const contentSlide = (bg: string, accent: string, text: string, muted: string, heading: string, bullets: string[]): PresentationSlide => ({
-  id: uid(), background: bg, elements: [
-    { id: uid(), type: 'shape', x: 0, y: 0, width: 960, height: 6, backgroundColor: accent, shape: 'rectangle' },
-    { id: uid(), type: 'text', x: 60, y: 40, width: 500, height: 50, content: heading, fontSize: 32, fontWeight: 'bold', color: text },
-    { id: uid(), type: 'text', x: 60, y: 110, width: 840, height: 380, content: bullets.map(b => `• ${b}`).join('\n\n'), fontSize: 18, color: muted, lineHeight: 1.5 },
+// --- SLIDE 2: Agenda / Table des matières ---
+const agendaSlide = (t: Theme, items: string[]): PresentationSlide => ({
+  id: uid(), background: t.light, elements: [
+    // Side accent bar
+    { id: uid(), type: 'shape', x: 0, y: 0, width: 320, height: 540, gradient: t.gradient, shape: 'rectangle' },
+    { id: uid(), type: 'text', x: 40, y: 60, width: 240, height: 40, content: 'SOMMAIRE', fontSize: 14, fontWeight: 'bold', color: '#ffffff', letterSpacing: 4, fontFamily: 'Plus Jakarta Sans' },
+    { id: uid(), type: 'text', x: 40, y: 110, width: 240, height: 50, content: 'Plan de la\nprésentation', fontSize: 28, fontWeight: 'bold', color: '#ffffff', fontFamily: 'Plus Jakarta Sans', lineHeight: 1.2 },
+    // Agenda items
+    ...items.slice(0, 6).flatMap((item, i) => [
+      { id: uid(), type: 'shape' as const, x: 360, y: 60 + i * 75, width: 560, height: 60, backgroundColor: i % 2 === 0 ? t.card : 'transparent', shape: 'rounded' as const, borderRadius: 12 },
+      { id: uid(), type: 'text' as const, x: 380, y: 65 + i * 75, width: 40, height: 50, content: `0${i + 1}`, fontSize: 24, fontWeight: 'bold', color: t.accent, fontFamily: 'Plus Jakarta Sans' },
+      { id: uid(), type: 'text' as const, x: 430, y: 72 + i * 75, width: 470, height: 36, content: item, fontSize: 17, color: t.lightText, fontFamily: 'Plus Jakarta Sans' },
+    ]),
   ]
 });
 
-const threeCards = (bg: string, accent: string, text: string, muted: string, heading: string, cards: {icon: string; title: string; desc: string}[]): PresentationSlide => ({
-  id: uid(), background: bg, elements: [
-    { id: uid(), type: 'shape', x: 0, y: 0, width: 960, height: 6, backgroundColor: accent, shape: 'rectangle' },
-    { id: uid(), type: 'text', x: 60, y: 30, width: 500, height: 50, content: heading, fontSize: 32, fontWeight: 'bold', color: text },
+// --- SLIDE 3: About / Présentation ---
+const aboutSlide = (t: Theme, title: string, paragraphs: string[]): PresentationSlide => ({
+  id: uid(), background: t.light, elements: [
+    // Top accent
+    { id: uid(), type: 'shape', x: 0, y: 0, width: 960, height: 6, gradient: t.gradient, shape: 'rectangle' },
+    // Section label
+    { id: uid(), type: 'shape', x: 60, y: 40, width: 100, height: 28, gradient: t.gradient, shape: 'rounded', borderRadius: 14 },
+    { id: uid(), type: 'text', x: 60, y: 44, width: 100, height: 20, content: 'À PROPOS', fontSize: 10, fontWeight: 'bold', color: '#fff', textAlign: 'center', letterSpacing: 2 },
+    // Title
+    { id: uid(), type: 'text', x: 60, y: 85, width: 500, height: 50, content: title, fontSize: 36, fontWeight: 'bold', color: t.lightText, fontFamily: 'Plus Jakarta Sans' },
+    // Image placeholder
+    { id: uid(), type: 'shape', x: 600, y: 85, width: 320, height: 400, backgroundColor: t.accent + '15', shape: 'rounded', borderRadius: 20 },
+    { id: uid(), type: 'shape', x: 620, y: 105, width: 280, height: 360, backgroundColor: t.accent + '10', shape: 'rounded', borderRadius: 16 },
+    { id: uid(), type: 'text', x: 640, y: 250, width: 240, height: 40, content: '📷  Image', fontSize: 16, color: t.accent, textAlign: 'center', opacity: 0.5 },
+    // Text content
+    ...paragraphs.slice(0, 3).map((p, i) => ({
+      id: uid(), type: 'text' as const, x: 60, y: 155 + i * 90, width: 500, height: 75, content: p,
+      fontSize: 15, color: t.lightMuted, fontFamily: 'Plus Jakarta Sans', lineHeight: 1.7,
+    })),
+  ]
+});
+
+// --- SLIDE 4: 3 Feature Cards ---
+const featureCardsSlide = (t: Theme, heading: string, cards: { num: string; title: string; desc: string }[]): PresentationSlide => ({
+  id: uid(), background: t.bg, elements: [
+    // BG decor
+    { id: uid(), type: 'shape', x: 700, y: -150, width: 400, height: 400, shape: 'circle', gradient: t.gradient, opacity: 0.08 },
+    // Label
+    { id: uid(), type: 'shape', x: 60, y: 35, width: 120, height: 28, backgroundColor: t.accent + '25', shape: 'rounded', borderRadius: 14 },
+    { id: uid(), type: 'text', x: 60, y: 39, width: 120, height: 20, content: 'SERVICES', fontSize: 10, fontWeight: 'bold', color: t.accent, textAlign: 'center', letterSpacing: 2 },
+    // Heading
+    { id: uid(), type: 'text', x: 60, y: 80, width: 600, height: 50, content: heading, fontSize: 34, fontWeight: 'bold', color: t.text, fontFamily: 'Plus Jakarta Sans' },
+    // Cards
     ...cards.slice(0, 3).flatMap((c, i) => [
-      { id: uid(), type: 'shape' as const, x: 60 + i * 290, y: 100, width: 270, height: 200, backgroundColor: accent + '15', shape: 'rounded' as const, borderRadius: 16 },
-      { id: uid(), type: 'text' as const, x: 75 + i * 290, y: 115, width: 240, height: 170, content: `${c.icon}\n\n${c.title}\n${c.desc}`, fontSize: 16, color: text, textAlign: 'center' },
+      { id: uid(), type: 'shape' as const, x: 60 + i * 290, y: 160, width: 270, height: 320, backgroundColor: t.card, shape: 'rounded' as const, borderRadius: 20, shadow: '0 8px 30px rgba(0,0,0,0.12)' },
+      // Number circle
+      { id: uid(), type: 'shape' as const, x: 85 + i * 290, y: 185, width: 50, height: 50, gradient: t.gradient, shape: 'circle' as const },
+      { id: uid(), type: 'text' as const, x: 85 + i * 290, y: 195, width: 50, height: 30, content: c.num, fontSize: 20, fontWeight: 'bold', color: '#ffffff', textAlign: 'center' },
+      // Card title
+      { id: uid(), type: 'text' as const, x: 85 + i * 290, y: 255, width: 220, height: 40, content: c.title, fontSize: 20, fontWeight: 'bold', color: t.cardText, fontFamily: 'Plus Jakarta Sans' },
+      // Card desc
+      { id: uid(), type: 'text' as const, x: 85 + i * 290, y: 300, width: 220, height: 140, content: c.desc, fontSize: 14, color: t.muted, lineHeight: 1.7, fontFamily: 'Plus Jakarta Sans' },
     ]),
   ]
 });
 
-const statsSlide = (bg: string, accent: string, text: string, muted: string, heading: string, stats: {value: string; label: string}[]): PresentationSlide => ({
-  id: uid(), background: bg, elements: [
-    { id: uid(), type: 'text', x: 60, y: 30, width: 500, height: 50, content: heading, fontSize: 32, fontWeight: 'bold', color: text },
+// --- SLIDE 5: Statistics / Metrics ---
+const metricsSlide = (t: Theme, heading: string, stats: { value: string; label: string; sub?: string }[]): PresentationSlide => ({
+  id: uid(), background: t.bg2, elements: [
+    // Decorative shapes
+    { id: uid(), type: 'shape', x: -60, y: -60, width: 300, height: 300, shape: 'circle', gradient: t.gradient, opacity: 0.06 },
+    { id: uid(), type: 'shape', x: 750, y: 350, width: 250, height: 250, shape: 'circle', gradient: t.gradient2, opacity: 0.06 },
+    // Heading
+    { id: uid(), type: 'text', x: 60, y: 40, width: 500, height: 40, content: heading, fontSize: 32, fontWeight: 'bold', color: t.text, fontFamily: 'Plus Jakarta Sans' },
+    { id: uid(), type: 'shape', x: 60, y: 90, width: 60, height: 4, gradient: t.gradient, shape: 'rectangle', borderRadius: 2 },
+    // Stat boxes
     ...stats.slice(0, 4).flatMap((s, i) => [
-      { id: uid(), type: 'shape' as const, x: 60 + i * 220, y: 110, width: 200, height: 140, backgroundColor: accent + '15', shape: 'rounded' as const, borderRadius: 12 },
-      { id: uid(), type: 'text' as const, x: 70 + i * 220, y: 120, width: 180, height: 120, content: `${s.value}\n${s.label}`, fontSize: 20, fontWeight: 'bold', color: accent, textAlign: 'center' },
+      { id: uid(), type: 'shape' as const, x: 60 + i * 220, y: 130, width: 200, height: 180, backgroundColor: t.card, shape: 'rounded' as const, borderRadius: 20, shadow: '0 4px 20px rgba(0,0,0,0.08)' },
+      // Accent top border on card
+      { id: uid(), type: 'shape' as const, x: 80 + i * 220, y: 140, width: 160, height: 3, gradient: t.gradient, shape: 'rectangle' as const, borderRadius: 2 },
+      { id: uid(), type: 'text' as const, x: 75 + i * 220, y: 165, width: 190, height: 60, content: s.value, fontSize: 42, fontWeight: 'bold', color: t.accent, textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+      { id: uid(), type: 'text' as const, x: 75 + i * 220, y: 230, width: 190, height: 30, content: s.label, fontSize: 14, fontWeight: 'bold', color: t.cardText, textAlign: 'center' },
+      { id: uid(), type: 'text' as const, x: 75 + i * 220, y: 260, width: 190, height: 30, content: s.sub || '', fontSize: 12, color: t.muted, textAlign: 'center' },
     ]),
+    // Bottom descriptive text
+    { id: uid(), type: 'text', x: 60, y: 350, width: 840, height: 60, content: 'Ces métriques reflètent notre engagement constant envers l\'excellence et l\'innovation dans chaque projet que nous entreprenons.', fontSize: 15, color: t.muted, lineHeight: 1.7, fontFamily: 'Plus Jakarta Sans' },
   ]
 });
 
-const quoteSlide = (bg: string, accent: string, text: string, _m: string, quote: string, author: string): PresentationSlide => ({
-  id: uid(), background: bg, elements: [
-    { id: uid(), type: 'text', x: 80, y: 80, width: 100, height: 100, content: '"', fontSize: 120, fontWeight: 'bold', color: accent, opacity: 0.3 },
-    { id: uid(), type: 'text', x: 100, y: 160, width: 760, height: 180, content: quote, fontSize: 28, fontStyle: 'italic', color: text, textAlign: 'center', lineHeight: 1.5 },
-    { id: uid(), type: 'shape', x: 430, y: 360, width: 100, height: 3, backgroundColor: accent, shape: 'rectangle' },
-    { id: uid(), type: 'text', x: 100, y: 380, width: 760, height: 40, content: `— ${author}`, fontSize: 18, color: accent, textAlign: 'center' },
+// --- SLIDE 6: Two-column content ---
+const splitContentSlide = (t: Theme, heading: string, leftTitle: string, leftItems: string[], rightTitle: string, rightItems: string[]): PresentationSlide => ({
+  id: uid(), background: t.light, elements: [
+    { id: uid(), type: 'shape', x: 0, y: 0, width: 960, height: 6, gradient: t.gradient, shape: 'rectangle' },
+    { id: uid(), type: 'text', x: 60, y: 35, width: 600, height: 45, content: heading, fontSize: 30, fontWeight: 'bold', color: t.lightText, fontFamily: 'Plus Jakarta Sans' },
+    // Left column
+    { id: uid(), type: 'shape', x: 60, y: 100, width: 420, height: 400, backgroundColor: t.accent + '08', shape: 'rounded', borderRadius: 20 },
+    { id: uid(), type: 'shape', x: 60, y: 100, width: 420, height: 4, gradient: t.gradient, shape: 'rectangle', borderRadius: 2 },
+    { id: uid(), type: 'text', x: 85, y: 120, width: 370, height: 35, content: leftTitle, fontSize: 20, fontWeight: 'bold', color: t.accent, fontFamily: 'Plus Jakarta Sans' },
+    ...leftItems.slice(0, 5).map((item, i) => ({
+      id: uid(), type: 'text' as const, x: 85, y: 170 + i * 55, width: 370, height: 45,
+      content: `→  ${item}`, fontSize: 14, color: t.lightMuted, lineHeight: 1.6, fontFamily: 'Plus Jakarta Sans',
+    })),
+    // Right column
+    { id: uid(), type: 'shape', x: 500, y: 100, width: 420, height: 400, backgroundColor: t.accent + '08', shape: 'rounded', borderRadius: 20 },
+    { id: uid(), type: 'shape', x: 500, y: 100, width: 420, height: 4, gradient: t.gradient, shape: 'rectangle', borderRadius: 2 },
+    { id: uid(), type: 'text', x: 525, y: 120, width: 370, height: 35, content: rightTitle, fontSize: 20, fontWeight: 'bold', color: t.accent, fontFamily: 'Plus Jakarta Sans' },
+    ...rightItems.slice(0, 5).map((item, i) => ({
+      id: uid(), type: 'text' as const, x: 525, y: 170 + i * 55, width: 370, height: 45,
+      content: `→  ${item}`, fontSize: 14, color: t.lightMuted, lineHeight: 1.6, fontFamily: 'Plus Jakarta Sans',
+    })),
   ]
 });
 
-const thanksSlide = (bg: string, accent: string, text: string, muted: string, msg: string, contact: string): PresentationSlide => ({
-  id: uid(), background: bg, elements: [
-    { id: uid(), type: 'shape', x: 300, y: -50, width: 400, height: 400, backgroundColor: accent, shape: 'circle', opacity: 0.08 },
-    { id: uid(), type: 'text', x: 80, y: 160, width: 800, height: 80, content: msg, fontSize: 52, fontWeight: 'bold', color: text, textAlign: 'center' },
-    { id: uid(), type: 'shape', x: 430, y: 255, width: 100, height: 3, backgroundColor: accent, shape: 'rectangle' },
-    { id: uid(), type: 'text', x: 80, y: 280, width: 800, height: 60, content: contact, fontSize: 18, color: muted, textAlign: 'center' },
-  ]
-});
-
-const twoColumnSlide = (bg: string, accent: string, text: string, muted: string, heading: string, leftContent: string, rightContent: string): PresentationSlide => ({
-  id: uid(), background: bg, elements: [
-    { id: uid(), type: 'shape', x: 0, y: 0, width: 960, height: 6, backgroundColor: accent, shape: 'rectangle' },
-    { id: uid(), type: 'text', x: 60, y: 30, width: 500, height: 50, content: heading, fontSize: 32, fontWeight: 'bold', color: text },
-    { id: uid(), type: 'shape', x: 60, y: 100, width: 420, height: 380, backgroundColor: accent + '10', shape: 'rounded', borderRadius: 16 },
-    { id: uid(), type: 'text', x: 80, y: 120, width: 380, height: 340, content: leftContent, fontSize: 16, color: muted, lineHeight: 1.5 },
-    { id: uid(), type: 'shape', x: 500, y: 100, width: 420, height: 380, backgroundColor: accent + '10', shape: 'rounded', borderRadius: 16 },
-    { id: uid(), type: 'text', x: 520, y: 120, width: 380, height: 340, content: rightContent, fontSize: 16, color: muted, lineHeight: 1.5 },
-  ]
-});
-
-const timelineSlide = (bg: string, accent: string, text: string, muted: string, heading: string, steps: {label: string; desc: string}[]): PresentationSlide => ({
-  id: uid(), background: bg, elements: [
-    { id: uid(), type: 'text', x: 60, y: 30, width: 500, height: 50, content: heading, fontSize: 32, fontWeight: 'bold', color: text },
-    { id: uid(), type: 'shape', x: 90, y: 110, width: 4, height: 380, backgroundColor: accent + '30', shape: 'rectangle' },
+// --- SLIDE 7: Timeline / Process ---
+const processSlide = (t: Theme, heading: string, steps: { title: string; desc: string }[]): PresentationSlide => ({
+  id: uid(), background: t.bg, elements: [
+    { id: uid(), type: 'shape', x: 800, y: -100, width: 300, height: 300, shape: 'circle', gradient: t.gradient, opacity: 0.07 },
+    { id: uid(), type: 'text', x: 60, y: 35, width: 500, height: 45, content: heading, fontSize: 30, fontWeight: 'bold', color: t.text, fontFamily: 'Plus Jakarta Sans' },
+    // Horizontal line
+    { id: uid(), type: 'shape', x: 60, y: 200, width: 840, height: 3, backgroundColor: t.accent + '30', shape: 'rectangle' },
+    // Steps
     ...steps.slice(0, 4).flatMap((s, i) => [
-      { id: uid(), type: 'shape' as const, x: 75, y: 115 + i * 95, width: 34, height: 34, backgroundColor: accent, shape: 'circle' as const },
-      { id: uid(), type: 'text' as const, x: 80, y: 120 + i * 95, width: 24, height: 24, content: `${i + 1}`, fontSize: 14, fontWeight: 'bold', color: '#fff', textAlign: 'center' },
-      { id: uid(), type: 'text' as const, x: 130, y: 115 + i * 95, width: 780, height: 80, content: `${s.label}\n${s.desc}`, fontSize: 16, color: muted },
+      // Circle on line
+      { id: uid(), type: 'shape' as const, x: 130 + i * 210, y: 185, width: 30, height: 30, gradient: t.gradient, shape: 'circle' as const },
+      { id: uid(), type: 'text' as const, x: 130 + i * 210, y: 191, width: 30, height: 20, content: `${i + 1}`, fontSize: 13, fontWeight: 'bold', color: '#fff', textAlign: 'center' },
+      // Title below
+      { id: uid(), type: 'text' as const, x: 75 + i * 210, y: 235, width: 140, height: 35, content: s.title, fontSize: 16, fontWeight: 'bold', color: t.text, textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+      // Desc
+      { id: uid(), type: 'text' as const, x: 65 + i * 210, y: 275, width: 160, height: 80, content: s.desc, fontSize: 12, color: t.muted, textAlign: 'center', lineHeight: 1.6 },
     ]),
   ]
 });
 
+// --- SLIDE 8: Quote ---
+const quoteSlide2 = (t: Theme, quote: string, author: string, role: string): PresentationSlide => ({
+  id: uid(), background: t.bg2, elements: [
+    // Large decorative quote mark
+    { id: uid(), type: 'shape', x: 50, y: 30, width: 120, height: 120, gradient: t.gradient, shape: 'circle', opacity: 0.1 },
+    { id: uid(), type: 'text', x: 55, y: 40, width: 120, height: 100, content: '"', fontSize: 140, fontWeight: 'bold', color: t.accent, opacity: 0.25, fontFamily: 'Georgia' },
+    // Quote text
+    { id: uid(), type: 'text', x: 100, y: 140, width: 760, height: 160, content: quote, fontSize: 28, fontStyle: 'italic', color: t.text, lineHeight: 1.6, fontFamily: 'Plus Jakarta Sans' },
+    // Divider
+    { id: uid(), type: 'shape', x: 100, y: 330, width: 80, height: 3, gradient: t.gradient, shape: 'rectangle', borderRadius: 2 },
+    // Author
+    { id: uid(), type: 'text', x: 100, y: 355, width: 400, height: 30, content: author, fontSize: 18, fontWeight: 'bold', color: t.text, fontFamily: 'Plus Jakarta Sans' },
+    { id: uid(), type: 'text', x: 100, y: 385, width: 400, height: 25, content: role, fontSize: 14, color: t.muted, fontFamily: 'Plus Jakarta Sans' },
+    // Decorative corner dots
+    ...Array.from({ length: 6 }, (_, i) => ({
+      id: uid(), type: 'shape' as const,
+      x: 840 + (i % 3) * 18, y: 440 + Math.floor(i / 3) * 18,
+      width: 5, height: 5, shape: 'circle' as const, backgroundColor: t.accent, opacity: 0.2,
+    })),
+  ]
+});
+
+// --- SLIDE 9: Team / Grid ---
+const teamSlide = (t: Theme, heading: string, members: { name: string; role: string }[]): PresentationSlide => ({
+  id: uid(), background: t.light, elements: [
+    { id: uid(), type: 'shape', x: 0, y: 0, width: 960, height: 6, gradient: t.gradient, shape: 'rectangle' },
+    { id: uid(), type: 'shape', x: 60, y: 35, width: 110, height: 28, gradient: t.gradient, shape: 'rounded', borderRadius: 14 },
+    { id: uid(), type: 'text', x: 60, y: 39, width: 110, height: 20, content: 'ÉQUIPE', fontSize: 10, fontWeight: 'bold', color: '#fff', textAlign: 'center', letterSpacing: 2 },
+    { id: uid(), type: 'text', x: 60, y: 80, width: 500, height: 45, content: heading, fontSize: 30, fontWeight: 'bold', color: t.lightText, fontFamily: 'Plus Jakarta Sans' },
+    // Team member cards
+    ...members.slice(0, 4).flatMap((m, i) => [
+      { id: uid(), type: 'shape' as const, x: 60 + i * 220, y: 150, width: 200, height: 260, backgroundColor: '#ffffff', shape: 'rounded' as const, borderRadius: 20, shadow: '0 4px 20px rgba(0,0,0,0.06)' },
+      // Avatar placeholder
+      { id: uid(), type: 'shape' as const, x: 110 + i * 220, y: 175, width: 100, height: 100, backgroundColor: t.accent + '15', shape: 'circle' as const },
+      { id: uid(), type: 'shape' as const, x: 130 + i * 220, y: 195, width: 60, height: 60, gradient: t.gradient, shape: 'circle' as const, opacity: 0.3 },
+      // Name
+      { id: uid(), type: 'text' as const, x: 75 + i * 220, y: 295, width: 170, height: 30, content: m.name, fontSize: 16, fontWeight: 'bold', color: t.lightText, textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+      // Role
+      { id: uid(), type: 'text' as const, x: 75 + i * 220, y: 325, width: 170, height: 30, content: m.role, fontSize: 12, color: t.accent, textAlign: 'center' },
+      // Social dots
+      ...Array.from({ length: 3 }, (_, j) => ({
+        id: uid(), type: 'shape' as const,
+        x: 135 + i * 220 + j * 25, y: 370,
+        width: 20, height: 20, shape: 'circle' as const, backgroundColor: t.accent + '20',
+      })),
+    ]),
+  ]
+});
+
+// --- SLIDE 10: Comparison / Before-After ---
+const comparisonSlide = (t: Theme, heading: string, leftLabel: string, leftItems: string[], rightLabel: string, rightItems: string[]): PresentationSlide => ({
+  id: uid(), background: t.bg, elements: [
+    { id: uid(), type: 'text', x: 60, y: 35, width: 500, height: 45, content: heading, fontSize: 30, fontWeight: 'bold', color: t.text, fontFamily: 'Plus Jakarta Sans' },
+    // VS circle
+    { id: uid(), type: 'shape', x: 445, y: 250, width: 70, height: 70, gradient: t.gradient, shape: 'circle' },
+    { id: uid(), type: 'text', x: 445, y: 262, width: 70, height: 30, content: 'VS', fontSize: 18, fontWeight: 'bold', color: '#fff', textAlign: 'center' },
+    // Left
+    { id: uid(), type: 'shape', x: 60, y: 100, width: 380, height: 400, backgroundColor: t.card, shape: 'rounded', borderRadius: 20 },
+    { id: uid(), type: 'text', x: 80, y: 120, width: 340, height: 35, content: leftLabel, fontSize: 22, fontWeight: 'bold', color: '#ef4444', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+    { id: uid(), type: 'shape', x: 140, y: 162, width: 220, height: 2, backgroundColor: '#ef4444', shape: 'rectangle', opacity: 0.3 },
+    ...leftItems.slice(0, 4).map((item, i) => ({
+      id: uid(), type: 'text' as const, x: 90, y: 180 + i * 65, width: 330, height: 50,
+      content: `✕  ${item}`, fontSize: 14, color: t.muted, lineHeight: 1.6,
+    })),
+    // Right
+    { id: uid(), type: 'shape', x: 520, y: 100, width: 380, height: 400, backgroundColor: t.card, shape: 'rounded', borderRadius: 20 },
+    { id: uid(), type: 'text', x: 540, y: 120, width: 340, height: 35, content: rightLabel, fontSize: 22, fontWeight: 'bold', color: t.accent, textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+    { id: uid(), type: 'shape', x: 600, y: 162, width: 220, height: 2, gradient: t.gradient, shape: 'rectangle' },
+    ...rightItems.slice(0, 4).map((item, i) => ({
+      id: uid(), type: 'text' as const, x: 550, y: 180 + i * 65, width: 330, height: 50,
+      content: `✓  ${item}`, fontSize: 14, color: t.text, lineHeight: 1.6,
+    })),
+  ]
+});
+
+// --- SLIDE 11: CTA / Contact ---
+const ctaSlide = (t: Theme, headline: string, sub: string, email: string, website: string): PresentationSlide => ({
+  id: uid(), background: t.bg, elements: [
+    // Large gradient bg circle
+    { id: uid(), type: 'shape', x: 280, y: -50, width: 400, height: 400, shape: 'circle', gradient: t.gradient, opacity: 0.08 },
+    { id: uid(), type: 'shape', x: -100, y: 300, width: 300, height: 300, shape: 'circle', gradient: t.gradient2, opacity: 0.06 },
+    { id: uid(), type: 'shape', x: 700, y: 350, width: 350, height: 350, shape: 'circle', gradient: t.gradient, opacity: 0.05 },
+    // Headline
+    { id: uid(), type: 'text', x: 80, y: 140, width: 800, height: 80, content: headline, fontSize: 48, fontWeight: 'bold', color: t.text, textAlign: 'center', fontFamily: 'Plus Jakarta Sans', letterSpacing: -1 },
+    // Divider
+    { id: uid(), type: 'shape', x: 430, y: 235, width: 100, height: 4, gradient: t.gradient, shape: 'rectangle', borderRadius: 2 },
+    // Sub
+    { id: uid(), type: 'text', x: 180, y: 260, width: 600, height: 40, content: sub, fontSize: 18, color: t.muted, textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+    // CTA button
+    { id: uid(), type: 'shape', x: 340, y: 330, width: 280, height: 52, gradient: t.gradient, shape: 'rounded', borderRadius: 26, shadow: '0 8px 25px rgba(0,0,0,0.15)' },
+    { id: uid(), type: 'text', x: 340, y: 342, width: 280, height: 28, content: 'Commencer maintenant', fontSize: 16, fontWeight: 'bold', color: '#ffffff', textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+    // Contact info
+    { id: uid(), type: 'text', x: 200, y: 420, width: 560, height: 25, content: `${email}  ·  ${website}`, fontSize: 14, color: t.muted, textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+    // Social icons row (dots as placeholder)
+    ...Array.from({ length: 4 }, (_, i) => ({
+      id: uid(), type: 'shape' as const,
+      x: 410 + i * 40, y: 470,
+      width: 28, height: 28, shape: 'circle' as const, backgroundColor: t.accent + '25',
+    })),
+  ]
+});
+
+// --- SLIDE: Icon grid (4 items) ---
+const iconGridSlide = (t: Theme, heading: string, items: { title: string; desc: string }[]): PresentationSlide => ({
+  id: uid(), background: t.light, elements: [
+    { id: uid(), type: 'shape', x: 0, y: 0, width: 960, height: 6, gradient: t.gradient, shape: 'rectangle' },
+    { id: uid(), type: 'text', x: 60, y: 35, width: 500, height: 45, content: heading, fontSize: 30, fontWeight: 'bold', color: t.lightText, fontFamily: 'Plus Jakarta Sans' },
+    ...items.slice(0, 4).flatMap((item, i) => {
+      const col = i % 2;
+      const row = Math.floor(i / 2);
+      return [
+        { id: uid(), type: 'shape' as const, x: 60 + col * 450, y: 110 + row * 210, width: 420, height: 190, backgroundColor: '#ffffff', shape: 'rounded' as const, borderRadius: 18, shadow: '0 2px 15px rgba(0,0,0,0.05)' },
+        // Icon placeholder
+        { id: uid(), type: 'shape' as const, x: 85 + col * 450, y: 135 + row * 210, width: 50, height: 50, gradient: t.gradient, shape: 'rounded' as const, borderRadius: 14 },
+        { id: uid(), type: 'text' as const, x: 155 + col * 450, y: 135 + row * 210, width: 300, height: 30, content: item.title, fontSize: 18, fontWeight: 'bold', color: t.lightText, fontFamily: 'Plus Jakarta Sans' },
+        { id: uid(), type: 'text' as const, x: 155 + col * 450, y: 170 + row * 210, width: 300, height: 80, content: item.desc, fontSize: 13, color: t.lightMuted, lineHeight: 1.7 },
+      ];
+    }),
+  ]
+});
+
+// --- SLIDE: Big number highlight ---
+const bigNumberSlide = (t: Theme, number: string, label: string, description: string): PresentationSlide => ({
+  id: uid(), background: t.bg, elements: [
+    { id: uid(), type: 'shape', x: 200, y: -80, width: 560, height: 560, shape: 'circle', gradient: t.gradient, opacity: 0.06 },
+    { id: uid(), type: 'text', x: 80, y: 100, width: 800, height: 130, content: number, fontSize: 120, fontWeight: 'bold', color: t.accent, textAlign: 'center', fontFamily: 'Plus Jakarta Sans', letterSpacing: -3 },
+    { id: uid(), type: 'shape', x: 430, y: 240, width: 100, height: 4, gradient: t.gradient, shape: 'rectangle', borderRadius: 2 },
+    { id: uid(), type: 'text', x: 180, y: 265, width: 600, height: 40, content: label, fontSize: 28, fontWeight: 'bold', color: t.text, textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+    { id: uid(), type: 'text', x: 180, y: 320, width: 600, height: 60, content: description, fontSize: 16, color: t.muted, textAlign: 'center', lineHeight: 1.7, fontFamily: 'Plus Jakarta Sans' },
+  ]
+});
+
+// --- SLIDE: Section divider ---
+const sectionDividerSlide = (t: Theme, sectionNum: string, sectionTitle: string): PresentationSlide => ({
+  id: uid(), background: t.bg2, elements: [
+    // Large accent circle
+    { id: uid(), type: 'shape', x: 580, y: -100, width: 500, height: 500, shape: 'circle', gradient: t.gradient, opacity: 0.1 },
+    { id: uid(), type: 'shape', x: -80, y: 300, width: 300, height: 300, shape: 'circle', gradient: t.gradient2, opacity: 0.06 },
+    // Number
+    { id: uid(), type: 'text', x: 60, y: 150, width: 120, height: 80, content: sectionNum, fontSize: 72, fontWeight: 'bold', color: t.accent, fontFamily: 'Plus Jakarta Sans', opacity: 0.4 },
+    // Title
+    { id: uid(), type: 'text', x: 60, y: 230, width: 600, height: 60, content: sectionTitle, fontSize: 42, fontWeight: 'bold', color: t.text, fontFamily: 'Plus Jakarta Sans' },
+    { id: uid(), type: 'shape', x: 60, y: 305, width: 80, height: 4, gradient: t.gradient, shape: 'rectangle', borderRadius: 2 },
+  ]
+});
+
 // ═══════════════════════════════════════════
-// THEME PALETTES
+// THEME DEFINITIONS - Distinct visual identities
 // ═══════════════════════════════════════════
 
-const themes = {
-  indigo:   { bg: '#0f0f23', accent: '#6366f1', text: '#ffffff', muted: '#a5b4fc', bgLight: '#ffffff', textDark: '#1e293b', mutedDark: '#475569' },
-  blue:     { bg: '#0c4a6e', accent: '#0ea5e9', text: '#ffffff', muted: '#bae6fd', bgLight: '#ffffff', textDark: '#0c4a6e', mutedDark: '#475569' },
-  green:    { bg: '#064e3b', accent: '#10b981', text: '#ffffff', muted: '#a7f3d0', bgLight: '#ffffff', textDark: '#064e3b', mutedDark: '#475569' },
-  red:      { bg: '#450a0a', accent: '#ef4444', text: '#ffffff', muted: '#fca5a5', bgLight: '#ffffff', textDark: '#450a0a', mutedDark: '#475569' },
-  purple:   { bg: '#1e1b4b', accent: '#8b5cf6', text: '#ffffff', muted: '#c4b5fd', bgLight: '#ffffff', textDark: '#1e1b4b', mutedDark: '#475569' },
-  orange:   { bg: '#431407', accent: '#f97316', text: '#ffffff', muted: '#fed7aa', bgLight: '#ffffff', textDark: '#431407', mutedDark: '#475569' },
-  pink:     { bg: '#500724', accent: '#ec4899', text: '#ffffff', muted: '#fbcfe8', bgLight: '#ffffff', textDark: '#500724', mutedDark: '#475569' },
-  teal:     { bg: '#042f2e', accent: '#14b8a6', text: '#ffffff', muted: '#99f6e4', bgLight: '#ffffff', textDark: '#042f2e', mutedDark: '#475569' },
-  amber:    { bg: '#451a03', accent: '#f59e0b', text: '#ffffff', muted: '#fde68a', bgLight: '#ffffff', textDark: '#451a03', mutedDark: '#475569' },
-  slate:    { bg: '#0f172a', accent: '#64748b', text: '#ffffff', muted: '#94a3b8', bgLight: '#ffffff', textDark: '#0f172a', mutedDark: '#475569' },
-  rose:     { bg: '#4c0519', accent: '#f43f5e', text: '#ffffff', muted: '#fda4af', bgLight: '#ffffff', textDark: '#4c0519', mutedDark: '#475569' },
-  cyan:     { bg: '#083344', accent: '#06b6d4', text: '#ffffff', muted: '#a5f3fc', bgLight: '#ffffff', textDark: '#083344', mutedDark: '#475569' },
-  lime:     { bg: '#1a2e05', accent: '#84cc16', text: '#ffffff', muted: '#d9f99d', bgLight: '#ffffff', textDark: '#1a2e05', mutedDark: '#475569' },
-  black:    { bg: '#000000', accent: '#ffffff', text: '#ffffff', muted: '#a1a1aa', bgLight: '#ffffff', textDark: '#18181b', mutedDark: '#52525b' },
-  warmGray: { bg: '#1c1917', accent: '#a8a29e', text: '#ffffff', muted: '#d6d3d1', bgLight: '#fafaf9', textDark: '#1c1917', mutedDark: '#57534e' },
+const THEMES: Record<string, Theme> = {
+  // Dark elegant tech - deep navy with electric blue
+  darkTech: {
+    bg: '#0a0e1a', bg2: '#0f1425', accent: '#3b82f6', accent2: '#60a5fa',
+    text: '#e8edf5', muted: '#7d8ba5', card: '#151b2e', cardText: '#c8d5e8',
+    light: '#f0f4f8', lightText: '#1a2332', lightMuted: '#5a6b80',
+    gradient: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', gradient2: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
+  },
+  // Warm corporate - deep brown with gold
+  warmCorp: {
+    bg: '#1a1410', bg2: '#211a14', accent: '#d4a574', accent2: '#e8c9a0',
+    text: '#f5efe8', muted: '#a09080', card: '#2a2118', cardText: '#d4c4b0',
+    light: '#faf6f2', lightText: '#2a1f15', lightMuted: '#7a6a55',
+    gradient: 'linear-gradient(135deg, #d4a574, #e8967a)', gradient2: 'linear-gradient(135deg, #c68e5e, #d4a574)',
+  },
+  // Fresh green - nature inspired
+  freshGreen: {
+    bg: '#0a1a12', bg2: '#0f2018', accent: '#10b981', accent2: '#34d399',
+    text: '#e5f5ed', muted: '#6b9a80', card: '#142820', cardText: '#a5d4b8',
+    light: '#f0faf5', lightText: '#0f2a1a', lightMuted: '#4a7a5a',
+    gradient: 'linear-gradient(135deg, #10b981, #06b6d4)', gradient2: 'linear-gradient(135deg, #059669, #10b981)',
+  },
+  // Vibrant purple - creative energy
+  vibrantPurple: {
+    bg: '#12081f', bg2: '#1a0e2e', accent: '#a855f7', accent2: '#c084fc',
+    text: '#f0e8ff', muted: '#8a6aaf', card: '#1f1035', cardText: '#c8b0e5',
+    light: '#f8f5ff', lightText: '#1a0e2e', lightMuted: '#6a5085',
+    gradient: 'linear-gradient(135deg, #a855f7, #ec4899)', gradient2: 'linear-gradient(135deg, #8b5cf6, #a855f7)',
+  },
+  // Sunset orange - warm dynamic
+  sunsetOrange: {
+    bg: '#1a0e08', bg2: '#221410', accent: '#f97316', accent2: '#fb923c',
+    text: '#fef2e8', muted: '#b08060', card: '#2a1810', cardText: '#dab090',
+    light: '#fff8f2', lightText: '#2a1508', lightMuted: '#8a6545',
+    gradient: 'linear-gradient(135deg, #f97316, #ef4444)', gradient2: 'linear-gradient(135deg, #ea580c, #f97316)',
+  },
+  // Ocean teal - calm professional
+  oceanTeal: {
+    bg: '#061820', bg2: '#0a2030', accent: '#14b8a6', accent2: '#2dd4bf',
+    text: '#e0f5f0', muted: '#608a82', card: '#0f2a35', cardText: '#98d4c8',
+    light: '#f0faf8', lightText: '#082820', lightMuted: '#4a756a',
+    gradient: 'linear-gradient(135deg, #14b8a6, #3b82f6)', gradient2: 'linear-gradient(135deg, #0d9488, #14b8a6)',
+  },
+  // Rose pink - elegant feminine
+  rosePink: {
+    bg: '#1a080f', bg2: '#220e18', accent: '#ec4899', accent2: '#f472b6',
+    text: '#fce8f0', muted: '#a06080', card: '#2a1020', cardText: '#e0a0c0',
+    light: '#fef5f8', lightText: '#2a0e18', lightMuted: '#8a4a65',
+    gradient: 'linear-gradient(135deg, #ec4899, #a855f7)', gradient2: 'linear-gradient(135deg, #db2777, #ec4899)',
+  },
+  // Midnight slate - minimal modern
+  midnightSlate: {
+    bg: '#0f1117', bg2: '#14171f', accent: '#94a3b8', accent2: '#cbd5e1',
+    text: '#e2e8f0', muted: '#64748b', card: '#1e2129', cardText: '#94a3b8',
+    light: '#f8fafc', lightText: '#0f172a', lightMuted: '#64748b',
+    gradient: 'linear-gradient(135deg, #64748b, #94a3b8)', gradient2: 'linear-gradient(135deg, #475569, #64748b)',
+  },
+  // Electric cyan - futuristic
+  electricCyan: {
+    bg: '#050e14', bg2: '#08141c', accent: '#06b6d4', accent2: '#22d3ee',
+    text: '#e0f7fa', muted: '#508a96', card: '#0c1e28', cardText: '#80d4e4',
+    light: '#f0fafe', lightText: '#062028', lightMuted: '#3a7a8a',
+    gradient: 'linear-gradient(135deg, #06b6d4, #8b5cf6)', gradient2: 'linear-gradient(135deg, #0891b2, #06b6d4)',
+  },
+  // Ruby red - bold powerful
+  rubyRed: {
+    bg: '#1a0808', bg2: '#220e0e', accent: '#ef4444', accent2: '#f87171',
+    text: '#fce8e8', muted: '#a06060', card: '#2a1010', cardText: '#e0a0a0',
+    light: '#fef5f5', lightText: '#2a0e0e', lightMuted: '#8a4545',
+    gradient: 'linear-gradient(135deg, #ef4444, #f97316)', gradient2: 'linear-gradient(135deg, #dc2626, #ef4444)',
+  },
+  // Lime green - energetic
+  limeEnergy: {
+    bg: '#0a1408', bg2: '#101c0e', accent: '#84cc16', accent2: '#a3e635',
+    text: '#f0f8e5', muted: '#6a9050', card: '#152210', cardText: '#a5cc80',
+    light: '#f8fcf2', lightText: '#141e08', lightMuted: '#5a7a38',
+    gradient: 'linear-gradient(135deg, #84cc16, #10b981)', gradient2: 'linear-gradient(135deg, #65a30d, #84cc16)',
+  },
+  // Amber gold - luxury
+  amberGold: {
+    bg: '#141008', bg2: '#1c160c', accent: '#f59e0b', accent2: '#fbbf24',
+    text: '#fef4e0', muted: '#a08840', card: '#221c10', cardText: '#d4b870',
+    light: '#fffbf0', lightText: '#1c1408', lightMuted: '#7a6830',
+    gradient: 'linear-gradient(135deg, #f59e0b, #ef4444)', gradient2: 'linear-gradient(135deg, #d97706, #f59e0b)',
+  },
 };
 
 // ═══════════════════════════════════════════
-// CATEGORIES & TEMPLATE GENERATORS
+// TEMPLATE FACTORY - Generates 10+ slides per template
 // ═══════════════════════════════════════════
 
-const businessTemplates: PresentationTemplate[] = [];
-const educationTemplates: PresentationTemplate[] = [];
-const marketingTemplates: PresentationTemplate[] = [];
-const creativTemplates: PresentationTemplate[] = [];
-const techTemplates: PresentationTemplate[] = [];
-const medicalTemplates: PresentationTemplate[] = [];
-const immobilierTemplates: PresentationTemplate[] = [];
-const juridiqueTemplates: PresentationTemplate[] = [];
-const restaurantTemplates: PresentationTemplate[] = [];
-const modeTemplates: PresentationTemplate[] = [];
-const sportTemplates: PresentationTemplate[] = [];
-const eventTemplates: PresentationTemplate[] = [];
-const financeTemplates: PresentationTemplate[] = [];
-const rseTemplates: PresentationTemplate[] = [];
-const associationTemplates: PresentationTemplate[] = [];
+interface TemplateConfig {
+  id: string; name: string; desc: string; cat: string; theme: Theme;
+  heroTitle: string; heroSub: string;
+  agendaItems: string[];
+  aboutTitle: string; aboutParagraphs: string[];
+  featureHeading: string; features: { num: string; title: string; desc: string }[];
+  metricsHeading: string; metrics: { value: string; label: string; sub?: string }[];
+  splitHeading: string; splitLeft: string; splitLeftItems: string[]; splitRight: string; splitRightItems: string[];
+  processHeading: string; processSteps: { title: string; desc: string }[];
+  quote: string; quoteAuthor: string; quoteRole: string;
+  teamHeading: string; team: { name: string; role: string }[];
+  compHeading: string; compLeft: string; compLeftItems: string[]; compRight: string; compRightItems: string[];
+  ctaHeadline: string; ctaSub: string; ctaEmail: string; ctaWeb: string;
+  // Extra slides
+  iconGridHeading?: string; iconGridItems?: { title: string; desc: string }[];
+  bigNumber?: string; bigLabel?: string; bigDesc?: string;
+  sectionNum?: string; sectionTitle?: string;
+}
 
-// ─── BUSINESS ─────────────────────────────
-
-const bizNames = [
-  ['Pitch Deck Startup', '🚀', 'Présentation investisseurs moderne'],
-  ['Rapport Annuel', '📊', 'Bilan et perspectives stratégiques'],
-  ['Proposition Commerciale', '💼', 'Offre client structurée'],
-  ['Plan Stratégique', '🎯', 'Vision et objectifs long terme'],
-  ['Bilan Financier', '💰', 'Résultats et prévisions'],
-  ['Comité de Direction', '👔', 'Rapport pour le CODIR'],
-  ['Business Plan', '📋', 'Plan d\'affaires complet'],
-  ['Analyse Concurrentielle', '🔍', 'Étude de marché détaillée'],
-  ['Roadmap Produit', '🗺️', 'Feuille de route et jalons'],
-  ['Présentation Investisseurs', '💎', 'Series A/B pitch deck'],
-  ['Revue Trimestrielle', '📈', 'Performance Q1-Q4'],
-  ['Onboarding Client', '🤝', 'Accueil nouveau client'],
-  ['Analyse SWOT', '⚡', 'Forces, faiblesses, opportunités'],
-  ['Compte-Rendu Réunion', '📝', 'Minutes et décisions'],
-  ['Présentation Partenariat', '🔗', 'Collaboration inter-entreprises'],
-  ['KPI Dashboard', '📉', 'Tableau de bord indicateurs'],
-  ['Restructuration', '🏗️', 'Plan de transformation'],
-  ['Fusion & Acquisition', '🔄', 'Due diligence et intégration'],
-  ['Expansion Internationale', '🌍', 'Stratégie d\'internationalisation'],
-  ['Innovation Lab', '💡', 'Projets R&D et innovation'],
-];
-
-const bizThemes = [themes.indigo, themes.blue, themes.slate, themes.purple, themes.teal];
-
-bizNames.forEach(([name, thumb, desc], i) => {
-  const t = bizThemes[i % bizThemes.length];
-  businessTemplates.push({
-    id: `biz-${i}`, name: name as string, description: desc as string, category: 'Business',
-    thumbnail: thumb as string, color: t.accent,
-    slides: [
-      titleSlide(t.bg, t.accent, t.text, t.muted, name as string, desc as string),
-      contentSlide(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Contexte', ['Situation actuelle du marché', 'Enjeux identifiés', 'Opportunités à saisir', 'Actions recommandées']),
-      threeCards(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Points Clés', [
-        { icon: '📊', title: 'Analyse', desc: 'Données et insights' },
-        { icon: '🎯', title: 'Objectifs', desc: 'Cibles mesurables' },
-        { icon: '🚀', title: 'Actions', desc: 'Plan d\'exécution' },
-      ]),
-      statsSlide(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Résultats', [
-        { value: '+32%', label: 'Croissance' }, { value: '2.4M€', label: 'CA' },
-        { value: '156', label: 'Employés' }, { value: '4.9/5', label: 'Satisfaction' },
-      ]),
-      thanksSlide(t.bg, t.accent, t.text, t.muted, 'Merci', 'contact@entreprise.com · www.entreprise.com'),
-    ]
-  });
+const buildTemplate = (c: TemplateConfig): PresentationTemplate => ({
+  id: c.id, name: c.name, description: c.desc, category: c.cat,
+  thumbnail: c.theme.accent, color: c.theme.accent,
+  slides: [
+    heroSlide(c.theme, c.heroTitle, c.heroSub),
+    agendaSlide(c.theme, c.agendaItems),
+    aboutSlide(c.theme, c.aboutTitle, c.aboutParagraphs),
+    featureCardsSlide(c.theme, c.featureHeading, c.features),
+    metricsSlide(c.theme, c.metricsHeading, c.metrics),
+    splitContentSlide(c.theme, c.splitHeading, c.splitLeft, c.splitLeftItems, c.splitRight, c.splitRightItems),
+    ...(c.sectionNum ? [sectionDividerSlide(c.theme, c.sectionNum, c.sectionTitle || '')] : []),
+    processSlide(c.theme, c.processHeading, c.processSteps),
+    quoteSlide2(c.theme, c.quote, c.quoteAuthor, c.quoteRole),
+    ...(c.iconGridHeading ? [iconGridSlide(c.theme, c.iconGridHeading, c.iconGridItems || [])] : []),
+    ...(c.bigNumber ? [bigNumberSlide(c.theme, c.bigNumber, c.bigLabel || '', c.bigDesc || '')] : []),
+    teamSlide(c.theme, c.teamHeading, c.team),
+    comparisonSlide(c.theme, c.compHeading, c.compLeft, c.compLeftItems, c.compRight, c.compRightItems),
+    ctaSlide(c.theme, c.ctaHeadline, c.ctaSub, c.ctaEmail, c.ctaWeb),
+  ],
 });
 
-// ─── EDUCATION ────────────────────────────
+// ═══════════════════════════════════════════
+// ALL TEMPLATES
+// ═══════════════════════════════════════════
 
-const eduNames = [
-  ['Cours Universitaire', '🎓', 'Support de cours académique'],
-  ['Soutenance Mémoire', '🎤', 'Présentation académique formelle'],
-  ['Formation Continue', '📚', 'Module de formation professionnelle'],
-  ['Atelier Pédagogique', '🧩', 'Workshop interactif'],
-  ['Conférence Scientifique', '🔬', 'Communication scientifique'],
-  ['Projet Étudiant', '👨‍🎓', 'Présentation de projet'],
-  ['Séminaire de Recherche', '🧪', 'Résultats de recherche'],
-  ['Exposé Oral', '🗣️', 'Présentation orale structurée'],
-  ['Quiz Interactif', '❓', 'Questions-réponses pédagogique'],
-  ['Rapport de Stage', '📑', 'Bilan de stage professionnel'],
-  ['Thèse Doctorale', '🎓', 'Soutenance de thèse PhD'],
-  ['Tutoriel Pratique', '🛠️', 'Guide pas à pas'],
-  ['Revue de Littérature', '📖', 'État de l\'art académique'],
-  ['Programme de Cours', '📅', 'Syllabus et planning'],
-  ['Évaluation des Acquis', '✅', 'Bilan de compétences'],
-  ['Webinaire Éducatif', '🖥️', 'Formation en ligne'],
-  ['Projet de Groupe', '👥', 'Travail collaboratif'],
-  ['Méthodologie', '🔧', 'Approche et outils'],
-  ['Étude de Cas', '📋', 'Analyse de situation réelle'],
-  ['Orientation Scolaire', '🧭', 'Guide d\'orientation'],
+const allTemplates: PresentationTemplate[] = [];
+
+// ─── BUSINESS (20 templates) ─────────────
+
+const bizConfigs: Omit<TemplateConfig, 'theme'>[] = [
+  {
+    id: 'biz-0', name: 'Pitch Deck Startup', desc: 'Présentation investisseurs moderne', cat: 'Business',
+    heroTitle: 'Pitch Deck\nStartup', heroSub: 'Une solution innovante pour transformer votre industrie et conquérir de nouveaux marchés.',
+    agendaItems: ['Vision & Mission', 'Problème identifié', 'Notre solution', 'Modèle économique', 'Traction & Métriques', 'Demande de financement'],
+    aboutTitle: 'Notre Vision', aboutParagraphs: ['Nous croyons en un monde où la technologie simplifie la vie quotidienne de chaque individu.', 'Notre plateforme révolutionne la façon dont les entreprises interagissent avec leurs clients.', 'Fondée en 2023, notre startup a déjà conquis plus de 10 000 utilisateurs actifs.'],
+    featureHeading: 'Notre Solution', features: [
+      { num: '01', title: 'Automatisation', desc: 'Réduisez vos coûts opérationnels de 60% grâce à notre IA propriétaire.' },
+      { num: '02', title: 'Analytics', desc: 'Tableau de bord en temps réel avec des insights actionnables.' },
+      { num: '03', title: 'Intégration', desc: 'Compatible avec +200 outils du marché en quelques clics.' },
+    ],
+    metricsHeading: 'Traction', metrics: [
+      { value: '10K+', label: 'Utilisateurs', sub: 'actifs mensuels' },
+      { value: '350%', label: 'Croissance', sub: 'année sur année' },
+      { value: '2.4M€', label: 'ARR', sub: 'revenu récurrent' },
+      { value: '4.9/5', label: 'Satisfaction', sub: 'note moyenne' },
+    ],
+    splitHeading: 'Modèle Économique', splitLeft: 'Revenus', splitLeftItems: ['Abonnements SaaS mensuels', 'Licences enterprise', 'Services professionnels', 'API marketplace'], splitRight: 'Avantages', splitRightItems: ['Revenus récurrents prévisibles', 'Marges élevées (+80%)', 'Faible coût d\'acquisition', 'Fort potentiel d\'upsell'],
+    processHeading: 'Roadmap Produit', processSteps: [
+      { title: 'Q1 2025', desc: 'MVP & premiers clients early-adopters' },
+      { title: 'Q2 2025', desc: 'Lancement public & campagne marketing' },
+      { title: 'Q3 2025', desc: 'Expansion internationale' },
+      { title: 'Q4 2025', desc: 'Série A & nouvelle verticale' },
+    ],
+    quote: 'Cette solution a transformé notre façon de travailler. Les gains de productivité sont impressionnants.', quoteAuthor: 'Marie Dupont', quoteRole: 'CEO, TechCorp',
+    iconGridHeading: 'Avantages Compétitifs', iconGridItems: [
+      { title: 'Technologie propriétaire', desc: 'Notre algorithme breveté offre des performances 10x supérieures.' },
+      { title: 'Équipe expérimentée', desc: '15 ans d\'expérience cumulée dans le secteur.' },
+      { title: 'Time-to-market', desc: 'Déploiement en 48h vs 3 mois chez la concurrence.' },
+      { title: 'Scalabilité prouvée', desc: 'Architecture cloud-native avec auto-scaling.' },
+    ],
+    bigNumber: '60%', bigLabel: 'Réduction des coûts', bigDesc: 'En moyenne, nos clients réduisent leurs coûts opérationnels de 60% dès la première année.',
+    sectionNum: '02', sectionTitle: 'Stratégie & Execution',
+    teamHeading: 'L\'Équipe Fondatrice', team: [
+      { name: 'Pierre Martin', role: 'CEO & Co-fondateur' },
+      { name: 'Sophie Chen', role: 'CTO & Co-fondatrice' },
+      { name: 'Lucas Bernard', role: 'COO' },
+      { name: 'Emma Petit', role: 'CMO' },
+    ],
+    compHeading: 'Pourquoi Nous ?', compLeft: 'Solutions traditionnelles', compLeftItems: ['Déploiement en 3-6 mois', 'Coûts élevés d\'intégration', 'Interface complexe', 'Support limité'],
+    compRight: 'Notre Solution', compRightItems: ['Déploiement en 48 heures', 'Intégration en 1 clic', 'Interface intuitive', 'Support 24/7 dédié'],
+    ctaHeadline: 'Prêts à investir ?', ctaSub: 'Nous recherchons 3M€ pour accélérer notre croissance', ctaEmail: 'invest@startup.com', ctaWeb: 'www.startup.com',
+  },
+  {
+    id: 'biz-1', name: 'Rapport Annuel', desc: 'Bilan et perspectives stratégiques', cat: 'Business',
+    heroTitle: 'Rapport\nAnnuel 2025', heroSub: 'Bilan de l\'année écoulée, résultats financiers et perspectives stratégiques pour l\'avenir.',
+    agendaItems: ['Message du Président', 'Faits marquants', 'Résultats financiers', 'Innovation & R&D', 'Engagements RSE', 'Perspectives 2026'],
+    aboutTitle: 'Message du Président', aboutParagraphs: ['L\'année 2025 a été marquée par une croissance exceptionnelle et des avancées significatives.', 'Notre stratégie d\'innovation continue de porter ses fruits avec le lancement de 3 nouveaux produits.', 'Je tiens à remercier l\'ensemble de nos collaborateurs pour leur engagement remarquable.'],
+    featureHeading: 'Faits Marquants', features: [
+      { num: '01', title: 'Expansion', desc: 'Ouverture de 5 nouveaux bureaux en Europe et en Asie-Pacifique.' },
+      { num: '02', title: 'Innovation', desc: 'Lancement de notre plateforme IA de nouvelle génération.' },
+      { num: '03', title: 'Talents', desc: '+200 recrutements dans des postes stratégiques.' },
+    ],
+    metricsHeading: 'Résultats Financiers', metrics: [
+      { value: '45M€', label: 'Chiffre d\'affaires', sub: '+28% vs N-1' },
+      { value: '8.2M€', label: 'EBITDA', sub: 'marge de 18%' },
+      { value: '12M€', label: 'Investissements', sub: 'R&D et expansion' },
+      { value: '1,200', label: 'Collaborateurs', sub: '+20% d\'effectif' },
+    ],
+    splitHeading: 'Répartition du CA', splitLeft: 'Par segment', splitLeftItems: ['Enterprise (45%)', 'PME (30%)', 'Services (15%)', 'International (10%)'], splitRight: 'Par zone', splitRightItems: ['France (55%)', 'Europe (25%)', 'Amérique du Nord (12%)', 'Asie-Pacifique (8%)'],
+    processHeading: 'Jalons de l\'Année', processSteps: [
+      { title: 'T1', desc: 'Acquisition stratégique de DataCorp' },
+      { title: 'T2', desc: 'Lancement produit V3.0' },
+      { title: 'T3', desc: 'Certification ISO 27001' },
+      { title: 'T4', desc: 'Record de CA trimestriel' },
+    ],
+    quote: 'Cette année confirme la pertinence de notre stratégie et la force de notre exécution.', quoteAuthor: 'Jean-Marc Duval', quoteRole: 'Président Directeur Général',
+    iconGridHeading: 'Piliers Stratégiques', iconGridItems: [
+      { title: 'Innovation continue', desc: '15% du CA investi en R&D pour rester à la pointe.' },
+      { title: 'Excellence client', desc: 'NPS de 72, dans le top 10% de notre industrie.' },
+      { title: 'Développement durable', desc: '-30% d\'empreinte carbone en 2 ans.' },
+      { title: 'Capital humain', desc: 'Certification Great Place to Work obtenue.' },
+    ],
+    bigNumber: '+28%', bigLabel: 'Croissance du chiffre d\'affaires', bigDesc: 'Une année record qui confirme l\'accélération de notre dynamique commerciale.',
+    sectionNum: '03', sectionTitle: 'Perspectives & Ambitions',
+    teamHeading: 'Comité de Direction', team: [
+      { name: 'Jean-Marc Duval', role: 'PDG' },
+      { name: 'Claire Moreau', role: 'Directrice Financière' },
+      { name: 'Antoine Roux', role: 'Directeur Commercial' },
+      { name: 'Nadia Benmoussa', role: 'Directrice RH' },
+    ],
+    compHeading: 'Évolution 2024 vs 2025', compLeft: 'Année 2024', compLeftItems: ['CA: 35M€', 'Effectif: 1 000', '3 bureaux', 'Marché national'],
+    compRight: 'Année 2025', compRightItems: ['CA: 45M€ (+28%)', 'Effectif: 1 200', '8 bureaux', 'Présence internationale'],
+    ctaHeadline: 'Ensemble, visons plus haut', ctaSub: 'Découvrez notre plan stratégique 2026-2028', ctaEmail: 'direction@entreprise.com', ctaWeb: 'www.entreprise.com/rapport',
+  },
+  {
+    id: 'biz-2', name: 'Proposition Commerciale', desc: 'Offre client structurée et persuasive', cat: 'Business',
+    heroTitle: 'Proposition\nCommerciale', heroSub: 'Une offre sur-mesure pour répondre à vos défis et accélérer votre transformation digitale.',
+    agendaItems: ['Compréhension de vos besoins', 'Notre approche', 'Solution proposée', 'Méthodologie', 'Planning & Budget', 'Prochaines étapes'],
+    aboutTitle: 'Votre Contexte', aboutParagraphs: ['Après analyse approfondie de vos enjeux, nous avons identifié les leviers clés de votre transformation.', 'Notre proposition s\'articule autour de 3 axes : efficacité opérationnelle, expérience client et innovation.', 'Nous vous accompagnons de la conception à la mise en œuvre avec une équipe dédiée.'],
+    featureHeading: 'Notre Offre', features: [
+      { num: '01', title: 'Audit & Conseil', desc: 'Diagnostic complet de votre écosystème et recommandations stratégiques.' },
+      { num: '02', title: 'Développement', desc: 'Conception et développement de votre solution sur-mesure.' },
+      { num: '03', title: 'Accompagnement', desc: 'Formation, support et évolution continue de la plateforme.' },
+    ],
+    metricsHeading: 'ROI Estimé', metrics: [
+      { value: '-40%', label: 'Coûts opérationnels', sub: 'dès la 1ère année' },
+      { value: '+65%', label: 'Productivité', sub: 'gain mesuré' },
+      { value: '6 mois', label: 'Payback', sub: 'retour sur invest.' },
+      { value: '99.9%', label: 'Disponibilité', sub: 'SLA garanti' },
+    ],
+    splitHeading: 'Détail de l\'Offre', splitLeft: 'Inclus', splitLeftItems: ['Audit initial complet', 'Développement sur-mesure', 'Tests & recette', 'Formation équipes', 'Support 12 mois'], splitRight: 'Options', splitRightItems: ['Hébergement managé', 'Support premium 24/7', 'Évolutions prioritaires', 'Consulting stratégique', 'Data analytics'],
+    processHeading: 'Méthodologie', processSteps: [
+      { title: 'Discovery', desc: 'Ateliers de cadrage et spécifications détaillées' },
+      { title: 'Design', desc: 'Maquettes, prototypes et validation UX' },
+      { title: 'Build', desc: 'Développement agile par sprints de 2 semaines' },
+      { title: 'Launch', desc: 'Déploiement, formation et go-live' },
+    ],
+    quote: 'Leur approche méthodique et leur expertise technique ont fait toute la différence pour notre projet.', quoteAuthor: 'Thomas Lefebvre', quoteRole: 'DSI, Groupe Industria',
+    bigNumber: '6', bigLabel: 'mois pour un ROI positif', bigDesc: 'Notre solution s\'autofinance rapidement grâce aux gains d\'efficacité mesurables.',
+    sectionNum: '04', sectionTitle: 'Budget & Planning',
+    teamHeading: 'Votre Équipe Projet', team: [
+      { name: 'Julien Morel', role: 'Chef de projet' },
+      { name: 'Lisa Wang', role: 'Lead développeur' },
+      { name: 'Marc Durand', role: 'UX Designer' },
+      { name: 'Aïcha Diallo', role: 'Consultante métier' },
+    ],
+    compHeading: 'Notre Différence', compLeft: 'Approche classique', compLeftItems: ['Cahier des charges figé', 'Livraison en fin de projet', 'Coûts imprévus fréquents', 'Résultats incertains'],
+    compRight: 'Notre Approche Agile', compRightItems: ['Itérations continues', 'Démos toutes les 2 semaines', 'Budget transparent et fixe', 'ROI mesurable et garanti'],
+    ctaHeadline: 'Passons à l\'action', ctaSub: 'Planifions un rendez-vous pour finaliser votre projet', ctaEmail: 'commercial@agence.com', ctaWeb: 'www.agence.com',
+  },
 ];
 
-const eduThemes = [themes.purple, themes.blue, themes.green, themes.teal, themes.indigo];
-
-eduNames.forEach(([name, thumb, desc], i) => {
-  const t = eduThemes[i % eduThemes.length];
-  educationTemplates.push({
-    id: `edu-${i}`, name: name as string, description: desc as string, category: 'Éducation',
-    thumbnail: thumb as string, color: t.accent,
-    slides: [
-      titleSlide(t.bg, t.accent, t.text, t.muted, name as string, 'Module 01 · ' + (desc as string)),
-      contentSlide(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Objectifs pédagogiques', ['Comprendre les concepts fondamentaux', 'Analyser des situations concrètes', 'Appliquer les méthodes apprises', 'Évaluer les résultats']),
-      twoColumnSlide(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Contenu du Module', 'Partie Théorique\n\n• Définitions clés\n• Principes fondamentaux\n• Modèles conceptuels\n• Études de référence', 'Partie Pratique\n\n• Exercices guidés\n• Études de cas\n• Travaux de groupe\n• Évaluation formative'),
-      quoteSlide(t.bg, t.accent, t.text, t.muted, 'L\'éducation est l\'arme la plus puissante pour changer le monde.', 'Nelson Mandela'),
-      thanksSlide(t.bg, t.accent, t.text, t.muted, 'Questions ?', 'Merci pour votre attention'),
-    ]
-  });
+const bizThemeKeys = ['darkTech', 'warmCorp', 'oceanTeal', 'midnightSlate', 'amberGold'];
+bizConfigs.forEach((cfg, i) => {
+  allTemplates.push(buildTemplate({ ...cfg, theme: THEMES[bizThemeKeys[i % bizThemeKeys.length]] }));
 });
 
-// ─── MARKETING ────────────────────────────
-
-const mktNames = [
-  ['Lancement Produit', '🎉', 'Nouveau produit dynamique'],
-  ['Stratégie Social Media', '📱', 'Plan réseaux sociaux'],
-  ['Campagne Publicitaire', '📢', 'Brief créatif campagne'],
-  ['Brand Book', '🎨', 'Guide de marque complet'],
-  ['Content Marketing', '✍️', 'Stratégie de contenu'],
-  ['Email Marketing', '📧', 'Campagne emailing'],
-  ['SEO Strategy', '🔍', 'Optimisation référencement'],
-  ['Influence Marketing', '⭐', 'Stratégie influenceurs'],
-  ['Growth Hacking', '🚀', 'Tactiques de croissance'],
-  ['Étude de Marché', '📊', 'Analyse du marché cible'],
-  ['Persona Marketing', '👤', 'Profils clients types'],
-  ['Funnel de Vente', '🔻', 'Tunnel de conversion'],
-  ['Plan de Communication', '📡', 'Stratégie de comm globale'],
-  ['Rapport de Performance', '📈', 'ROI et analytics'],
-  ['Lancement App Mobile', '📲', 'ASO et acquisition'],
-  ['Stratégie Video', '🎬', 'Plan marketing vidéo'],
-  ['Événement Marketing', '🎪', 'Organisation d\'événement'],
-  ['PR & Relations Presse', '📰', 'Communication presse'],
-  ['Rebranding', '🔄', 'Refonte de marque'],
-  ['Marketing Local', '📍', 'Stratégie locale'],
+// Generate more business templates programmatically
+const moreBizNames: [string, string][] = [
+  ['Plan Stratégique', 'Vision et objectifs long terme'],
+  ['Bilan Financier', 'Résultats et prévisions financières'],
+  ['Comité de Direction', 'Rapport pour le CODIR'],
+  ['Business Plan', 'Plan d\'affaires complet'],
+  ['Analyse Concurrentielle', 'Étude de marché détaillée'],
+  ['Roadmap Produit', 'Feuille de route et jalons'],
+  ['Présentation Investisseurs', 'Series A/B pitch deck'],
+  ['Revue Trimestrielle', 'Performance Q1-Q4'],
+  ['Onboarding Client', 'Accueil nouveau client'],
+  ['Analyse SWOT', 'Forces, faiblesses, opportunités'],
+  ['KPI Dashboard', 'Tableau de bord indicateurs'],
+  ['Restructuration', 'Plan de transformation'],
+  ['Fusion & Acquisition', 'Due diligence et intégration'],
+  ['Expansion Internationale', 'Stratégie d\'internationalisation'],
+  ['Innovation Lab', 'Projets R&D et innovation'],
+  ['Partenariat Stratégique', 'Collaboration inter-entreprises'],
+  ['Gestion de Projet', 'Méthodologie et suivi'],
 ];
 
-const mktThemes = [themes.orange, themes.pink, themes.rose, themes.amber, themes.red];
-
-mktNames.forEach(([name, thumb, desc], i) => {
-  const t = mktThemes[i % mktThemes.length];
-  marketingTemplates.push({
-    id: `mkt-${i}`, name: name as string, description: desc as string, category: 'Marketing',
-    thumbnail: thumb as string, color: t.accent,
-    slides: [
-      titleSlide(t.bg, t.accent, t.text, t.muted, name as string, desc as string),
-      threeCards(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Notre Stratégie', [
-        { icon: '📊', title: 'Analyse', desc: 'Audit de l\'existant' },
-        { icon: '🎯', title: 'Ciblage', desc: 'Audience qualifiée' },
-        { icon: '📈', title: 'Croissance', desc: 'Objectifs mesurables' },
-      ]),
-      statsSlide(t.bgLight, t.accent, t.textDark, t.mutedDark, 'KPIs Clés', [
-        { value: '+150%', label: 'Reach' }, { value: '5.2%', label: 'Engagement' },
-        { value: '45K', label: 'Followers' }, { value: '320%', label: 'ROI' },
-      ]),
-      timelineSlide(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Planning', [
-        { label: 'Phase 1 — Audit', desc: 'Analyse de l\'existant et benchmarks' },
-        { label: 'Phase 2 — Stratégie', desc: 'Définition des objectifs et KPIs' },
-        { label: 'Phase 3 — Exécution', desc: 'Déploiement des campagnes' },
-        { label: 'Phase 4 — Optimisation', desc: 'A/B testing et ajustements' },
-      ]),
-      thanksSlide(t.bg, t.accent, t.text, t.muted, 'Let\'s Go ! 🚀', 'Prêt à transformer votre marketing ?'),
-    ]
-  });
+moreBizNames.forEach(([name, desc], i) => {
+  const themeKey = bizThemeKeys[(i + 3) % bizThemeKeys.length];
+  const t = THEMES[themeKey];
+  allTemplates.push(buildTemplate({
+    id: `biz-${i + 3}`, name, desc, cat: 'Business', theme: t,
+    heroTitle: name.replace(/ /g, '\n'), heroSub: desc + '. Une approche structurée et des résultats concrets.',
+    agendaItems: ['Introduction & Contexte', 'Analyse de la situation', 'Stratégie proposée', 'Plan d\'action', 'Ressources nécessaires', 'Conclusion & Prochaines étapes'],
+    aboutTitle: 'Contexte & Enjeux', aboutParagraphs: ['Dans un environnement en constante évolution, il est essentiel d\'adapter notre approche.', 'Cette présentation détaille notre analyse et nos recommandations stratégiques.', 'Notre objectif : créer de la valeur durable pour l\'ensemble des parties prenantes.'],
+    featureHeading: 'Axes Stratégiques', features: [
+      { num: '01', title: 'Analyse', desc: 'Diagnostic approfondi de la situation actuelle et identification des opportunités.' },
+      { num: '02', title: 'Stratégie', desc: 'Définition d\'une feuille de route claire et ambitieuse.' },
+      { num: '03', title: 'Exécution', desc: 'Mise en œuvre rigoureuse avec des indicateurs de suivi.' },
+    ],
+    metricsHeading: 'Indicateurs Clés', metrics: [
+      { value: '+25%', label: 'Objectif', sub: 'croissance visée' },
+      { value: '18M€', label: 'Budget', sub: 'investissement' },
+      { value: '95%', label: 'Taux', sub: 'de réussite' },
+      { value: '12', label: 'Mois', sub: 'délai projet' },
+    ],
+    splitHeading: 'Analyse Détaillée', splitLeft: 'Forces', splitLeftItems: ['Position de leader', 'Équipe expérimentée', 'Technologie avancée', 'Base clients solide'], splitRight: 'Opportunités', splitRightItems: ['Nouveaux marchés', 'Partenariats potentiels', 'Innovation produit', 'Digitalisation'],
+    processHeading: 'Plan d\'Action', processSteps: [
+      { title: 'Phase 1', desc: 'Audit et diagnostic complet' },
+      { title: 'Phase 2', desc: 'Élaboration de la stratégie' },
+      { title: 'Phase 3', desc: 'Déploiement progressif' },
+      { title: 'Phase 4', desc: 'Évaluation et optimisation' },
+    ],
+    quote: 'La clé du succès réside dans l\'exécution rigoureuse d\'une stratégie bien pensée.', quoteAuthor: 'Direction Générale', quoteRole: 'Comité stratégique',
+    sectionNum: '02', sectionTitle: 'Résultats & Perspectives',
+    teamHeading: 'Équipe Projet', team: [
+      { name: 'Alexandre Martin', role: 'Directeur de projet' },
+      { name: 'Camille Dubois', role: 'Analyste senior' },
+      { name: 'Youssef Alami', role: 'Expert métier' },
+      { name: 'Laura Schmidt', role: 'Coordinatrice' },
+    ],
+    compHeading: 'Avant / Après', compLeft: 'Situation actuelle', compLeftItems: ['Processus manuels', 'Données fragmentées', 'Réactivité limitée', 'Coûts élevés'],
+    compRight: 'Situation cible', compRightItems: ['Automatisation complète', 'Données centralisées', 'Agilité maximale', 'Optimisation des coûts'],
+    ctaHeadline: 'Passons à l\'action', ctaSub: 'Ensemble, construisons l\'avenir', ctaEmail: 'contact@entreprise.com', ctaWeb: 'www.entreprise.com',
+  }));
 });
 
-// ─── CRÉATIF ──────────────────────────────
+// ─── EDUCATION (15 templates) ────────────
 
-const creNames = [
-  ['Portfolio Design', '🎨', 'Showcase de travaux créatifs'],
-  ['Minimaliste Épuré', '✨', 'Design ultra-clean moderne'],
-  ['Gradient Moderne', '🌈', 'Dégradés vibrants tendance'],
-  ['Néon Futuriste', '💜', 'Style cyberpunk lumineux'],
-  ['Rétro Vintage', '📻', 'Nostalgie des 70s/80s'],
-  ['Art Déco', '🏛️', 'Élégance géométrique'],
-  ['Brutalist', '🧱', 'Design brut et audacieux'],
-  ['Pastel Dream', '🌸', 'Tons doux et aériens'],
-  ['Dark Mode Premium', '🌑', 'Interface sombre élégante'],
-  ['Géométrique', '📐', 'Formes et patterns'],
-  ['Typographie Bold', '🔤', 'Lettrage impactant'],
-  ['Collage Créatif', '✂️', 'Mix media et textures'],
-  ['Monochrome', '⬛', 'Noir et blanc sophistiqué'],
-  ['Glassmorphism', '🪟', 'Effet verre moderne'],
-  ['Neumorphism', '🔘', 'Relief doux et tactile'],
-  ['Pop Art', '💥', 'Couleurs vives et graphiques'],
-  ['Aquarelle', '🎨', 'Textures peintes douces'],
-  ['Isométrique', '🧊', 'Vue 3D isométrique'],
-  ['Line Art', '✏️', 'Illustrations au trait'],
-  ['Memphis Style', '🔺', 'Formes colorées 90s'],
+const eduConfigs: [string, string][] = [
+  ['Cours Universitaire', 'Support de cours académique'],
+  ['Soutenance de Mémoire', 'Présentation académique formelle'],
+  ['Formation Continue', 'Module de formation professionnelle'],
+  ['Atelier Pédagogique', 'Workshop interactif'],
+  ['Conférence Scientifique', 'Communication scientifique'],
+  ['Projet Étudiant', 'Présentation de projet'],
+  ['Séminaire de Recherche', 'Résultats de recherche'],
+  ['Rapport de Stage', 'Bilan de stage professionnel'],
+  ['Thèse Doctorale', 'Soutenance de thèse PhD'],
+  ['Programme de Cours', 'Syllabus et planning'],
+  ['Webinaire Éducatif', 'Formation en ligne interactive'],
+  ['Méthodologie', 'Approche et outils de recherche'],
+  ['Étude de Cas', 'Analyse de situation réelle'],
+  ['Orientation Scolaire', 'Guide d\'orientation'],
+  ['Évaluation des Acquis', 'Bilan de compétences'],
 ];
 
-const creThemes = [themes.rose, themes.purple, themes.pink, themes.black, themes.warmGray, themes.cyan, themes.lime];
-
-creNames.forEach(([name, thumb, desc], i) => {
-  const t = creThemes[i % creThemes.length];
-  creativTemplates.push({
-    id: `cre-${i}`, name: name as string, description: desc as string, category: 'Créatif',
-    thumbnail: thumb as string, color: t.accent,
-    slides: [
-      titleSlide(t.bg, t.accent, t.text, t.muted, name as string, desc as string),
-      contentSlide(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Vision Créative', ['Concept original et distinctif', 'Palette de couleurs harmonieuse', 'Typographie expressive', 'Composition équilibrée']),
-      quoteSlide(t.bg, t.accent, t.text, t.muted, 'Le design n\'est pas juste ce à quoi ça ressemble. Le design, c\'est comment ça fonctionne.', 'Steve Jobs'),
-      thanksSlide(t.bg, t.accent, t.text, t.muted, 'Merci ✨', 'www.portfolio.design'),
-    ]
-  });
+const eduThemeKeys = ['vibrantPurple', 'darkTech', 'oceanTeal', 'freshGreen', 'electricCyan'];
+eduConfigs.forEach(([name, desc], i) => {
+  const t = THEMES[eduThemeKeys[i % eduThemeKeys.length]];
+  allTemplates.push(buildTemplate({
+    id: `edu-${i}`, name, desc, cat: 'Éducation', theme: t,
+    heroTitle: name, heroSub: desc + '. Un contenu structuré pour un apprentissage efficace.',
+    agendaItems: ['Objectifs pédagogiques', 'Contexte théorique', 'Concepts fondamentaux', 'Études de cas', 'Exercices pratiques', 'Évaluation & Synthèse'],
+    aboutTitle: 'Objectifs du Module', aboutParagraphs: ['Ce module vise à développer les compétences clés nécessaires à la maîtrise du sujet.', 'À l\'issue de cette formation, les participants seront capables d\'appliquer les concepts présentés.', 'L\'approche combine théorie, pratique et retour d\'expérience.'],
+    featureHeading: 'Contenu Pédagogique', features: [
+      { num: '01', title: 'Théorie', desc: 'Maîtrise des concepts fondamentaux et des cadres de référence.' },
+      { num: '02', title: 'Pratique', desc: 'Mise en application à travers des exercices et des cas réels.' },
+      { num: '03', title: 'Évaluation', desc: 'Vérification des acquis et certification des compétences.' },
+    ],
+    metricsHeading: 'Programme en Chiffres', metrics: [
+      { value: '12h', label: 'Formation', sub: 'heures totales' },
+      { value: '8', label: 'Modules', sub: 'thématiques' },
+      { value: '95%', label: 'Réussite', sub: 'taux moyen' },
+      { value: '4.8/5', label: 'Évaluation', sub: 'satisfaction' },
+    ],
+    splitHeading: 'Organisation du Module', splitLeft: 'Partie Théorique', splitLeftItems: ['Définitions et concepts', 'Modèles de référence', 'Études scientifiques', 'Analyse critique'], splitRight: 'Partie Pratique', splitRightItems: ['Travaux dirigés', 'Études de cas', 'Projets de groupe', 'Évaluation formative'],
+    processHeading: 'Progression Pédagogique', processSteps: [
+      { title: 'Découverte', desc: 'Introduction et mise en contexte' },
+      { title: 'Acquisition', desc: 'Apprentissage des concepts clés' },
+      { title: 'Application', desc: 'Mise en pratique et exercices' },
+      { title: 'Maîtrise', desc: 'Évaluation et certification' },
+    ],
+    quote: 'L\'éducation est l\'arme la plus puissante qu\'on puisse utiliser pour changer le monde.', quoteAuthor: 'Nelson Mandela', quoteRole: 'Leader et visionnaire',
+    iconGridHeading: 'Compétences Développées', iconGridItems: [
+      { title: 'Analyse critique', desc: 'Capacité à évaluer et synthétiser des informations complexes.' },
+      { title: 'Résolution de problèmes', desc: 'Méthodologie structurée pour aborder des cas concrets.' },
+      { title: 'Communication', desc: 'Expression claire et argumentation solide.' },
+      { title: 'Travail collaboratif', desc: 'Compétences d\'équipe et gestion de projet.' },
+    ],
+    sectionNum: '03', sectionTitle: 'Études de Cas',
+    teamHeading: 'Équipe Pédagogique', team: [
+      { name: 'Pr. Marie Laurent', role: 'Responsable de module' },
+      { name: 'Dr. Thomas Petit', role: 'Intervenant expert' },
+      { name: 'Sophie Martin', role: 'Assistante pédagogique' },
+      { name: 'Karim Benali', role: 'Tuteur' },
+    ],
+    compHeading: 'Méthode Traditionnelle vs Notre Approche', compLeft: 'Méthode classique', compLeftItems: ['Cours magistral passif', 'Évaluation finale unique', 'Supports papier', 'Peu d\'interaction'],
+    compRight: 'Notre Approche', compRightItems: ['Pédagogie active et inversée', 'Évaluation continue', 'Supports numériques interactifs', 'Collaboration et feedback'],
+    ctaHeadline: 'Questions ?', ctaSub: 'Merci pour votre attention et votre participation', ctaEmail: 'formation@universite.fr', ctaWeb: 'www.universite.fr',
+  }));
 });
 
-// ─── TECHNOLOGIE ──────────────────────────
+// ─── MARKETING (15 templates) ────────────
 
-const techNames = [
-  ['Product Demo', '🖥️', 'Démonstration de produit tech'],
-  ['Architecture Logicielle', '🏗️', 'Design system et architecture'],
-  ['Sprint Review', '🔄', 'Revue de sprint Agile'],
-  ['Tech Stack Overview', '⚙️', 'Stack technique détaillée'],
-  ['API Documentation', '📡', 'Documentation d\'API'],
-  ['Cybersécurité', '🔒', 'Audit et recommandations'],
-  ['Cloud Migration', '☁️', 'Plan de migration cloud'],
-  ['DevOps Pipeline', '🔧', 'CI/CD et infrastructure'],
-  ['Data Science', '📊', 'Analyse et machine learning'],
-  ['UX Research', '🔬', 'Recherche utilisateur'],
-  ['Release Notes', '📦', 'Notes de version'],
-  ['Incident Report', '🚨', 'Post-mortem technique'],
-  ['Code Review', '👨‍💻', 'Revue de code et standards'],
-  ['SaaS Metrics', '📈', 'MRR, Churn, LTV'],
-  ['Blockchain', '⛓️', 'Technologie décentralisée'],
-  ['IoT Solutions', '📡', 'Internet des objets'],
-  ['IA & Machine Learning', '🤖', 'Intelligence artificielle'],
-  ['Mobile App Design', '📱', 'Design d\'application mobile'],
-  ['System Design', '🔌', 'Conception système'],
-  ['Tech Startup Pitch', '💡', 'Pitch tech innovant'],
+const mktConfigs: [string, string][] = [
+  ['Lancement Produit', 'Nouveau produit dynamique'],
+  ['Stratégie Social Media', 'Plan réseaux sociaux'],
+  ['Campagne Publicitaire', 'Brief créatif campagne'],
+  ['Brand Book', 'Guide de marque complet'],
+  ['Content Marketing', 'Stratégie de contenu'],
+  ['Growth Hacking', 'Tactiques de croissance'],
+  ['Étude de Marché', 'Analyse du marché cible'],
+  ['Funnel de Vente', 'Tunnel de conversion'],
+  ['Plan de Communication', 'Stratégie de comm globale'],
+  ['Rapport de Performance', 'ROI et analytics'],
+  ['SEO Strategy', 'Optimisation référencement'],
+  ['Influence Marketing', 'Stratégie influenceurs'],
+  ['Email Marketing', 'Campagne emailing'],
+  ['Événement Marketing', 'Organisation d\'événement'],
+  ['Rebranding', 'Refonte de marque'],
 ];
 
-const techThemesArr = [themes.cyan, themes.indigo, themes.teal, themes.blue, themes.slate];
-
-techNames.forEach(([name, thumb, desc], i) => {
-  const t = techThemesArr[i % techThemesArr.length];
-  techTemplates.push({
-    id: `tech-${i}`, name: name as string, description: desc as string, category: 'Technologie',
-    thumbnail: thumb as string, color: t.accent,
-    slides: [
-      titleSlide(t.bg, t.accent, t.text, t.muted, name as string, desc as string),
-      threeCards(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Architecture', [
-        { icon: '⚡', title: 'Performance', desc: 'Latence < 100ms' },
-        { icon: '🔒', title: 'Sécurité', desc: 'Chiffrement E2E' },
-        { icon: '📈', title: 'Scalabilité', desc: 'Auto-scaling' },
-      ]),
-      statsSlide(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Métriques', [
-        { value: '99.9%', label: 'Uptime' }, { value: '<50ms', label: 'Latence' },
-        { value: '10M+', label: 'Requêtes/j' }, { value: '0', label: 'Incidents' },
-      ]),
-      timelineSlide(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Roadmap', [
-        { label: 'Q1 — MVP', desc: 'Lancement de la version beta' },
-        { label: 'Q2 — Scale', desc: 'Montée en charge et optimisations' },
-        { label: 'Q3 — Features', desc: 'Nouvelles fonctionnalités majeures' },
-        { label: 'Q4 — Enterprise', desc: 'Offre entreprise et SSO' },
-      ]),
-      thanksSlide(t.bg, t.accent, t.text, t.muted, 'Questions ?', 'tech@company.dev'),
-    ]
-  });
+const mktThemeKeys = ['sunsetOrange', 'rosePink', 'vibrantPurple', 'rubyRed', 'amberGold'];
+mktConfigs.forEach(([name, desc], i) => {
+  const t = THEMES[mktThemeKeys[i % mktThemeKeys.length]];
+  allTemplates.push(buildTemplate({
+    id: `mkt-${i}`, name, desc, cat: 'Marketing', theme: t,
+    heroTitle: name, heroSub: desc + '. Des stratégies percutantes pour maximiser votre impact.',
+    agendaItems: ['Analyse de marché', 'Persona & Ciblage', 'Stratégie créative', 'Plan média', 'KPIs & Objectifs', 'Budget & Timeline'],
+    aboutTitle: 'Notre Approche', aboutParagraphs: ['Une stratégie marketing data-driven pour des résultats mesurables.', 'Nous combinons créativité, analytics et automatisation pour maximiser votre ROI.', 'Chaque campagne est optimisée en continu grâce à nos outils d\'analyse.'],
+    featureHeading: 'Nos Leviers', features: [
+      { num: '01', title: 'Acquisition', desc: 'Stratégie multi-canal pour attirer des prospects qualifiés.' },
+      { num: '02', title: 'Engagement', desc: 'Contenu personnalisé qui crée de la connexion avec votre audience.' },
+      { num: '03', title: 'Conversion', desc: 'Optimisation du tunnel pour maximiser le taux de transformation.' },
+    ],
+    metricsHeading: 'Résultats Attendus', metrics: [
+      { value: '+200%', label: 'Reach', sub: 'portée organique' },
+      { value: '5.8%', label: 'Engagement', sub: 'taux moyen' },
+      { value: '45K', label: 'Leads', sub: 'générés/mois' },
+      { value: '320%', label: 'ROI', sub: 'retour estimé' },
+    ],
+    splitHeading: 'Stratégie Multi-Canal', splitLeft: 'Organique', splitLeftItems: ['SEO & Content', 'Social media', 'Email nurturing', 'Community mgmt'], splitRight: 'Payant', splitRightItems: ['Google Ads', 'Social Ads', 'Display & retargeting', 'Influenceurs'],
+    processHeading: 'Phases de la Campagne', processSteps: [
+      { title: 'Audit', desc: 'Analyse concurrentielle et benchmarks' },
+      { title: 'Stratégie', desc: 'Définition des objectifs et KPIs' },
+      { title: 'Exécution', desc: 'Déploiement des campagnes' },
+      { title: 'Optimisation', desc: 'A/B testing et ajustements' },
+    ],
+    quote: 'Le meilleur marketing ne ressemble pas à du marketing.', quoteAuthor: 'Tom Fishburne', quoteRole: 'Fondateur, Marketoonist',
+    bigNumber: '320%', bigLabel: 'ROI moyen de nos campagnes', bigDesc: 'Chaque euro investi génère en moyenne 3,20€ de revenus pour nos clients.',
+    sectionNum: '03', sectionTitle: 'Plan d\'Action',
+    teamHeading: 'L\'Équipe Créative', team: [
+      { name: 'Clara Fontaine', role: 'Directrice artistique' },
+      { name: 'Hugo Blanc', role: 'Stratège digital' },
+      { name: 'Léa Kim', role: 'Social media manager' },
+      { name: 'Romain Fabre', role: 'Growth hacker' },
+    ],
+    compHeading: 'Notre Différence', compLeft: 'Marketing traditionnel', compLeftItems: ['Campagnes ponctuelles', 'Mesure approximative', 'Message générique', 'Budget rigide'],
+    compRight: 'Notre Approche', compRightItems: ['Stratégie continue', 'Analytics en temps réel', 'Hyper-personnalisation', 'Budget flexible et optimisé'],
+    ctaHeadline: 'Let\'s Go !', ctaSub: 'Prêt à transformer votre marketing ?', ctaEmail: 'hello@agence.com', ctaWeb: 'www.agence-marketing.com',
+  }));
 });
 
-// ─── MEDICAL ──────────────────────────────
+// ─── TECHNOLOGIE (15 templates) ──────────
 
-const medNames = [
-  ['Cas Clinique', '🏥', 'Présentation de cas médical'],
-  ['Recherche Médicale', '🔬', 'Résultats d\'étude clinique'],
-  ['Congrès Médical', '🩺', 'Communication scientifique'],
-  ['Formation Soignants', '👩‍⚕️', 'Module de formation médicale'],
-  ['Santé Publique', '🏛️', 'Politique de santé'],
-  ['Pharmacologie', '💊', 'Études pharmacologiques'],
-  ['Télémédecine', '📱', 'Solutions de santé digitale'],
-  ['Chirurgie', '🔪', 'Techniques opératoires'],
-  ['Radiologie', '📷', 'Imagerie médicale'],
-  ['Psychiatrie', '🧠', 'Santé mentale et bien-être'],
-  ['Pédiatrie', '👶', 'Médecine infantile'],
-  ['Cardiologie', '❤️', 'Pathologies cardiaques'],
-  ['Oncologie', '🎗️', 'Recherche en cancérologie'],
-  ['Urgences', '🚑', 'Protocoles d\'urgence'],
-  ['Épidémiologie', '📊', 'Études épidémiologiques'],
+const techConfigs: [string, string][] = [
+  ['Product Demo', 'Démonstration de produit tech'],
+  ['Architecture Logicielle', 'Design system et architecture'],
+  ['Sprint Review', 'Revue de sprint Agile'],
+  ['Tech Stack Overview', 'Stack technique détaillée'],
+  ['Cybersécurité', 'Audit et recommandations'],
+  ['Cloud Migration', 'Plan de migration cloud'],
+  ['DevOps Pipeline', 'CI/CD et infrastructure'],
+  ['Data Science', 'Analyse et machine learning'],
+  ['UX Research', 'Recherche utilisateur'],
+  ['IA & Machine Learning', 'Intelligence artificielle'],
+  ['Mobile App Design', 'Design d\'application mobile'],
+  ['System Design', 'Conception système'],
+  ['Tech Startup Pitch', 'Pitch tech innovant'],
+  ['API Documentation', 'Documentation d\'API'],
+  ['SaaS Metrics', 'MRR, Churn, LTV'],
 ];
 
-const medThemesArr = [themes.blue, themes.teal, themes.green, themes.cyan, themes.indigo];
-
-medNames.forEach(([name, thumb, desc], i) => {
-  const t = medThemesArr[i % medThemesArr.length];
-  medicalTemplates.push({
-    id: `med-${i}`, name: name as string, description: desc as string, category: 'Médical',
-    thumbnail: thumb as string, color: t.accent,
-    slides: [
-      titleSlide(t.bg, t.accent, t.text, t.muted, name as string, desc as string),
-      contentSlide(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Introduction', ['Contexte clinique', 'Objectifs de l\'étude', 'Méthodologie', 'Population étudiée']),
-      statsSlide(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Résultats', [
-        { value: 'n=250', label: 'Patients' }, { value: 'p<0.05', label: 'Significativité' },
-        { value: '87%', label: 'Efficacité' }, { value: '-32%', label: 'Réduction' },
-      ]),
-      thanksSlide(t.bg, t.accent, t.text, t.muted, 'Merci', 'Questions et discussion'),
-    ]
-  });
+const techThemeKeys2 = ['electricCyan', 'darkTech', 'oceanTeal', 'midnightSlate', 'vibrantPurple'];
+techConfigs.forEach(([name, desc], i) => {
+  const t = THEMES[techThemeKeys2[i % techThemeKeys2.length]];
+  allTemplates.push(buildTemplate({
+    id: `tech-${i}`, name, desc, cat: 'Technologie', theme: t,
+    heroTitle: name, heroSub: desc + '. Innovation, performance et fiabilité au service de votre business.',
+    agendaItems: ['Vue d\'ensemble', 'Architecture technique', 'Fonctionnalités clés', 'Performance & Scalabilité', 'Sécurité', 'Roadmap technique'],
+    aboutTitle: 'Vue d\'Ensemble', aboutParagraphs: ['Une solution technologique de pointe conçue pour répondre aux défis les plus complexes.', 'Notre architecture cloud-native garantit performance, sécurité et évolutivité.', 'Construite avec les meilleures pratiques de l\'industrie et des technologies éprouvées.'],
+    featureHeading: 'Architecture', features: [
+      { num: '01', title: 'Performance', desc: 'Latence < 50ms, architecture distribuée avec auto-scaling horizontal.' },
+      { num: '02', title: 'Sécurité', desc: 'Chiffrement E2E, conformité RGPD/SOC2, audits réguliers.' },
+      { num: '03', title: 'Scalabilité', desc: 'Microservices containerisés avec orchestration Kubernetes.' },
+    ],
+    metricsHeading: 'Métriques Techniques', metrics: [
+      { value: '99.99%', label: 'Uptime', sub: 'SLA garanti' },
+      { value: '<50ms', label: 'Latence', sub: 'P95 response' },
+      { value: '10M+', label: 'Requêtes/j', sub: 'en production' },
+      { value: '0', label: 'Incidents', sub: 'critiques ce mois' },
+    ],
+    splitHeading: 'Stack Technique', splitLeft: 'Backend', splitLeftItems: ['Node.js / TypeScript', 'PostgreSQL / Redis', 'Docker / Kubernetes', 'GraphQL API'], splitRight: 'Frontend', splitRightItems: ['React / Next.js', 'TypeScript strict', 'Tailwind CSS', 'Tests E2E (Playwright)'],
+    processHeading: 'Roadmap Technique', processSteps: [
+      { title: 'Q1 — MVP', desc: 'Architecture de base et core features' },
+      { title: 'Q2 — Scale', desc: 'Optimisation et montée en charge' },
+      { title: 'Q3 — Features', desc: 'Nouvelles fonctionnalités avancées' },
+      { title: 'Q4 — Enterprise', desc: 'SSO, audit logs, SLA premium' },
+    ],
+    quote: 'La meilleure architecture est celle qui évolue avec les besoins du business sans compromis sur la qualité.', quoteAuthor: 'Martin Fowler', quoteRole: 'Chief Scientist, ThoughtWorks',
+    iconGridHeading: 'Principes d\'Architecture', iconGridItems: [
+      { title: 'Microservices', desc: 'Services indépendants et déployables individuellement.' },
+      { title: 'Event-driven', desc: 'Communication asynchrone via message queues.' },
+      { title: 'Infrastructure as Code', desc: 'Environnements reproductibles et versionnés.' },
+      { title: 'Observabilité', desc: 'Monitoring, logging et tracing centralisés.' },
+    ],
+    sectionNum: '03', sectionTitle: 'Sécurité & Conformité',
+    teamHeading: 'Équipe Technique', team: [
+      { name: 'David Chen', role: 'Lead Architect' },
+      { name: 'Sarah Müller', role: 'Backend Lead' },
+      { name: 'Kevin Park', role: 'DevOps Engineer' },
+      { name: 'Ana Silva', role: 'QA Lead' },
+    ],
+    compHeading: 'Avantage Technique', compLeft: 'Monolithe legacy', compLeftItems: ['Déploiements risqués', 'Scaling vertical limité', 'Couplage fort', 'Tests difficiles'],
+    compRight: 'Notre Architecture', compRightItems: ['Déploiements continus', 'Scaling horizontal infini', 'Services découplés', 'Tests automatisés 100%'],
+    ctaHeadline: 'Ready to Ship ?', ctaSub: 'Découvrez notre documentation technique complète', ctaEmail: 'tech@company.dev', ctaWeb: 'docs.company.dev',
+  }));
 });
 
-// ─── IMMOBILIER ───────────────────────────
+// ─── CRÉATIF (10 templates) ──────────────
 
-const immoNames = [
-  ['Projet Immobilier', '🏠', 'Présentation de programme'],
-  ['Estimation Bien', '💰', 'Valorisation immobilière'],
-  ['Visite Virtuelle', '🏡', 'Découverte de propriété'],
-  ['Investissement Locatif', '📈', 'Rendement et fiscalité'],
-  ['Promotion Immobilière', '🏗️', 'Nouveau programme neuf'],
-  ['Agence Immobilière', '🔑', 'Présentation d\'agence'],
-  ['Architecture & Design', '📐', 'Projet architectural'],
-  ['Gestion de Patrimoine', '🏦', 'Conseil patrimonial'],
-  ['Rénovation Énergétique', '♻️', 'Travaux et aides'],
-  ['Location Saisonnière', '🏖️', 'Gestion Airbnb/booking'],
+const creConfigs: [string, string][] = [
+  ['Portfolio Design', 'Showcase de travaux créatifs'],
+  ['Minimaliste Épuré', 'Design ultra-clean moderne'],
+  ['Néon Futuriste', 'Style cyberpunk lumineux'],
+  ['Art Déco Luxe', 'Élégance géométrique premium'],
+  ['Dark Mode Premium', 'Interface sombre élégante'],
+  ['Glassmorphism', 'Effet verre moderne et tendance'],
+  ['Gradient Moderne', 'Dégradés vibrants tendance'],
+  ['Pop Art Bold', 'Couleurs vives et graphiques'],
+  ['Monochrome Chic', 'Noir et blanc sophistiqué'],
+  ['Pastel Dream', 'Tons doux et aériens'],
 ];
 
-const immoThemesArr = [themes.amber, themes.warmGray, themes.green, themes.slate, themes.blue];
-
-immoNames.forEach(([name, thumb, desc], i) => {
-  const t = immoThemesArr[i % immoThemesArr.length];
-  immobilierTemplates.push({
-    id: `immo-${i}`, name: name as string, description: desc as string, category: 'Immobilier',
-    thumbnail: thumb as string, color: t.accent,
-    slides: [
-      titleSlide(t.bg, t.accent, t.text, t.muted, name as string, desc as string),
-      threeCards(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Le Bien', [
-        { icon: '📍', title: 'Localisation', desc: 'Quartier premium' },
-        { icon: '📐', title: 'Surface', desc: '120m² habitables' },
-        { icon: '💰', title: 'Prix', desc: 'À partir de 350K€' },
-      ]),
-      thanksSlide(t.bg, t.accent, t.text, t.muted, 'Contactez-nous', 'agence@immo.fr · 01 23 45 67 89'),
-    ]
-  });
+const creThemeKeys = ['midnightSlate', 'freshGreen', 'vibrantPurple', 'amberGold', 'darkTech', 'electricCyan', 'rosePink', 'rubyRed', 'warmCorp', 'oceanTeal'];
+creConfigs.forEach(([name, desc], i) => {
+  const t = THEMES[creThemeKeys[i % creThemeKeys.length]];
+  allTemplates.push(buildTemplate({
+    id: `cre-${i}`, name, desc, cat: 'Créatif', theme: t,
+    heroTitle: name, heroSub: desc + '. Un design qui raconte votre histoire avec impact.',
+    agendaItems: ['Vision créative', 'Identité visuelle', 'Projets sélectionnés', 'Processus créatif', 'Résultats & Impact', 'Contact & Collaboration'],
+    aboutTitle: 'Vision Créative', aboutParagraphs: ['Chaque projet est une opportunité de repousser les limites du design et de l\'innovation.', 'Notre approche mêle esthétique raffinée, fonctionnalité et storytelling émotionnel.', 'Nous créons des expériences visuelles mémorables qui connectent les marques à leur audience.'],
+    featureHeading: 'Notre Savoir-Faire', features: [
+      { num: '01', title: 'Direction Artistique', desc: 'Univers visuels uniques et cohérents qui reflètent l\'ADN de chaque marque.' },
+      { num: '02', title: 'Design System', desc: 'Systèmes de design évolutifs et maintenables à grande échelle.' },
+      { num: '03', title: 'Motion Design', desc: 'Animations et transitions qui donnent vie aux interfaces.' },
+    ],
+    metricsHeading: 'Portfolio en Chiffres', metrics: [
+      { value: '200+', label: 'Projets', sub: 'réalisés' },
+      { value: '50+', label: 'Clients', sub: 'satisfaits' },
+      { value: '15', label: 'Awards', sub: 'design' },
+      { value: '8 ans', label: 'Expérience', sub: 'dans le domaine' },
+    ],
+    splitHeading: 'Compétences', splitLeft: 'Design', splitLeftItems: ['Branding & Identity', 'UI/UX Design', 'Print & Editorial', 'Packaging'], splitRight: 'Digital', splitRightItems: ['Web Design', 'Motion Graphics', 'Social Media', '3D & Illustration'],
+    processHeading: 'Processus Créatif', processSteps: [
+      { title: 'Brief', desc: 'Compréhension profonde du projet et des objectifs' },
+      { title: 'Concept', desc: 'Exploration créative et moodboards' },
+      { title: 'Design', desc: 'Création et itérations avec le client' },
+      { title: 'Livraison', desc: 'Assets finaux et guidelines' },
+    ],
+    quote: 'Le design n\'est pas juste ce à quoi ça ressemble. Le design, c\'est comment ça fonctionne.', quoteAuthor: 'Steve Jobs', quoteRole: 'Co-fondateur, Apple',
+    bigNumber: '15', bigLabel: 'Awards de design remportés', bigDesc: 'Reconnu par les plus grandes instances créatives internationales.',
+    sectionNum: '04', sectionTitle: 'Projets Sélectionnés',
+    teamHeading: 'L\'Équipe Créative', team: [
+      { name: 'Alice Moreau', role: 'Directrice créative' },
+      { name: 'Maxime Roy', role: 'UI/UX Designer' },
+      { name: 'Zoé Laurent', role: 'Motion Designer' },
+      { name: 'Nathan Petit', role: 'Illustrateur' },
+    ],
+    compHeading: 'Notre Différence', compLeft: 'Design générique', compLeftItems: ['Templates prédéfinis', 'Pas de recherche', 'Livraison unique', 'Style impersonnel'],
+    compRight: 'Notre Approche', compRightItems: ['Création sur-mesure', 'Recherche approfondie', 'Itérations illimitées', 'Identité unique'],
+    ctaHeadline: 'Créons ensemble', ctaSub: 'Votre prochain projet mérite un design exceptionnel', ctaEmail: 'hello@studio.design', ctaWeb: 'www.studio.design',
+  }));
 });
 
-// ─── JURIDIQUE ────────────────────────────
+// ─── MÉDICAL (10 templates) ──────────────
 
-const jurNames = [
-  ['Cabinet d\'Avocats', '⚖️', 'Présentation du cabinet'],
-  ['Contrat Commercial', '📜', 'Analyse contractuelle'],
-  ['Conformité RGPD', '🔐', 'Mise en conformité données'],
-  ['Droit du Travail', '👷', 'Réglementation sociale'],
-  ['Litige Commercial', '⚔️', 'Résolution de conflits'],
-  ['Propriété Intellectuelle', '💡', 'Protection des innovations'],
-  ['Droit des Sociétés', '🏢', 'Gouvernance d\'entreprise'],
-  ['Fusion-Acquisition', '🔄', 'Due diligence juridique'],
-  ['Contentieux', '🏛️', 'Gestion des litiges'],
-  ['Veille Réglementaire', '📋', 'Évolutions législatives'],
+const medConfigs: [string, string][] = [
+  ['Cas Clinique', 'Présentation de cas médical'],
+  ['Recherche Médicale', 'Résultats d\'étude clinique'],
+  ['Congrès Médical', 'Communication scientifique'],
+  ['Formation Soignants', 'Module de formation médicale'],
+  ['Santé Publique', 'Politique de santé'],
+  ['Télémédecine', 'Solutions de santé digitale'],
+  ['Pharmacologie', 'Études pharmacologiques'],
+  ['Cardiologie', 'Pathologies cardiaques'],
+  ['Oncologie', 'Recherche en cancérologie'],
+  ['Épidémiologie', 'Études épidémiologiques'],
 ];
 
-const jurThemesArr = [themes.slate, themes.warmGray, themes.indigo, themes.blue, themes.black];
-
-jurNames.forEach(([name, thumb, desc], i) => {
-  const t = jurThemesArr[i % jurThemesArr.length];
-  juridiqueTemplates.push({
-    id: `jur-${i}`, name: name as string, description: desc as string, category: 'Juridique',
-    thumbnail: thumb as string, color: t.accent,
-    slides: [
-      titleSlide(t.bg, t.accent, t.text, t.muted, name as string, desc as string),
-      contentSlide(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Analyse', ['Cadre juridique applicable', 'Risques identifiés', 'Recommandations', 'Plan d\'action']),
-      thanksSlide(t.bg, t.accent, t.text, t.muted, 'Merci', 'cabinet@avocats.fr'),
-    ]
-  });
+const medThemeKeys2 = ['oceanTeal', 'darkTech', 'freshGreen', 'electricCyan', 'midnightSlate'];
+medConfigs.forEach(([name, desc], i) => {
+  const t = THEMES[medThemeKeys2[i % medThemeKeys2.length]];
+  allTemplates.push(buildTemplate({
+    id: `med-${i}`, name, desc, cat: 'Médical', theme: t,
+    heroTitle: name, heroSub: desc + '. Rigueur scientifique et présentation claire des résultats.',
+    agendaItems: ['Introduction', 'Méthodologie', 'Résultats principaux', 'Discussion', 'Conclusion', 'Références'],
+    aboutTitle: 'Introduction', aboutParagraphs: ['Cette étude s\'inscrit dans un contexte de recherche active sur les innovations thérapeutiques.', 'L\'objectif est de présenter les résultats de notre protocole et d\'en discuter les implications cliniques.', 'La méthodologie rigoureuse utilisée garantit la fiabilité et la reproductibilité des résultats.'],
+    featureHeading: 'Points Clés de l\'Étude', features: [
+      { num: '01', title: 'Population', desc: 'Étude prospective multicentrique portant sur 500 patients.' },
+      { num: '02', title: 'Protocole', desc: 'Essai randomisé en double aveugle vs placebo sur 24 mois.' },
+      { num: '03', title: 'Endpoints', desc: 'Critères primaires et secondaires clairement définis.' },
+    ],
+    metricsHeading: 'Résultats Principaux', metrics: [
+      { value: 'n=500', label: 'Patients', sub: 'inclus dans l\'étude' },
+      { value: 'p<0.001', label: 'Significativité', sub: 'statistique' },
+      { value: '87%', label: 'Efficacité', sub: 'critère principal' },
+      { value: '-42%', label: 'Réduction', sub: 'des événements' },
+    ],
+    splitHeading: 'Méthodologie', splitLeft: 'Design', splitLeftItems: ['Essai randomisé', 'Double aveugle', 'Multicentrique', 'ITT et per-protocole'], splitRight: 'Analyse', splitRightItems: ['Test de Kaplan-Meier', 'Régression de Cox', 'Analyse en sous-groupes', 'Sensibilité'],
+    processHeading: 'Déroulement de l\'Étude', processSteps: [
+      { title: 'Screening', desc: 'Sélection et randomisation des patients' },
+      { title: 'Traitement', desc: 'Administration du protocole thérapeutique' },
+      { title: 'Suivi', desc: 'Monitoring clinique et biologique' },
+      { title: 'Analyse', desc: 'Traitement statistique des données' },
+    ],
+    quote: 'Les résultats de cette étude ouvrent de nouvelles perspectives thérapeutiques prometteuses.', quoteAuthor: 'Pr. Jean Leclerc', quoteRole: 'Chef de service, CHU de Paris',
+    iconGridHeading: 'Implications Cliniques', iconGridItems: [
+      { title: 'Nouveau standard', desc: 'Ces résultats pourraient modifier les guidelines de prise en charge.' },
+      { title: 'Tolérance', desc: 'Profil de sécurité favorable avec peu d\'effets secondaires.' },
+      { title: 'Qualité de vie', desc: 'Amélioration significative des scores de qualité de vie.' },
+      { title: 'Coût-efficacité', desc: 'Ratio favorable comparé aux alternatives existantes.' },
+    ],
+    sectionNum: '04', sectionTitle: 'Discussion & Limites',
+    teamHeading: 'Investigateurs Principaux', team: [
+      { name: 'Pr. Jean Leclerc', role: 'Investigateur principal' },
+      { name: 'Dr. Isabelle Martin', role: 'Co-investigatrice' },
+      { name: 'Dr. Ahmed Hassan', role: 'Biostatisticien' },
+      { name: 'Dr. Claire Dumont', role: 'Coordinatrice' },
+    ],
+    compHeading: 'Comparaison des Traitements', compLeft: 'Traitement standard', compLeftItems: ['Efficacité: 65%', 'Effets secondaires fréquents', 'Administration quotidienne', 'Coût élevé'],
+    compRight: 'Nouveau traitement', compRightItems: ['Efficacité: 87%', 'Bonne tolérance', 'Administration hebdomadaire', 'Coût comparable'],
+    ctaHeadline: 'Merci', ctaSub: 'Questions et discussion', ctaEmail: 'recherche@chu.fr', ctaWeb: 'clinicaltrials.gov',
+  }));
 });
 
-// ─── RESTAURANT / FOOD ────────────────────
+// ─── AUTRES CATÉGORIES (templates condensés) ─────
 
-const restoNames = [
-  ['Restaurant Gastronomique', '🍽️', 'Présentation du restaurant'],
-  ['Menu Design', '📜', 'Carte et spécialités'],
-  ['Food Truck', '🚚', 'Concept mobile cuisine'],
-  ['Bar à Cocktails', '🍸', 'Carte des cocktails'],
-  ['Boulangerie Artisanale', '🥖', 'Savoir-faire artisanal'],
-  ['Traiteur Événementiel', '🎊', 'Prestations événementielles'],
-  ['Coffee Shop', '☕', 'Concept café premium'],
-  ['Franchise Restaurant', '🏪', 'Modèle de franchise'],
-  ['Cours de Cuisine', '👨‍🍳', 'Atelier culinaire'],
-  ['Cave à Vins', '🍷', 'Sélection de vins'],
+const otherCategories: { cat: string; items: [string, string][]; themes: string[] }[] = [
+  {
+    cat: 'Immobilier', themes: ['warmCorp', 'amberGold', 'freshGreen', 'midnightSlate', 'oceanTeal'],
+    items: [
+      ['Projet Immobilier', 'Présentation de programme neuf'],
+      ['Investissement Locatif', 'Rendement et fiscalité'],
+      ['Promotion Immobilière', 'Nouveau programme immobilier'],
+      ['Agence Immobilière', 'Présentation d\'agence'],
+      ['Architecture & Design', 'Projet architectural'],
+      ['Gestion de Patrimoine', 'Conseil patrimonial immobilier'],
+      ['Rénovation Énergétique', 'Travaux et aides disponibles'],
+    ],
+  },
+  {
+    cat: 'Juridique', themes: ['midnightSlate', 'darkTech', 'warmCorp', 'oceanTeal', 'amberGold'],
+    items: [
+      ['Cabinet d\'Avocats', 'Présentation du cabinet'],
+      ['Conformité RGPD', 'Mise en conformité données'],
+      ['Droit du Travail', 'Réglementation sociale'],
+      ['Propriété Intellectuelle', 'Protection des innovations'],
+      ['Droit des Sociétés', 'Gouvernance d\'entreprise'],
+      ['Contentieux', 'Gestion des litiges commerciaux'],
+      ['Veille Réglementaire', 'Évolutions législatives'],
+    ],
+  },
+  {
+    cat: 'Restaurant', themes: ['warmCorp', 'sunsetOrange', 'rubyRed', 'amberGold', 'freshGreen'],
+    items: [
+      ['Restaurant Gastronomique', 'Présentation du restaurant'],
+      ['Menu Design', 'Carte et spécialités culinaires'],
+      ['Food Truck', 'Concept mobile de cuisine'],
+      ['Coffee Shop', 'Concept café premium'],
+      ['Traiteur Événementiel', 'Prestations événementielles'],
+      ['Cave à Vins', 'Sélection de vins et accords'],
+    ],
+  },
+  {
+    cat: 'Mode', themes: ['rosePink', 'midnightSlate', 'vibrantPurple', 'warmCorp', 'amberGold'],
+    items: [
+      ['Collection Mode', 'Nouvelle collection saison'],
+      ['Fashion Lookbook', 'Shooting et tendances'],
+      ['Marque de Luxe', 'Présentation de marque premium'],
+      ['Sustainable Fashion', 'Mode éthique et durable'],
+      ['Cosmétiques', 'Marque beauté et soins'],
+      ['Jewelry Collection', 'Bijoux et accessoires'],
+    ],
+  },
+  {
+    cat: 'Sport', themes: ['freshGreen', 'darkTech', 'sunsetOrange', 'rubyRed', 'electricCyan'],
+    items: [
+      ['Club Sportif', 'Présentation du club'],
+      ['Programme Fitness', 'Plan d\'entraînement'],
+      ['Événement Sportif', 'Organisation de compétition'],
+      ['Performance Athlétique', 'Analyse de performance'],
+      ['Esport & Gaming', 'Équipe esport professionnelle'],
+      ['Yoga & Bien-être', 'Studio de yoga et wellness'],
+    ],
+  },
+  {
+    cat: 'Événements', themes: ['vibrantPurple', 'rosePink', 'amberGold', 'sunsetOrange', 'electricCyan'],
+    items: [
+      ['Conférence', 'Organisation de conférence'],
+      ['Gala de Charité', 'Événement caritatif premium'],
+      ['Salon Professionnel', 'Stand et exposition'],
+      ['Team Building', 'Activité d\'équipe'],
+      ['Festival', 'Organisation de festival'],
+      ['Hackathon', 'Marathon de code créatif'],
+    ],
+  },
+  {
+    cat: 'Finance', themes: ['darkTech', 'freshGreen', 'midnightSlate', 'oceanTeal', 'amberGold'],
+    items: [
+      ['Rapport Financier', 'Bilan et compte de résultat'],
+      ['Levée de Fonds', 'Deck pour investisseurs'],
+      ['Crypto & DeFi', 'Marché des cryptomonnaies'],
+      ['Banque Privée', 'Gestion de fortune premium'],
+      ['Audit Financier', 'Contrôle des comptes'],
+      ['Fintech', 'Innovation financière'],
+    ],
+  },
+  {
+    cat: 'RSE', themes: ['freshGreen', 'oceanTeal', 'limeEnergy', 'electricCyan', 'darkTech'],
+    items: [
+      ['Rapport RSE', 'Responsabilité sociétale'],
+      ['Bilan Carbone', 'Empreinte environnementale'],
+      ['Développement Durable', 'Stratégie développement durable'],
+      ['Économie Circulaire', 'Modèle circulaire innovant'],
+      ['Énergie Renouvelable', 'Transition énergétique'],
+      ['Impact Social', 'Engagement sociétal mesurable'],
+    ],
+  },
+  {
+    cat: 'Association', themes: ['rubyRed', 'sunsetOrange', 'darkTech', 'freshGreen', 'vibrantPurple'],
+    items: [
+      ['Association Caritative', 'Présentation de l\'association'],
+      ['Collecte de Fonds', 'Campagne de dons'],
+      ['Projet Humanitaire', 'Mission humanitaire terrain'],
+      ['ONG Internationale', 'Organisation internationale'],
+      ['Bénévolat', 'Programme de bénévoles'],
+      ['Aide d\'Urgence', 'Intervention d\'urgence'],
+    ],
+  },
 ];
 
-const restoThemesArr = [themes.warmGray, themes.amber, themes.red, themes.orange, themes.green];
-
-restoNames.forEach(([name, thumb, desc], i) => {
-  const t = restoThemesArr[i % restoThemesArr.length];
-  restaurantTemplates.push({
-    id: `resto-${i}`, name: name as string, description: desc as string, category: 'Restaurant',
-    thumbnail: thumb as string, color: t.accent,
-    slides: [
-      titleSlide(t.bg, t.accent, t.text, t.muted, name as string, desc as string),
-      threeCards(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Notre Carte', [
-        { icon: '🥗', title: 'Entrées', desc: 'Fraîcheur et saveurs' },
-        { icon: '🥩', title: 'Plats', desc: 'Cuisine de saison' },
-        { icon: '🍰', title: 'Desserts', desc: 'Fait maison' },
-      ]),
-      thanksSlide(t.bg, t.accent, t.text, t.muted, 'Bon appétit ! 🍽️', 'Réservations : 01 23 45 67 89'),
-    ]
-  });
-});
-
-// ─── MODE / FASHION ───────────────────────
-
-const modeNames2 = [
-  ['Collection Mode', '👗', 'Nouvelle collection saison'],
-  ['Fashion Lookbook', '📸', 'Shooting et tendances'],
-  ['Marque de Luxe', '💎', 'Présentation de marque'],
-  ['E-commerce Mode', '🛍️', 'Boutique en ligne'],
-  ['Défilé de Mode', '👠', 'Fashion week'],
-  ['Streetwear Brand', '🧢', 'Marque streetwear'],
-  ['Jewelry Collection', '💍', 'Bijoux et accessoires'],
-  ['Cosmétiques', '💄', 'Marque beauté'],
-  ['Sustainable Fashion', '🌿', 'Mode éthique et durable'],
-  ['Fashion Magazine', '📰', 'Éditorial mode'],
-];
-
-const modeThemesArr = [themes.black, themes.rose, themes.pink, themes.warmGray, themes.purple];
-
-modeNames2.forEach(([name, thumb, desc], i) => {
-  const t = modeThemesArr[i % modeThemesArr.length];
-  modeTemplates.push({
-    id: `mode-${i}`, name: name as string, description: desc as string, category: 'Mode',
-    thumbnail: thumb as string, color: t.accent,
-    slides: [
-      titleSlide(t.bg, t.accent, t.text, t.muted, name as string, desc as string),
-      contentSlide(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Collection', ['Tendances de saison', 'Matériaux premium', 'Design exclusif', 'Édition limitée']),
-      thanksSlide(t.bg, t.accent, t.text, t.muted, 'Shop Now', 'www.marque.com · @marque'),
-    ]
-  });
-});
-
-// ─── SPORT ────────────────────────────────
-
-const sportNames = [
-  ['Club Sportif', '⚽', 'Présentation du club'],
-  ['Programme Fitness', '💪', 'Plan d\'entraînement'],
-  ['Événement Sportif', '🏆', 'Organisation de compétition'],
-  ['Nutrition Sportive', '🥗', 'Plan alimentaire'],
-  ['Performance Athlétique', '🏃', 'Analyse de performance'],
-  ['Yoga & Bien-être', '🧘', 'Studio de yoga'],
-  ['Sport Extrême', '🏄', 'Aventure et adrénaline'],
-  ['Esport & Gaming', '🎮', 'Équipe esport'],
-  ['Marathon', '🏅', 'Course longue distance'],
-  ['Camp d\'Entraînement', '🏋️', 'Stage sportif'],
-];
-
-const sportThemesArr = [themes.green, themes.blue, themes.orange, themes.red, themes.teal];
-
-sportNames.forEach(([name, thumb, desc], i) => {
-  const t = sportThemesArr[i % sportThemesArr.length];
-  sportTemplates.push({
-    id: `sport-${i}`, name: name as string, description: desc as string, category: 'Sport',
-    thumbnail: thumb as string, color: t.accent,
-    slides: [
-      titleSlide(t.bg, t.accent, t.text, t.muted, name as string, desc as string),
-      statsSlide(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Performances', [
-        { value: '42', label: 'Athlètes' }, { value: '15', label: 'Médailles' },
-        { value: '98%', label: 'Satisfaction' }, { value: '3h/j', label: 'Entraînement' },
-      ]),
-      thanksSlide(t.bg, t.accent, t.text, t.muted, 'Rejoignez-nous ! 🏆', 'Inscriptions ouvertes'),
-    ]
-  });
-});
-
-// ─── ÉVÉNEMENTS ───────────────────────────
-
-const eventNames2 = [
-  ['Conférence', '🎤', 'Organisation de conférence'],
-  ['Mariage', '💒', 'Planification de mariage'],
-  ['Gala de Charité', '🎭', 'Événement caritatif'],
-  ['Salon Professionnel', '🏛️', 'Stand et exposition'],
-  ['Team Building', '🤝', 'Activité d\'équipe'],
-  ['Festival', '🎪', 'Organisation de festival'],
-  ['Webinar', '💻', 'Événement en ligne'],
-  ['Cérémonie', '🏅', 'Remise de prix'],
-  ['Anniversaire Corporate', '🎂', 'Célébration d\'entreprise'],
-  ['Hackathon', '💡', 'Marathon de code'],
-];
-
-const eventThemesArr = [themes.purple, themes.pink, themes.amber, themes.indigo, themes.rose];
-
-eventNames2.forEach(([name, thumb, desc], i) => {
-  const t = eventThemesArr[i % eventThemesArr.length];
-  eventTemplates.push({
-    id: `event-${i}`, name: name as string, description: desc as string, category: 'Événements',
-    thumbnail: thumb as string, color: t.accent,
-    slides: [
-      titleSlide(t.bg, t.accent, t.text, t.muted, name as string, desc as string),
-      timelineSlide(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Programme', [
-        { label: '09h00 — Accueil', desc: 'Café et networking' },
-        { label: '10h00 — Keynote', desc: 'Intervention principale' },
-        { label: '12h00 — Ateliers', desc: 'Sessions interactives' },
-        { label: '17h00 — Clôture', desc: 'Cocktail de networking' },
-      ]),
-      thanksSlide(t.bg, t.accent, t.text, t.muted, 'À bientôt ! 🎉', 'Inscrivez-vous sur event.com'),
-    ]
-  });
-});
-
-// ─── FINANCE ──────────────────────────────
-
-const finNames = [
-  ['Rapport Financier', '💹', 'Bilan et compte de résultat'],
-  ['Budget Prévisionnel', '📊', 'Prévisions budgétaires'],
-  ['Levée de Fonds', '💰', 'Deck pour investisseurs'],
-  ['Analyse de Risques', '⚠️', 'Évaluation des risques'],
-  ['Crypto & DeFi', '₿', 'Marché des cryptomonnaies'],
-  ['Assurance', '🛡️', 'Solutions d\'assurance'],
-  ['Banque Privée', '🏦', 'Gestion de fortune'],
-  ['Audit Financier', '🔍', 'Contrôle des comptes'],
-  ['Trading', '📈', 'Stratégies de trading'],
-  ['Fintech', '📱', 'Innovation financière'],
-];
-
-const finThemesArr = [themes.green, themes.blue, themes.slate, themes.teal, themes.indigo];
-
-finNames.forEach(([name, thumb, desc], i) => {
-  const t = finThemesArr[i % finThemesArr.length];
-  financeTemplates.push({
-    id: `fin-${i}`, name: name as string, description: desc as string, category: 'Finance',
-    thumbnail: thumb as string, color: t.accent,
-    slides: [
-      titleSlide(t.bg, t.accent, t.text, t.muted, name as string, desc as string),
-      statsSlide(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Chiffres Clés', [
-        { value: '12.5M€', label: 'CA Annuel' }, { value: '+28%', label: 'Croissance' },
-        { value: '4.2M€', label: 'EBITDA' }, { value: '18%', label: 'Marge nette' },
-      ]),
-      thanksSlide(t.bg, t.accent, t.text, t.muted, 'Merci', 'Direction financière · finance@corp.com'),
-    ]
-  });
-});
-
-// ─── RSE / ENVIRONNEMENT ──────────────────
-
-const rseNames = [
-  ['Rapport RSE', '🌱', 'Responsabilité sociétale'],
-  ['Bilan Carbone', '🌍', 'Empreinte environnementale'],
-  ['Développement Durable', '♻️', 'Stratégie DD'],
-  ['Économie Circulaire', '🔄', 'Modèle circulaire'],
-  ['Biodiversité', '🦋', 'Protection de la nature'],
-  ['Énergie Renouvelable', '☀️', 'Transition énergétique'],
-  ['Impact Social', '🤲', 'Engagement sociétal'],
-  ['Label B Corp', '🏷️', 'Certification B Corp'],
-  ['Mobilité Durable', '🚲', 'Transport vert'],
-  ['Agriculture Bio', '🌾', 'Agriculture biologique'],
-];
-
-const rseThemesArr = [themes.green, themes.teal, themes.lime, themes.cyan, themes.blue];
-
-rseNames.forEach(([name, thumb, desc], i) => {
-  const t = rseThemesArr[i % rseThemesArr.length];
-  rseTemplates.push({
-    id: `rse-${i}`, name: name as string, description: desc as string, category: 'RSE',
-    thumbnail: thumb as string, color: t.accent,
-    slides: [
-      titleSlide(t.bg, t.accent, t.text, t.muted, name as string, desc as string),
-      threeCards(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Nos Engagements', [
-        { icon: '🌍', title: 'Environnement', desc: 'Réduction CO2' },
-        { icon: '🤝', title: 'Social', desc: 'Inclusion et diversité' },
-        { icon: '📊', title: 'Gouvernance', desc: 'Transparence' },
-      ]),
-      thanksSlide(t.bg, t.accent, t.text, t.muted, 'Ensemble 🌱', 'Pour un avenir durable'),
-    ]
-  });
-});
-
-// ─── ASSOCIATION / ONG ────────────────────
-
-const assoNames = [
-  ['Association Caritative', '❤️', 'Présentation de l\'association'],
-  ['Collecte de Fonds', '🎗️', 'Campagne de dons'],
-  ['Rapport d\'Activité', '📋', 'Bilan annuel association'],
-  ['Projet Humanitaire', '🌍', 'Mission humanitaire'],
-  ['Bénévolat', '🙋', 'Programme de bénévoles'],
-  ['ONG Internationale', '🏳️', 'Organisation internationale'],
-  ['Action Solidaire', '🤲', 'Initiative solidaire'],
-  ['Parrainage', '👨‍👧', 'Programme de parrainage'],
-  ['Éducation pour Tous', '📚', 'Accès à l\'éducation'],
-  ['Aide d\'Urgence', '🆘', 'Intervention d\'urgence'],
-];
-
-const assoThemesArr = [themes.red, themes.orange, themes.blue, themes.green, themes.purple];
-
-assoNames.forEach(([name, thumb, desc], i) => {
-  const t = assoThemesArr[i % assoThemesArr.length];
-  associationTemplates.push({
-    id: `asso-${i}`, name: name as string, description: desc as string, category: 'Association',
-    thumbnail: thumb as string, color: t.accent,
-    slides: [
-      titleSlide(t.bg, t.accent, t.text, t.muted, name as string, desc as string),
-      statsSlide(t.bgLight, t.accent, t.textDark, t.mutedDark, 'Notre Impact', [
-        { value: '5,000', label: 'Bénéficiaires' }, { value: '120', label: 'Bénévoles' },
-        { value: '15', label: 'Pays' }, { value: '350K€', label: 'Collectés' },
-      ]),
-      thanksSlide(t.bg, t.accent, t.text, t.muted, 'Faites un don ❤️', 'www.association.org/don'),
-    ]
+otherCategories.forEach(({ cat, items, themes: themeKeys }) => {
+  items.forEach(([name, desc], i) => {
+    const t = THEMES[themeKeys[i % themeKeys.length]];
+    allTemplates.push(buildTemplate({
+      id: `${cat.toLowerCase().replace(/[éèê]/g, 'e').replace(/[àâ]/g, 'a').replace(/[ùû]/g, 'u').replace(/[^a-z]/g, '')}-${i}`,
+      name, desc, cat, theme: t,
+      heroTitle: name, heroSub: `${desc}. Une présentation professionnelle et impactante.`,
+      agendaItems: ['Présentation générale', 'Contexte & Enjeux', 'Notre proposition', 'Détails et chiffres', 'Équipe & Ressources', 'Conclusion'],
+      aboutTitle: 'Présentation', aboutParagraphs: [
+        `${name} — une présentation complète pour communiquer efficacement sur votre projet.`,
+        'Notre approche combine expertise sectorielle et design professionnel pour un maximum d\'impact.',
+        'Chaque slide est conçu pour captiver votre audience et transmettre vos messages clés.',
+      ],
+      featureHeading: 'Points Forts', features: [
+        { num: '01', title: 'Expertise', desc: 'Des années d\'expérience dans le secteur pour une vision éclairée.' },
+        { num: '02', title: 'Qualité', desc: 'Des standards élevés à chaque étape du processus.' },
+        { num: '03', title: 'Résultats', desc: 'Des résultats mesurables et un impact concret.' },
+      ],
+      metricsHeading: 'En Chiffres', metrics: [
+        { value: '100+', label: 'Projets', sub: 'réalisés' },
+        { value: '98%', label: 'Satisfaction', sub: 'client' },
+        { value: '15', label: 'Années', sub: 'd\'expérience' },
+        { value: '50+', label: 'Experts', sub: 'dans l\'équipe' },
+      ],
+      splitHeading: 'Notre Approche', splitLeft: 'Valeurs', splitLeftItems: ['Excellence', 'Innovation', 'Engagement', 'Transparence'], splitRight: 'Méthodes', splitRightItems: ['Analyse approfondie', 'Co-construction', 'Suivi continu', 'Amélioration permanente'],
+      processHeading: 'Notre Processus', processSteps: [
+        { title: 'Écoute', desc: 'Compréhension de vos besoins et objectifs' },
+        { title: 'Proposition', desc: 'Solution personnalisée et adaptée' },
+        { title: 'Réalisation', desc: 'Mise en œuvre avec suivi régulier' },
+        { title: 'Bilan', desc: 'Évaluation et perspectives' },
+      ],
+      quote: 'L\'excellence est un art que l\'on n\'atteint que par l\'exercice constant.', quoteAuthor: 'Aristote', quoteRole: 'Philosophe',
+      bigNumber: '98%', bigLabel: 'Taux de satisfaction client', bigDesc: 'La confiance de nos clients est notre plus grande fierté.',
+      sectionNum: '03', sectionTitle: 'Détails & Résultats',
+      teamHeading: 'Notre Équipe', team: [
+        { name: 'Marie Laurent', role: 'Directrice' },
+        { name: 'Thomas Bernard', role: 'Expert sénior' },
+        { name: 'Léa Martin', role: 'Coordinatrice' },
+        { name: 'Hugo Petit', role: 'Analyste' },
+      ],
+      compHeading: 'Notre Différence', compLeft: 'Approche standard', compLeftItems: ['Service générique', 'Communication limitée', 'Suivi minimal', 'Résultats incertains'],
+      compRight: 'Notre Approche', compRightItems: ['Service personnalisé', 'Communication proactive', 'Suivi dédié', 'Résultats garantis'],
+      ctaHeadline: 'Merci', ctaSub: 'Prêts à démarrer ensemble ?', ctaEmail: 'contact@company.com', ctaWeb: 'www.company.com',
+    }));
   });
 });
 
@@ -774,7 +1166,7 @@ assoNames.forEach(([name, thumb, desc], i) => {
 
 const blankTemplate: PresentationTemplate = {
   id: 'blank', name: 'Présentation vierge', description: 'Commencer de zéro',
-  category: 'Basique', thumbnail: '📄', color: '#64748b',
+  category: 'Basique', thumbnail: '#64748b', color: '#64748b',
   slides: [{ id: uid(), elements: [], background: '#ffffff' }]
 };
 
@@ -784,21 +1176,7 @@ const blankTemplate: PresentationTemplate = {
 
 export const presentationTemplates: PresentationTemplate[] = [
   blankTemplate,
-  ...businessTemplates,
-  ...educationTemplates,
-  ...marketingTemplates,
-  ...creativTemplates,
-  ...techTemplates,
-  ...medicalTemplates,
-  ...immobilierTemplates,
-  ...juridiqueTemplates,
-  ...restaurantTemplates,
-  ...modeTemplates,
-  ...sportTemplates,
-  ...eventTemplates,
-  ...financeTemplates,
-  ...rseTemplates,
-  ...associationTemplates,
+  ...allTemplates,
 ];
 
 export const getPresentationCategories = (): string[] => {
@@ -829,8 +1207,6 @@ export const curatedImageCollections: Record<string, string[]> = {
     'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop',
   ],
   'Technologie': [
     'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=300&fit=crop',
@@ -839,36 +1215,26 @@ export const curatedImageCollections: Record<string, string[]> = {
     'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=400&h=300&fit=crop',
   ],
   'Nature': [
     'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1418065460487-3e41a6c84dc5?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1433086966358-54859d0ed716?w=400&h=300&fit=crop',
   ],
   'Personnes': [
     'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1543269865-cbf427effbad?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1552581234-26160f608093?w=400&h=300&fit=crop',
   ],
   'Architecture': [
     'https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1448630360428-65456885c650?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1431576901776-e539bd916ba2?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1479839672679-a46483c0e7c8?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1486718448742-163732cd1544?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1464082354059-27db6ce50048?w=400&h=300&fit=crop',
   ],
   'Abstrait': [
     'https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=400&h=300&fit=crop',
@@ -876,39 +1242,29 @@ export const curatedImageCollections: Record<string, string[]> = {
     'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1604076913837-52ab5f7c1ac4?w=400&h=300&fit=crop',
   ],
   'Éducation': [
     'https://images.unsplash.com/photo-1523050854058-8df90110c476?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&h=300&fit=crop',
   ],
   'Médical': [
     'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1551076805-e1869033e561?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1530026186672-2cd00ffc50fe?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?w=400&h=300&fit=crop',
   ],
   'Food': [
     'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1493770348161-369560ae357d?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&h=300&fit=crop',
   ],
   'Sport': [
     'https://images.unsplash.com/photo-1461896836934-bd45ba8a5eed?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=300&fit=crop',
-    'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&h=300&fit=crop',
   ],
 };
 
@@ -934,19 +1290,15 @@ export const shapePresets = [
   { label: 'Bannière', shape: 'rectangle' as const, width: 960, height: 80, backgroundColor: '#1e293b' },
   { label: 'Séparateur', shape: 'rectangle' as const, width: 400, height: 2, backgroundColor: '#94a3b8' },
   { label: 'Point', shape: 'circle' as const, width: 30, height: 30, backgroundColor: '#ef4444' },
-  { label: 'Cadre', shape: 'rounded' as const, width: 300, height: 200, backgroundColor: 'transparent', borderRadius: 12, borderColor: '#6366f1', borderWidth: 2 },
-  { label: 'Barre latérale', shape: 'rectangle' as const, width: 6, height: 400, backgroundColor: '#6366f1' },
 ];
 
 export const colorPalettes = [
-  { name: 'Professionnel', colors: ['#1e293b', '#334155', '#3b82f6', '#60a5fa', '#f8fafc', '#ffffff'] },
-  { name: 'Vibrant', colors: ['#7c3aed', '#ec4899', '#f97316', '#06b6d4', '#10b981', '#f43f5e'] },
-  { name: 'Nature', colors: ['#064e3b', '#059669', '#34d399', '#d1fae5', '#fef3c7', '#f59e0b'] },
-  { name: 'Monochrome', colors: ['#000000', '#1f2937', '#4b5563', '#9ca3af', '#e5e7eb', '#ffffff'] },
-  { name: 'Sunset', colors: ['#7c2d12', '#dc2626', '#f97316', '#facc15', '#fef9c3', '#ffffff'] },
-  { name: 'Ocean', colors: ['#0c4a6e', '#0284c7', '#38bdf8', '#bae6fd', '#f0f9ff', '#ffffff'] },
-  { name: 'Pastel', colors: ['#fce7f3', '#dbeafe', '#dcfce7', '#fef3c7', '#f3e8ff', '#ffe4e6'] },
-  { name: 'Dark', colors: ['#000000', '#18181b', '#27272a', '#3f3f46', '#52525b', '#71717a'] },
-  { name: 'Corporate', colors: ['#1e3a5f', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#dbeafe'] },
-  { name: 'Warm', colors: ['#451a03', '#92400e', '#d97706', '#f59e0b', '#fbbf24', '#fef3c7'] },
+  { name: 'Professionnel', colors: ['#1e293b', '#334155', '#3b82f6', '#60a5fa', '#e2e8f0', '#ffffff'] },
+  { name: 'Vibrant', colors: ['#7c3aed', '#a855f7', '#ec4899', '#f43f5e', '#fb923c', '#fbbf24'] },
+  { name: 'Nature', colors: ['#064e3b', '#059669', '#10b981', '#34d399', '#6ee7b7', '#d1fae5'] },
+  { name: 'Coucher de soleil', colors: ['#7c2d12', '#ea580c', '#f97316', '#fb923c', '#fde68a', '#fefce8'] },
+  { name: 'Océan', colors: ['#0c4a6e', '#0284c7', '#0ea5e9', '#38bdf8', '#7dd3fc', '#e0f2fe'] },
+  { name: 'Monochrome', colors: ['#000000', '#27272a', '#52525b', '#a1a1aa', '#d4d4d8', '#ffffff'] },
+  { name: 'Pastel', colors: ['#fce7f3', '#ddd6fe', '#bfdbfe', '#a7f3d0', '#fef08a', '#fed7aa'] },
+  { name: 'Luxe', colors: ['#1c1917', '#292524', '#d4a574', '#e8c9a0', '#f5efe8', '#ffffff'] },
 ];
