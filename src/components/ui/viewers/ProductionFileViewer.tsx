@@ -82,11 +82,13 @@ const ProductionFileViewer: React.FC<ProductionFileViewerProps> = ({
   const [showThumbnails, setShowThumbnails] = useState(false);
   const [showAnnotations, setShowAnnotations] = useState(false);
   const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
+  const [officeViewerIndex, setOfficeViewerIndex] = useState(0);
   
   const isMobile = useIsMobile();
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<number | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const officeLoadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { resolvedUrl, isResolving, resolveError } = useResolvedFileUrl(fileUrl, { 
     enabled: isOpen,
@@ -109,6 +111,7 @@ const ProductionFileViewer: React.FC<ProductionFileViewerProps> = ({
       setImageRotation(0);
       setShowThumbnails(false);
       setShowAnnotations(false);
+      setOfficeViewerIndex(0);
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -173,6 +176,21 @@ const ProductionFileViewer: React.FC<ProductionFileViewerProps> = ({
       }
     }
   }, [isFullscreen, resetControlsTimeout]);
+
+  // Office viewer auto-fallback timeout
+  useEffect(() => {
+    if (fileType !== 'office' || !loading || !isOpen) return;
+    officeLoadTimeoutRef.current = setTimeout(() => {
+      if (loading && officeViewerIndex < 1) {
+        setOfficeViewerIndex(prev => prev + 1);
+        setLoading(true);
+        toast.info('Basculement vers Google Docs Viewer...');
+      }
+    }, 15000);
+    return () => {
+      if (officeLoadTimeoutRef.current) clearTimeout(officeLoadTimeoutRef.current);
+    };
+  }, [officeViewerIndex, loading, fileType, isOpen]);
 
   // Check if file is PowerPoint
   const isPowerPoint = useMemo(() => {
@@ -455,32 +473,80 @@ const ProductionFileViewer: React.FC<ProductionFileViewerProps> = ({
   );
 
   const renderOfficeContent = () => {
-    // Office Online viewer requires publicly accessible URL
-    const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(resolvedUrl)}`;
+    const encodedUrl = encodeURIComponent(resolvedUrl);
+    
+    // Multiple viewer options with automatic fallback
+    const officeViewers = [
+      {
+        name: 'Office Online',
+        url: `https://view.officeapps.live.com/op/embed.aspx?src=${encodedUrl}`,
+      },
+      {
+        name: 'Google Docs Viewer',
+        url: `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true`,
+      },
+    ];
+    
+    const currentOfficeViewer = officeViewers[officeViewerIndex] || officeViewers[0];
+    
+    const handleOfficeLoadError = () => {
+      // Try next viewer before giving up
+      if (officeViewerIndex < officeViewers.length - 1) {
+        setOfficeViewerIndex(prev => prev + 1);
+        setLoading(true);
+        toast.info(`Basculement vers ${officeViewers[officeViewerIndex + 1].name}...`);
+      } else {
+        handleLoadError('Impossible de charger le document Office');
+      }
+    };
+
+
+
     return (
       <div 
         className="flex-1 w-full h-full bg-muted relative"
         onClick={() => {
-          // Click to focus iframe for keyboard navigation
           officeIframeRef.current?.focus();
         }}
       >
+        {/* Viewer indicator */}
+        <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
+          <span className="text-xs bg-background/80 backdrop-blur px-2 py-1 rounded text-muted-foreground">
+            {currentOfficeViewer.name}
+          </span>
+          {officeViewers.length > 1 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                setOfficeViewerIndex((prev) => (prev + 1) % officeViewers.length);
+                setLoading(true);
+              }}
+            >
+              <RefreshCw className="h-3 w-3 mr-1" />
+              Changer de viewer
+            </Button>
+          )}
+        </div>
+        
         <iframe
           ref={officeIframeRef}
-          key={retryCount}
-          src={officeViewerUrl}
+          key={`${retryCount}-${officeViewerIndex}`}
+          src={currentOfficeViewer.url}
           className="w-full h-full border-0"
           title={fileName}
           onLoad={() => {
+            if (officeLoadTimeoutRef.current) clearTimeout(officeLoadTimeoutRef.current);
             handleLoadSuccess();
-            // Auto-focus iframe for PowerPoint keyboard navigation
             if (isPowerPoint) {
               setTimeout(() => {
                 officeIframeRef.current?.focus();
               }, 500);
             }
           }}
-          onError={() => handleLoadError('Impossible de charger le document Office')}
+          onError={handleOfficeLoadError}
           sandbox="allow-scripts allow-same-origin allow-forms"
           tabIndex={0}
         />
