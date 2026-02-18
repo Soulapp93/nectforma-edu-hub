@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { WorkspaceDocument, workspaceService } from '@/services/workspaceService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { fileImportService } from '@/services/fileImportService';
 import { useMyContext } from '@/hooks/useMyContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +20,7 @@ import {
   Highlighter, ZoomIn, ZoomOut, FileDown, ChevronDown, MoreHorizontal,
   PaintBucket, Pilcrow, Heading1, Heading2, Heading3, Heading4,
   RemoveFormatting, Copy, Clipboard, Scissors, RotateCcw, RotateCw,
-  Maximize, SpellCheck, ListChecks, SeparatorHorizontal
+  Maximize, SpellCheck, ListChecks, SeparatorHorizontal, Upload
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -98,6 +99,8 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
   const editorRef = useRef<HTMLDivElement>(null);
   const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const importFileRef = useRef<HTMLInputElement>(null);
+  const [importingFile, setImportingFile] = useState(false);
 
   // UI state
   const [zoom, setZoom] = useState(100);
@@ -366,6 +369,26 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
     editorRef.current?.focus();
   };
 
+  const handleImportDocx = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportingFile(true);
+    try {
+      const result = await fileImportService.importDocx(file);
+      if (editorRef.current) {
+        editorRef.current.innerHTML = result.html;
+        updateWordCount();
+        handleAutoSave();
+        toast.success(`"${file.name}" importé avec succès`);
+      }
+    } catch (err: any) {
+      toast.error(`Erreur d'import: ${err?.message || 'Erreur'}`);
+    } finally {
+      setImportingFile(false);
+      if (importFileRef.current) importFileRef.current.value = '';
+    }
+  };
+
   // Share functions
   const loadShares = useCallback(async () => {
     try {
@@ -603,6 +626,7 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] bg-background print:h-auto print:overflow-visible">
       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+      <input ref={importFileRef} type="file" accept=".docx,.doc" className="hidden" onChange={handleImportDocx} />
 
       {/* Google Docs style menu bar */}
       <div className="flex items-center gap-1 px-2 py-1 border-b bg-card print:hidden">
@@ -638,6 +662,10 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
           <DropdownMenuTrigger className="px-2 py-1 rounded hover:bg-muted transition-colors">Fichier</DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-[200px]">
             <DropdownMenuItem onClick={handleSave}><Save className="h-3.5 w-3.5 mr-2" />Enregistrer <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+S</span></DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => importFileRef.current?.click()} disabled={importingFile}>
+              <Upload className="h-3.5 w-3.5 mr-2" />{importingFile ? 'Import en cours...' : 'Importer un fichier Word'}
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handlePrint}><Printer className="h-3.5 w-3.5 mr-2" />Imprimer <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+P</span></DropdownMenuItem>
             <DropdownMenuItem onClick={handleExportPDF}><FileDown className="h-3.5 w-3.5 mr-2" />Exporter en PDF</DropdownMenuItem>

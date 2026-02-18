@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { WorkspaceDocument, workspaceService } from '@/services/workspaceService';
+import { fileImportService } from '@/services/fileImportService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +10,7 @@ import {
   PaintBucket, Type, Download, Undo2, Redo2, BarChart3, Trash2, Copy, Clipboard,
   Scissors, Search, FileSpreadsheet, ChevronDown, Merge, SplitSquareHorizontal,
   Lock, Unlock, Filter, SortAsc, SortDesc, WrapText, Grid3X3, Eye, EyeOff,
-  PlusCircle, MinusCircle, ArrowUpDown, Columns, Rows, MoreHorizontal, X
+  PlusCircle, MinusCircle, ArrowUpDown, Columns, Rows, MoreHorizontal, X, Upload
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -157,6 +158,8 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
   const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
   const tableRef = useRef<HTMLDivElement>(null);
   const formulaInputRef = useRef<HTMLInputElement>(null);
+  const importFileRef = useRef<HTMLInputElement>(null);
+  const [importingFile, setImportingFile] = useState(false);
 
   const sheet = sheets[activeSheetIdx];
   const data = sheet?.data || {};
@@ -800,6 +803,29 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
     URL.revokeObjectURL(url);
   };
 
+  const handleImportXlsx = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportingFile(true);
+    try {
+      const result = await fileImportService.importXlsx(file);
+      const importedSheets = result.sheets.map(s => ({
+        ...s,
+        hiddenRows: new Set<number>(s.hiddenRows || []),
+        hiddenCols: new Set<number>(s.hiddenCols || []),
+      }));
+      setSheets(importedSheets);
+      setActiveSheetIdx(0);
+      scheduleAutoSave();
+      toast.success(`"${file.name}" importé avec succès`);
+    } catch (err: any) {
+      toast.error(`Erreur d'import: ${err?.message || 'Erreur'}`);
+    } finally {
+      setImportingFile(false);
+      if (importFileRef.current) importFileRef.current.value = '';
+    }
+  };
+
   // --- Format display value ---
   const formatDisplayValue = (value: string, format?: string) => {
     if (!format || !value) return value;
@@ -874,6 +900,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
   // --- Render ---
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] bg-background" onClick={() => setContextMenu(null)}>
+      <input ref={importFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportXlsx} />
       {/* Top bar */}
       <div className="flex items-center gap-2 px-3 py-1.5 border-b bg-card">
         <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
@@ -889,6 +916,9 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
         <span className="text-xs text-muted-foreground hidden sm:block">
           {saving ? 'Sauvegarde...' : '✓ Auto'}
         </span>
+        <Button size="sm" variant="outline" onClick={() => importFileRef.current?.click()} disabled={importingFile} className="gap-1 h-7 text-xs">
+          <Upload className="h-3 w-3" /> {importingFile ? 'Import...' : 'Importer'}
+        </Button>
         <Button size="sm" variant="outline" onClick={exportCSV} className="gap-1 h-7 text-xs">
           <Download className="h-3 w-3" /> CSV
         </Button>
