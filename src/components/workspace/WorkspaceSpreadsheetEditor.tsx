@@ -235,7 +235,39 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
   useEffect(() => () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); }, []);
 
   // --- Cell interactions ---
+  const isEditingFormula = editingCell !== null && editValue.startsWith('=');
+
   const handleCellClick = (key: string, e: React.MouseEvent) => {
+    // Excel-like: if editing a formula, clicking another cell inserts the cell reference
+    if (isEditingFormula && key !== editingCell) {
+      e.preventDefault();
+      e.stopPropagation();
+      // Check if the last char is an operator or open paren or comma or start of formula
+      const lastChar = editValue.slice(-1);
+      const isAfterOperator = ['+', '-', '*', '/', '(', ',', '=', '>', '<', '&', '^', ' '].includes(lastChar);
+      if (isAfterOperator) {
+        // Insert cell reference directly
+        const newVal = editValue + key;
+        setEditValue(newVal);
+        setFormulaBarValue(newVal);
+      } else {
+        // Replace trailing cell reference if any, or append with operator hint
+        // Try to detect if there's already a cell ref at the end to replace (for re-clicking)
+        const refPattern = /[A-Z]+\d+$/;
+        const match = editValue.match(refPattern);
+        if (match) {
+          const newVal = editValue.slice(0, -match[0].length) + key;
+          setEditValue(newVal);
+          setFormulaBarValue(newVal);
+        } else {
+          const newVal = editValue + key;
+          setEditValue(newVal);
+          setFormulaBarValue(newVal);
+        }
+      }
+      return;
+    }
+
     if (e.shiftKey && selectedCell) {
       setSelectionEnd(key);
     } else {
@@ -277,8 +309,14 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
       } else {
         setShowFormulaHelper(false);
       }
+      // Enter formula editing mode if not already
+      if (selectedCell && editingCell !== selectedCell) {
+        setEditingCell(selectedCell);
+      }
+      setEditValue(value);
     } else {
       setShowFormulaHelper(false);
+      setEditValue(value);
     }
     if (selectedCell) {
       if (value.startsWith('=')) {
@@ -333,6 +371,30 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      // When editing a formula and pressing Enter (even if cell input lost focus)
+      if (e.key === 'Enter' && editingCell && editValue.startsWith('=')) {
+        e.preventDefault();
+        commitEdit(editingCell);
+        const ref = parseCellRef(editingCell);
+        if (ref) {
+          const nextKey = cellKey(ref[0] + 1, ref[1]);
+          setSelectedCell(nextKey);
+          setSelectionStart(nextKey);
+          setSelectionEnd(nextKey);
+          const cell = data[nextKey];
+          setFormulaBarValue(cell?.formula || cell?.value || '');
+        }
+        return;
+      }
+      if (e.key === 'Escape' && editingCell) {
+        setEditingCell(null);
+        setEditValue('');
+        if (selectedCell) {
+          const cell = data[selectedCell];
+          setFormulaBarValue(cell?.formula || cell?.value || '');
+        }
+        return;
+      }
       if (e.ctrlKey || e.metaKey) {
         if (e.key === 'z') { e.preventDefault(); undo(); }
         if (e.key === 'y') { e.preventDefault(); redo(); }
@@ -374,7 +436,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedCell, editingCell, undo, redo, data, sheet]);
+  }, [selectedCell, editingCell, editValue, undo, redo, data, sheet]);
 
   // --- Selection range ---
   const getSelectionBounds = () => {
@@ -999,8 +1061,61 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
         <span className="text-xs text-muted-foreground font-semibold">fx</span>
         <input
           ref={formulaInputRef}
-          value={formulaBarValue}
-          onChange={e => handleFormulaBarChange(e.target.value)}
+          value={editingCell ? editValue : formulaBarValue}
+          onChange={e => {
+            if (editingCell) {
+              setEditValue(e.target.value);
+              setFormulaBarValue(e.target.value);
+              if (e.target.value.startsWith('=')) {
+                updateSheetData(editingCell, { formula: e.target.value, value: '' });
+              } else {
+                updateSheetData(editingCell, { value: e.target.value, formula: undefined });
+              }
+              scheduleAutoSave();
+            } else {
+              handleFormulaBarChange(e.target.value);
+            }
+          }}
+          onKeyDown={e => {
+            if (e.key === 'Enter' && selectedCell) {
+              e.preventDefault();
+              if (editingCell) {
+                commitEdit(editingCell);
+              } else if (formulaBarValue) {
+                pushHistory();
+                if (formulaBarValue.startsWith('=')) {
+                  updateSheetData(selectedCell, { formula: formulaBarValue, value: '' });
+                } else {
+                  updateSheetData(selectedCell, { value: formulaBarValue, formula: undefined });
+                }
+                scheduleAutoSave();
+              }
+              // Move to next row like Excel
+              const ref = parseCellRef(selectedCell);
+              if (ref) {
+                const nextKey = cellKey(ref[0] + 1, ref[1]);
+                setSelectedCell(nextKey);
+                setSelectionStart(nextKey);
+                setSelectionEnd(nextKey);
+                const cell = data[nextKey];
+                setFormulaBarValue(cell?.formula || cell?.value || '');
+              }
+            } else if (e.key === 'Escape') {
+              setEditingCell(null);
+              if (selectedCell) {
+                const cell = data[selectedCell];
+                setFormulaBarValue(cell?.formula || cell?.value || '');
+                setEditValue('');
+              }
+            }
+          }}
+          onFocus={() => {
+            // Enter edit mode when focusing formula bar
+            if (selectedCell && !editingCell) {
+              setEditingCell(selectedCell);
+              setEditValue(formulaBarValue);
+            }
+          }}
           className="flex-1 text-sm border-none bg-transparent outline-none font-mono text-foreground"
           placeholder="Valeur ou formule (=SUM, =VLOOKUP, =IF...)"
         />
@@ -1125,10 +1240,18 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
                             <input
                               autoFocus
                               value={editValue}
-                              onChange={e => setEditValue(e.target.value)}
-                              onBlur={() => commitEdit(key)}
+                              onChange={e => {
+                                setEditValue(e.target.value);
+                                setFormulaBarValue(e.target.value);
+                              }}
+                              onBlur={() => {
+                                // Don't commit if we're clicking another cell during formula editing
+                                if (!isEditingFormula) {
+                                  commitEdit(key);
+                                }
+                              }}
                               onKeyDown={e => handleCellKeyDown(e, key)}
-                              className="w-full h-full px-1 py-0 text-xs outline-none bg-white dark:bg-gray-900 border-none font-mono"
+                              className="w-full h-full px-1 py-0 text-xs outline-none bg-background border-none font-mono"
                               style={{ minHeight: rh }}
                             />
                           ) : (
