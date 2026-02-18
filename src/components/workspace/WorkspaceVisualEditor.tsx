@@ -7,8 +7,10 @@ import { toast } from 'sonner';
 import {
   ArrowLeft, Save, Type, Image, Square, Circle, Star, Triangle,
   Trash2, Bold, Italic, AlignLeft, AlignCenter, AlignRight, Palette,
-  Layers, Copy, Download, ZoomIn, ZoomOut, Minus
+  Layers, Copy, Download, ZoomIn, ZoomOut, Minus, LayoutTemplate
 } from 'lucide-react';
+import VisualTemplateGallery from './VisualTemplateGallery';
+import { VisualTemplate } from '@/data/visualTemplates';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
@@ -80,6 +82,7 @@ const WorkspaceVisualEditor: React.FC<Props> = ({ document: doc, onSave, onClose
   const [dragging, setDragging] = useState<{ id: string; startX: number; startY: number; elX: number; elY: number } | null>(null);
   const [resizing, setResizing] = useState<{ id: string; startX: number; startY: number; elW: number; elH: number } | null>(null);
   const [zoom, setZoom] = useState(0.5);
+  const [showTemplateGallery, setShowTemplateGallery] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -100,6 +103,20 @@ const WorkspaceVisualEditor: React.FC<Props> = ({ document: doc, onSave, onClose
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(handleSave, 3000);
   }, [handleSave]);
+
+  const loadTemplate = useCallback((template: VisualTemplate) => {
+    setCanvas({
+      width: template.width,
+      height: template.height,
+      background: template.canvas.background,
+      elements: template.canvas.elements.map(el => ({ ...el })),
+    });
+    setSelectedId(null);
+    setEditingTextId(null);
+    setShowTemplateGallery(false);
+    scheduleAutoSave();
+    toast.success(`Template "${template.name}" chargé`);
+  }, [scheduleAutoSave]);
 
   useEffect(() => () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); }, []);
 
@@ -278,6 +295,9 @@ const WorkspaceVisualEditor: React.FC<Props> = ({ document: doc, onSave, onClose
       <div className="flex items-center gap-3 px-4 py-2 border-b bg-card">
         <Button variant="ghost" size="icon" onClick={onClose}><ArrowLeft className="h-4 w-4" /></Button>
         <Input value={title} onChange={e => setTitle(e.target.value)} className="max-w-md border-none shadow-none text-lg font-semibold focus-visible:ring-0 px-1" placeholder="Titre" />
+        <Button size="sm" variant="outline" onClick={() => setShowTemplateGallery(true)} className="gap-1.5 text-xs">
+          <LayoutTemplate className="h-4 w-4" /> Templates
+        </Button>
         <div className="flex-1" />
         <Select value={`${canvas.width}x${canvas.height}`} onValueChange={v => { const [w, h] = v.split('x').map(Number); setCanvas(prev => ({ ...prev, width: w, height: h })); scheduleAutoSave(); }}>
           <SelectTrigger className="w-44 h-8 text-xs"><SelectValue /></SelectTrigger>
@@ -397,6 +417,13 @@ const WorkspaceVisualEditor: React.FC<Props> = ({ document: doc, onSave, onClose
           </div>
         </div>
       </div>
+      {showTemplateGallery && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+          <div className="w-full max-w-6xl h-[85vh] bg-card rounded-2xl border shadow-2xl overflow-hidden">
+            <VisualTemplateGallery onSelect={loadTemplate} onClose={() => setShowTemplateGallery(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
