@@ -60,6 +60,7 @@
     "jspdf": "^3.0.2",
     "jszip": "^3.10.1",
     "lucide-react": "^0.462.0",
+    "mammoth": "^1.11.0",
     "next-themes": "^0.3.0",
     "pdfjs-dist": "^5.3.93",
     "qr-scanner": "^1.4.2",

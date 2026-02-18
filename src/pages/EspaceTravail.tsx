@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { workspaceService, WorkspaceDocument, WorkspaceFolder } from '@/services/workspaceService';
 import { toast } from 'sonner';
-import { Plus, FileText, Table2, Presentation, Image, FolderPlus, Folder, ArrowLeft, Trash2, MoreVertical, Search, LayoutGrid, List, Users, ChevronLeft } from 'lucide-react';
+import { Plus, FileText, Table2, Presentation, Image, FolderPlus, Folder, ArrowLeft, Trash2, MoreVertical, Search, LayoutGrid, List, Users, ChevronLeft, Upload, FileUp } from 'lucide-react';
 import { getTemplatesByType, getTemplateCategories, DocumentTemplate } from '@/data/workspaceTemplates';
+import { fileImportService } from '@/services/fileImportService';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,6 +63,10 @@ const EspaceTravail = () => {
   const [folderPath, setFolderPath] = useState<WorkspaceFolder[]>([]);
   const [selectedDocType, setSelectedDocType] = useState<WorkspaceDocument['document_type'] | null>(null);
   const [templateCategory, setTemplateCategory] = useState<string>('all');
+  const [importing, setImporting] = useState(false);
+  const importFileRef = useRef<HTMLInputElement>(null);
+  const [showPdfTargetChoice, setShowPdfTargetChoice] = useState(false);
+  const [pendingPdfFile, setPendingPdfFile] = useState<File | null>(null);
 
   const loadData = useCallback(async () => {
     if (!userId) return;
@@ -105,6 +110,76 @@ const EspaceTravail = () => {
     } catch (err: any) {
       console.error('Create document error:', err);
       toast.error(`Erreur: ${err?.message || 'Erreur inconnue'}`);
+    }
+  };
+
+  const handleImportFile = async (file: File, forceType?: 'presentation' | 'visual') => {
+    if (!userId) return;
+    setImporting(true);
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      let docType: WorkspaceDocument['document_type'];
+      let content: any;
+      const docTitle = file.name.replace(/\.[^.]+$/, '');
+
+      if (ext === 'pdf') {
+        if (!forceType) {
+          setPendingPdfFile(file);
+          setShowPdfTargetChoice(true);
+          setImporting(false);
+          return;
+        }
+        docType = forceType;
+        if (forceType === 'presentation') {
+          content = await fileImportService.importPdfAsPresentation(file);
+        } else {
+          content = await fileImportService.importPdfAsVisual(file);
+        }
+      } else if (ext === 'docx' || ext === 'doc') {
+        docType = 'text';
+        content = await fileImportService.importDocx(file);
+      } else if (ext === 'xlsx' || ext === 'xls' || ext === 'csv') {
+        docType = 'spreadsheet';
+        content = await fileImportService.importXlsx(file);
+      } else if (ext === 'pptx' || ext === 'ppt') {
+        docType = 'presentation';
+        content = await fileImportService.importPptx(file);
+      } else if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext || '')) {
+        docType = 'visual';
+        content = await fileImportService.importImageAsVisual(file);
+      } else {
+        toast.error('Format de fichier non supporté');
+        setImporting(false);
+        return;
+      }
+
+      const doc = await workspaceService.createDocument({
+        title: docTitle,
+        document_type: docType,
+        content,
+        folder_id: currentFolderId,
+        owner_id: userId,
+        owner_type: 'user',
+      });
+      setShowNewDocModal(false);
+      setSelectedDocType(null);
+      setTemplateCategory('all');
+      setEditingDoc(doc);
+      toast.success(`"${docTitle}" importé avec succès`);
+    } catch (err: any) {
+      console.error('Import error:', err);
+      toast.error(`Erreur d'import: ${err?.message || 'Erreur inconnue'}`);
+    } finally {
+      setImporting(false);
+      if (importFileRef.current) importFileRef.current.value = '';
+    }
+  };
+
+  const handlePdfTargetChoice = async (target: 'presentation' | 'visual') => {
+    setShowPdfTargetChoice(false);
+    if (pendingPdfFile) {
+      await handleImportFile(pendingPdfFile, target);
+      setPendingPdfFile(null);
     }
   };
 
@@ -359,18 +434,47 @@ const EspaceTravail = () => {
           </DialogHeader>
 
           {!selectedDocType ? (
-            <div className="grid grid-cols-2 gap-3 py-4">
-              {DOC_TYPES.map(dt => (
-                <button key={dt.type} onClick={() => setSelectedDocType(dt.type)} className="flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-transparent hover:border-primary/30 hover:bg-muted/50 transition-all">
-                  <div className={`p-3 rounded-xl ${dt.color} text-white`}>
-                    <dt.icon className="h-6 w-6" />
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-3">
+                {DOC_TYPES.map(dt => (
+                  <button key={dt.type} onClick={() => setSelectedDocType(dt.type)} className="flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-transparent hover:border-primary/30 hover:bg-muted/50 transition-all">
+                    <div className={`p-3 rounded-xl ${dt.color} text-white`}>
+                      <dt.icon className="h-6 w-6" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium">{dt.label}</p>
+                      <p className="text-xs text-muted-foreground">{dt.desc}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              
+              {/* Import section */}
+              <div className="border-t pt-4">
+                <input
+                  ref={importFileRef}
+                  type="file"
+                  accept={fileImportService.getAllAcceptedExtensions()}
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleImportFile(file);
+                  }}
+                />
+                <button
+                  onClick={() => importFileRef.current?.click()}
+                  disabled={importing}
+                  className="w-full flex items-center gap-3 p-4 rounded-xl border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 hover:bg-muted/30 transition-all"
+                >
+                  <div className="p-2.5 rounded-lg bg-muted">
+                    <FileUp className="h-5 w-5 text-muted-foreground" />
                   </div>
-                  <div className="text-center">
-                    <p className="text-sm font-medium">{dt.label}</p>
-                    <p className="text-xs text-muted-foreground">{dt.desc}</p>
+                  <div className="text-left">
+                    <p className="text-sm font-medium">{importing ? 'Import en cours...' : 'Importer un fichier'}</p>
+                    <p className="text-xs text-muted-foreground">Word, Excel, PowerPoint, PDF, Images</p>
                   </div>
                 </button>
-              ))}
+              </div>
             </div>
           ) : (
             <div className="flex flex-col gap-3 flex-1 min-h-0">
@@ -410,6 +514,37 @@ const EspaceTravail = () => {
               </ScrollArea>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* PDF target choice dialog */}
+      <Dialog open={showPdfTargetChoice} onOpenChange={(v) => { setShowPdfTargetChoice(v); if (!v) setPendingPdfFile(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Ouvrir le PDF en tant que…</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-3 py-4">
+            <button
+              onClick={() => handlePdfTargetChoice('presentation')}
+              className="flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-transparent hover:border-primary/30 hover:bg-muted/50 transition-all"
+            >
+              <Presentation className="h-8 w-8 text-orange-500" />
+              <div className="text-center">
+                <p className="text-sm font-medium">Présentation</p>
+                <p className="text-xs text-muted-foreground">1 slide par page</p>
+              </div>
+            </button>
+            <button
+              onClick={() => handlePdfTargetChoice('visual')}
+              className="flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-transparent hover:border-primary/30 hover:bg-muted/50 transition-all"
+            >
+              <Image className="h-8 w-8 text-pink-500" />
+              <div className="text-center">
+                <p className="text-sm font-medium">Visuel</p>
+                <p className="text-xs text-muted-foreground">Première page éditable</p>
+              </div>
+            </button>
+          </div>
         </DialogContent>
       </Dialog>
 

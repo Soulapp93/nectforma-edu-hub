@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { WorkspaceDocument } from '@/services/workspaceService';
+import { fileImportService } from '@/services/fileImportService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +8,7 @@ import { toast } from 'sonner';
 import {
   ArrowLeft, Save, Type, Image, Square, Circle, Star, Triangle,
   Trash2, Bold, Italic, AlignLeft, AlignCenter, AlignRight, Palette,
-  Layers, Copy, Download, ZoomIn, ZoomOut, Minus, LayoutTemplate
+  Layers, Copy, Download, ZoomIn, ZoomOut, Minus, LayoutTemplate, Upload
 } from 'lucide-react';
 import VisualTemplateGallery from './VisualTemplateGallery';
 import { VisualTemplate } from '@/data/visualTemplates';
@@ -85,6 +86,8 @@ const WorkspaceVisualEditor: React.FC<Props> = ({ document: doc, onSave, onClose
   const [showTemplateGallery, setShowTemplateGallery] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
+  const importFileRef = useRef<HTMLInputElement>(null);
+  const [importingFile, setImportingFile] = useState(false);
 
   const updateElement = useCallback((id: string, updates: Partial<CanvasElement>) => {
     setCanvas(prev => ({ ...prev, elements: prev.elements.map(el => el.id === id ? { ...el, ...updates } : el) }));
@@ -119,6 +122,30 @@ const WorkspaceVisualEditor: React.FC<Props> = ({ document: doc, onSave, onClose
   }, [scheduleAutoSave]);
 
   useEffect(() => () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); }, []);
+
+  const handleImportVisual = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportingFile(true);
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      let result;
+      if (ext === 'pdf') {
+        result = await fileImportService.importPdfAsVisual(file);
+      } else {
+        result = await fileImportService.importImageAsVisual(file);
+      }
+      setCanvas(result as CanvasData);
+      setSelectedId(null);
+      scheduleAutoSave();
+      toast.success(`"${file.name}" importé`);
+    } catch (err: any) {
+      toast.error(`Erreur d'import: ${err?.message || 'Erreur'}`);
+    } finally {
+      setImportingFile(false);
+      if (importFileRef.current) importFileRef.current.value = '';
+    }
+  };
 
   const addElement = (type: CanvasElement['type']) => {
     const el: CanvasElement = {
@@ -293,8 +320,12 @@ const WorkspaceVisualEditor: React.FC<Props> = ({ document: doc, onSave, onClose
     <div className="flex flex-col h-[calc(100vh-4rem)] bg-background">
       {/* Top bar */}
       <div className="flex items-center gap-3 px-4 py-2 border-b bg-card">
+        <input ref={importFileRef} type="file" accept=".png,.jpg,.jpeg,.gif,.webp,.svg,.pdf" className="hidden" onChange={handleImportVisual} />
         <Button variant="ghost" size="icon" onClick={onClose}><ArrowLeft className="h-4 w-4" /></Button>
         <Input value={title} onChange={e => setTitle(e.target.value)} className="max-w-md border-none shadow-none text-lg font-semibold focus-visible:ring-0 px-1" placeholder="Titre" />
+        <Button size="sm" variant="outline" onClick={() => importFileRef.current?.click()} disabled={importingFile} className="gap-1.5 text-xs">
+          <Upload className="h-4 w-4" /> {importingFile ? 'Import...' : 'Importer'}
+        </Button>
         <Button size="sm" variant="outline" onClick={() => setShowTemplateGallery(true)} className="gap-1.5 text-xs">
           <LayoutTemplate className="h-4 w-4" /> Templates
         </Button>

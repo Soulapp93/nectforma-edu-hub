@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { WorkspaceDocument } from '@/services/workspaceService';
+import { fileImportService } from '@/services/fileImportService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -105,6 +106,8 @@ const WorkspacePresentationEditor: React.FC<Props> = ({ document: doc, onSave, o
   const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
   const presentRef = useRef<HTMLDivElement>(null);
   const cursorTimer = useRef<NodeJS.Timeout | null>(null);
+  const importFileRef = useRef<HTMLInputElement>(null);
+  const [importingFile, setImportingFile] = useState(false);
 
   const currentSlide = slides[currentSlideIndex] || slides[0];
 
@@ -165,6 +168,35 @@ const WorkspacePresentationEditor: React.FC<Props> = ({ document: doc, onSave, o
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [selectedElementId, editingTextId, undo, redo, isPresenting]);
+
+  const handleImportPresentation = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportingFile(true);
+    try {
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      let result;
+      if (ext === 'pdf') {
+        result = await fileImportService.importPdfAsPresentation(file);
+      } else if (ext === 'pptx' || ext === 'ppt') {
+        result = await fileImportService.importPptx(file);
+      } else if (['png','jpg','jpeg','gif','webp','svg'].includes(ext || '')) {
+        result = await fileImportService.importImageAsPresentation(file);
+      } else {
+        toast.error('Format non supporté'); setImportingFile(false); return;
+      }
+      setSlides(result.slides);
+      setCurrentSlideIndex(0);
+      pushHistory(result.slides);
+      scheduleAutoSave();
+      toast.success(`"${file.name}" importé`);
+    } catch (err: any) {
+      toast.error(`Erreur d'import: ${err?.message || 'Erreur'}`);
+    } finally {
+      setImportingFile(false);
+      if (importFileRef.current) importFileRef.current.value = '';
+    }
+  };
 
   // Slide operations
   const addSlide = () => {
@@ -775,6 +807,7 @@ const WorkspacePresentationEditor: React.FC<Props> = ({ document: doc, onSave, o
   // ═══════════════════════════════════════════
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] bg-background">
+      <input ref={importFileRef} type="file" accept=".pptx,.ppt,.pdf,.png,.jpg,.jpeg,.gif,.webp,.svg" className="hidden" onChange={handleImportPresentation} />
       {/* TOP BAR */}
       <div className="flex items-center gap-1.5 px-3 py-1.5 border-b bg-card shrink-0">
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}><ArrowLeft className="h-4 w-4" /></Button>
@@ -796,6 +829,9 @@ const WorkspacePresentationEditor: React.FC<Props> = ({ document: doc, onSave, o
         </Button>
         <div className="flex-1" />
         <span className="text-xs text-muted-foreground hidden sm:block">{saving ? 'Sauvegarde...' : '✓ Sauvé'}</span>
+        <Button size="sm" variant="outline" onClick={() => importFileRef.current?.click()} disabled={importingFile} className="gap-1.5 h-7 text-xs">
+          <Upload className="h-3 w-3" /> {importingFile ? 'Import...' : 'Importer'}
+        </Button>
         <Button size="sm" variant="outline" onClick={() => setShowTemplateGallery(true)} className="gap-1.5 h-7 text-xs">
           <Layout className="h-3 w-3" /> Templates
         </Button>
