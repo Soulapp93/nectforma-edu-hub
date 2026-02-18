@@ -270,6 +270,17 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
   // --- Cell interactions ---
   const isEditingFormula = editingCell !== null && editValue.startsWith('=');
 
+  // Extract cell references from formula for visual highlighting
+  const formulaReferencedCells = useMemo(() => {
+    if (!isEditingFormula) return new Set<string>();
+    const refs = new Set<string>();
+    const matches = editValue.matchAll(/\b([A-Z]+\d+)\b/g);
+    for (const m of matches) {
+      refs.add(m[1]);
+    }
+    return refs;
+  }, [isEditingFormula, editValue]);
+
   const handleCellClick = (key: string, e: React.MouseEvent) => {
     // Excel-like: if editing a formula, clicking another cell inserts the cell reference
     if (isEditingFormula && key !== editingCell) {
@@ -278,26 +289,27 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
       // Check if the last char is an operator or open paren or comma or start of formula
       const lastChar = editValue.slice(-1);
       const isAfterOperator = ['+', '-', '*', '/', '(', ',', '=', '>', '<', '&', '^', ' '].includes(lastChar);
+      let newVal: string;
       if (isAfterOperator) {
-        // Insert cell reference directly
-        const newVal = editValue + key;
-        setEditValue(newVal);
-        setFormulaBarValue(newVal);
+        newVal = editValue + key;
       } else {
-        // Replace trailing cell reference if any, or append with operator hint
-        // Try to detect if there's already a cell ref at the end to replace (for re-clicking)
+        // Replace trailing cell reference if any (for re-clicking a different cell)
         const refPattern = /[A-Z]+\d+$/;
         const match = editValue.match(refPattern);
         if (match) {
-          const newVal = editValue.slice(0, -match[0].length) + key;
-          setEditValue(newVal);
-          setFormulaBarValue(newVal);
+          newVal = editValue.slice(0, -match[0].length) + key;
         } else {
-          const newVal = editValue + key;
-          setEditValue(newVal);
-          setFormulaBarValue(newVal);
+          newVal = editValue + key;
         }
       }
+      setEditValue(newVal);
+      setFormulaBarValue(newVal);
+      // Also update the cell data live so formula bar stays in sync
+      if (editingCell) {
+        updateSheetData(editingCell, { formula: newVal, value: '' });
+      }
+      // Refocus formula bar so user can continue typing operators (+, -, etc.)
+      setTimeout(() => formulaInputRef.current?.focus(), 0);
       return;
     }
 
@@ -1587,6 +1599,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
         <span className="text-xs text-muted-foreground font-semibold">fx</span>
         <input
           ref={formulaInputRef}
+          data-formula-bar="true"
           value={editingCell ? editValue : formulaBarValue}
           onChange={e => {
             if (editingCell) {
@@ -1642,7 +1655,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
               setEditValue(formulaBarValue);
             }
           }}
-          className="flex-1 text-sm border-none bg-transparent outline-none font-mono text-foreground"
+          className={`flex-1 text-sm border-none bg-transparent outline-none font-mono text-foreground ${isEditingFormula ? 'ring-1 ring-primary/50 rounded px-1' : ''}`}
           placeholder="Valeur ou formule (=SUM, =VLOOKUP, =IF...)"
         />
         {showFormulaHelper && formulaSuggestions.length > 0 && (
@@ -1742,15 +1755,17 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
                       const formattedValue = formatDisplayValue(displayValue, cell?.numberFormat);
                       const isSearchMatch = searchTerm && displayValue.toLowerCase().includes(searchTerm.toLowerCase());
                       const colW = sheet.colWidths[c] || DEFAULT_COL_WIDTH;
+                      const isFormulaRef = formulaReferencedCells.has(key);
 
                       return (
                         <td
                           key={c}
                           className={`border border-border p-0 relative transition-colors
                             ${isSelected ? 'ring-2 ring-primary ring-inset z-[5]' : ''}
-                            ${inSel && !isSelected ? 'bg-primary/5' : ''}
+                            ${isFormulaRef && !isSelected ? 'ring-2 ring-blue-500/70 ring-inset bg-blue-50/30 dark:bg-blue-900/20 z-[4]' : ''}
+                            ${inSel && !isSelected && !isFormulaRef ? 'bg-primary/5' : ''}
                             ${isSearchMatch ? 'ring-2 ring-yellow-400 ring-inset' : ''}
-                            ${!isSelected && !inSel ? 'hover:bg-muted/20' : ''}
+                            ${!isSelected && !inSel && !isFormulaRef ? 'hover:bg-muted/20' : ''}
                           `}
                           style={{
                             backgroundColor: cell?.bgColor || undefined,
@@ -1773,9 +1788,10 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
                                 setEditValue(e.target.value);
                                 setFormulaBarValue(e.target.value);
                               }}
-                              onBlur={() => {
+                              onBlur={(e) => {
                                 // Don't commit if we're clicking another cell during formula editing
-                                if (!isEditingFormula) {
+                                // Also don't commit if focus moved to formula bar
+                                if (!isEditingFormula && !e.relatedTarget?.closest?.('[data-formula-bar]')) {
                                   commitEdit(key);
                                 }
                               }}
