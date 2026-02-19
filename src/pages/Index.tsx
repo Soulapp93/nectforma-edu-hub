@@ -317,7 +317,35 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div className="min-h-screen landing-gradient-bg overflow-x-hidden relative">
+      {/* Global decorative blobs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute w-[600px] h-[600px] opacity-[0.07]" style={{
+          background: 'radial-gradient(circle, hsl(280 80% 70%) 0%, transparent 70%)',
+          top: '-5%', left: '-10%',
+          filter: 'blur(80px)',
+          animation: 'blob-float 25s ease-in-out infinite'
+        }} />
+        <div className="absolute w-[500px] h-[500px] opacity-[0.06]" style={{
+          background: 'radial-gradient(circle, hsl(330 70% 70%) 0%, transparent 70%)',
+          top: '30%', right: '-8%',
+          filter: 'blur(80px)',
+          animation: 'blob-float 30s ease-in-out infinite 5s'
+        }} />
+        <div className="absolute w-[400px] h-[400px] opacity-[0.05]" style={{
+          background: 'radial-gradient(circle, hsl(262 83% 65%) 0%, transparent 70%)',
+          bottom: '10%', left: '20%',
+          filter: 'blur(70px)',
+          animation: 'blob-float 20s ease-in-out infinite 10s'
+        }} />
+        <div className="absolute w-[350px] h-[350px] opacity-[0.04]" style={{
+          background: 'radial-gradient(circle, hsl(200 80% 70%) 0%, transparent 70%)',
+          top: '60%', left: '-5%',
+          filter: 'blur(60px)',
+          animation: 'blob-float 22s ease-in-out infinite 8s'
+        }} />
+      </div>
+
       <LandingHeader />
       {/* Spacer pour compenser le header fixed */}
       <div className="h-14 md:h-16" />
@@ -650,8 +678,17 @@ const Index = () => {
       <SectionDivider variant="wave" fillColor="fill-primary" />
 
       {/* Features Count Section */}
-      <section className="py-12 md:py-16 bg-gradient-to-r from-primary to-accent relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%27%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-20"></div>
+        <section className="py-12 md:py-16 relative overflow-hidden" style={{
+          background: 'linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(280 75% 55%) 40%, hsl(300 65% 50%) 70%, hsl(262 83% 50%) 100%)'
+        }}>
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.06%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%27%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-30"></div>
+        {/* Shimmer overlay */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute w-[200%] h-full opacity-[0.08]" style={{
+            background: 'linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%)',
+            animation: 'shimmer-line 8s ease-in-out infinite'
+          }} />
+        </div>
         {/* Floating icons in stats bar */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <BookOpen className="absolute text-white/[0.08] w-12 h-12" style={{ top: '10%', left: '5%', animation: 'float-slow 8s ease-in-out infinite' }} />
@@ -689,7 +726,23 @@ const Index = () => {
       <SectionDivider variant="curve" flip fillColor="fill-muted/30" />
 
       {/* Features Section */}
-      <section id="fonctionnalites" className="py-16 md:py-24 bg-muted/30 relative overflow-hidden">
+      <section id="fonctionnalites" className="py-16 md:py-24 relative overflow-hidden">
+        {/* Soft gradient background for features section */}
+        <div className="absolute inset-0" style={{
+          background: 'linear-gradient(180deg, hsl(270 50% 97% / 0.6) 0%, hsl(280 40% 95% / 0.8) 30%, hsl(300 35% 96% / 0.6) 60%, hsl(270 50% 97% / 0.5) 100%)'
+        }} />
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute w-[300px] h-[300px] opacity-[0.08]" style={{
+            background: 'radial-gradient(circle, hsl(262 83% 65%) 0%, transparent 70%)',
+            top: '10%', right: '5%', filter: 'blur(60px)',
+            animation: 'blob-float 18s ease-in-out infinite'
+          }} />
+          <div className="absolute w-[250px] h-[250px] opacity-[0.06]" style={{
+            background: 'radial-gradient(circle, hsl(330 60% 65%) 0%, transparent 70%)',
+            top: '40%', left: '0%', filter: 'blur(50px)',
+            animation: 'blob-float 22s ease-in-out infinite 4s'
+          }} />
+        </div>
         {/* Decorative pedagogical background elements */}
         <div className="absolute inset-0 pointer-events-none">
           <BookOpen className="absolute text-primary/[0.04] w-20 h-20 md:w-32 md:h-32" style={{ top: '5%', right: '5%', animation: 'float-slow 12s ease-in-out infinite' }} />
@@ -758,9 +811,20 @@ const Index = () => {
                     </ul>
 
                     {/* Détails supplémentaires */}
-                    <div className="bg-muted/50 rounded-xl p-4 border border-border">
-                      <p className="text-sm font-semibold text-foreground mb-3">Fonctionnalités détaillées :</p>
-                      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="rounded-xl p-4 border border-primary/10 relative overflow-hidden" style={{
+                      background: 'linear-gradient(135deg, hsl(270 60% 98% / 0.8) 0%, hsl(280 50% 96% / 0.6) 100%)',
+                      backdropFilter: 'blur(10px)'
+                    }}>
+                      {/* Subtle shimmer */}
+                      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
+                        <div style={{
+                          position: 'absolute', top: 0, left: '-100%', width: '50%', height: '100%',
+                          background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.08), transparent)',
+                          animation: 'shimmer-line 6s ease-in-out infinite'
+                        }} />
+                      </div>
+                      <p className="text-sm font-semibold text-foreground mb-3 relative z-10">Fonctionnalités détaillées :</p>
+                      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 relative z-10">
                         {feature.details.map((detail, detailIndex) => (
                           <li key={detailIndex} className="flex items-start text-sm text-muted-foreground">
                             <span className="text-primary mr-2">•</span>
@@ -845,10 +909,21 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-br from-primary via-primary to-accent relative overflow-hidden">
-        <div className="absolute inset-0 opacity-20" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+      <section className="py-16 md:py-24 relative overflow-hidden" style={{
+          background: 'linear-gradient(135deg, hsl(262 83% 55%) 0%, hsl(270 75% 50%) 30%, hsl(300 65% 48%) 60%, hsl(280 75% 52%) 100%)'
+        }}>
+        <div className="absolute inset-0 opacity-25" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
         }}></div>
+        {/* Glow orbs in CTA */}
+        <div className="absolute w-[300px] h-[300px] opacity-20 rounded-full" style={{
+          background: 'radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%)',
+          top: '-10%', right: '10%', filter: 'blur(50px)'
+        }} />
+        <div className="absolute w-[200px] h-[200px] opacity-15 rounded-full" style={{
+          background: 'radial-gradient(circle, rgba(236,72,153,0.4) 0%, transparent 70%)',
+          bottom: '-5%', left: '15%', filter: 'blur(40px)'
+        }} />
         
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-5xl font-bold text-primary-foreground mb-6">
@@ -876,7 +951,10 @@ const Index = () => {
       </section>
 
       {/* Newsletter Section */}
-      <section className="py-16 md:py-20 bg-gradient-to-br from-primary/5 via-accent/5 to-primary/5">
+      <section className="py-16 md:py-20 relative overflow-hidden">
+        <div className="absolute inset-0" style={{
+          background: 'linear-gradient(135deg, hsl(270 60% 97% / 0.8) 0%, hsl(300 40% 95% / 0.6) 50%, hsl(262 50% 96% / 0.7) 100%)'
+        }} />
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <AnimatedSection animation="fade-up">
             <div className="inline-flex items-center px-4 py-2 bg-primary/10 rounded-full mb-6">
@@ -960,7 +1038,10 @@ const Index = () => {
       <FAQSection />
 
       {/* Contact Section */}
-      <section id="contact" className="py-16 md:py-24 bg-background">
+      <section id="contact" className="py-16 md:py-24 relative overflow-hidden">
+        <div className="absolute inset-0" style={{
+          background: 'linear-gradient(180deg, hsl(270 50% 98% / 0.5) 0%, hsl(280 40% 96% / 0.4) 100%)'
+        }} />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <div className="inline-flex items-center px-4 py-2 bg-primary/10 rounded-full mb-6">
