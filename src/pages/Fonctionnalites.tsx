@@ -331,20 +331,35 @@ const Fonctionnalites = () => {
                       </div>
                     </div>
 
-                    {/* Illustration - rounded, floating */}
+                    {/* Illustration - floating, no borders */}
                     <div className="flex-1 w-full flex items-center justify-center relative group">
                       {hasImages ? (
                         <div className="relative">
-                          <div className="absolute -inset-4 bg-gradient-to-br from-primary/20 to-accent/20 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                          {/* Halo lumineux */}
+                          <div 
+                            className="absolute inset-0 rounded-full blur-3xl opacity-40 group-hover:opacity-60 transition-opacity duration-700"
+                            style={{
+                              background: 'radial-gradient(ellipse at center, hsl(var(--primary) / 0.3), hsl(var(--accent) / 0.15), transparent 70%)',
+                            }}
+                          />
+                          {/* Particules flottantes */}
+                          <div className="absolute -top-4 -right-4 w-3 h-3 bg-primary/30 rounded-full animate-bounce" style={{ animationDelay: '0s', animationDuration: '3s' }} />
+                          <div className="absolute -bottom-2 -left-6 w-2 h-2 bg-accent/40 rounded-full animate-bounce" style={{ animationDelay: '1s', animationDuration: '4s' }} />
+                          <div className="absolute top-1/3 -right-8 w-2.5 h-2.5 bg-primary/20 rounded-full animate-bounce" style={{ animationDelay: '0.5s', animationDuration: '3.5s' }} />
                           <img 
                             src={feature.images[0]} 
                             alt={feature.title}
-                            className="relative w-full max-w-lg h-auto object-contain rounded-2xl drop-shadow-2xl transition-transform duration-500 group-hover:scale-[1.02]"
+                            className="relative w-full max-w-lg h-auto object-contain transition-transform duration-500 group-hover:scale-[1.03]"
                             loading="lazy"
+                            style={{
+                              filter: 'drop-shadow(0 20px 40px hsl(var(--primary) / 0.15)) drop-shadow(0 8px 16px hsl(var(--primary) / 0.1))',
+                              maskImage: 'radial-gradient(ellipse 85% 85% at center, black 55%, transparent 100%)',
+                              WebkitMaskImage: 'radial-gradient(ellipse 85% 85% at center, black 55%, transparent 100%)',
+                            }}
                           />
                         </div>
                       ) : (
-                        <div className="w-full max-w-lg aspect-[4/3] flex items-center justify-center rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5">
+                        <div className="w-full max-w-lg aspect-[4/3] flex items-center justify-center">
                           <Icon className="h-24 w-24 text-primary/20" />
                         </div>
                       )}
