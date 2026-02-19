@@ -23,8 +23,6 @@ import SectionDivider from '@/components/landing/SectionDivider';
 import GradientBackground from '@/components/landing/GradientBackground';
 import LandingHeader from '@/components/landing/LandingHeader';
 
-// Import du logo NF stylé
-import nfLogo from '@/assets/logo-nf-styled.png';
 
 // Imports des illustrations
 import tableauDeBordImg from '@/assets/illustrations/tableau-de-bord.png';
@@ -423,7 +421,7 @@ const Index = () => {
 
               {/* Logo et nom */}
               <div className="relative z-20 flex flex-col items-center justify-center space-y-4 md:space-y-6">
-                {/* Logo NF avec effet 3D et bordures arrondies */}
+              {/* Logo Nectforma avec effet 3D */}
                 <div 
                   className="relative"
                   style={{ 
@@ -431,18 +429,11 @@ const Index = () => {
                     transformStyle: 'preserve-3d'
                   }}
                 >
-                  <div className="bg-white rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-2xl"
+                  <div className="bg-white rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-2xl"
                        style={{
                          boxShadow: '0 20px 60px rgba(139, 92, 246, 0.3), 0 10px 30px rgba(139, 92, 246, 0.2)'
                        }}>
-                    <img 
-                      src={nfLogo} 
-                      alt="NF Logo" 
-                      className="w-20 h-20 md:w-32 md:h-32 lg:w-40 lg:h-40 object-contain"
-                      style={{
-                        filter: 'drop-shadow(0 4px 8px rgba(139, 92, 246, 0.3))'
-                      }}
-                    />
+                    <NectformaLogo variant="gradient" size="xl" showIcon={true} />
                   </div>
                 </div>
                 
