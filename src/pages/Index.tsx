@@ -16,7 +16,7 @@ import AnimatedSection from '@/components/landing/AnimatedSection';
 import AnimatedCounter from '@/components/landing/AnimatedCounter';
 import TextReveal from '@/components/landing/TextReveal';
 import ParallaxSection from '@/components/landing/ParallaxSection';
-import GlowCard from '@/components/landing/GlowCard';
+
 import Hover3DCard from '@/components/landing/Hover3DCard';
 import AnimatedButton from '@/components/landing/AnimatedButton';
 import SectionDivider from '@/components/landing/SectionDivider';
@@ -695,7 +695,7 @@ const Index = () => {
                     <ul className="space-y-2 mb-6">
                       {feature.benefits.map((benefit, benefitIndex) => (
                         <li key={benefitIndex} className="flex items-center text-foreground">
-                          <CheckCircle2 className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                          <CheckCircle2 className="h-5 w-5 text-success mr-3 flex-shrink-0" />
                           <span className="text-base md:text-lg font-medium">{benefit}</span>
                         </li>
                       ))}
@@ -715,47 +715,69 @@ const Index = () => {
                     </div>
                   </div>
 
-                  {/* Images */}
+                  {/* Images - style flottant sans bordures */}
                   <div className="flex-1 w-full max-w-2xl">
                     {feature.images && feature.images.length > 0 ? (
-                      <div className="space-y-4">
-                        {feature.images.map((img, imgIndex) => (
-                          <Hover3DCard key={imgIndex} intensity={5}>
-                            <GlowCard className="rounded-2xl">
-                              <div 
-                                className="relative rounded-2xl overflow-hidden shadow-2xl border border-border bg-card hover-lift"
-                              >
-                                <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent pointer-events-none z-10"></div>
-                                <img 
-                                  src={img} 
-                                  alt={`${feature.title} - Capture ${imgIndex + 1}`}
-                                  className="w-full h-auto object-cover"
-                                />
-                              </div>
-                            </GlowCard>
-                          </Hover3DCard>
-                        ))}
+                      <div className="relative group">
+                        {/* Halo lumineux derrière l'image */}
+                        <div 
+                          className="absolute -inset-8 rounded-full opacity-40 group-hover:opacity-60 transition-opacity duration-700 blur-3xl"
+                          style={{
+                            background: `radial-gradient(ellipse at center, hsl(var(--primary) / 0.25) 0%, hsl(var(--accent) / 0.15) 50%, transparent 80%)`
+                          }}
+                        />
+                        {/* Particules décoratives flottantes autour de l'image */}
+                        <div className="absolute -top-6 -right-4 w-12 h-12 rounded-full opacity-30 animate-pulse"
+                             style={{ background: 'radial-gradient(circle, hsl(var(--primary) / 0.4) 0%, transparent 70%)' }} />
+                        <div className="absolute -bottom-4 -left-6 w-16 h-16 rounded-full opacity-25"
+                             style={{ background: 'radial-gradient(circle, hsl(var(--accent) / 0.35) 0%, transparent 70%)', animation: 'float-particle 8s ease-in-out infinite' }} />
+                        <div className="absolute top-1/4 -right-8 w-8 h-8 rounded-full opacity-20"
+                             style={{ background: 'radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, transparent 70%)', animation: 'float-particle 10s ease-in-out infinite 2s' }} />
+                        
+                        <Hover3DCard intensity={8}>
+                          <div className="relative">
+                            {/* Image sans bordures - fondu sur les bords */}
+                            <img 
+                              src={feature.images[0]} 
+                              alt={`${feature.title} - Illustration`}
+                              className="w-full h-auto object-contain drop-shadow-2xl transition-transform duration-700 group-hover:scale-[1.03]"
+                              style={{
+                                filter: 'drop-shadow(0 20px 40px rgba(139, 92, 246, 0.2)) drop-shadow(0 8px 16px rgba(139, 92, 246, 0.15))',
+                                maskImage: 'radial-gradient(ellipse 85% 85% at center, black 60%, transparent 100%)',
+                                WebkitMaskImage: 'radial-gradient(ellipse 85% 85% at center, black 60%, transparent 100%)',
+                              }}
+                            />
+                            {/* Reflet brillant subtil */}
+                            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                              <div style={{
+                                position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%',
+                                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+                                animation: 'logo-shine 5s ease-in-out infinite'
+                              }} />
+                            </div>
+                          </div>
+                        </Hover3DCard>
+                        
+                        {/* Petits points décoratifs */}
+                        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 opacity-40">
+                          {[...Array(5)].map((_, i) => (
+                            <div key={i} className="w-1.5 h-1.5 rounded-full bg-primary/50" style={{ animationDelay: `${i * 0.2}s` }} />
+                          ))}
+                        </div>
                       </div>
                     ) : (
-                      <div 
-                        className="relative bg-gradient-to-br from-card to-muted rounded-2xl border border-border shadow-xl overflow-hidden aspect-[16/10] group hover:shadow-2xl transition-all duration-500"
-                        data-feature-image={feature.id}
-                      >
-                        <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center">
-                          <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                            <Icon className="h-10 w-10 text-primary" />
+                      <div className="relative group">
+                        <div 
+                          className="absolute -inset-8 rounded-full opacity-30 blur-3xl"
+                          style={{ background: `radial-gradient(ellipse at center, hsl(var(--primary) / 0.2) 0%, transparent 70%)` }}
+                        />
+                        <div className="relative flex flex-col items-center justify-center p-12 text-center">
+                          <div className="w-24 h-24 bg-primary/10 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300"
+                               style={{ boxShadow: '0 10px 30px hsl(var(--primary) / 0.15)' }}>
+                            <Icon className="h-12 w-12 text-primary" />
                           </div>
-                          <p className="text-muted-foreground text-sm md:text-base">
-                            Capture d'écran : {feature.title}
-                          </p>
-                          <p className="text-muted-foreground/60 text-xs mt-2">
-                            Image à venir
-                          </p>
+                          <p className="text-muted-foreground text-sm">Image à venir</p>
                         </div>
-                        <div className="absolute top-4 left-4 w-3 h-3 rounded-full bg-red-400"></div>
-                        <div className="absolute top-4 left-10 w-3 h-3 rounded-full bg-yellow-400"></div>
-                        <div className="absolute top-4 left-16 w-3 h-3 rounded-full bg-green-400"></div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-primary/5 to-transparent pointer-events-none"></div>
                       </div>
                     )}
                   </div>
