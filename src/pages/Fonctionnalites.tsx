@@ -6,7 +6,7 @@ import {
   LayoutDashboard, ShieldCheck, Users, GraduationCap, BookText, CalendarDays, 
   ClipboardCheck, Mail, UsersRound, Building2, UserCircle, Briefcase,
   ArrowRight, CheckCircle2, Sparkles, Smartphone, FileDown, QrCode, 
-  Upload, Bell, Search, Monitor
+  Upload, Bell, Search, Monitor, Layers
 } from 'lucide-react';
 
 // Imports des illustrations
@@ -23,6 +23,7 @@ import gestionEtablissementIllust from '@/assets/illustrations/gestion-etablisse
 import profilsIllust from '@/assets/illustrations/profils.png';
 import espaceTuteursIllust from '@/assets/illustrations/espace-tuteurs.png';
 import classesVirtuellesIllust from '@/assets/illustrations/classes-virtuelles.png';
+import espaceTravailIllust from '@/assets/illustrations/espace-travail.png';
 
 const Fonctionnalites = () => {
   const location = useLocation();
@@ -218,6 +219,21 @@ const Fonctionnalites = () => {
       images: [espaceTuteursIllust]
     },
     {
+      id: 'espace-travail',
+      icon: Layers,
+      title: 'Espace de travail',
+      description: 'Suite collaborative intégrée avec éditeur de documents multi-pages, tableur professionnel (150+ formules incluant XLOOKUP, INDEX, MATCH), présentations interactives style Canva et éditeur visuel avec 300+ templates.',
+      features: [
+        'Éditeur de documents style Word',
+        'Tableur Excel++ avec 150+ formules',
+        'Présentations Canva-like',
+        'Éditeur visuel avec 300+ templates',
+        'Collaboration temps réel',
+        'Partage avec permissions granulaires'
+      ],
+      images: [espaceTravailIllust]
+    },
+    {
       id: 'classes-virtuelles',
       icon: Monitor,
       title: 'Classes virtuelles',
@@ -255,7 +271,7 @@ const Fonctionnalites = () => {
         <div className="relative max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center px-5 py-2.5 bg-primary/10 rounded-full mb-8 backdrop-blur-sm border border-primary/20">
             <Sparkles className="h-4 w-4 text-primary mr-2" />
-            <span className="text-primary font-semibold">13 modules complets</span>
+            <span className="text-primary font-semibold">14 modules complets</span>
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-foreground mb-6 leading-tight">
             Toutes nos <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">Fonctionnalités</span>

@@ -4,7 +4,7 @@ import {
   LayoutDashboard, ShieldCheck, Users, GraduationCap, BookText, CalendarDays, 
   ClipboardCheck, Mail, UsersRound, Building2, UserCircle, Briefcase,
   ArrowRight, CheckCircle2, Sparkles, Play, Shield, Zap, Clock, Monitor,
-  Send, Phone, MapPin, ChevronDown, Download
+  Send, Phone, MapPin, ChevronDown, Download, Layers
 } from 'lucide-react';
 import { toast } from 'sonner';
 import NectformaLogo from '@/components/NectformaLogo';
@@ -43,6 +43,7 @@ import gestionEtablissementImg from '@/assets/illustrations/gestion-etablissemen
 import profilImg from '@/assets/illustrations/profils.png';
 import espaceTuteursImg from '@/assets/illustrations/espace-tuteurs.png';
 import classesVirtuellesImg from '@/assets/illustrations/classes-virtuelles.png';
+import espaceTravailImg from '@/assets/illustrations/espace-travail.png';
 
 interface FeatureItem {
   id: string;
@@ -275,6 +276,25 @@ const Index = () => {
       images: [espaceTuteursImg]
     },
     {
+      id: 'workspace',
+      icon: Layers,
+      title: 'Espace de travail',
+      subtitle: 'Suite collaborative complète',
+      description: 'Un espace de travail intégré avec éditeur de documents, tableur professionnel (150+ formules), présentations style Canva et éditeur visuel. Collaborez en temps réel et partagez vos créations.',
+      benefits: ['Éditeur de documents multi-pages', 'Tableur avec 150+ formules', 'Présentations interactives'],
+      details: [
+        'Éditeur de texte style Word avec pagination',
+        'Tableur Excel++ avec XLOOKUP, INDEX, MATCH',
+        'Présentations Canva-like avec drag & drop',
+        'Éditeur visuel avec 300+ templates',
+        'Collaboration en temps réel',
+        'Partage avec permissions granulaires',
+        'Dossiers et organisation des fichiers'
+      ],
+      imagePlaceholder: 'workspace',
+      images: [espaceTravailImg]
+    },
+    {
       id: 'virtual-classes',
       icon: Monitor,
       title: 'Classes virtuelles',
@@ -307,7 +327,7 @@ const Index = () => {
           <AnimatedSection animation="scale" delay={0}>
             <div className="inline-flex items-center px-4 py-2 bg-primary/10 rounded-full mb-6 md:mb-8 glass">
               <Sparkles className="h-4 w-4 text-primary mr-2 flex-shrink-0 animate-pulse" />
-              <span className="text-primary font-medium text-sm md:text-base">La plateforme tout-en-un pour la formation</span>
+              <span className="text-primary font-medium text-sm md:text-base">La plateforme tout-en-un pour la formation — 14 modules</span>
             </div>
           </AnimatedSection>
           
@@ -323,7 +343,7 @@ const Index = () => {
           <AnimatedSection animation="fade-up" delay={300}>
             <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground mb-10 md:mb-12 max-w-4xl mx-auto leading-relaxed px-2">
               NECTFORMA est la solution complète pour digitaliser et automatiser 
-              la gestion de vos formations. <span className="text-foreground font-medium">12 modules puissants</span> pour tout gérer.
+              la gestion de vos formations. <span className="text-foreground font-medium">14 modules puissants</span> pour tout gérer.
             </p>
           </AnimatedSection>
           
@@ -604,7 +624,7 @@ const Index = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center text-primary-foreground">
             <AnimatedSection animation="fade-up" delay={0}>
               <div className="text-4xl md:text-5xl font-bold mb-2">
-                <AnimatedCounter end={12} suffix="" />
+                <AnimatedCounter end={14} suffix="" />
               </div>
               <div className="text-primary-foreground/80 text-sm md:text-base">Modules complets</div>
             </AnimatedSection>
@@ -640,7 +660,7 @@ const Index = () => {
               Toutes les solutions dont vous avez besoin
             </h2>
             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-              Une plateforme complète avec 12 modules puissants pour gérer efficacement votre établissement de formation
+              Une plateforme complète avec 14 modules puissants pour gérer efficacement votre établissement de formation
             </p>
           </AnimatedSection>
 

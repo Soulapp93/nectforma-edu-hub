@@ -36,6 +36,7 @@ const MobileDrawerNavigation: React.FC<MobileDrawerNavigationProps> = ({ isOpen,
         { label: 'Émargement digital', href: '/fonctionnalites', isAnchor: false },
         { label: 'Messagerie & Chat', href: '/fonctionnalites', isAnchor: false },
         { label: 'Espace tuteurs', href: '/fonctionnalites', isAnchor: false },
+        { label: 'Espace de travail', href: '/fonctionnalites', isAnchor: false },
       ],
     },
     {
