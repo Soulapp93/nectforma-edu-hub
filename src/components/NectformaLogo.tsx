@@ -115,9 +115,9 @@ const NectformaLogo: React.FC<NectformaLogoProps> = ({
   );
 
   const content = (
-    <div className={`flex items-center ${config.gap} ${className}`}>
+    <div className={`flex flex-col items-center ${className}`}>
       {showIcon && <LogoIcon size={config.icon} />}
-      <span className={`${config.text} font-bold tracking-tight ${textColorClass}`}>
+      <span className={`${config.text} font-bold tracking-tight ${textColorClass} mt-1`}>
         Nectf<span className={`${oColorClass} font-extrabold`}>o</span>rma
       </span>
     </div>
