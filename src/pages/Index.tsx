@@ -364,7 +364,7 @@ const Index = () => {
               
               {/* Étoiles subtiles */}
               <div className="absolute inset-0 overflow-hidden">
-                {[...Array(30)].map((_, i) => (
+                {[...Array(50)].map((_, i) => (
                   <div
                     key={i}
                     className="absolute rounded-full"
@@ -373,7 +373,7 @@ const Index = () => {
                       height: Math.random() * 3 + 1 + 'px',
                       left: Math.random() * 100 + '%',
                       top: Math.random() * 100 + '%',
-                      backgroundColor: 'rgba(139, 92, 246, 0.4)',
+                      backgroundColor: i % 3 === 0 ? 'rgba(236, 72, 153, 0.5)' : 'rgba(139, 92, 246, 0.5)',
                       opacity: Math.random() * 0.6 + 0.2,
                       animation: `twinkle ${Math.random() * 3 + 2}s ease-in-out infinite ${Math.random() * 2}s`
                     }}
@@ -381,7 +381,24 @@ const Index = () => {
                 ))}
               </div>
 
-              {/* Anneaux orbitaux 3D - Plus légers */}
+              {/* Rayons lumineux radiaux */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                {[...Array(8)].map((_, i) => (
+                  <div
+                    key={`ray-${i}`}
+                    className="absolute origin-center"
+                    style={{
+                      width: '2px',
+                      height: '200px',
+                      background: `linear-gradient(to top, transparent, rgba(139, 92, 246, ${0.08 + (i % 3) * 0.04}), transparent)`,
+                      transform: `rotate(${i * 45}deg)`,
+                      animation: `pulse-glow ${3 + i * 0.5}s ease-in-out infinite ${i * 0.3}s`
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Anneaux orbitaux 3D */}
               <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: '1000px' }}>
                 <div 
                   className="absolute w-[280px] h-[280px] md:w-[480px] md:h-[480px] rounded-full border-2 opacity-20"
@@ -407,33 +424,90 @@ const Index = () => {
                     animation: 'orbit-spin 25s linear infinite'
                   }}
                 />
+                {/* 4ème anneau supplémentaire */}
+                <div 
+                  className="absolute w-[320px] h-[320px] md:w-[560px] md:h-[560px] rounded-full opacity-10"
+                  style={{ 
+                    border: '1px dashed hsl(280 75% 60%)',
+                    transform: 'rotateX(75deg) rotateZ(15deg)',
+                    animation: 'orbit-spin 30s linear infinite'
+                  }}
+                />
               </div>
 
-              {/* Halo lumineux derrière le logo */}
+              {/* Orbes flottants colorés */}
+              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute w-16 h-16 md:w-24 md:h-24 rounded-full"
+                     style={{
+                       background: 'radial-gradient(circle, rgba(236, 72, 153, 0.25) 0%, transparent 70%)',
+                       top: '15%', left: '10%',
+                       filter: 'blur(15px)',
+                       animation: 'float-particle 12s ease-in-out infinite'
+                     }} />
+                <div className="absolute w-12 h-12 md:w-20 md:h-20 rounded-full"
+                     style={{
+                       background: 'radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%)',
+                       bottom: '20%', right: '12%',
+                       filter: 'blur(12px)',
+                       animation: 'float-particle 15s ease-in-out infinite 3s'
+                     }} />
+                <div className="absolute w-10 h-10 md:w-16 md:h-16 rounded-full"
+                     style={{
+                       background: 'radial-gradient(circle, rgba(168, 85, 247, 0.3) 0%, transparent 70%)',
+                       top: '60%', left: '75%',
+                       filter: 'blur(10px)',
+                       animation: 'float-particle 18s ease-in-out infinite 5s'
+                     }} />
+              </div>
+
+              {/* Halo lumineux derrière le logo - amélioré double couche */}
               <div 
-                className="absolute w-32 h-32 md:w-56 md:h-56 rounded-full"
+                className="absolute w-40 h-40 md:w-64 md:h-64 rounded-full"
                 style={{
-                  background: 'radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, rgba(168, 85, 247, 0.15) 50%, transparent 70%)',
-                  filter: 'blur(25px)',
+                  background: 'radial-gradient(circle, rgba(139, 92, 246, 0.35) 0%, rgba(168, 85, 247, 0.2) 40%, transparent 70%)',
+                  filter: 'blur(30px)',
                   animation: 'pulse-glow 3s ease-in-out infinite'
+                }}
+              />
+              <div 
+                className="absolute w-24 h-24 md:w-40 md:h-40 rounded-full"
+                style={{
+                  background: 'radial-gradient(circle, rgba(236, 72, 153, 0.2) 0%, transparent 70%)',
+                  filter: 'blur(20px)',
+                  animation: 'pulse-glow 4s ease-in-out infinite 1.5s'
                 }}
               />
 
               {/* Logo et nom */}
               <div className="relative z-20 flex flex-col items-center justify-center space-y-4 md:space-y-6">
-              {/* Logo Nectforma avec effet 3D */}
+                {/* Logo Nectforma avec effet 3D */}
                 <div 
-                  className="relative"
+                  className="relative group"
                   style={{ 
                     animation: 'float-3d 6s ease-in-out infinite',
                     transformStyle: 'preserve-3d'
                   }}
                 >
-                  <div className="bg-white rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-2xl"
+                  {/* Cercle lumineux pulsant derrière le logo card */}
+                  <div className="absolute -inset-4 md:-inset-6 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"
                        style={{
-                         boxShadow: '0 20px 60px rgba(139, 92, 246, 0.3), 0 10px 30px rgba(139, 92, 246, 0.2)'
+                         background: 'conic-gradient(from 0deg, rgba(139,92,246,0.3), rgba(236,72,153,0.2), rgba(99,102,241,0.3), rgba(139,92,246,0.3))',
+                         filter: 'blur(20px)',
+                         animation: 'orbit-spin 8s linear infinite'
+                       }} />
+                  <div className="relative bg-white/95 backdrop-blur-sm rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-2xl transition-transform duration-500 hover:scale-105"
+                       style={{
+                         boxShadow: '0 20px 60px rgba(139, 92, 246, 0.3), 0 10px 30px rgba(139, 92, 246, 0.2), inset 0 1px 0 rgba(255,255,255,0.8)'
                        }}>
                     <NectformaLogo variant="gradient" size="xl" showIcon={true} />
+                    {/* Reflet brillant sur le logo */}
+                    <div className="absolute inset-0 rounded-2xl md:rounded-3xl overflow-hidden pointer-events-none">
+                      <div style={{
+                        position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%',
+                        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+                        animation: 'logo-shine 4s ease-in-out infinite 2s'
+                      }} />
+                    </div>
                   </div>
                 </div>
                 
@@ -442,12 +516,14 @@ const Index = () => {
                   <h2 
                     className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-wider"
                     style={{
-                      background: 'linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(280 75% 55%) 50%, hsl(262 83% 50%) 100%)',
-                      backgroundSize: '200% 200%',
+                      background: 'linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(280 75% 55%) 30%, hsl(330 70% 55%) 60%, hsl(262 83% 50%) 100%)',
+                      backgroundSize: '300% 300%',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text',
-                      animation: 'gradient-shift 4s ease infinite'
+                      animation: 'gradient-shift 4s ease infinite',
+                      textShadow: 'none',
+                      filter: 'drop-shadow(0 2px 10px rgba(139, 92, 246, 0.3))'
                     }}
                   >
                     NECTFORMA
@@ -455,7 +531,8 @@ const Index = () => {
                   <p 
                     className="mt-3 md:mt-4 text-sm md:text-lg lg:text-xl font-medium tracking-wide"
                     style={{
-                      color: 'hsl(262 60% 40%)'
+                      color: 'hsl(262 60% 40%)',
+                      animation: 'fade-in-up 1s ease-out 0.8s both'
                     }}
                   >
                     La gestion de formation simplifiée
@@ -463,9 +540,9 @@ const Index = () => {
                 </div>
               </div>
 
-              {/* Particules flottantes - Plus subtiles */}
+              {/* Particules flottantes - Plus nombreuses */}
               <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                {[...Array(10)].map((_, i) => (
+                {[...Array(18)].map((_, i) => (
                   <div
                     key={`particle-${i}`}
                     className="absolute rounded-full"
@@ -474,7 +551,9 @@ const Index = () => {
                       height: Math.random() * 8 + 3 + 'px',
                       left: Math.random() * 100 + '%',
                       top: Math.random() * 100 + '%',
-                      background: `radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, transparent 70%)`,
+                      background: i % 2 === 0 
+                        ? `radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, transparent 70%)`
+                        : `radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, transparent 70%)`,
                       animation: `float-particle ${Math.random() * 10 + 10}s ease-in-out infinite ${Math.random() * 5}s`
                     }}
                   />
