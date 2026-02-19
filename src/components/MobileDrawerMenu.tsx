@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import NectformaLogo from './NectformaLogo';
 import { 
   X, 
   LayoutDashboard, 
@@ -166,14 +167,7 @@ const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({ isOpen, onClose }) 
           <div className="flex flex-col gap-3">
             {/* Logo Row with Close Button */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg ring-2 ring-white/20">
-                  <span className="text-transparent bg-clip-text bg-gradient-to-br from-primary to-accent font-extrabold text-base tracking-tight">NF</span>
-                </div>
-                <span className="text-lg font-bold text-white tracking-tight">
-                  Nectf<span className="text-white/70 font-extrabold">o</span>rma
-                </span>
-              </div>
+              <NectformaLogo variant="light" size="md" />
               
               {/* Close Button */}
               <button

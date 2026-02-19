@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { X, ChevronRight, ChevronDown, ArrowLeft } from 'lucide-react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
+import NectformaLogo from '@/components/NectformaLogo';
 
 interface SubMenuItem {
   label: string;
@@ -77,14 +78,7 @@ const MobileDrawerNavigation: React.FC<MobileDrawerNavigationProps> = ({ isOpen,
               <X className="h-5 w-5 text-white" />
             </button>
             
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
-                <span className="text-white font-extrabold text-xs tracking-tight">NF</span>
-              </div>
-              <span className="text-lg font-bold text-white tracking-tight">
-                Nectf<span className="text-white/70 font-extrabold">o</span>rma
-              </span>
-            </div>
+            <NectformaLogo variant="light" size="md" />
 
             {/* Empty spacer to keep logo centered */}
             <div className="w-10" />

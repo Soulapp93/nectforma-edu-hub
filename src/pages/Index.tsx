@@ -7,6 +7,7 @@ import {
   Send, Phone, MapPin, ChevronDown, Download
 } from 'lucide-react';
 import { toast } from 'sonner';
+import NectformaLogo from '@/components/NectformaLogo';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import FloatingCTA from '@/components/landing/FloatingCTA';
 import ChatWidget from '@/components/landing/ChatWidget';
@@ -967,10 +968,7 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div className="md:col-span-2">
               <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
-                  <span className="text-primary-foreground font-extrabold text-sm tracking-tight">NF</span>
-                </div>
-                <h3 className="text-xl font-bold">Nectf<span className="text-primary font-extrabold">o</span>rma</h3>
+                <NectformaLogo variant="gradient" size="lg" />
               </div>
               <p className="text-muted-foreground mb-4 max-w-md">
                 La plateforme complète pour digitaliser et automatiser la gestion de vos formations professionnelles.
