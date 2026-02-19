@@ -38,101 +38,76 @@ const NectformaLogo: React.FC<NectformaLogoProps> = ({
   }[variant];
 
   const strokeColor = variant === 'light' ? '#ffffff' : 'hsl(var(--primary))';
+  const fillColor = variant === 'light' ? 'rgba(255,255,255,0.15)' : 'hsl(var(--primary) / 0.12)';
   const letterNColor = variant === 'light' ? '#ffffff' : 'hsl(var(--primary))';
-  const letterFColor = variant === 'light' ? '#ffffff' : 'hsl(var(--accent))';
+  const letterFColor = variant === 'light' ? '#ffffff' : 'hsl(var(--primary))';
 
   const BookIcon = ({ size: s }: { size: number }) => (
     <svg
       width={s}
       height={s}
-      viewBox="0 0 120 100"
+      viewBox="0 0 48 44"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className="flex-shrink-0"
     >
-      {/* === BACK BOOK LAYER (3rd/outermost) === */}
-      {/* Left back cover */}
-      <path
-        d="M20 75 L20 20 Q20 14 26 12 L56 8 Q60 7 60 12 L60 75"
-        stroke={strokeColor} strokeWidth="2" fill="none" opacity="0.35"
-      />
-      {/* Right back cover */}
-      <path
-        d="M100 75 L100 20 Q100 14 94 12 L64 8 Q60 7 60 12 L60 75"
-        stroke={strokeColor} strokeWidth="2" fill="none" opacity="0.35"
-      />
-      {/* Back bottom curves */}
-      <path
-        d="M20 75 Q30 70 40 72 Q50 74 60 78 Q70 74 80 72 Q90 70 100 75"
-        stroke={strokeColor} strokeWidth="2" fill="none" opacity="0.35"
+      {/* Book cover background - rounded rectangle */}
+      <rect
+        x="8" y="2" width="32" height="30" rx="3" ry="3"
+        fill={fillColor} stroke={strokeColor} strokeWidth="1.8"
       />
 
-      {/* === MIDDLE BOOK LAYER (2nd) === */}
-      {/* Left middle page */}
+      {/* Left page (slightly open, angled left) */}
       <path
-        d="M16 78 L16 24 Q16 17 23 15 L56 10 Q60 9 60 14 L60 78"
-        stroke={strokeColor} strokeWidth="2" fill="none" opacity="0.55"
+        d="M10 34 L10 8 Q10 5 13 5 L24 5 L24 34"
+        fill={fillColor} stroke={strokeColor} strokeWidth="1.6"
       />
-      {/* Right middle page */}
+      {/* Right page (slightly open, angled right) */}
       <path
-        d="M104 78 L104 24 Q104 17 97 15 L64 10 Q60 9 60 14 L60 78"
-        stroke={strokeColor} strokeWidth="2" fill="none" opacity="0.55"
-      />
-      {/* Middle bottom curves */}
-      <path
-        d="M16 78 Q28 72 40 74 Q50 77 60 82 Q70 77 80 74 Q92 72 104 78"
-        stroke={strokeColor} strokeWidth="2" fill="none" opacity="0.55"
+        d="M38 34 L38 8 Q38 5 35 5 L24 5 L24 34"
+        fill={fillColor} stroke={strokeColor} strokeWidth="1.6"
       />
 
-      {/* === FRONT BOOK LAYER (main/foreground) === */}
-      {/* Left front page */}
+      {/* Open pages flaring out at bottom - left */}
       <path
-        d="M12 82 L12 28 Q12 20 20 18 L56 12 Q60 11 60 16 L60 82"
-        stroke={strokeColor} strokeWidth="2.5" fill="none"
+        d="M10 34 Q6 36 4 40 Q12 35 24 38"
+        stroke={strokeColor} strokeWidth="1.6" fill="none" strokeLinecap="round"
       />
-      {/* Right front page */}
+      {/* Open pages flaring out at bottom - right */}
       <path
-        d="M108 82 L108 28 Q108 20 100 18 L64 12 Q60 11 60 16 L60 82"
-        stroke={strokeColor} strokeWidth="2.5" fill="none"
-      />
-      {/* Front bottom curves - wide open pages flaring */}
-      <path
-        d="M12 82 Q24 74 38 76 Q50 80 60 86 Q70 80 82 76 Q96 74 108 82"
-        stroke={strokeColor} strokeWidth="2.5" fill="none"
+        d="M38 34 Q42 36 44 40 Q36 35 24 38"
+        stroke={strokeColor} strokeWidth="1.6" fill="none" strokeLinecap="round"
       />
 
-      {/* Extra bottom curve for depth */}
+      {/* Second layer curve (behind) */}
       <path
-        d="M8 84 Q22 76 38 78 Q50 82 60 88 Q70 82 82 78 Q98 76 112 84"
-        stroke={strokeColor} strokeWidth="1.8" fill="none" opacity="0.3"
+        d="M8 33 Q5 35 3 38 Q11 33 24 36 Q37 33 45 38 Q43 35 40 33"
+        stroke={strokeColor} strokeWidth="1.2" fill="none" opacity="0.4" strokeLinecap="round"
       />
 
-      {/* Page lines left side */}
-      <line x1="24" y1="34" x2="50" y2="28" stroke={strokeColor} strokeWidth="1.5" opacity="0.3" strokeLinecap="round" />
-      <line x1="24" y1="40" x2="50" y2="34" stroke={strokeColor} strokeWidth="1.5" opacity="0.3" strokeLinecap="round" />
-      <line x1="24" y1="46" x2="50" y2="40" stroke={strokeColor} strokeWidth="1.5" opacity="0.3" strokeLinecap="round" />
+      {/* Text lines on left page */}
+      <line x1="13" y1="12" x2="21" y2="12" stroke={strokeColor} strokeWidth="1.2" opacity="0.4" strokeLinecap="round" />
+      <line x1="13" y1="16" x2="21" y2="16" stroke={strokeColor} strokeWidth="1.2" opacity="0.4" strokeLinecap="round" />
+      <line x1="13" y1="20" x2="21" y2="20" stroke={strokeColor} strokeWidth="1.2" opacity="0.4" strokeLinecap="round" />
 
-      {/* Page lines right side */}
-      <line x1="70" y1="28" x2="96" y2="34" stroke={strokeColor} strokeWidth="1.5" opacity="0.3" strokeLinecap="round" />
-      <line x1="70" y1="34" x2="96" y2="40" stroke={strokeColor} strokeWidth="1.5" opacity="0.3" strokeLinecap="round" />
-      <line x1="70" y1="40" x2="96" y2="46" stroke={strokeColor} strokeWidth="1.5" opacity="0.3" strokeLinecap="round" />
+      {/* Text lines on right page */}
+      <line x1="27" y1="12" x2="35" y2="12" stroke={strokeColor} strokeWidth="1.2" opacity="0.4" strokeLinecap="round" />
+      <line x1="27" y1="16" x2="35" y2="16" stroke={strokeColor} strokeWidth="1.2" opacity="0.4" strokeLinecap="round" />
+      <line x1="27" y1="20" x2="35" y2="20" stroke={strokeColor} strokeWidth="1.2" opacity="0.4" strokeLinecap="round" />
 
-      {/* Spine center line */}
-      <line x1="60" y1="16" x2="60" y2="82" stroke={strokeColor} strokeWidth="1.5" opacity="0.2" />
-
-      {/* Letter N on left page */}
+      {/* Letter N */}
       <text
-        x="40" y="66"
+        x="17" y="30"
         fontFamily="Plus Jakarta Sans, sans-serif"
-        fontWeight="800" fontSize="22"
+        fontWeight="800" fontSize="10"
         fill={letterNColor} textAnchor="middle"
       >N</text>
 
-      {/* Letter F on right page */}
+      {/* Letter F */}
       <text
-        x="80" y="66"
+        x="31" y="30"
         fontFamily="Plus Jakarta Sans, sans-serif"
-        fontWeight="800" fontSize="22"
+        fontWeight="800" fontSize="10"
         fill={letterFColor} textAnchor="middle"
       >F</text>
     </svg>
