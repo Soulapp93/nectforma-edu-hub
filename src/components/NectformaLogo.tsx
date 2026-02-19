@@ -45,32 +45,54 @@ const NectformaLogo: React.FC<NectformaLogoProps> = ({
     <svg
       width={s}
       height={s}
-      viewBox="0 0 64 64"
+      viewBox="0 0 100 90"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className="flex-shrink-0"
     >
-      {/* Back book layer */}
+      {/* Back book layer (outermost) */}
       <path
-        d="M8 48 L8 14 Q8 10 12 10 L28 10 Q32 10 32 14 L32 48"
+        d="M10 70 L10 25 Q10 18 18 16 L46 12 Q50 11 50 16 L50 70"
         stroke={strokeColor}
-        strokeWidth="2.2"
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        opacity="0.35"
+        fill="none"
+        opacity="0.4"
       />
       <path
-        d="M56 48 L56 14 Q56 10 52 10 L36 10 Q32 10 32 14 L32 48"
+        d="M90 70 L90 25 Q90 18 82 16 L54 12 Q50 11 50 16 L50 70"
         stroke={strokeColor}
-        strokeWidth="2.2"
+        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        opacity="0.35"
+        fill="none"
+        opacity="0.4"
       />
 
-      {/* Front open book */}
+      {/* Middle book layer */}
       <path
-        d="M6 50 L6 18 Q6 14 10 13 L29 11 Q32 11 32 14 L32 50"
+        d="M14 72 L14 28 Q14 22 20 20 L46 15 Q50 14 50 18 L50 72"
+        stroke={strokeColor}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+        opacity="0.6"
+      />
+      <path
+        d="M86 72 L86 28 Q86 22 80 20 L54 15 Q50 14 50 18 L50 72"
+        stroke={strokeColor}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+        opacity="0.6"
+      />
+
+      {/* Front book layer (main) */}
+      <path
+        d="M18 74 L18 30 Q18 25 24 23 L46 18 Q50 17 50 21 L50 74"
         stroke={strokeColor}
         strokeWidth="2.5"
         strokeLinecap="round"
@@ -78,7 +100,7 @@ const NectformaLogo: React.FC<NectformaLogoProps> = ({
         fill="none"
       />
       <path
-        d="M58 50 L58 18 Q58 14 54 13 L35 11 Q32 11 32 14 L32 50"
+        d="M82 74 L82 30 Q82 25 76 23 L54 18 Q50 17 50 21 L50 74"
         stroke={strokeColor}
         strokeWidth="2.5"
         strokeLinecap="round"
@@ -87,30 +109,50 @@ const NectformaLogo: React.FC<NectformaLogoProps> = ({
       />
 
       {/* Page lines left */}
-      <line x1="13" y1="22" x2="27" y2="20" stroke={strokeColor} strokeWidth="1.5" opacity="0.3" strokeLinecap="round" />
-      <line x1="13" y1="28" x2="27" y2="26" stroke={strokeColor} strokeWidth="1.5" opacity="0.3" strokeLinecap="round" />
+      <line x1="25" y1="35" x2="44" y2="31" stroke={strokeColor} strokeWidth="1.5" opacity="0.35" strokeLinecap="round" />
+      <line x1="25" y1="41" x2="44" y2="37" stroke={strokeColor} strokeWidth="1.5" opacity="0.35" strokeLinecap="round" />
+      <line x1="25" y1="47" x2="44" y2="43" stroke={strokeColor} strokeWidth="1.5" opacity="0.35" strokeLinecap="round" />
 
       {/* Page lines right */}
-      <line x1="37" y1="20" x2="51" y2="22" stroke={strokeColor} strokeWidth="1.5" opacity="0.3" strokeLinecap="round" />
-      <line x1="37" y1="26" x2="51" y2="28" stroke={strokeColor} strokeWidth="1.5" opacity="0.3" strokeLinecap="round" />
+      <line x1="56" y1="31" x2="75" y2="35" stroke={strokeColor} strokeWidth="1.5" opacity="0.35" strokeLinecap="round" />
+      <line x1="56" y1="37" x2="75" y2="41" stroke={strokeColor} strokeWidth="1.5" opacity="0.35" strokeLinecap="round" />
+      <line x1="56" y1="43" x2="75" y2="47" stroke={strokeColor} strokeWidth="1.5" opacity="0.35" strokeLinecap="round" />
 
-      {/* Bottom curve */}
+      {/* Bottom curved pages */}
       <path
-        d="M6 50 Q18 46 32 50 Q46 46 58 50"
+        d="M18 74 Q34 68 50 74 Q66 68 82 74"
         stroke={strokeColor}
         strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"
         fill="none"
       />
+      <path
+        d="M14 72 Q32 66 50 72 Q68 66 86 72"
+        stroke={strokeColor}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+        opacity="0.6"
+      />
+      <path
+        d="M10 70 Q30 64 50 70 Q70 64 90 70"
+        stroke={strokeColor}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+        opacity="0.4"
+      />
 
-      {/* Letter N */}
+      {/* Letter N - golden/orange like the mockup */}
       <text
-        x="20"
-        y="43"
+        x="35"
+        y="62"
         fontFamily="Plus Jakarta Sans, sans-serif"
         fontWeight="800"
-        fontSize="16"
+        fontSize="18"
         fill={letterNColor}
         textAnchor="middle"
       >
@@ -119,11 +161,11 @@ const NectformaLogo: React.FC<NectformaLogoProps> = ({
 
       {/* Letter F */}
       <text
-        x="44"
-        y="43"
+        x="65"
+        y="62"
         fontFamily="Plus Jakarta Sans, sans-serif"
         fontWeight="800"
-        fontSize="16"
+        fontSize="18"
         fill={letterFColor}
         textAnchor="middle"
       >
