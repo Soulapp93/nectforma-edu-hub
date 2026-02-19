@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, LayoutDashboard, ShieldCheck, Users, GraduationCap, BookText, CalendarDays, ClipboardCheck, Mail, UsersRound, Building2, UserCircle, Briefcase, Monitor } from 'lucide-react';
+import { Menu, LayoutDashboard, ShieldCheck, Users, GraduationCap, BookText, CalendarDays, ClipboardCheck, Mail, UsersRound, Building2, UserCircle, Briefcase, Monitor, Layers } from 'lucide-react';
 import HeaderDropdown from './HeaderDropdown';
 import MobileDrawerNavigation from './MobileDrawerNavigation';
 import NectformaLogo from '@/components/NectformaLogo';
@@ -40,6 +40,7 @@ const LandingHeader: React.FC = () => {
                   { label: 'Gestion établissement', href: '/fonctionnalites#etablissement', icon: Building2 },
                   { label: 'Profils utilisateurs', href: '/fonctionnalites#profils', icon: UserCircle },
                   { label: 'Espace tuteurs', href: '/fonctionnalites#tuteurs', icon: Briefcase },
+                  { label: 'Espace de travail', href: '/fonctionnalites#espace-travail', icon: Layers },
                   { label: 'Classes virtuelles', href: '/fonctionnalites#classes-virtuelles', icon: Monitor },
                 ]}
               />
