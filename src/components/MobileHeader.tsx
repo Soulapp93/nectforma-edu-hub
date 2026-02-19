@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Menu } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import MobileDrawerMenu from './MobileDrawerMenu';
+import NectformaLogo from './NectformaLogo';
 
 const MobileHeader = () => {
   const location = useLocation();
@@ -65,9 +66,7 @@ const MobileHeader = () => {
         
         {/* Logo et Titre au centre */}
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 nect-gradient rounded-lg flex items-center justify-center shadow-sm">
-            <span className="text-primary-foreground font-extrabold text-xs tracking-tight">NF</span>
-          </div>
+          <NectformaLogo variant="dark" size="sm" showIcon={true} className="" />
           <h1 className="text-base font-bold text-foreground truncate max-w-[160px] tracking-tight">
             {getPageTitle()}
           </h1>

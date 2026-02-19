@@ -39,6 +39,7 @@ import { useMyContext } from '@/hooks/useMyContext';
 import { useEstablishment } from '@/hooks/useEstablishment';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 import { supabase } from '@/integrations/supabase/client';
+import NectformaLogo from './NectformaLogo';
 
 interface NavigationItem {
   name: string;
@@ -163,14 +164,7 @@ const Sidebar = () => {
           {/* Logo Row with Collapse Button */}
           <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'}`}>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg ring-2 ring-white/20">
-                <span className="text-transparent bg-clip-text bg-gradient-to-br from-primary to-accent font-extrabold text-base tracking-tight">NF</span>
-              </div>
-              {!collapsed && (
-                <span className="text-lg font-bold text-white tracking-tight">
-                  Nectf<span className="text-white/70 font-extrabold">o</span>rma
-                </span>
-              )}
+              <NectformaLogo variant="light" size={collapsed ? 'sm' : 'md'} showIcon={true} />
             </div>
             
             {/* Modern Collapse Toggle Button */}

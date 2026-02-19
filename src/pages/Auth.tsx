@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, Shield, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import NectformaLogo from '@/components/NectformaLogo';
 
 const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -78,12 +79,9 @@ const Auth = () => {
       <div className="relative z-10 w-full max-w-md animate-scale-in">
         {/* Logo and brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-xl mb-4 animate-float">
-            <span className="text-primary font-extrabold text-2xl tracking-tight">NF</span>
+          <div className="inline-flex items-center justify-center mb-4 animate-float">
+            <NectformaLogo variant="light" size="xl" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Nectf<span className="text-white/70 font-extrabold">o</span>rma
-          </h1>
           <p className="text-white/70 text-sm">Plateforme de gestion éducative</p>
         </div>
 

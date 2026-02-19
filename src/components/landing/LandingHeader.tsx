@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Menu, LayoutDashboard, ShieldCheck, Users, GraduationCap, BookText, CalendarDays, ClipboardCheck, Mail, UsersRound, Building2, UserCircle, Briefcase, Monitor } from 'lucide-react';
 import HeaderDropdown from './HeaderDropdown';
 import MobileDrawerNavigation from './MobileDrawerNavigation';
+import NectformaLogo from '@/components/NectformaLogo';
 
 const LandingHeader: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -20,14 +21,7 @@ const LandingHeader: React.FC = () => {
               >
                 <Menu className="h-5 w-5 text-white" />
               </button>
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 shadow-lg">
-                <span className="text-white font-extrabold text-xs md:text-sm tracking-tight">NF</span>
-              </div>
-              <div>
-                <Link to="/" className="text-lg md:text-2xl font-bold text-white tracking-tight">
-                  Nectf<span className="text-white/70 font-extrabold">o</span>rma
-                </Link>
-              </div>
+              <NectformaLogo variant="light" size="md" linkTo="/" />
             </div>
 
             <nav className="hidden lg:flex items-center space-x-1">
