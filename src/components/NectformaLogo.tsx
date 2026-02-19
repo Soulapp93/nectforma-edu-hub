@@ -37,85 +37,86 @@ const NectformaLogo: React.FC<NectformaLogoProps> = ({
     gradient: 'text-primary',
   }[variant];
 
-  const strokeColor = variant === 'light' ? '#ffffff' : 'hsl(var(--primary))';
-  const fillColor = variant === 'light' ? 'rgba(255,255,255,0.15)' : 'hsl(var(--primary) / 0.12)';
-  const letterNColor = variant === 'light' ? '#ffffff' : 'hsl(var(--primary))';
-  const letterFColor = variant === 'light' ? '#ffffff' : 'hsl(var(--primary))';
+  const isLight = variant === 'light';
 
-  const BookIcon = ({ size: s }: { size: number }) => (
+  const gradientId = `logo-grad-${Math.random().toString(36).slice(2, 8)}`;
+  const gradientId2 = `logo-grad2-${Math.random().toString(36).slice(2, 8)}`;
+  const gradientId3 = `logo-grad3-${Math.random().toString(36).slice(2, 8)}`;
+
+  const LogoIcon = ({ size: s }: { size: number }) => (
     <svg
       width={s}
       height={s}
-      viewBox="0 0 48 44"
+      viewBox="0 0 64 72"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className="flex-shrink-0"
     >
-      {/* Book cover background - rounded rectangle */}
-      <rect
-        x="8" y="2" width="32" height="30" rx="3" ry="3"
-        fill={fillColor} stroke={strokeColor} strokeWidth="1.8"
+      <defs>
+        {/* Main purple-pink gradient */}
+        <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor={variant === 'light' ? '#e0b0ff' : '#c084fc'} />
+          <stop offset="50%" stopColor={variant === 'light' ? '#d946ef' : '#a855f7'} />
+          <stop offset="100%" stopColor={variant === 'light' ? '#f472b6' : '#ec4899'} />
+        </linearGradient>
+        {/* Cap top gradient */}
+        <linearGradient id={gradientId2} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor={variant === 'light' ? '#f9a8d4' : '#f472b6'} />
+          <stop offset="100%" stopColor={variant === 'light' ? '#c084fc' : '#a855f7'} />
+        </linearGradient>
+        {/* Book gradient */}
+        <linearGradient id={gradientId3} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor={variant === 'light' ? '#d8b4fe' : '#a855f7'} />
+          <stop offset="60%" stopColor={variant === 'light' ? '#818cf8' : '#7c3aed'} />
+          <stop offset="100%" stopColor={variant === 'light' ? '#6366f1' : '#6d28d9'} />
+        </linearGradient>
+      </defs>
+
+      {/* === GRADUATION CAP === */}
+      {/* Cap board (diamond/rhombus shape) */}
+      <polygon
+        points="32,4 58,18 32,28 6,18"
+        fill={`url(#${gradientId2})`}
+        stroke={variant === 'light' ? 'rgba(255,255,255,0.3)' : 'none'}
+        strokeWidth="0.5"
+      />
+      {/* Cap underside shadow */}
+      <polygon
+        points="32,28 58,18 58,20 32,30 6,20 6,18"
+        fill={variant === 'light' ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.25)'}
       />
 
-      {/* Left page (slightly open, angled left) */}
+      {/* === CIRCLE HEAD === */}
+      <circle
+        cx="32" cy="34" r="11"
+        fill={`url(#${gradientId})`}
+      />
+
+      {/* === TASSEL === */}
+      <line x1="50" y1="18" x2="54" y2="28" stroke={`url(#${gradientId})`} strokeWidth="2" strokeLinecap="round" />
+      <circle cx="54" cy="30" r="2.5" fill={`url(#${gradientId})`} />
+
+      {/* === OPEN BOOK === */}
+      {/* Left page */}
       <path
-        d="M10 34 L10 8 Q10 5 13 5 L24 5 L24 34"
-        fill={fillColor} stroke={strokeColor} strokeWidth="1.6"
+        d="M6 56 Q6 50 16 50 Q24 50 32 54 L32 66 Q24 62 16 62 Q6 62 6 56 Z"
+        fill={`url(#${gradientId3})`}
+        opacity="0.9"
       />
-      {/* Right page (slightly open, angled right) */}
+      {/* Right page */}
       <path
-        d="M38 34 L38 8 Q38 5 35 5 L24 5 L24 34"
-        fill={fillColor} stroke={strokeColor} strokeWidth="1.6"
+        d="M58 56 Q58 50 48 50 Q40 50 32 54 L32 66 Q40 62 48 62 Q58 62 58 56 Z"
+        fill={`url(#${gradientId3})`}
+        opacity="0.75"
       />
-
-      {/* Open pages flaring out at bottom - left */}
-      <path
-        d="M10 34 Q6 36 4 40 Q12 35 24 38"
-        stroke={strokeColor} strokeWidth="1.6" fill="none" strokeLinecap="round"
-      />
-      {/* Open pages flaring out at bottom - right */}
-      <path
-        d="M38 34 Q42 36 44 40 Q36 35 24 38"
-        stroke={strokeColor} strokeWidth="1.6" fill="none" strokeLinecap="round"
-      />
-
-      {/* Second layer curve (behind) */}
-      <path
-        d="M8 33 Q5 35 3 38 Q11 33 24 36 Q37 33 45 38 Q43 35 40 33"
-        stroke={strokeColor} strokeWidth="1.2" fill="none" opacity="0.4" strokeLinecap="round"
-      />
-
-      {/* Text lines on left page */}
-      <line x1="13" y1="12" x2="21" y2="12" stroke={strokeColor} strokeWidth="1.2" opacity="0.4" strokeLinecap="round" />
-      <line x1="13" y1="16" x2="21" y2="16" stroke={strokeColor} strokeWidth="1.2" opacity="0.4" strokeLinecap="round" />
-      <line x1="13" y1="20" x2="21" y2="20" stroke={strokeColor} strokeWidth="1.2" opacity="0.4" strokeLinecap="round" />
-
-      {/* Text lines on right page */}
-      <line x1="27" y1="12" x2="35" y2="12" stroke={strokeColor} strokeWidth="1.2" opacity="0.4" strokeLinecap="round" />
-      <line x1="27" y1="16" x2="35" y2="16" stroke={strokeColor} strokeWidth="1.2" opacity="0.4" strokeLinecap="round" />
-      <line x1="27" y1="20" x2="35" y2="20" stroke={strokeColor} strokeWidth="1.2" opacity="0.4" strokeLinecap="round" />
-
-      {/* Letter N */}
-      <text
-        x="17" y="30"
-        fontFamily="Plus Jakarta Sans, sans-serif"
-        fontWeight="800" fontSize="10"
-        fill={letterNColor} textAnchor="middle"
-      >N</text>
-
-      {/* Letter F */}
-      <text
-        x="31" y="30"
-        fontFamily="Plus Jakarta Sans, sans-serif"
-        fontWeight="800" fontSize="10"
-        fill={letterFColor} textAnchor="middle"
-      >F</text>
+      {/* Book spine highlight */}
+      <line x1="32" y1="54" x2="32" y2="66" stroke={variant === 'light' ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)'} strokeWidth="1" />
     </svg>
   );
 
   const content = (
     <div className={`flex items-center ${config.gap} ${className}`}>
-      {showIcon && <BookIcon size={config.icon} />}
+      {showIcon && <LogoIcon size={config.icon} />}
       <span className={`${config.text} font-bold tracking-tight ${textColorClass}`}>
         Nectf<span className={`${oColorClass} font-extrabold`}>o</span>rma
       </span>
