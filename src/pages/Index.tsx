@@ -4,7 +4,8 @@ import {
   LayoutDashboard, ShieldCheck, Users, GraduationCap, BookText, CalendarDays, 
   ClipboardCheck, Mail, UsersRound, Building2, UserCircle, Briefcase,
   ArrowRight, CheckCircle2, Sparkles, Play, Shield, Zap, Clock, Monitor,
-  Send, Phone, MapPin, ChevronDown, Download, Layers
+  Send, Phone, MapPin, ChevronDown, Download, Layers,
+  BookOpen, PenTool, Lightbulb, Award, Star, FileText, Pencil
 } from 'lucide-react';
 import { toast } from 'sonner';
 import NectformaLogo from '@/components/NectformaLogo';
@@ -322,7 +323,39 @@ const Index = () => {
       <div className="h-14 md:h-16" />
 
       {/* Hero Section */}
-      <GradientBackground variant="orbs" className="py-16 md:py-28 px-4 sm:px-6 lg:px-8">
+      <GradientBackground variant="orbs" className="py-16 md:py-28 px-4 sm:px-6 lg:px-8 relative">
+        {/* Floating pedagogical decorations */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {/* Book icons */}
+          <BookOpen className="absolute text-primary/[0.07] w-16 h-16 md:w-24 md:h-24" style={{ top: '8%', left: '5%', animation: 'float-slow 8s ease-in-out infinite' }} />
+          <BookOpen className="absolute text-accent/[0.06] w-12 h-12 md:w-20 md:h-20" style={{ bottom: '15%', right: '8%', animation: 'float-slow-reverse 10s ease-in-out infinite 2s' }} />
+          
+          {/* Graduation cap */}
+          <GraduationCap className="absolute text-primary/[0.08] w-14 h-14 md:w-20 md:h-20" style={{ top: '15%', right: '10%', animation: 'float-slow 9s ease-in-out infinite 1s' }} />
+          <GraduationCap className="absolute text-accent/[0.05] w-10 h-10 md:w-16 md:h-16" style={{ bottom: '25%', left: '12%', animation: 'drift-horizontal 12s ease-in-out infinite' }} />
+          
+          {/* Pen / Pencil */}
+          <Pencil className="absolute text-primary/[0.06] w-10 h-10 md:w-14 md:h-14" style={{ top: '40%', left: '3%', animation: 'float-slow-reverse 7s ease-in-out infinite 3s', transform: 'rotate(-30deg)' }} />
+          <PenTool className="absolute text-accent/[0.07] w-8 h-8 md:w-12 md:h-12" style={{ top: '30%', right: '4%', animation: 'float-slow 11s ease-in-out infinite 4s' }} />
+          
+          {/* Lightbulb */}
+          <Lightbulb className="absolute text-warning/[0.08] w-10 h-10 md:w-16 md:h-16" style={{ bottom: '10%', left: '25%', animation: 'float-slow 10s ease-in-out infinite 2s' }} />
+          
+          {/* Star / Award */}
+          <Star className="absolute text-primary/[0.06] w-8 h-8 md:w-12 md:h-12" style={{ top: '60%', right: '15%', animation: 'drift-horizontal 14s ease-in-out infinite 1s' }} />
+          <Award className="absolute text-accent/[0.05] w-12 h-12 md:w-16 md:h-16" style={{ top: '70%', left: '8%', animation: 'float-slow 13s ease-in-out infinite 5s' }} />
+          
+          {/* File/Document */}
+          <FileText className="absolute text-primary/[0.05] w-10 h-10 md:w-14 md:h-14" style={{ bottom: '30%', right: '20%', animation: 'float-slow-reverse 9s ease-in-out infinite 3s' }} />
+          
+          {/* Decorative circles */}
+          <div className="absolute w-32 h-32 md:w-48 md:h-48 rounded-full border-2 border-primary/[0.04]" style={{ top: '20%', right: '15%', animation: 'spin-slow 40s linear infinite' }} />
+          <div className="absolute w-24 h-24 md:w-36 md:h-36 rounded-full border border-dashed border-accent/[0.05]" style={{ bottom: '20%', left: '10%', animation: 'spin-slow 30s linear infinite reverse' }} />
+          
+          {/* Dotted pattern */}
+          <div className="absolute w-40 h-40 md:w-60 md:h-60 opacity-[0.03]" style={{ top: '5%', right: '25%', backgroundImage: 'radial-gradient(circle, hsl(var(--primary)) 1px, transparent 1px)', backgroundSize: '12px 12px' }} />
+          <div className="absolute w-32 h-32 md:w-48 md:h-48 opacity-[0.03]" style={{ bottom: '10%', left: '30%', backgroundImage: 'radial-gradient(circle, hsl(var(--accent)) 1px, transparent 1px)', backgroundSize: '10px 10px' }} />
+        </div>
         <div className="relative max-w-7xl mx-auto text-center px-2">
           <AnimatedSection animation="scale" delay={0}>
             <div className="inline-flex items-center px-4 py-2 bg-primary/10 rounded-full mb-6 md:mb-8 glass">
@@ -619,6 +652,13 @@ const Index = () => {
       {/* Features Count Section */}
       <section className="py-12 md:py-16 bg-gradient-to-r from-primary to-accent relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%27%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-20"></div>
+        {/* Floating icons in stats bar */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <BookOpen className="absolute text-white/[0.08] w-12 h-12" style={{ top: '10%', left: '5%', animation: 'float-slow 8s ease-in-out infinite' }} />
+          <GraduationCap className="absolute text-white/[0.08] w-10 h-10" style={{ top: '20%', right: '8%', animation: 'float-slow-reverse 9s ease-in-out infinite 2s' }} />
+          <Lightbulb className="absolute text-white/[0.06] w-8 h-8" style={{ bottom: '15%', left: '40%', animation: 'drift-horizontal 10s ease-in-out infinite 1s' }} />
+          <Star className="absolute text-white/[0.07] w-6 h-6" style={{ top: '30%', left: '70%', animation: 'float-slow 7s ease-in-out infinite 3s' }} />
+        </div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center text-primary-foreground">
@@ -649,8 +689,24 @@ const Index = () => {
       <SectionDivider variant="curve" flip fillColor="fill-muted/30" />
 
       {/* Features Section */}
-      <section id="fonctionnalites" className="py-16 md:py-24 bg-muted/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="fonctionnalites" className="py-16 md:py-24 bg-muted/30 relative overflow-hidden">
+        {/* Decorative pedagogical background elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          <BookOpen className="absolute text-primary/[0.04] w-20 h-20 md:w-32 md:h-32" style={{ top: '5%', right: '5%', animation: 'float-slow 12s ease-in-out infinite' }} />
+          <GraduationCap className="absolute text-accent/[0.04] w-16 h-16 md:w-24 md:h-24" style={{ top: '20%', left: '3%', animation: 'float-slow-reverse 15s ease-in-out infinite 3s' }} />
+          <Lightbulb className="absolute text-warning/[0.05] w-12 h-12 md:w-20 md:h-20" style={{ top: '40%', right: '8%', animation: 'drift-horizontal 13s ease-in-out infinite 2s' }} />
+          <Pencil className="absolute text-primary/[0.04] w-14 h-14 md:w-20 md:h-20" style={{ top: '55%', left: '5%', animation: 'float-slow 10s ease-in-out infinite 4s' }} />
+          <Star className="absolute text-accent/[0.04] w-10 h-10 md:w-16 md:h-16" style={{ top: '70%', right: '12%', animation: 'float-slow-reverse 11s ease-in-out infinite 1s' }} />
+          <Award className="absolute text-primary/[0.03] w-16 h-16 md:w-24 md:h-24" style={{ top: '85%', left: '8%', animation: 'drift-horizontal 16s ease-in-out infinite 5s' }} />
+          <FileText className="absolute text-accent/[0.04] w-12 h-12 md:w-18 md:h-18" style={{ top: '30%', left: '90%', animation: 'float-slow 14s ease-in-out infinite 6s' }} />
+          
+          {/* Decorative geometric shapes */}
+          <div className="absolute w-64 h-64 rounded-full border border-primary/[0.03]" style={{ top: '15%', left: '-5%', animation: 'spin-slow 50s linear infinite' }} />
+          <div className="absolute w-48 h-48 rounded-full border border-dashed border-accent/[0.03]" style={{ top: '50%', right: '-3%', animation: 'spin-slow 35s linear infinite reverse' }} />
+          <div className="absolute w-80 h-80 rounded-full border border-primary/[0.02]" style={{ bottom: '10%', left: '30%', animation: 'spin-slow 60s linear infinite' }} />
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <AnimatedSection className="text-center mb-16 md:mb-20">
             <div className="inline-flex items-center px-4 py-2 bg-primary/10 rounded-full mb-6">
               <Clock className="h-4 w-4 text-primary mr-2" />
