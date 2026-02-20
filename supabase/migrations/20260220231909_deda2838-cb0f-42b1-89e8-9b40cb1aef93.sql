@@ -1,0 +1,2 @@
+ALTER TABLE public.workspace_documents DROP CONSTRAINT workspace_documents_document_type_check;
+ALTER TABLE public.workspace_documents ADD CONSTRAINT workspace_documents_document_type_check CHECK (document_type = ANY (ARRAY['text'::text, 'spreadsheet'::text, 'presentation'::text, 'visual'::text, 'whiteboard'::text]));
