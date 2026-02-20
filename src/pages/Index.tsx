@@ -835,58 +835,55 @@ const Index = () => {
                     </div>
                   </div>
 
-                  {/* Images avec fond violet - style flottant sans bordures */}
+                  {/* Images - style flottant sans bordures */}
                   <div className="flex-1 w-full max-w-2xl">
                     {feature.images && feature.images.length > 0 ? (
                       <div className="relative group">
-                        {/* Fond violet dégradé derrière l'image */}
+                        {/* Halo lumineux derrière l'image */}
                         <div 
-                          className="absolute inset-0 -inset-x-4 -inset-y-4"
+                          className="absolute -inset-8 rounded-full opacity-40 group-hover:opacity-60 transition-opacity duration-700 blur-3xl"
                           style={{
-                            background: 'linear-gradient(145deg, hsl(262 83% 30%) 0%, hsl(270 70% 25%) 40%, hsl(280 65% 20%) 100%)',
-                            borderRadius: '2rem',
-                            filter: 'blur(0px)',
+                            background: `radial-gradient(ellipse at center, hsl(var(--primary) / 0.25) 0%, hsl(var(--accent) / 0.15) 50%, transparent 80%)`
                           }}
-                        >
-                          {/* Halos lumineux dynamiques */}
-                          <div className="absolute inset-0 rounded-[2rem] overflow-hidden pointer-events-none">
-                            <div className="absolute w-1/2 h-1/2 top-0 left-0 opacity-20" style={{
-                              background: 'radial-gradient(circle, hsl(262 80% 60%) 0%, transparent 70%)',
-                              animation: 'float-slow 12s ease-in-out infinite'
-                            }} />
-                            <div className="absolute w-1/3 h-1/3 bottom-0 right-0 opacity-15" style={{
-                              background: 'radial-gradient(circle, hsl(280 70% 55%) 0%, transparent 70%)',
-                              animation: 'float-slow-reverse 10s ease-in-out infinite 3s'
-                            }} />
-                          </div>
-                          {/* Particules flottantes */}
-                          <div className="absolute top-6 right-8 w-3 h-3 rounded-full bg-white/10 animate-pulse" />
-                          <div className="absolute bottom-10 left-6 w-2 h-2 rounded-full bg-white/[0.08]" style={{ animation: 'float-particle 6s ease-in-out infinite' }} />
-                          <div className="absolute top-1/3 right-6 w-2 h-2 rounded-full bg-white/[0.06]" style={{ animation: 'float-particle 8s ease-in-out infinite 2s' }} />
-                        </div>
+                        />
+                        {/* Particules décoratives flottantes autour de l'image */}
+                        <div className="absolute -top-6 -right-4 w-12 h-12 rounded-full opacity-30 animate-pulse"
+                             style={{ background: 'radial-gradient(circle, hsl(var(--primary) / 0.4) 0%, transparent 70%)' }} />
+                        <div className="absolute -bottom-4 -left-6 w-16 h-16 rounded-full opacity-25"
+                             style={{ background: 'radial-gradient(circle, hsl(var(--accent) / 0.35) 0%, transparent 70%)', animation: 'float-particle 8s ease-in-out infinite' }} />
+                        <div className="absolute top-1/4 -right-8 w-8 h-8 rounded-full opacity-20"
+                             style={{ background: 'radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, transparent 70%)', animation: 'float-particle 10s ease-in-out infinite 2s' }} />
                         
                         <Hover3DCard intensity={8}>
-                          <div className="relative p-6 md:p-10">
+                          <div className="relative">
+                            {/* Image sans bordures - fondu sur les bords */}
                             <img 
                               src={feature.images[0]} 
                               alt={`${feature.title} - Illustration`}
-                              className="relative z-10 w-full h-auto object-contain transition-transform duration-700 group-hover:scale-[1.03]"
+                              className="w-full h-auto object-contain drop-shadow-2xl transition-transform duration-700 group-hover:scale-[1.03]"
                               style={{
-                                filter: 'drop-shadow(0 20px 40px rgba(0, 0, 0, 0.35)) drop-shadow(0 8px 16px rgba(139, 92, 246, 0.2))',
-                                maskImage: 'radial-gradient(ellipse 90% 90% at center, black 65%, transparent 100%)',
-                                WebkitMaskImage: 'radial-gradient(ellipse 90% 90% at center, black 65%, transparent 100%)',
+                                filter: 'drop-shadow(0 20px 40px rgba(139, 92, 246, 0.2)) drop-shadow(0 8px 16px rgba(139, 92, 246, 0.15))',
+                                maskImage: 'radial-gradient(ellipse 85% 85% at center, black 60%, transparent 100%)',
+                                WebkitMaskImage: 'radial-gradient(ellipse 85% 85% at center, black 60%, transparent 100%)',
                               }}
                             />
-                            {/* Reflet brillant au hover */}
-                            <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-20">
+                            {/* Reflet brillant subtil */}
+                            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700">
                               <div style={{
                                 position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%',
-                                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)',
+                                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
                                 animation: 'logo-shine 5s ease-in-out infinite'
                               }} />
                             </div>
                           </div>
                         </Hover3DCard>
+                        
+                        {/* Petits points décoratifs */}
+                        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 opacity-40">
+                          {[...Array(5)].map((_, i) => (
+                            <div key={i} className="w-1.5 h-1.5 rounded-full bg-primary/50" style={{ animationDelay: `${i * 0.2}s` }} />
+                          ))}
+                        </div>
                       </div>
                     ) : (
                       <div className="relative group">
