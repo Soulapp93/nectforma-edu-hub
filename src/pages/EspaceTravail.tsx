@@ -439,10 +439,10 @@ const EspaceTravail = () => {
           </DialogHeader>
 
           {!selectedDocType ? (
-            <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-4 py-4 overflow-y-auto">
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
                 {DOC_TYPES.map(dt => (
-                  <button key={dt.type} onClick={() => setSelectedDocType(dt.type)} className="flex flex-col items-center gap-3 p-5 rounded-xl border-2 border-transparent hover:border-primary/30 hover:bg-muted/50 transition-all">
+                  <button key={dt.type} onClick={() => setSelectedDocType(dt.type)} className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-transparent hover:border-primary/30 hover:bg-muted/50 transition-all">
                     <div className={`p-3 rounded-xl ${dt.color} text-white`}>
                       <dt.icon className="h-6 w-6" />
                     </div>
