@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { workspaceService, WorkspaceDocument, WorkspaceFolder } from '@/services/workspaceService';
 import { toast } from 'sonner';
-import { Plus, FileText, Table2, Presentation, Image, FolderPlus, Folder, ArrowLeft, Trash2, MoreVertical, Search, LayoutGrid, List, Users, ChevronLeft, Upload, FileUp } from 'lucide-react';
+import { Plus, FileText, Table2, Presentation, Image, FolderPlus, Folder, ArrowLeft, Trash2, MoreVertical, Search, LayoutGrid, List, Users, ChevronLeft, Upload, FileUp, PenLine } from 'lucide-react';
 import { getTemplatesByType, getTemplateCategories, DocumentTemplate } from '@/data/workspaceTemplates';
 import { fileImportService } from '@/services/fileImportService';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -18,12 +18,14 @@ import WorkspaceTextEditor from '@/components/workspace/WorkspaceTextEditor';
 import WorkspaceSpreadsheetEditor from '@/components/workspace/WorkspaceSpreadsheetEditor';
 import WorkspacePresentationEditor from '@/components/workspace/WorkspacePresentationEditor';
 import WorkspaceVisualEditor from '@/components/workspace/WorkspaceVisualEditor';
+import WorkspaceWhiteboardEditor from '@/components/workspace/WorkspaceWhiteboardEditor';
 
 const DOC_TYPES = [
   { type: 'text' as const, label: 'Document texte', icon: FileText, color: 'bg-blue-500', desc: 'Comme Word' },
   { type: 'spreadsheet' as const, label: 'Tableau', icon: Table2, color: 'bg-green-500', desc: 'Comme Excel' },
   { type: 'presentation' as const, label: 'Présentation', icon: Presentation, color: 'bg-orange-500', desc: 'Comme PowerPoint' },
   { type: 'visual' as const, label: 'Visuel', icon: Image, color: 'bg-pink-500', desc: 'Comme Canva' },
+  { type: 'whiteboard' as const, label: 'Tableau blanc', icon: PenLine, color: 'bg-cyan-500', desc: 'Whiteboard infini' },
 ];
 
 const getDocIcon = (type: string) => {
@@ -32,6 +34,7 @@ const getDocIcon = (type: string) => {
     case 'spreadsheet': return <Table2 className="h-8 w-8 text-green-500" />;
     case 'presentation': return <Presentation className="h-8 w-8 text-orange-500" />;
     case 'visual': return <Image className="h-8 w-8 text-pink-500" />;
+    case 'whiteboard': return <PenLine className="h-8 w-8 text-cyan-500" />;
     default: return <FileText className="h-8 w-8 text-muted-foreground" />;
   }
 };
@@ -42,6 +45,7 @@ const getDocColor = (type: string) => {
     case 'spreadsheet': return 'border-green-200 hover:border-green-400 hover:shadow-green-100';
     case 'presentation': return 'border-orange-200 hover:border-orange-400 hover:shadow-orange-100';
     case 'visual': return 'border-pink-200 hover:border-pink-400 hover:shadow-pink-100';
+    case 'whiteboard': return 'border-cyan-200 hover:border-cyan-400 hover:shadow-cyan-100';
     default: return '';
   }
 };
@@ -93,7 +97,7 @@ const EspaceTravail = () => {
   const handleCreateDocument = async (type: WorkspaceDocument['document_type'], template?: DocumentTemplate) => {
     if (!userId) return;
     try {
-      const defaultContent = template?.content || (type === 'text' ? { html: '' } : type === 'spreadsheet' ? { cells: {}, numRows: 50, numCols: 26 } : type === 'presentation' ? { slides: [{ id: '1', elements: [], background: '#ffffff' }] } : { width: 1080, height: 1080, background: '#ffffff', elements: [] });
+      const defaultContent = template?.content || (type === 'text' ? { html: '' } : type === 'spreadsheet' ? { cells: {}, numRows: 50, numCols: 26 } : type === 'presentation' ? { slides: [{ id: '1', elements: [], background: '#ffffff' }] } : type === 'whiteboard' ? { elements: [], background: '#ffffff', gridVisible: true } : { width: 1080, height: 1080, background: '#ffffff', elements: [] });
       const doc = await workspaceService.createDocument({
         title: template?.name && template.id.indexOf('blank') === -1 ? template.name : 'Sans titre',
         document_type: type,
@@ -257,6 +261,7 @@ const EspaceTravail = () => {
       case 'spreadsheet': return <WorkspaceSpreadsheetEditor {...editorProps} />;
       case 'presentation': return <WorkspacePresentationEditor {...editorProps} />;
       case 'visual': return <WorkspaceVisualEditor {...editorProps} />;
+      case 'whiteboard': return <WorkspaceWhiteboardEditor {...editorProps} />;
       default: return <WorkspaceTextEditor {...editorProps} />;
     }
   }

@@ -5,6 +5,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
 import {
   ArrowLeft, Save, Plus, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight,
   PaintBucket, Type, Download, Undo2, Redo2, BarChart3, Trash2, Copy, Clipboard,
@@ -13,8 +14,9 @@ import {
   PlusCircle, MinusCircle, ArrowUpDown, Columns, Rows, MoreHorizontal, X, Upload,
   Strikethrough, MessageSquare, List, Palette, ArrowDownUp, Replace, Square,
   AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
-  RotateCcw, IndentIncrease, IndentDecrease
+  RotateCcw, IndentIncrease, IndentDecrease, Share2, Users,
 } from 'lucide-react';
+import ShareDocumentModal from './ShareDocumentModal';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
   DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent
@@ -121,6 +123,8 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
   // --- State ---
   const [title, setTitle] = useState(doc.title);
   const [saving, setSaving] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const isOwner = doc.owner_id === userId;
   const [sheets, setSheets] = useState<SheetTab[]>(() => {
     if (doc.content?.sheets) {
       return doc.content.sheets.map((s: any) => ({
@@ -1217,6 +1221,16 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
           placeholder="Titre"
         />
         <div className="flex-1" />
+        {isOwner && (
+          <Button size="sm" variant="outline" onClick={() => setShowShareModal(true)} className="gap-1 h-7 text-xs">
+            <Share2 className="h-3 w-3" /> Partager
+          </Button>
+        )}
+        {doc.is_shared && (
+          <Badge variant="secondary" className="gap-1 text-xs h-6">
+            <Users className="h-3 w-3" /> Partagé
+          </Badge>
+        )}
         <span className="text-xs text-muted-foreground hidden sm:block">
           {saving ? 'Sauvegarde...' : '✓ Auto'}
         </span>
@@ -1963,6 +1977,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
           )}
         </div>
       )}
+      {userId && <ShareDocumentModal open={showShareModal} onOpenChange={setShowShareModal} documentId={doc.id} userId={userId} />}
     </div>
   );
 };
