@@ -933,23 +933,28 @@ const Index = () => {
                              style={{ background: 'radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, transparent 70%)', animation: 'float-particle 10s ease-in-out infinite 2s' }} />
                         
                         <Hover3DCard intensity={8}>
-                          <div className="relative">
-                            {/* Image sans bordures - fondu sur les bords */}
+                          <div 
+                            className="relative rounded-2xl overflow-hidden"
+                            style={{
+                              background: 'linear-gradient(135deg, hsl(262 83% 30%) 0%, hsl(270 70% 25%) 40%, hsl(280 65% 20%) 100%)',
+                              padding: '20px 20px 16px 20px',
+                              maskImage: 'radial-gradient(ellipse 90% 90% at center, black 65%, transparent 100%)',
+                              WebkitMaskImage: 'radial-gradient(ellipse 90% 90% at center, black 65%, transparent 100%)',
+                            }}
+                          >
                             <img 
                               src={feature.images[0]} 
                               alt={`${feature.title} - Illustration`}
-                              className="w-full h-auto object-contain drop-shadow-2xl transition-transform duration-700 group-hover:scale-[1.03]"
+                              className="w-full h-auto object-contain transition-transform duration-700 group-hover:scale-[1.03] rounded-xl"
                               style={{
-                                filter: 'drop-shadow(0 20px 40px rgba(139, 92, 246, 0.2)) drop-shadow(0 8px 16px rgba(139, 92, 246, 0.15))',
-                                maskImage: 'radial-gradient(ellipse 85% 85% at center, black 60%, transparent 100%)',
-                                WebkitMaskImage: 'radial-gradient(ellipse 85% 85% at center, black 60%, transparent 100%)',
+                                filter: 'drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3))',
                               }}
                             />
                             {/* Reflet brillant subtil */}
-                            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                            <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-700">
                               <div style={{
                                 position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%',
-                                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+                                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)',
                                 animation: 'logo-shine 5s ease-in-out infinite'
                               }} />
                             </div>
