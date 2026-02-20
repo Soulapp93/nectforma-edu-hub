@@ -693,14 +693,41 @@ body:has(.fullscreen-container) {
   .landing-gradient-bg {
     background: linear-gradient(
       180deg,
-      hsl(270 60% 98%) 0%,
-      hsl(280 50% 96%) 15%,
-      hsl(270 40% 97%) 30%,
-      hsl(300 40% 96%) 50%,
-      hsl(270 50% 97%) 70%,
-      hsl(280 45% 96%) 85%,
-      hsl(270 60% 98%) 100%
+      hsl(270 70% 96%) 0%,
+      hsl(280 60% 93%) 15%,
+      hsl(300 50% 94%) 30%,
+      hsl(320 45% 95%) 45%,
+      hsl(280 55% 94%) 60%,
+      hsl(270 60% 93%) 75%,
+      hsl(300 50% 95%) 90%,
+      hsl(270 65% 96%) 100%
     );
+  }
+
+  /* Scattered sparkle dots */
+  .landing-sparkles {
+    position: relative;
+  }
+
+  .landing-sparkles::before,
+  .landing-sparkles::after {
+    content: '✦';
+    position: absolute;
+    font-size: 14px;
+    color: hsl(262 83% 58% / 0.15);
+    animation: twinkle 3s ease-in-out infinite;
+  }
+
+  .landing-sparkles::before {
+    top: 10%;
+    right: 8%;
+  }
+
+  .landing-sparkles::after {
+    bottom: 15%;
+    left: 5%;
+    animation-delay: 1.5s;
+    color: hsl(330 70% 55% / 0.12);
   }
 
   .dark .landing-gradient-bg {
