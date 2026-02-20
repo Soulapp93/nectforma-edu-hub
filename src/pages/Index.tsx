@@ -318,103 +318,32 @@ const Index = () => {
 
   return (
     <div className="min-h-screen landing-gradient-bg overflow-x-hidden relative">
-      {/* Global decorative blobs - much more visible */}
+      {/* Global decorative blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        {/* Large purple blob top-left */}
-        <div className="absolute w-[700px] h-[700px] opacity-[0.18]" style={{
-          background: 'radial-gradient(circle, hsl(262 83% 70%) 0%, hsl(280 70% 65%) 30%, transparent 70%)',
-          top: '-8%', left: '-12%',
+        <div className="absolute w-[600px] h-[600px] opacity-[0.07]" style={{
+          background: 'radial-gradient(circle, hsl(280 80% 70%) 0%, transparent 70%)',
+          top: '-5%', left: '-10%',
           filter: 'blur(80px)',
           animation: 'blob-float 25s ease-in-out infinite'
         }} />
-        {/* Pink blob right */}
-        <div className="absolute w-[600px] h-[600px] opacity-[0.15]" style={{
-          background: 'radial-gradient(circle, hsl(330 70% 75%) 0%, hsl(310 60% 70%) 30%, transparent 70%)',
-          top: '25%', right: '-10%',
+        <div className="absolute w-[500px] h-[500px] opacity-[0.06]" style={{
+          background: 'radial-gradient(circle, hsl(330 70% 70%) 0%, transparent 70%)',
+          top: '30%', right: '-8%',
           filter: 'blur(80px)',
           animation: 'blob-float 30s ease-in-out infinite 5s'
         }} />
-        {/* Purple blob bottom */}
-        <div className="absolute w-[500px] h-[500px] opacity-[0.14]" style={{
+        <div className="absolute w-[400px] h-[400px] opacity-[0.05]" style={{
           background: 'radial-gradient(circle, hsl(262 83% 65%) 0%, transparent 70%)',
-          bottom: '5%', left: '15%',
+          bottom: '10%', left: '20%',
           filter: 'blur(70px)',
           animation: 'blob-float 20s ease-in-out infinite 10s'
         }} />
-        {/* Magenta blob center-left */}
-        <div className="absolute w-[450px] h-[450px] opacity-[0.12]" style={{
-          background: 'radial-gradient(circle, hsl(290 65% 70%) 0%, transparent 70%)',
-          top: '55%', left: '-5%',
+        <div className="absolute w-[350px] h-[350px] opacity-[0.04]" style={{
+          background: 'radial-gradient(circle, hsl(200 80% 70%) 0%, transparent 70%)',
+          top: '60%', left: '-5%',
           filter: 'blur(60px)',
           animation: 'blob-float 22s ease-in-out infinite 8s'
         }} />
-        {/* Small accent blobs for extra color */}
-        <div className="absolute w-[300px] h-[300px] opacity-[0.10]" style={{
-          background: 'radial-gradient(circle, hsl(270 80% 75%) 0%, transparent 70%)',
-          top: '70%', right: '20%',
-          filter: 'blur(50px)',
-          animation: 'blob-float 18s ease-in-out infinite 3s'
-        }} />
-        <div className="absolute w-[250px] h-[250px] opacity-[0.08]" style={{
-          background: 'radial-gradient(circle, hsl(320 70% 75%) 0%, transparent 70%)',
-          top: '10%', right: '30%',
-          filter: 'blur(45px)',
-          animation: 'blob-float 15s ease-in-out infinite 7s'
-        }} />
-        
-        {/* Scattered decorative stars/sparkles */}
-        {[
-          { top: '5%', left: '15%', size: 8, color: 'hsl(262 83% 65% / 0.25)', delay: 0 },
-          { top: '12%', right: '20%', size: 6, color: 'hsl(330 70% 60% / 0.20)', delay: 1 },
-          { top: '25%', left: '80%', size: 10, color: 'hsl(280 75% 60% / 0.18)', delay: 2 },
-          { top: '35%', left: '5%', size: 7, color: 'hsl(262 83% 58% / 0.22)', delay: 0.5 },
-          { top: '45%', right: '10%', size: 5, color: 'hsl(310 60% 65% / 0.15)', delay: 1.5 },
-          { top: '55%', left: '25%', size: 9, color: 'hsl(270 70% 65% / 0.20)', delay: 3 },
-          { top: '65%', right: '35%', size: 6, color: 'hsl(330 65% 60% / 0.18)', delay: 2.5 },
-          { top: '75%', left: '60%', size: 8, color: 'hsl(262 80% 60% / 0.15)', delay: 4 },
-          { top: '85%', left: '10%', size: 7, color: 'hsl(290 70% 65% / 0.20)', delay: 1.8 },
-          { top: '90%', right: '15%', size: 5, color: 'hsl(262 83% 58% / 0.12)', delay: 3.5 },
-        ].map((star, i) => (
-          <div
-            key={`star-${i}`}
-            className="absolute rounded-full"
-            style={{
-              width: star.size,
-              height: star.size,
-              top: star.top,
-              left: star.left,
-              right: star.right,
-              backgroundColor: star.color,
-              animation: `twinkle ${2 + i * 0.3}s ease-in-out infinite ${star.delay}s`,
-              boxShadow: `0 0 ${star.size * 2}px ${star.color}`
-            }}
-          />
-        ))}
-        
-        {/* Small decorative crosses/plus signs */}
-        {[
-          { top: '8%', left: '45%', opacity: 0.12 },
-          { top: '30%', right: '25%', opacity: 0.10 },
-          { top: '50%', left: '70%', opacity: 0.08 },
-          { top: '72%', left: '40%', opacity: 0.10 },
-          { top: '88%', right: '40%', opacity: 0.08 },
-        ].map((cross, i) => (
-          <div
-            key={`cross-${i}`}
-            className="absolute text-primary"
-            style={{
-              top: cross.top,
-              left: cross.left,
-              right: cross.right,
-              opacity: cross.opacity,
-              fontSize: '16px',
-              fontWeight: 300,
-              animation: `twinkle ${3 + i * 0.5}s ease-in-out infinite ${i * 0.8}s`
-            }}
-          >
-            ✦
-          </div>
-        ))}
       </div>
 
       <LandingHeader />
@@ -425,35 +354,35 @@ const Index = () => {
       <GradientBackground variant="orbs" className="py-16 md:py-28 px-4 sm:px-6 lg:px-8 relative">
         {/* Floating pedagogical decorations */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {/* Book icons - more visible */}
-          <BookOpen className="absolute text-primary/[0.15] w-16 h-16 md:w-24 md:h-24" style={{ top: '8%', left: '5%', animation: 'float-slow 8s ease-in-out infinite' }} />
-          <BookOpen className="absolute text-accent/[0.12] w-12 h-12 md:w-20 md:h-20" style={{ bottom: '15%', right: '8%', animation: 'float-slow-reverse 10s ease-in-out infinite 2s' }} />
+          {/* Book icons */}
+          <BookOpen className="absolute text-primary/[0.07] w-16 h-16 md:w-24 md:h-24" style={{ top: '8%', left: '5%', animation: 'float-slow 8s ease-in-out infinite' }} />
+          <BookOpen className="absolute text-accent/[0.06] w-12 h-12 md:w-20 md:h-20" style={{ bottom: '15%', right: '8%', animation: 'float-slow-reverse 10s ease-in-out infinite 2s' }} />
           
           {/* Graduation cap */}
-          <GraduationCap className="absolute text-primary/[0.18] w-14 h-14 md:w-20 md:h-20" style={{ top: '15%', right: '10%', animation: 'float-slow 9s ease-in-out infinite 1s' }} />
-          <GraduationCap className="absolute text-accent/[0.10] w-10 h-10 md:w-16 md:h-16" style={{ bottom: '25%', left: '12%', animation: 'drift-horizontal 12s ease-in-out infinite' }} />
+          <GraduationCap className="absolute text-primary/[0.08] w-14 h-14 md:w-20 md:h-20" style={{ top: '15%', right: '10%', animation: 'float-slow 9s ease-in-out infinite 1s' }} />
+          <GraduationCap className="absolute text-accent/[0.05] w-10 h-10 md:w-16 md:h-16" style={{ bottom: '25%', left: '12%', animation: 'drift-horizontal 12s ease-in-out infinite' }} />
           
           {/* Pen / Pencil */}
-          <Pencil className="absolute text-primary/[0.12] w-10 h-10 md:w-14 md:h-14" style={{ top: '40%', left: '3%', animation: 'float-slow-reverse 7s ease-in-out infinite 3s', transform: 'rotate(-30deg)' }} />
-          <PenTool className="absolute text-accent/[0.14] w-8 h-8 md:w-12 md:h-12" style={{ top: '30%', right: '4%', animation: 'float-slow 11s ease-in-out infinite 4s' }} />
+          <Pencil className="absolute text-primary/[0.06] w-10 h-10 md:w-14 md:h-14" style={{ top: '40%', left: '3%', animation: 'float-slow-reverse 7s ease-in-out infinite 3s', transform: 'rotate(-30deg)' }} />
+          <PenTool className="absolute text-accent/[0.07] w-8 h-8 md:w-12 md:h-12" style={{ top: '30%', right: '4%', animation: 'float-slow 11s ease-in-out infinite 4s' }} />
           
           {/* Lightbulb */}
-          <Lightbulb className="absolute text-warning/[0.15] w-10 h-10 md:w-16 md:h-16" style={{ bottom: '10%', left: '25%', animation: 'float-slow 10s ease-in-out infinite 2s' }} />
+          <Lightbulb className="absolute text-warning/[0.08] w-10 h-10 md:w-16 md:h-16" style={{ bottom: '10%', left: '25%', animation: 'float-slow 10s ease-in-out infinite 2s' }} />
           
           {/* Star / Award */}
-          <Star className="absolute text-primary/[0.12] w-8 h-8 md:w-12 md:h-12" style={{ top: '60%', right: '15%', animation: 'drift-horizontal 14s ease-in-out infinite 1s' }} />
-          <Award className="absolute text-accent/[0.10] w-12 h-12 md:w-16 md:h-16" style={{ top: '70%', left: '8%', animation: 'float-slow 13s ease-in-out infinite 5s' }} />
+          <Star className="absolute text-primary/[0.06] w-8 h-8 md:w-12 md:h-12" style={{ top: '60%', right: '15%', animation: 'drift-horizontal 14s ease-in-out infinite 1s' }} />
+          <Award className="absolute text-accent/[0.05] w-12 h-12 md:w-16 md:h-16" style={{ top: '70%', left: '8%', animation: 'float-slow 13s ease-in-out infinite 5s' }} />
           
           {/* File/Document */}
-          <FileText className="absolute text-primary/[0.10] w-10 h-10 md:w-14 md:h-14" style={{ bottom: '30%', right: '20%', animation: 'float-slow-reverse 9s ease-in-out infinite 3s' }} />
+          <FileText className="absolute text-primary/[0.05] w-10 h-10 md:w-14 md:h-14" style={{ bottom: '30%', right: '20%', animation: 'float-slow-reverse 9s ease-in-out infinite 3s' }} />
           
-          {/* Decorative circles - more visible */}
-          <div className="absolute w-32 h-32 md:w-48 md:h-48 rounded-full border-2 border-primary/[0.10]" style={{ top: '20%', right: '15%', animation: 'spin-slow 40s linear infinite' }} />
-          <div className="absolute w-24 h-24 md:w-36 md:h-36 rounded-full border border-dashed border-accent/[0.12]" style={{ bottom: '20%', left: '10%', animation: 'spin-slow 30s linear infinite reverse' }} />
+          {/* Decorative circles */}
+          <div className="absolute w-32 h-32 md:w-48 md:h-48 rounded-full border-2 border-primary/[0.04]" style={{ top: '20%', right: '15%', animation: 'spin-slow 40s linear infinite' }} />
+          <div className="absolute w-24 h-24 md:w-36 md:h-36 rounded-full border border-dashed border-accent/[0.05]" style={{ bottom: '20%', left: '10%', animation: 'spin-slow 30s linear infinite reverse' }} />
           
-          {/* Dotted pattern - stronger */}
-          <div className="absolute w-40 h-40 md:w-60 md:h-60 opacity-[0.07]" style={{ top: '5%', right: '25%', backgroundImage: 'radial-gradient(circle, hsl(var(--primary)) 1px, transparent 1px)', backgroundSize: '12px 12px' }} />
-          <div className="absolute w-32 h-32 md:w-48 md:h-48 opacity-[0.07]" style={{ bottom: '10%', left: '30%', backgroundImage: 'radial-gradient(circle, hsl(var(--accent)) 1px, transparent 1px)', backgroundSize: '10px 10px' }} />
+          {/* Dotted pattern */}
+          <div className="absolute w-40 h-40 md:w-60 md:h-60 opacity-[0.03]" style={{ top: '5%', right: '25%', backgroundImage: 'radial-gradient(circle, hsl(var(--primary)) 1px, transparent 1px)', backgroundSize: '12px 12px' }} />
+          <div className="absolute w-32 h-32 md:w-48 md:h-48 opacity-[0.03]" style={{ bottom: '10%', left: '30%', backgroundImage: 'radial-gradient(circle, hsl(var(--accent)) 1px, transparent 1px)', backgroundSize: '10px 10px' }} />
         </div>
         <div className="relative max-w-7xl mx-auto text-center px-2">
           <AnimatedSection animation="scale" delay={0}>
@@ -762,12 +691,10 @@ const Index = () => {
         </div>
         {/* Floating icons in stats bar */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <BookOpen className="absolute text-white/[0.15] w-12 h-12" style={{ top: '10%', left: '5%', animation: 'float-slow 8s ease-in-out infinite' }} />
-          <GraduationCap className="absolute text-white/[0.15] w-10 h-10" style={{ top: '20%', right: '8%', animation: 'float-slow-reverse 9s ease-in-out infinite 2s' }} />
-          <Lightbulb className="absolute text-white/[0.12] w-8 h-8" style={{ bottom: '15%', left: '40%', animation: 'drift-horizontal 10s ease-in-out infinite 1s' }} />
-          <Star className="absolute text-white/[0.14] w-6 h-6" style={{ top: '30%', left: '70%', animation: 'float-slow 7s ease-in-out infinite 3s' }} />
-          <Pencil className="absolute text-white/[0.10] w-8 h-8" style={{ bottom: '20%', right: '15%', animation: 'float-slow-reverse 11s ease-in-out infinite 4s' }} />
-          <Award className="absolute text-white/[0.10] w-10 h-10" style={{ top: '40%', left: '20%', animation: 'drift-horizontal 12s ease-in-out infinite 3s' }} />
+          <BookOpen className="absolute text-white/[0.08] w-12 h-12" style={{ top: '10%', left: '5%', animation: 'float-slow 8s ease-in-out infinite' }} />
+          <GraduationCap className="absolute text-white/[0.08] w-10 h-10" style={{ top: '20%', right: '8%', animation: 'float-slow-reverse 9s ease-in-out infinite 2s' }} />
+          <Lightbulb className="absolute text-white/[0.06] w-8 h-8" style={{ bottom: '15%', left: '40%', animation: 'drift-horizontal 10s ease-in-out infinite 1s' }} />
+          <Star className="absolute text-white/[0.07] w-6 h-6" style={{ top: '30%', left: '70%', animation: 'float-slow 7s ease-in-out infinite 3s' }} />
         </div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -805,36 +732,31 @@ const Index = () => {
           background: 'linear-gradient(180deg, hsl(270 50% 97% / 0.6) 0%, hsl(280 40% 95% / 0.8) 30%, hsl(300 35% 96% / 0.6) 60%, hsl(270 50% 97% / 0.5) 100%)'
         }} />
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute w-[400px] h-[400px] opacity-[0.15]" style={{
+          <div className="absolute w-[300px] h-[300px] opacity-[0.08]" style={{
             background: 'radial-gradient(circle, hsl(262 83% 65%) 0%, transparent 70%)',
             top: '10%', right: '5%', filter: 'blur(60px)',
             animation: 'blob-float 18s ease-in-out infinite'
           }} />
-          <div className="absolute w-[350px] h-[350px] opacity-[0.12]" style={{
+          <div className="absolute w-[250px] h-[250px] opacity-[0.06]" style={{
             background: 'radial-gradient(circle, hsl(330 60% 65%) 0%, transparent 70%)',
             top: '40%', left: '0%', filter: 'blur(50px)',
             animation: 'blob-float 22s ease-in-out infinite 4s'
           }} />
-          <div className="absolute w-[300px] h-[300px] opacity-[0.10]" style={{
-            background: 'radial-gradient(circle, hsl(280 70% 70%) 0%, transparent 70%)',
-            bottom: '20%', right: '15%', filter: 'blur(55px)',
-            animation: 'blob-float 20s ease-in-out infinite 8s'
-          }} />
         </div>
-        {/* Decorative pedagogical background elements - more visible */}
+        {/* Decorative pedagogical background elements */}
         <div className="absolute inset-0 pointer-events-none">
-          <BookOpen className="absolute text-primary/[0.08] w-20 h-20 md:w-32 md:h-32" style={{ top: '5%', right: '5%', animation: 'float-slow 12s ease-in-out infinite' }} />
-          <GraduationCap className="absolute text-accent/[0.08] w-16 h-16 md:w-24 md:h-24" style={{ top: '20%', left: '3%', animation: 'float-slow-reverse 15s ease-in-out infinite 3s' }} />
-          <Lightbulb className="absolute text-warning/[0.10] w-12 h-12 md:w-20 md:h-20" style={{ top: '40%', right: '8%', animation: 'drift-horizontal 13s ease-in-out infinite 2s' }} />
-          <Pencil className="absolute text-primary/[0.08] w-14 h-14 md:w-20 md:h-20" style={{ top: '55%', left: '5%', animation: 'float-slow 10s ease-in-out infinite 4s' }} />
-          <Star className="absolute text-accent/[0.08] w-10 h-10 md:w-16 md:h-16" style={{ top: '70%', right: '12%', animation: 'float-slow-reverse 11s ease-in-out infinite 1s' }} />
-          <Award className="absolute text-primary/[0.06] w-16 h-16 md:w-24 md:h-24" style={{ top: '85%', left: '8%', animation: 'drift-horizontal 16s ease-in-out infinite 5s' }} />
-          <FileText className="absolute text-accent/[0.08] w-12 h-12 md:w-18 md:h-18" style={{ top: '30%', left: '90%', animation: 'float-slow 14s ease-in-out infinite 6s' }} />
+          <BookOpen className="absolute text-primary/[0.04] w-20 h-20 md:w-32 md:h-32" style={{ top: '5%', right: '5%', animation: 'float-slow 12s ease-in-out infinite' }} />
+          <GraduationCap className="absolute text-accent/[0.04] w-16 h-16 md:w-24 md:h-24" style={{ top: '20%', left: '3%', animation: 'float-slow-reverse 15s ease-in-out infinite 3s' }} />
+          <Lightbulb className="absolute text-warning/[0.05] w-12 h-12 md:w-20 md:h-20" style={{ top: '40%', right: '8%', animation: 'drift-horizontal 13s ease-in-out infinite 2s' }} />
+          <Pencil className="absolute text-primary/[0.04] w-14 h-14 md:w-20 md:h-20" style={{ top: '55%', left: '5%', animation: 'float-slow 10s ease-in-out infinite 4s' }} />
+          <Star className="absolute text-accent/[0.04] w-10 h-10 md:w-16 md:h-16" style={{ top: '70%', right: '12%', animation: 'float-slow-reverse 11s ease-in-out infinite 1s' }} />
+          <Award className="absolute text-primary/[0.03] w-16 h-16 md:w-24 md:h-24" style={{ top: '85%', left: '8%', animation: 'drift-horizontal 16s ease-in-out infinite 5s' }} />
+          <FileText className="absolute text-accent/[0.04] w-12 h-12 md:w-18 md:h-18" style={{ top: '30%', left: '90%', animation: 'float-slow 14s ease-in-out infinite 6s' }} />
           
-          {/* Decorative geometric shapes - stronger */}
-          <div className="absolute w-64 h-64 rounded-full border border-primary/[0.06]" style={{ top: '15%', left: '-5%', animation: 'spin-slow 50s linear infinite' }} />
-          <div className="absolute w-48 h-48 rounded-full border border-dashed border-accent/[0.06]" style={{ top: '50%', right: '-3%', animation: 'spin-slow 35s linear infinite reverse' }} />
-          <div className="absolute w-80 h-80 rounded-full border border-primary/[0.04]" style={{ bottom: '10%', left: '30%', animation: 'spin-slow 60s linear infinite' }} />
+          {/* Decorative geometric shapes */}
+          <div className="absolute w-64 h-64 rounded-full border border-primary/[0.03]" style={{ top: '15%', left: '-5%', animation: 'spin-slow 50s linear infinite' }} />
+          <div className="absolute w-48 h-48 rounded-full border border-dashed border-accent/[0.03]" style={{ top: '50%', right: '-3%', animation: 'spin-slow 35s linear infinite reverse' }} />
+          <div className="absolute w-80 h-80 rounded-full border border-primary/[0.02]" style={{ bottom: '10%', left: '30%', animation: 'spin-slow 60s linear infinite' }} />
         </div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -933,28 +855,23 @@ const Index = () => {
                              style={{ background: 'radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, transparent 70%)', animation: 'float-particle 10s ease-in-out infinite 2s' }} />
                         
                         <Hover3DCard intensity={8}>
-                          <div 
-                            className="relative rounded-2xl overflow-hidden"
-                            style={{
-                              background: 'linear-gradient(135deg, hsl(262 83% 30%) 0%, hsl(270 70% 25%) 40%, hsl(280 65% 20%) 100%)',
-                              padding: '20px 20px 16px 20px',
-                              maskImage: 'radial-gradient(ellipse 90% 90% at center, black 65%, transparent 100%)',
-                              WebkitMaskImage: 'radial-gradient(ellipse 90% 90% at center, black 65%, transparent 100%)',
-                            }}
-                          >
+                          <div className="relative">
+                            {/* Image sans bordures - fondu sur les bords */}
                             <img 
                               src={feature.images[0]} 
                               alt={`${feature.title} - Illustration`}
-                              className="w-full h-auto object-contain transition-transform duration-700 group-hover:scale-[1.03] rounded-xl"
+                              className="w-full h-auto object-contain drop-shadow-2xl transition-transform duration-700 group-hover:scale-[1.03]"
                               style={{
-                                filter: 'drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3))',
+                                filter: 'drop-shadow(0 20px 40px rgba(139, 92, 246, 0.2)) drop-shadow(0 8px 16px rgba(139, 92, 246, 0.15))',
+                                maskImage: 'radial-gradient(ellipse 85% 85% at center, black 60%, transparent 100%)',
+                                WebkitMaskImage: 'radial-gradient(ellipse 85% 85% at center, black 60%, transparent 100%)',
                               }}
                             />
                             {/* Reflet brillant subtil */}
-                            <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700">
                               <div style={{
                                 position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%',
-                                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)',
+                                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
                                 animation: 'logo-shine 5s ease-in-out infinite'
                               }} />
                             </div>
