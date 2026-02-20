@@ -69,9 +69,10 @@ interface HistoryEntry {
 const DEFAULT_ROWS = 100;
 const DEFAULT_COLS = 26;
 const DEFAULT_COL_WIDTH = 100;
-const DEFAULT_ROW_HEIGHT = 28;
+const DEFAULT_ROW_HEIGHT = 25;
 const MIN_COL_WIDTH = 40;
 const MIN_ROW_HEIGHT = 20;
+const ROW_HEADER_WIDTH = 46;
 
 const CELL_COLORS = [
   'transparent', '#ffffff', '#f3f4f6', '#fef3c7', '#dcfce7', '#dbeafe', '#fce7f3', '#f3e8ff',
@@ -146,8 +147,8 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
   const [editingCell, setEditingCell] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
   const [formulaBarValue, setFormulaBarValue] = useState('');
-  const [selectionStart, setSelectionStart] = useState<string | null>(null);
-  const [selectionEnd, setSelectionEnd] = useState<string | null>(null);
+  const [selectionStart, setSelectionStart] = useState<string | null>('A1');
+  const [selectionEnd, setSelectionEnd] = useState<string | null>('A1');
   const [isSelecting, setIsSelecting] = useState(false);
   const [clipboard, setClipboard] = useState<{ data: Record<string, CellData>; startRow: number; startCol: number; rows: number; cols: number } | null>(null);
   const [clipboardMode, setClipboardMode] = useState<'copy' | 'cut'>('copy');
@@ -164,6 +165,9 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
   const [resizingCol, setResizingCol] = useState<number | null>(null);
   const [resizeStartX, setResizeStartX] = useState(0);
   const [resizeStartWidth, setResizeStartWidth] = useState(0);
+  const [resizingRow, setResizingRow] = useState<number | null>(null);
+  const [resizeStartY, setResizeStartY] = useState(0);
+  const [resizeStartHeight, setResizeStartHeight] = useState(0);
   const [showFindReplace, setShowFindReplace] = useState(false);
   const [replaceText, setReplaceText] = useState('');
   const [showConditionalFormat, setShowConditionalFormat] = useState(false);
@@ -290,14 +294,12 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
     if (isEditingFormula && key !== editingCell) {
       e.preventDefault();
       e.stopPropagation();
-      // Check if the last char is an operator or open paren or comma or start of formula
       const lastChar = editValue.slice(-1);
       const isAfterOperator = ['+', '-', '*', '/', '(', ',', '=', '>', '<', '&', '^', ' '].includes(lastChar);
       let newVal: string;
       if (isAfterOperator) {
         newVal = editValue + key;
       } else {
-        // Replace trailing cell reference if any (for re-clicking a different cell)
         const refPattern = /[A-Z]+\d+$/;
         const match = editValue.match(refPattern);
         if (match) {
@@ -308,17 +310,18 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
       }
       setEditValue(newVal);
       setFormulaBarValue(newVal);
-      // Also update the cell data live so formula bar stays in sync
       if (editingCell) {
         updateSheetData(editingCell, { formula: newVal, value: '' });
       }
-      // Refocus formula bar so user can continue typing operators (+, -, etc.)
       setTimeout(() => formulaInputRef.current?.focus(), 0);
       return;
     }
 
     if (e.shiftKey && selectedCell) {
       setSelectionEnd(key);
+    } else if (e.ctrlKey || e.metaKey) {
+      // Ctrl+Click: just move active cell without clearing selection
+      setSelectedCell(key);
     } else {
       setSelectedCell(key);
       setSelectionStart(key);
@@ -358,7 +361,6 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
       } else {
         setShowFormulaHelper(false);
       }
-      // Enter formula editing mode if not already
       if (selectedCell && editingCell !== selectedCell) {
         setEditingCell(selectedCell);
       }
@@ -406,7 +408,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
       commitEdit(key);
       const ref = parseCellRef(key);
       if (ref) {
-        const nextKey = cellKey(ref[0], ref[1] + 1);
+        const nextKey = cellKey(ref[0], ref[1] + (e.shiftKey ? -1 : 1));
         setSelectedCell(nextKey);
         setSelectionStart(nextKey);
         setSelectionEnd(nextKey);
@@ -415,12 +417,16 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
       }
     } else if (e.key === 'Escape') {
       setEditingCell(null);
+      setEditValue('');
+      if (selectedCell) {
+        const cell = data[selectedCell];
+        setFormulaBarValue(cell?.formula || cell?.value || '');
+      }
     }
   };
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      // When editing a formula and pressing Enter (even if cell input lost focus)
       if (e.key === 'Enter' && editingCell && editValue.startsWith('=')) {
         e.preventDefault();
         commitEdit(editingCell);
@@ -454,11 +460,32 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
         if (e.key === 'b' && selectedCell) { e.preventDefault(); toggleFormat('bold'); }
         if (e.key === 'i' && selectedCell) { e.preventDefault(); toggleFormat('italic'); }
         if (e.key === 'u' && selectedCell) { e.preventDefault(); toggleFormat('underline'); }
+        if (e.key === 'a' && !editingCell) {
+          e.preventDefault();
+          // Select all
+          setSelectionStart(cellKey(0, 0));
+          setSelectionEnd(cellKey(sheet.numRows - 1, sheet.numCols - 1));
+          setSelectedCell('A1');
+        }
       }
       if (e.key === 'Delete' && selectedCell && !editingCell) {
         pushHistory();
-        updateSheetData(selectedCell, { value: '', formula: undefined });
+        const b = getSelectionBounds();
+        if (b) {
+          for (let r = b.r1; r <= b.r2; r++) {
+            for (let c = b.c1; c <= b.c2; c++) {
+              updateSheetData(cellKey(r, c), { value: '', formula: undefined });
+            }
+          }
+        } else {
+          updateSheetData(selectedCell, { value: '', formula: undefined });
+        }
         scheduleAutoSave();
+      }
+      // F2 to edit
+      if (e.key === 'F2' && selectedCell && !editingCell) {
+        e.preventDefault();
+        handleCellDoubleClick(selectedCell);
       }
       // Arrow keys navigation
       if (!editingCell && selectedCell && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
@@ -471,11 +498,20 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
         if (e.key === 'ArrowLeft') c = Math.max(0, c - 1);
         if (e.key === 'ArrowRight') c = Math.min(sheet.numCols - 1, c + 1);
         const newKey = cellKey(r, c);
-        setSelectedCell(newKey);
-        setSelectionStart(newKey);
-        setSelectionEnd(newKey);
+        if (e.shiftKey) {
+          // Extend selection
+          setSelectionEnd(newKey);
+        } else {
+          setSelectedCell(newKey);
+          setSelectionStart(newKey);
+          setSelectionEnd(newKey);
+        }
         const cell = data[newKey];
         setFormulaBarValue(cell?.formula || cell?.value || '');
+
+        // Scroll into view
+        const cellEl = tableRef.current?.querySelector(`[data-cell="${newKey}"]`);
+        cellEl?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       }
       // Start typing to enter edit mode
       if (!editingCell && selectedCell && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
@@ -488,7 +524,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
   }, [selectedCell, editingCell, editValue, undo, redo, data, sheet]);
 
   // --- Selection range ---
-  const getSelectionBounds = () => {
+  const getSelectionBounds = useCallback(() => {
     if (!selectionStart || !selectionEnd) return null;
     const s = parseCellRef(selectionStart);
     const e = parseCellRef(selectionEnd);
@@ -497,13 +533,77 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
       r1: Math.min(s[0], e[0]), r2: Math.max(s[0], e[0]),
       c1: Math.min(s[1], e[1]), c2: Math.max(s[1], e[1]),
     };
-  };
+  }, [selectionStart, selectionEnd]);
 
   const isInSelection = (row: number, col: number) => {
     const b = getSelectionBounds();
     if (!b) return selectedCell === cellKey(row, col);
     return row >= b.r1 && row <= b.r2 && col >= b.c1 && col <= b.c2;
   };
+
+  // --- Selection info for status bar ---
+  const selectionStats = useMemo(() => {
+    const b = getSelectionBounds();
+    if (!b) {
+      if (selectedCell) {
+        const val = getCellValue(selectedCell, data);
+        const num = parseFloat(val);
+        if (!isNaN(num) && val.trim()) {
+          return { sum: num, average: num, count: 1, numCount: 1 };
+        }
+        return { sum: 0, average: 0, count: val.trim() ? 1 : 0, numCount: 0 };
+      }
+      return null;
+    }
+    let sum = 0, count = 0, numCount = 0;
+    for (let r = b.r1; r <= b.r2; r++) {
+      for (let c = b.c1; c <= b.c2; c++) {
+        const val = getCellValue(cellKey(r, c), data);
+        if (val.trim()) {
+          count++;
+          const num = parseFloat(val);
+          if (!isNaN(num)) {
+            sum += num;
+            numCount++;
+          }
+        }
+      }
+    }
+    return {
+      sum,
+      average: numCount > 0 ? sum / numCount : 0,
+      count,
+      numCount,
+      min: (() => {
+        let min = Infinity;
+        for (let r = b.r1; r <= b.r2; r++) {
+          for (let c = b.c1; c <= b.c2; c++) {
+            const n = parseFloat(getCellValue(cellKey(r, c), data));
+            if (!isNaN(n) && n < min) min = n;
+          }
+        }
+        return min === Infinity ? 0 : min;
+      })(),
+      max: (() => {
+        let max = -Infinity;
+        for (let r = b.r1; r <= b.r2; r++) {
+          for (let c = b.c1; c <= b.c2; c++) {
+            const n = parseFloat(getCellValue(cellKey(r, c), data));
+            if (!isNaN(n) && n > max) max = n;
+          }
+        }
+        return max === -Infinity ? 0 : max;
+      })(),
+    };
+  }, [getSelectionBounds, selectedCell, data]);
+
+  // Selection range label for display (e.g., "A1:C5")
+  const selectionLabel = useMemo(() => {
+    const b = getSelectionBounds();
+    if (!b) return selectedCell || '';
+    if (b.r1 === b.r2 && b.c1 === b.c2) return cellKey(b.r1, b.c1);
+    return `${cellKey(b.r1, b.c1)}:${cellKey(b.r2, b.c2)}`;
+  }, [getSelectionBounds, selectedCell]);
 
   // --- Clipboard ---
   const handleCopy = () => {
@@ -641,7 +741,6 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
     if (!b || (b.r1 === b.r2 && b.c1 === b.c2)) return;
     pushHistory();
     const parentKey = cellKey(b.r1, b.c1);
-    // Combine values
     let combined = '';
     for (let r = b.r1; r <= b.r2; r++) {
       for (let c = b.c1; c <= b.c2; c++) {
@@ -833,8 +932,8 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
     if (!b && selectedCell) {
       pushHistory();
       const bdr = borderStyle === 'none' ? {} : borderStyle === 'all'
-        ? { top: '1px solid #d1d5db', right: '1px solid #d1d5db', bottom: '1px solid #d1d5db', left: '1px solid #d1d5db' }
-        : { [borderStyle]: '1px solid #d1d5db' };
+        ? { top: '1px solid #9ca3af', right: '1px solid #9ca3af', bottom: '1px solid #9ca3af', left: '1px solid #9ca3af' }
+        : { [borderStyle]: '1px solid #9ca3af' };
       updateSheetData(selectedCell, { border: bdr as any });
       scheduleAutoSave();
       return;
@@ -848,7 +947,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
         if (borderStyle === 'none') {
           bdr = {};
         } else if (borderStyle === 'all') {
-          bdr = { top: '1px solid #d1d5db', right: '1px solid #d1d5db', bottom: '1px solid #d1d5db', left: '1px solid #d1d5db' };
+          bdr = { top: '1px solid #9ca3af', right: '1px solid #9ca3af', bottom: '1px solid #9ca3af', left: '1px solid #9ca3af' };
         } else if (borderStyle === 'outer') {
           bdr = {};
           if (r === b.r1) bdr.top = '2px solid #374151';
@@ -856,7 +955,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
           if (c === b.c1) bdr.left = '2px solid #374151';
           if (c === b.c2) bdr.right = '2px solid #374151';
         } else {
-          bdr = { [borderStyle]: '1px solid #d1d5db' };
+          bdr = { [borderStyle]: '1px solid #9ca3af' };
         }
         updateSheetData(key, { border: bdr });
       }
@@ -969,7 +1068,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
 
   const getColumnUniqueValues = (col: number): string[] => {
     const values = new Set<string>();
-    for (let r = 1; r < sheet.numRows; r++) { // Skip header
+    for (let r = 1; r < sheet.numRows; r++) {
       const val = getCellValue(cellKey(r, col), data);
       if (val.trim()) values.add(val);
     }
@@ -978,26 +1077,41 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
 
   const isRowFiltered = (row: number): boolean => {
     if (Object.keys(activeFilters).length === 0) return false;
-    if (row === 0) return false; // Never filter header row
+    if (row === 0) return false;
     for (const [col, filterValue] of Object.entries(activeFilters)) {
-      const val = getCellValue(cellKey(row, parseInt(col)), data);
-      if (val !== filterValue) return true;
+      const cellVal = getCellValue(cellKey(row, parseInt(col)), data);
+      if (cellVal !== filterValue) return true;
     }
     return false;
   };
 
   // --- Auto-fill ---
-  const handleAutoFill = () => {
-    if (!autoFillStart || !autoFillEnd) return;
+  const handleAutoFillStart = (key: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setAutoFillStart(key);
+    setAutoFillEnd(key);
+    setIsAutoFilling(true);
+  };
+
+  const handleAutoFillMove = (key: string) => {
+    if (isAutoFilling) setAutoFillEnd(key);
+  };
+
+  const handleAutoFillEnd = () => {
+    if (!autoFillStart || !autoFillEnd || autoFillStart === autoFillEnd) {
+      setIsAutoFilling(false);
+      return;
+    }
     const startRef = parseCellRef(autoFillStart);
     const endRef = parseCellRef(autoFillEnd);
-    if (!startRef || !endRef) return;
+    if (!startRef || !endRef) { setIsAutoFilling(false); return; }
+
     pushHistory();
-    const srcCell = data[autoFillStart];
-    if (!srcCell) return;
+    const srcCell = data[autoFillStart] || { value: '' };
     const srcVal = getCellValue(autoFillStart, data);
     const srcNum = parseFloat(srcVal);
-    // Detect series
+
     const isNumber = !isNaN(srcNum);
     for (let r = startRef[0] + 1; r <= endRef[0]; r++) {
       const key = cellKey(r, startRef[1]);
@@ -1039,6 +1153,29 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
     const cell = data[selectedCell] || { value: '' };
     updateSheetData(selectedCell, { indent: Math.max(0, (cell.indent || 0) + delta) });
     scheduleAutoSave();
+  };
+
+  // --- Select column/row ---
+  const handleSelectColumn = (col: number) => {
+    setSelectionStart(cellKey(0, col));
+    setSelectionEnd(cellKey(sheet.numRows - 1, col));
+    setSelectedCell(cellKey(0, col));
+    setFormulaBarValue('');
+    setEditingCell(null);
+  };
+
+  const handleSelectRow = (row: number) => {
+    setSelectionStart(cellKey(row, 0));
+    setSelectionEnd(cellKey(row, sheet.numCols - 1));
+    setSelectedCell(cellKey(row, 0));
+    setFormulaBarValue('');
+    setEditingCell(null);
+  };
+
+  const handleSelectAll = () => {
+    setSelectionStart(cellKey(0, 0));
+    setSelectionEnd(cellKey(sheet.numRows - 1, sheet.numCols - 1));
+    setSelectedCell('A1');
   };
 
   // --- Charts ---
@@ -1170,6 +1307,28 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
     return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
   }, [resizingCol, resizeStartX, resizeStartWidth]);
 
+  // --- Row resize ---
+  const handleRowResizeStart = (row: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setResizingRow(row);
+    setResizeStartY(e.clientY);
+    setResizeStartHeight(sheet.rowHeights[row] || DEFAULT_ROW_HEIGHT);
+  };
+
+  useEffect(() => {
+    if (resizingRow === null) return;
+    const onMove = (e: MouseEvent) => {
+      const diff = e.clientY - resizeStartY;
+      const newHeight = Math.max(MIN_ROW_HEIGHT, resizeStartHeight + diff);
+      updateSheet({ rowHeights: { ...sheet.rowHeights, [resizingRow]: newHeight } });
+    };
+    const onUp = () => setResizingRow(null);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+  }, [resizingRow, resizeStartY, resizeStartHeight]);
+
   // --- Context menu ---
   const handleContextMenu = (e: React.MouseEvent, row: number, col: number) => {
     e.preventDefault();
@@ -1185,6 +1344,14 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
   // --- Mouse selection ---
   const handleMouseDown = (key: string, e: React.MouseEvent) => {
     if (e.button !== 0) return;
+    if (isAutoFilling) return;
+
+    if (e.shiftKey) {
+      // Extend selection
+      setSelectionEnd(key);
+      return;
+    }
+
     setIsSelecting(true);
     setSelectionStart(key);
     setSelectionEnd(key);
@@ -1194,59 +1361,104 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
   };
 
   const handleMouseEnter = (key: string) => {
-    if (isSelecting) setSelectionEnd(key);
+    if (isSelecting && !isAutoFilling) setSelectionEnd(key);
+    if (isAutoFilling) handleAutoFillMove(key);
   };
 
   useEffect(() => {
-    const onUp = () => setIsSelecting(false);
+    const onUp = () => {
+      if (isAutoFilling) handleAutoFillEnd();
+      setIsSelecting(false);
+    };
     window.addEventListener('mouseup', onUp);
     return () => window.removeEventListener('mouseup', onUp);
-  }, []);
+  }, [isAutoFilling, autoFillStart, autoFillEnd]);
 
   const selectedCellData = selectedCell ? data[selectedCell] : null;
 
+  // --- Edge detection for selection rectangle ---
+  const getSelectionEdge = (row: number, col: number) => {
+    const b = getSelectionBounds();
+    if (!b) return { isTop: false, isBottom: false, isLeft: false, isRight: false };
+    if (!(row >= b.r1 && row <= b.r2 && col >= b.c1 && col <= b.c2)) {
+      return { isTop: false, isBottom: false, isLeft: false, isRight: false };
+    }
+    return {
+      isTop: row === b.r1,
+      isBottom: row === b.r2,
+      isLeft: col === b.c1,
+      isRight: col === b.c2,
+    };
+  };
+
+  // Is column header in selection
+  const isColInSelection = (col: number) => {
+    const b = getSelectionBounds();
+    if (!b) {
+      if (!selectedCell) return false;
+      const ref = parseCellRef(selectedCell);
+      return ref ? ref[1] === col : false;
+    }
+    return col >= b.c1 && col <= b.c2;
+  };
+
+  // Is row header in selection
+  const isRowInSelection = (row: number) => {
+    const b = getSelectionBounds();
+    if (!b) {
+      if (!selectedCell) return false;
+      const ref = parseCellRef(selectedCell);
+      return ref ? ref[0] === row : false;
+    }
+    return row >= b.r1 && row <= b.r2;
+  };
+
   // --- Render ---
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-background" onClick={() => setContextMenu(null)}>
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-background select-none" onClick={() => setContextMenu(null)}>
       <input ref={importFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportXlsx} />
-      {/* Top bar */}
-      <div className="flex items-center gap-2 px-3 py-1.5 border-b bg-card">
-        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
+      
+      {/* Top bar - Excel green theme */}
+      <div className="flex items-center gap-2 px-3 py-1.5 border-b" style={{ backgroundColor: '#217346' }}>
+        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 text-white hover:bg-white/20">
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <Input
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          className="max-w-[200px] border-none shadow-none text-sm font-semibold focus-visible:ring-0 px-1 h-8"
-          placeholder="Titre"
-        />
+        <div className="flex items-center gap-1">
+          <FileSpreadsheet className="h-4 w-4 text-white" />
+          <Input
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            className="max-w-[200px] border-none shadow-none text-sm font-semibold focus-visible:ring-0 px-1 h-8 bg-transparent text-white placeholder:text-white/60"
+            placeholder="Titre"
+          />
+        </div>
         <div className="flex-1" />
         {isOwner && (
-          <Button size="sm" variant="outline" onClick={() => setShowShareModal(true)} className="gap-1 h-7 text-xs">
+          <Button size="sm" variant="ghost" onClick={() => setShowShareModal(true)} className="gap-1 h-7 text-xs text-white hover:bg-white/20">
             <Share2 className="h-3 w-3" /> Partager
           </Button>
         )}
         {doc.is_shared && (
-          <Badge variant="secondary" className="gap-1 text-xs h-6">
+          <Badge variant="secondary" className="gap-1 text-xs h-6 bg-white/20 text-white border-0">
             <Users className="h-3 w-3" /> Partagé
           </Badge>
         )}
-        <span className="text-xs text-muted-foreground hidden sm:block">
+        <span className="text-xs text-white/70 hidden sm:block">
           {saving ? 'Sauvegarde...' : '✓ Auto'}
         </span>
-        <Button size="sm" variant="outline" onClick={() => importFileRef.current?.click()} disabled={importingFile} className="gap-1 h-7 text-xs">
+        <Button size="sm" variant="ghost" onClick={() => importFileRef.current?.click()} disabled={importingFile} className="gap-1 h-7 text-xs text-white hover:bg-white/20">
           <Upload className="h-3 w-3" /> {importingFile ? 'Import...' : 'Importer'}
         </Button>
-        <Button size="sm" variant="outline" onClick={exportCSV} className="gap-1 h-7 text-xs">
+        <Button size="sm" variant="ghost" onClick={exportCSV} className="gap-1 h-7 text-xs text-white hover:bg-white/20">
           <Download className="h-3 w-3" /> CSV
         </Button>
-        <Button size="sm" onClick={handleSave} disabled={saving} className="gap-1 h-7 text-xs">
+        <Button size="sm" onClick={handleSave} disabled={saving} className="gap-1 h-7 text-xs bg-white/20 hover:bg-white/30 text-white border-0">
           <Save className="h-3 w-3" /> Sauver
         </Button>
       </div>
 
-      {/* Main toolbar */}
-      <div className="flex items-center gap-0.5 px-2 py-1 border-b bg-card/50 overflow-x-auto flex-shrink-0">
+      {/* Main toolbar - Excel ribbon style */}
+      <div className="flex items-center gap-0.5 px-2 py-1 border-b bg-card/95 overflow-x-auto flex-shrink-0">
         {/* Undo/Redo */}
         <button onClick={undo} className="p-1.5 rounded hover:bg-muted" title="Annuler (Ctrl+Z)"><Undo2 className="h-3.5 w-3.5" /></button>
         <button onClick={redo} className="p-1.5 rounded hover:bg-muted" title="Rétablir (Ctrl+Y)"><Redo2 className="h-3.5 w-3.5" /></button>
@@ -1254,40 +1466,40 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
 
         {/* Font family */}
         <Select value={selectedCellData?.fontFamily || 'Arial'} onValueChange={v => setFontForSelection('fontFamily', v)}>
-          <SelectTrigger className="h-7 w-24 text-xs border-none shadow-none"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-7 w-24 text-xs border-muted shadow-none"><SelectValue /></SelectTrigger>
           <SelectContent>{FONT_FAMILIES.map(f => <SelectItem key={f} value={f} style={{ fontFamily: f }}>{f}</SelectItem>)}</SelectContent>
         </Select>
 
         {/* Font size */}
         <Select value={String(selectedCellData?.fontSize || 11)} onValueChange={v => setFontForSelection('fontSize', parseInt(v))}>
-          <SelectTrigger className="h-7 w-14 text-xs border-none shadow-none"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-7 w-14 text-xs border-muted shadow-none"><SelectValue /></SelectTrigger>
           <SelectContent>{FONT_SIZES.map(s => <SelectItem key={s} value={String(s)}>{s}</SelectItem>)}</SelectContent>
         </Select>
         <div className="w-px h-5 bg-border mx-0.5" />
 
-        {/* Bold, Italic, Underline */}
-        <button onClick={() => toggleFormat('bold')} className={`p-1.5 rounded ${selectedCellData?.bold ? 'bg-primary/10 text-primary' : 'hover:bg-muted'}`} title="Gras (Ctrl+B)">
+        {/* Bold, Italic, Underline, Strikethrough */}
+        <button onClick={() => toggleFormat('bold')} className={`p-1.5 rounded ${selectedCellData?.bold ? 'bg-primary/15 text-primary' : 'hover:bg-muted'}`} title="Gras (Ctrl+B)">
           <Bold className="h-3.5 w-3.5" />
         </button>
-        <button onClick={() => toggleFormat('italic')} className={`p-1.5 rounded ${selectedCellData?.italic ? 'bg-primary/10 text-primary' : 'hover:bg-muted'}`} title="Italique (Ctrl+I)">
+        <button onClick={() => toggleFormat('italic')} className={`p-1.5 rounded ${selectedCellData?.italic ? 'bg-primary/15 text-primary' : 'hover:bg-muted'}`} title="Italique (Ctrl+I)">
           <Italic className="h-3.5 w-3.5" />
         </button>
-        <button onClick={() => toggleFormat('underline')} className={`p-1.5 rounded ${selectedCellData?.underline ? 'bg-primary/10 text-primary' : 'hover:bg-muted'}`} title="Souligné (Ctrl+U)">
+        <button onClick={() => toggleFormat('underline')} className={`p-1.5 rounded ${selectedCellData?.underline ? 'bg-primary/15 text-primary' : 'hover:bg-muted'}`} title="Souligné (Ctrl+U)">
           <Underline className="h-3.5 w-3.5" />
         </button>
-        <button onClick={toggleStrikethrough} className={`p-1.5 rounded ${selectedCellData?.strikethrough ? 'bg-primary/10 text-primary' : 'hover:bg-muted'}`} title="Barré">
+        <button onClick={toggleStrikethrough} className={`p-1.5 rounded ${selectedCellData?.strikethrough ? 'bg-primary/15 text-primary' : 'hover:bg-muted'}`} title="Barré">
           <Strikethrough className="h-3.5 w-3.5" />
         </button>
         <div className="w-px h-5 bg-border mx-0.5" />
 
         {/* Alignment */}
-        <button onClick={() => setAlignForSelection('left')} className={`p-1.5 rounded ${(!selectedCellData?.align || selectedCellData?.align === 'left') ? 'bg-primary/10 text-primary' : 'hover:bg-muted'}`}>
+        <button onClick={() => setAlignForSelection('left')} className={`p-1.5 rounded ${(!selectedCellData?.align || selectedCellData?.align === 'left') ? 'bg-primary/15 text-primary' : 'hover:bg-muted'}`}>
           <AlignLeft className="h-3.5 w-3.5" />
         </button>
-        <button onClick={() => setAlignForSelection('center')} className={`p-1.5 rounded ${selectedCellData?.align === 'center' ? 'bg-primary/10 text-primary' : 'hover:bg-muted'}`}>
+        <button onClick={() => setAlignForSelection('center')} className={`p-1.5 rounded ${selectedCellData?.align === 'center' ? 'bg-primary/15 text-primary' : 'hover:bg-muted'}`}>
           <AlignCenter className="h-3.5 w-3.5" />
         </button>
-        <button onClick={() => setAlignForSelection('right')} className={`p-1.5 rounded ${selectedCellData?.align === 'right' ? 'bg-primary/10 text-primary' : 'hover:bg-muted'}`}>
+        <button onClick={() => setAlignForSelection('right')} className={`p-1.5 rounded ${selectedCellData?.align === 'right' ? 'bg-primary/15 text-primary' : 'hover:bg-muted'}`}>
           <AlignRight className="h-3.5 w-3.5" />
         </button>
 
@@ -1376,13 +1588,13 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
 
         {/* Number format */}
         <Select value={selectedCellData?.numberFormat || ''} onValueChange={setNumberFormat}>
-          <SelectTrigger className="h-7 w-28 text-xs border-none shadow-none"><SelectValue placeholder="Format" /></SelectTrigger>
+          <SelectTrigger className="h-7 w-28 text-xs border-muted shadow-none"><SelectValue placeholder="Format" /></SelectTrigger>
           <SelectContent>{NUMBER_FORMATS.map(f => <SelectItem key={f.value} value={f.value || 'none'}>{f.label}</SelectItem>)}</SelectContent>
         </Select>
         <div className="w-px h-5 bg-border mx-0.5" />
 
         {/* Wrap */}
-        <button onClick={toggleWrap} className={`p-1.5 rounded ${selectedCellData?.wrap ? 'bg-primary/10 text-primary' : 'hover:bg-muted'}`} title="Retour à la ligne">
+        <button onClick={toggleWrap} className={`p-1.5 rounded ${selectedCellData?.wrap ? 'bg-primary/15 text-primary' : 'hover:bg-muted'}`} title="Retour à la ligne">
           <WrapText className="h-3.5 w-3.5" />
         </button>
 
@@ -1453,7 +1665,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
               toast.info('Cliquez sur les en-têtes de colonnes pour filtrer');
             }
           }}
-          className={`p-1.5 rounded ${Object.keys(activeFilters).length > 0 ? 'bg-primary/10 text-primary' : 'hover:bg-muted'}`}
+          className={`p-1.5 rounded ${Object.keys(activeFilters).length > 0 ? 'bg-primary/15 text-primary' : 'hover:bg-muted'}`}
           title="Filtres"
         >
           <Filter className="h-3.5 w-3.5" />
@@ -1480,7 +1692,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
               setCommentText(data[selectedCell]?.comment || '');
             }
           }}
-          className={`p-1.5 rounded ${selectedCellData?.comment ? 'bg-primary/10 text-primary' : 'hover:bg-muted'}`}
+          className={`p-1.5 rounded ${selectedCellData?.comment ? 'bg-primary/15 text-primary' : 'hover:bg-muted'}`}
           title="Commentaire"
         >
           <MessageSquare className="h-3.5 w-3.5" />
@@ -1506,22 +1718,11 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
       {showSearch && (
         <div className="flex items-center gap-2 px-3 py-1.5 border-b bg-muted/30 flex-wrap">
           <Search className="h-3.5 w-3.5 text-muted-foreground" />
-          <Input
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            placeholder="Rechercher..."
-            className="h-7 text-xs max-w-[200px]"
-            autoFocus
-          />
+          <Input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Rechercher..." className="h-7 text-xs max-w-[200px]" autoFocus />
           {showFindReplace && (
             <>
               <Replace className="h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                value={replaceText}
-                onChange={e => setReplaceText(e.target.value)}
-                placeholder="Remplacer par..."
-                className="h-7 text-xs max-w-[200px]"
-              />
+              <Input value={replaceText} onChange={e => setReplaceText(e.target.value)} placeholder="Remplacer par..." className="h-7 text-xs max-w-[200px]" />
               <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => findAndReplace(false)}>Remplacer</Button>
               <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => findAndReplace(true)}>Tout remplacer</Button>
             </>
@@ -1605,12 +1806,18 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
         </div>
       )}
 
-      {/* Formula bar */}
-      <div className="flex items-center gap-2 px-3 py-1 border-b bg-card/30 relative">
-        <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded min-w-[3rem] text-center text-foreground/80">
-          {selectedCell || ''}
-        </span>
-        <span className="text-xs text-muted-foreground font-semibold">fx</span>
+      {/* Formula bar - Excel style */}
+      <div className="flex items-center border-b bg-background relative" style={{ height: 28 }}>
+        {/* Name Box */}
+        <div 
+          className="flex items-center justify-center text-xs font-medium border-r px-1"
+          style={{ width: 80, minWidth: 80, height: '100%', backgroundColor: '#f3f4f6' }}
+        >
+          <span className="font-mono text-foreground">{selectionLabel}</span>
+        </div>
+        <div className="flex items-center px-2 border-r" style={{ height: '100%' }}>
+          <span className="text-xs text-muted-foreground font-bold italic">fx</span>
+        </div>
         <input
           ref={formulaInputRef}
           data-formula-bar="true"
@@ -1643,7 +1850,6 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
                 }
                 scheduleAutoSave();
               }
-              // Move to next row like Excel
               const ref = parseCellRef(selectedCell);
               if (ref) {
                 const nextKey = cellKey(ref[0] + 1, ref[1]);
@@ -1663,23 +1869,19 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
             }
           }}
           onFocus={() => {
-            // Enter edit mode when focusing formula bar
             if (selectedCell && !editingCell) {
               setEditingCell(selectedCell);
               setEditValue(formulaBarValue);
             }
           }}
-          className={`flex-1 text-sm border-none bg-transparent outline-none font-mono text-foreground ${isEditingFormula ? 'ring-1 ring-primary/50 rounded px-1' : ''}`}
+          className={`flex-1 text-xs border-none bg-transparent outline-none font-mono text-foreground px-2 ${isEditingFormula ? 'bg-blue-50/50 dark:bg-blue-950/30' : ''}`}
+          style={{ height: '100%' }}
           placeholder="Valeur ou formule (=SUM, =VLOOKUP, =IF...)"
         />
         {showFormulaHelper && formulaSuggestions.length > 0 && (
           <div className="absolute top-full left-20 z-50 bg-card border border-border rounded-lg shadow-lg py-1 min-w-[200px]">
             {formulaSuggestions.map(f => (
-              <button
-                key={f}
-                onClick={() => insertFormulaSuggestion(f)}
-                className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted font-mono"
-              >
+              <button key={f} onClick={() => insertFormulaSuggestion(f)} className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted font-mono">
                 {f}()
               </button>
             ))}
@@ -1697,11 +1899,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
                 <div className="text-[10px] font-semibold text-muted-foreground mb-1">{cat}</div>
                 <div className="flex flex-wrap gap-1">
                   {fns.map(f => (
-                    <button
-                      key={f}
-                      onClick={() => insertFormulaSuggestion(f)}
-                      className="text-[10px] bg-muted hover:bg-primary/10 hover:text-primary px-1.5 py-0.5 rounded font-mono transition-colors"
-                    >
+                    <button key={f} onClick={() => insertFormulaSuggestion(f)} className="text-[10px] bg-muted hover:bg-primary/10 hover:text-primary px-1.5 py-0.5 rounded font-mono transition-colors">
                       {f}
                     </button>
                   ))}
@@ -1715,26 +1913,39 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
       {/* Main content area */}
       <div className="flex-1 flex overflow-hidden">
         {/* Spreadsheet grid */}
-        <div ref={tableRef} className="flex-1 overflow-auto">
+        <div ref={tableRef} className="flex-1 overflow-auto" style={{ cursor: resizingCol !== null || resizingRow !== null ? (resizingCol !== null ? 'col-resize' : 'row-resize') : undefined }}>
           <table className="border-collapse" style={{ tableLayout: 'fixed' }}>
             <thead className="sticky top-0 z-10">
               <tr>
-                <th className="w-10 min-w-[2.5rem] bg-muted border border-border text-[10px] font-medium text-center sticky left-0 z-20" />
+                {/* Select all button (top-left corner) */}
+                <th 
+                  className="border border-[#c0c0c0] text-[10px] font-normal text-center cursor-pointer hover:bg-[#d0d0d0] transition-colors"
+                  style={{ width: ROW_HEADER_WIDTH, minWidth: ROW_HEADER_WIDTH, backgroundColor: '#e6e6e6', position: 'sticky', left: 0, zIndex: 30 }}
+                  onClick={handleSelectAll}
+                />
                 {Array.from({ length: sheet.numCols }, (_, c) => {
                   if (sheet.hiddenCols.has(c)) return null;
                   const w = sheet.colWidths[c] || DEFAULT_COL_WIDTH;
+                  const inSel = isColInSelection(c);
                   return (
                     <th
                       key={c}
-                      className="bg-muted border border-border text-[10px] font-medium text-center py-0.5 relative select-none group"
-                      style={{ width: w, minWidth: w }}
+                      className={`border border-[#c0c0c0] text-[11px] font-normal text-center py-0 relative group cursor-pointer transition-colors`}
+                      style={{ 
+                        width: w, minWidth: w, height: 22,
+                        backgroundColor: inSel ? '#b8cfe5' : '#e6e6e6',
+                        color: inSel ? '#000' : '#333',
+                        fontWeight: inSel ? 600 : 400,
+                      }}
+                      onClick={() => handleSelectColumn(c)}
                     >
                       <div className="flex items-center justify-center gap-0.5">
                         {colLetter(c)}
                         {activeFilters[c] !== undefined && <Filter className="h-2.5 w-2.5 text-primary" />}
                       </div>
+                      {/* Column resize handle */}
                       <div
-                        className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize opacity-0 group-hover:opacity-100 bg-primary/30"
+                        className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-blue-500/50"
                         onMouseDown={e => handleColResizeStart(c, e)}
                       />
                     </th>
@@ -1745,15 +1956,32 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
             <tbody>
               {Array.from({ length: sheet.numRows }, (_, r) => {
                 if (sheet.hiddenRows.has(r)) return null;
+                if (isRowFiltered(r)) return null;
                 const rh = sheet.rowHeights[r] || DEFAULT_ROW_HEIGHT;
+                const inRowSel = isRowInSelection(r);
                 return (
-                  <tr key={r} style={{ height: rh }}>
+                  <tr key={r}>
+                    {/* Row header */}
                     <td
-                      className="bg-muted border border-border text-[10px] text-center font-medium text-muted-foreground sticky left-0 z-10"
+                      className={`border border-[#c0c0c0] text-[11px] text-center font-normal relative group cursor-pointer transition-colors`}
+                      style={{ 
+                        width: ROW_HEADER_WIDTH, minWidth: ROW_HEADER_WIDTH, height: rh,
+                        backgroundColor: inRowSel ? '#b8cfe5' : '#e6e6e6',
+                        color: inRowSel ? '#000' : '#333',
+                        fontWeight: inRowSel ? 600 : 400,
+                        position: 'sticky', left: 0, zIndex: 10,
+                      }}
+                      onClick={() => handleSelectRow(r)}
                       onContextMenu={e => handleContextMenu(e, r, -1)}
                     >
                       {r + 1}
+                      {/* Row resize handle */}
+                      <div
+                        className="absolute left-0 right-0 bottom-0 h-1 cursor-row-resize hover:bg-blue-500/50"
+                        onMouseDown={e => handleRowResizeStart(r, e)}
+                      />
                     </td>
+                    {/* Data cells */}
                     {Array.from({ length: sheet.numCols }, (_, c) => {
                       if (sheet.hiddenCols.has(c)) return null;
                       const key = cellKey(r, c);
@@ -1770,21 +1998,54 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
                       const isSearchMatch = searchTerm && displayValue.toLowerCase().includes(searchTerm.toLowerCase());
                       const colW = sheet.colWidths[c] || DEFAULT_COL_WIDTH;
                       const isFormulaRef = formulaReferencedCells.has(key);
+                      const edge = getSelectionEdge(r, c);
+                      const hasComment = !!cell?.comment;
+
+                      // Conditional formatting
+                      let cfStyle: React.CSSProperties = {};
+                      if (cell?.conditionalFormats) {
+                        const cfResult = evaluateConditionalFormat(displayValue, cell.conditionalFormats);
+                        if (cfResult) {
+                          if (cfResult.bgColor) cfStyle.backgroundColor = cfResult.bgColor;
+                          if (cfResult.textColor) cfStyle.color = cfResult.textColor;
+                        }
+                      }
+
+                      // Cell border styles from data
+                      const borderStyles: React.CSSProperties = {};
+                      if (cell?.border) {
+                        if (cell.border.top) borderStyles.borderTop = cell.border.top;
+                        if (cell.border.right) borderStyles.borderRight = cell.border.right;
+                        if (cell.border.bottom) borderStyles.borderBottom = cell.border.bottom;
+                        if (cell.border.left) borderStyles.borderLeft = cell.border.left;
+                      }
+
+                      // Selection border (Excel-style blue dashed rectangle)
+                      const selBorder: React.CSSProperties = {};
+                      if (inSel && !isSelected) {
+                        if (edge.isTop) selBorder.borderTop = '2px solid #2563eb';
+                        if (edge.isBottom) selBorder.borderBottom = '2px solid #2563eb';
+                        if (edge.isLeft) selBorder.borderLeft = '2px solid #2563eb';
+                        if (edge.isRight) selBorder.borderRight = '2px solid #2563eb';
+                      }
 
                       return (
                         <td
                           key={c}
-                          className={`border border-border p-0 relative transition-colors
-                            ${isSelected ? 'ring-2 ring-primary ring-inset z-[5]' : ''}
-                            ${isFormulaRef && !isSelected ? 'ring-2 ring-blue-500/70 ring-inset bg-blue-50/30 dark:bg-blue-900/20 z-[4]' : ''}
-                            ${inSel && !isSelected && !isFormulaRef ? 'bg-primary/5' : ''}
-                            ${isSearchMatch ? 'ring-2 ring-yellow-400 ring-inset' : ''}
-                            ${!isSelected && !inSel && !isFormulaRef ? 'hover:bg-muted/20' : ''}
-                          `}
+                          data-cell={key}
+                          className={`p-0 relative ${isEditing ? '' : 'cursor-cell'}`}
                           style={{
-                            backgroundColor: cell?.bgColor || undefined,
                             width: colW,
                             minWidth: colW,
+                            height: rh,
+                            backgroundColor: isFormulaRef ? '#e8f0fe' : inSel && !isSelected ? 'rgba(37, 99, 235, 0.08)' : cell?.bgColor || '#ffffff',
+                            border: isSelected ? '2px solid #217346' : '1px solid #d4d4d4',
+                            ...borderStyles,
+                            ...selBorder,
+                            ...cfStyle,
+                            outline: isSelected ? '1px solid #217346' : 'none',
+                            outlineOffset: '-1px',
+                            boxShadow: isSearchMatch ? 'inset 0 0 0 2px #facc15' : isFormulaRef ? 'inset 0 0 0 1px #3b82f6' : undefined,
                           }}
                           colSpan={cell?.merged?.cols || 1}
                           rowSpan={cell?.merged?.rows || 1}
@@ -1794,6 +2055,15 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
                           onDoubleClick={() => handleCellDoubleClick(key)}
                           onContextMenu={e => handleContextMenu(e, r, c)}
                         >
+                          {/* Comment indicator */}
+                          {hasComment && (
+                            <div 
+                              className="absolute top-0 right-0 w-0 h-0" 
+                              style={{ borderLeft: '6px solid transparent', borderTop: '6px solid #ef4444' }}
+                              title={cell?.comment}
+                            />
+                          )}
+
                           {isEditing ? (
                             <input
                               autoFocus
@@ -1803,35 +2073,75 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
                                 setFormulaBarValue(e.target.value);
                               }}
                               onBlur={(e) => {
-                                // Don't commit if we're clicking another cell during formula editing
-                                // Also don't commit if focus moved to formula bar
                                 if (!isEditingFormula && !e.relatedTarget?.closest?.('[data-formula-bar]')) {
                                   commitEdit(key);
                                 }
                               }}
                               onKeyDown={e => handleCellKeyDown(e, key)}
-                              className="w-full h-full px-1 py-0 text-xs outline-none bg-background border-none font-mono"
-                              style={{ minHeight: rh }}
+                              className="w-full h-full px-1 py-0 text-xs outline-none bg-white dark:bg-background border-none"
+                              style={{ 
+                                minHeight: rh, 
+                                fontFamily: cell?.fontFamily || 'Arial',
+                                fontSize: cell?.fontSize ? `${cell.fontSize}px` : '12px',
+                              }}
                             />
-                          ) : (
-                            <div
-                              className="px-1 py-0 text-xs truncate select-none"
+                          ) : cell?.validation?.type === 'list' ? (
+                            <select
+                              value={displayValue}
+                              onChange={e => {
+                                pushHistory();
+                                updateSheetData(key, { value: e.target.value, formula: undefined });
+                                scheduleAutoSave();
+                              }}
+                              className="w-full h-full px-1 text-xs outline-none bg-transparent border-none cursor-pointer"
                               style={{
                                 fontWeight: cell?.bold ? 'bold' : undefined,
                                 fontStyle: cell?.italic ? 'italic' : undefined,
-                                textDecoration: cell?.underline ? 'underline' : undefined,
                                 textAlign: cell?.align || 'left',
                                 color: cell?.textColor || undefined,
-                                fontFamily: cell?.fontFamily || undefined,
-                                fontSize: cell?.fontSize ? `${cell.fontSize}px` : undefined,
-                                minHeight: rh,
-                                lineHeight: `${rh}px`,
+                                fontFamily: cell?.fontFamily || 'Arial',
+                                fontSize: cell?.fontSize ? `${cell.fontSize}px` : '12px',
+                              }}
+                            >
+                              <option value="">--</option>
+                              {cell.validation.values?.map(v => <option key={v} value={v}>{v}</option>)}
+                            </select>
+                          ) : (
+                            <div
+                              className="px-1 text-xs select-none"
+                              style={{
+                                fontWeight: cell?.bold ? 'bold' : undefined,
+                                fontStyle: cell?.italic ? 'italic' : undefined,
+                                textDecoration: [
+                                  cell?.underline ? 'underline' : '',
+                                  cell?.strikethrough ? 'line-through' : '',
+                                ].filter(Boolean).join(' ') || undefined,
+                                textAlign: cell?.align || 'left',
+                                color: cfStyle.color || cell?.textColor || undefined,
+                                fontFamily: cell?.fontFamily || 'Arial',
+                                fontSize: cell?.fontSize ? `${cell.fontSize}px` : '12px',
+                                lineHeight: `${rh - 2}px`,
+                                height: rh - 2,
                                 whiteSpace: cell?.wrap ? 'pre-wrap' : 'nowrap',
-                                overflow: cell?.wrap ? 'visible' : 'hidden',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                paddingLeft: cell?.indent ? `${cell.indent * 12}px` : undefined,
+                                verticalAlign: cell?.verticalAlign || 'middle',
+                                display: 'flex',
+                                alignItems: cell?.verticalAlign === 'top' ? 'flex-start' : cell?.verticalAlign === 'bottom' ? 'flex-end' : 'center',
                               }}
                             >
                               {formattedValue}
                             </div>
+                          )}
+
+                          {/* Auto-fill handle (bottom-right corner of selected cell) */}
+                          {isSelected && !isEditing && (
+                            <div
+                              className="absolute bottom-0 right-0 w-[7px] h-[7px] cursor-crosshair z-20"
+                              style={{ backgroundColor: '#217346', border: '1px solid white', transform: 'translate(50%, 50%)' }}
+                              onMouseDown={e => handleAutoFillStart(key, e)}
+                            />
                           )}
                         </td>
                       );
@@ -1886,63 +2196,84 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
         )}
       </div>
 
-      {/* Sheet tabs */}
-      <div className="flex items-center border-t bg-card px-2 py-1 gap-1 overflow-x-auto">
-        {sheets.map((s, i) => (
-          <div
-            key={s.id}
-            className={`flex items-center gap-1 px-3 py-1 rounded-t text-xs cursor-pointer border border-b-0 transition-colors ${
-              i === activeSheetIdx ? 'bg-background text-foreground font-medium' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-            }`}
-            onClick={() => setActiveSheetIdx(i)}
-            onDoubleClick={() => setEditingSheetName(i)}
-          >
-            {editingSheetName === i ? (
-              <input
-                value={s.name}
-                onChange={e => renameSheet(i, e.target.value)}
-                onBlur={() => setEditingSheetName(null)}
-                onKeyDown={e => e.key === 'Enter' && setEditingSheetName(null)}
-                className="w-20 text-xs bg-transparent outline-none border-b border-primary"
-                autoFocus
-              />
-            ) : (
-              <span>{s.name}</span>
-            )}
-            {sheets.length > 1 && (
-              <button
-                onClick={e => { e.stopPropagation(); deleteSheet(i); }}
-                className="hover:text-destructive ml-1"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            )}
-          </div>
-        ))}
-        <button onClick={addSheet} className="p-1 rounded hover:bg-muted text-muted-foreground">
-          <Plus className="h-4 w-4" />
-        </button>
-        <div className="flex-1" />
-        <span className="text-[10px] text-muted-foreground">
-          {sheet.numRows} × {sheet.numCols} • {Object.keys(data).length} cellules
-        </span>
+      {/* Bottom area: sheet tabs + status bar */}
+      <div className="flex items-center border-t" style={{ backgroundColor: '#e6e6e6', height: 28 }}>
+        {/* Sheet tabs */}
+        <div className="flex items-center gap-0 overflow-x-auto flex-1">
+          <button onClick={addSheet} className="px-2 py-1 hover:bg-[#d0d0d0] transition-colors border-r border-[#c0c0c0]" title="Nouvelle feuille">
+            <Plus className="h-3.5 w-3.5 text-[#555]" />
+          </button>
+          {sheets.map((s, i) => (
+            <div
+              key={s.id}
+              className={`flex items-center gap-1 px-3 py-1 text-xs cursor-pointer border-r border-[#c0c0c0] transition-colors whitespace-nowrap ${
+                i === activeSheetIdx 
+                  ? 'bg-white font-medium text-foreground border-t-2 border-t-[#217346]' 
+                  : 'hover:bg-[#d0d0d0] text-[#555]'
+              }`}
+              onClick={() => setActiveSheetIdx(i)}
+              onDoubleClick={() => setEditingSheetName(i)}
+            >
+              {editingSheetName === i ? (
+                <input
+                  value={s.name}
+                  onChange={e => renameSheet(i, e.target.value)}
+                  onBlur={() => setEditingSheetName(null)}
+                  onKeyDown={e => e.key === 'Enter' && setEditingSheetName(null)}
+                  className="w-20 text-xs bg-transparent outline-none border-b border-primary"
+                  autoFocus
+                />
+              ) : (
+                <span>{s.name}</span>
+              )}
+              {sheets.length > 1 && (
+                <button
+                  onClick={e => { e.stopPropagation(); deleteSheet(i); }}
+                  className="hover:text-destructive ml-1 opacity-50 hover:opacity-100"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Status bar - Excel style with Sum/Average/Count */}
+        <div className="flex items-center gap-3 px-3 text-[11px] text-[#555] border-l border-[#c0c0c0] flex-shrink-0">
+          {selectionStats && selectionStats.numCount > 0 && (
+            <>
+              <span>Moyenne : <strong>{selectionStats.average.toLocaleString('fr-FR', { maximumFractionDigits: 2 })}</strong></span>
+              <span>Nombre : <strong>{selectionStats.count}</strong></span>
+              <span>Somme : <strong>{selectionStats.sum.toLocaleString('fr-FR', { maximumFractionDigits: 2 })}</strong></span>
+              {selectionStats.min !== undefined && selectionStats.numCount > 1 && (
+                <>
+                  <span>Min : <strong>{selectionStats.min.toLocaleString('fr-FR')}</strong></span>
+                  <span>Max : <strong>{selectionStats.max?.toLocaleString('fr-FR')}</strong></span>
+                </>
+              )}
+            </>
+          )}
+          {(!selectionStats || selectionStats.numCount === 0) && (
+            <span>{sheet.numRows} × {sheet.numCols} • {Object.keys(data).length} cellules</span>
+          )}
+        </div>
       </div>
 
       {/* Context menu */}
       {contextMenu && (
         <div
-          className="fixed z-50 bg-card border border-border rounded-lg shadow-lg py-1 min-w-[180px]"
+          className="fixed z-50 bg-card border border-border rounded-lg shadow-xl py-1 min-w-[200px]"
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onClick={e => e.stopPropagation()}
         >
           <button className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted flex items-center gap-2" onClick={() => { handleCopy(); setContextMenu(null); }}>
-            <Copy className="h-3 w-3" /> Copier
+            <Copy className="h-3 w-3" /> Copier <span className="ml-auto text-muted-foreground">Ctrl+C</span>
           </button>
           <button className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted flex items-center gap-2" onClick={() => { handleCut(); setContextMenu(null); }}>
-            <Scissors className="h-3 w-3" /> Couper
+            <Scissors className="h-3 w-3" /> Couper <span className="ml-auto text-muted-foreground">Ctrl+X</span>
           </button>
           <button className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted flex items-center gap-2" onClick={() => { handlePaste(); setContextMenu(null); }}>
-            <Clipboard className="h-3 w-3" /> Coller
+            <Clipboard className="h-3 w-3" /> Coller <span className="ml-auto text-muted-foreground">Ctrl+V</span>
           </button>
           <div className="h-px bg-border my-1" />
           <button className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted flex items-center gap-2" onClick={() => { insertRow(contextMenu.row); setContextMenu(null); }}>
@@ -1951,8 +2282,8 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
           <button className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted flex items-center gap-2" onClick={() => { insertRow(contextMenu.row + 1); setContextMenu(null); }}>
             <PlusCircle className="h-3 w-3" /> Insérer une ligne en-dessous
           </button>
-          <button className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted flex items-center gap-2" onClick={() => { deleteRow(contextMenu.row); setContextMenu(null); }}>
-            <MinusCircle className="h-3 w-3 text-destructive" /> Supprimer la ligne
+          <button className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted flex items-center gap-2 text-destructive" onClick={() => { deleteRow(contextMenu.row); setContextMenu(null); }}>
+            <MinusCircle className="h-3 w-3" /> Supprimer la ligne
           </button>
           <div className="h-px bg-border my-1" />
           {contextMenu.col >= 0 && (
@@ -1963,8 +2294,8 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
               <button className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted flex items-center gap-2" onClick={() => { insertCol(contextMenu.col + 1); setContextMenu(null); }}>
                 <PlusCircle className="h-3 w-3" /> Insérer colonne à droite
               </button>
-              <button className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted flex items-center gap-2" onClick={() => { deleteCol(contextMenu.col); setContextMenu(null); }}>
-                <MinusCircle className="h-3 w-3 text-destructive" /> Supprimer la colonne
+              <button className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted flex items-center gap-2 text-destructive" onClick={() => { deleteCol(contextMenu.col); setContextMenu(null); }}>
+                <MinusCircle className="h-3 w-3" /> Supprimer la colonne
               </button>
               <div className="h-px bg-border my-1" />
               <button className="w-full text-left px-3 py-1.5 text-xs hover:bg-muted flex items-center gap-2" onClick={() => { sortColumn(contextMenu.col, true); setContextMenu(null); }}>
