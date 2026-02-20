@@ -525,12 +525,272 @@ const visualTemplates: DocumentTemplate[] = [
   },
 ];
 
+// ========== WHITEBOARD TEMPLATES ==========
+const whiteboardTemplates: DocumentTemplate[] = [
+  {
+    id: 'wb-blank', name: 'Tableau blanc vierge', description: 'Canvas libre infini', category: 'Basique',
+    type: 'whiteboard', thumbnail: '🖊️', color: '#06b6d4',
+    content: { elements: [], background: '#ffffff', gridVisible: true }
+  },
+  {
+    id: 'wb-blank-dark', name: 'Tableau noir', description: 'Canvas sombre pour craies', category: 'Basique',
+    type: 'whiteboard', thumbnail: '🖤', color: '#1e293b',
+    content: { elements: [], background: '#1e293b', gridVisible: false }
+  },
+  {
+    id: 'wb-blank-dotted', name: 'Grille à points', description: 'Canvas avec grille pointillée', category: 'Basique',
+    type: 'whiteboard', thumbnail: '⬜', color: '#94a3b8',
+    content: { elements: [], background: '#f8fafc', gridVisible: true }
+  },
+  {
+    id: 'wb-brainstorming', name: 'Brainstorming', description: 'Séance de remue-méninges', category: 'Créativité',
+    type: 'whiteboard', thumbnail: '💡', color: '#f59e0b',
+    content: {
+      elements: [
+        { id: 'title', type: 'text', x: 350, y: 30, width: 400, height: 50, content: '💡 BRAINSTORMING', fontSize: 32, fontWeight: 'bold', color: '#f59e0b', textAlign: 'center' },
+        { id: 'topic', type: 'text', x: 400, y: 90, width: 300, height: 30, content: 'Sujet principal ici', fontSize: 18, color: '#64748b', textAlign: 'center' },
+        { id: 's1', type: 'sticky', x: 100, y: 180, width: 180, height: 150, content: 'Idée 1', stickyColor: '#fef3c7' },
+        { id: 's2', type: 'sticky', x: 320, y: 180, width: 180, height: 150, content: 'Idée 2', stickyColor: '#dbeafe' },
+        { id: 's3', type: 'sticky', x: 540, y: 180, width: 180, height: 150, content: 'Idée 3', stickyColor: '#dcfce7' },
+        { id: 's4', type: 'sticky', x: 760, y: 180, width: 180, height: 150, content: 'Idée 4', stickyColor: '#fce7f3' },
+        { id: 's5', type: 'sticky', x: 100, y: 370, width: 180, height: 150, content: 'Idée 5', stickyColor: '#f3e8ff' },
+        { id: 's6', type: 'sticky', x: 320, y: 370, width: 180, height: 150, content: 'Idée 6', stickyColor: '#fed7aa' },
+        { id: 's7', type: 'sticky', x: 540, y: 370, width: 180, height: 150, content: 'Idée 7', stickyColor: '#fef3c7' },
+        { id: 's8', type: 'sticky', x: 760, y: 370, width: 180, height: 150, content: 'Idée 8', stickyColor: '#dbeafe' },
+      ],
+      background: '#ffffff', gridVisible: false
+    }
+  },
+  {
+    id: 'wb-mindmap', name: 'Carte mentale', description: 'Mind map structurée', category: 'Créativité',
+    type: 'whiteboard', thumbnail: '🧠', color: '#8b5cf6',
+    content: {
+      elements: [
+        { id: 'center', type: 'circle', x: 400, y: 250, width: 200, height: 200, backgroundColor: '#8b5cf6', borderRadius: 100 },
+        { id: 'centertext', type: 'text', x: 420, y: 320, width: 160, height: 40, content: 'THÈME CENTRAL', fontSize: 14, fontWeight: 'bold', color: '#ffffff', textAlign: 'center' },
+        { id: 'b1', type: 'rectangle', x: 100, y: 80, width: 160, height: 60, backgroundColor: '#ddd6fe', borderRadius: 12 },
+        { id: 'b1t', type: 'text', x: 110, y: 95, width: 140, height: 30, content: 'Branche 1', fontSize: 14, color: '#6d28d9', textAlign: 'center' },
+        { id: 'b2', type: 'rectangle', x: 700, y: 80, width: 160, height: 60, backgroundColor: '#dbeafe', borderRadius: 12 },
+        { id: 'b2t', type: 'text', x: 710, y: 95, width: 140, height: 30, content: 'Branche 2', fontSize: 14, color: '#2563eb', textAlign: 'center' },
+        { id: 'b3', type: 'rectangle', x: 100, y: 420, width: 160, height: 60, backgroundColor: '#dcfce7', borderRadius: 12 },
+        { id: 'b3t', type: 'text', x: 110, y: 435, width: 140, height: 30, content: 'Branche 3', fontSize: 14, color: '#16a34a', textAlign: 'center' },
+        { id: 'b4', type: 'rectangle', x: 700, y: 420, width: 160, height: 60, backgroundColor: '#fef3c7', borderRadius: 12 },
+        { id: 'b4t', type: 'text', x: 710, y: 435, width: 140, height: 30, content: 'Branche 4', fontSize: 14, color: '#d97706', textAlign: 'center' },
+      ],
+      background: '#ffffff', gridVisible: false
+    }
+  },
+  {
+    id: 'wb-kanban', name: 'Kanban Board', description: 'Tableau de gestion de tâches', category: 'Organisation',
+    type: 'whiteboard', thumbnail: '📋', color: '#0ea5e9',
+    content: {
+      elements: [
+        { id: 'h1', type: 'rectangle', x: 30, y: 20, width: 280, height: 50, backgroundColor: '#dbeafe', borderRadius: 8 },
+        { id: 'h1t', type: 'text', x: 40, y: 30, width: 260, height: 30, content: '📥 À faire', fontSize: 18, fontWeight: 'bold', color: '#1e40af', textAlign: 'center' },
+        { id: 'h2', type: 'rectangle', x: 340, y: 20, width: 280, height: 50, backgroundColor: '#fef3c7', borderRadius: 8 },
+        { id: 'h2t', type: 'text', x: 350, y: 30, width: 260, height: 30, content: '🔄 En cours', fontSize: 18, fontWeight: 'bold', color: '#92400e', textAlign: 'center' },
+        { id: 'h3', type: 'rectangle', x: 650, y: 20, width: 280, height: 50, backgroundColor: '#dcfce7', borderRadius: 8 },
+        { id: 'h3t', type: 'text', x: 660, y: 30, width: 260, height: 30, content: '✅ Terminé', fontSize: 18, fontWeight: 'bold', color: '#166534', textAlign: 'center' },
+        { id: 't1', type: 'sticky', x: 50, y: 90, width: 240, height: 100, content: 'Tâche 1\nDescription courte', stickyColor: '#dbeafe' },
+        { id: 't2', type: 'sticky', x: 50, y: 210, width: 240, height: 100, content: 'Tâche 2\nDescription courte', stickyColor: '#dbeafe' },
+        { id: 't3', type: 'sticky', x: 360, y: 90, width: 240, height: 100, content: 'Tâche 3\nEn progression', stickyColor: '#fef3c7' },
+        { id: 't4', type: 'sticky', x: 670, y: 90, width: 240, height: 100, content: 'Tâche 4\nComplétée ✓', stickyColor: '#dcfce7' },
+      ],
+      background: '#ffffff', gridVisible: false
+    }
+  },
+  {
+    id: 'wb-swot', name: 'Analyse SWOT', description: 'Forces, Faiblesses, Opportunités, Menaces', category: 'Organisation',
+    type: 'whiteboard', thumbnail: '📊', color: '#10b981',
+    content: {
+      elements: [
+        { id: 'title', type: 'text', x: 300, y: 10, width: 400, height: 40, content: 'ANALYSE SWOT', fontSize: 28, fontWeight: 'bold', color: '#1e293b', textAlign: 'center' },
+        { id: 'r1', type: 'rectangle', x: 50, y: 70, width: 420, height: 250, backgroundColor: '#dcfce7', borderRadius: 12 },
+        { id: 'r1t', type: 'text', x: 70, y: 85, width: 380, height: 30, content: '💪 FORCES (Strengths)', fontSize: 18, fontWeight: 'bold', color: '#166534' },
+        { id: 'r1c', type: 'text', x: 70, y: 120, width: 380, height: 180, content: '• Force 1\n• Force 2\n• Force 3', fontSize: 14, color: '#166534' },
+        { id: 'r2', type: 'rectangle', x: 500, y: 70, width: 420, height: 250, backgroundColor: '#fef3c7', borderRadius: 12 },
+        { id: 'r2t', type: 'text', x: 520, y: 85, width: 380, height: 30, content: '⚠️ FAIBLESSES (Weaknesses)', fontSize: 18, fontWeight: 'bold', color: '#92400e' },
+        { id: 'r2c', type: 'text', x: 520, y: 120, width: 380, height: 180, content: '• Faiblesse 1\n• Faiblesse 2\n• Faiblesse 3', fontSize: 14, color: '#92400e' },
+        { id: 'r3', type: 'rectangle', x: 50, y: 340, width: 420, height: 250, backgroundColor: '#dbeafe', borderRadius: 12 },
+        { id: 'r3t', type: 'text', x: 70, y: 355, width: 380, height: 30, content: '🚀 OPPORTUNITÉS (Opportunities)', fontSize: 18, fontWeight: 'bold', color: '#1e40af' },
+        { id: 'r3c', type: 'text', x: 70, y: 390, width: 380, height: 180, content: '• Opportunité 1\n• Opportunité 2\n• Opportunité 3', fontSize: 14, color: '#1e40af' },
+        { id: 'r4', type: 'rectangle', x: 500, y: 340, width: 420, height: 250, backgroundColor: '#fce7f3', borderRadius: 12 },
+        { id: 'r4t', type: 'text', x: 520, y: 355, width: 380, height: 30, content: '🔥 MENACES (Threats)', fontSize: 18, fontWeight: 'bold', color: '#9d174d' },
+        { id: 'r4c', type: 'text', x: 520, y: 390, width: 380, height: 180, content: '• Menace 1\n• Menace 2\n• Menace 3', fontSize: 14, color: '#9d174d' },
+      ],
+      background: '#ffffff', gridVisible: false
+    }
+  },
+  {
+    id: 'wb-retrospective', name: 'Rétrospective', description: 'Start / Stop / Continue', category: 'Organisation',
+    type: 'whiteboard', thumbnail: '🔄', color: '#6366f1',
+    content: {
+      elements: [
+        { id: 'title', type: 'text', x: 250, y: 10, width: 500, height: 40, content: '🔄 RÉTROSPECTIVE', fontSize: 28, fontWeight: 'bold', color: '#4f46e5', textAlign: 'center' },
+        { id: 'c1', type: 'rectangle', x: 30, y: 70, width: 290, height: 450, backgroundColor: '#dcfce7', borderRadius: 12 },
+        { id: 'c1t', type: 'text', x: 50, y: 85, width: 250, height: 30, content: '▶️ START', fontSize: 20, fontWeight: 'bold', color: '#166534', textAlign: 'center' },
+        { id: 'c1s1', type: 'sticky', x: 55, y: 130, width: 240, height: 80, content: 'Commencer à...', stickyColor: '#bbf7d0' },
+        { id: 'c1s2', type: 'sticky', x: 55, y: 225, width: 240, height: 80, content: 'Nouvelle idée...', stickyColor: '#bbf7d0' },
+        { id: 'c2', type: 'rectangle', x: 345, y: 70, width: 290, height: 450, backgroundColor: '#fee2e2', borderRadius: 12 },
+        { id: 'c2t', type: 'text', x: 365, y: 85, width: 250, height: 30, content: '⏹️ STOP', fontSize: 20, fontWeight: 'bold', color: '#991b1b', textAlign: 'center' },
+        { id: 'c2s1', type: 'sticky', x: 370, y: 130, width: 240, height: 80, content: 'Arrêter de...', stickyColor: '#fecaca' },
+        { id: 'c2s2', type: 'sticky', x: 370, y: 225, width: 240, height: 80, content: 'Ne plus faire...', stickyColor: '#fecaca' },
+        { id: 'c3', type: 'rectangle', x: 660, y: 70, width: 290, height: 450, backgroundColor: '#dbeafe', borderRadius: 12 },
+        { id: 'c3t', type: 'text', x: 680, y: 85, width: 250, height: 30, content: '🔁 CONTINUE', fontSize: 20, fontWeight: 'bold', color: '#1e40af', textAlign: 'center' },
+        { id: 'c3s1', type: 'sticky', x: 685, y: 130, width: 240, height: 80, content: 'Continuer à...', stickyColor: '#bfdbfe' },
+        { id: 'c3s2', type: 'sticky', x: 685, y: 225, width: 240, height: 80, content: 'Garder cette habitude', stickyColor: '#bfdbfe' },
+      ],
+      background: '#ffffff', gridVisible: false
+    }
+  },
+  {
+    id: 'wb-wireframe', name: 'Wireframe App', description: 'Maquette d\'application mobile', category: 'Design',
+    type: 'whiteboard', thumbnail: '📱', color: '#64748b',
+    content: {
+      elements: [
+        { id: 'title', type: 'text', x: 300, y: 10, width: 400, height: 40, content: '📱 WIREFRAME — App Mobile', fontSize: 22, fontWeight: 'bold', color: '#1e293b', textAlign: 'center' },
+        { id: 'phone1', type: 'rectangle', x: 100, y: 70, width: 240, height: 420, backgroundColor: '#f1f5f9', borderRadius: 24, borderColor: '#cbd5e1', borderWidth: 2 },
+        { id: 'p1header', type: 'rectangle', x: 100, y: 70, width: 240, height: 50, backgroundColor: '#e2e8f0', borderRadius: 0 },
+        { id: 'p1htxt', type: 'text', x: 120, y: 82, width: 200, height: 26, content: 'Écran d\'accueil', fontSize: 14, fontWeight: 'bold', color: '#475569', textAlign: 'center' },
+        { id: 'p1btn1', type: 'rectangle', x: 120, y: 140, width: 200, height: 40, backgroundColor: '#dbeafe', borderRadius: 8 },
+        { id: 'p1btn1t', type: 'text', x: 130, y: 148, width: 180, height: 24, content: 'Bouton CTA', fontSize: 13, color: '#1e40af', textAlign: 'center' },
+        { id: 'p1card', type: 'rectangle', x: 120, y: 200, width: 200, height: 120, backgroundColor: '#ffffff', borderRadius: 8, borderColor: '#e2e8f0', borderWidth: 1 },
+        { id: 'p1cardt', type: 'text', x: 130, y: 210, width: 180, height: 20, content: 'Carte de contenu', fontSize: 12, color: '#64748b' },
+        { id: 'phone2', type: 'rectangle', x: 400, y: 70, width: 240, height: 420, backgroundColor: '#f1f5f9', borderRadius: 24, borderColor: '#cbd5e1', borderWidth: 2 },
+        { id: 'p2header', type: 'rectangle', x: 400, y: 70, width: 240, height: 50, backgroundColor: '#e2e8f0', borderRadius: 0 },
+        { id: 'p2htxt', type: 'text', x: 420, y: 82, width: 200, height: 26, content: 'Écran détail', fontSize: 14, fontWeight: 'bold', color: '#475569', textAlign: 'center' },
+        { id: 'phone3', type: 'rectangle', x: 700, y: 70, width: 240, height: 420, backgroundColor: '#f1f5f9', borderRadius: 24, borderColor: '#cbd5e1', borderWidth: 2 },
+        { id: 'p3header', type: 'rectangle', x: 700, y: 70, width: 240, height: 50, backgroundColor: '#e2e8f0', borderRadius: 0 },
+        { id: 'p3htxt', type: 'text', x: 720, y: 82, width: 200, height: 26, content: 'Écran profil', fontSize: 14, fontWeight: 'bold', color: '#475569', textAlign: 'center' },
+        { id: 'label', type: 'text', x: 300, y: 510, width: 400, height: 30, content: 'Ajoutez des éléments pour compléter votre maquette', fontSize: 13, color: '#94a3b8', textAlign: 'center' },
+      ],
+      background: '#ffffff', gridVisible: true
+    }
+  },
+  {
+    id: 'wb-flowchart', name: 'Diagramme de flux', description: 'Flowchart avec décisions', category: 'Design',
+    type: 'whiteboard', thumbnail: '🔀', color: '#ec4899',
+    content: {
+      elements: [
+        { id: 'title', type: 'text', x: 300, y: 10, width: 400, height: 40, content: '🔀 DIAGRAMME DE FLUX', fontSize: 22, fontWeight: 'bold', color: '#1e293b', textAlign: 'center' },
+        { id: 'start', type: 'circle', x: 430, y: 70, width: 120, height: 60, backgroundColor: '#dcfce7', borderRadius: 30 },
+        { id: 'startt', type: 'text', x: 445, y: 85, width: 90, height: 30, content: 'Début', fontSize: 14, fontWeight: 'bold', color: '#166534', textAlign: 'center' },
+        { id: 'step1', type: 'rectangle', x: 400, y: 170, width: 180, height: 60, backgroundColor: '#dbeafe', borderRadius: 8 },
+        { id: 'step1t', type: 'text', x: 410, y: 185, width: 160, height: 30, content: 'Étape 1', fontSize: 14, color: '#1e40af', textAlign: 'center' },
+        { id: 'decision', type: 'diamond', x: 420, y: 280, width: 140, height: 100, backgroundColor: '#fef3c7', borderRadius: 0 },
+        { id: 'dect', type: 'text', x: 435, y: 310, width: 110, height: 30, content: 'Condition ?', fontSize: 12, color: '#92400e', textAlign: 'center' },
+        { id: 'yes', type: 'rectangle', x: 250, y: 430, width: 150, height: 60, backgroundColor: '#dcfce7', borderRadius: 8 },
+        { id: 'yest', type: 'text', x: 260, y: 445, width: 130, height: 30, content: 'Oui → Action A', fontSize: 13, color: '#166534', textAlign: 'center' },
+        { id: 'no', type: 'rectangle', x: 580, y: 430, width: 150, height: 60, backgroundColor: '#fee2e2', borderRadius: 8 },
+        { id: 'not', type: 'text', x: 590, y: 445, width: 130, height: 30, content: 'Non → Action B', fontSize: 13, color: '#991b1b', textAlign: 'center' },
+        { id: 'end', type: 'circle', x: 430, y: 550, width: 120, height: 60, backgroundColor: '#fee2e2', borderRadius: 30 },
+        { id: 'endt', type: 'text', x: 445, y: 565, width: 90, height: 30, content: 'Fin', fontSize: 14, fontWeight: 'bold', color: '#991b1b', textAlign: 'center' },
+      ],
+      background: '#ffffff', gridVisible: true
+    }
+  },
+  {
+    id: 'wb-user-journey', name: 'Parcours utilisateur', description: 'User journey map', category: 'Design',
+    type: 'whiteboard', thumbnail: '🗺️', color: '#14b8a6',
+    content: {
+      elements: [
+        { id: 'title', type: 'text', x: 200, y: 10, width: 600, height: 40, content: '🗺️ PARCOURS UTILISATEUR', fontSize: 24, fontWeight: 'bold', color: '#0f766e', textAlign: 'center' },
+        { id: 'phase1h', type: 'rectangle', x: 30, y: 70, width: 180, height: 40, backgroundColor: '#ccfbf1', borderRadius: 8 },
+        { id: 'phase1t', type: 'text', x: 40, y: 78, width: 160, height: 24, content: '1. Découverte', fontSize: 14, fontWeight: 'bold', color: '#0f766e', textAlign: 'center' },
+        { id: 'phase2h', type: 'rectangle', x: 230, y: 70, width: 180, height: 40, backgroundColor: '#dbeafe', borderRadius: 8 },
+        { id: 'phase2t', type: 'text', x: 240, y: 78, width: 160, height: 24, content: '2. Évaluation', fontSize: 14, fontWeight: 'bold', color: '#1e40af', textAlign: 'center' },
+        { id: 'phase3h', type: 'rectangle', x: 430, y: 70, width: 180, height: 40, backgroundColor: '#fef3c7', borderRadius: 8 },
+        { id: 'phase3t', type: 'text', x: 440, y: 78, width: 160, height: 24, content: '3. Achat', fontSize: 14, fontWeight: 'bold', color: '#92400e', textAlign: 'center' },
+        { id: 'phase4h', type: 'rectangle', x: 630, y: 70, width: 180, height: 40, backgroundColor: '#dcfce7', borderRadius: 8 },
+        { id: 'phase4t', type: 'text', x: 640, y: 78, width: 160, height: 24, content: '4. Fidélisation', fontSize: 14, fontWeight: 'bold', color: '#166534', textAlign: 'center' },
+        { id: 'act1', type: 'sticky', x: 40, y: 130, width: 160, height: 80, content: 'Action utilisateur', stickyColor: '#ccfbf1' },
+        { id: 'act2', type: 'sticky', x: 240, y: 130, width: 160, height: 80, content: 'Action utilisateur', stickyColor: '#dbeafe' },
+        { id: 'act3', type: 'sticky', x: 440, y: 130, width: 160, height: 80, content: 'Action utilisateur', stickyColor: '#fef3c7' },
+        { id: 'act4', type: 'sticky', x: 640, y: 130, width: 160, height: 80, content: 'Action utilisateur', stickyColor: '#dcfce7' },
+        { id: 'em1', type: 'text', x: 40, y: 230, width: 160, height: 30, content: '😊 Satisfait', fontSize: 14, color: '#166534', textAlign: 'center' },
+        { id: 'em2', type: 'text', x: 240, y: 230, width: 160, height: 30, content: '🤔 Hésitant', fontSize: 14, color: '#92400e', textAlign: 'center' },
+        { id: 'em3', type: 'text', x: 440, y: 230, width: 160, height: 30, content: '😰 Stressé', fontSize: 14, color: '#991b1b', textAlign: 'center' },
+        { id: 'em4', type: 'text', x: 640, y: 230, width: 160, height: 30, content: '🎉 Ravi', fontSize: 14, color: '#166534', textAlign: 'center' },
+      ],
+      background: '#ffffff', gridVisible: false
+    }
+  },
+  {
+    id: 'wb-planning', name: 'Planning hebdomadaire', description: 'Semaine en colonnes', category: 'Organisation',
+    type: 'whiteboard', thumbnail: '📅', color: '#3b82f6',
+    content: {
+      elements: [
+        { id: 'title', type: 'text', x: 250, y: 10, width: 500, height: 40, content: '📅 PLANNING HEBDOMADAIRE', fontSize: 24, fontWeight: 'bold', color: '#1e40af', textAlign: 'center' },
+        { id: 'd1h', type: 'rectangle', x: 20, y: 65, width: 130, height: 35, backgroundColor: '#1e40af', borderRadius: 6 },
+        { id: 'd1t', type: 'text', x: 25, y: 72, width: 120, height: 20, content: 'Lundi', fontSize: 13, fontWeight: 'bold', color: '#ffffff', textAlign: 'center' },
+        { id: 'd2h', type: 'rectangle', x: 160, y: 65, width: 130, height: 35, backgroundColor: '#2563eb', borderRadius: 6 },
+        { id: 'd2t', type: 'text', x: 165, y: 72, width: 120, height: 20, content: 'Mardi', fontSize: 13, fontWeight: 'bold', color: '#ffffff', textAlign: 'center' },
+        { id: 'd3h', type: 'rectangle', x: 300, y: 65, width: 130, height: 35, backgroundColor: '#3b82f6', borderRadius: 6 },
+        { id: 'd3t', type: 'text', x: 305, y: 72, width: 120, height: 20, content: 'Mercredi', fontSize: 13, fontWeight: 'bold', color: '#ffffff', textAlign: 'center' },
+        { id: 'd4h', type: 'rectangle', x: 440, y: 65, width: 130, height: 35, backgroundColor: '#60a5fa', borderRadius: 6 },
+        { id: 'd4t', type: 'text', x: 445, y: 72, width: 120, height: 20, content: 'Jeudi', fontSize: 13, fontWeight: 'bold', color: '#ffffff', textAlign: 'center' },
+        { id: 'd5h', type: 'rectangle', x: 580, y: 65, width: 130, height: 35, backgroundColor: '#93c5fd', borderRadius: 6 },
+        { id: 'd5t', type: 'text', x: 585, y: 72, width: 120, height: 20, content: 'Vendredi', fontSize: 13, fontWeight: 'bold', color: '#1e40af', textAlign: 'center' },
+        { id: 's1', type: 'sticky', x: 25, y: 115, width: 120, height: 70, content: 'Tâche', stickyColor: '#dbeafe' },
+        { id: 's2', type: 'sticky', x: 165, y: 115, width: 120, height: 70, content: 'Tâche', stickyColor: '#dbeafe' },
+        { id: 's3', type: 'sticky', x: 305, y: 115, width: 120, height: 70, content: 'Tâche', stickyColor: '#dbeafe' },
+        { id: 's4', type: 'sticky', x: 445, y: 115, width: 120, height: 70, content: 'Tâche', stickyColor: '#dbeafe' },
+        { id: 's5', type: 'sticky', x: 585, y: 115, width: 120, height: 70, content: 'Tâche', stickyColor: '#dbeafe' },
+      ],
+      background: '#f8fafc', gridVisible: false
+    }
+  },
+  {
+    id: 'wb-meeting-notes', name: 'Notes de réunion', description: 'Prise de notes collaborative', category: 'Pédagogie',
+    type: 'whiteboard', thumbnail: '📝', color: '#f97316',
+    content: {
+      elements: [
+        { id: 'title', type: 'text', x: 250, y: 15, width: 500, height: 40, content: '📝 NOTES DE RÉUNION', fontSize: 24, fontWeight: 'bold', color: '#c2410c', textAlign: 'center' },
+        { id: 'date', type: 'text', x: 350, y: 55, width: 300, height: 24, content: 'Date : __ / __ / ____', fontSize: 14, color: '#9ca3af', textAlign: 'center' },
+        { id: 'obj', type: 'rectangle', x: 40, y: 100, width: 430, height: 200, backgroundColor: '#fff7ed', borderRadius: 12 },
+        { id: 'objt', type: 'text', x: 55, y: 112, width: 400, height: 24, content: '🎯 Objectifs', fontSize: 18, fontWeight: 'bold', color: '#c2410c' },
+        { id: 'objc', type: 'text', x: 55, y: 145, width: 400, height: 140, content: '1. \n2. \n3. ', fontSize: 14, color: '#78350f' },
+        { id: 'act', type: 'rectangle', x: 500, y: 100, width: 430, height: 200, backgroundColor: '#f0fdf4', borderRadius: 12 },
+        { id: 'actt', type: 'text', x: 515, y: 112, width: 400, height: 24, content: '✅ Actions à mener', fontSize: 18, fontWeight: 'bold', color: '#166534' },
+        { id: 'actc', type: 'text', x: 515, y: 145, width: 400, height: 140, content: '• Action — Responsable — Deadline\n• \n• ', fontSize: 14, color: '#166534' },
+        { id: 'notes', type: 'rectangle', x: 40, y: 330, width: 890, height: 220, backgroundColor: '#fffbeb', borderRadius: 12 },
+        { id: 'notest', type: 'text', x: 55, y: 342, width: 400, height: 24, content: '📋 Notes', fontSize: 18, fontWeight: 'bold', color: '#92400e' },
+        { id: 'notesc', type: 'text', x: 55, y: 375, width: 860, height: 160, content: 'Écrivez vos notes ici...', fontSize: 14, color: '#78350f' },
+      ],
+      background: '#ffffff', gridVisible: false
+    }
+  },
+  {
+    id: 'wb-lesson-plan', name: 'Plan de cours', description: 'Structure pédagogique', category: 'Pédagogie',
+    type: 'whiteboard', thumbnail: '🎓', color: '#7c3aed',
+    content: {
+      elements: [
+        { id: 'title', type: 'text', x: 200, y: 10, width: 600, height: 40, content: '🎓 PLAN DE COURS', fontSize: 26, fontWeight: 'bold', color: '#5b21b6', textAlign: 'center' },
+        { id: 'info', type: 'text', x: 300, y: 50, width: 400, height: 24, content: 'Matière : __________ | Classe : __________', fontSize: 14, color: '#a78bfa', textAlign: 'center' },
+        { id: 'obj', type: 'rectangle', x: 40, y: 90, width: 290, height: 180, backgroundColor: '#f5f3ff', borderRadius: 12 },
+        { id: 'objt', type: 'text', x: 55, y: 102, width: 260, height: 24, content: '🎯 Objectifs', fontSize: 16, fontWeight: 'bold', color: '#5b21b6' },
+        { id: 'objc', type: 'text', x: 55, y: 132, width: 260, height: 120, content: '• Objectif 1\n• Objectif 2\n• Objectif 3', fontSize: 13, color: '#6d28d9' },
+        { id: 'intro', type: 'rectangle', x: 350, y: 90, width: 290, height: 180, backgroundColor: '#dbeafe', borderRadius: 12 },
+        { id: 'introt', type: 'text', x: 365, y: 102, width: 260, height: 24, content: '📖 Introduction (10 min)', fontSize: 16, fontWeight: 'bold', color: '#1e40af' },
+        { id: 'dev', type: 'rectangle', x: 660, y: 90, width: 290, height: 180, backgroundColor: '#dcfce7', borderRadius: 12 },
+        { id: 'devt', type: 'text', x: 675, y: 102, width: 260, height: 24, content: '📚 Développement (30 min)', fontSize: 16, fontWeight: 'bold', color: '#166534' },
+        { id: 'activ', type: 'rectangle', x: 40, y: 290, width: 440, height: 180, backgroundColor: '#fef3c7', borderRadius: 12 },
+        { id: 'activt', type: 'text', x: 55, y: 302, width: 410, height: 24, content: '✏️ Activités pratiques (15 min)', fontSize: 16, fontWeight: 'bold', color: '#92400e' },
+        { id: 'eval', type: 'rectangle', x: 510, y: 290, width: 440, height: 180, backgroundColor: '#fce7f3', borderRadius: 12 },
+        { id: 'evalt', type: 'text', x: 525, y: 302, width: 410, height: 24, content: '📊 Évaluation & Conclusion (5 min)', fontSize: 16, fontWeight: 'bold', color: '#9d174d' },
+      ],
+      background: '#ffffff', gridVisible: false
+    }
+  },
+];
+
 // Combine all templates
 export const ALL_TEMPLATES: DocumentTemplate[] = [
   ...textTemplates,
   ...spreadsheetTemplates,
   ...presentationTemplates,
   ...visualTemplates,
+  ...whiteboardTemplates,
 ];
 
 export const getTemplatesByType = (type: DocumentTemplate['type']): DocumentTemplate[] => {
