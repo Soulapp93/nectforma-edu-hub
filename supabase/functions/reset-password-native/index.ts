@@ -62,6 +62,7 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     
     console.log("[reset-password-native] 🔄 Request received");
     
@@ -74,6 +75,65 @@ serve(async (req) => {
 
     const body: ResetPasswordRequest = await req.json();
     const { email, redirect_url } = body;
+
+    // --- Authorization check: only admins can trigger password reset for others ---
+    // Self-service reset from login page is allowed (no auth header), but we
+    // validate the caller when an Authorization header is present and skip
+    // the admin check only when the request comes from the public login form
+    // (identified by the absence of any auth token).
+    const authHeader = req.headers.get("Authorization");
+    const isSelfServiceReset = !authHeader; // public login page sends no token
+
+    if (!isSelfServiceReset) {
+      // Validate caller JWT
+      const callerToken = authHeader!.replace("Bearer ", "");
+      const supabaseCaller = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader! } },
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
+      const { data: claimsData, error: claimsError } = await supabaseCaller.auth.getClaims(callerToken);
+
+      if (claimsError || !claimsData?.claims) {
+        return new Response(
+          JSON.stringify({ error: "Non autorisé" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const callerId = claimsData.claims.sub;
+
+      // Verify caller is admin in their establishment
+      const { data: callerProfile } = await supabaseAdmin
+        .from("users")
+        .select("role, establishment_id")
+        .eq("id", callerId)
+        .single();
+
+      if (!callerProfile || !["Admin", "AdminPrincipal"].includes(callerProfile.role)) {
+        return new Response(
+          JSON.stringify({ error: "Droits insuffisants" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // When called by an admin, verify target user belongs to same establishment
+      if (email) {
+        const { data: targetUsers } = await supabaseAdmin
+          .from("users")
+          .select("establishment_id")
+          .eq("email", email.toLowerCase())
+          .limit(1);
+
+        const targetUser = targetUsers && targetUsers.length > 0 ? targetUsers[0] : null;
+        if (targetUser && targetUser.establishment_id !== callerProfile.establishment_id) {
+          return new Response(
+            JSON.stringify({ error: "Impossible de réinitialiser le mot de passe d'un utilisateur d'un autre établissement" }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+    }
+    // --- End authorization check ---
 
     console.log(`[reset-password-native] 📧 Processing reset for email: ${email}`);
 
