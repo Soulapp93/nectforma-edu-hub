@@ -5,11 +5,13 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
 import {
   ArrowLeft, Save, Type, Image, Square, Circle, Star, Triangle,
   Trash2, Bold, Italic, AlignLeft, AlignCenter, AlignRight, Palette,
-  Layers, Copy, Download, ZoomIn, ZoomOut, Minus, LayoutTemplate, Upload
+  Layers, Copy, Download, ZoomIn, ZoomOut, Minus, LayoutTemplate, Upload, Share2, Users,
 } from 'lucide-react';
+import ShareDocumentModal from './ShareDocumentModal';
 import VisualTemplateGallery from './VisualTemplateGallery';
 import { VisualTemplate } from '@/data/visualTemplates';
 import {
@@ -73,6 +75,8 @@ const WorkspaceVisualEditor: React.FC<Props> = ({ document: doc, onSave, onClose
   const { userId } = useCurrentUser();
   const [title, setTitle] = useState(doc.title);
   const [saving, setSaving] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const isOwner = doc.owner_id === userId;
   const [canvas, setCanvas] = useState<CanvasData>(() => {
     const c = doc.content;
     if (c?.elements) return c as CanvasData;
@@ -330,6 +334,16 @@ const WorkspaceVisualEditor: React.FC<Props> = ({ document: doc, onSave, onClose
           <LayoutTemplate className="h-4 w-4" /> Templates
         </Button>
         <div className="flex-1" />
+        {isOwner && (
+          <Button size="sm" variant="outline" onClick={() => setShowShareModal(true)} className="gap-1.5 text-xs">
+            <Share2 className="h-4 w-4" /> Partager
+          </Button>
+        )}
+        {doc.is_shared && (
+          <Badge variant="secondary" className="gap-1 text-xs h-6">
+            <Users className="h-3 w-3" /> Partagé
+          </Badge>
+        )}
         <Select value={`${canvas.width}x${canvas.height}`} onValueChange={v => { const [w, h] = v.split('x').map(Number); setCanvas(prev => ({ ...prev, width: w, height: h })); scheduleAutoSave(); }}>
           <SelectTrigger className="w-44 h-8 text-xs"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -455,6 +469,7 @@ const WorkspaceVisualEditor: React.FC<Props> = ({ document: doc, onSave, onClose
           </div>
         </div>
       )}
+      {userId && <ShareDocumentModal open={showShareModal} onOpenChange={setShowShareModal} documentId={doc.id} userId={userId} />}
     </div>
   );
 };

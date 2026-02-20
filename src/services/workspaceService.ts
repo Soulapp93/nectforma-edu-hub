@@ -16,7 +16,7 @@ export interface WorkspaceFolder {
 export interface WorkspaceDocument {
   id: string;
   title: string;
-  document_type: 'text' | 'spreadsheet' | 'presentation' | 'visual';
+  document_type: 'text' | 'spreadsheet' | 'presentation' | 'visual' | 'whiteboard';
   content: any;
   folder_id: string | null;
   owner_id: string;

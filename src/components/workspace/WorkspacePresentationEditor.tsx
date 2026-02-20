@@ -4,14 +4,16 @@ import { fileImportService } from '@/services/fileImportService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import {
   ArrowLeft, Save, Plus, Trash2, Copy, Type, ImageIcon, Square, Play, Maximize,
   Bold, Italic, AlignLeft, AlignCenter, AlignRight, Layout, Shapes, Search, Upload,
   Undo2, Redo2, ChevronDown, X, Grid3X3, Underline, ZoomIn, ZoomOut,
-  MousePointer, Move, Minimize2,
+  MousePointer, Move, Minimize2, Share2, Users,
 } from 'lucide-react';
+import ShareDocumentModal from './ShareDocumentModal';
 import {
   presentationTemplates, getPresentationCategories, getPresentationTemplatesByCategory,
   searchPresentationTemplates, curatedImageCollections, textPresets, shapePresets, colorPalettes,
@@ -101,7 +103,8 @@ const WorkspacePresentationEditor: React.FC<Props> = ({ document: doc, onSave, o
   const [cursorHidden, setCursorHidden] = useState(false);
   const [slideNotes, setSlideNotes] = useState('');
   const [showNotes, setShowNotes] = useState(false);
-
+  const [showShareModal, setShowShareModal] = useState(false);
+  const isOwner = doc.owner_id === userId;
   const canvasRef = useRef<HTMLDivElement>(null);
   const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
   const presentRef = useRef<HTMLDivElement>(null);
@@ -835,6 +838,16 @@ const WorkspacePresentationEditor: React.FC<Props> = ({ document: doc, onSave, o
         <Button size="sm" variant="outline" onClick={() => setShowTemplateGallery(true)} className="gap-1.5 h-7 text-xs">
           <Layout className="h-3 w-3" /> Templates
         </Button>
+        {isOwner && (
+          <Button size="sm" variant="outline" onClick={() => setShowShareModal(true)} className="gap-1 h-7 text-xs">
+            <Share2 className="h-3 w-3" /> Partager
+          </Button>
+        )}
+        {doc.is_shared && (
+          <Badge variant="secondary" className="gap-1 text-xs h-6">
+            <Users className="h-3 w-3" /> Partagé
+          </Badge>
+        )}
         <Button size="sm" variant="default" onClick={startPresentation} className="gap-1.5 h-7 text-xs bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 border-0">
           <Play className="h-3 w-3" /> Présenter
         </Button>
@@ -1079,6 +1092,7 @@ const WorkspacePresentationEditor: React.FC<Props> = ({ document: doc, onSave, o
           </div>
         </div>
       </div>
+      {userId && <ShareDocumentModal open={showShareModal} onOpenChange={setShowShareModal} documentId={doc.id} userId={userId} />}
     </div>
   );
 };

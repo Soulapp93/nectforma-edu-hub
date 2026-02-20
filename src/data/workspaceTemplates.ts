@@ -5,7 +5,7 @@ export interface DocumentTemplate {
   name: string;
   description: string;
   category: string;
-  type: 'text' | 'spreadsheet' | 'presentation' | 'visual';
+  type: 'text' | 'spreadsheet' | 'presentation' | 'visual' | 'whiteboard';
   thumbnail: string; // emoji or icon
   color: string;
   content: any;
