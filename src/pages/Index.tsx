@@ -835,43 +835,39 @@ const Index = () => {
                     </div>
                   </div>
 
-                  {/* Images - style flottant sans bordures */}
+                  {/* Images avec fond violet */}
                   <div className="flex-1 w-full max-w-2xl">
                     {feature.images && feature.images.length > 0 ? (
                       <div className="relative group">
-                        {/* Halo lumineux derrière l'image */}
-                        <div 
-                          className="absolute -inset-8 rounded-full opacity-40 group-hover:opacity-60 transition-opacity duration-700 blur-3xl"
-                          style={{
-                            background: `radial-gradient(ellipse at center, hsl(var(--primary) / 0.25) 0%, hsl(var(--accent) / 0.15) 50%, transparent 80%)`
-                          }}
-                        />
-                        {/* Particules décoratives flottantes autour de l'image */}
-                        <div className="absolute -top-6 -right-4 w-12 h-12 rounded-full opacity-30 animate-pulse"
-                             style={{ background: 'radial-gradient(circle, hsl(var(--primary) / 0.4) 0%, transparent 70%)' }} />
-                        <div className="absolute -bottom-4 -left-6 w-16 h-16 rounded-full opacity-25"
-                             style={{ background: 'radial-gradient(circle, hsl(var(--accent) / 0.35) 0%, transparent 70%)', animation: 'float-particle 8s ease-in-out infinite' }} />
-                        <div className="absolute top-1/4 -right-8 w-8 h-8 rounded-full opacity-20"
-                             style={{ background: 'radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, transparent 70%)', animation: 'float-particle 10s ease-in-out infinite 2s' }} />
-                        
                         <Hover3DCard intensity={8}>
-                          <div className="relative">
-                            {/* Image sans bordures - fondu sur les bords */}
+                          <div 
+                            className="relative rounded-2xl overflow-hidden p-6 md:p-8 shadow-xl transition-shadow duration-500 group-hover:shadow-2xl"
+                            style={{
+                              background: 'linear-gradient(145deg, hsl(262 83% 30%) 0%, hsl(270 70% 25%) 40%, hsl(280 65% 20%) 100%)',
+                            }}
+                          >
+                            {/* Halo lumineux interne */}
+                            <div className="absolute inset-0 pointer-events-none" style={{
+                              background: 'radial-gradient(ellipse at 30% 20%, hsl(262 80% 60% / 0.2) 0%, transparent 60%), radial-gradient(ellipse at 80% 80%, hsl(280 70% 55% / 0.15) 0%, transparent 50%)'
+                            }} />
+                            {/* Particules flottantes */}
+                            <div className="absolute top-4 right-6 w-3 h-3 rounded-full bg-white/10 animate-pulse" />
+                            <div className="absolute bottom-8 left-4 w-2 h-2 rounded-full bg-white/[0.08]" style={{ animation: 'float-particle 6s ease-in-out infinite' }} />
+                            <div className="absolute top-1/3 right-4 w-2 h-2 rounded-full bg-white/[0.06]" style={{ animation: 'float-particle 8s ease-in-out infinite 2s' }} />
+                            
                             <img 
                               src={feature.images[0]} 
                               alt={`${feature.title} - Illustration`}
-                              className="w-full h-auto object-contain drop-shadow-2xl transition-transform duration-700 group-hover:scale-[1.03]"
+                              className="relative z-10 w-full h-auto object-contain drop-shadow-2xl transition-transform duration-700 group-hover:scale-[1.03]"
                               style={{
-                                filter: 'drop-shadow(0 20px 40px rgba(139, 92, 246, 0.2)) drop-shadow(0 8px 16px rgba(139, 92, 246, 0.15))',
-                                maskImage: 'radial-gradient(ellipse 85% 85% at center, black 60%, transparent 100%)',
-                                WebkitMaskImage: 'radial-gradient(ellipse 85% 85% at center, black 60%, transparent 100%)',
+                                filter: 'drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3))',
                               }}
                             />
-                            {/* Reflet brillant subtil */}
-                            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                            {/* Reflet brillant au hover */}
+                            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-20">
                               <div style={{
                                 position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%',
-                                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+                                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)',
                                 animation: 'logo-shine 5s ease-in-out infinite'
                               }} />
                             </div>
