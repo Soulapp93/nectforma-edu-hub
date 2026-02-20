@@ -1013,7 +1013,7 @@ serve(async (req) => {
 
         if (subscribers && subscribers.length > 0) {
           const article = generated.article || generated;
-          const articleUrl = `https://nectforme.lovable.app/blog/${article.slug || 'article'}`;
+          const articleUrl = `https://nectforma.com/blog/${article.slug || 'article'}`;
           const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
           const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 
