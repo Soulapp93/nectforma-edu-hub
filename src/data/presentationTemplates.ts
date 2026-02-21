@@ -64,29 +64,192 @@ interface Theme {
   gradient: string; gradient2: string;
 }
 
-// --- SLIDE 1: Hero / Cover ---
-const heroSlide = (t: Theme, title: string, subtitle: string): PresentationSlide => ({
+// ═══════════════════════════════════════════
+// LAYOUT STYLE A — Classic left-aligned with accent bar
+// ═══════════════════════════════════════════
+
+const heroSlideA = (t: Theme, title: string, subtitle: string): PresentationSlide => ({
   id: uid(), background: t.bg, elements: [
-    // Large gradient accent shape
     { id: uid(), type: 'shape', x: 500, y: -100, width: 600, height: 700, shape: 'circle', gradient: t.gradient, opacity: 0.15 },
     { id: uid(), type: 'shape', x: -80, y: 380, width: 350, height: 350, shape: 'circle', gradient: t.gradient2, opacity: 0.1 },
-    // Accent bar left
     { id: uid(), type: 'shape', x: 0, y: 0, width: 8, height: 540, gradient: t.gradient, shape: 'rectangle' },
-    // Title
     { id: uid(), type: 'text', x: 60, y: 120, width: 600, height: 120, content: title, fontSize: 56, fontWeight: 'bold', color: t.text, fontFamily: 'Plus Jakarta Sans', lineHeight: 1.15, letterSpacing: -1 },
-    // Divider line
     { id: uid(), type: 'shape', x: 60, y: 260, width: 80, height: 4, gradient: t.gradient, shape: 'rectangle', borderRadius: 2 },
-    // Subtitle
     { id: uid(), type: 'text', x: 60, y: 285, width: 500, height: 60, content: subtitle, fontSize: 20, color: t.muted, fontFamily: 'Plus Jakarta Sans', lineHeight: 1.6 },
-    // Bottom tag
     { id: uid(), type: 'shape', x: 60, y: 460, width: 140, height: 36, gradient: t.gradient, shape: 'rounded', borderRadius: 18 },
     { id: uid(), type: 'text', x: 60, y: 466, width: 140, height: 24, content: 'PRÉSENTATION', fontSize: 11, fontWeight: 'bold', color: '#ffffff', textAlign: 'center', letterSpacing: 2, fontFamily: 'Plus Jakarta Sans' },
-    // Decorative dots grid
     ...Array.from({ length: 9 }, (_, i) => ({
       id: uid(), type: 'shape' as const,
       x: 780 + (i % 3) * 20, y: 440 + Math.floor(i / 3) * 20,
       width: 6, height: 6, shape: 'circle' as const, backgroundColor: t.accent, opacity: 0.3,
     })),
+  ]
+});
+
+// ═══════════════════════════════════════════
+// LAYOUT STYLE B — Centered bold with full-width gradient band
+// ═══════════════════════════════════════════
+
+const heroSlideB = (t: Theme, title: string, subtitle: string): PresentationSlide => ({
+  id: uid(), background: t.light, elements: [
+    { id: uid(), type: 'shape', x: 0, y: 0, width: 960, height: 200, gradient: t.gradient, shape: 'rectangle' },
+    { id: uid(), type: 'text', x: 80, y: 50, width: 800, height: 100, content: title, fontSize: 52, fontWeight: 'bold', color: '#ffffff', fontFamily: 'Plus Jakarta Sans', textAlign: 'center', lineHeight: 1.15, letterSpacing: -1 },
+    { id: uid(), type: 'text', x: 80, y: 155, width: 800, height: 30, content: 'PRÉSENTATION', fontSize: 12, fontWeight: 'bold', color: '#ffffff', textAlign: 'center', letterSpacing: 4, opacity: 0.7 },
+    { id: uid(), type: 'shape', x: 380, y: 230, width: 200, height: 4, backgroundColor: t.accent, shape: 'rectangle', borderRadius: 2 },
+    { id: uid(), type: 'text', x: 130, y: 270, width: 700, height: 80, content: subtitle, fontSize: 20, color: t.lightMuted, fontFamily: 'Plus Jakarta Sans', textAlign: 'center', lineHeight: 1.7 },
+    { id: uid(), type: 'shape', x: 60, y: 420, width: 840, height: 1, backgroundColor: t.accent + '20', shape: 'rectangle' },
+    ...Array.from({ length: 3 }, (_, i) => ({
+      id: uid(), type: 'shape' as const, x: 330 + i * 150, y: 440, width: 120, height: 60,
+      backgroundColor: t.accent + '10', shape: 'rounded' as const, borderRadius: 12,
+    })),
+  ]
+});
+
+// ═══════════════════════════════════════════
+// LAYOUT STYLE C — Split diagonal with image area
+// ═══════════════════════════════════════════
+
+const heroSlideC = (t: Theme, title: string, subtitle: string): PresentationSlide => ({
+  id: uid(), background: t.bg2, elements: [
+    { id: uid(), type: 'shape', x: 480, y: 0, width: 480, height: 540, gradient: t.gradient, shape: 'rectangle', opacity: 0.15 },
+    { id: uid(), type: 'shape', x: 520, y: 40, width: 400, height: 460, backgroundColor: t.accent + '12', shape: 'rounded', borderRadius: 30 },
+    { id: uid(), type: 'text', x: 560, y: 200, width: 320, height: 50, content: '📷  Votre image', fontSize: 18, color: t.accent, textAlign: 'center', opacity: 0.4 },
+    { id: uid(), type: 'shape', x: 60, y: 60, width: 50, height: 50, gradient: t.gradient, shape: 'circle' },
+    { id: uid(), type: 'text', x: 60, y: 150, width: 400, height: 120, content: title, fontSize: 48, fontWeight: 'bold', color: t.text, fontFamily: 'Plus Jakarta Sans', lineHeight: 1.15 },
+    { id: uid(), type: 'shape', x: 60, y: 285, width: 60, height: 4, gradient: t.gradient, shape: 'rectangle', borderRadius: 2 },
+    { id: uid(), type: 'text', x: 60, y: 310, width: 380, height: 70, content: subtitle, fontSize: 17, color: t.muted, fontFamily: 'Plus Jakarta Sans', lineHeight: 1.7 },
+    { id: uid(), type: 'shape', x: 60, y: 440, width: 160, height: 44, gradient: t.gradient, shape: 'rounded', borderRadius: 22, shadow: '0 6px 20px rgba(0,0,0,0.2)' },
+    { id: uid(), type: 'text', x: 60, y: 450, width: 160, height: 24, content: 'Découvrir →', fontSize: 14, fontWeight: 'bold', color: '#fff', textAlign: 'center' },
+  ]
+});
+
+// ═══════════════════════════════════════════
+// LAYOUT STYLE D — Minimalist with large typography
+// ═══════════════════════════════════════════
+
+const heroSlideD = (t: Theme, title: string, subtitle: string): PresentationSlide => ({
+  id: uid(), background: t.bg, elements: [
+    { id: uid(), type: 'shape', x: 0, y: 520, width: 960, height: 20, gradient: t.gradient, shape: 'rectangle' },
+    { id: uid(), type: 'text', x: 60, y: 80, width: 840, height: 180, content: title, fontSize: 72, fontWeight: 'bold', color: t.text, fontFamily: 'Plus Jakarta Sans', lineHeight: 1.05, letterSpacing: -2 },
+    { id: uid(), type: 'text', x: 60, y: 300, width: 500, height: 60, content: subtitle, fontSize: 20, color: t.muted, fontFamily: 'Plus Jakarta Sans', lineHeight: 1.7 },
+    { id: uid(), type: 'shape', x: 800, y: 80, width: 120, height: 120, gradient: t.gradient, shape: 'circle', opacity: 0.2 },
+    { id: uid(), type: 'shape', x: 830, y: 110, width: 60, height: 60, gradient: t.gradient, shape: 'circle', opacity: 0.3 },
+  ]
+});
+
+// ═══════════════════════════════════════════
+// LAYOUT STYLE E — Card-based with bottom stripe
+// ═══════════════════════════════════════════
+
+const heroSlideE = (t: Theme, title: string, subtitle: string): PresentationSlide => ({
+  id: uid(), background: t.light, elements: [
+    { id: uid(), type: 'shape', x: 60, y: 40, width: 840, height: 380, gradient: t.gradient, shape: 'rounded', borderRadius: 30 },
+    { id: uid(), type: 'text', x: 120, y: 100, width: 720, height: 120, content: title, fontSize: 52, fontWeight: 'bold', color: '#ffffff', fontFamily: 'Plus Jakarta Sans', textAlign: 'center', lineHeight: 1.15 },
+    { id: uid(), type: 'shape', x: 400, y: 235, width: 160, height: 3, backgroundColor: '#ffffff', shape: 'rectangle', borderRadius: 2, opacity: 0.5 },
+    { id: uid(), type: 'text', x: 150, y: 260, width: 660, height: 60, content: subtitle, fontSize: 18, color: '#ffffff', fontFamily: 'Plus Jakarta Sans', textAlign: 'center', lineHeight: 1.6, opacity: 0.85 },
+    { id: uid(), type: 'shape', x: 350, y: 340, width: 260, height: 50, backgroundColor: '#ffffff', shape: 'rounded', borderRadius: 25 },
+    { id: uid(), type: 'text', x: 350, y: 352, width: 260, height: 26, content: 'En savoir plus', fontSize: 15, fontWeight: 'bold', color: t.accent, textAlign: 'center' },
+    { id: uid(), type: 'text', x: 60, y: 460, width: 840, height: 30, content: 'PRÉSENTATION  ·  STRATÉGIE  ·  RÉSULTATS', fontSize: 11, color: t.lightMuted, textAlign: 'center', letterSpacing: 3 },
+  ]
+});
+
+// ═══════════════════════════════════════════
+// ALTERNATIVE FEATURE CARD SLIDES
+// ═══════════════════════════════════════════
+
+const featureCardsSlideB = (t: Theme, heading: string, cards: { num: string; title: string; desc: string }[]): PresentationSlide => ({
+  id: uid(), background: t.light, elements: [
+    { id: uid(), type: 'shape', x: 0, y: 0, width: 960, height: 6, gradient: t.gradient, shape: 'rectangle' },
+    { id: uid(), type: 'text', x: 60, y: 35, width: 600, height: 45, content: heading, fontSize: 30, fontWeight: 'bold', color: t.lightText, fontFamily: 'Plus Jakarta Sans' },
+    ...cards.slice(0, 3).flatMap((c, i) => [
+      { id: uid(), type: 'shape' as const, x: 60, y: 100 + i * 140, width: 840, height: 120, backgroundColor: '#ffffff', shape: 'rounded' as const, borderRadius: 16, shadow: '0 2px 12px rgba(0,0,0,0.05)' },
+      { id: uid(), type: 'shape' as const, x: 60, y: 100 + i * 140, width: 6, height: 120, gradient: t.gradient, shape: 'rectangle' as const },
+      { id: uid(), type: 'text' as const, x: 90, y: 110 + i * 140, width: 50, height: 40, content: c.num, fontSize: 28, fontWeight: 'bold', color: t.accent, fontFamily: 'Plus Jakarta Sans' },
+      { id: uid(), type: 'text' as const, x: 150, y: 115 + i * 140, width: 250, height: 30, content: c.title, fontSize: 20, fontWeight: 'bold', color: t.lightText, fontFamily: 'Plus Jakarta Sans' },
+      { id: uid(), type: 'text' as const, x: 150, y: 150 + i * 140, width: 720, height: 50, content: c.desc, fontSize: 14, color: t.lightMuted, lineHeight: 1.6 },
+    ]),
+  ]
+});
+
+const featureCardsSlideC = (t: Theme, heading: string, cards: { num: string; title: string; desc: string }[]): PresentationSlide => ({
+  id: uid(), background: t.bg, elements: [
+    { id: uid(), type: 'text', x: 280, y: 25, width: 400, height: 45, content: heading, fontSize: 30, fontWeight: 'bold', color: t.text, textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+    { id: uid(), type: 'shape', x: 430, y: 78, width: 100, height: 3, gradient: t.gradient, shape: 'rectangle', borderRadius: 2 },
+    ...cards.slice(0, 3).flatMap((c, i) => [
+      { id: uid(), type: 'shape' as const, x: 60 + i * 290, y: 110, width: 270, height: 380, backgroundColor: t.card, shape: 'rounded' as const, borderRadius: 24 },
+      { id: uid(), type: 'shape' as const, x: 60 + i * 290, y: 110, width: 270, height: 6, gradient: t.gradient, shape: 'rectangle' as const, borderRadius: 3 },
+      { id: uid(), type: 'text' as const, x: 90 + i * 290, y: 145, width: 210, height: 60, content: c.num, fontSize: 56, fontWeight: 'bold', color: t.accent, opacity: 0.2 },
+      { id: uid(), type: 'text' as const, x: 90 + i * 290, y: 210, width: 210, height: 40, content: c.title, fontSize: 22, fontWeight: 'bold', color: t.cardText, fontFamily: 'Plus Jakarta Sans' },
+      { id: uid(), type: 'text' as const, x: 90 + i * 290, y: 270, width: 210, height: 180, content: c.desc, fontSize: 14, color: t.muted, lineHeight: 1.8 },
+    ]),
+  ]
+});
+
+// ═══════════════════════════════════════════
+// ALTERNATIVE METRICS SLIDES
+// ═══════════════════════════════════════════
+
+const metricsSlideB = (t: Theme, heading: string, stats: { value: string; label: string; sub?: string }[]): PresentationSlide => ({
+  id: uid(), background: t.light, elements: [
+    { id: uid(), type: 'text', x: 280, y: 30, width: 400, height: 40, content: heading, fontSize: 28, fontWeight: 'bold', color: t.lightText, textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+    ...stats.slice(0, 4).flatMap((s, i) => {
+      const col = i % 2, row = Math.floor(i / 2);
+      return [
+        { id: uid(), type: 'shape' as const, x: 80 + col * 420, y: 100 + row * 210, width: 380, height: 190, backgroundColor: '#ffffff', shape: 'rounded' as const, borderRadius: 20, shadow: '0 4px 20px rgba(0,0,0,0.06)' },
+        { id: uid(), type: 'shape' as const, x: 80 + col * 420, y: 100 + row * 210, width: 380, height: 4, gradient: t.gradient, shape: 'rectangle' as const },
+        { id: uid(), type: 'text' as const, x: 100 + col * 420, y: 125 + row * 210, width: 340, height: 65, content: s.value, fontSize: 52, fontWeight: 'bold', color: t.accent, fontFamily: 'Plus Jakarta Sans' },
+        { id: uid(), type: 'text' as const, x: 100 + col * 420, y: 200 + row * 210, width: 340, height: 30, content: s.label, fontSize: 16, fontWeight: 'bold', color: t.lightText },
+        { id: uid(), type: 'text' as const, x: 100 + col * 420, y: 235 + row * 210, width: 340, height: 25, content: s.sub || '', fontSize: 13, color: t.lightMuted },
+      ];
+    }),
+  ]
+});
+
+const metricsSlideC = (t: Theme, heading: string, stats: { value: string; label: string; sub?: string }[]): PresentationSlide => ({
+  id: uid(), background: t.bg2, elements: [
+    { id: uid(), type: 'shape', x: 0, y: 0, width: 960, height: 540, gradient: t.gradient, opacity: 0.04, shape: 'rectangle' },
+    { id: uid(), type: 'text', x: 60, y: 40, width: 840, height: 40, content: heading, fontSize: 32, fontWeight: 'bold', color: t.text, textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+    { id: uid(), type: 'shape', x: 60, y: 100, width: 840, height: 2, backgroundColor: t.accent + '20', shape: 'rectangle' },
+    ...stats.slice(0, 4).flatMap((s, i) => [
+      { id: uid(), type: 'shape' as const, x: 60 + i * 220, y: 130, width: 1, height: 300, backgroundColor: i > 0 ? t.accent + '15' : 'transparent', shape: 'rectangle' as const },
+      { id: uid(), type: 'text' as const, x: 70 + i * 220, y: 180, width: 200, height: 80, content: s.value, fontSize: 48, fontWeight: 'bold', color: t.accent, textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+      { id: uid(), type: 'text' as const, x: 70 + i * 220, y: 275, width: 200, height: 30, content: s.label, fontSize: 16, fontWeight: 'bold', color: t.text, textAlign: 'center' },
+      { id: uid(), type: 'text' as const, x: 70 + i * 220, y: 310, width: 200, height: 25, content: s.sub || '', fontSize: 12, color: t.muted, textAlign: 'center' },
+    ]),
+  ]
+});
+
+// ═══════════════════════════════════════════
+// ALTERNATIVE PROCESS/TIMELINE SLIDES
+// ═══════════════════════════════════════════
+
+const processSlideB = (t: Theme, heading: string, steps: { title: string; desc: string }[]): PresentationSlide => ({
+  id: uid(), background: t.light, elements: [
+    { id: uid(), type: 'text', x: 60, y: 30, width: 600, height: 40, content: heading, fontSize: 28, fontWeight: 'bold', color: t.lightText, fontFamily: 'Plus Jakarta Sans' },
+    ...steps.slice(0, 4).flatMap((s, i) => [
+      { id: uid(), type: 'shape' as const, x: 60, y: 95 + i * 108, width: 840, height: 95, backgroundColor: '#ffffff', shape: 'rounded' as const, borderRadius: 16, shadow: '0 2px 8px rgba(0,0,0,0.04)' },
+      { id: uid(), type: 'shape' as const, x: 80, y: 110 + i * 108, width: 65, height: 65, gradient: t.gradient, shape: 'circle' as const },
+      { id: uid(), type: 'text' as const, x: 80, y: 122 + i * 108, width: 65, height: 40, content: `${i + 1}`, fontSize: 24, fontWeight: 'bold', color: '#fff', textAlign: 'center' },
+      { id: uid(), type: 'text' as const, x: 170, y: 110 + i * 108, width: 300, height: 30, content: s.title, fontSize: 18, fontWeight: 'bold', color: t.lightText, fontFamily: 'Plus Jakarta Sans' },
+      { id: uid(), type: 'text' as const, x: 170, y: 143 + i * 108, width: 700, height: 35, content: s.desc, fontSize: 14, color: t.lightMuted, lineHeight: 1.5 },
+    ]),
+  ]
+});
+
+// ═══════════════════════════════════════════
+// ALTERNATIVE CTA SLIDES
+// ═══════════════════════════════════════════
+
+const ctaSlideB = (t: Theme, headline: string, sub: string, email: string, website: string): PresentationSlide => ({
+  id: uid(), background: t.bg, elements: [
+    { id: uid(), type: 'shape', x: 0, y: 0, width: 960, height: 540, gradient: t.gradient, opacity: 0.08, shape: 'rectangle' },
+    { id: uid(), type: 'shape', x: 160, y: 80, width: 640, height: 380, backgroundColor: t.card, shape: 'rounded', borderRadius: 30, shadow: '0 20px 60px rgba(0,0,0,0.3)' },
+    { id: uid(), type: 'text', x: 200, y: 130, width: 560, height: 70, content: headline, fontSize: 40, fontWeight: 'bold', color: t.text, textAlign: 'center', fontFamily: 'Plus Jakarta Sans' },
+    { id: uid(), type: 'shape', x: 420, y: 215, width: 120, height: 3, gradient: t.gradient, shape: 'rectangle', borderRadius: 2 },
+    { id: uid(), type: 'text', x: 230, y: 240, width: 500, height: 40, content: sub, fontSize: 16, color: t.muted, textAlign: 'center' },
+    { id: uid(), type: 'shape', x: 330, y: 310, width: 300, height: 52, gradient: t.gradient, shape: 'rounded', borderRadius: 26 },
+    { id: uid(), type: 'text', x: 330, y: 322, width: 300, height: 28, content: 'Nous contacter', fontSize: 16, fontWeight: 'bold', color: '#ffffff', textAlign: 'center' },
+    { id: uid(), type: 'text', x: 200, y: 400, width: 560, height: 25, content: `${email}  ·  ${website}`, fontSize: 13, color: t.muted, textAlign: 'center' },
   ]
 });
 
@@ -462,6 +625,7 @@ const THEMES: Record<string, Theme> = {
 
 interface TemplateConfig {
   id: string; name: string; desc: string; cat: string; theme: Theme;
+  layoutStyle?: number; // 0-4 for different visual layouts
   heroTitle: string; heroSub: string;
   agendaItems: string[];
   aboutTitle: string; aboutParagraphs: string[];
@@ -479,26 +643,41 @@ interface TemplateConfig {
   sectionNum?: string; sectionTitle?: string;
 }
 
-const buildTemplate = (c: TemplateConfig): PresentationTemplate => ({
-  id: c.id, name: c.name, description: c.desc, category: c.cat,
-  thumbnail: c.theme.accent, color: c.theme.accent,
-  slides: [
-    heroSlide(c.theme, c.heroTitle, c.heroSub),
-    agendaSlide(c.theme, c.agendaItems),
-    aboutSlide(c.theme, c.aboutTitle, c.aboutParagraphs),
-    featureCardsSlide(c.theme, c.featureHeading, c.features),
-    metricsSlide(c.theme, c.metricsHeading, c.metrics),
-    splitContentSlide(c.theme, c.splitHeading, c.splitLeft, c.splitLeftItems, c.splitRight, c.splitRightItems),
-    ...(c.sectionNum ? [sectionDividerSlide(c.theme, c.sectionNum, c.sectionTitle || '')] : []),
-    processSlide(c.theme, c.processHeading, c.processSteps),
-    quoteSlide2(c.theme, c.quote, c.quoteAuthor, c.quoteRole),
-    ...(c.iconGridHeading ? [iconGridSlide(c.theme, c.iconGridHeading, c.iconGridItems || [])] : []),
-    ...(c.bigNumber ? [bigNumberSlide(c.theme, c.bigNumber, c.bigLabel || '', c.bigDesc || '')] : []),
-    teamSlide(c.theme, c.teamHeading, c.team),
-    comparisonSlide(c.theme, c.compHeading, c.compLeft, c.compLeftItems, c.compRight, c.compRightItems),
-    ctaSlide(c.theme, c.ctaHeadline, c.ctaSub, c.ctaEmail, c.ctaWeb),
-  ],
-});
+const heroVariants = [heroSlideA, heroSlideB, heroSlideC, heroSlideD, heroSlideE];
+const featureVariants = [featureCardsSlide, featureCardsSlideB, featureCardsSlideC];
+const metricsVariants = [metricsSlide, metricsSlideB, metricsSlideC];
+const processVariants = [processSlide, processSlideB];
+const ctaVariants = [ctaSlide, ctaSlideB];
+
+const buildTemplate = (c: TemplateConfig): PresentationTemplate => {
+  const s = c.layoutStyle ?? 0;
+  const heroFn = heroVariants[s % heroVariants.length];
+  const featureFn = featureVariants[s % featureVariants.length];
+  const metricsFn = metricsVariants[s % metricsVariants.length];
+  const processFn = processVariants[s % processVariants.length];
+  const ctaFn = ctaVariants[s % ctaVariants.length];
+
+  return {
+    id: c.id, name: c.name, description: c.desc, category: c.cat,
+    thumbnail: c.theme.accent, color: c.theme.accent,
+    slides: [
+      heroFn(c.theme, c.heroTitle, c.heroSub),
+      agendaSlide(c.theme, c.agendaItems),
+      aboutSlide(c.theme, c.aboutTitle, c.aboutParagraphs),
+      featureFn(c.theme, c.featureHeading, c.features),
+      metricsFn(c.theme, c.metricsHeading, c.metrics),
+      splitContentSlide(c.theme, c.splitHeading, c.splitLeft, c.splitLeftItems, c.splitRight, c.splitRightItems),
+      ...(c.sectionNum ? [sectionDividerSlide(c.theme, c.sectionNum, c.sectionTitle || '')] : []),
+      processFn(c.theme, c.processHeading, c.processSteps),
+      quoteSlide2(c.theme, c.quote, c.quoteAuthor, c.quoteRole),
+      ...(c.iconGridHeading ? [iconGridSlide(c.theme, c.iconGridHeading, c.iconGridItems || [])] : []),
+      ...(c.bigNumber ? [bigNumberSlide(c.theme, c.bigNumber, c.bigLabel || '', c.bigDesc || '')] : []),
+      teamSlide(c.theme, c.teamHeading, c.team),
+      comparisonSlide(c.theme, c.compHeading, c.compLeft, c.compLeftItems, c.compRight, c.compRightItems),
+      ctaFn(c.theme, c.ctaHeadline, c.ctaSub, c.ctaEmail, c.ctaWeb),
+    ],
+  };
+};
 
 // ═══════════════════════════════════════════
 // ALL TEMPLATES
@@ -633,7 +812,7 @@ const bizConfigs: Omit<TemplateConfig, 'theme'>[] = [
 
 const bizThemeKeys = ['darkTech', 'warmCorp', 'oceanTeal', 'midnightSlate', 'amberGold'];
 bizConfigs.forEach((cfg, i) => {
-  allTemplates.push(buildTemplate({ ...cfg, theme: THEMES[bizThemeKeys[i % bizThemeKeys.length]] }));
+  allTemplates.push(buildTemplate({ ...cfg, theme: THEMES[bizThemeKeys[i % bizThemeKeys.length]], layoutStyle: i % 5 }));
 });
 
 // Generate more business templates programmatically
@@ -661,7 +840,7 @@ moreBizNames.forEach(([name, desc], i) => {
   const themeKey = bizThemeKeys[(i + 3) % bizThemeKeys.length];
   const t = THEMES[themeKey];
   allTemplates.push(buildTemplate({
-    id: `biz-${i + 3}`, name, desc, cat: 'Business', theme: t,
+    id: `biz-${i + 3}`, name, desc, cat: 'Business', theme: t, layoutStyle: (i + 3) % 5,
     heroTitle: name.replace(/ /g, '\n'), heroSub: desc + '. Une approche structurée et des résultats concrets.',
     agendaItems: ['Introduction & Contexte', 'Analyse de la situation', 'Stratégie proposée', 'Plan d\'action', 'Ressources nécessaires', 'Conclusion & Prochaines étapes'],
     aboutTitle: 'Contexte & Enjeux', aboutParagraphs: ['Dans un environnement en constante évolution, il est essentiel d\'adapter notre approche.', 'Cette présentation détaille notre analyse et nos recommandations stratégiques.', 'Notre objectif : créer de la valeur durable pour l\'ensemble des parties prenantes.'],
@@ -721,7 +900,7 @@ const eduThemeKeys = ['vibrantPurple', 'darkTech', 'oceanTeal', 'freshGreen', 'e
 eduConfigs.forEach(([name, desc], i) => {
   const t = THEMES[eduThemeKeys[i % eduThemeKeys.length]];
   allTemplates.push(buildTemplate({
-    id: `edu-${i}`, name, desc, cat: 'Éducation', theme: t,
+    id: `edu-${i}`, name, desc, cat: 'Éducation', theme: t, layoutStyle: i % 5,
     heroTitle: name, heroSub: desc + '. Un contenu structuré pour un apprentissage efficace.',
     agendaItems: ['Objectifs pédagogiques', 'Contexte théorique', 'Concepts fondamentaux', 'Études de cas', 'Exercices pratiques', 'Évaluation & Synthèse'],
     aboutTitle: 'Objectifs du Module', aboutParagraphs: ['Ce module vise à développer les compétences clés nécessaires à la maîtrise du sujet.', 'À l\'issue de cette formation, les participants seront capables d\'appliquer les concepts présentés.', 'L\'approche combine théorie, pratique et retour d\'expérience.'],
@@ -787,7 +966,7 @@ const mktThemeKeys = ['sunsetOrange', 'rosePink', 'vibrantPurple', 'rubyRed', 'a
 mktConfigs.forEach(([name, desc], i) => {
   const t = THEMES[mktThemeKeys[i % mktThemeKeys.length]];
   allTemplates.push(buildTemplate({
-    id: `mkt-${i}`, name, desc, cat: 'Marketing', theme: t,
+    id: `mkt-${i}`, name, desc, cat: 'Marketing', theme: t, layoutStyle: i % 5,
     heroTitle: name, heroSub: desc + '. Des stratégies percutantes pour maximiser votre impact.',
     agendaItems: ['Analyse de marché', 'Persona & Ciblage', 'Stratégie créative', 'Plan média', 'KPIs & Objectifs', 'Budget & Timeline'],
     aboutTitle: 'Notre Approche', aboutParagraphs: ['Une stratégie marketing data-driven pour des résultats mesurables.', 'Nous combinons créativité, analytics et automatisation pour maximiser votre ROI.', 'Chaque campagne est optimisée en continu grâce à nos outils d\'analyse.'],
@@ -848,7 +1027,7 @@ const techThemeKeys2 = ['electricCyan', 'darkTech', 'oceanTeal', 'midnightSlate'
 techConfigs.forEach(([name, desc], i) => {
   const t = THEMES[techThemeKeys2[i % techThemeKeys2.length]];
   allTemplates.push(buildTemplate({
-    id: `tech-${i}`, name, desc, cat: 'Technologie', theme: t,
+    id: `tech-${i}`, name, desc, cat: 'Technologie', theme: t, layoutStyle: i % 5,
     heroTitle: name, heroSub: desc + '. Innovation, performance et fiabilité au service de votre business.',
     agendaItems: ['Vue d\'ensemble', 'Architecture technique', 'Fonctionnalités clés', 'Performance & Scalabilité', 'Sécurité', 'Roadmap technique'],
     aboutTitle: 'Vue d\'Ensemble', aboutParagraphs: ['Une solution technologique de pointe conçue pour répondre aux défis les plus complexes.', 'Notre architecture cloud-native garantit performance, sécurité et évolutivité.', 'Construite avec les meilleures pratiques de l\'industrie et des technologies éprouvées.'],
@@ -909,7 +1088,7 @@ const creThemeKeys = ['midnightSlate', 'freshGreen', 'vibrantPurple', 'amberGold
 creConfigs.forEach(([name, desc], i) => {
   const t = THEMES[creThemeKeys[i % creThemeKeys.length]];
   allTemplates.push(buildTemplate({
-    id: `cre-${i}`, name, desc, cat: 'Créatif', theme: t,
+    id: `cre-${i}`, name, desc, cat: 'Créatif', theme: t, layoutStyle: i % 5,
     heroTitle: name, heroSub: desc + '. Un design qui raconte votre histoire avec impact.',
     agendaItems: ['Vision créative', 'Identité visuelle', 'Projets sélectionnés', 'Processus créatif', 'Résultats & Impact', 'Contact & Collaboration'],
     aboutTitle: 'Vision Créative', aboutParagraphs: ['Chaque projet est une opportunité de repousser les limites du design et de l\'innovation.', 'Notre approche mêle esthétique raffinée, fonctionnalité et storytelling émotionnel.', 'Nous créons des expériences visuelles mémorables qui connectent les marques à leur audience.'],
@@ -965,7 +1144,7 @@ const medThemeKeys2 = ['oceanTeal', 'darkTech', 'freshGreen', 'electricCyan', 'm
 medConfigs.forEach(([name, desc], i) => {
   const t = THEMES[medThemeKeys2[i % medThemeKeys2.length]];
   allTemplates.push(buildTemplate({
-    id: `med-${i}`, name, desc, cat: 'Médical', theme: t,
+    id: `med-${i}`, name, desc, cat: 'Médical', theme: t, layoutStyle: i % 5,
     heroTitle: name, heroSub: desc + '. Rigueur scientifique et présentation claire des résultats.',
     agendaItems: ['Introduction', 'Méthodologie', 'Résultats principaux', 'Discussion', 'Conclusion', 'Références'],
     aboutTitle: 'Introduction', aboutParagraphs: ['Cette étude s\'inscrit dans un contexte de recherche active sur les innovations thérapeutiques.', 'L\'objectif est de présenter les résultats de notre protocole et d\'en discuter les implications cliniques.', 'La méthodologie rigoureuse utilisée garantit la fiabilité et la reproductibilité des résultats.'],
@@ -1118,7 +1297,7 @@ otherCategories.forEach(({ cat, items, themes: themeKeys }) => {
     const t = THEMES[themeKeys[i % themeKeys.length]];
     allTemplates.push(buildTemplate({
       id: `${cat.toLowerCase().replace(/[éèê]/g, 'e').replace(/[àâ]/g, 'a').replace(/[ùû]/g, 'u').replace(/[^a-z]/g, '')}-${i}`,
-      name, desc, cat, theme: t,
+      name, desc, cat, theme: t, layoutStyle: i % 5,
       heroTitle: name, heroSub: `${desc}. Une présentation professionnelle et impactante.`,
       agendaItems: ['Présentation générale', 'Contexte & Enjeux', 'Notre proposition', 'Détails et chiffres', 'Équipe & Ressources', 'Conclusion'],
       aboutTitle: 'Présentation', aboutParagraphs: [
