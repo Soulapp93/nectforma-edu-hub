@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { workspaceService, WorkspaceDocument, WorkspaceFolder } from '@/services/workspaceService';
 import { toast } from 'sonner';
-import { Plus, FileText, Table2, Presentation, Image, FolderPlus, Folder, ArrowLeft, Trash2, MoreVertical, Search, LayoutGrid, List, Users, ChevronLeft, Upload, FileUp, PenLine, Briefcase } from 'lucide-react';
+import { Plus, FileText, Table2, Presentation, Image, FolderPlus, Folder, ArrowLeft, Trash2, MoreVertical, Search, LayoutGrid, List, Users, ChevronLeft, Upload, FileUp, PenLine, FolderKanban } from 'lucide-react';
 import { getTemplatesByType, getTemplateCategories, DocumentTemplate } from '@/data/workspaceTemplates';
 import { fileImportService } from '@/services/fileImportService';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -21,11 +21,11 @@ import WorkspaceVisualEditor from '@/components/workspace/WorkspaceVisualEditor'
 import WorkspaceWhiteboardEditor from '@/components/workspace/WorkspaceWhiteboardEditor';
 
 const DOC_TYPES = [
-  { type: 'text' as const, label: 'Document texte', icon: FileText, color: 'from-blue-500 to-blue-600', bgLight: 'bg-blue-50 dark:bg-blue-950/30', textColor: 'text-blue-600 dark:text-blue-400', borderColor: 'border-blue-200 dark:border-blue-800', desc: 'Comme Word' },
-  { type: 'spreadsheet' as const, label: 'Tableau', icon: Table2, color: 'from-emerald-500 to-emerald-600', bgLight: 'bg-emerald-50 dark:bg-emerald-950/30', textColor: 'text-emerald-600 dark:text-emerald-400', borderColor: 'border-emerald-200 dark:border-emerald-800', desc: 'Comme Excel' },
-  { type: 'presentation' as const, label: 'Présentation', icon: Presentation, color: 'from-orange-500 to-orange-600', bgLight: 'bg-orange-50 dark:bg-orange-950/30', textColor: 'text-orange-600 dark:text-orange-400', borderColor: 'border-orange-200 dark:border-orange-800', desc: 'Comme PowerPoint' },
-  { type: 'visual' as const, label: 'Visuel', icon: Image, color: 'from-pink-500 to-pink-600', bgLight: 'bg-pink-50 dark:bg-pink-950/30', textColor: 'text-pink-600 dark:text-pink-400', borderColor: 'border-pink-200 dark:border-pink-800', desc: 'Comme Canva' },
-  { type: 'whiteboard' as const, label: 'Tableau blanc', icon: PenLine, color: 'from-cyan-500 to-cyan-600', bgLight: 'bg-cyan-50 dark:bg-cyan-950/30', textColor: 'text-cyan-600 dark:text-cyan-400', borderColor: 'border-cyan-200 dark:border-cyan-800', desc: 'Whiteboard infini' },
+  { type: 'text' as const, label: 'Document texte', icon: FileText, color: 'from-blue-500 to-blue-600', bgLight: 'bg-blue-50 dark:bg-blue-950/30', textColor: 'text-blue-600 dark:text-blue-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Comme Word' },
+  { type: 'spreadsheet' as const, label: 'Tableau', icon: Table2, color: 'from-emerald-500 to-emerald-600', bgLight: 'bg-emerald-50 dark:bg-emerald-950/30', textColor: 'text-emerald-600 dark:text-emerald-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Comme Excel' },
+  { type: 'presentation' as const, label: 'Présentation', icon: Presentation, color: 'from-orange-500 to-orange-600', bgLight: 'bg-orange-50 dark:bg-orange-950/30', textColor: 'text-orange-600 dark:text-orange-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Comme PowerPoint' },
+  { type: 'visual' as const, label: 'Visuel', icon: Image, color: 'from-pink-500 to-pink-600', bgLight: 'bg-pink-50 dark:bg-pink-950/30', textColor: 'text-pink-600 dark:text-pink-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Comme Canva' },
+  { type: 'whiteboard' as const, label: 'Tableau blanc', icon: PenLine, color: 'from-cyan-500 to-cyan-600', bgLight: 'bg-cyan-50 dark:bg-cyan-950/30', textColor: 'text-cyan-600 dark:text-cyan-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Whiteboard infini' },
 ];
 
 const getDocMeta = (type: string) => {
@@ -263,7 +263,7 @@ const EspaceTravail = () => {
       <PageHeader
         title="Espace de travail"
         description="Créez et gérez vos documents, tableaux et présentations"
-        icon={Briefcase}
+        icon={FolderKanban}
       />
 
       {/* Tabs + actions */}
@@ -349,7 +349,7 @@ const EspaceTravail = () => {
                 {filteredFolders.map(folder => (
                   <div
                     key={folder.id}
-                    className={`glass-card rounded-2xl cursor-pointer group transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${viewMode === 'list' ? 'flex items-center p-3 gap-3' : 'p-5'}`}
+                    className={`rounded-2xl cursor-pointer group transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 border-2 border-primary/20 bg-primary/5 dark:bg-primary/10 backdrop-blur-sm ${viewMode === 'list' ? 'flex items-center p-3 gap-3' : 'p-5'}`}
                     onClick={() => navigateToFolder(folder)}
                   >
                     <div className={`flex ${viewMode === 'grid' ? 'flex-col items-center gap-3' : 'items-center gap-3 flex-1'}`}>
@@ -403,7 +403,7 @@ const EspaceTravail = () => {
                   return (
                     <div
                       key={doc.id}
-                      className={`glass-card rounded-2xl cursor-pointer group transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 border-l-4 ${meta.borderColor} ${viewMode === 'list' ? 'flex items-center p-3 gap-3' : 'p-5'}`}
+                      className={`rounded-2xl cursor-pointer group transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1 border-2 ${meta.borderColor} ${meta.cardBg} backdrop-blur-sm ${viewMode === 'list' ? 'flex items-center p-3 gap-3' : 'p-5'}`}
                       onClick={() => setEditingDoc(doc)}
                     >
                       <div className={`flex ${viewMode === 'grid' ? 'flex-col items-center gap-3' : 'items-center gap-3 flex-1'}`}>

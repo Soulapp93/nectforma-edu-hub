@@ -18,7 +18,7 @@ import {
   ShieldCheck,
   PanelLeftClose,
   PanelLeft,
-  Briefcase,
+  FolderKanban,
 } from 'lucide-react';
 import {
   Sidebar as SidebarWrapper,
@@ -108,7 +108,7 @@ const Sidebar = () => {
     { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarClock },
     { name: 'Messagerie', href: '/messagerie', icon: Mail },
     { name: 'Groupes', href: '/groupes', icon: UsersRound },
-    { name: 'Espace de travail', href: '/espace-travail', icon: Briefcase },
+    { name: 'Espace de travail', href: '/espace-travail', icon: FolderKanban },
     { name: 'Gestion du compte', href: '/gestion-etablissement', icon: Building2 },
     { name: 'Mon profil', href: '/compte', icon: UserCircle },
   ];
@@ -120,7 +120,7 @@ const Sidebar = () => {
     { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarClock },
     { name: 'Messagerie', href: '/messagerie', icon: Mail },
     { name: 'Groupes', href: '/groupes', icon: UsersRound },
-    { name: 'Espace de travail', href: '/espace-travail', icon: Briefcase },
+    { name: 'Espace de travail', href: '/espace-travail', icon: FolderKanban },
     { name: 'Mon profil', href: '/compte', icon: UserCircle },
   ];
 
@@ -128,7 +128,7 @@ const Sidebar = () => {
     { name: 'Formation apprenti', href: '/formations', icon: GraduationCap },
     { name: 'Suivi émargement apprenti', href: '/suivi-emargement', icon: ClipboardCheck },
     { name: 'Emploi du temps apprenti', href: '/emploi-temps', icon: CalendarClock },
-    { name: 'Espace de travail', href: '/espace-travail', icon: Briefcase },
+    { name: 'Espace de travail', href: '/espace-travail', icon: FolderKanban },
     { name: 'Mon profil', href: '/compte', icon: UserCircle },
   ];
 
@@ -138,7 +138,7 @@ const Sidebar = () => {
     { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarClock },
     { name: 'Messagerie', href: '/messagerie', icon: Mail },
     { name: 'Groupes', href: '/groupes', icon: UsersRound },
-    { name: 'Espace de travail', href: '/espace-travail', icon: Briefcase },
+    { name: 'Espace de travail', href: '/espace-travail', icon: FolderKanban },
     { name: 'Mon profil', href: '/compte', icon: UserCircle },
   ];
 
