@@ -736,4 +736,179 @@ body:has(.fullscreen-container) {
     0% { transform: translateX(-100%) rotate(-45deg); }
     100% { transform: translateX(300%) rotate(-45deg); }
   }
+
+  /* ═══════════════════════════════════════════════════
+     WORKSPACE EDITORS — Unified Design System
+     ═══════════════════════════════════════════════════ */
+
+  /* Main wrapper for all workspace editors */
+  .workspace-editor {
+    @apply flex flex-col bg-background;
+    height: calc(100vh - 4rem);
+  }
+
+  /* Unified top header bar */
+  .workspace-header {
+    @apply flex items-center gap-2 px-3 py-1.5 shrink-0;
+    background: hsl(var(--card));
+    border-bottom: 1px solid hsl(var(--border) / 0.6);
+    box-shadow: 0 1px 3px hsl(var(--primary) / 0.04);
+  }
+
+  .dark .workspace-header {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Title input in header */
+  .workspace-title-input {
+    @apply max-w-xs border-none shadow-none text-base font-semibold px-2 h-8 rounded-lg;
+    background: transparent;
+    transition: background 0.2s ease;
+  }
+
+  .workspace-title-input:focus,
+  .workspace-title-input:focus-visible {
+    background: hsl(var(--muted));
+    outline: none;
+    box-shadow: none;
+    ring: none;
+  }
+
+  /* Menu bar (File, Edit, View, etc.) */
+  .workspace-menubar {
+    @apply flex items-center gap-0.5 px-3 py-0.5 text-xs shrink-0;
+    background: hsl(var(--card));
+    border-bottom: 1px solid hsl(var(--border) / 0.4);
+  }
+
+  .workspace-menubar button,
+  .workspace-menubar [role="menuitem"] {
+    @apply rounded-md transition-colors;
+  }
+
+  /* Menu trigger buttons */
+  .workspace-menu-trigger {
+    @apply px-2.5 py-1 text-xs rounded-md font-medium transition-colors;
+    color: hsl(var(--foreground) / 0.75);
+  }
+
+  .workspace-menu-trigger:hover {
+    background: hsl(var(--muted));
+    color: hsl(var(--foreground));
+  }
+
+  /* Toolbar (formatting buttons row) */
+  .workspace-toolbar {
+    @apply flex items-center gap-0.5 px-2 py-1 overflow-x-auto shrink-0;
+    background: hsl(var(--card) / 0.95);
+    border-bottom: 1px solid hsl(var(--border) / 0.3);
+    backdrop-filter: blur(8px);
+  }
+
+  /* Toolbar buttons */
+  .workspace-tool-btn {
+    @apply p-1.5 rounded-md transition-all duration-150;
+    color: hsl(var(--foreground) / 0.65);
+  }
+
+  .workspace-tool-btn:hover {
+    background: hsl(var(--muted));
+    color: hsl(var(--foreground));
+  }
+
+  .workspace-tool-btn.active {
+    background: hsl(var(--primary) / 0.12);
+    color: hsl(var(--primary));
+  }
+
+  /* Toolbar separator */
+  .workspace-separator {
+    @apply mx-0.5;
+    width: 1px;
+    height: 20px;
+    background: hsl(var(--border) / 0.5);
+  }
+
+  /* Save status indicator */
+  .workspace-save-status {
+    @apply text-[11px] hidden sm:block;
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Left sidebar panel (for whiteboard, presentation) */
+  .workspace-sidebar {
+    @apply shrink-0 overflow-y-auto;
+    background: hsl(var(--card));
+    border-right: 1px solid hsl(var(--border) / 0.5);
+  }
+
+  .workspace-sidebar-btn {
+    @apply flex items-center justify-center rounded-lg transition-all duration-150;
+  }
+
+  .workspace-sidebar-btn.active {
+    @apply bg-primary text-primary-foreground;
+    box-shadow: 0 2px 8px hsl(var(--primary) / 0.25);
+  }
+
+  .workspace-sidebar-btn:not(.active) {
+    color: hsl(var(--foreground) / 0.6);
+  }
+
+  .workspace-sidebar-btn:not(.active):hover {
+    background: hsl(var(--muted));
+    color: hsl(var(--foreground));
+  }
+
+  /* Context toolbar for selected elements */
+  .workspace-context-bar {
+    @apply flex items-center gap-1 px-3 py-1 shrink-0 overflow-x-auto;
+    background: hsl(var(--card) / 0.85);
+    border-bottom: 1px solid hsl(var(--border) / 0.3);
+    backdrop-filter: blur(12px);
+  }
+
+  /* Canvas work area */
+  .workspace-canvas-area {
+    @apply flex-1 overflow-hidden relative;
+    background: hsl(var(--muted) / 0.3);
+  }
+
+  .dark .workspace-canvas-area {
+    background: hsl(var(--background));
+  }
+
+  /* Right properties panel */
+  .workspace-properties-panel {
+    @apply shrink-0 overflow-y-auto;
+    background: hsl(var(--card));
+    border-left: 1px solid hsl(var(--border) / 0.5);
+  }
+
+  /* Status bar at bottom */
+  .workspace-statusbar {
+    @apply flex items-center justify-between px-3 shrink-0;
+    height: 26px;
+    background: hsl(var(--card));
+    border-top: 1px solid hsl(var(--border) / 0.4);
+    font-size: 10px;
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Gradient present button */
+  .workspace-present-btn {
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    border: none;
+    color: white;
+    transition: opacity 0.2s ease, transform 0.15s ease;
+  }
+
+  .workspace-present-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .workspace-present-btn:active {
+    transform: translateY(0);
+  }
 }

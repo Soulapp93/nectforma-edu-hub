@@ -1507,54 +1507,54 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
 
   // --- Render ---
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-background select-none" onClick={() => setContextMenu(null)}>
+    <div className="workspace-editor select-none" onClick={() => setContextMenu(null)}>
       <input ref={importFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportXlsx} />
       
-      {/* Top bar - Excel green theme */}
-      <div className="flex items-center gap-2 px-3 py-1.5 border-b" style={{ backgroundColor: '#217346' }}>
-        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 text-white hover:bg-white/20">
+      {/* Top bar */}
+      <div className="workspace-header">
+        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div className="flex items-center gap-1">
-          <FileSpreadsheet className="h-4 w-4 text-white" />
+        <div className="flex items-center gap-1.5">
+          <FileSpreadsheet className="h-4 w-4 text-primary" />
           <Input
             value={title}
             onChange={e => setTitle(e.target.value)}
-            className="max-w-[200px] border-none shadow-none text-sm font-semibold focus-visible:ring-0 px-1 h-8 bg-transparent text-white placeholder:text-white/60"
+            className="workspace-title-input focus-visible:ring-0"
             placeholder="Titre"
           />
         </div>
         <div className="flex-1" />
         {isOwner && (
-          <Button size="sm" variant="ghost" onClick={() => setShowShareModal(true)} className="gap-1 h-7 text-xs text-white hover:bg-white/20">
+          <Button size="sm" variant="outline" onClick={() => setShowShareModal(true)} className="gap-1 h-7 text-xs">
             <Share2 className="h-3 w-3" /> Partager
           </Button>
         )}
         {doc.is_shared && (
-          <Badge variant="secondary" className="gap-1 text-xs h-6 bg-white/20 text-white border-0">
+          <Badge variant="secondary" className="gap-1 text-xs h-6">
             <Users className="h-3 w-3" /> Partagé
           </Badge>
         )}
-        <span className="text-xs text-white/70 hidden sm:block">
+        <span className="workspace-save-status">
           {saving ? 'Sauvegarde...' : '✓ Auto'}
         </span>
-        <Button size="sm" variant="ghost" onClick={() => importFileRef.current?.click()} disabled={importingFile} className="gap-1 h-7 text-xs text-white hover:bg-white/20">
+        <Button size="sm" variant="outline" onClick={() => importFileRef.current?.click()} disabled={importingFile} className="gap-1 h-7 text-xs">
           <Upload className="h-3 w-3" /> {importingFile ? 'Import...' : 'Importer'}
         </Button>
-        <Button size="sm" variant="ghost" onClick={exportCSV} className="gap-1 h-7 text-xs text-white hover:bg-white/20">
+        <Button size="sm" variant="outline" onClick={exportCSV} className="gap-1 h-7 text-xs">
           <Download className="h-3 w-3" /> CSV
         </Button>
-        <Button size="sm" onClick={handleSave} disabled={saving} className="gap-1 h-7 text-xs bg-white/20 hover:bg-white/30 text-white border-0">
+        <Button size="sm" onClick={handleSave} disabled={saving} className="gap-1 h-7 text-xs">
           <Save className="h-3 w-3" /> Sauver
         </Button>
       </div>
 
-      {/* Google Sheets-style Menu Bar */}
-      <div className="flex items-center gap-0 px-1 border-b bg-card/95 flex-shrink-0" style={{ height: 28 }}>
+      {/* Menu Bar */}
+      <div className="workspace-menubar" style={{ height: 28 }}>
         {/* Fichier */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="px-2.5 py-1 text-xs rounded hover:bg-muted transition-colors">Fichier</button>
+            <button className="workspace-menu-trigger">Fichier</button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-[220px]">
             <DropdownMenuItem onClick={addSheet}><Plus className="h-3.5 w-3.5 mr-2" /> Nouvelle feuille</DropdownMenuItem>
@@ -1592,7 +1592,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
         {/* Édition */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="px-2.5 py-1 text-xs rounded hover:bg-muted transition-colors">Édition</button>
+            <button className="workspace-menu-trigger">Édition</button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-[220px]">
             <DropdownMenuItem onClick={undo}>
@@ -1646,7 +1646,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
         {/* Affichage */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="px-2.5 py-1 text-xs rounded hover:bg-muted transition-colors">Affichage</button>
+            <button className="workspace-menu-trigger">Affichage</button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-[220px]">
             <DropdownMenuItem onClick={() => setShowGridLines(!showGridLines)}>
@@ -1690,7 +1690,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
         {/* Insertion */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="px-2.5 py-1 text-xs rounded hover:bg-muted transition-colors">Insertion</button>
+            <button className="workspace-menu-trigger">Insertion</button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-[250px]">
             <DropdownMenuSub>
@@ -1758,7 +1758,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
         {/* Format */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="px-2.5 py-1 text-xs rounded hover:bg-muted transition-colors">Format</button>
+            <button className="workspace-menu-trigger">Format</button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-[250px]">
             <DropdownMenuSub>
@@ -1838,7 +1838,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
         {/* Données */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="px-2.5 py-1 text-xs rounded hover:bg-muted transition-colors">Données</button>
+            <button className="workspace-menu-trigger">Données</button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-[250px]">
             <DropdownMenuSub>
@@ -1882,7 +1882,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
         {/* Outils */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="px-2.5 py-1 text-xs rounded hover:bg-muted transition-colors">Outils</button>
+            <button className="workspace-menu-trigger">Outils</button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-[200px]">
             <DropdownMenuItem onClick={() => updateSheet({ numRows: sheet.numRows + 20 })}>
@@ -1901,7 +1901,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
         {/* Aide */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="px-2.5 py-1 text-xs rounded hover:bg-muted transition-colors">Aide</button>
+            <button className="workspace-menu-trigger">Aide</button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-[200px]">
             <DropdownMenuItem onClick={() => setShowFormulaHelper(true)}>
@@ -1929,7 +1929,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
       </div>
 
       {/* Main toolbar - Excel ribbon style */}
-      <div className="flex items-center gap-0.5 px-2 py-1 border-b bg-card/95 overflow-x-auto flex-shrink-0">
+      <div className="workspace-toolbar flex-shrink-0">
         {/* Undo/Redo */}
         <button onClick={undo} className="p-1.5 rounded hover:bg-muted" title="Annuler (Ctrl+Z)"><Undo2 className="h-3.5 w-3.5" /></button>
         <button onClick={redo} className="p-1.5 rounded hover:bg-muted" title="Rétablir (Ctrl+Y)"><Redo2 className="h-3.5 w-3.5" /></button>
@@ -2717,7 +2717,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
         </div>
 
         {/* Status bar - Excel style with Sum/Average/Count */}
-        <div className="flex items-center gap-3 px-3 text-[11px] text-[#555] border-l border-[#c0c0c0] flex-shrink-0">
+        <div className="workspace-statusbar flex-shrink-0 gap-3 border-l border-border">
           {selectionStats && selectionStats.numCount > 0 && (
             <>
               <span>Moyenne : <strong>{selectionStats.average.toLocaleString('fr-FR', { maximumFractionDigits: 2 })}</strong></span>

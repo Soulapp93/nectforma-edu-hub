@@ -809,18 +809,18 @@ const WorkspacePresentationEditor: React.FC<Props> = ({ document: doc, onSave, o
   // MAIN EDITOR
   // ═══════════════════════════════════════════
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-background">
+    <div className="workspace-editor">
       <input ref={importFileRef} type="file" accept=".pptx,.ppt,.pdf,.png,.jpg,.jpeg,.gif,.webp,.svg" className="hidden" onChange={handleImportPresentation} />
       {/* TOP BAR */}
-      <div className="flex items-center gap-1.5 px-3 py-1.5 border-b bg-card shrink-0">
+      <div className="workspace-header">
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}><ArrowLeft className="h-4 w-4" /></Button>
         <Input value={title} onChange={e => setTitle(e.target.value)}
-          className="max-w-xs border-none shadow-none text-base font-semibold focus-visible:ring-0 px-1 h-8" placeholder="Sans titre" />
+          className="workspace-title-input focus-visible:ring-0" placeholder="Sans titre" />
         <div className="flex items-center gap-0.5 ml-1">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={undo} disabled={historyIndex <= 0} title="Annuler (Ctrl+Z)"><Undo2 className="h-3.5 w-3.5" /></Button>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={redo} disabled={historyIndex >= history.length - 1} title="Rétablir (Ctrl+Y)"><Redo2 className="h-3.5 w-3.5" /></Button>
         </div>
-        <div className="w-px h-5 bg-border mx-1" />
+        <div className="workspace-separator" />
         {/* Zoom */}
         <div className="flex items-center gap-0.5">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setCanvasZoom(z => Math.max(50, z - 10))}><ZoomOut className="h-3.5 w-3.5" /></Button>
@@ -831,7 +831,7 @@ const WorkspacePresentationEditor: React.FC<Props> = ({ document: doc, onSave, o
           <Grid3X3 className="h-3.5 w-3.5" />
         </Button>
         <div className="flex-1" />
-        <span className="text-xs text-muted-foreground hidden sm:block">{saving ? 'Sauvegarde...' : '✓ Sauvé'}</span>
+        <span className="workspace-save-status">{saving ? 'Sauvegarde...' : '✓ Sauvé'}</span>
         <Button size="sm" variant="outline" onClick={() => importFileRef.current?.click()} disabled={importingFile} className="gap-1.5 h-7 text-xs">
           <Upload className="h-3 w-3" /> {importingFile ? 'Import...' : 'Importer'}
         </Button>
@@ -848,7 +848,7 @@ const WorkspacePresentationEditor: React.FC<Props> = ({ document: doc, onSave, o
             <Users className="h-3 w-3" /> Partagé
           </Badge>
         )}
-        <Button size="sm" variant="default" onClick={startPresentation} className="gap-1.5 h-7 text-xs bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 border-0">
+        <Button size="sm" variant="default" onClick={startPresentation} className="workspace-present-btn gap-1.5 h-7 text-xs">
           <Play className="h-3 w-3" /> Présenter
         </Button>
         <Button size="sm" onClick={handleSave} disabled={saving} className="gap-1.5 h-7 text-xs">
@@ -858,7 +858,7 @@ const WorkspacePresentationEditor: React.FC<Props> = ({ document: doc, onSave, o
 
       {/* CONTEXT TOOLBAR */}
       {selectedElement && (
-        <div className="flex items-center gap-1 px-3 py-1 border-b bg-card/80 shrink-0 overflow-x-auto">
+        <div className="workspace-context-bar">
           {selectedElement.type === 'text' && (
             <>
               <select value={selectedElement.fontFamily || 'Inter'} onChange={e => { updateElement(selectedElement.id, { fontFamily: e.target.value }); scheduleAutoSave(); }}
