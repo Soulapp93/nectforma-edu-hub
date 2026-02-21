@@ -792,7 +792,7 @@ async function saveMultiChannelContent(
     .update({ autopilot_last_run: new Date().toISOString() })
     .limit(1);
 
-  return { articleId: savedPost.id, socialCount };
+  return { articleId: savedPost.id, articleSlug: savedPost.slug, socialCount };
 }
 
 // ─── MAIN HANDLER ───
@@ -1013,7 +1013,8 @@ serve(async (req) => {
 
         if (subscribers && subscribers.length > 0) {
           const article = generated.article || generated;
-          const articleUrl = `https://nectforma.com/blog/${article.slug || 'article'}`;
+          // Use the actual slug saved in the database (result.articleSlug), not the AI-generated one
+          const articleUrl = `https://nectforma.com/blog/${result.articleSlug || article.slug || 'article'}`;
           const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
           const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 
