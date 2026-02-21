@@ -445,16 +445,20 @@ const EspaceTravail = () => {
 
       {/* New Document Modal */}
       <Dialog open={showNewDocModal} onOpenChange={(v) => { setShowNewDocModal(v); if (!v) { setSelectedDocType(null); setTemplateCategory('all'); } }}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col border-2 border-primary/30">
+          <DialogHeader className="bg-gradient-to-r from-primary to-primary/80 -mx-6 -mt-6 px-6 pt-6 pb-4 rounded-t-2xl">
+            <DialogTitle className="flex items-center gap-2 text-white">
               {selectedDocType && (
-                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => { setSelectedDocType(null); setTemplateCategory('all'); }}>
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-white hover:bg-white/20" onClick={() => { setSelectedDocType(null); setTemplateCategory('all'); }}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
               )}
+              <FolderKanban className="h-5 w-5" />
               {selectedDocType ? `Choisir un modèle — ${DOC_TYPES.find(d => d.type === selectedDocType)?.label}` : 'Nouveau document'}
             </DialogTitle>
+            <p className="text-white/70 text-sm">
+              {selectedDocType ? 'Sélectionnez un modèle pour commencer' : 'Créer un nouveau document'}
+            </p>
           </DialogHeader>
 
           {!selectedDocType ? (
@@ -464,13 +468,13 @@ const EspaceTravail = () => {
                   <button
                     key={dt.type}
                     onClick={() => setSelectedDocType(dt.type)}
-                    className="flex flex-col items-center gap-3 p-4 rounded-2xl border-2 border-transparent hover:border-primary/30 hover:bg-muted/50 transition-all group"
+                    className="flex flex-col items-center gap-3 p-4 rounded-2xl border-2 border-primary/20 hover:border-primary hover:bg-primary/5 transition-all group"
                   >
-                    <div className={`p-3.5 rounded-xl bg-gradient-to-br ${dt.color} text-white shadow-sm group-hover:shadow-md transition-shadow`}>
+                    <div className={`p-3.5 rounded-xl bg-gradient-to-br ${dt.color} text-white shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all`}>
                       <dt.icon className="h-6 w-6" />
                     </div>
                     <div className="text-center">
-                      <p className="text-sm font-medium text-foreground">{dt.label}</p>
+                      <p className="text-sm font-semibold text-primary">{dt.label}</p>
                       <p className="text-xs text-muted-foreground">{dt.desc}</p>
                     </div>
                   </button>
@@ -478,7 +482,7 @@ const EspaceTravail = () => {
               </div>
               
               {/* Import section */}
-              <div className="border-t border-border pt-5">
+              <div className="border-t border-primary/15 pt-5">
                 <input
                   ref={importFileRef}
                   type="file"
@@ -492,13 +496,13 @@ const EspaceTravail = () => {
                 <button
                   onClick={() => importFileRef.current?.click()}
                   disabled={importing}
-                  className="w-full flex items-center gap-3 p-4 rounded-2xl border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 hover:bg-muted/30 transition-all"
+                  className="w-full flex items-center gap-3 p-4 rounded-2xl border-2 border-dashed border-primary/25 hover:border-primary/60 hover:bg-primary/5 transition-all"
                 >
-                  <div className="p-2.5 rounded-xl bg-muted">
-                    <FileUp className="h-5 w-5 text-muted-foreground" />
+                  <div className="p-2.5 rounded-xl bg-primary/10">
+                    <FileUp className="h-5 w-5 text-primary" />
                   </div>
                   <div className="text-left">
-                    <p className="text-sm font-medium text-foreground">{importing ? 'Import en cours...' : 'Importer un fichier'}</p>
+                    <p className="text-sm font-semibold text-primary">{importing ? 'Import en cours...' : 'Importer un fichier'}</p>
                     <p className="text-xs text-muted-foreground">Word, Excel, PowerPoint, PDF, Images</p>
                   </div>
                 </button>
@@ -527,7 +531,7 @@ const EspaceTravail = () => {
                       <button
                         key={template.id}
                         onClick={() => handleCreateDocument(selectedDocType, template)}
-                        className="flex flex-col items-center gap-2 p-4 rounded-2xl border-2 border-transparent hover:border-primary/30 hover:bg-muted/50 transition-all text-left group"
+                        className="flex flex-col items-center gap-2 p-4 rounded-2xl border-2 border-primary/20 hover:border-primary hover:bg-primary/5 transition-all text-left group"
                       >
                         <div className="w-full aspect-[4/3] rounded-xl flex items-center justify-center text-4xl" style={{ backgroundColor: template.color + '15' }}>
                           {template.thumbnail}
