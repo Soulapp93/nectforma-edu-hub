@@ -80,8 +80,8 @@ serve(async (req: Request): Promise<Response> => {
 <body>
   <div class="container">
     <div class="header">
-      <h1 style="margin: 0;">📩 Nouveau message de contact</h1>
-      <p style="margin: 10px 0 0 0; opacity: 0.9;">NECTFORMA - Formulaire de contact</p>
+      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma.png?v=1" alt="Nectforma" width="140" style="display:block;margin:0 auto 12px;" />
+      <h2 style="margin: 0; color: white;">📩 Nouveau message de contact</h2>
     </div>
     <div class="content">
       <div class="field">
@@ -162,7 +162,8 @@ serve(async (req: Request): Promise<Response> => {
 <body>
   <div class="container">
     <div class="header">
-      <h1 style="margin: 0;">✅ Message reçu !</h1>
+      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma.png?v=1" alt="Nectforma" width="140" style="display:block;margin:0 auto 12px;" />
+      <h2 style="margin: 0; color: white;">✅ Message reçu !</h2>
     </div>
     <div class="content">
       <p>Bonjour ${body.firstName},</p>

@@ -227,7 +227,7 @@ serve(async (req) => {
           <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
             <!-- Header -->
             <div style="background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%); padding: 40px 30px; text-align: center;">
-              <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">NECTFORMA</h1>
+              <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma.png?v=1" alt="Nectforma" width="160" style="display:block;margin:0 auto 12px;" />
               <p style="color: rgba(255,255,255,0.9); margin-top: 8px; font-size: 14px;">Plateforme intelligente de gestion de formation</p>
             </div>
             
@@ -393,7 +393,7 @@ serve(async (req) => {
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
           <!-- Header -->
           <div style="background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%); padding: 40px 30px; text-align: center;">
-            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">NECTFORMA</h1>
+            <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma.png?v=1" alt="Nectforma" width="160" style="display:block;margin:0 auto 12px;" />
             <p style="color: rgba(255,255,255,0.9); margin-top: 8px; font-size: 14px;">Plateforme intelligente de gestion de formation</p>
           </div>
           
