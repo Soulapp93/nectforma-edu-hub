@@ -9,7 +9,7 @@ import {
   ArrowLeft, Save, MousePointer, Pencil, Type, Square, Circle, Minus, Diamond,
   StickyNote, Trash2, Undo2, Redo2, ZoomIn, ZoomOut, Hand, Eraser,
   Share2, Users, Palette, Move, ArrowRight, Star, Triangle, Hexagon,
-  Lock, Unlock, Copy, Layers, Grid3X3, Download
+  Lock, Unlock, Copy, Layers, Grid3X3, Download, Image as ImageIcon
 } from 'lucide-react';
 import ShareDocumentModal from './ShareDocumentModal';
 
@@ -21,7 +21,7 @@ interface Props {
 
 interface WhiteboardElement {
   id: string;
-  type: 'rectangle' | 'circle' | 'triangle' | 'diamond' | 'star' | 'line' | 'arrow' | 'text' | 'sticky' | 'freehand' | 'hexagon';
+  type: 'rectangle' | 'circle' | 'triangle' | 'diamond' | 'star' | 'line' | 'arrow' | 'text' | 'sticky' | 'freehand' | 'hexagon' | 'image';
   x: number;
   y: number;
   width: number;
@@ -37,8 +37,9 @@ interface WhiteboardElement {
   opacity?: number;
   zIndex?: number;
   locked?: boolean;
-  points?: { x: number; y: number }[]; // for freehand
+  points?: { x: number; y: number }[];
   stickyColor?: string;
+  imageUrl?: string;
 }
 
 interface WhiteboardData {
@@ -47,15 +48,35 @@ interface WhiteboardData {
   gridVisible: boolean;
 }
 
-type Tool = 'select' | 'pan' | 'draw' | 'eraser' | 'rectangle' | 'circle' | 'triangle' | 'diamond' | 'star' | 'hexagon' | 'line' | 'arrow' | 'text' | 'sticky';
+type Tool = 'select' | 'pan' | 'draw' | 'eraser' | 'rectangle' | 'circle' | 'triangle' | 'diamond' | 'star' | 'hexagon' | 'line' | 'arrow' | 'text' | 'sticky' | 'image';
+
+type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
 
 const newId = () => Math.random().toString(36).slice(2, 10);
 
 const STICKY_COLORS = ['#fef08a', '#bbf7d0', '#bfdbfe', '#fbcfe8', '#fed7aa', '#e9d5ff', '#fecaca', '#d9f99d'];
-const SHAPE_COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#000000', '#6b7280'];
+
+const EXTENDED_COLORS = [
+  '#000000', '#374151', '#6b7280', '#9ca3af', '#d1d5db', '#ffffff',
+  '#dc2626', '#ef4444', '#f87171', '#fca5a5',
+  '#ea580c', '#f97316', '#fb923c', '#fdba74',
+  '#ca8a04', '#eab308', '#facc15', '#fde047',
+  '#16a34a', '#22c55e', '#4ade80', '#86efac',
+  '#0891b2', '#06b6d4', '#22d3ee', '#67e8f9',
+  '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd',
+  '#7c3aed', '#8b5cf6', '#a78bfa', '#c4b5fd',
+  '#c026d3', '#d946ef', '#e879f9', '#f0abfc',
+  '#db2777', '#ec4899', '#f472b6', '#f9a8d4',
+];
+
 const BG_COLORS = ['#ffffff', '#f8fafc', '#f1f5f9', '#fafaf9', '#1e293b', '#0f172a', '#fef3c7', '#dcfce7', '#dbeafe', '#fce7f3'];
 const STROKE_WIDTHS = [1, 2, 3, 5, 8];
-const PEN_COLORS = ['#000000', '#374151', '#dc2626', '#2563eb', '#16a34a', '#9333ea', '#ea580c', '#0891b2', '#ffffff'];
+
+const RESIZE_HANDLES: ResizeHandle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+const HANDLE_CURSORS: Record<ResizeHandle, string> = {
+  nw: 'nwse-resize', n: 'ns-resize', ne: 'nesw-resize', e: 'ew-resize',
+  se: 'nwse-resize', s: 'ns-resize', sw: 'nesw-resize', w: 'ew-resize',
+};
 
 const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onClose }) => {
   const { userId } = useCurrentUser();
@@ -78,6 +99,7 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState<{ id: string; startX: number; startY: number; elX: number; elY: number } | null>(null);
+  const [resizing, setResizing] = useState<{ id: string; handle: ResizeHandle; startX: number; startY: number; origX: number; origY: number; origW: number; origH: number } | null>(null);
   const [drawing, setDrawing] = useState(false);
   const [drawPoints, setDrawPoints] = useState<{ x: number; y: number }[]>([]);
   const [drawStart, setDrawStart] = useState<{ x: number; y: number } | null>(null);
@@ -91,6 +113,7 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const pushHistory = useCallback((newBoard: WhiteboardData) => {
     setHistory(prev => [...prev.slice(0, historyIdx + 1), JSON.parse(JSON.stringify(newBoard))].slice(-50));
@@ -127,7 +150,6 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
 
   useEffect(() => () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); }, []);
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (editingTextId) return;
@@ -143,6 +165,7 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
       if (e.key === 't') setTool('text');
       if (e.key === 'n') setTool('sticky');
       if (e.key === 'g') setShowGrid(p => !p);
+      if (e.key === 'i') setTool('image');
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
@@ -160,10 +183,10 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
   const addElement = (type: WhiteboardElement['type'], x: number, y: number, overrides?: Partial<WhiteboardElement>) => {
     const el: WhiteboardElement = {
       id: newId(), type, x, y,
-      width: type === 'text' ? 200 : type === 'sticky' ? 200 : type === 'line' || type === 'arrow' ? 200 : 120,
-      height: type === 'text' ? 40 : type === 'sticky' ? 200 : type === 'line' || type === 'arrow' ? 4 : 120,
+      width: type === 'text' ? 200 : type === 'sticky' ? 200 : type === 'line' || type === 'arrow' ? 200 : type === 'image' ? 300 : 120,
+      height: type === 'text' ? 40 : type === 'sticky' ? 200 : type === 'line' || type === 'arrow' ? 4 : type === 'image' ? 200 : 120,
       content: type === 'text' ? 'Texte' : type === 'sticky' ? '' : undefined,
-      color: type === 'text' ? currentColor : currentColor,
+      color: currentColor,
       backgroundColor: type === 'sticky' ? STICKY_COLORS[Math.floor(Math.random() * STICKY_COLORS.length)] : ['rectangle', 'circle', 'triangle', 'diamond', 'star', 'hexagon'].includes(type) ? currentBgColor : undefined,
       borderColor: currentColor,
       borderWidth: strokeWidth,
@@ -210,6 +233,43 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
     scheduleAutoSave();
   };
 
+  // Image import handler
+  const handleImageImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Veuillez sélectionner une image');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      const img = new window.Image();
+      img.onload = () => {
+        const maxW = 400;
+        const ratio = img.width / img.height;
+        const w = Math.min(img.width, maxW);
+        const h = w / ratio;
+        addElement('image', 100 + pan.x / zoom, 100 + pan.y / zoom, { imageUrl: dataUrl, width: w, height: h });
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  // Resize logic
+  const handleResizeStart = (e: React.MouseEvent, handle: ResizeHandle, el: WhiteboardElement) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const coords = getCanvasCoords(e);
+    setResizing({
+      id: el.id, handle,
+      startX: coords.x, startY: coords.y,
+      origX: el.x, origY: el.y, origW: el.width, origH: el.height,
+    });
+  };
+
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
     const coords = getCanvasCoords(e);
 
@@ -226,8 +286,7 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
     }
 
     if (tool === 'eraser') {
-      // Find element under cursor and delete
-      const el = [...board.elements].reverse().find(el => 
+      const el = [...board.elements].reverse().find(el =>
         coords.x >= el.x && coords.x <= el.x + el.width &&
         coords.y >= el.y && coords.y <= el.y + el.height
       );
@@ -251,15 +310,9 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
       return;
     }
 
-    if (tool === 'text') {
-      addElement('text', coords.x, coords.y);
-      return;
-    }
-
-    if (tool === 'sticky') {
-      addElement('sticky', coords.x, coords.y);
-      return;
-    }
+    if (tool === 'text') { addElement('text', coords.x, coords.y); return; }
+    if (tool === 'sticky') { addElement('sticky', coords.x, coords.y); return; }
+    if (tool === 'image') { imageInputRef.current?.click(); return; }
 
     // Select tool
     if (tool === 'select') {
@@ -284,6 +337,22 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
     }
 
     const coords = getCanvasCoords(e);
+
+    if (resizing) {
+      const dx = coords.x - resizing.startX;
+      const dy = coords.y - resizing.startY;
+      let { origX, origY, origW, origH } = resizing;
+      let newX = origX, newY = origY, newW = origW, newH = origH;
+
+      const h = resizing.handle;
+      if (h.includes('e')) { newW = Math.max(20, origW + dx); }
+      if (h.includes('w')) { newW = Math.max(20, origW - dx); newX = origX + (origW - newW); }
+      if (h.includes('s')) { newH = Math.max(20, origH + dy); }
+      if (h.includes('n')) { newH = Math.max(20, origH - dy); newY = origY + (origH - newH); }
+
+      updateElement(resizing.id, { x: newX, y: newY, width: newW, height: newH });
+      return;
+    }
 
     if (drawing && tool === 'draw') {
       setDrawPoints(prev => [...prev, coords]);
@@ -312,6 +381,12 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
 
   const handleCanvasMouseUp = () => {
     if (isPanning) { setIsPanning(false); return; }
+
+    if (resizing) {
+      pushHistory(board);
+      setResizing(null);
+      return;
+    }
 
     if (drawing && drawPoints.length > 1) {
       const minX = Math.min(...drawPoints.map(p => p.x));
@@ -360,6 +435,41 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
 
   const selectedEl = selectedId ? board.elements.find(e => e.id === selectedId) : null;
 
+  // Render resize handles for a selected element
+  const renderResizeHandles = (el: WhiteboardElement) => {
+    const size = 8;
+    const half = size / 2;
+    const positions: Record<ResizeHandle, { left: number; top: number }> = {
+      nw: { left: -half, top: -half },
+      n: { left: el.width / 2 - half, top: -half },
+      ne: { left: el.width - half, top: -half },
+      e: { left: el.width - half, top: el.height / 2 - half },
+      se: { left: el.width - half, top: el.height - half },
+      s: { left: el.width / 2 - half, top: el.height - half },
+      sw: { left: -half, top: el.height - half },
+      w: { left: -half, top: el.height / 2 - half },
+    };
+
+    return RESIZE_HANDLES.map(handle => (
+      <div
+        key={handle}
+        onMouseDown={(e) => handleResizeStart(e, handle, el)}
+        style={{
+          position: 'absolute',
+          left: positions[handle].left,
+          top: positions[handle].top,
+          width: size,
+          height: size,
+          backgroundColor: 'white',
+          border: '2px solid hsl(var(--primary))',
+          borderRadius: 2,
+          cursor: HANDLE_CURSORS[handle],
+          zIndex: 9999,
+        }}
+      />
+    ));
+  };
+
   const renderShape = (el: WhiteboardElement, isPreview = false) => {
     const style: React.CSSProperties = {
       position: 'absolute',
@@ -372,7 +482,38 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
     const isSelected = !isPreview && selectedId === el.id;
     const outline = isSelected ? '2px solid hsl(var(--primary))' : 'none';
 
+    const wrapWithResize = (content: React.ReactNode) => {
+      if (!isSelected) return content;
+      return (
+        <div key={el.id} style={{ ...style, outline: 'none' }}>
+          <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+            {/* Re-render inner content without absolute positioning */}
+            {content}
+            {renderResizeHandles(el)}
+          </div>
+        </div>
+      );
+    };
+
     switch (el.type) {
+      case 'image':
+        if (isSelected) {
+          return (
+            <div key={el.id} style={{ ...style, position: 'absolute' }}>
+              <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <img src={el.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', outline, borderRadius: 4, cursor: 'move' }}
+                  onClick={() => setSelectedId(el.id)} draggable={false} />
+                {renderResizeHandles(el)}
+              </div>
+            </div>
+          );
+        }
+        return (
+          <img key={el.id} src={el.imageUrl} alt="" draggable={false}
+            style={{ ...style, objectFit: 'contain', outline, borderRadius: 4, cursor: isPreview ? 'default' : 'move' }}
+            onClick={() => !isPreview && setSelectedId(el.id)} />
+        );
+
       case 'freehand': {
         if (!el.points || el.points.length < 2) return null;
         const d = el.points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
@@ -380,10 +521,35 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
           <svg key={el.id} style={{ ...style, overflow: 'visible', pointerEvents: 'all' }}
             onClick={() => !isPreview && setSelectedId(el.id)}>
             <path d={d} fill="none" stroke={el.color || '#000'} strokeWidth={el.borderWidth || 2} strokeLinecap="round" strokeLinejoin="round" />
+            {isSelected && <rect x="-2" y="-2" width={el.width + 4} height={el.height + 4} fill="none" stroke="hsl(var(--primary))" strokeWidth="2" />}
           </svg>
         );
       }
       case 'sticky':
+        if (isSelected) {
+          return (
+            <div key={el.id} style={{ ...style, position: 'absolute' }}>
+              <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <div style={{ width: '100%', height: '100%', backgroundColor: el.stickyColor || '#fef08a', outline, borderRadius: 4, boxShadow: '2px 4px 12px rgba(0,0,0,0.1)', padding: 12, cursor: 'move' }}
+                  onClick={() => setSelectedId(el.id)}
+                  onDoubleClick={() => setEditingTextId(el.id)}>
+                  {editingTextId === el.id ? (
+                    <textarea value={el.content || ''} autoFocus
+                      onChange={e => updateElement(el.id, { content: e.target.value })}
+                      onBlur={() => setEditingTextId(null)}
+                      className="w-full h-full bg-transparent border-none outline-none resize-none"
+                      style={{ fontSize: el.fontSize || 14, color: el.color || '#000' }} />
+                  ) : (
+                    <div style={{ fontSize: el.fontSize || 14, color: el.color || '#000', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                      {el.content || 'Double-cliquez pour écrire...'}
+                    </div>
+                  )}
+                </div>
+                {renderResizeHandles(el)}
+              </div>
+            </div>
+          );
+        }
         return (
           <div key={el.id} style={{ ...style, backgroundColor: el.stickyColor || '#fef08a', outline, borderRadius: 4, boxShadow: '2px 4px 12px rgba(0,0,0,0.1)', padding: 12, cursor: isPreview ? 'default' : 'move' }}
             onClick={() => !isPreview && setSelectedId(el.id)}
@@ -402,6 +568,30 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
           </div>
         );
       case 'text':
+        if (isSelected) {
+          return (
+            <div key={el.id} style={{ ...style, position: 'absolute' }}>
+              <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <div style={{ width: '100%', height: '100%', outline, cursor: 'move' }}
+                  onClick={() => setSelectedId(el.id)}
+                  onDoubleClick={() => setEditingTextId(el.id)}>
+                  {editingTextId === el.id ? (
+                    <input value={el.content || ''} autoFocus
+                      onChange={e => updateElement(el.id, { content: e.target.value })}
+                      onBlur={() => setEditingTextId(null)}
+                      className="w-full bg-transparent border-none outline-none"
+                      style={{ fontSize: el.fontSize || 18, fontWeight: el.fontWeight || 'normal', color: el.color || '#000' }} />
+                  ) : (
+                    <div style={{ fontSize: el.fontSize || 18, fontWeight: el.fontWeight || 'normal', color: el.color || '#000', whiteSpace: 'nowrap' }}>
+                      {el.content || 'Texte'}
+                    </div>
+                  )}
+                </div>
+                {renderResizeHandles(el)}
+              </div>
+            </div>
+          );
+        }
         return (
           <div key={el.id} style={{ ...style, outline, cursor: isPreview ? 'default' : 'move' }}
             onClick={() => !isPreview && setSelectedId(el.id)}
@@ -420,60 +610,180 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
           </div>
         );
       case 'rectangle':
+        if (isSelected) {
+          return (
+            <div key={el.id} style={{ ...style, position: 'absolute' }}>
+              <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <div style={{ width: '100%', height: '100%', backgroundColor: el.backgroundColor || '#3b82f6', border: `${el.borderWidth || 2}px solid ${el.borderColor || '#1e40af'}`, borderRadius: 4, outline, cursor: 'move' }}
+                  onClick={() => setSelectedId(el.id)} />
+                {renderResizeHandles(el)}
+              </div>
+            </div>
+          );
+        }
         return (
           <div key={el.id} style={{ ...style, backgroundColor: el.backgroundColor || '#3b82f6', border: `${el.borderWidth || 2}px solid ${el.borderColor || '#1e40af'}`, borderRadius: 4, outline, cursor: isPreview ? 'default' : 'move' }}
             onClick={() => !isPreview && setSelectedId(el.id)} />
         );
       case 'circle':
+        if (isSelected) {
+          return (
+            <div key={el.id} style={{ ...style, position: 'absolute' }}>
+              <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <div style={{ width: '100%', height: '100%', backgroundColor: el.backgroundColor || '#3b82f6', border: `${el.borderWidth || 2}px solid ${el.borderColor || '#1e40af'}`, borderRadius: '50%', outline, cursor: 'move' }}
+                  onClick={() => setSelectedId(el.id)} />
+                {renderResizeHandles(el)}
+              </div>
+            </div>
+          );
+        }
         return (
           <div key={el.id} style={{ ...style, backgroundColor: el.backgroundColor || '#3b82f6', border: `${el.borderWidth || 2}px solid ${el.borderColor || '#1e40af'}`, borderRadius: '50%', outline, cursor: isPreview ? 'default' : 'move' }}
             onClick={() => !isPreview && setSelectedId(el.id)} />
         );
-      case 'triangle':
-        return (
-          <svg key={el.id} style={{ ...style, overflow: 'visible', cursor: isPreview ? 'default' : 'move' }}
-            onClick={() => !isPreview && setSelectedId(el.id)}>
+      case 'triangle': {
+        const svgContent = (
+          <>
             <polygon points={`${el.width/2},0 ${el.width},${el.height} 0,${el.height}`}
               fill={el.backgroundColor || '#3b82f6'} stroke={el.borderColor || '#1e40af'} strokeWidth={el.borderWidth || 2} />
             {isSelected && <rect x="-2" y="-2" width={el.width + 4} height={el.height + 4} fill="none" stroke="hsl(var(--primary))" strokeWidth="2" />}
-          </svg>
+          </>
         );
-      case 'diamond':
+        if (isSelected) {
+          return (
+            <div key={el.id} style={{ ...style, position: 'absolute' }}>
+              <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <svg style={{ width: '100%', height: '100%', overflow: 'visible', cursor: 'move' }}
+                  onClick={() => setSelectedId(el.id)}>
+                  {svgContent}
+                </svg>
+                {renderResizeHandles(el)}
+              </div>
+            </div>
+          );
+        }
         return (
           <svg key={el.id} style={{ ...style, overflow: 'visible', cursor: isPreview ? 'default' : 'move' }}
             onClick={() => !isPreview && setSelectedId(el.id)}>
+            {svgContent}
+          </svg>
+        );
+      }
+      case 'diamond': {
+        const svgContent = (
+          <>
             <polygon points={`${el.width/2},0 ${el.width},${el.height/2} ${el.width/2},${el.height} 0,${el.height/2}`}
               fill={el.backgroundColor || '#8b5cf6'} stroke={el.borderColor || '#6d28d9'} strokeWidth={el.borderWidth || 2} />
             {isSelected && <rect x="-2" y="-2" width={el.width + 4} height={el.height + 4} fill="none" stroke="hsl(var(--primary))" strokeWidth="2" />}
+          </>
+        );
+        if (isSelected) {
+          return (
+            <div key={el.id} style={{ ...style, position: 'absolute' }}>
+              <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <svg style={{ width: '100%', height: '100%', overflow: 'visible', cursor: 'move' }}
+                  viewBox={`0 0 ${el.width} ${el.height}`}
+                  onClick={() => setSelectedId(el.id)}>
+                  {svgContent}
+                </svg>
+                {renderResizeHandles(el)}
+              </div>
+            </div>
+          );
+        }
+        return (
+          <svg key={el.id} style={{ ...style, overflow: 'visible', cursor: isPreview ? 'default' : 'move' }}
+            onClick={() => !isPreview && setSelectedId(el.id)}>
+            {svgContent}
           </svg>
         );
-      case 'star':
+      }
+      case 'star': {
         const starPoints = Array.from({ length: 10 }, (_, i) => {
           const angle = (Math.PI / 5) * i - Math.PI / 2;
           const r = i % 2 === 0 ? Math.min(el.width, el.height) / 2 : Math.min(el.width, el.height) / 4;
           return `${el.width/2 + r * Math.cos(angle)},${el.height/2 + r * Math.sin(angle)}`;
         }).join(' ');
+        const svgContent = (
+          <>
+            <polygon points={starPoints} fill={el.backgroundColor || '#f59e0b'} stroke={el.borderColor || '#d97706'} strokeWidth={el.borderWidth || 2} />
+            {isSelected && <rect x="-2" y="-2" width={el.width + 4} height={el.height + 4} fill="none" stroke="hsl(var(--primary))" strokeWidth="2" />}
+          </>
+        );
+        if (isSelected) {
+          return (
+            <div key={el.id} style={{ ...style, position: 'absolute' }}>
+              <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <svg style={{ width: '100%', height: '100%', overflow: 'visible', cursor: 'move' }}
+                  viewBox={`0 0 ${el.width} ${el.height}`}
+                  onClick={() => setSelectedId(el.id)}>
+                  {svgContent}
+                </svg>
+                {renderResizeHandles(el)}
+              </div>
+            </div>
+          );
+        }
         return (
           <svg key={el.id} style={{ ...style, overflow: 'visible', cursor: isPreview ? 'default' : 'move' }}
             onClick={() => !isPreview && setSelectedId(el.id)}>
-            <polygon points={starPoints} fill={el.backgroundColor || '#f59e0b'} stroke={el.borderColor || '#d97706'} strokeWidth={el.borderWidth || 2} />
-            {isSelected && <rect x="-2" y="-2" width={el.width + 4} height={el.height + 4} fill="none" stroke="hsl(var(--primary))" strokeWidth="2" />}
+            {svgContent}
           </svg>
         );
-      case 'hexagon':
+      }
+      case 'hexagon': {
         const hexPoints = Array.from({ length: 6 }, (_, i) => {
           const angle = (Math.PI / 3) * i - Math.PI / 6;
           return `${el.width/2 + el.width/2 * Math.cos(angle)},${el.height/2 + el.height/2 * Math.sin(angle)}`;
         }).join(' ');
+        const svgContent = (
+          <>
+            <polygon points={hexPoints} fill={el.backgroundColor || '#06b6d4'} stroke={el.borderColor || '#0891b2'} strokeWidth={el.borderWidth || 2} />
+            {isSelected && <rect x="-2" y="-2" width={el.width + 4} height={el.height + 4} fill="none" stroke="hsl(var(--primary))" strokeWidth="2" />}
+          </>
+        );
+        if (isSelected) {
+          return (
+            <div key={el.id} style={{ ...style, position: 'absolute' }}>
+              <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <svg style={{ width: '100%', height: '100%', overflow: 'visible', cursor: 'move' }}
+                  viewBox={`0 0 ${el.width} ${el.height}`}
+                  onClick={() => setSelectedId(el.id)}>
+                  {svgContent}
+                </svg>
+                {renderResizeHandles(el)}
+              </div>
+            </div>
+          );
+        }
         return (
           <svg key={el.id} style={{ ...style, overflow: 'visible', cursor: isPreview ? 'default' : 'move' }}
             onClick={() => !isPreview && setSelectedId(el.id)}>
-            <polygon points={hexPoints} fill={el.backgroundColor || '#06b6d4'} stroke={el.borderColor || '#0891b2'} strokeWidth={el.borderWidth || 2} />
-            {isSelected && <rect x="-2" y="-2" width={el.width + 4} height={el.height + 4} fill="none" stroke="hsl(var(--primary))" strokeWidth="2" />}
+            {svgContent}
           </svg>
         );
+      }
       case 'line':
       case 'arrow':
+        if (isSelected) {
+          return (
+            <div key={el.id} style={{ ...style, position: 'absolute' }}>
+              <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <svg style={{ width: '100%', height: '100%', overflow: 'visible', cursor: 'move' }}
+                  onClick={() => setSelectedId(el.id)}>
+                  <line x1="0" y1={el.height / 2} x2={el.width} y2={el.height / 2}
+                    stroke={el.borderColor || '#000'} strokeWidth={el.borderWidth || 2} />
+                  {el.type === 'arrow' && (
+                    <polygon points={`${el.width},${el.height/2} ${el.width - 12},${el.height/2 - 6} ${el.width - 12},${el.height/2 + 6}`}
+                      fill={el.borderColor || '#000'} />
+                  )}
+                  <rect x="-2" y="-2" width={el.width + 4} height={el.height + 4} fill="none" stroke="hsl(var(--primary))" strokeWidth="2" />
+                </svg>
+                {renderResizeHandles(el)}
+              </div>
+            </div>
+          );
+        }
         return (
           <svg key={el.id} style={{ ...style, overflow: 'visible', cursor: isPreview ? 'default' : 'move' }}
             onClick={() => !isPreview && setSelectedId(el.id)}>
@@ -483,7 +793,6 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
               <polygon points={`${el.width},${el.height/2} ${el.width - 12},${el.height/2 - 6} ${el.width - 12},${el.height/2 + 6}`}
                 fill={el.borderColor || '#000'} />
             )}
-            {isSelected && <rect x="-2" y="-2" width={el.width + 4} height={el.height + 4} fill="none" stroke="hsl(var(--primary))" strokeWidth="2" />}
           </svg>
         );
       default:
@@ -491,13 +800,14 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
     }
   };
 
-  const tools: { id: Tool; icon: React.ReactNode; label: string; shortcut: string }[] = [
+  const tools_list: { id: Tool; icon: React.ReactNode; label: string; shortcut: string }[] = [
     { id: 'select', icon: <MousePointer className="h-4 w-4" />, label: 'Sélectionner', shortcut: 'V' },
     { id: 'pan', icon: <Hand className="h-4 w-4" />, label: 'Déplacer', shortcut: 'H' },
     { id: 'draw', icon: <Pencil className="h-4 w-4" />, label: 'Dessin libre', shortcut: 'P' },
     { id: 'eraser', icon: <Eraser className="h-4 w-4" />, label: 'Gomme', shortcut: 'E' },
     { id: 'text', icon: <Type className="h-4 w-4" />, label: 'Texte', shortcut: 'T' },
     { id: 'sticky', icon: <StickyNote className="h-4 w-4" />, label: 'Post-it', shortcut: 'N' },
+    { id: 'image', icon: <ImageIcon className="h-4 w-4" />, label: 'Image', shortcut: 'I' },
     { id: 'rectangle', icon: <Square className="h-4 w-4" />, label: 'Rectangle', shortcut: 'R' },
     { id: 'circle', icon: <Circle className="h-4 w-4" />, label: 'Cercle', shortcut: 'C' },
     { id: 'triangle', icon: <Triangle className="h-4 w-4" />, label: 'Triangle', shortcut: '' },
@@ -510,6 +820,9 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] bg-background">
+      {/* Hidden image input */}
+      <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageImport} />
+
       {/* Top bar */}
       <div className="flex items-center gap-2 px-3 py-1.5 border-b bg-card shrink-0">
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}><ArrowLeft className="h-4 w-4" /></Button>
@@ -547,10 +860,10 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
 
       <div className="flex flex-1 overflow-hidden">
         {/* Left toolbar */}
-        <div className="w-12 border-r bg-card flex flex-col items-center py-2 gap-0.5 shrink-0">
-          {tools.map(t => (
-            <button key={t.id} onClick={() => setTool(t.id)}
-              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${tool === t.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-foreground/70'}`}
+        <div className="w-12 border-r bg-card flex flex-col items-center py-2 gap-0.5 shrink-0 overflow-y-auto">
+          {tools_list.map(t => (
+            <button key={t.id} onClick={() => { setTool(t.id); if (t.id === 'image') imageInputRef.current?.click(); }}
+              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors shrink-0 ${tool === t.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-foreground/70'}`}
               title={`${t.label}${t.shortcut ? ` (${t.shortcut})` : ''}`}>
               {t.icon}
             </button>
@@ -559,7 +872,7 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
 
         {/* Canvas */}
         <div className="flex-1 overflow-hidden relative"
-          style={{ cursor: tool === 'pan' ? 'grab' : tool === 'draw' ? 'crosshair' : tool === 'eraser' ? 'cell' : tool === 'select' ? 'default' : 'crosshair' }}>
+          style={{ cursor: resizing ? HANDLE_CURSORS[resizing.handle] : tool === 'pan' ? 'grab' : tool === 'draw' ? 'crosshair' : tool === 'eraser' ? 'cell' : tool === 'select' ? 'default' : 'crosshair' }}>
           <div ref={canvasRef} className="absolute inset-0"
             onMouseDown={handleCanvasMouseDown}
             onMouseMove={handleCanvasMouseMove}
@@ -589,31 +902,45 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
         </div>
 
         {/* Right panel */}
-        <div className="w-52 border-l bg-card overflow-y-auto hidden md:block shrink-0">
+        <div className="w-56 border-l bg-card overflow-y-auto hidden md:block shrink-0">
           <div className="p-3 space-y-4">
-            {/* Color */}
+            {/* Stroke Color */}
             <div>
               <h4 className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1"><Palette className="h-3 w-3" /> Couleur trait</h4>
-              <div className="grid grid-cols-5 gap-1">
-                {PEN_COLORS.map(c => (
-                  <button key={c} onClick={() => setCurrentColor(c)}
-                    className={`w-full aspect-square rounded-md border-2 transition-all ${currentColor === c ? 'border-primary scale-90' : 'border-border hover:border-primary/30'}`}
+              <div className="grid grid-cols-6 gap-1">
+                {EXTENDED_COLORS.map(c => (
+                  <button key={`stroke-${c}`} onClick={() => setCurrentColor(c)}
+                    className={`w-full aspect-square rounded-md border-2 transition-all ${currentColor === c ? 'border-primary scale-90' : 'border-transparent hover:border-primary/30'}`}
                     style={{ backgroundColor: c }} />
                 ))}
               </div>
+              <div className="mt-2 flex items-center gap-2">
+                <label className="text-[10px] text-muted-foreground">Personnalisée:</label>
+                <input type="color" value={currentColor} onChange={e => setCurrentColor(e.target.value)}
+                  className="w-8 h-6 rounded border border-border cursor-pointer" />
+                <span className="text-[10px] text-muted-foreground font-mono">{currentColor}</span>
+              </div>
             </div>
 
+            {/* Fill Color */}
             <div>
               <h4 className="text-xs font-semibold text-muted-foreground mb-2">Remplissage</h4>
-              <div className="grid grid-cols-5 gap-1">
-                {SHAPE_COLORS.map(c => (
-                  <button key={c} onClick={() => setCurrentBgColor(c)}
-                    className={`w-full aspect-square rounded-md border-2 transition-all ${currentBgColor === c ? 'border-primary scale-90' : 'border-border hover:border-primary/30'}`}
+              <div className="grid grid-cols-6 gap-1">
+                {EXTENDED_COLORS.map(c => (
+                  <button key={`fill-${c}`} onClick={() => setCurrentBgColor(c)}
+                    className={`w-full aspect-square rounded-md border-2 transition-all ${currentBgColor === c ? 'border-primary scale-90' : 'border-transparent hover:border-primary/30'}`}
                     style={{ backgroundColor: c }} />
                 ))}
               </div>
+              <div className="mt-2 flex items-center gap-2">
+                <label className="text-[10px] text-muted-foreground">Personnalisée:</label>
+                <input type="color" value={currentBgColor} onChange={e => setCurrentBgColor(e.target.value)}
+                  className="w-8 h-6 rounded border border-border cursor-pointer" />
+                <span className="text-[10px] text-muted-foreground font-mono">{currentBgColor}</span>
+              </div>
             </div>
 
+            {/* Stroke Width */}
             <div>
               <h4 className="text-xs font-semibold text-muted-foreground mb-2">Épaisseur</h4>
               <div className="flex items-center gap-1">
@@ -626,6 +953,7 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
               </div>
             </div>
 
+            {/* Board Background */}
             <div>
               <h4 className="text-xs font-semibold text-muted-foreground mb-2">Fond du tableau</h4>
               <div className="grid grid-cols-5 gap-1">
@@ -635,11 +963,50 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
                     style={{ backgroundColor: c }} />
                 ))}
               </div>
+              <div className="mt-2 flex items-center gap-2">
+                <label className="text-[10px] text-muted-foreground">Personnalisée:</label>
+                <input type="color" value={board.background} onChange={e => { setBoard(prev => ({ ...prev, background: e.target.value })); scheduleAutoSave(); }}
+                  className="w-8 h-6 rounded border border-border cursor-pointer" />
+              </div>
             </div>
 
+            {/* Selected element properties */}
             {selectedEl && (
               <div className="pt-3 border-t space-y-2">
                 <h4 className="text-xs font-semibold text-muted-foreground">Élément sélectionné</h4>
+
+                {/* Size controls */}
+                <div className="grid grid-cols-2 gap-1">
+                  <div>
+                    <label className="text-[10px] text-muted-foreground">Largeur</label>
+                    <Input type="number" value={Math.round(selectedEl.width)} min={20}
+                      onChange={e => updateElement(selectedEl.id, { width: parseInt(e.target.value) || 20 })}
+                      className="h-7 text-xs" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground">Hauteur</label>
+                    <Input type="number" value={Math.round(selectedEl.height)} min={20}
+                      onChange={e => updateElement(selectedEl.id, { height: parseInt(e.target.value) || 20 })}
+                      className="h-7 text-xs" />
+                  </div>
+                </div>
+
+                {/* Element-specific color */}
+                {['rectangle', 'circle', 'triangle', 'diamond', 'star', 'hexagon'].includes(selectedEl.type) && (
+                  <div>
+                    <label className="text-[10px] text-muted-foreground">Couleur de l'élément</label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <input type="color" value={selectedEl.backgroundColor || '#3b82f6'}
+                        onChange={e => updateElement(selectedEl.id, { backgroundColor: e.target.value })}
+                        className="w-8 h-6 rounded border border-border cursor-pointer" />
+                      <input type="color" value={selectedEl.borderColor || '#000000'}
+                        onChange={e => updateElement(selectedEl.id, { borderColor: e.target.value })}
+                        className="w-8 h-6 rounded border border-border cursor-pointer" />
+                      <span className="text-[10px] text-muted-foreground">Fond / Bord</span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-1">
                   <Button size="sm" variant="outline" onClick={duplicateElement} className="flex-1 text-[10px] gap-1 h-7">
                     <Copy className="h-3 w-3" /> Dupliquer
@@ -663,6 +1030,12 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
                           style={{ backgroundColor: c }} />
                       ))}
                     </div>
+                    <div className="mt-1 flex items-center gap-2">
+                      <input type="color" value={selectedEl.stickyColor || '#fef08a'}
+                        onChange={e => updateElement(selectedEl.id, { stickyColor: e.target.value })}
+                        className="w-8 h-6 rounded border border-border cursor-pointer" />
+                      <span className="text-[10px] text-muted-foreground">Couleur libre</span>
+                    </div>
                   </div>
                 )}
 
@@ -674,6 +1047,14 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
                       className="h-7 text-xs" />
                   </div>
                 )}
+
+                {/* Opacity */}
+                <div>
+                  <h4 className="text-xs font-semibold text-muted-foreground mb-1">Opacité</h4>
+                  <input type="range" min="0.1" max="1" step="0.05" value={selectedEl.opacity ?? 1}
+                    onChange={e => updateElement(selectedEl.id, { opacity: parseFloat(e.target.value) })}
+                    className="w-full h-1.5 accent-primary" />
+                </div>
               </div>
             )}
 
