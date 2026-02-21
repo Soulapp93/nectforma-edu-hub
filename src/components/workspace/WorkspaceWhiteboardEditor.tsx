@@ -819,20 +819,20 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
   ];
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-background">
+    <div className="workspace-editor">
       {/* Hidden image input */}
       <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageImport} />
 
       {/* Top bar */}
-      <div className="flex items-center gap-2 px-3 py-1.5 border-b bg-card shrink-0">
+      <div className="workspace-header">
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}><ArrowLeft className="h-4 w-4" /></Button>
         <Input value={title} onChange={e => setTitle(e.target.value)}
-          className="max-w-xs border-none shadow-none text-base font-semibold focus-visible:ring-0 px-1 h-8" placeholder="Sans titre" />
+          className="workspace-title-input focus-visible:ring-0" placeholder="Sans titre" />
         <div className="flex items-center gap-0.5 ml-1">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={undo} disabled={historyIdx <= 0} title="Annuler (Ctrl+Z)"><Undo2 className="h-3.5 w-3.5" /></Button>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={redo} disabled={historyIdx >= history.length - 1} title="Rétablir (Ctrl+Y)"><Redo2 className="h-3.5 w-3.5" /></Button>
         </div>
-        <div className="w-px h-5 bg-border mx-1" />
+        <div className="workspace-separator" />
         <div className="flex items-center gap-0.5">
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setZoom(z => Math.max(0.1, z - 0.1))}><ZoomOut className="h-3.5 w-3.5" /></Button>
           <span className="text-xs text-muted-foreground w-10 text-center">{Math.round(zoom * 100)}%</span>
@@ -847,7 +847,7 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
             <Users className="h-3 w-3" /> Partagé
           </Badge>
         )}
-        <span className="text-xs text-muted-foreground hidden sm:block">{saving ? 'Sauvegarde...' : '✓ Sauvé'}</span>
+        <span className="workspace-save-status">{saving ? 'Sauvegarde...' : '✓ Sauvé'}</span>
         {isOwner && (
           <Button size="sm" variant="outline" onClick={() => setShowShareModal(true)} className="gap-1 h-7 text-xs">
             <Share2 className="h-3 w-3" /> Partager
@@ -860,10 +860,10 @@ const WorkspaceWhiteboardEditor: React.FC<Props> = ({ document: doc, onSave, onC
 
       <div className="flex flex-1 overflow-hidden">
         {/* Left toolbar */}
-        <div className="w-12 border-r bg-card flex flex-col items-center py-2 gap-0.5 shrink-0 overflow-y-auto">
+        <div className="workspace-sidebar w-12 flex flex-col items-center py-2 gap-0.5">
           {tools_list.map(t => (
             <button key={t.id} onClick={() => { setTool(t.id); if (t.id === 'image') imageInputRef.current?.click(); }}
-              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors shrink-0 ${tool === t.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-foreground/70'}`}
+              className={`workspace-sidebar-btn w-9 h-9 shrink-0 ${tool === t.id ? 'active' : ''}`}
               title={`${t.label}${t.shortcut ? ` (${t.shortcut})` : ''}`}>
               {t.icon}
             </button>

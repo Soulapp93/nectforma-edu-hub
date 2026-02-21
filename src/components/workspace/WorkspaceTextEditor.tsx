@@ -624,19 +624,19 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
   }, []);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-background print:h-auto print:overflow-visible">
+    <div className="workspace-editor print:h-auto print:overflow-visible">
       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
       <input ref={importFileRef} type="file" accept=".docx,.doc" className="hidden" onChange={handleImportDocx} />
 
-      {/* Google Docs style menu bar */}
-      <div className="flex items-center gap-1 px-2 py-1 border-b bg-card print:hidden">
+      {/* Header bar */}
+      <div className="workspace-header print:hidden">
         <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 shrink-0">
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <Input
           value={title}
           onChange={e => setTitle(e.target.value)}
-          className="max-w-xs border-none shadow-none text-base font-semibold focus-visible:ring-0 px-1 h-8"
+          className="workspace-title-input focus-visible:ring-0"
           placeholder="Sans titre"
         />
         <div className="flex-1" />
@@ -645,7 +645,7 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
             <Users className="h-3 w-3" /> Partagé
           </Badge>
         )}
-        <span className="text-[11px] text-muted-foreground hidden sm:block">
+        <span className="workspace-save-status">
           {saving ? 'Enregistrement...' : '✓ Enregistré'}
         </span>
         {isOwner && (
@@ -656,10 +656,10 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
       </div>
 
       {/* Menu bar - Google Docs style */}
-      <div className="flex items-center gap-0.5 px-3 py-0.5 border-b bg-card text-xs print:hidden">
+      <div className="workspace-menubar print:hidden">
         {/* Fichier */}
         <DropdownMenu>
-          <DropdownMenuTrigger className="px-2 py-1 rounded hover:bg-muted transition-colors">Fichier</DropdownMenuTrigger>
+          <DropdownMenuTrigger className="workspace-menu-trigger">Fichier</DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-[200px]">
             <DropdownMenuItem onClick={handleSave}><Save className="h-3.5 w-3.5 mr-2" />Enregistrer <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+S</span></DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -676,7 +676,7 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
 
         {/* Édition */}
         <DropdownMenu>
-          <DropdownMenuTrigger className="px-2 py-1 rounded hover:bg-muted transition-colors">Édition</DropdownMenuTrigger>
+          <DropdownMenuTrigger className="workspace-menu-trigger">Édition</DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-[200px]">
             <DropdownMenuItem onClick={() => execCommand('undo')}><Undo2 className="h-3.5 w-3.5 mr-2" />Annuler <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+Z</span></DropdownMenuItem>
             <DropdownMenuItem onClick={() => execCommand('redo')}><Redo2 className="h-3.5 w-3.5 mr-2" />Rétablir <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+Y</span></DropdownMenuItem>
@@ -693,7 +693,7 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
 
         {/* Affichage */}
         <DropdownMenu>
-          <DropdownMenuTrigger className="px-2 py-1 rounded hover:bg-muted transition-colors">Affichage</DropdownMenuTrigger>
+          <DropdownMenuTrigger className="workspace-menu-trigger">Affichage</DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-[200px]">
             <DropdownMenuItem onClick={() => setShowRuler(!showRuler)}>
               {showRuler ? '✓ ' : '  '}Règle
@@ -719,7 +719,7 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
 
         {/* Insertion */}
         <DropdownMenu>
-          <DropdownMenuTrigger className="px-2 py-1 rounded hover:bg-muted transition-colors">Insertion</DropdownMenuTrigger>
+          <DropdownMenuTrigger className="workspace-menu-trigger">Insertion</DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-[200px]">
             <DropdownMenuItem onClick={insertImageFromFile}><Image className="h-3.5 w-3.5 mr-2" />Image (fichier)</DropdownMenuItem>
             <DropdownMenuItem onClick={insertImageFromUrl}><Image className="h-3.5 w-3.5 mr-2" />Image (URL)</DropdownMenuItem>
@@ -763,7 +763,7 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
 
         {/* Format */}
         <DropdownMenu>
-          <DropdownMenuTrigger className="px-2 py-1 rounded hover:bg-muted transition-colors">Format</DropdownMenuTrigger>
+          <DropdownMenuTrigger className="workspace-menu-trigger">Format</DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-[200px]">
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>Texte</DropdownMenuSubTrigger>
@@ -810,7 +810,7 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
 
         {/* Outils */}
         <DropdownMenu>
-          <DropdownMenuTrigger className="px-2 py-1 rounded hover:bg-muted transition-colors">Outils</DropdownMenuTrigger>
+          <DropdownMenuTrigger className="workspace-menu-trigger">Outils</DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-[200px]">
             <DropdownMenuItem onClick={() => setShowFindReplace(true)}><Search className="h-3.5 w-3.5 mr-2" />Rechercher et remplacer</DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -826,7 +826,7 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
       </div>
 
       {/* Main Toolbar - Google Docs style */}
-      <div className="flex items-center flex-wrap gap-0.5 px-2 py-1 border-b bg-muted/30 overflow-x-auto print:hidden">
+      <div className="workspace-toolbar flex-wrap print:hidden">
         <TB onClick={() => execCommand('undo')} title="Annuler (Ctrl+Z)"><Undo2 className="h-3.5 w-3.5" /></TB>
         <TB onClick={() => execCommand('redo')} title="Rétablir (Ctrl+Y)"><Redo2 className="h-3.5 w-3.5" /></TB>
         <TB onClick={handlePrint} title="Imprimer"><Printer className="h-3.5 w-3.5" /></TB>

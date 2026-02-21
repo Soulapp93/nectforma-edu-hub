@@ -321,12 +321,12 @@ const WorkspaceVisualEditor: React.FC<Props> = ({ document: doc, onSave, onClose
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-background">
+    <div className="workspace-editor">
       {/* Top bar */}
-      <div className="flex items-center gap-3 px-4 py-2 border-b bg-card">
+      <div className="workspace-header">
         <input ref={importFileRef} type="file" accept=".png,.jpg,.jpeg,.gif,.webp,.svg,.pdf" className="hidden" onChange={handleImportVisual} />
         <Button variant="ghost" size="icon" onClick={onClose}><ArrowLeft className="h-4 w-4" /></Button>
-        <Input value={title} onChange={e => setTitle(e.target.value)} className="max-w-md border-none shadow-none text-lg font-semibold focus-visible:ring-0 px-1" placeholder="Titre" />
+        <Input value={title} onChange={e => setTitle(e.target.value)} className="workspace-title-input focus-visible:ring-0" placeholder="Titre" />
         <Button size="sm" variant="outline" onClick={() => importFileRef.current?.click()} disabled={importingFile} className="gap-1.5 text-xs">
           <Upload className="h-4 w-4" /> {importingFile ? 'Import...' : 'Importer'}
         </Button>
@@ -350,21 +350,21 @@ const WorkspaceVisualEditor: React.FC<Props> = ({ document: doc, onSave, onClose
             {PRESET_SIZES.map(s => <SelectItem key={`${s.w}x${s.h}`} value={`${s.w}x${s.h}`}>{s.label} ({s.w}×{s.h})</SelectItem>)}
           </SelectContent>
         </Select>
-        <span className="text-xs text-muted-foreground hidden sm:block">{saving ? 'Sauvegarde...' : 'Auto-sauvegarde'}</span>
+        <span className="workspace-save-status">{saving ? 'Sauvegarde...' : 'Auto-sauvegarde'}</span>
         <Button size="sm" onClick={handleSave} disabled={saving} className="gap-1.5">
           <Save className="h-4 w-4" /> Sauvegarder
         </Button>
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center gap-1 px-4 py-1.5 border-b bg-card/50 overflow-x-auto">
+      <div className="workspace-toolbar">
         <Button size="sm" variant="ghost" onClick={() => addElement('text')} className="text-xs gap-1"><Type className="h-3.5 w-3.5" /> Texte</Button>
         <Button size="sm" variant="ghost" onClick={addImage} className="text-xs gap-1"><Image className="h-3.5 w-3.5" /> Image</Button>
         <Button size="sm" variant="ghost" onClick={() => addElement('rectangle')} className="text-xs gap-1"><Square className="h-3.5 w-3.5" /> Rectangle</Button>
         <Button size="sm" variant="ghost" onClick={() => addElement('circle')} className="text-xs gap-1"><Circle className="h-3.5 w-3.5" /> Cercle</Button>
         <Button size="sm" variant="ghost" onClick={() => addElement('triangle')} className="text-xs gap-1"><Triangle className="h-3.5 w-3.5" /> Triangle</Button>
         <Button size="sm" variant="ghost" onClick={() => addElement('line')} className="text-xs gap-1"><Minus className="h-3.5 w-3.5" /> Ligne</Button>
-        <div className="w-px h-5 bg-border mx-1" />
+        <div className="workspace-separator" />
         {selectedEl && (
           <>
             {selectedEl.type === 'text' && (
