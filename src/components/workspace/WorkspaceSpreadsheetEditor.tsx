@@ -14,7 +14,9 @@ import {
   PlusCircle, MinusCircle, ArrowUpDown, Columns, Rows, MoreHorizontal, X, Upload,
   Strikethrough, MessageSquare, List, Palette, ArrowDownUp, Replace, Square,
   AlignVerticalJustifyStart, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd,
-  RotateCcw, IndentIncrease, IndentDecrease, Share2, Users,
+  RotateCcw, IndentIncrease, IndentDecrease, Share2, Users, Printer,
+  Maximize2, Minimize2, CheckSquare, Link, ZoomIn, ZoomOut, Eraser,
+  Table, BarChart, Hash, Sigma, FunctionSquare, HelpCircle, Settings,
 } from 'lucide-react';
 import ShareDocumentModal from './ShareDocumentModal';
 import {
@@ -179,6 +181,9 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
   const [autoFillStart, setAutoFillStart] = useState<string | null>(null);
   const [isAutoFilling, setIsAutoFilling] = useState(false);
   const [autoFillEnd, setAutoFillEnd] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(100);
+  const [showGridLines, setShowGridLines] = useState(true);
 
   // Conditional format panel state
   const [cfType, setCfType] = useState<'greaterThan' | 'lessThan' | 'equal' | 'between' | 'text' | 'blank' | 'notBlank'>('greaterThan');
@@ -460,6 +465,8 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
         if (e.key === 'b' && selectedCell) { e.preventDefault(); toggleFormat('bold'); }
         if (e.key === 'i' && selectedCell) { e.preventDefault(); toggleFormat('italic'); }
         if (e.key === 'u' && selectedCell) { e.preventDefault(); toggleFormat('underline'); }
+        if (e.key === '\\' && selectedCell) { e.preventDefault(); clearFormatting(); }
+        if (e.key === 'h') { e.preventDefault(); setShowSearch(true); setShowFindReplace(true); }
         if (e.key === 'a' && !editingCell) {
           e.preventDefault();
           // Select all
@@ -924,6 +931,91 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
       }
       scheduleAutoSave();
     }
+  };
+
+  // --- Clear formatting ---
+  const clearFormatting = () => {
+    const b = getSelectionBounds();
+    pushHistory();
+    const clear = (key: string) => {
+      updateSheetData(key, {
+        bold: undefined, italic: undefined, underline: undefined, strikethrough: undefined,
+        bgColor: undefined, textColor: undefined, fontSize: undefined, fontFamily: undefined,
+        numberFormat: undefined, border: undefined, indent: undefined, rotation: undefined,
+        verticalAlign: undefined, wrap: undefined, conditionalFormats: undefined,
+      });
+    };
+    if (b) {
+      for (let r = b.r1; r <= b.r2; r++) for (let c = b.c1; c <= b.c2; c++) clear(cellKey(r, c));
+    } else if (selectedCell) clear(selectedCell);
+    scheduleAutoSave();
+    toast.success('Mise en forme effacée');
+  };
+
+  // --- Checkbox toggle ---
+  const toggleCheckbox = () => {
+    if (!selectedCell) return;
+    pushHistory();
+    const cell = data[selectedCell];
+    const currentVal = cell?.value?.toLowerCase();
+    updateSheetData(selectedCell, { value: currentVal === 'true' || currentVal === '☑' ? '☐' : '☑' });
+    scheduleAutoSave();
+  };
+
+  const insertCheckbox = () => {
+    const b = getSelectionBounds();
+    pushHistory();
+    const insert = (key: string) => updateSheetData(key, { value: '☐' });
+    if (b) {
+      for (let r = b.r1; r <= b.r2; r++) for (let c = b.c1; c <= b.c2; c++) insert(cellKey(r, c));
+    } else if (selectedCell) insert(selectedCell);
+    scheduleAutoSave();
+  };
+
+  // --- Print ---
+  const handlePrint = () => {
+    window.print();
+  };
+
+  // --- Fullscreen ---
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen?.();
+      setIsFullscreen(false);
+    }
+  };
+
+  // --- Column statistics ---
+  const showColumnStats = () => {
+    if (!selectedCell) return;
+    const ref = parseCellRef(selectedCell);
+    if (!ref) return;
+    const col = ref[1];
+    const nums: number[] = [];
+    let count = 0;
+    for (let r = 0; r < sheet.numRows; r++) {
+      const val = getCellValue(cellKey(r, col), data);
+      if (val.trim()) {
+        count++;
+        const n = parseFloat(val);
+        if (!isNaN(n)) nums.push(n);
+      }
+    }
+    if (nums.length === 0) {
+      toast.info(`Colonne ${colLetter(col)} : ${count} valeurs (aucune numérique)`);
+      return;
+    }
+    const sum = nums.reduce((a, b) => a + b, 0);
+    const avg = sum / nums.length;
+    const min = Math.min(...nums);
+    const max = Math.max(...nums);
+    toast.info(
+      `Colonne ${colLetter(col)} : ${count} valeurs, ${nums.length} nombres\nSomme: ${sum.toLocaleString('fr-FR')}, Moy: ${avg.toFixed(2)}, Min: ${min}, Max: ${max}`,
+      { duration: 6000 }
+    );
   };
 
   // --- Borders ---
@@ -1457,6 +1549,385 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
         </Button>
       </div>
 
+      {/* Google Sheets-style Menu Bar */}
+      <div className="flex items-center gap-0 px-1 border-b bg-card/95 flex-shrink-0" style={{ height: 28 }}>
+        {/* Fichier */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="px-2.5 py-1 text-xs rounded hover:bg-muted transition-colors">Fichier</button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[220px]">
+            <DropdownMenuItem onClick={addSheet}><Plus className="h-3.5 w-3.5 mr-2" /> Nouvelle feuille</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => importFileRef.current?.click()}>
+              <Upload className="h-3.5 w-3.5 mr-2" /> Importer
+            </DropdownMenuItem>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger><Download className="h-3.5 w-3.5 mr-2" /> Télécharger</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem onClick={exportCSV}>Fichier CSV (.csv)</DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator />
+            {isOwner && (
+              <DropdownMenuItem onClick={() => setShowShareModal(true)}>
+                <Share2 className="h-3.5 w-3.5 mr-2" /> Partager
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => {
+              const nameEl = window.prompt('Renommer le classeur :', title);
+              if (nameEl) setTitle(nameEl);
+            }}>
+              <Type className="h-3.5 w-3.5 mr-2" /> Renommer
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handlePrint}>
+              <Printer className="h-3.5 w-3.5 mr-2" /> Imprimer
+              <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+P</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Édition */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="px-2.5 py-1 text-xs rounded hover:bg-muted transition-colors">Édition</button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[220px]">
+            <DropdownMenuItem onClick={undo}>
+              <Undo2 className="h-3.5 w-3.5 mr-2" /> Annuler
+              <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+Z</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={redo}>
+              <Redo2 className="h-3.5 w-3.5 mr-2" /> Rétablir
+              <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+Y</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleCut}>
+              <Scissors className="h-3.5 w-3.5 mr-2" /> Couper
+              <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+X</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleCopy}>
+              <Copy className="h-3.5 w-3.5 mr-2" /> Copier
+              <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+C</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handlePaste}>
+              <Clipboard className="h-3.5 w-3.5 mr-2" /> Coller
+              <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+V</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => { setShowSearch(true); setShowFindReplace(false); }}>
+              <Search className="h-3.5 w-3.5 mr-2" /> Rechercher
+              <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+F</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => { setShowSearch(true); setShowFindReplace(true); }}>
+              <Replace className="h-3.5 w-3.5 mr-2" /> Rechercher et remplacer
+              <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+H</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleSelectAll}>
+              <Grid3X3 className="h-3.5 w-3.5 mr-2" /> Tout sélectionner
+              <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+A</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => {
+              if (selectedCell) {
+                pushHistory();
+                updateSheetData(selectedCell, { value: '', formula: undefined });
+                scheduleAutoSave();
+              }
+            }}>
+              <Trash2 className="h-3.5 w-3.5 mr-2" /> Supprimer le contenu
+              <span className="ml-auto text-muted-foreground text-[10px]">Suppr</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Affichage */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="px-2.5 py-1 text-xs rounded hover:bg-muted transition-colors">Affichage</button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[220px]">
+            <DropdownMenuItem onClick={() => setShowGridLines(!showGridLines)}>
+              {showGridLines ? <Eye className="h-3.5 w-3.5 mr-2" /> : <EyeOff className="h-3.5 w-3.5 mr-2" />}
+              {showGridLines ? 'Masquer la grille' : 'Afficher la grille'}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger><Lock className="h-3.5 w-3.5 mr-2" /> Figer</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem onClick={freezeAtSelection}>Figer jusqu'à la cellule sélectionnée</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateSheet({ frozenRows: 1, frozenCols: 0 })}>Figer 1 ligne</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateSheet({ frozenRows: 2, frozenCols: 0 })}>Figer 2 lignes</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => updateSheet({ frozenRows: 0, frozenCols: 1 })}>Figer 1 colonne</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={unfreezeAll}><Unlock className="h-3.5 w-3.5 mr-2" /> Défiger tout</DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger><ZoomIn className="h-3.5 w-3.5 mr-2" /> Zoom ({zoomLevel}%)</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {[50, 75, 90, 100, 110, 125, 150, 200].map(z => (
+                  <DropdownMenuItem key={z} onClick={() => setZoomLevel(z)}>
+                    {z}% {z === zoomLevel && '✓'}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuItem onClick={toggleFullscreen}>
+              {isFullscreen ? <Minimize2 className="h-3.5 w-3.5 mr-2" /> : <Maximize2 className="h-3.5 w-3.5 mr-2" />}
+              {isFullscreen ? 'Quitter le plein écran' : 'Plein écran'}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setShowFormulaHelper(!showFormulaHelper)}>
+              <FunctionSquare className="h-3.5 w-3.5 mr-2" /> {showFormulaHelper ? 'Masquer' : 'Afficher'} l'aide formules
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Insertion */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="px-2.5 py-1 text-xs rounded hover:bg-muted transition-colors">Insertion</button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[250px]">
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger><Rows className="h-3.5 w-3.5 mr-2" /> Lignes</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem onClick={() => { const ref = parseCellRef(selectedCell || 'A1'); if (ref) insertRow(ref[0]); }}>
+                  Insérer une ligne au-dessus
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { const ref = parseCellRef(selectedCell || 'A1'); if (ref) insertRow(ref[0] + 1); }}>
+                  Insérer une ligne en-dessous
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger><Columns className="h-3.5 w-3.5 mr-2" /> Colonnes</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem onClick={() => { const ref = parseCellRef(selectedCell || 'A1'); if (ref) insertCol(ref[1]); }}>
+                  Insérer une colonne à gauche
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { const ref = parseCellRef(selectedCell || 'A1'); if (ref) insertCol(ref[1] + 1); }}>
+                  Insérer une colonne à droite
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuItem onClick={addSheet}><Plus className="h-3.5 w-3.5 mr-2" /> Feuille</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={createChart}><BarChart3 className="h-3.5 w-3.5 mr-2" /> Graphique</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger><FunctionSquare className="h-3.5 w-3.5 mr-2" /> Fonction</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="max-h-[300px] overflow-y-auto">
+                {Object.entries(FORMULA_CATEGORIES).map(([cat, formulas]) => (
+                  <DropdownMenuSub key={cat}>
+                    <DropdownMenuSubTrigger className="text-xs">{cat}</DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="max-h-[250px] overflow-y-auto">
+                      {formulas.map(f => (
+                        <DropdownMenuItem key={f} onClick={() => {
+                          if (selectedCell) {
+                            setEditingCell(selectedCell);
+                            const val = `=${f}(`;
+                            setEditValue(val);
+                            setFormulaBarValue(val);
+                            updateSheetData(selectedCell, { formula: val, value: '' });
+                          }
+                        }} className="text-xs font-mono">{f}</DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={insertCheckbox}><CheckSquare className="h-3.5 w-3.5 mr-2" /> Case à cocher</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowDataValidation(true)}><List className="h-3.5 w-3.5 mr-2" /> Liste déroulante</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => {
+              if (selectedCell) { setCommentCell(selectedCell); setCommentText(data[selectedCell]?.comment || ''); }
+            }}>
+              <MessageSquare className="h-3.5 w-3.5 mr-2" /> Commentaire
+              <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+Alt+M</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Format */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="px-2.5 py-1 text-xs rounded hover:bg-muted transition-colors">Format</button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[250px]">
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger><Hash className="h-3.5 w-3.5 mr-2" /> Nombre</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {NUMBER_FORMATS.map(f => (
+                  <DropdownMenuItem key={f.value || 'none'} onClick={() => setNumberFormat(f.value)}>
+                    {f.label} {selectedCellData?.numberFormat === f.value && '✓'}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger><Bold className="h-3.5 w-3.5 mr-2" /> Texte</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem onClick={() => toggleFormat('bold')}>
+                  <Bold className="h-3.5 w-3.5 mr-2" /> Gras
+                  <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+B</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toggleFormat('italic')}>
+                  <Italic className="h-3.5 w-3.5 mr-2" /> Italique
+                  <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+I</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toggleFormat('underline')}>
+                  <Underline className="h-3.5 w-3.5 mr-2" /> Souligné
+                  <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+U</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={toggleStrikethrough}>
+                  <Strikethrough className="h-3.5 w-3.5 mr-2" /> Barré
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger><AlignLeft className="h-3.5 w-3.5 mr-2" /> Alignement</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem onClick={() => setAlignForSelection('left')}><AlignLeft className="h-3.5 w-3.5 mr-2" /> Gauche</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setAlignForSelection('center')}><AlignCenter className="h-3.5 w-3.5 mr-2" /> Centré</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setAlignForSelection('right')}><AlignRight className="h-3.5 w-3.5 mr-2" /> Droite</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setVerticalAlignForSelection('top')}><AlignVerticalJustifyStart className="h-3.5 w-3.5 mr-2" /> Haut</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setVerticalAlignForSelection('middle')}><AlignVerticalJustifyCenter className="h-3.5 w-3.5 mr-2" /> Milieu</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setVerticalAlignForSelection('bottom')}><AlignVerticalJustifyEnd className="h-3.5 w-3.5 mr-2" /> Bas</DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuItem onClick={toggleWrap}>
+              <WrapText className="h-3.5 w-3.5 mr-2" /> Retour automatique à la ligne
+            </DropdownMenuItem>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger><Type className="h-3.5 w-3.5 mr-2" /> Taille de la police</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="max-h-[250px] overflow-y-auto">
+                {FONT_SIZES.map(s => (
+                  <DropdownMenuItem key={s} onClick={() => setFontForSelection('fontSize', s)}>
+                    {s} {selectedCellData?.fontSize === s && '✓'}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger><Merge className="h-3.5 w-3.5 mr-2" /> Fusionner les cellules</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem onClick={mergeCells}><Merge className="h-3.5 w-3.5 mr-2" /> Fusionner</DropdownMenuItem>
+                <DropdownMenuItem onClick={unmergeCells}><SplitSquareHorizontal className="h-3.5 w-3.5 mr-2" /> Défusionner</DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setShowConditionalFormat(true)}>
+              <Palette className="h-3.5 w-3.5 mr-2" /> Mise en forme conditionnelle
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={clearFormatting}>
+              <Eraser className="h-3.5 w-3.5 mr-2" /> Effacer la mise en forme
+              <span className="ml-auto text-muted-foreground text-[10px]">Ctrl+\</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Données */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="px-2.5 py-1 text-xs rounded hover:bg-muted transition-colors">Données</button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[250px]">
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger><SortAsc className="h-3.5 w-3.5 mr-2" /> Trier une feuille</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem onClick={() => {
+                  const ref = parseCellRef(selectedCell || 'A1');
+                  if (ref) sortColumn(ref[1], true);
+                }}>
+                  <SortAsc className="h-3.5 w-3.5 mr-2" /> Trier A → Z
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  const ref = parseCellRef(selectedCell || 'A1');
+                  if (ref) sortColumn(ref[1], false);
+                }}>
+                  <SortDesc className="h-3.5 w-3.5 mr-2" /> Trier Z → A
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => {
+              if (Object.keys(activeFilters).length > 0) {
+                setActiveFilters({});
+                toast.success('Filtres supprimés');
+              } else {
+                toast.info('Cliquez sur les en-têtes de colonnes pour filtrer');
+              }
+            }}>
+              <Filter className="h-3.5 w-3.5 mr-2" /> {Object.keys(activeFilters).length > 0 ? 'Supprimer les filtres' : 'Créer un filtre'}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setShowDataValidation(true)}>
+              <List className="h-3.5 w-3.5 mr-2" /> Validation des données
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={showColumnStats}>
+              <BarChart className="h-3.5 w-3.5 mr-2" /> Statistiques de colonne
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Outils */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="px-2.5 py-1 text-xs rounded hover:bg-muted transition-colors">Outils</button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[200px]">
+            <DropdownMenuItem onClick={() => updateSheet({ numRows: sheet.numRows + 20 })}>
+              <Plus className="h-3.5 w-3.5 mr-2" /> Ajouter 20 lignes
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => updateSheet({ numCols: Math.min(sheet.numCols + 5, 52) })}>
+              <Plus className="h-3.5 w-3.5 mr-2" /> Ajouter 5 colonnes
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setShowFormulaHelper(!showFormulaHelper)}>
+              <FunctionSquare className="h-3.5 w-3.5 mr-2" /> Aide formules ({FORMULA_LIST.length})
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Aide */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="px-2.5 py-1 text-xs rounded hover:bg-muted transition-colors">Aide</button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-[200px]">
+            <DropdownMenuItem onClick={() => setShowFormulaHelper(true)}>
+              <HelpCircle className="h-3.5 w-3.5 mr-2" /> Liste des formules ({FORMULA_LIST.length})
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => toast.info('Raccourcis clavier :\n• Ctrl+B: Gras\n• Ctrl+I: Italique\n• Ctrl+U: Souligné\n• Ctrl+Z: Annuler\n• Ctrl+Y: Rétablir\n• Ctrl+F: Rechercher\n• Ctrl+A: Tout sélectionner\n• F2: Modifier la cellule\n• Tab: Cellule suivante\n• Suppr: Effacer', { duration: 8000 })}>
+              <Settings className="h-3.5 w-3.5 mr-2" /> Raccourcis clavier
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <div className="flex-1" />
+        
+        {/* Zoom control in menu bar */}
+        <div className="flex items-center gap-1 mr-2">
+          <button onClick={() => setZoomLevel(Math.max(50, zoomLevel - 10))} className="p-1 rounded hover:bg-muted">
+            <ZoomOut className="h-3 w-3 text-muted-foreground" />
+          </button>
+          <span className="text-[10px] text-muted-foreground w-8 text-center">{zoomLevel}%</span>
+          <button onClick={() => setZoomLevel(Math.min(200, zoomLevel + 10))} className="p-1 rounded hover:bg-muted">
+            <ZoomIn className="h-3 w-3 text-muted-foreground" />
+          </button>
+        </div>
+      </div>
+
       {/* Main toolbar - Excel ribbon style */}
       <div className="flex items-center gap-0.5 px-2 py-1 border-b bg-card/95 overflow-x-auto flex-shrink-0">
         {/* Undo/Redo */}
@@ -1914,7 +2385,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
       <div className="flex-1 flex overflow-hidden">
         {/* Spreadsheet grid */}
         <div ref={tableRef} className="flex-1 overflow-auto" style={{ cursor: resizingCol !== null || resizingRow !== null ? (resizingCol !== null ? 'col-resize' : 'row-resize') : undefined }}>
-          <table className="border-collapse" style={{ tableLayout: 'fixed' }}>
+          <table className="border-collapse" style={{ tableLayout: 'fixed', transform: zoomLevel !== 100 ? `scale(${zoomLevel / 100})` : undefined, transformOrigin: 'top left' }}>
             <thead className="sticky top-0 z-10">
               <tr>
                 {/* Select all button (top-left corner) */}
@@ -2039,7 +2510,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
                             minWidth: colW,
                             height: rh,
                             backgroundColor: isFormulaRef ? '#e8f0fe' : inSel && !isSelected ? 'rgba(37, 99, 235, 0.08)' : cell?.bgColor || '#ffffff',
-                            border: isSelected ? '2px solid #217346' : '1px solid #d4d4d4',
+                            border: isSelected ? '2px solid #217346' : showGridLines ? '1px solid #d4d4d4' : '1px solid transparent',
                             ...borderStyles,
                             ...selBorder,
                             ...cfStyle,
@@ -2131,7 +2602,14 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
                                 alignItems: cell?.verticalAlign === 'top' ? 'flex-start' : cell?.verticalAlign === 'bottom' ? 'flex-end' : 'center',
                               }}
                             >
-                              {formattedValue}
+                              {(formattedValue === '☐' || formattedValue === '☑') ? (
+                                <span 
+                                  className="cursor-pointer text-base leading-none"
+                                  onClick={(e) => { e.stopPropagation(); pushHistory(); updateSheetData(key, { value: formattedValue === '☐' ? '☑' : '☐' }); scheduleAutoSave(); }}
+                                >
+                                  {formattedValue}
+                                </span>
+                              ) : formattedValue}
                             </div>
                           )}
 
