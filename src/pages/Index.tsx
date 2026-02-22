@@ -725,6 +725,55 @@ const Index = () => {
 
       <SectionDivider variant="curve" flip fillColor="fill-muted/30" />
 
+      {/* Comment ça marche - Timeline Section */}
+      <section className="py-16 md:py-24 relative overflow-hidden">
+        <div className="absolute inset-0" style={{
+          background: 'linear-gradient(180deg, hsl(270 50% 98% / 0.5) 0%, hsl(262 60% 96% / 0.6) 50%, hsl(280 40% 97% / 0.5) 100%)'
+        }} />
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <AnimatedSection className="text-center mb-16">
+            <div className="inline-flex items-center px-4 py-2 bg-primary/10 rounded-full mb-6">
+              <Zap className="h-4 w-4 text-primary mr-2" />
+              <span className="text-primary font-medium text-sm">Simple et rapide</span>
+            </div>
+            <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-6">
+              Comment ça <span className="gradient-text-animated">marche ?</span>
+            </h2>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+              Démarrez en 3 étapes simples et digitalisez votre gestion de formation
+            </p>
+          </AnimatedSection>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 relative">
+            {/* Connecting line */}
+            <div className="hidden md:block absolute top-24 left-[16.5%] right-[16.5%] h-0.5 bg-gradient-to-r from-primary/30 via-accent/40 to-primary/30" />
+            
+            {[
+              { step: '01', title: 'Créez votre établissement', description: 'Inscrivez-vous gratuitement et configurez votre établissement en quelques clics. Logo, informations, c\'est parti !', icon: Building2 },
+              { step: '02', title: 'Configurez vos formations', description: 'Ajoutez vos formations, modules, emplois du temps et invitez vos formateurs et apprenants par email.', icon: GraduationCap },
+              { step: '03', title: 'Gérez tout au quotidien', description: 'Émargements, cahiers de texte, messagerie, groupes... Tout est automatisé et centralisé pour vous.', icon: Sparkles },
+            ].map((item, i) => (
+              <AnimatedSection key={i} animation="fade-up" delay={i * 150}>
+                <div className="relative text-center group">
+                  {/* Step number circle */}
+                  <div className="relative mx-auto mb-6 w-20 h-20">
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary to-accent opacity-20 group-hover:opacity-40 transition-opacity duration-500 blur-lg" />
+                    <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      <item.icon className="h-8 w-8 text-primary-foreground" />
+                    </div>
+                    <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-background border-2 border-primary flex items-center justify-center text-xs font-bold text-primary shadow-md">
+                      {item.step}
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-foreground mb-3">{item.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed">{item.description}</p>
+                </div>
+              </AnimatedSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section id="fonctionnalites" className="py-16 md:py-24 relative overflow-hidden">
         {/* Soft gradient background for features section */}
@@ -1284,7 +1333,7 @@ const Index = () => {
           </div>
           
           <div className="pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center text-muted-foreground text-sm">
-            <p>© 2024 NECTFORMA. Tous droits réservés.</p>
+            <p>© 2025 NECTFORMA. Tous droits réservés.</p>
             <p className="mt-2 md:mt-0">Made with ❤️ for formation professionals</p>
           </div>
         </div>
