@@ -70,12 +70,12 @@ const CreateEstablishment = () => {
   });
 
   const establishmentTypes = [
-    { value: 'ecole_superieure', label: 'École supérieure', icon: '🎓' },
-    { value: 'centre_formation', label: 'Centre de formation', icon: '📚' },
+    { value: 'enseignement_superieur_prive', label: 'Enseignement supérieur privé', icon: '🎓' },
+    { value: 'enseignement_superieur_public', label: 'Enseignement supérieur public', icon: '🏫' },
     { value: 'organisme_formation', label: 'Organisme de formation', icon: '🏢' },
+    { value: 'cfa', label: 'Centre de formation des apprentis (CFA)', icon: '📚' },
     { value: 'universite', label: 'Université', icon: '🏛️' },
-    { value: 'entreprise', label: 'Entreprise', icon: '💼' },
-    { value: 'formateur_independant', label: 'Formateur indépendant', icon: '👨‍🏫' }
+    { value: 'autre', label: 'Autre', icon: '📋' }
   ];
 
   const userRanges = ['1-10', '11-25', '26-50', '51-100', '101-500', '500+'];

@@ -14,7 +14,7 @@ const faqs = [
   },
   {
     question: "Quels types d'établissements peuvent utiliser NECTFORMA ?",
-    answer: "NECTFORMA s'adapte à tous les organismes de formation : centres de formation professionnelle, écoles, universités, CFA, organismes de formation continue, et même les entreprises avec leur propre académie interne."
+    answer: "NECTFORMA s'adresse aux établissements d'enseignement supérieur privés et publics, organismes de formation, centres de formation des apprentis (CFA) et universités. Chaque type d'établissement bénéficie d'une solution adaptée à ses besoins spécifiques."
   },
   {
     question: "Comment fonctionne le système d'émargement numérique ?",

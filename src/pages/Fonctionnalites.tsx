@@ -278,7 +278,7 @@ const Fonctionnalites = () => {
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
             Découvrez l'ensemble des modules NECTFORMA pour digitaliser 
-            et automatiser la gestion de votre établissement de formation.
+            et automatiser la gestion de votre établissement d'enseignement supérieur, organisme de formation, CFA ou université.
           </p>
         </div>
       </section>
