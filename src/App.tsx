@@ -53,6 +53,9 @@ import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import CookieConsent from '@/components/CookieConsent';
 import LinkedInCallback from '@/pages/LinkedInCallback';
 import EspaceTravail from './pages/EspaceTravail';
+import Finance from './pages/Finance';
+import RessourcesHumaines from './pages/RessourcesHumaines';
+import Comptabilite from './pages/Comptabilite';
 
 
 const queryClient = new QueryClient({
@@ -406,6 +409,9 @@ const AppContent = () => {
             <Route path="/compte" element={<ProtectedRoute><Compte /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/espace-travail" element={<ProtectedRoute><EspaceTravail /></ProtectedRoute>} />
+            <Route path="/finance" element={<ProtectedRoute><AdminRoute><Finance /></AdminRoute></ProtectedRoute>} />
+            <Route path="/ressources-humaines" element={<ProtectedRoute><AdminRoute><RessourcesHumaines /></AdminRoute></ProtectedRoute>} />
+            <Route path="/comptabilite" element={<ProtectedRoute><AdminRoute><Comptabilite /></AdminRoute></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
