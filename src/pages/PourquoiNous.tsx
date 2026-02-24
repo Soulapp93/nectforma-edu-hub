@@ -24,8 +24,8 @@ const PourquoiNous = () => {
   const audiences = [
     {
       icon: GraduationCap,
-      title: 'Centres de formation',
-      description: 'Vous gérez un organisme de formation et souhaitez optimiser vos processus ?',
+      title: 'Établissements d\'enseignement supérieur',
+      description: 'Vous êtes une école supérieure privée ou publique et souhaitez optimiser votre gestion ?',
       benefits: [
         'Gestion complète des formations et modules',
         'Émargement numérique conforme',
@@ -35,13 +35,13 @@ const PourquoiNous = () => {
       ],
       testimonial: {
         text: 'Nectforma a transformé notre gestion quotidienne. Nous avons divisé par 3 le temps administratif !',
-        author: 'Marie D., Directrice de CFA'
+        author: 'Marie D., Directrice d\'école supérieure'
       }
     },
     {
       icon: Building2,
-      title: 'Établissements d\'enseignement',
-      description: 'Vous êtes un établissement scolaire ou universitaire ?',
+      title: 'Organismes de formation & CFA',
+      description: 'Vous gérez un organisme de formation ou un centre de formation des apprentis ?',
       benefits: [
         'Interface intuitive pour tous les profils',
         'Messagerie et groupes intégrés',
@@ -50,14 +50,14 @@ const PourquoiNous = () => {
         'Exports et rapports détaillés'
       ],
       testimonial: {
-        text: 'La plateforme est adoptée par tous nos formateurs et étudiants. Simple et efficace !',
-        author: 'Jean-Pierre L., Responsable pédagogique'
+        text: 'La plateforme est adoptée par tous nos formateurs et apprentis. Simple et efficace !',
+        author: 'Jean-Pierre L., Directeur de CFA'
       }
     },
     {
       icon: Briefcase,
-      title: 'Entreprises avec alternants',
-      description: 'Vous accueillez des alternants et souhaitez suivre leur formation ?',
+      title: 'Universités & entreprises',
+      description: 'Vous êtes une université ou une entreprise avec des alternants à suivre ?',
       benefits: [
         'Espace tuteur entreprise dédié',
         'Suivi des présences de l\'alternant',
@@ -175,7 +175,7 @@ const PourquoiNous = () => {
 
               <AnimatedSection animation="fade-up" delay={200}>
                 <p className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed max-w-xl mx-auto lg:mx-0">
-                  Digitalisez, <strong className="text-foreground">automatisez</strong> et pilotez votre organisme de formation avec une solution complète et intuitive.
+                  Digitalisez, <strong className="text-foreground">automatisez</strong> et pilotez votre établissement d'enseignement supérieur, organisme de formation, CFA ou université avec une solution complète et intuitive.
                 </p>
               </AnimatedSection>
 
@@ -319,7 +319,7 @@ const PourquoiNous = () => {
               Pourquoi choisir <span className="gradient-text-animated">Nectforma ?</span>
             </h2>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Digitalisez votre organisme de formation grâce à une <strong className="text-foreground">solution SaaS</strong> complète et simple à utiliser.
+              Digitalisez votre établissement d'enseignement supérieur, organisme de formation, CFA ou université grâce à une <strong className="text-foreground">solution SaaS</strong> complète et simple à utiliser.
             </p>
           </AnimatedSection>
 

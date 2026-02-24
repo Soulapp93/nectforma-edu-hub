@@ -217,7 +217,7 @@ const Solutions = () => {
           </h1>
           <p className="text-xl text-muted-foreground leading-relaxed">
             Découvrez l'ensemble des modules Nectforma pour digitaliser 
-            et automatiser la gestion de votre établissement de formation.
+            et automatiser la gestion de votre établissement d'enseignement supérieur, organisme de formation, CFA ou université.
           </p>
         </div>
       </section>
@@ -305,7 +305,7 @@ const Solutions = () => {
             Prêt à découvrir toutes nos solutions ?
           </h2>
           <p className="text-xl text-primary-foreground/90 mb-10">
-            Testez gratuitement Nectforma pendant 14 jours
+            Testez gratuitement Nectforma et digitalisez votre établissement
           </p>
           <Link 
             to="/create-establishment" 

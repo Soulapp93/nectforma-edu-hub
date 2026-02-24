@@ -388,7 +388,7 @@ const Index = () => {
           <AnimatedSection animation="scale" delay={0}>
             <div className="inline-flex items-center px-4 py-2 bg-primary/10 rounded-full mb-6 md:mb-8 glass">
               <Sparkles className="h-4 w-4 text-primary mr-2 flex-shrink-0 animate-pulse" />
-              <span className="text-primary font-medium text-sm md:text-base">La plateforme tout-en-un pour la formation — 14 modules</span>
+              <span className="text-primary font-medium text-sm md:text-base">La plateforme tout-en-un pour l'enseignement supérieur et la formation professionnelle</span>
             </div>
           </AnimatedSection>
           
@@ -403,8 +403,8 @@ const Index = () => {
           
           <AnimatedSection animation="fade-up" delay={300}>
             <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground mb-10 md:mb-12 max-w-4xl mx-auto leading-relaxed px-2">
-              NECTFORMA est la solution complète pour digitaliser et automatiser 
-              la gestion de vos formations. <span className="text-foreground font-medium">14 modules puissants</span> pour tout gérer.
+              NECTFORMA est la solution complète pour les établissements d'enseignement supérieur, 
+              organismes de formation, CFA et universités. <span className="text-foreground font-medium">14 modules puissants</span> pour tout gérer.
             </p>
           </AnimatedSection>
           
@@ -616,7 +616,7 @@ const Index = () => {
                       animation: 'fade-in-up 1s ease-out 0.8s both'
                     }}
                   >
-                    La gestion de formation simplifiée
+                    La solution pour l'enseignement supérieur et la formation professionnelle
                   </p>
                 </div>
               </div>
@@ -818,7 +818,7 @@ const Index = () => {
               Toutes les solutions dont vous avez besoin
             </h2>
             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-              Une plateforme complète avec 14 modules puissants pour gérer efficacement votre établissement de formation
+              Une plateforme complète avec 14 modules puissants pour gérer efficacement votre établissement d'enseignement supérieur, organisme de formation, CFA ou université
             </p>
           </AnimatedSection>
 
@@ -1020,7 +1020,7 @@ const Index = () => {
             Prêt à transformer votre gestion ?
           </h2>
           <p className="text-xl md:text-2xl text-primary-foreground/90 mb-10">
-            Rejoignez les établissements qui ont déjà adopté NECTFORMA
+            Rejoignez les établissements d'enseignement supérieur, organismes de formation, CFA et universités qui ont déjà adopté NECTFORMA
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link 
@@ -1310,7 +1310,7 @@ const Index = () => {
                 <NectformaLogo variant="gradient" size="lg" />
               </div>
               <p className="text-muted-foreground mb-4 max-w-md">
-                La plateforme complète pour digitaliser et automatiser la gestion de vos formations professionnelles.
+                La plateforme complète pour digitaliser et automatiser la gestion des établissements d'enseignement supérieur, organismes de formation, CFA et universités.
               </p>
             </div>
             
