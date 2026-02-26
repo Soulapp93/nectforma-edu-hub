@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Plus, FileText, Receipt, CreditCard, Users, Search, Trash2, Edit, ArrowRight, Download, Eye } from 'lucide-react';
+import { Plus, FileText, Receipt, CreditCard, Users, Search, Trash2, Edit, ArrowRight, Download, Eye, GraduationCap, Landmark } from 'lucide-react';
 import { useEstablishment } from '@/hooks/useEstablishment';
 import * as financeService from '@/services/financeService';
 import { format } from 'date-fns';
@@ -43,6 +43,9 @@ const Finance = () => {
   const [quotes, setQuotes] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
+  const [studentFees, setStudentFees] = useState<any[]>([]);
+  const [fundingSources, setFundingSources] = useState<any[]>([]);
+  const [formations, setFormations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -51,6 +54,8 @@ const Finance = () => {
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showFeeModal, setShowFeeModal] = useState(false);
+  const [showFundingModal, setShowFundingModal] = useState(false);
   const [editingClient, setEditingClient] = useState<any>(null);
   
   // Forms
@@ -58,22 +63,31 @@ const Finance = () => {
   const [invoiceForm, setInvoiceForm] = useState({ client_id: '', subject: '', notes: '', due_date: '', tax_rate: '20', items: [{ description: '', quantity: '1', unit_price: '0' }] });
   const [quoteForm, setQuoteForm] = useState({ client_id: '', subject: '', notes: '', validity_date: '', tax_rate: '20', items: [{ description: '', quantity: '1', unit_price: '0' }] });
   const [paymentForm, setPaymentForm] = useState({ invoice_id: '', amount: '', payment_date: new Date().toISOString().split('T')[0], payment_method: 'bank_transfer', reference: '' });
+  const [feeForm, setFeeForm] = useState({ student_id: '', formation_id: '', fee_type: 'tuition', label: '', amount: '', due_date: '', notes: '' });
+  const [fundingForm, setFundingForm] = useState({ organism_name: '', funding_type: 'OPCO', formation_id: '', amount_granted: '', convention_number: '', status: 'pending', notes: '' });
 
   useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [inv, quo, pay, cli] = await Promise.all([
+      const [inv, quo, pay, cli, fees, fund] = await Promise.all([
         financeService.getInvoices(),
         financeService.getQuotes(),
         financeService.getPayments(),
         financeService.getBillingClients(),
+        financeService.getStudentFees(),
+        financeService.getFundingSources(),
       ]);
       setInvoices(inv || []);
       setQuotes(quo || []);
       setPayments(pay || []);
       setClients(cli || []);
+      setStudentFees(fees || []);
+      setFundingSources(fund || []);
+      // Load formations for selects
+      const { data: formData } = await (await import('@/integrations/supabase/client')).supabase.from('formations').select('id, title');
+      setFormations(formData || []);
     } catch (e: any) {
       toast.error('Erreur de chargement: ' + e.message);
     } finally {
@@ -254,6 +268,8 @@ const Finance = () => {
           <Button size="sm" variant="outline" onClick={() => setShowQuoteModal(true)}><FileText className="w-4 h-4 mr-1" />Devis</Button>
           <Button size="sm" onClick={() => setShowInvoiceModal(true)}><Receipt className="w-4 h-4 mr-1" />Facture</Button>
           <Button size="sm" variant="outline" onClick={() => setShowPaymentModal(true)}><CreditCard className="w-4 h-4 mr-1" />Paiement</Button>
+          <Button size="sm" variant="outline" onClick={() => setShowFeeModal(true)}><GraduationCap className="w-4 h-4 mr-1" />Frais étudiant</Button>
+          <Button size="sm" variant="outline" onClick={() => setShowFundingModal(true)}><Landmark className="w-4 h-4 mr-1" />Financement</Button>
         </div>
       </div>
 
@@ -272,6 +288,8 @@ const Finance = () => {
           <TabsTrigger value="quotes">Devis ({quotes.length})</TabsTrigger>
           <TabsTrigger value="payments">Paiements ({payments.length})</TabsTrigger>
           <TabsTrigger value="clients">Clients ({clients.length})</TabsTrigger>
+          <TabsTrigger value="fees">Frais étudiants ({studentFees.length})</TabsTrigger>
+          <TabsTrigger value="funding">Financements ({fundingSources.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -434,6 +452,60 @@ const Finance = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="fees">
+          <Card><CardContent className="p-0">
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Étudiant</TableHead><TableHead>Formation</TableHead><TableHead>Type</TableHead>
+                <TableHead>Libellé</TableHead><TableHead>Montant</TableHead><TableHead>Payé</TableHead>
+                <TableHead>Statut</TableHead><TableHead></TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {studentFees.map(f => (
+                  <TableRow key={f.id}>
+                    <TableCell className="text-sm">{f.student_id?.slice(0, 8) || '-'}</TableCell>
+                    <TableCell className="text-sm">{f.formations?.title || '-'}</TableCell>
+                    <TableCell className="text-sm capitalize">{f.fee_type === 'tuition' ? 'Scolarité' : f.fee_type === 'registration' ? 'Inscription' : f.fee_type === 'exam' ? 'Examen' : f.fee_type}</TableCell>
+                    <TableCell className="text-sm">{f.label}</TableCell>
+                    <TableCell className="text-sm font-semibold">{fmt(Number(f.amount))}</TableCell>
+                    <TableCell className="text-sm text-success">{fmt(Number(f.amount_paid))}</TableCell>
+                    <TableCell><Badge variant="secondary" className={`text-[10px] ${f.status === 'paid' ? 'bg-success/10 text-success' : f.status === 'overdue' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'}`}>{f.status === 'paid' ? 'Payé' : f.status === 'overdue' ? 'En retard' : 'En attente'}</Badge></TableCell>
+                    <TableCell><Button size="sm" variant="ghost" onClick={() => financeService.deleteStudentFee(f.id).then(loadData)}><Trash2 className="w-3.5 h-3.5" /></Button></TableCell>
+                  </TableRow>
+                ))}
+                {studentFees.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Aucun frais étudiant</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+          </CardContent></Card>
+        </TabsContent>
+
+        <TabsContent value="funding">
+          <Card><CardContent className="p-0">
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Organisme</TableHead><TableHead>Type</TableHead><TableHead>Formation</TableHead>
+                <TableHead>N° Convention</TableHead><TableHead>Montant accordé</TableHead><TableHead>Montant reçu</TableHead>
+                <TableHead>Statut</TableHead><TableHead></TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {fundingSources.map(f => (
+                  <TableRow key={f.id}>
+                    <TableCell className="text-sm font-medium">{f.organism_name}</TableCell>
+                    <TableCell><Badge variant="outline" className="text-[10px]">{f.funding_type}</Badge></TableCell>
+                    <TableCell className="text-sm">{f.formations?.title || '-'}</TableCell>
+                    <TableCell className="text-sm">{f.convention_number || '-'}</TableCell>
+                    <TableCell className="text-sm font-semibold">{fmt(Number(f.amount_granted))}</TableCell>
+                    <TableCell className="text-sm text-success">{fmt(Number(f.amount_received))}</TableCell>
+                    <TableCell><Badge variant="secondary" className={`text-[10px] ${f.status === 'received' ? 'bg-success/10 text-success' : f.status === 'rejected' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'}`}>{f.status === 'received' ? 'Reçu' : f.status === 'approved' ? 'Approuvé' : f.status === 'rejected' ? 'Refusé' : 'En attente'}</Badge></TableCell>
+                    <TableCell><Button size="sm" variant="ghost" onClick={() => financeService.deleteFundingSource(f.id).then(loadData)}><Trash2 className="w-3.5 h-3.5" /></Button></TableCell>
+                  </TableRow>
+                ))}
+                {fundingSources.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Aucun financement</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+          </CardContent></Card>
+        </TabsContent>
       </Tabs>
 
       {/* Client Modal */}
@@ -568,6 +640,97 @@ const Finance = () => {
             <div><Label>Référence</Label><Input value={paymentForm.reference} onChange={e => setPaymentForm(p => ({ ...p, reference: e.target.value }))} /></div>
           </div>
           <DialogFooter><Button onClick={handleSavePayment}>Enregistrer</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Student Fee Modal */}
+      <Dialog open={showFeeModal} onOpenChange={setShowFeeModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Nouveau frais étudiant</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Libellé *</Label><Input value={feeForm.label} onChange={e => setFeeForm(p => ({ ...p, label: e.target.value }))} /></div>
+            <div>
+              <Label>Formation</Label>
+              <Select value={feeForm.formation_id} onValueChange={v => setFeeForm(p => ({ ...p, formation_id: v }))}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+                <SelectContent>{formations.map(f => <SelectItem key={f.id} value={f.id}>{f.title}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Type</Label>
+              <Select value={feeForm.fee_type} onValueChange={v => setFeeForm(p => ({ ...p, fee_type: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="tuition">Frais de scolarité</SelectItem>
+                  <SelectItem value="registration">Inscription</SelectItem>
+                  <SelectItem value="exam">Examens</SelectItem>
+                  <SelectItem value="material">Matériel pédagogique</SelectItem>
+                  <SelectItem value="other">Autre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Montant *</Label><Input type="number" step="0.01" value={feeForm.amount} onChange={e => setFeeForm(p => ({ ...p, amount: e.target.value }))} /></div>
+              <div><Label>Échéance</Label><Input type="date" value={feeForm.due_date} onChange={e => setFeeForm(p => ({ ...p, due_date: e.target.value }))} /></div>
+            </div>
+          </div>
+          <DialogFooter><Button onClick={async () => {
+            try {
+              if (!feeForm.label || !feeForm.amount) { toast.error('Libellé et montant requis'); return; }
+              await financeService.createStudentFee({ ...feeForm, establishment_id: establishment?.id, amount: Number(feeForm.amount), student_id: feeForm.student_id || establishment?.id });
+              toast.success('Frais étudiant créé');
+              setShowFeeModal(false);
+              setFeeForm({ student_id: '', formation_id: '', fee_type: 'tuition', label: '', amount: '', due_date: '', notes: '' });
+              loadData();
+            } catch (e: any) { toast.error(e.message); }
+          }}>Créer</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Funding Source Modal */}
+      <Dialog open={showFundingModal} onOpenChange={setShowFundingModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Nouveau financement</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Organisme *</Label><Input value={fundingForm.organism_name} onChange={e => setFundingForm(p => ({ ...p, organism_name: e.target.value }))} /></div>
+            <div>
+              <Label>Type de financement</Label>
+              <Select value={fundingForm.funding_type} onValueChange={v => setFundingForm(p => ({ ...p, funding_type: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="OPCO">OPCO</SelectItem>
+                  <SelectItem value="CPF">CPF</SelectItem>
+                  <SelectItem value="pole_emploi">Pôle Emploi / France Travail</SelectItem>
+                  <SelectItem value="region">Région</SelectItem>
+                  <SelectItem value="agefiph">AGEFIPH</SelectItem>
+                  <SelectItem value="enterprise">Entreprise</SelectItem>
+                  <SelectItem value="personal">Personnel</SelectItem>
+                  <SelectItem value="other">Autre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Formation</Label>
+              <Select value={fundingForm.formation_id} onValueChange={v => setFundingForm(p => ({ ...p, formation_id: v }))}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+                <SelectContent>{formations.map(f => <SelectItem key={f.id} value={f.id}>{f.title}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Montant accordé *</Label><Input type="number" step="0.01" value={fundingForm.amount_granted} onChange={e => setFundingForm(p => ({ ...p, amount_granted: e.target.value }))} /></div>
+              <div><Label>N° Convention</Label><Input value={fundingForm.convention_number} onChange={e => setFundingForm(p => ({ ...p, convention_number: e.target.value }))} /></div>
+            </div>
+          </div>
+          <DialogFooter><Button onClick={async () => {
+            try {
+              if (!fundingForm.organism_name || !fundingForm.amount_granted) { toast.error('Organisme et montant requis'); return; }
+              await financeService.createFundingSource({ ...fundingForm, establishment_id: establishment?.id, amount_granted: Number(fundingForm.amount_granted), formation_id: fundingForm.formation_id || null });
+              toast.success('Financement créé');
+              setShowFundingModal(false);
+              setFundingForm({ organism_name: '', funding_type: 'OPCO', formation_id: '', amount_granted: '', convention_number: '', status: 'pending', notes: '' });
+              loadData();
+            } catch (e: any) { toast.error(e.message); }
+          }}>Créer</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

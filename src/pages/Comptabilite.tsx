@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Plus, BookOpen, PenLine, BarChart3, Download, Trash2, Settings } from 'lucide-react';
+import { Plus, BookOpen, PenLine, BarChart3, Download, Trash2, Settings, FileSpreadsheet, Target } from 'lucide-react';
 import { useEstablishment } from '@/hooks/useEstablishment';
 import * as accountingService from '@/services/accountingService';
 
@@ -19,6 +19,8 @@ const Comptabilite = () => {
   const [accounts, setAccounts] = useState<any[]>([]);
   const [entries, setEntries] = useState<any[]>([]);
   const [summary, setSummary] = useState<any>(null);
+  const [bpfData, setBpfData] = useState<any>(null);
+  const [costCenterData, setCostCenterData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   // Modals
@@ -37,14 +39,18 @@ const Comptabilite = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [acc, ent, sum] = await Promise.all([
+      const [acc, ent, sum, bpf, cc] = await Promise.all([
         accountingService.getAccountingAccounts(),
         accountingService.getAccountingEntries(dateFilter),
         accountingService.getFinancialSummary(),
+        accountingService.generateBPF(),
+        accountingService.getCostCenterReport(),
       ]);
       setAccounts(acc || []);
       setEntries(ent || []);
       setSummary(sum);
+      setBpfData(bpf);
+      setCostCenterData(cc);
     } catch (e: any) { toast.error(e.message); } finally { setLoading(false); }
   };
 
@@ -132,6 +138,8 @@ const Comptabilite = () => {
           <TabsTrigger value="dashboard">Tableau de bord</TabsTrigger>
           <TabsTrigger value="journal">Journal ({entries.length})</TabsTrigger>
           <TabsTrigger value="accounts">Plan comptable ({accounts.length})</TabsTrigger>
+          <TabsTrigger value="bpf">BPF</TabsTrigger>
+          <TabsTrigger value="costcenters">Centres de coût</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dashboard" className="space-y-4">
@@ -232,6 +240,76 @@ const Comptabilite = () => {
                     </TableRow>
                   ))}
                   {accounts.length === 0 && <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Aucun compte — cliquez sur "Initialiser le PCG" pour créer les comptes de base</TableCell></TableRow>}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="bpf" className="space-y-4">
+          <Card>
+            <CardHeader><CardTitle className="text-sm flex items-center gap-2"><FileSpreadsheet className="w-4 h-4" />Bilan Pédagogique et Financier — {bpfData?.year}</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase">Activité</p>
+                  <div className="flex justify-between"><span className="text-sm">Formations dispensées</span><span className="font-semibold">{bpfData?.formationsCount || 0}</span></div>
+                  <div className="flex justify-between"><span className="text-sm">Heures prévues</span><span className="font-semibold">{bpfData?.totalHoursPlanned || 0}h</span></div>
+                  <div className="flex justify-between"><span className="text-sm">Heures réalisées</span><span className="font-semibold">{bpfData?.totalHoursActual || 0}h</span></div>
+                  <div className="flex justify-between"><span className="text-sm">Taux de réalisation</span><span className="font-semibold">{bpfData?.hoursCompletionRate || 0}%</span></div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase">Personnel</p>
+                  <div className="flex justify-between"><span className="text-sm">Effectif total</span><span className="font-semibold">{bpfData?.employeesCount || 0}</span></div>
+                  <div className="flex justify-between"><span className="text-sm">Formateurs</span><span className="font-semibold">{bpfData?.instructorsCount || 0}</span></div>
+                  <div className="flex justify-between"><span className="text-sm">Coût formateurs</span><span className="font-semibold">{fmt(bpfData?.totalInstructorCost || 0)}</span></div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase">Finances</p>
+                  <div className="flex justify-between"><span className="text-sm">Chiffre d'affaires</span><span className="font-semibold">{fmt(bpfData?.totalCA || 0)}</span></div>
+                  <div className="flex justify-between"><span className="text-sm">Frais étudiants</span><span className="font-semibold">{fmt(bpfData?.totalStudentFees || 0)}</span></div>
+                  <div className="flex justify-between"><span className="text-sm">Financements totaux</span><span className="font-semibold text-success">{fmt(bpfData?.totalFunding || 0)}</span></div>
+                </div>
+              </div>
+              {bpfData?.fundingByType && Object.keys(bpfData.fundingByType).length > 0 && (
+                <div className="border-t pt-3 mt-3">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Répartition des financements</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {Object.entries(bpfData.fundingByType).map(([type, amount]) => (
+                      <div key={type} className="bg-muted/50 rounded p-2">
+                        <p className="text-[10px] text-muted-foreground">{type}</p>
+                        <p className="font-semibold text-sm">{fmt(Number(amount))}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="costcenters" className="space-y-4">
+          <Card>
+            <CardHeader><CardTitle className="text-sm flex items-center gap-2"><Target className="w-4 h-4" />Suivi par centre de coût (formation) — {costCenterData?.year}</CardTitle></CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>Formation</TableHead><TableHead className="text-right">Coût formateurs</TableHead>
+                  <TableHead className="text-right">Notes de frais</TableHead><TableHead className="text-right">Coût total</TableHead>
+                  <TableHead className="text-right">CA estimé</TableHead><TableHead className="text-right">Marge</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {(costCenterData?.costByFormation || []).map((c: any) => (
+                    <TableRow key={c.formationId}>
+                      <TableCell className="text-sm font-medium">{c.formationTitle}</TableCell>
+                      <TableCell className="text-sm text-right">{fmt(c.instructorCost)}</TableCell>
+                      <TableCell className="text-sm text-right">{fmt(c.expenseCost)}</TableCell>
+                      <TableCell className="text-sm text-right font-semibold">{fmt(c.totalCost)}</TableCell>
+                      <TableCell className="text-sm text-right">{fmt(c.estimatedRevenue)}</TableCell>
+                      <TableCell className={`text-sm text-right font-bold ${c.margin >= 0 ? 'text-success' : 'text-destructive'}`}>{fmt(c.margin)}</TableCell>
+                    </TableRow>
+                  ))}
+                  {(!costCenterData?.costByFormation || costCenterData.costByFormation.length === 0) && <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Aucune formation</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </CardContent>

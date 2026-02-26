@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Plus, Users, FileText, Calendar, Wallet, Trash2, Edit, Check, X } from 'lucide-react';
+import { Plus, Users, FileText, Calendar, Wallet, Trash2, Edit, Check, X, Clock, Receipt } from 'lucide-react';
 import { useEstablishment } from '@/hooks/useEstablishment';
 import * as rhService from '@/services/rhService';
 
@@ -36,6 +36,9 @@ const RessourcesHumaines = () => {
   const [contracts, setContracts] = useState<any[]>([]);
   const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
   const [payslips, setPayslips] = useState<any[]>([]);
+  const [expenseReports, setExpenseReports] = useState<any[]>([]);
+  const [instructorHours, setInstructorHours] = useState<any[]>([]);
+  const [formations, setFormations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Modals
@@ -43,6 +46,8 @@ const RessourcesHumaines = () => {
   const [showContractModal, setShowContractModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showPayslipModal, setShowPayslipModal] = useState(false);
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [showHoursModal, setShowHoursModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<any>(null);
 
   // Forms
@@ -50,22 +55,30 @@ const RessourcesHumaines = () => {
   const [contractForm, setContractForm] = useState({ employee_id: '', contract_type: 'CDI', title: '', start_date: '', end_date: '', weekly_hours: '35', gross_salary: '' });
   const [leaveForm, setLeaveForm] = useState({ employee_id: '', leave_type: 'paid_leave', start_date: '', end_date: '', days_count: '1', reason: '' });
   const [payslipForm, setPayslipForm] = useState({ employee_id: '', period_month: String(new Date().getMonth() + 1), period_year: String(new Date().getFullYear()), gross_salary: '', net_salary: '', employer_charges: '', employee_charges: '', bonuses: '0', deductions: '0' });
+  const [expenseForm, setExpenseForm] = useState({ employee_id: '', category: 'transport', label: '', amount: '', expense_date: new Date().toISOString().split('T')[0], formation_id: '', notes: '' });
+  const [hoursForm, setHoursForm] = useState({ employee_id: '', formation_id: '', period_month: String(new Date().getMonth() + 1), period_year: String(new Date().getFullYear()), planned_hours: '', actual_hours: '', hourly_rate: '' });
 
   useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [emp, con, lv, ps] = await Promise.all([
+      const [emp, con, lv, ps, exp, hrs] = await Promise.all([
         rhService.getEmployees(),
         rhService.getContracts(),
         rhService.getLeaveRequests(),
         rhService.getPayslips(),
+        rhService.getExpenseReports(),
+        rhService.getInstructorHours(),
       ]);
       setEmployees(emp || []);
       setContracts(con || []);
       setLeaveRequests(lv || []);
       setPayslips(ps || []);
+      setExpenseReports(exp || []);
+      setInstructorHours(hrs || []);
+      const { data: formData } = await (await import('@/integrations/supabase/client')).supabase.from('formations').select('id, title');
+      setFormations(formData || []);
     } catch (e: any) { toast.error(e.message); } finally { setLoading(false); }
   };
 
@@ -162,6 +175,8 @@ const RessourcesHumaines = () => {
           <Button size="sm" variant="outline" onClick={() => setShowContractModal(true)}><FileText className="w-4 h-4 mr-1" />Contrat</Button>
           <Button size="sm" variant="outline" onClick={() => setShowLeaveModal(true)}><Calendar className="w-4 h-4 mr-1" />Congé</Button>
           <Button size="sm" variant="outline" onClick={() => setShowPayslipModal(true)}><Wallet className="w-4 h-4 mr-1" />Fiche de paie</Button>
+          <Button size="sm" variant="outline" onClick={() => setShowExpenseModal(true)}><Receipt className="w-4 h-4 mr-1" />Note de frais</Button>
+          <Button size="sm" variant="outline" onClick={() => setShowHoursModal(true)}><Clock className="w-4 h-4 mr-1" />Heures</Button>
         </div>
       </div>
 
@@ -178,6 +193,8 @@ const RessourcesHumaines = () => {
           <TabsTrigger value="contracts">Contrats ({contracts.length})</TabsTrigger>
           <TabsTrigger value="leaves">Congés ({leaveRequests.length})</TabsTrigger>
           <TabsTrigger value="payslips">Paie ({payslips.length})</TabsTrigger>
+          <TabsTrigger value="expenses">Notes de frais ({expenseReports.length})</TabsTrigger>
+          <TabsTrigger value="hours">Heures formateurs ({instructorHours.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="employees">
@@ -284,6 +301,68 @@ const RessourcesHumaines = () => {
                   </TableRow>
                 ))}
                 {payslips.length === 0 && <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Aucune fiche de paie</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+          </CardContent></Card>
+        </TabsContent>
+
+        <TabsContent value="expenses">
+          <Card><CardContent className="p-0">
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Employé</TableHead><TableHead>Catégorie</TableHead><TableHead>Libellé</TableHead>
+                <TableHead>Formation</TableHead><TableHead>Date</TableHead><TableHead>Montant</TableHead>
+                <TableHead>Statut</TableHead><TableHead></TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {expenseReports.map(e => (
+                  <TableRow key={e.id}>
+                    <TableCell className="text-sm font-medium">{e.employees?.first_name} {e.employees?.last_name}</TableCell>
+                    <TableCell className="text-sm capitalize">{e.category === 'transport' ? 'Transport' : e.category === 'meal' ? 'Repas' : e.category === 'accommodation' ? 'Hébergement' : e.category === 'material' ? 'Matériel' : e.category}</TableCell>
+                    <TableCell className="text-sm">{e.label}</TableCell>
+                    <TableCell className="text-sm">{e.formations?.title || '-'}</TableCell>
+                    <TableCell className="text-sm">{e.expense_date}</TableCell>
+                    <TableCell className="text-sm font-semibold">{fmt(Number(e.amount))}</TableCell>
+                    <TableCell><Badge variant="secondary" className={`text-[10px] ${e.status === 'approved' ? 'bg-success/10 text-success' : e.status === 'rejected' ? 'bg-destructive/10 text-destructive' : e.status === 'reimbursed' ? 'bg-primary/10 text-primary' : 'bg-warning/10 text-warning'}`}>{e.status === 'approved' ? 'Approuvé' : e.status === 'rejected' ? 'Refusé' : e.status === 'reimbursed' ? 'Remboursé' : 'En attente'}</Badge></TableCell>
+                    <TableCell className="flex gap-1">
+                      {e.status === 'pending' && (
+                        <>
+                          <Button size="sm" variant="ghost" className="text-success" onClick={() => rhService.updateExpenseReport(e.id, { status: 'approved', approved_at: new Date().toISOString() }).then(loadData)}><Check className="w-3.5 h-3.5" /></Button>
+                          <Button size="sm" variant="ghost" className="text-destructive" onClick={() => rhService.updateExpenseReport(e.id, { status: 'rejected' }).then(loadData)}><X className="w-3.5 h-3.5" /></Button>
+                        </>
+                      )}
+                      <Button size="sm" variant="ghost" onClick={() => rhService.deleteExpenseReport(e.id).then(loadData)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {expenseReports.length === 0 && <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Aucune note de frais</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+          </CardContent></Card>
+        </TabsContent>
+
+        <TabsContent value="hours">
+          <Card><CardContent className="p-0">
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead>Formateur</TableHead><TableHead>Formation</TableHead><TableHead>Période</TableHead>
+                <TableHead>H. prévues</TableHead><TableHead>H. réalisées</TableHead><TableHead>Taux horaire</TableHead>
+                <TableHead>Coût total</TableHead><TableHead></TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {instructorHours.map(h => (
+                  <TableRow key={h.id}>
+                    <TableCell className="text-sm font-medium">{h.employees?.first_name} {h.employees?.last_name}</TableCell>
+                    <TableCell className="text-sm">{h.formations?.title || '-'}</TableCell>
+                    <TableCell className="text-sm">{months[h.period_month - 1]} {h.period_year}</TableCell>
+                    <TableCell className="text-sm">{h.planned_hours}h</TableCell>
+                    <TableCell className="text-sm font-semibold">{h.actual_hours}h</TableCell>
+                    <TableCell className="text-sm">{fmt(Number(h.hourly_rate || 0))}/h</TableCell>
+                    <TableCell className="text-sm font-semibold">{fmt(Number(h.total_cost || 0))}</TableCell>
+                    <TableCell><Button size="sm" variant="ghost" onClick={() => rhService.deleteInstructorHours(h.id).then(loadData)}><Trash2 className="w-3.5 h-3.5" /></Button></TableCell>
+                  </TableRow>
+                ))}
+                {instructorHours.length === 0 && <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Aucune donnée d'heures</TableCell></TableRow>}
               </TableBody>
             </Table>
           </CardContent></Card>
@@ -418,6 +497,110 @@ const RessourcesHumaines = () => {
             </div>
           </div>
           <DialogFooter><Button onClick={handleSavePayslip}>Créer</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Expense Report Modal */}
+      <Dialog open={showExpenseModal} onOpenChange={setShowExpenseModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Nouvelle note de frais</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Employé *</Label>
+              <Select value={expenseForm.employee_id} onValueChange={v => setExpenseForm(p => ({ ...p, employee_id: v }))}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+                <SelectContent>{employees.filter(e => e.is_active).map(e => <SelectItem key={e.id} value={e.id}>{e.first_name} {e.last_name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div><Label>Libellé *</Label><Input value={expenseForm.label} onChange={e => setExpenseForm(p => ({ ...p, label: e.target.value }))} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Catégorie</Label>
+                <Select value={expenseForm.category} onValueChange={v => setExpenseForm(p => ({ ...p, category: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="transport">Transport</SelectItem>
+                    <SelectItem value="meal">Repas</SelectItem>
+                    <SelectItem value="accommodation">Hébergement</SelectItem>
+                    <SelectItem value="material">Matériel</SelectItem>
+                    <SelectItem value="other">Autre</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label>Montant *</Label><Input type="number" step="0.01" value={expenseForm.amount} onChange={e => setExpenseForm(p => ({ ...p, amount: e.target.value }))} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Date</Label><Input type="date" value={expenseForm.expense_date} onChange={e => setExpenseForm(p => ({ ...p, expense_date: e.target.value }))} /></div>
+              <div>
+                <Label>Formation</Label>
+                <Select value={expenseForm.formation_id} onValueChange={v => setExpenseForm(p => ({ ...p, formation_id: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Optionnel..." /></SelectTrigger>
+                  <SelectContent>{formations.map(f => <SelectItem key={f.id} value={f.id}>{f.title}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter><Button onClick={async () => {
+            try {
+              if (!expenseForm.employee_id || !expenseForm.label || !expenseForm.amount) { toast.error('Champs requis manquants'); return; }
+              await rhService.createExpenseReport({ ...expenseForm, establishment_id: establishment?.id, amount: Number(expenseForm.amount), formation_id: expenseForm.formation_id || null });
+              toast.success('Note de frais créée');
+              setShowExpenseModal(false);
+              setExpenseForm({ employee_id: '', category: 'transport', label: '', amount: '', expense_date: new Date().toISOString().split('T')[0], formation_id: '', notes: '' });
+              loadData();
+            } catch (e: any) { toast.error(e.message); }
+          }}>Créer</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Instructor Hours Modal */}
+      <Dialog open={showHoursModal} onOpenChange={setShowHoursModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Suivi des heures formateur</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Formateur *</Label>
+              <Select value={hoursForm.employee_id} onValueChange={v => setHoursForm(p => ({ ...p, employee_id: v }))}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+                <SelectContent>{employees.filter(e => e.is_active).map(e => <SelectItem key={e.id} value={e.id}>{e.first_name} {e.last_name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Formation</Label>
+              <Select value={hoursForm.formation_id} onValueChange={v => setHoursForm(p => ({ ...p, formation_id: v }))}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+                <SelectContent>{formations.map(f => <SelectItem key={f.id} value={f.id}>{f.title}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Mois</Label>
+                <Select value={hoursForm.period_month} onValueChange={v => setHoursForm(p => ({ ...p, period_month: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{months.map((m, i) => <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div><Label>Année</Label><Input type="number" value={hoursForm.period_year} onChange={e => setHoursForm(p => ({ ...p, period_year: e.target.value }))} /></div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div><Label>H. prévues</Label><Input type="number" value={hoursForm.planned_hours} onChange={e => setHoursForm(p => ({ ...p, planned_hours: e.target.value }))} /></div>
+              <div><Label>H. réalisées</Label><Input type="number" value={hoursForm.actual_hours} onChange={e => setHoursForm(p => ({ ...p, actual_hours: e.target.value }))} /></div>
+              <div><Label>Taux/h (€)</Label><Input type="number" value={hoursForm.hourly_rate} onChange={e => setHoursForm(p => ({ ...p, hourly_rate: e.target.value }))} /></div>
+            </div>
+          </div>
+          <DialogFooter><Button onClick={async () => {
+            try {
+              if (!hoursForm.employee_id) { toast.error('Formateur requis'); return; }
+              const planned = Number(hoursForm.planned_hours) || 0;
+              const actual = Number(hoursForm.actual_hours) || 0;
+              const rate = Number(hoursForm.hourly_rate) || 0;
+              await rhService.createInstructorHours({ ...hoursForm, establishment_id: establishment?.id, planned_hours: planned, actual_hours: actual, hourly_rate: rate, total_cost: actual * rate, period_month: Number(hoursForm.period_month), period_year: Number(hoursForm.period_year), formation_id: hoursForm.formation_id || null });
+              toast.success('Heures enregistrées');
+              setShowHoursModal(false);
+              setHoursForm({ employee_id: '', formation_id: '', period_month: String(new Date().getMonth() + 1), period_year: String(new Date().getFullYear()), planned_hours: '', actual_hours: '', hourly_rate: '' });
+              loadData();
+            } catch (e: any) { toast.error(e.message); }
+          }}>Enregistrer</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

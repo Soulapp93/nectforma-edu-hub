@@ -154,3 +154,76 @@ export const deletePayslip = async (id: string) => {
   const { error } = await supabase.from('payslips').delete().eq('id', id);
   if (error) throw error;
 };
+
+// ============= EXPENSE REPORTS =============
+export const getExpenseReports = async () => {
+  const { data, error } = await supabase
+    .from('expense_reports')
+    .select('*, employees(*), formations(*)')
+    .order('expense_date', { ascending: false });
+  if (error) throw error;
+  return data;
+};
+
+export const createExpenseReport = async (report: any) => {
+  const { data, error } = await supabase
+    .from('expense_reports')
+    .insert(report)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const updateExpenseReport = async (id: string, updates: any) => {
+  const { data, error } = await supabase
+    .from('expense_reports')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const deleteExpenseReport = async (id: string) => {
+  const { error } = await supabase.from('expense_reports').delete().eq('id', id);
+  if (error) throw error;
+};
+
+// ============= INSTRUCTOR HOURS =============
+export const getInstructorHours = async () => {
+  const { data, error } = await supabase
+    .from('instructor_hours')
+    .select('*, employees(*), formations(*)')
+    .order('period_year', { ascending: false })
+    .order('period_month', { ascending: false });
+  if (error) throw error;
+  return data;
+};
+
+export const createInstructorHours = async (hours: any) => {
+  const { data, error } = await supabase
+    .from('instructor_hours')
+    .insert(hours)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const updateInstructorHours = async (id: string, updates: any) => {
+  const { data, error } = await supabase
+    .from('instructor_hours')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const deleteInstructorHours = async (id: string) => {
+  const { error } = await supabase.from('instructor_hours').delete().eq('id', id);
+  if (error) throw error;
+};
