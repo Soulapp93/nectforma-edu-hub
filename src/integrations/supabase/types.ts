@@ -1158,6 +1158,88 @@ export type Database = {
         }
         Relationships: []
       }
+      expense_reports: {
+        Row: {
+          amount: number
+          approved_at: string | null
+          approved_by: string | null
+          category: string
+          created_at: string
+          employee_id: string
+          establishment_id: string
+          expense_date: string
+          formation_id: string | null
+          id: string
+          label: string
+          notes: string | null
+          receipt_url: string | null
+          reimbursed_at: string | null
+          status: string
+          updated_at: string
+          vat_amount: number | null
+        }
+        Insert: {
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          category?: string
+          created_at?: string
+          employee_id: string
+          establishment_id: string
+          expense_date: string
+          formation_id?: string | null
+          id?: string
+          label: string
+          notes?: string | null
+          receipt_url?: string | null
+          reimbursed_at?: string | null
+          status?: string
+          updated_at?: string
+          vat_amount?: number | null
+        }
+        Update: {
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          category?: string
+          created_at?: string
+          employee_id?: string
+          establishment_id?: string
+          expense_date?: string
+          formation_id?: string | null
+          id?: string
+          label?: string
+          notes?: string | null
+          receipt_url?: string | null
+          reimbursed_at?: string | null
+          status?: string
+          updated_at?: string
+          vat_amount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_reports_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_reports_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_reports_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       formation_modules: {
         Row: {
           created_at: string
@@ -1254,6 +1336,157 @@ export type Database = {
             columns: ["establishment_id"]
             isOneToOne: false
             referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funding_sources: {
+        Row: {
+          agreement_date: string | null
+          amount_granted: number
+          amount_received: number
+          convention_number: string | null
+          created_at: string
+          documents_url: string[] | null
+          end_date: string | null
+          establishment_id: string
+          formation_id: string | null
+          funding_type: string
+          id: string
+          notes: string | null
+          organism_contact: string | null
+          organism_email: string | null
+          organism_name: string
+          start_date: string | null
+          status: string
+          student_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          agreement_date?: string | null
+          amount_granted?: number
+          amount_received?: number
+          convention_number?: string | null
+          created_at?: string
+          documents_url?: string[] | null
+          end_date?: string | null
+          establishment_id: string
+          formation_id?: string | null
+          funding_type?: string
+          id?: string
+          notes?: string | null
+          organism_contact?: string | null
+          organism_email?: string | null
+          organism_name: string
+          start_date?: string | null
+          status?: string
+          student_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agreement_date?: string | null
+          amount_granted?: number
+          amount_received?: number
+          convention_number?: string | null
+          created_at?: string
+          documents_url?: string[] | null
+          end_date?: string | null
+          establishment_id?: string
+          formation_id?: string | null
+          funding_type?: string
+          id?: string
+          notes?: string | null
+          organism_contact?: string | null
+          organism_email?: string | null
+          organism_name?: string
+          start_date?: string | null
+          status?: string
+          student_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funding_sources_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_sources_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instructor_hours: {
+        Row: {
+          actual_hours: number
+          created_at: string
+          employee_id: string
+          establishment_id: string
+          formation_id: string | null
+          hourly_rate: number | null
+          id: string
+          notes: string | null
+          period_month: number
+          period_year: number
+          planned_hours: number
+          total_cost: number | null
+          updated_at: string
+        }
+        Insert: {
+          actual_hours?: number
+          created_at?: string
+          employee_id: string
+          establishment_id: string
+          formation_id?: string | null
+          hourly_rate?: number | null
+          id?: string
+          notes?: string | null
+          period_month: number
+          period_year: number
+          planned_hours?: number
+          total_cost?: number | null
+          updated_at?: string
+        }
+        Update: {
+          actual_hours?: number
+          created_at?: string
+          employee_id?: string
+          establishment_id?: string
+          formation_id?: string | null
+          hourly_rate?: number | null
+          id?: string
+          notes?: string | null
+          period_month?: number
+          period_year?: number
+          planned_hours?: number
+          total_cost?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instructor_hours_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instructor_hours_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instructor_hours_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations"
             referencedColumns: ["id"]
           },
         ]
@@ -2595,6 +2828,72 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      student_fees: {
+        Row: {
+          amount: number
+          amount_paid: number
+          created_at: string
+          due_date: string | null
+          establishment_id: string
+          fee_type: string
+          formation_id: string
+          id: string
+          label: string
+          notes: string | null
+          payment_schedule: Json | null
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          amount_paid?: number
+          created_at?: string
+          due_date?: string | null
+          establishment_id: string
+          fee_type?: string
+          formation_id: string
+          id?: string
+          label: string
+          notes?: string | null
+          payment_schedule?: Json | null
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          amount_paid?: number
+          created_at?: string
+          due_date?: string | null
+          establishment_id?: string
+          fee_type?: string
+          formation_id?: string
+          id?: string
+          label?: string
+          notes?: string | null
+          payment_schedule?: Json | null
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_fees_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_fees_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       submission_files: {
         Row: {

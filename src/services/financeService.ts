@@ -207,6 +207,78 @@ export const deletePayment = async (id: string) => {
   if (error) throw error;
 };
 
+// ============= STUDENT FEES =============
+export const getStudentFees = async () => {
+  const { data, error } = await supabase
+    .from('student_fees')
+    .select('*, formations(*)')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+};
+
+export const createStudentFee = async (fee: any) => {
+  const { data, error } = await supabase
+    .from('student_fees')
+    .insert(fee)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const updateStudentFee = async (id: string, updates: any) => {
+  const { data, error } = await supabase
+    .from('student_fees')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const deleteStudentFee = async (id: string) => {
+  const { error } = await supabase.from('student_fees').delete().eq('id', id);
+  if (error) throw error;
+};
+
+// ============= FUNDING SOURCES =============
+export const getFundingSources = async () => {
+  const { data, error } = await supabase
+    .from('funding_sources')
+    .select('*, formations(*)')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+};
+
+export const createFundingSource = async (source: any) => {
+  const { data, error } = await supabase
+    .from('funding_sources')
+    .insert(source)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const updateFundingSource = async (id: string, updates: any) => {
+  const { data, error } = await supabase
+    .from('funding_sources')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const deleteFundingSource = async (id: string) => {
+  const { error } = await supabase.from('funding_sources').delete().eq('id', id);
+  if (error) throw error;
+};
+
 // ============= UTILITIES =============
 export const generateQuoteNumber = async () => {
   const year = new Date().getFullYear();
@@ -246,7 +318,6 @@ export const convertQuoteToInvoice = async (quoteId: string) => {
     created_by: quote.created_by,
   });
 
-  // Copy items
   if (quote.quote_items) {
     for (const item of quote.quote_items) {
       await createInvoiceItem({
@@ -260,7 +331,6 @@ export const convertQuoteToInvoice = async (quoteId: string) => {
     }
   }
 
-  // Update quote status
   await updateQuote(quoteId, { status: 'converted', converted_invoice_id: invoice.id });
 
   return invoice;
