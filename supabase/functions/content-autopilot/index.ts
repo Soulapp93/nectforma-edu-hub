@@ -1041,7 +1041,7 @@ serve(async (req) => {
   <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;margin-top:20px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
     <!-- Header -->
     <div style="background:linear-gradient(135deg,#7c3aed,#a855f7);padding:28px 20px;text-align:center;">
-      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma.png?v=2" alt="Nectforma" width="140" style="display:block;margin:0 auto 8px;" />
+      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma-v3.png" alt="Nectforma" width="200" style="display:block;margin:0 auto 8px;border:none;outline:none;" />
       <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:8px 0 0;">La newsletter de Nectforma</p>
     </div>
     <!-- Content -->
