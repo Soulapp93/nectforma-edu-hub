@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, CheckCircle2, XCircle, Edit3, FileText, Eye, ArrowLeft, ChevronRight, PenTool, Download, Send, Link, Video } from 'lucide-react';
+import { Calendar, Clock, Users, CheckCircle2, XCircle, Edit3, FileText, Eye, ArrowLeft, ChevronRight, PenTool, Download, Send, Link, Video, FilePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ import SignatureManagementModal from '../ui/signature-management-modal';
 import SendSignatureLinkModal from './SendSignatureLinkModal';
 import SendAttendanceLinkModal from './SendAttendanceLinkModal';
 import { pdfExportService } from '@/services/pdfExportService';
+import BlankAttendanceSlotModal from './BlankAttendanceSlotModal';
 
 const AttendanceManagement = () => {
   const [pendingSheets, setPendingSheets] = useState<AttendanceSheet[]>([]);
@@ -33,6 +34,7 @@ const AttendanceManagement = () => {
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [showSendLinkModal, setShowSendLinkModal] = useState(false);
   const [showSendAttendanceLinkModal, setShowSendAttendanceLinkModal] = useState(false);
+  const [showBlankSlotModal, setShowBlankSlotModal] = useState(false);
   const [selectedSignature, setSelectedSignature] = useState<any>(null);
   const [adminSignature, setAdminSignature] = useState<string | null>(null);
   const [view, setView] = useState<'formations' | 'sheets'>('formations');
@@ -441,6 +443,16 @@ const AttendanceManagement = () => {
                   <span className="hidden sm:inline">Enregistrement signature</span>
                   <span className="sm:hidden">Signature</span>
                 </Button>
+                <Button
+                  onClick={() => setShowBlankSlotModal(true)}
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full border-2 border-green-500 text-green-600 hover:bg-green-50 text-xs sm:text-sm"
+                >
+                  <FilePlus className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Feuille vierge</span>
+                  <span className="sm:hidden">Vierge</span>
+                </Button>
               </div>
             )}
           </div>
@@ -573,14 +585,6 @@ const AttendanceManagement = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleDownloadBlankPDF(sheet)}
-                            >
-                              <FileText className="h-4 w-4 mr-1" />
-                              Vierge
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
                               onClick={() => handleDownloadPDF(sheet)}
                             >
                               <Download className="h-4 w-4 mr-1" />
@@ -693,6 +697,12 @@ const AttendanceManagement = () => {
             fetchFormationSheets(selectedFormationId);
           }
         }}
+      />
+
+      <BlankAttendanceSlotModal
+        isOpen={showBlankSlotModal}
+        onClose={() => setShowBlankSlotModal(false)}
+        formations={formations}
       />
     </div>
   );
