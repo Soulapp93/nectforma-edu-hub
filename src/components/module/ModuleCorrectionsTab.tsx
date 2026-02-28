@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit, CheckCircle, Clock, FileText, Eye, FolderOpen, ChevronDown, ChevronRight, Award, BookOpen } from 'lucide-react';
+import { Edit, CheckCircle, Clock, FileText, Eye, FolderOpen, ChevronDown, ChevronRight, Award, BookOpen, Download, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { assignmentService, Assignment, AssignmentSubmission } from '@/services/assignmentService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -14,6 +14,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { supabase } from '@/integrations/supabase/client';
+import { pdfExportService } from '@/services/pdfExportService';
 
 interface ModuleCorrectionsTabProps {
   moduleId: string;
@@ -30,6 +32,7 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
   const [showCorrectionModal, setShowCorrectionModal] = useState<AssignmentSubmission | null>(null);
   const [showStudentModal, setShowStudentModal] = useState<{ submission: AssignmentSubmission; title: string } | null>(null);
   const [expandedAssignments, setExpandedAssignments] = useState<Set<string>>(new Set());
+  const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
   
   const { userId, userRole, loading: userLoading } = useCurrentUser();
 
@@ -106,6 +109,72 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
     fetchData();
     setShowCorrectionModal(null);
     toast.success('Correction sauvegardée avec succès');
+  };
+
+  const handleGenerateCorrectionSheet = async (assignment: Assignment, submissions: AssignmentSubmission[]) => {
+    try {
+      setGeneratingPdf(assignment.id);
+
+      // Load module info
+      const { data: moduleData } = await supabase
+        .from('formation_modules')
+        .select('title, formation_id')
+        .eq('id', moduleId)
+        .single();
+
+      if (!moduleData) {
+        toast.error('Module introuvable');
+        return;
+      }
+
+      // Load formation info
+      const { data: formationData } = await supabase
+        .from('formations')
+        .select('title, id')
+        .eq('id', moduleData.formation_id)
+        .single();
+
+      if (!formationData) {
+        toast.error('Formation introuvable');
+        return;
+      }
+
+      // Load instructor name (assignment creator)
+      let instructorName = 'Non assigné';
+      if (assignment.created_by) {
+        const { data: instructorData } = await supabase
+          .from('users')
+          .select('first_name, last_name')
+          .eq('id', assignment.created_by)
+          .single();
+        if (instructorData) {
+          instructorName = `${instructorData.first_name || ''} ${instructorData.last_name || ''}`.trim();
+        }
+      }
+
+      const correctionData = submissions.map(s => ({
+        student_name: `${s.student?.first_name || ''} ${s.student?.last_name || ''}`.trim() || 'Inconnu',
+        grade: s.correction?.score ?? s.correction?.grade ?? null,
+        max_grade: s.correction?.max_score ?? assignment.max_points ?? 20
+      }));
+
+      await pdfExportService.exportCorrectionSheet(
+        assignment.id,
+        assignment.title,
+        correctionData,
+        moduleData.title,
+        formationData.title,
+        instructorName,
+        formationData.id
+      );
+
+      toast.success('Feuille de correction téléchargée');
+    } catch (error) {
+      console.error('Error generating correction sheet:', error);
+      toast.error('Erreur lors de la génération de la feuille de correction');
+    } finally {
+      setGeneratingPdf(null);
+    }
   };
 
   const getStatusBadge = (submission: AssignmentSubmission) => {
@@ -269,6 +338,26 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
                           </div>
                         </div>
                       </div>
+                      {/* Correction sheet button */}
+                      {submissions.length > 0 && (
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="rounded-full border-2 border-orange-500 text-orange-600 hover:bg-orange-50 text-xs"
+                            disabled={generatingPdf === assignment.id}
+                            onClick={() => handleGenerateCorrectionSheet(assignment, submissions)}
+                          >
+                            {generatingPdf === assignment.id ? (
+                              <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-orange-500 border-t-transparent mr-1.5" />
+                            ) : (
+                              <Receipt className="h-3.5 w-3.5 mr-1.5" />
+                            )}
+                            <span className="hidden sm:inline">Feuille de correction</span>
+                            <span className="sm:hidden">🧾</span>
+                          </Button>
+                        </div>
+                      )}
                     </button>
                   </CollapsibleTrigger>
 

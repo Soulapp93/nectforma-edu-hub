@@ -351,6 +351,16 @@ const AttendanceManagement = () => {
     }
   };
 
+  const handleDownloadBlankPDF = async (sheet: AttendanceSheet) => {
+    try {
+      await pdfExportService.exportBlankAttendanceSheet(sheet);
+      toast.success('Feuille d\'émargement vierge téléchargée');
+    } catch (error) {
+      console.error('Error downloading blank PDF:', error);
+      toast.error('Erreur lors du téléchargement');
+    }
+  };
+
   const handleRowClick = (sheet: AttendanceSheet) => {
     setSelectedSheet(sheet);
     setShowSheetModal(true);
@@ -560,6 +570,14 @@ const AttendanceManagement = () => {
                                 Envoyer lien
                               </Button>
                             )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadBlankPDF(sheet)}
+                            >
+                              <FileText className="h-4 w-4 mr-1" />
+                              Vierge
+                            </Button>
                             <Button
                               variant="outline"
                               size="sm"
