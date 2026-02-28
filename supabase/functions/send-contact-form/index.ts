@@ -80,7 +80,7 @@ serve(async (req: Request): Promise<Response> => {
 <body>
   <div class="container">
     <div class="header">
-      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma.png?v=2" alt="Nectforma" width="140" style="display:block;margin:0 auto 12px;" />
+      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma-v3.png" alt="Nectforma" width="200" style="display:block;margin:0 auto 12px;border:none;outline:none;" />
       <h2 style="margin: 0; color: white;">📩 Nouveau message de contact</h2>
     </div>
     <div class="content">
@@ -162,7 +162,7 @@ serve(async (req: Request): Promise<Response> => {
 <body>
   <div class="container">
     <div class="header">
-      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma.png?v=2" alt="Nectforma" width="140" style="display:block;margin:0 auto 12px;" />
+      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma-v3.png" alt="Nectforma" width="200" style="display:block;margin:0 auto 12px;border:none;outline:none;" />
       <h2 style="margin: 0; color: white;">✅ Message reçu !</h2>
     </div>
     <div class="content">
