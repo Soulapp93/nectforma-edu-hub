@@ -68,7 +68,8 @@ serve(async (req: Request): Promise<Response> => {
   <style>
     body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #10B981, #059669); color: white; padding: 30px; border-radius: 10px 10px 0 0; }
+    .header { padding: 24px 30px; border-radius: 10px 10px 0 0; }
+    .header-accent { height: 4px; background: linear-gradient(135deg, #10B981, #059669); }
     .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
     .field { margin-bottom: 20px; }
     .label { font-weight: bold; color: #059669; margin-bottom: 5px; }
@@ -80,8 +81,11 @@ serve(async (req: Request): Promise<Response> => {
 <body>
   <div class="container">
     <div class="header">
-      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma-v3.png" alt="Nectforma" width="200" style="display:block;margin:0 auto 12px;border:none;outline:none;" />
-      <h2 style="margin: 0; color: white;">📩 Nouveau message de contact</h2>
+      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma-v3.png" alt="Nectforma" width="120" style="display:block;border:none;outline:none;" />
+    </div>
+    <div class="header-accent"></div>
+    <div style="padding: 15px 30px; background: #f9fafb;">
+      <h2 style="margin: 0; color: #1a1a1a;">📩 Nouveau message de contact</h2>
     </div>
     <div class="content">
       <div class="field">
@@ -154,7 +158,8 @@ serve(async (req: Request): Promise<Response> => {
   <style>
     body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #10B981, #059669); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
+    .header { padding: 24px 30px; border-radius: 10px 10px 0 0; }
+    .header-accent { height: 4px; background: linear-gradient(135deg, #10B981, #059669); }
     .content { background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; }
     .footer { text-align: center; margin-top: 20px; color: #6b7280; font-size: 12px; }
   </style>
@@ -162,9 +167,9 @@ serve(async (req: Request): Promise<Response> => {
 <body>
   <div class="container">
     <div class="header">
-      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma-v3.png" alt="Nectforma" width="200" style="display:block;margin:0 auto 12px;border:none;outline:none;" />
-      <h2 style="margin: 0; color: white;">✅ Message reçu !</h2>
+      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma-v3.png" alt="Nectforma" width="120" style="display:block;border:none;outline:none;" />
     </div>
+    <div class="header-accent"></div>
     <div class="content">
       <p>Bonjour ${body.firstName},</p>
       <p>Nous avons bien reçu votre message concernant "<strong>${subjectLabel}</strong>".</p>
