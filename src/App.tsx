@@ -58,6 +58,7 @@ import EspaceTravail from './pages/EspaceTravail';
 import Finance from './pages/Finance';
 import RessourcesHumaines from './pages/RessourcesHumaines';
 import Comptabilite from './pages/Comptabilite';
+import QuestionnairePublic from './pages/QuestionnairePublic';
 
 
 const queryClient = new QueryClient({
@@ -97,6 +98,7 @@ const AppContent = () => {
       <div className="min-h-screen w-full">
         <Routes>
           <Route path="/emargement/signer/:token" element={<SignaturePublique />} />
+          <Route path="/questionnaire/:token" element={<QuestionnairePublic />} />
           <Route path="/linkedin-callback" element={<LinkedInCallback />} />
         </Routes>
         <Toaster />
