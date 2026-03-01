@@ -69,7 +69,7 @@ const EnhancedDashboardCard: React.FC<EnhancedDashboardCardProps> = ({
       <Card className="bg-card shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 p-5 sm:p-6">
           <CardTitle className="text-base sm:text-lg font-medium flex items-center gap-2">
-            <Trophy className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+            <Trophy className="h-5 w-5 sm:h-6 sm:w-6 text-success" />
             {title}
           </CardTitle>
           <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
@@ -85,7 +85,7 @@ const EnhancedDashboardCard: React.FC<EnhancedDashboardCardProps> = ({
                       <div className="text-xs sm:text-sm text-muted-foreground truncate mt-1">{student.formationName}</div>
                     )}
                   </div>
-                  <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50 text-sm sm:text-base px-3 py-1">
+                  <Badge variant="outline" className="text-success border-success/30 bg-success-muted text-sm sm:text-base px-3 py-1">
                     {student.attendanceRate}%
                   </Badge>
                 </div>
@@ -104,7 +104,7 @@ const EnhancedDashboardCard: React.FC<EnhancedDashboardCardProps> = ({
       <Card className="bg-card shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 p-5 sm:p-6">
           <CardTitle className="text-base sm:text-lg font-medium flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
+            <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 text-destructive" />
             {title}
           </CardTitle>
           <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
@@ -120,7 +120,7 @@ const EnhancedDashboardCard: React.FC<EnhancedDashboardCardProps> = ({
                       <div className="text-xs sm:text-sm text-muted-foreground truncate mt-1">{student.formationName}</div>
                     )}
                   </div>
-                  <Badge variant="outline" className="text-red-600 border-red-200 bg-red-50 text-sm sm:text-base px-3 py-1">
+                  <Badge variant="outline" className="text-destructive border-destructive/30 bg-destructive/10 text-sm sm:text-base px-3 py-1">
                     {student.attendanceRate}%
                   </Badge>
                 </div>
@@ -147,11 +147,11 @@ const EnhancedDashboardCard: React.FC<EnhancedDashboardCardProps> = ({
         {trend && (
           <div className="flex items-center mt-2">
             {trend.isPositive ? (
-              <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+              <TrendingUp className="h-4 w-4 text-success mr-1" />
             ) : (
-              <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
+              <TrendingDown className="h-4 w-4 text-destructive mr-1" />
             )}
-            <span className={`text-sm ${trend.isPositive ? 'text-green-600' : 'text-red-600'}`}>
+            <span className={`text-sm ${trend.isPositive ? 'text-success' : 'text-destructive'}`}>
               {trend.value}%
             </span>
           </div>

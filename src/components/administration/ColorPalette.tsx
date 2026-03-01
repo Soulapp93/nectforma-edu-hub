@@ -25,7 +25,7 @@ const ColorPalette: React.FC<ColorPaletteProps> = ({ selectedColor, onColorChang
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+      <label className="block text-sm font-medium text-foreground mb-2">
         Couleur de la carte
       </label>
       <div className="grid grid-cols-6 gap-2">
@@ -36,8 +36,8 @@ const ColorPalette: React.FC<ColorPaletteProps> = ({ selectedColor, onColorChang
             onClick={() => onColorChange(color)}
             className={`w-10 h-10 rounded-lg border-2 transition-all hover:scale-105 flex items-center justify-center ${
               selectedColor === color 
-                ? 'border-gray-400 ring-2 ring-primary' 
-                : 'border-gray-200 hover:border-gray-300'
+                ? 'border-muted-foreground ring-2 ring-primary' 
+                : 'border-border hover:border-muted-foreground'
             }`}
             style={{ backgroundColor: color }}
             title={`Sélectionner la couleur ${color}`}
@@ -48,7 +48,7 @@ const ColorPalette: React.FC<ColorPaletteProps> = ({ selectedColor, onColorChang
           </button>
         ))}
       </div>
-      <p className="text-xs text-gray-500 mt-2">
+      <p className="text-xs text-muted-foreground mt-2">
         Choisissez la couleur qui apparaîtra sur la carte de formation
       </p>
     </div>
