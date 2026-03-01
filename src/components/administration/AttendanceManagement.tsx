@@ -427,7 +427,7 @@ const AttendanceManagement = () => {
                   onClick={() => setShowSendAttendanceLinkModal(true)}
                   variant="outline"
                   size="sm"
-                  className="rounded-full border-2 border-blue-500 text-blue-600 hover:bg-blue-50 text-xs sm:text-sm"
+                  className="rounded-full border-2 border-blue-500 text-blue-600 hover:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20 text-xs sm:text-sm"
                 >
                   <Link className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Envoyer lien d'émargement</span>
@@ -437,7 +437,7 @@ const AttendanceManagement = () => {
                   onClick={() => setShowSignatureModal(true)}
                   variant="outline"
                   size="sm"
-                  className="rounded-full border-2 border-purple-500 text-purple-600 hover:bg-purple-50 text-xs sm:text-sm"
+                  className="rounded-full border-2 border-primary text-primary hover:bg-primary/10 text-xs sm:text-sm"
                 >
                   <PenTool className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Enregistrement signature</span>
@@ -447,7 +447,7 @@ const AttendanceManagement = () => {
                   onClick={() => setShowBlankSlotModal(true)}
                   variant="outline"
                   size="sm"
-                  className="rounded-full border-2 border-green-500 text-green-600 hover:bg-green-50 text-xs sm:text-sm"
+                  className="rounded-full border-2 border-green-500 text-green-600 hover:bg-green-500/10 dark:text-green-400 dark:hover:bg-green-500/20 text-xs sm:text-sm"
                 >
                   <FilePlus className="h-4 w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Feuille vierge</span>
@@ -462,7 +462,7 @@ const AttendanceManagement = () => {
             // Vue des formations
             <div className="space-y-4">
               {formations.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                 <div className="text-center py-8 text-muted-foreground">
                   Aucune formation disponible
                 </div>
               ) : (
@@ -472,15 +472,15 @@ const AttendanceManagement = () => {
                    return (
                      <Card
                        key={formation.id}
-                       className="hover:bg-gray-50 transition-colors"
+                       className="hover:bg-muted/50 transition-colors"
                      >
                        <CardContent className="p-4">
                          <div className="flex items-center justify-between">
                            <div className="cursor-pointer flex-1" onClick={() => handleFormationClick(formation.id)}>
-                             <h3 className="font-semibold text-gray-900">
+                             <h3 className="font-semibold text-foreground">
                                {formation.title}
                              </h3>
-                             <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
+                             <div className="flex items-center space-x-4 mt-1 text-sm text-muted-foreground">
                                <span>{formation.level}</span>
                                <span>
                                  {format(new Date(formation.start_date), 'dd/MM/yyyy', { locale: fr })} - {' '}
@@ -502,7 +502,7 @@ const AttendanceManagement = () => {
                                </Badge>
                              )}
                              <div className="cursor-pointer" onClick={() => handleFormationClick(formation.id)}>
-                               <ChevronRight className="h-5 w-5 text-gray-400" />
+                               <ChevronRight className="h-5 w-5 text-muted-foreground" />
                              </div>
                            </div>
                          </div>
@@ -516,7 +516,7 @@ const AttendanceManagement = () => {
             // Vue des feuilles d'émargement pour une formation
             <div>
               {formationSheets.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-muted-foreground">
                   Aucune feuille d'émargement pour cette formation
                 </div>
               ) : (
@@ -535,7 +535,7 @@ const AttendanceManagement = () => {
                     {formationSheets.map((sheet) => (
                       <TableRow 
                         key={sheet.id} 
-                        className="cursor-pointer hover:bg-gray-50"
+                        className="cursor-pointer hover:bg-muted/50"
                         onClick={() => handleRowClick(sheet)}
                       >
                         <TableCell>
