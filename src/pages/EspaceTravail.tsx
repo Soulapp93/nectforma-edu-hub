@@ -19,6 +19,8 @@ import WorkspaceSpreadsheetEditor from '@/components/workspace/WorkspaceSpreadsh
 import WorkspacePresentationEditor from '@/components/workspace/WorkspacePresentationEditor';
 import WorkspaceVisualEditor from '@/components/workspace/WorkspaceVisualEditor';
 import WorkspaceWhiteboardEditor from '@/components/workspace/WorkspaceWhiteboardEditor';
+import WorkspaceQuestionnaireEditor from '@/components/workspace/WorkspaceQuestionnaireEditor';
+import { ClipboardList } from 'lucide-react';
 
 const DOC_TYPES = [
   { type: 'text' as const, label: 'Document texte', icon: FileText, color: 'from-blue-500 to-blue-600', bgLight: 'bg-blue-50 dark:bg-blue-950/30', textColor: 'text-blue-600 dark:text-blue-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Comme Word' },
@@ -26,6 +28,7 @@ const DOC_TYPES = [
   { type: 'presentation' as const, label: 'Présentation', icon: Presentation, color: 'from-orange-500 to-orange-600', bgLight: 'bg-orange-50 dark:bg-orange-950/30', textColor: 'text-orange-600 dark:text-orange-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Comme PowerPoint' },
   { type: 'visual' as const, label: 'Visuel', icon: Image, color: 'from-pink-500 to-pink-600', bgLight: 'bg-pink-50 dark:bg-pink-950/30', textColor: 'text-pink-600 dark:text-pink-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Comme Canva' },
   { type: 'whiteboard' as const, label: 'Tableau blanc', icon: PenLine, color: 'from-cyan-500 to-cyan-600', bgLight: 'bg-cyan-50 dark:bg-cyan-950/30', textColor: 'text-cyan-600 dark:text-cyan-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Whiteboard infini' },
+  { type: 'questionnaire' as const, label: 'Questionnaire', icon: ClipboardList, color: 'from-violet-500 to-violet-600', bgLight: 'bg-violet-50 dark:bg-violet-950/30', textColor: 'text-violet-600 dark:text-violet-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Comme Google Forms' },
 ];
 
 const getDocMeta = (type: string) => {
@@ -254,6 +257,7 @@ const EspaceTravail = () => {
       case 'presentation': return <WorkspacePresentationEditor {...editorProps} />;
       case 'visual': return <WorkspaceVisualEditor {...editorProps} />;
       case 'whiteboard': return <WorkspaceWhiteboardEditor {...editorProps} />;
+      case 'questionnaire': return <WorkspaceQuestionnaireEditor {...editorProps} />;
       default: return <WorkspaceTextEditor {...editorProps} />;
     }
   }

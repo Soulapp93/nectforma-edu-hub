@@ -2281,6 +2281,365 @@ export type Database = {
         }
         Relationships: []
       }
+      questionnaire_answers: {
+        Row: {
+          answer_file_url: string | null
+          answer_text: string | null
+          answer_values: Json | null
+          created_at: string
+          id: string
+          points_earned: number | null
+          question_id: string
+          response_id: string
+        }
+        Insert: {
+          answer_file_url?: string | null
+          answer_text?: string | null
+          answer_values?: Json | null
+          created_at?: string
+          id?: string
+          points_earned?: number | null
+          question_id: string
+          response_id: string
+        }
+        Update: {
+          answer_file_url?: string | null
+          answer_text?: string | null
+          answer_values?: Json | null
+          created_at?: string
+          id?: string
+          points_earned?: number | null
+          question_id?: string
+          response_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questionnaire_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questionnaire_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questionnaire_answers_response_id_fkey"
+            columns: ["response_id"]
+            isOneToOne: false
+            referencedRelation: "questionnaire_responses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questionnaire_matrix_rows: {
+        Row: {
+          id: string
+          label: string
+          order_index: number
+          question_id: string
+        }
+        Insert: {
+          id?: string
+          label: string
+          order_index?: number
+          question_id: string
+        }
+        Update: {
+          id?: string
+          label?: string
+          order_index?: number
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questionnaire_matrix_rows_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questionnaire_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questionnaire_options: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          is_correct: boolean | null
+          label: string
+          order_index: number
+          points: number | null
+          question_id: string
+          value: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_correct?: boolean | null
+          label: string
+          order_index?: number
+          points?: number | null
+          question_id: string
+          value?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_correct?: boolean | null
+          label?: string
+          order_index?: number
+          points?: number | null
+          question_id?: string
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questionnaire_options_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questionnaire_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questionnaire_questions: {
+        Row: {
+          condition_operator: string | null
+          condition_question_id: string | null
+          condition_value: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_required: boolean
+          order_index: number
+          points: number | null
+          question_type: string
+          questionnaire_id: string
+          section_id: string | null
+          settings: Json | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          condition_operator?: string | null
+          condition_question_id?: string | null
+          condition_value?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_required?: boolean
+          order_index?: number
+          points?: number | null
+          question_type?: string
+          questionnaire_id: string
+          section_id?: string | null
+          settings?: Json | null
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          condition_operator?: string | null
+          condition_question_id?: string | null
+          condition_value?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_required?: boolean
+          order_index?: number
+          points?: number | null
+          question_type?: string
+          questionnaire_id?: string
+          section_id?: string | null
+          settings?: Json | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questionnaire_questions_condition_question_id_fkey"
+            columns: ["condition_question_id"]
+            isOneToOne: false
+            referencedRelation: "questionnaire_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questionnaire_questions_questionnaire_id_fkey"
+            columns: ["questionnaire_id"]
+            isOneToOne: false
+            referencedRelation: "questionnaires"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questionnaire_questions_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "questionnaire_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questionnaire_responses: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          ip_hash: string | null
+          max_score: number | null
+          questionnaire_id: string
+          respondent_email: string | null
+          respondent_id: string | null
+          respondent_name: string | null
+          score: number | null
+          started_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          max_score?: number | null
+          questionnaire_id: string
+          respondent_email?: string | null
+          respondent_id?: string | null
+          respondent_name?: string | null
+          score?: number | null
+          started_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          max_score?: number | null
+          questionnaire_id?: string
+          respondent_email?: string | null
+          respondent_id?: string | null
+          respondent_name?: string | null
+          score?: number | null
+          started_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questionnaire_responses_questionnaire_id_fkey"
+            columns: ["questionnaire_id"]
+            isOneToOne: false
+            referencedRelation: "questionnaires"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questionnaire_sections: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          order_index: number
+          questionnaire_id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_index?: number
+          questionnaire_id: string
+          title?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_index?: number
+          questionnaire_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questionnaire_sections_questionnaire_id_fkey"
+            columns: ["questionnaire_id"]
+            isOneToOne: false
+            referencedRelation: "questionnaires"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questionnaires: {
+        Row: {
+          allow_multiple_responses: boolean
+          confirmation_message: string | null
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          establishment_id: string | null
+          id: string
+          is_accepting_responses: boolean
+          is_published: boolean
+          owner_id: string
+          public_token: string | null
+          requires_auth: boolean
+          scoring_enabled: boolean
+          show_progress_bar: boolean
+          shuffle_questions: boolean
+          theme_color: string | null
+          title: string
+          total_points: number | null
+          updated_at: string
+        }
+        Insert: {
+          allow_multiple_responses?: boolean
+          confirmation_message?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          establishment_id?: string | null
+          id?: string
+          is_accepting_responses?: boolean
+          is_published?: boolean
+          owner_id: string
+          public_token?: string | null
+          requires_auth?: boolean
+          scoring_enabled?: boolean
+          show_progress_bar?: boolean
+          shuffle_questions?: boolean
+          theme_color?: string | null
+          title?: string
+          total_points?: number | null
+          updated_at?: string
+        }
+        Update: {
+          allow_multiple_responses?: boolean
+          confirmation_message?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          establishment_id?: string | null
+          id?: string
+          is_accepting_responses?: boolean
+          is_published?: boolean
+          owner_id?: string
+          public_token?: string | null
+          requires_auth?: boolean
+          scoring_enabled?: boolean
+          show_progress_bar?: boolean
+          shuffle_questions?: boolean
+          theme_color?: string | null
+          title?: string
+          total_points?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questionnaires_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quote_items: {
         Row: {
           created_at: string
