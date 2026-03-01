@@ -335,7 +335,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto force-light-theme">
         <DialogHeader>
           <DialogTitle>Feuille d'émargement</DialogTitle>
         </DialogHeader>
