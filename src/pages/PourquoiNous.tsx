@@ -247,7 +247,7 @@ const PourquoiNous = () => {
                     </div>
 
                     {/* Floating badge */}
-                    <div className="absolute top-4 right-4 z-20 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg flex items-center gap-2">
+                    <div className="absolute top-4 right-4 z-20 bg-card/90 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg flex items-center gap-2 border border-border/50">
                       <div className="w-6 h-6 rounded-full bg-success/20 flex items-center justify-center">
                         <CheckCircle2 className="w-4 h-4 text-success" />
                       </div>
@@ -294,10 +294,8 @@ const PourquoiNous = () => {
       <SectionDivider variant="wave" fillColor="fill-primary" />
 
       {/* Pourquoi choisir - Avantages Cards */}
-      <section id="avantages" className="py-16 md:py-24 relative overflow-hidden">
-        <div className="absolute inset-0" style={{
-          background: 'linear-gradient(180deg, hsl(270 50% 98% / 0.5) 0%, hsl(262 60% 96% / 0.6) 50%, hsl(280 40% 97% / 0.5) 100%)'
-        }} />
+       <section id="avantages" className="py-16 md:py-24 relative overflow-hidden">
+        <div className="absolute inset-0 section-soft-bg" />
         
         {/* Decorative blobs */}
         <div className="absolute inset-0 pointer-events-none">
@@ -329,11 +327,7 @@ const PourquoiNous = () => {
               const Icon = advantage.icon;
               return (
                 <AnimatedSection key={index} animation="fade-up" delay={index * 100}>
-                  <div className="group relative rounded-2xl overflow-hidden border border-primary/10 hover:border-primary/25 transition-all duration-500 hover:shadow-xl"
-                    style={{
-                      background: 'linear-gradient(135deg, hsl(var(--card)) 0%, hsl(270 60% 98% / 0.8) 100%)',
-                      backdropFilter: 'blur(10px)'
-                    }}>
+                   <div className="group relative rounded-2xl overflow-hidden border border-primary/10 hover:border-primary/25 transition-all duration-500 hover:shadow-xl card-soft-bg">
                     {/* Shimmer effect */}
                     <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700">
                       <div style={{
@@ -426,11 +420,7 @@ const PourquoiNous = () => {
           {/* Testimonial Card */}
           <AnimatedSection animation="fade-up" delay={300}>
             <div className="max-w-lg mx-auto">
-              <div className="relative p-6 rounded-2xl border border-primary/10 shadow-lg"
-                style={{
-                  background: 'linear-gradient(135deg, hsl(var(--card)) 0%, hsl(270 60% 98% / 0.8) 100%)',
-                  backdropFilter: 'blur(10px)'
-                }}>
+               <div className="relative p-6 rounded-2xl border border-primary/10 shadow-lg card-soft-bg">
                 <div className="flex items-start gap-4">
                   <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 shadow-lg">
                     <Users className="w-6 h-6 text-primary-foreground" />
@@ -468,10 +458,8 @@ const PourquoiNous = () => {
       <SectionDivider variant="wave" flip fillColor="fill-primary/5" />
 
       {/* Target Audiences */}
-      <section className="py-16 md:py-24 relative overflow-hidden">
-        <div className="absolute inset-0" style={{
-          background: 'linear-gradient(180deg, hsl(270 50% 98% / 0.3) 0%, hsl(262 60% 96% / 0.5) 50%, hsl(280 40% 97% / 0.3) 100%)'
-        }} />
+       <section className="py-16 md:py-24 relative overflow-hidden">
+        <div className="absolute inset-0 section-soft-bg" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <AnimatedSection className="text-center mb-16">
             <div className="inline-flex items-center px-4 py-2 bg-primary/10 rounded-full mb-6">
@@ -512,11 +500,7 @@ const PourquoiNous = () => {
                     </ul>
                   </div>
                   <div className="flex-1">
-                    <div className="p-8 rounded-2xl border border-primary/10 shadow-lg relative overflow-hidden"
-                      style={{
-                        background: 'linear-gradient(135deg, hsl(var(--card)) 0%, hsl(270 60% 98% / 0.8) 100%)',
-                        backdropFilter: 'blur(10px)'
-                      }}>
+                     <div className="p-8 rounded-2xl border border-primary/10 shadow-lg relative overflow-hidden card-soft-bg">
                       <div className="flex mb-4">
                         {[...Array(5)].map((_, i) => (
                           <Star key={i} className="h-5 w-5 text-yellow-400 fill-yellow-400" />
@@ -554,11 +538,7 @@ const PourquoiNous = () => {
               const Icon = reason.icon;
               return (
                 <AnimatedSection key={index} animation="fade-up" delay={index * 80}>
-                  <div className="group p-6 rounded-2xl border border-primary/10 hover:border-primary/25 hover:shadow-xl transition-all duration-500 relative overflow-hidden"
-                    style={{
-                      background: 'linear-gradient(135deg, hsl(var(--card)) 0%, hsl(270 60% 98% / 0.8) 100%)',
-                      backdropFilter: 'blur(10px)'
-                    }}>
+                   <div className="group p-6 rounded-2xl border border-primary/10 hover:border-primary/25 hover:shadow-xl transition-all duration-500 relative overflow-hidden card-soft-bg">
                     <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
                       <Icon className="h-6 w-6 text-primary-foreground" />
                     </div>
