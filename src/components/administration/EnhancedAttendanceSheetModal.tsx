@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Edit, Download, CheckCircle2, CheckCircle, XCircle, Clock, Building, UserX } from 'lucide-react';
+import { X, Edit, Download, CheckCircle2, CheckCircle, XCircle, Clock, Building, UserX, ToggleLeft, ToggleRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -67,6 +67,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
   const [instructorSignature, setInstructorSignature] = useState<string>('');
   const [instructorName, setInstructorName] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [togglingStudentId, setTogglingStudentId] = useState<string | null>(null);
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [establishmentInfo, setEstablishmentInfo] = useState<{ logo_url: string | null; name: string } | null>(null);
 
@@ -267,6 +268,24 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
     };
   }, [isOpen, attendanceSheet.id]);
 
+  const handleTogglePresence = async (studentId: string, currentlyPresent: boolean) => {
+    if (attendanceSheet.status === 'Validé') return;
+    
+    try {
+      setTogglingStudentId(studentId);
+      const newPresent = !currentlyPresent;
+      await attendanceService.toggleStudentPresence(attendanceSheet.id, studentId, newPresent);
+      toast.success(newPresent ? 'Étudiant marqué présent' : 'Étudiant marqué absent');
+      await loadAttendanceData();
+      onUpdate();
+    } catch (error) {
+      console.error('Error toggling presence:', error);
+      toast.error('Erreur lors du changement de statut');
+    } finally {
+      setTogglingStudentId(null);
+    }
+  };
+
   const handleStudentStatusChange = (studentId: string, present: boolean, absenceReason?: string) => {
     console.log('Update student status:', { studentId, present, absenceReason });
   };
@@ -404,12 +423,15 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
             
             {/* En-tête du tableau */}
             <div 
-              className="grid grid-cols-4 gap-4 p-3 text-white font-medium text-sm rounded-t-lg"
+              className={`grid gap-4 p-3 text-white font-medium text-sm rounded-t-lg ${attendanceSheet.status !== 'Validé' ? 'grid-cols-5' : 'grid-cols-4'}`}
               style={{ backgroundColor: formationColor }}
             >
               <div className="col-span-2">Nom et Prénom</div>
               <div className="text-center">Statut</div>
               <div className="text-center">Signature</div>
+              {attendanceSheet.status !== 'Validé' && (
+                <div className="text-center">Actions</div>
+              )}
             </div>
 
             {/* Lignes des étudiants */}
@@ -419,7 +441,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
                 return (
                   <div 
                     key={student.id}
-                    className={`grid grid-cols-4 gap-4 p-3 border-b border-gray-200 last:border-b-0 ${
+                    className={`grid gap-4 p-3 border-b border-gray-200 last:border-b-0 ${attendanceSheet.status !== 'Validé' ? 'grid-cols-5' : 'grid-cols-4'} ${
                       index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
                     }`}
                   >
@@ -436,34 +458,15 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
                       </div>
                     </div>
                     <div className="flex items-center justify-center">
-                      {mode === 'edit' ? (
-                        <Select 
-                          value={statusInfo.status} 
-                          onValueChange={(value: string) => {
-                            const present = value === 'Présent';
-                            const absenceReason = !present ? 'Autre' : undefined;
-                            handleStudentStatusChange(student.id, present, absenceReason);
-                          }}
-                        >
-                          <SelectTrigger className="w-32 mx-auto">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Présent">Présent</SelectItem>
-                            <SelectItem value="Absent">Absent</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${statusInfo.bgColor}`}>
-                          {statusInfo.icon}
-                          <span className={`text-xs font-medium ${statusInfo.textColor}`}>
-                            {statusInfo.status}
-                          </span>
-                        </div>
-                      )}
+                      <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${statusInfo.bgColor}`}>
+                        {statusInfo.icon}
+                        <span className={`text-xs font-medium ${statusInfo.textColor}`}>
+                          {statusInfo.status}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex items-center justify-center">
-                      {student.signature ? (
+                      {student.signature && student.signature.present ? (
                         <div className="text-center">
                           {student.signature.signature_data ? (
                             <img 
@@ -486,6 +489,38 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
                         </div>
                       )}
                     </div>
+                    {attendanceSheet.status !== 'Validé' && (
+                      <div className="flex items-center justify-center">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={togglingStudentId === student.id}
+                          onClick={() => {
+                            const isPresent = student.signature?.present === true;
+                            handleTogglePresence(student.id, isPresent);
+                          }}
+                          className={`text-xs ${
+                            student.signature?.present
+                              ? 'border-red-300 text-red-600 hover:bg-red-50'
+                              : 'border-green-300 text-green-600 hover:bg-green-50'
+                          }`}
+                        >
+                          {togglingStudentId === student.id ? (
+                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current" />
+                          ) : student.signature?.present ? (
+                            <>
+                              <XCircle className="h-3 w-3 mr-1" />
+                              Absent
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Présent
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 );
               })}

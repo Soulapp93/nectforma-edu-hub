@@ -717,6 +717,108 @@ export const attendanceService = {
     }
   },
 
+  // Basculer le statut présent/absent d'un étudiant par l'administration
+  async toggleStudentPresence(
+    attendanceSheetId: string,
+    studentId: string,
+    newPresent: boolean
+  ): Promise<any> {
+    try {
+      // Vérifier si une signature existe déjà
+      const { data: existingSig, error: existingError } = await supabase
+        .from('attendance_signatures')
+        .select('*')
+        .eq('attendance_sheet_id', attendanceSheetId)
+        .eq('user_id', studentId)
+        .maybeSingle();
+
+      if (existingError) throw existingError;
+
+      if (newPresent) {
+        // Absent → Présent : récupérer la signature du profil de l'étudiant
+        const { data: userSig } = await supabase
+          .from('user_signatures')
+          .select('signature_data')
+          .eq('user_id', studentId)
+          .maybeSingle();
+
+        const signatureData = userSig?.signature_data || null;
+
+        if (existingSig) {
+          // Mettre à jour la signature existante
+          const { data, error } = await supabase
+            .from('attendance_signatures')
+            .update({
+              present: true,
+              signature_data: signatureData,
+              absence_reason: null,
+              absence_reason_type: null,
+              signed_at: new Date().toISOString()
+            })
+            .eq('id', existingSig.id)
+            .select()
+            .single();
+
+          if (error) throw error;
+          return data;
+        } else {
+          // Créer une nouvelle signature
+          const { data, error } = await supabase
+            .from('attendance_signatures')
+            .insert({
+              attendance_sheet_id: attendanceSheetId,
+              user_id: studentId,
+              user_type: 'student',
+              present: true,
+              signature_data: signatureData,
+              signed_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+          if (error) throw error;
+          return data;
+        }
+      } else {
+        // Présent → Absent
+        if (existingSig) {
+          const { data, error } = await supabase
+            .from('attendance_signatures')
+            .update({
+              present: false,
+              signature_data: null,
+              signed_at: new Date().toISOString()
+            })
+            .eq('id', existingSig.id)
+            .select()
+            .single();
+
+          if (error) throw error;
+          return data;
+        } else {
+          // Créer une entrée absent
+          const { data, error } = await supabase
+            .from('attendance_signatures')
+            .insert({
+              attendance_sheet_id: attendanceSheetId,
+              user_id: studentId,
+              user_type: 'student',
+              present: false,
+              signed_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+          if (error) throw error;
+          return data;
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling student presence:', error);
+      throw error;
+    }
+  },
+
   // S'abonner aux changements en temps réel des signatures
   subscribeToSignatures(sheetId: string, callback: (payload: any) => void) {
     const channel = supabase
