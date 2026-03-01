@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Menu } from 'lucide-react';
 import NotificationBell from './NotificationBell';
+import { ThemeToggle } from './ThemeToggle';
 import MobileDrawerMenu from './MobileDrawerMenu';
 import NectformaLogo from './NectformaLogo';
 
@@ -74,6 +75,7 @@ const MobileHeader = () => {
         
         {/* Actions à droite */}
         <div className="flex items-center gap-1">
+          <ThemeToggle />
           <NotificationBell />
         </div>
       </header>
