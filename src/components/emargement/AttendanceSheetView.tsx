@@ -82,18 +82,18 @@ const AttendanceSheetView: React.FC<AttendanceSheetViewProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Présent':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-success-muted text-success border-success/30';
       case 'Retard':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-warning-muted text-warning border-warning/30';
       case 'Absent':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-destructive/10 text-destructive border-destructive/30';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-muted text-muted-foreground border-border';
     }
   };
 
   return (
-    <div className="bg-white">
+    <div className="bg-card">
       {/* Header */}
       <div 
         className="text-white p-6 text-center"
@@ -126,13 +126,13 @@ const AttendanceSheetView: React.FC<AttendanceSheetViewProps> = ({
 
       {/* Actions */}
       {showActions && (
-        <div className="p-6 border-b bg-gray-50 flex justify-between items-center">
+        <div className="p-6 border-b bg-muted/50 flex justify-between items-center">
           <div className="flex gap-3">
             <Button variant="outline" onClick={onExportPDF}>
               <Download className="h-4 w-4 mr-2" />
               Télécharger en PDF
             </Button>
-            <Button onClick={onValidate} className="bg-green-600 hover:bg-green-700 text-white">
+            <Button onClick={onValidate} className="bg-success hover:bg-success/90 text-success-foreground">
               <CheckCircle2 className="h-4 w-4 mr-2" />
               Valider & Signer
             </Button>
@@ -142,13 +142,13 @@ const AttendanceSheetView: React.FC<AttendanceSheetViewProps> = ({
 
       {/* Participants List */}
       <div className="p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-900">
+        <h3 className="text-lg font-semibold mb-4 text-foreground">
           Liste des participants ({signedUsers.length + 3})
         </h3>
         
-        <div className="overflow-hidden rounded-lg border">
+        <div className="overflow-hidden rounded-lg border border-border">
           <table className="w-full">
-            <thead className="bg-purple-600 text-white">
+            <thead className="bg-primary text-primary-foreground">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-semibold">
                   Nom et Prénom
@@ -164,29 +164,29 @@ const AttendanceSheetView: React.FC<AttendanceSheetViewProps> = ({
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-border">
               {/* Present Users */}
               {signedUsers.map((signature, index) => (
-                <tr key={signature.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                <tr key={signature.id} className={index % 2 === 0 ? 'bg-card' : 'bg-muted/30'}>
                   <td className="px-4 py-3">
                     <div className="flex items-center">
-                      <div className="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
+                      <div className="w-2 h-2 rounded-full bg-success mr-2"></div>
                       <div>
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-foreground">
                           {signature.user?.first_name} {signature.user?.last_name}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-muted-foreground">
                           Licence Informatique L1
                         </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                    <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-success-muted text-success">
                       Présent.e
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center text-sm text-gray-600">
+                  <td className="px-4 py-3 text-center text-sm text-muted-foreground">
                     -
                   </td>
                   <td className="px-4 py-3 text-center">
@@ -197,80 +197,80 @@ const AttendanceSheetView: React.FC<AttendanceSheetViewProps> = ({
                         className="h-8 max-w-20 object-contain mx-auto border rounded"
                       />
                     ) : (
-                      <div className="text-xs text-gray-400">Non signé</div>
+                      <div className="text-xs text-muted-foreground/60">Non signé</div>
                     )}
                   </td>
                 </tr>
               ))}
               
               {/* Demo delayed user */}
-              <tr className="bg-white">
+              <tr className="bg-card">
                 <td className="px-4 py-3">
                   <div className="flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-yellow-500 mr-2"></div>
+                    <div className="w-2 h-2 rounded-full bg-warning mr-2"></div>
                     <div>
-                      <div className="font-medium text-gray-900">Dan</div>
-                      <div className="text-sm text-gray-500">Licence Informatique L1</div>
+                      <div className="font-medium text-foreground">Dan</div>
+                      <div className="text-sm text-muted-foreground">Licence Informatique L1</div>
                     </div>
                   </div>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                  <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-warning-muted text-warning">
                     Retard
                   </span>
                 </td>
-                <td className="px-4 py-3 text-center text-sm text-gray-600">
+                <td className="px-4 py-3 text-center text-sm text-muted-foreground">
                   Transport
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <div className="text-xs text-gray-400">Non signé</div>
+                  <div className="text-xs text-muted-foreground/60">Non signé</div>
                 </td>
               </tr>
 
               {/* Demo absent users */}
-              <tr className="bg-gray-50">
+              <tr className="bg-muted/30">
                 <td className="px-4 py-3">
                   <div className="flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-red-500 mr-2"></div>
+                    <div className="w-2 h-2 rounded-full bg-destructive mr-2"></div>
                     <div>
-                      <div className="font-medium text-gray-900">Eva</div>
-                      <div className="text-sm text-gray-500">Licence Informatique L1</div>
+                      <div className="font-medium text-foreground">Eva</div>
+                      <div className="text-sm text-muted-foreground">Licence Informatique L1</div>
                     </div>
                   </div>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                  <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-destructive/10 text-destructive">
                     Absent.e
                   </span>
                 </td>
-                <td className="px-4 py-3 text-center text-sm text-gray-600">
+                <td className="px-4 py-3 text-center text-sm text-muted-foreground">
                   Maladie
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <div className="text-xs text-gray-400">Absent</div>
+                  <div className="text-xs text-muted-foreground/60">Absent</div>
                 </td>
               </tr>
 
-              <tr className="bg-white">
+              <tr className="bg-card">
                 <td className="px-4 py-3">
                   <div className="flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-red-500 mr-2"></div>
+                    <div className="w-2 h-2 rounded-full bg-destructive mr-2"></div>
                     <div>
-                      <div className="font-medium text-gray-900">Frank</div>
-                      <div className="text-sm text-gray-500">Licence Informatique L1</div>
+                      <div className="font-medium text-foreground">Frank</div>
+                      <div className="text-sm text-muted-foreground">Licence Informatique L1</div>
                     </div>
                   </div>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                  <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-destructive/10 text-destructive">
                     Absent.e
                   </span>
                 </td>
-                <td className="px-4 py-3 text-center text-sm text-gray-600">
+                <td className="px-4 py-3 text-center text-sm text-muted-foreground">
                   Autre
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <div className="text-xs text-gray-400">Absent</div>
+                  <div className="text-xs text-muted-foreground/60">Absent</div>
                 </td>
               </tr>
             </tbody>
@@ -279,11 +279,11 @@ const AttendanceSheetView: React.FC<AttendanceSheetViewProps> = ({
       </div>
 
       {/* Signatures Section */}
-      <div className="p-6 border-t bg-gray-50">
+      <div className="p-6 border-t bg-muted/50">
         <div className="grid gap-8 grid-cols-1 md:grid-cols-2">
           {/* Signature formateur - TOUJOURS affichée (même en autonomie) */}
           <div className="text-center">
-            <h4 className="font-semibold mb-2 text-gray-900">Signature du Formateur</h4>
+            <h4 className="font-semibold mb-2 text-foreground">Signature du Formateur</h4>
 
             <div className="h-20 border-2 border-border rounded-lg flex items-center justify-center bg-background">
               {((attendanceSheet as any).instructor_absent) ? (
@@ -312,7 +312,7 @@ const AttendanceSheetView: React.FC<AttendanceSheetViewProps> = ({
           </div>
 
           <div className="text-center">
-            <h4 className="font-semibold mb-2 text-gray-900">Signature de l'Administration</h4>
+            <h4 className="font-semibold mb-2 text-foreground">Signature de l'Administration</h4>
             <div className="h-20 border-2 border-border rounded-lg flex items-center justify-center bg-background">
               <div className="w-32 h-12 bg-muted rounded flex items-center justify-center">
                 <span className="text-muted-foreground text-xs">Signature requise</span>

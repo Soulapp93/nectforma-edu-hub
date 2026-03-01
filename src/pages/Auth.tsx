@@ -86,7 +86,7 @@ const Auth = () => {
         </div>
 
         {/* Login form card */}
-        <div className="bg-white rounded-2xl border-2 border-primary/30 shadow-2xl p-6 sm:p-8 backdrop-blur-sm animate-slide-up">
+        <div className="bg-card rounded-2xl border-2 border-primary/30 shadow-2xl p-6 sm:p-8 backdrop-blur-sm animate-slide-up">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-foreground mb-1">
               Connexion

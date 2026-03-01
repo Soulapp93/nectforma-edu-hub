@@ -102,7 +102,7 @@ const CreateEstablishment = () => {
 
   const passwordStrength = getPasswordStrength(formData.password);
   const strengthLabels = ['Très faible', 'Faible', 'Moyen', 'Bon', 'Fort', 'Excellent'];
-  const strengthColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500', 'bg-emerald-500'];
+  const strengthColors = ['bg-destructive', 'bg-warning', 'bg-warning', 'bg-success/70', 'bg-success', 'bg-success'];
 
   const validateStep1 = () => {
     const result = establishmentSchema.safeParse(formData);
@@ -208,9 +208,9 @@ const CreateEstablishment = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-purple-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-secondary to-background">
       {/* Header */}
-      <header className="bg-white/95 backdrop-blur-sm border-b border-border shadow-sm sticky top-0 z-50">
+      <header className="bg-card/95 backdrop-blur-sm border-b border-border shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <Link to="/" className="flex items-center space-x-3">
@@ -230,7 +230,7 @@ const CreateEstablishment = () => {
             {/* Step 1 */}
             <div className={`flex items-center ${step >= 1 ? 'text-primary' : 'text-muted-foreground'}`}>
               <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center font-semibold transition-all duration-300 ${
-                step > 1 ? 'bg-green-500 text-white' : step === 1 ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-muted'
+                step > 1 ? 'bg-success text-success-foreground' : step === 1 ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30' : 'bg-muted'
               }`}>
                 {step > 1 ? <Check className="h-5 w-5" /> : <Building className="h-5 w-5" />}
               </div>
@@ -255,10 +255,10 @@ const CreateEstablishment = () => {
 
       {/* Form */}
       <div className="max-w-2xl mx-auto px-4 pb-12">
-        <div className="bg-white rounded-2xl shadow-xl border border-border overflow-hidden">
+        <div className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden">
           {/* Form Header */}
-          <div className="bg-gradient-to-r from-primary/10 to-purple-100 p-6 sm:p-8 text-center border-b border-border">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-xl shadow-lg mb-4">
+          <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-6 sm:p-8 text-center border-b border-border">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-card rounded-xl shadow-lg mb-4">
               {step === 1 ? (
                 <Building className="h-8 w-8 text-primary" />
               ) : (
@@ -476,7 +476,7 @@ const CreateEstablishment = () => {
                       Retour
                     </Button>
                   </Link>
-                  <Button type="submit" className="w-full sm:w-auto bg-gradient-to-r from-primary to-purple-600 hover:opacity-90">
+                  <Button type="submit" className="w-full sm:w-auto bg-gradient-to-r from-primary to-accent hover:opacity-90">
                     Continuer
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
@@ -604,7 +604,7 @@ const CreateEstablishment = () => {
                           />
                         ))}
                       </div>
-                      <p className={`text-xs ${passwordStrength >= 3 ? 'text-green-600' : 'text-muted-foreground'}`}>
+                      <p className={`text-xs ${passwordStrength >= 3 ? 'text-success' : 'text-muted-foreground'}`}>
                         Force: {strengthLabels[passwordStrength]}
                       </p>
                     </div>
@@ -634,7 +634,7 @@ const CreateEstablishment = () => {
                     <p className="text-sm text-destructive mt-1">{errors.confirmPassword}</p>
                   )}
                   {formData.confirmPassword && formData.password === formData.confirmPassword && (
-                    <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                    <p className="text-xs text-success mt-1 flex items-center gap-1">
                       <Check className="h-3 w-3" /> Les mots de passe correspondent
                     </p>
                   )}
@@ -669,7 +669,7 @@ const CreateEstablishment = () => {
                   <Button 
                     type="submit" 
                     disabled={loading}
-                    className="w-full sm:w-auto bg-gradient-to-r from-primary to-purple-600 hover:opacity-90"
+                    className="w-full sm:w-auto bg-gradient-to-r from-primary to-accent hover:opacity-90"
                   >
                     {loading ? (
                       <>
@@ -693,15 +693,15 @@ const CreateEstablishment = () => {
         <div className="mt-8 text-center">
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs text-muted-foreground">
             <div className="flex items-center gap-1.5">
-              <ShieldCheck className="h-4 w-4 text-green-500" />
+              <ShieldCheck className="h-4 w-4 text-success" />
               <span>Données sécurisées</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <Check className="h-4 w-4 text-green-500" />
+              <Check className="h-4 w-4 text-success" />
               <span>Essai gratuit 14 jours</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <Check className="h-4 w-4 text-green-500" />
+              <Check className="h-4 w-4 text-success" />
               <span>Sans engagement</span>
             </div>
           </div>
