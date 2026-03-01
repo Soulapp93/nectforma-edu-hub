@@ -1040,10 +1040,9 @@ serve(async (req) => {
 <body style="margin:0;padding:0;background-color:#f3f4f6;font-family:Arial,Helvetica,sans-serif;">
   <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;margin-top:20px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
     <!-- Header -->
-    <div style="padding:24px 28px;">
-      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma-v3.png" alt="Nectforma" width="120" style="display:block;border:none;outline:none;" />
+    <div style="background:linear-gradient(135deg,#8B5CF6 0%,#7C3AED 50%,#9333EA 100%);padding:28px 28px;text-align:center;">
+      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma-v3.png" alt="Nectforma" width="100" style="display:inline-block;border:none;outline:none;" />
     </div>
-    <div style="height:4px;background:linear-gradient(135deg,#7c3aed,#a855f7);"></div>
     <!-- Content -->
     <div style="padding:32px 28px;">
       <h1 style="color:#1f2937;font-size:21px;line-height:1.4;margin:0 0 16px;text-align:center;">${article.title}</h1>
