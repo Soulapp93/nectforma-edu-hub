@@ -2549,7 +2549,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
                                 }
                               }}
                               onKeyDown={e => handleCellKeyDown(e, key)}
-                              className="w-full h-full px-1 py-0 text-xs outline-none bg-white dark:bg-background border-none"
+                              className="w-full h-full px-1 py-0 text-xs outline-none bg-white border-none text-black"
                               style={{ 
                                 minHeight: rh, 
                                 fontFamily: cell?.fontFamily || 'Arial',
@@ -2588,7 +2588,7 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
                                   cell?.strikethrough ? 'line-through' : '',
                                 ].filter(Boolean).join(' ') || undefined,
                                 textAlign: cell?.align || 'left',
-                                color: cfStyle.color || cell?.textColor || undefined,
+                                color: cfStyle.color || cell?.textColor || '#000000',
                                 fontFamily: cell?.fontFamily || 'Arial',
                                 fontSize: cell?.fontSize ? `${cell.fontSize}px` : '12px',
                                 lineHeight: `${rh - 2}px`,
