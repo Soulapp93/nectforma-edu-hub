@@ -81,7 +81,7 @@ serve(async (req: Request): Promise<Response> => {
 <body>
   <div class="container">
     <div class="header" style="background:linear-gradient(135deg,#8B5CF6 0%,#7C3AED 50%,#9333EA 100%);padding:24px 30px;text-align:center;border-radius:10px 10px 0 0;">
-      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nf.png" alt="Nectforma" width="48" style="display:block;margin:0 auto 8px;border:none;outline:none;" />
+      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/email-logo-landing.svg" alt="Nectforma" width="52" height="58" style="display:block;margin:0 auto 10px;border:none;outline:none;" />
       <span style="color:#ffffff;font-size:18px;font-weight:700;letter-spacing:0.5px;font-family:Arial,sans-serif;">Nectforma</span>
     </div>
     <div style="padding: 15px 30px; background: #f9fafb;">
@@ -167,7 +167,7 @@ serve(async (req: Request): Promise<Response> => {
 <body>
   <div class="container">
     <div class="header" style="background:linear-gradient(135deg,#8B5CF6 0%,#7C3AED 50%,#9333EA 100%);padding:24px 30px;text-align:center;border-radius:10px 10px 0 0;">
-      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nf.png" alt="Nectforma" width="48" style="display:block;margin:0 auto 8px;border:none;outline:none;" />
+      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/email-logo-landing.svg" alt="Nectforma" width="52" height="58" style="display:block;margin:0 auto 10px;border:none;outline:none;" />
       <span style="color:#ffffff;font-size:18px;font-weight:700;letter-spacing:0.5px;font-family:Arial,sans-serif;">Nectforma</span>
     </div>
     <div class="content">

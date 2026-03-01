@@ -1041,7 +1041,7 @@ serve(async (req) => {
   <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;margin-top:20px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
     <!-- Header -->
     <div style="background:linear-gradient(135deg,#8B5CF6 0%,#7C3AED 50%,#9333EA 100%);padding:24px 28px;text-align:center;">
-      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nf.png" alt="Nectforma" width="48" style="display:block;margin:0 auto 8px;border:none;outline:none;" />
+      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/email-logo-landing.svg" alt="Nectforma" width="52" height="58" style="display:block;margin:0 auto 10px;border:none;outline:none;" />
       <span style="color:#ffffff;font-size:18px;font-weight:700;letter-spacing:0.5px;font-family:Arial,Helvetica,sans-serif;">Nectforma</span>
     </div>
     <!-- Content -->
