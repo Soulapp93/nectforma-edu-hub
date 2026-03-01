@@ -10,7 +10,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { Button } from '@/components/ui/button';
 import Sidebar from './components/Sidebar';
 import NotificationBell from './components/NotificationBell';
-import { ThemeToggle } from './components/ThemeToggle';
+
 import MobileHeader from './components/MobileHeader';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
@@ -385,7 +385,6 @@ const AppContent = () => {
         {/* Header desktop (notification band) */}
         <header className="hidden md:flex h-14 sm:h-16 items-center justify-end border-b border-border/60 bg-gradient-to-r from-secondary/60 via-background/70 to-secondary/60 backdrop-blur-xl px-4 sm:px-6 sticky top-0 z-20">
           <div className="flex items-center space-x-3 sm:space-x-4">
-            <ThemeToggle />
             <NotificationBell />
           </div>
         </header>
@@ -427,7 +426,7 @@ const AppContent = () => {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange forcedTheme="light">
         <QueryClientProvider client={queryClient}>
           <Router>
             <AuthProvider>
