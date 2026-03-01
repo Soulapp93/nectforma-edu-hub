@@ -2278,11 +2278,11 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
       )}
 
       {/* Formula bar - Excel style */}
-      <div className="flex items-center border-b bg-background relative" style={{ height: 28 }}>
+      <div className="flex items-center border-b border-border bg-background relative" style={{ height: 28 }}>
         {/* Name Box */}
         <div 
-          className="flex items-center justify-center text-xs font-medium border-r px-1"
-          style={{ width: 80, minWidth: 80, height: '100%', backgroundColor: '#f3f4f6' }}
+          className="flex items-center justify-center text-xs font-medium border-r border-border px-1 bg-muted"
+          style={{ width: 80, minWidth: 80, height: '100%' }}
         >
           <span className="font-mono text-foreground">{selectionLabel}</span>
         </div>
@@ -2675,19 +2675,19 @@ const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, on
       </div>
 
       {/* Bottom area: sheet tabs + status bar */}
-      <div className="flex items-center border-t" style={{ backgroundColor: '#e6e6e6', height: 28 }}>
+      <div className="flex items-center border-t border-border bg-muted" style={{ height: 28 }}>
         {/* Sheet tabs */}
         <div className="flex items-center gap-0 overflow-x-auto flex-1">
-          <button onClick={addSheet} className="px-2 py-1 hover:bg-[#d0d0d0] transition-colors border-r border-[#c0c0c0]" title="Nouvelle feuille">
-            <Plus className="h-3.5 w-3.5 text-[#555]" />
+          <button onClick={addSheet} className="px-2 py-1 hover:bg-muted-foreground/10 transition-colors border-r border-border" title="Nouvelle feuille">
+            <Plus className="h-3.5 w-3.5 text-muted-foreground" />
           </button>
           {sheets.map((s, i) => (
             <div
               key={s.id}
-              className={`flex items-center gap-1 px-3 py-1 text-xs cursor-pointer border-r border-[#c0c0c0] transition-colors whitespace-nowrap ${
+              className={`flex items-center gap-1 px-3 py-1 text-xs cursor-pointer border-r border-border transition-colors whitespace-nowrap ${
                 i === activeSheetIdx 
-                  ? 'bg-white font-medium text-foreground border-t-2 border-t-[#217346]' 
-                  : 'hover:bg-[#d0d0d0] text-[#555]'
+                  ? 'bg-card font-medium text-foreground border-t-2 border-t-primary' 
+                  : 'hover:bg-muted-foreground/10 text-muted-foreground'
               }`}
               onClick={() => setActiveSheetIdx(i)}
               onDoubleClick={() => setEditingSheetName(i)}

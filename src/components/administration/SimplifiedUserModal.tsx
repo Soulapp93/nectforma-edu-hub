@@ -301,10 +301,10 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-card rounded-xl shadow-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-border">
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <h2 className="text-xl font-semibold text-foreground">
             {mode === 'create' 
               ? preselectedRole 
                 ? `Ajouter un ${preselectedRole === 'Admin' ? 'Administrateur' : preselectedRole}`
@@ -313,7 +313,7 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-muted-foreground hover:text-foreground transition-colors"
           >
             <X className="h-6 w-6" />
           </button>
@@ -322,8 +322,8 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Informations personnelles */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
-              <User className="h-5 w-5 text-purple-600" />
+            <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
+              <User className="h-5 w-5 text-primary" />
               Informations personnelles
             </h3>
             
@@ -360,7 +360,7 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
             <div>
               <Label htmlFor="email">Email *</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
@@ -378,8 +378,8 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
 
           {/* Paramètres du compte */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
-              <Building className="h-5 w-5 text-purple-600" />
+            <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
+              <Building className="h-5 w-5 text-primary" />
               Paramètres du compte
             </h3>
             
@@ -424,8 +424,8 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
           {formData.role === 'Étudiant' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
-                  <UserCheck className="h-5 w-5 text-purple-600" />
+                <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
+                  <UserCheck className="h-5 w-5 text-primary" />
                   Associer un tuteur entreprise
                 </h3>
                 <Switch
@@ -435,10 +435,10 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
               </div>
               
               {showTutorSection && (
-                <div className="space-y-6 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <div className="space-y-6 border border-border rounded-lg p-4 bg-muted/50">
                   {/* Informations personnelles du tuteur */}
                   <div className="space-y-4">
-                    <h4 className="font-medium text-gray-700 flex items-center gap-2">
+                    <h4 className="font-medium text-foreground/80 flex items-center gap-2">
                       <User className="h-4 w-4" />
                       Informations personnelles
                     </h4>
@@ -477,7 +477,7 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
                       <div>
                         <Label htmlFor="tutor_email">Email du tuteur *</Label>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input
                             id="tutor_email"
                             type="email"
@@ -495,7 +495,7 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
                       <div>
                         <Label htmlFor="tutor_phone">Téléphone</Label>
                         <div className="relative">
-                          <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input
                             id="tutor_phone"
                             value={tutorData.phone}
@@ -510,7 +510,7 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
 
                   {/* Informations entreprise */}
                   <div className="space-y-4">
-                    <h4 className="font-medium text-gray-700 flex items-center gap-2">
+                    <h4 className="font-medium text-foreground/80 flex items-center gap-2">
                       <Building className="h-4 w-4" />
                       Informations entreprise
                     </h4>
@@ -590,18 +590,18 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
           {/* Inscription aux formations - Caché pour les administrateurs */}
           {formData.role !== 'Admin' && (
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
-                <Users className="h-5 w-5 text-purple-600" />
+              <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
                 Inscription aux formations
               </h3>
               
               {loadingFormations ? (
                 <div className="text-center py-4">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600 mx-auto"></div>
-                  <p className="text-sm text-gray-500 mt-2">Chargement des formations...</p>
+                  <p className="text-sm text-muted-foreground mt-2">Chargement des formations...</p>
                 </div>
               ) : formations.length > 0 ? (
-                <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-4">
+                <div className="space-y-2 max-h-60 overflow-y-auto border border-border rounded-lg p-4">
                   {formations.map((formation) => (
                     <div key={formation.id} className="flex items-center space-x-2">
                       <Checkbox
@@ -617,7 +617,7 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
                       >
                         <div>
                           <div className="font-medium">{formation.title}</div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-muted-foreground">
                             {formation.level} • Du {new Date(formation.start_date).toLocaleDateString('fr-FR')} au {new Date(formation.end_date).toLocaleDateString('fr-FR')}
                           </div>
                         </div>
@@ -626,7 +626,7 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500">Aucune formation disponible</p>
+                <p className="text-sm text-muted-foreground">Aucune formation disponible</p>
               )}
               
               {selectedFormations.length > 0 && (
@@ -637,7 +637,7 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex justify-end gap-3 pt-4 border-t border-border">
             <Button
               type="button"
               variant="outline"
