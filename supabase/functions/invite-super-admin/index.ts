@@ -158,10 +158,9 @@ serve(async (req: Request): Promise<Response> => {
         </head>
         <body style="margin:0;padding:0;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background-color:#f4f4f5;">
           <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;margin-top:40px;margin-bottom:40px;box-shadow:0 4px 6px rgba(0,0,0,0.1);">
-            <div style="padding:24px 30px;">
-              <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma-v3.png" alt="Nectforma" width="120" style="display:block;border:none;outline:none;" />
+            <div style="background:linear-gradient(135deg,#8B5CF6 0%,#7C3AED 50%,#9333EA 100%);padding:28px 30px;text-align:center;">
+              <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma-v3.png" alt="Nectforma" width="100" style="display:inline-block;border:none;outline:none;" />
             </div>
-            <div style="height:4px;background:linear-gradient(135deg,#8B5CF6 0%,#6D28D9 100%);"></div>
             <div style="padding:40px 30px;">
               <p style="font-size:16px;color:#374151;margin-bottom:20px;">
                 Bonjour <strong>${first_name}</strong>,

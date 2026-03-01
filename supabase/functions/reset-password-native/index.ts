@@ -226,10 +226,9 @@ serve(async (req) => {
         <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px;">
           <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
             <!-- Header -->
-            <div style="padding: 24px 30px;">
-              <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma-v3.png" alt="Nectforma" width="120" style="display:block;border:none;outline:none;" />
+            <div style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 50%, #9333EA 100%); padding: 28px 30px; text-align: center;">
+              <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma-v3.png" alt="Nectforma" width="100" style="display:inline-block;border:none;outline:none;" />
             </div>
-            <div style="height: 4px; background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);"></div>
             
             <!-- Main Content -->
             <div style="padding: 40px 30px;">
@@ -392,10 +391,9 @@ serve(async (req) => {
       <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
           <!-- Header -->
-          <div style="padding: 24px 30px;">
-            <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma-v3.png" alt="Nectforma" width="120" style="display:block;border:none;outline:none;" />
+          <div style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 50%, #9333EA 100%); padding: 28px 30px; text-align: center;">
+            <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma-v3.png" alt="Nectforma" width="100" style="display:inline-block;border:none;outline:none;" />
           </div>
-          <div style="height: 4px; background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);"></div>
           
           <!-- Main Content -->
           <div style="padding: 40px 30px;">
