@@ -437,11 +437,7 @@ const Index = () => {
 
           {/* Logo Presentation Section - Light Violet Theme */}
           <AnimatedSection animation="scale" delay={500} className="mt-12 md:mt-16 mb-8 md:mb-12 px-2">
-            <div className="relative max-w-4xl mx-auto rounded-3xl overflow-hidden aspect-video flex items-center justify-center border border-primary/20"
-                 style={{ 
-                   background: 'radial-gradient(ellipse at center, hsl(262 83% 95%) 0%, hsl(262 60% 88%) 40%, hsl(270 50% 82%) 100%)',
-                   boxShadow: '0 0 60px rgba(139, 92, 246, 0.2), 0 0 100px rgba(168, 85, 247, 0.15), inset 0 0 40px rgba(255, 255, 255, 0.5)'
-                 }}>
+             <div className="relative max-w-4xl mx-auto rounded-3xl overflow-hidden aspect-video flex items-center justify-center border border-primary/20 logo-presentation-bg">
               
               {/* Étoiles subtiles */}
               <div className="absolute inset-0 overflow-hidden">
@@ -576,7 +572,7 @@ const Index = () => {
                          filter: 'blur(20px)',
                          animation: 'orbit-spin 8s linear infinite'
                        }} />
-                  <div className="relative bg-white/95 backdrop-blur-sm rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-2xl transition-transform duration-500 hover:scale-105"
+                   <div className="relative logo-card-bg backdrop-blur-sm rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-2xl transition-transform duration-500 hover:scale-105"
                        style={{
                          boxShadow: '0 20px 60px rgba(139, 92, 246, 0.3), 0 10px 30px rgba(139, 92, 246, 0.2), inset 0 1px 0 rgba(255,255,255,0.8)'
                        }}>
@@ -609,10 +605,9 @@ const Index = () => {
                   >
                     NECTFORMA
                   </h2>
-                  <p 
-                    className="mt-3 md:mt-4 text-sm md:text-lg lg:text-xl font-medium tracking-wide"
+                   <p 
+                    className="mt-3 md:mt-4 text-sm md:text-lg lg:text-xl font-medium tracking-wide nectforma-subtitle"
                     style={{
-                      color: 'hsl(262 60% 40%)',
                       animation: 'fade-in-up 1s ease-out 0.8s both'
                     }}
                   >
@@ -726,10 +721,8 @@ const Index = () => {
       <SectionDivider variant="curve" flip fillColor="fill-muted/30" />
 
       {/* Comment ça marche - Timeline Section */}
-      <section className="py-16 md:py-24 relative overflow-hidden">
-        <div className="absolute inset-0" style={{
-          background: 'linear-gradient(180deg, hsl(270 50% 98% / 0.5) 0%, hsl(262 60% 96% / 0.6) 50%, hsl(280 40% 97% / 0.5) 100%)'
-        }} />
+       <section className="py-16 md:py-24 relative overflow-hidden">
+        <div className="absolute inset-0 section-soft-bg" />
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <AnimatedSection className="text-center mb-16">
             <div className="inline-flex items-center px-4 py-2 bg-primary/10 rounded-full mb-6">
@@ -775,11 +768,9 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section id="fonctionnalites" className="py-16 md:py-24 relative overflow-hidden">
+       <section id="fonctionnalites" className="py-16 md:py-24 relative overflow-hidden">
         {/* Soft gradient background for features section */}
-        <div className="absolute inset-0" style={{
-          background: 'linear-gradient(180deg, hsl(270 50% 97% / 0.6) 0%, hsl(280 40% 95% / 0.8) 30%, hsl(300 35% 96% / 0.6) 60%, hsl(270 50% 97% / 0.5) 100%)'
-        }} />
+        <div className="absolute inset-0 section-soft-bg-alt" />
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute w-[300px] h-[300px] opacity-[0.08]" style={{
             background: 'radial-gradient(circle, hsl(262 83% 65%) 0%, transparent 70%)',
@@ -860,10 +851,7 @@ const Index = () => {
                     </ul>
 
                     {/* Détails supplémentaires */}
-                    <div className="rounded-xl p-4 border border-primary/10 relative overflow-hidden" style={{
-                      background: 'linear-gradient(135deg, hsl(270 60% 98% / 0.8) 0%, hsl(280 50% 96% / 0.6) 100%)',
-                      backdropFilter: 'blur(10px)'
-                    }}>
+                     <div className="rounded-xl p-4 border border-primary/10 relative overflow-hidden detail-box-bg">
                       {/* Subtle shimmer */}
                       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
                         <div style={{
@@ -1041,10 +1029,8 @@ const Index = () => {
       </section>
 
       {/* Newsletter Section */}
-      <section className="py-16 md:py-20 relative overflow-hidden">
-        <div className="absolute inset-0" style={{
-          background: 'linear-gradient(135deg, hsl(270 60% 97% / 0.8) 0%, hsl(300 40% 95% / 0.6) 50%, hsl(262 50% 96% / 0.7) 100%)'
-        }} />
+       <section className="py-16 md:py-20 relative overflow-hidden">
+        <div className="absolute inset-0 section-newsletter-bg" />
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <AnimatedSection animation="fade-up">
             <div className="inline-flex items-center px-4 py-2 bg-primary/10 rounded-full mb-6">
@@ -1128,10 +1114,8 @@ const Index = () => {
       <FAQSection />
 
       {/* Contact Section */}
-      <section id="contact" className="py-16 md:py-24 relative overflow-hidden">
-        <div className="absolute inset-0" style={{
-          background: 'linear-gradient(180deg, hsl(270 50% 98% / 0.5) 0%, hsl(280 40% 96% / 0.4) 100%)'
-        }} />
+       <section id="contact" className="py-16 md:py-24 relative overflow-hidden">
+        <div className="absolute inset-0 section-contact-bg" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <div className="inline-flex items-center px-4 py-2 bg-primary/10 rounded-full mb-6">
