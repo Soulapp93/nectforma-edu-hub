@@ -80,10 +80,10 @@ serve(async (req: Request): Promise<Response> => {
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma-v3.png" alt="Nectforma" width="120" style="display:block;border:none;outline:none;" />
+    <div class="header" style="background:linear-gradient(135deg,#8B5CF6 0%,#7C3AED 50%,#9333EA 100%);padding:24px 30px;text-align:center;border-radius:10px 10px 0 0;">
+      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nf.png" alt="Nectforma" width="48" style="display:block;margin:0 auto 8px;border:none;outline:none;" />
+      <span style="color:#ffffff;font-size:18px;font-weight:700;letter-spacing:0.5px;font-family:Arial,sans-serif;">Nectforma</span>
     </div>
-    <div class="header-accent"></div>
     <div style="padding: 15px 30px; background: #f9fafb;">
       <h2 style="margin: 0; color: #1a1a1a;">📩 Nouveau message de contact</h2>
     </div>
@@ -166,10 +166,10 @@ serve(async (req: Request): Promise<Response> => {
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nectforma-v3.png" alt="Nectforma" width="120" style="display:block;border:none;outline:none;" />
+    <div class="header" style="background:linear-gradient(135deg,#8B5CF6 0%,#7C3AED 50%,#9333EA 100%);padding:24px 30px;text-align:center;border-radius:10px 10px 0 0;">
+      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/logo-nf.png" alt="Nectforma" width="48" style="display:block;margin:0 auto 8px;border:none;outline:none;" />
+      <span style="color:#ffffff;font-size:18px;font-weight:700;letter-spacing:0.5px;font-family:Arial,sans-serif;">Nectforma</span>
     </div>
-    <div class="header-accent"></div>
     <div class="content">
       <p>Bonjour ${body.firstName},</p>
       <p>Nous avons bien reçu votre message concernant "<strong>${subjectLabel}</strong>".</p>
