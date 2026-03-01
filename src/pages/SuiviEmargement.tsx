@@ -308,14 +308,14 @@ const SuiviEmargement = () => {
     return (
       <div className="p-8">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded mb-4 w-64"></div>
-          <div className="h-4 bg-gray-200 rounded mb-8 w-96"></div>
+          <div className="h-8 bg-muted rounded mb-4 w-64"></div>
+          <div className="h-4 bg-muted rounded mb-8 w-96"></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded"></div>
+              <div key={i} className="h-32 bg-muted rounded"></div>
             ))}
           </div>
-          <div className="h-96 bg-gray-200 rounded"></div>
+          <div className="h-96 bg-muted rounded"></div>
         </div>
       </div>
     );
@@ -326,14 +326,14 @@ const SuiviEmargement = () => {
     return (
       <div className="p-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Suivi émargement apprenti</h1>
-          <p className="text-gray-600">Suivez les émargements de votre apprenti</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Suivi émargement apprenti</h1>
+          <p className="text-muted-foreground">Suivez les émargements de votre apprenti</p>
         </div>
         
         <Card className="max-w-lg mx-auto mt-12">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-orange-100 flex items-center justify-center">
-              <User className="h-8 w-8 text-orange-600" />
+            <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-warning-muted flex items-center justify-center">
+              <User className="h-8 w-8 text-warning" />
             </div>
             <CardTitle>Aucun apprenti assigné</CardTitle>
             <CardDescription className="text-base">

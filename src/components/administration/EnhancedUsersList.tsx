@@ -532,7 +532,7 @@ const EnhancedUsersList: React.FC = () => {
               onClick={() => setIsStudentExcelImportOpen(true)}
               variant="outline"
               size="sm"
-              className="flex items-center justify-center gap-1.5 text-xs sm:text-sm rounded-full border-2 border-green-500 text-green-600 hover:bg-green-50"
+              className="flex items-center justify-center gap-1.5 text-xs sm:text-sm rounded-full border-2 border-success text-success hover:bg-success-muted"
             >
               <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Importer Étudiants</span>
@@ -542,7 +542,7 @@ const EnhancedUsersList: React.FC = () => {
               onClick={handleCreateAdmin}
               variant="outline"
               size="sm"
-              className="flex items-center justify-center gap-1.5 text-xs sm:text-sm rounded-full border-2 border-slate-400 text-slate-600 hover:bg-slate-50"
+              className="flex items-center justify-center gap-1.5 text-xs sm:text-sm rounded-full border-2 border-muted-foreground/50 text-muted-foreground hover:bg-muted"
             >
               <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Ajouter Admin</span>
@@ -552,7 +552,7 @@ const EnhancedUsersList: React.FC = () => {
               onClick={handleCreateInstructor}
               variant="outline"
               size="sm"
-              className="flex items-center justify-center gap-1.5 text-xs sm:text-sm rounded-full border-2 border-blue-500 text-blue-600 hover:bg-blue-50"
+              className="flex items-center justify-center gap-1.5 text-xs sm:text-sm rounded-full border-2 border-info text-info hover:bg-info-muted"
             >
               <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Ajouter Formateur</span>
@@ -562,7 +562,7 @@ const EnhancedUsersList: React.FC = () => {
               onClick={handleCreateStudent}
               variant="outline"
               size="sm"
-              className="flex items-center justify-center gap-1.5 text-xs sm:text-sm rounded-full border-2 border-purple-500 text-purple-600 hover:bg-purple-50"
+              className="flex items-center justify-center gap-1.5 text-xs sm:text-sm rounded-full border-2 border-primary text-primary hover:bg-primary/10"
             >
               <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Ajouter Étudiant</span>
