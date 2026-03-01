@@ -44,6 +44,31 @@ const SuiviEmargement = () => {
     }
   }, [userId, userRole, relationInfo]);
 
+  // Realtime: écouter les changements de signatures pour mise à jour automatique
+  useEffect(() => {
+    if (!userId) return;
+
+    const channel = supabase
+      .channel('suivi-emargement-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'attendance_signatures'
+        },
+        () => {
+          console.log('[SuiviEmargement] Changement détecté, rechargement...');
+          loadAttendanceHistory();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId, userRole, relationInfo]);
+
   const loadAttendanceHistory = async () => {
     try {
       setLoading(true);
