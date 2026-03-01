@@ -57,13 +57,8 @@ const Auth = () => {
     setError(null);
 
     try {
-      // Appeler la même edge function que l'admin (reset-password-native)
-      // mais sans token d'auth (self-service depuis la page de connexion)
-      const { data, error } = await supabase.functions.invoke('reset-password-native', {
-        body: { 
-          email: resetEmail,
-          redirect_url: window.location.origin
-        },
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
       });
 
       if (error) {
@@ -73,7 +68,7 @@ const Auth = () => {
       }
 
       setResetSent(true);
-      toast.success('Si cette adresse email existe, un lien vous a été envoyé.');
+      toast.success('Si cette adresse email existe, un lien de réinitialisation vous a été envoyé.');
     } catch (err: any) {
       setError('Erreur lors de l\'envoi. Veuillez réessayer.');
     } finally {
