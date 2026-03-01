@@ -1055,7 +1055,7 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
               onInput={handleAutoSave}
               onClick={updateSelectionState}
               onKeyUp={updateSelectionState}
-              className="outline-none prose prose-sm max-w-none dark:prose-invert word-editable-area
+              className="outline-none prose prose-sm max-w-none word-editable-area
                 [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:mt-2 [&_h1]:leading-tight
                 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:mb-3 [&_h2]:mt-2
                 [&_h3]:text-xl [&_h3]:font-medium [&_h3]:mb-2 [&_h3]:mt-1
@@ -1097,6 +1097,7 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
             min-height: var(--page-height);
             position: relative;
             background-color: #f0f0f0;
+            color: #000000 !important;
             background-image:
               repeating-linear-gradient(
                 to bottom,
