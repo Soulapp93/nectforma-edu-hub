@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Lock, Eye, EyeOff, CheckCircle, Loader2, XCircle } from 'lucide-react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { Lock, Eye, EyeOff, CheckCircle, Loader2, XCircle, Shield, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import NectformaLogo from '@/components/NectformaLogo';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -26,11 +27,9 @@ const ResetPassword = () => {
 
   const checkResetFlow = async () => {
     try {
-      // Check for custom token from our edge function
       const customToken = searchParams.get('token');
 
       if (customToken) {
-        // Validate custom token via edge function
         const { data, error: validateError } = await supabase.functions.invoke('validate-activation-token', {
           body: { token: customToken },
         });
@@ -47,14 +46,12 @@ const ResetPassword = () => {
         return;
       }
 
-      // Check for native Supabase recovery flow (hash params)
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get('access_token');
       const refreshToken = hashParams.get('refresh_token');
       const type = hashParams.get('type');
 
       if (accessToken && refreshToken && type === 'recovery') {
-        // Set the session
         const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken,
@@ -72,7 +69,6 @@ const ResetPassword = () => {
         return;
       }
 
-      // Check if we have an existing session
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         setUserEmail(session.user.email || null);
@@ -81,7 +77,6 @@ const ResetPassword = () => {
         return;
       }
 
-      // No valid token or session
       setError("Lien de réinitialisation invalide ou expiré. Veuillez demander un nouveau lien.");
       setLoading(false);
     } catch (err: any) {
@@ -112,7 +107,6 @@ const ResetPassword = () => {
       const customToken = searchParams.get('token');
 
       if (customToken) {
-        // Use our custom activation/reset flow
         const { data, error: resetError } = await supabase.functions.invoke('activate-user-account', {
           body: {
             token: customToken,
@@ -135,7 +129,6 @@ const ResetPassword = () => {
         setSuccess(true);
         toast.success('Mot de passe mis à jour avec succès !');
 
-        // Auto-login if we have the email
         if (userEmail) {
           const { error: signInError } = await supabase.auth.signInWithPassword({
             email: userEmail,
@@ -150,7 +143,6 @@ const ResetPassword = () => {
 
         setTimeout(() => navigate('/auth'), 2000);
       } else {
-        // Native Supabase flow
         const { error: updateError } = await supabase.auth.updateUser({
           password: formData.password
         });
@@ -184,10 +176,10 @@ const ResetPassword = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center">
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4 bg-gradient-to-br from-primary/90 via-primary to-primary/80">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Vérification du lien de réinitialisation...</p>
+          <Loader2 className="h-12 w-12 animate-spin text-white mx-auto mb-4" />
+          <p className="text-white/70">Vérification du lien de réinitialisation...</p>
         </div>
       </div>
     );
@@ -195,23 +187,35 @@ const ResetPassword = () => {
 
   if (!tokenValid && error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-destructive/5 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-card rounded-2xl shadow-xl p-8 text-center">
-          <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <XCircle className="h-8 w-8 text-destructive" />
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4 bg-gradient-to-br from-primary/90 via-primary to-primary/80">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-10 w-64 h-64 bg-white/5 rounded-full blur-3xl animate-float" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }} />
+        </div>
+        <div className="relative z-10 w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center mb-4 animate-float">
+              <NectformaLogo variant="light" size="xl" />
+            </div>
+            <p className="text-white/70 text-sm">Plateforme de gestion éducative</p>
           </div>
-          <h2 className="text-2xl font-bold text-foreground mb-2">
-            Lien invalide ou expiré
-          </h2>
-          <p className="text-muted-foreground mb-6">
-            {error}
-          </p>
-          <button
-            onClick={() => navigate('/auth')}
-            className="w-full bg-primary text-primary-foreground py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors"
-          >
-            Retour à la connexion
-          </button>
+          <div className="bg-card rounded-2xl border-2 border-primary/30 shadow-2xl p-6 sm:p-8 backdrop-blur-sm text-center">
+            <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <XCircle className="h-8 w-8 text-destructive" />
+            </div>
+            <h2 className="text-2xl font-bold text-foreground mb-2">
+              Lien invalide ou expiré
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              {error}
+            </p>
+            <button
+              onClick={() => navigate('/auth')}
+              className="w-full bg-primary text-primary-foreground py-3.5 px-4 rounded-xl font-semibold hover:bg-primary/90 transition-all duration-200 shadow-lg"
+            >
+              Retour à la connexion
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -219,11 +223,21 @@ const ResetPassword = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          <div className="bg-card rounded-2xl shadow-xl p-8 text-center">
-            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
+      <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4 bg-gradient-to-br from-primary/90 via-primary to-primary/80">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-10 w-64 h-64 bg-white/5 rounded-full blur-3xl animate-float" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }} />
+        </div>
+        <div className="relative z-10 w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center mb-4 animate-float">
+              <NectformaLogo variant="light" size="xl" />
+            </div>
+            <p className="text-white/70 text-sm">Plateforme de gestion éducative</p>
+          </div>
+          <div className="bg-card rounded-2xl border-2 border-primary/30 shadow-2xl p-6 sm:p-8 backdrop-blur-sm text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
             <h2 className="text-2xl font-bold text-foreground mb-2">
               Mot de passe mis à jour !
@@ -238,134 +252,149 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col lg:flex-row">
-      {/* Left side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 nect-gradient text-white p-12 flex-col justify-center">
-        <div className="max-w-md">
-          <div className="flex items-center space-x-3 mb-8">
-            <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-              <span className="text-primary font-bold text-xl">N</span>
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold">NECTFORMA</h1>
-              <p className="text-white/80">Plateforme de gestion éducative</p>
-            </div>
-          </div>
-          
-          <h2 className="text-4xl font-bold mb-6">
-            Sécurisez votre compte
-          </h2>
-          
-          <p className="text-lg text-white/90 mb-8">
-            Choisissez un nouveau mot de passe sécurisé pour protéger votre espace NECTFORMA.
-          </p>
-          
-          <div className="space-y-4">
-            <div className="flex items-center">
-              <div className="w-2 h-2 bg-white/60 rounded-full mr-3"></div>
-              <span className="text-white/90">Au moins 8 caractères</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-2 h-2 bg-white/60 rounded-full mr-3"></div>
-              <span className="text-white/90">Mélangez lettres et chiffres</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-2 h-2 bg-white/60 rounded-full mr-3"></div>
-              <span className="text-white/90">Évitez les mots de passe communs</span>
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4 bg-gradient-to-br from-primary/90 via-primary to-primary/80">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-64 h-64 bg-white/5 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/4 w-48 h-48 bg-white/3 rounded-full blur-2xl animate-float" style={{ animationDelay: '2s' }} />
+        <div 
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)`,
+            backgroundSize: '50px 50px'
+          }}
+        />
       </div>
 
-      {/* Right side - Form */}
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
-        <div className="w-full max-w-md">
-          <div className="bg-card rounded-2xl shadow-xl p-6 sm:p-8 border">
-            {/* Mobile Logo */}
-            <div className="lg:hidden flex items-center justify-center space-x-2 mb-6">
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">N</span>
-              </div>
-              <span className="text-xl font-bold text-foreground">NECTFORMA</span>
-            </div>
-
-            <div className="text-center mb-8">
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-                Nouveau mot de passe
-              </h2>
-              <p className="text-muted-foreground">
-                Créez un nouveau mot de passe sécurisé
-              </p>
-              {userEmail && (
-                <p className="text-sm text-primary mt-2">{userEmail}</p>
-              )}
-            </div>
-
-            {error && (
-              <div className="mb-6 bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  <Lock className="inline h-4 w-4 mr-2" />
-                  Nouveau mot de passe
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={formData.password}
-                    onChange={(e) => handleInputChange('password', e.target.value)}
-                    className="w-full px-4 py-3 border border-input bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent pr-12 text-foreground"
-                    placeholder="Minimum 8 caractères"
-                    required
-                    minLength={8}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  <Lock className="inline h-4 w-4 mr-2" />
-                  Confirmer le mot de passe
-                </label>
-                <div className="relative">
-                  <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    value={formData.confirmPassword}
-                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                    className="w-full px-4 py-3 border border-input bg-background rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent pr-12 text-foreground"
-                    placeholder="Confirmez votre mot de passe"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                  </button>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-primary text-primary-foreground py-3 px-4 rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
-                disabled={submitting}
-              >
-                {submitting ? 'Mise à jour en cours...' : 'Mettre à jour le mot de passe'}
-              </button>
-            </form>
+      {/* Main content */}
+      <div className="relative z-10 w-full max-w-md animate-scale-in">
+        {/* Logo and brand */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center mb-4 animate-float">
+            <NectformaLogo variant="light" size="xl" />
           </div>
+          <p className="text-white/70 text-sm">Plateforme de gestion éducative</p>
+        </div>
+
+        {/* Reset password card */}
+        <div className="bg-card rounded-2xl border-2 border-primary/30 shadow-2xl p-6 sm:p-8 backdrop-blur-sm animate-slide-up">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-foreground mb-1">Nouveau mot de passe</h2>
+            <p className="text-muted-foreground text-sm">
+              Créez un nouveau mot de passe sécurisé
+            </p>
+            {userEmail && (
+              <p className="text-sm text-primary mt-2">{userEmail}</p>
+            )}
+          </div>
+
+          {error && (
+            <div className="bg-destructive/10 border border-destructive/30 text-destructive px-4 py-3 rounded-xl text-sm mb-4 animate-fade-in">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-foreground">
+                <Lock className="inline h-4 w-4 mr-2 text-primary" />
+                Nouveau mot de passe
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={(e) => handleInputChange('password', e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-primary/20 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 pr-12 text-foreground placeholder:text-muted-foreground/60"
+                  placeholder="Minimum 8 caractères"
+                  required
+                  minLength={8}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-foreground">
+                <Lock className="inline h-4 w-4 mr-2 text-primary" />
+                Confirmer le mot de passe
+              </label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={formData.confirmPassword}
+                  onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-primary/20 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 pr-12 text-foreground placeholder:text-muted-foreground/60"
+                  placeholder="Confirmez votre mot de passe"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
+                >
+                  {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-primary text-primary-foreground py-3.5 px-4 rounded-xl font-semibold hover:bg-primary/90 transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl hover:shadow-primary/20 active:scale-[0.98]"
+              disabled={submitting}
+            >
+              {submitting ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Mise à jour en cours...
+                </span>
+              ) : (
+                'Mettre à jour le mot de passe'
+              )}
+            </button>
+          </form>
+
+          {/* Back to login */}
+          <div className="mt-6 pt-6 border-t border-border text-center">
+            <Link
+              to="/auth"
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground font-medium transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Retour à la connexion
+            </Link>
+          </div>
+        </div>
+
+        {/* Legal links */}
+        <div className="flex items-center justify-center gap-4 mt-6">
+          <Link 
+            to="/cgu" 
+            className="text-white/70 hover:text-white text-xs transition-colors flex items-center gap-1"
+          >
+            <Shield className="h-3 w-3" />
+            CGU
+          </Link>
+          <span className="text-white/30">•</span>
+          <Link 
+            to="/politique-confidentialite" 
+            className="text-white/70 hover:text-white text-xs transition-colors flex items-center gap-1"
+          >
+            <Lock className="h-3 w-3" />
+            Confidentialité
+          </Link>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center mt-4 text-white/50 text-xs">
+          © {new Date().getFullYear()} NECTFORMA. Tous droits réservés.
         </div>
       </div>
     </div>
