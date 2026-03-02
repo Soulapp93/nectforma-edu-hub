@@ -64,9 +64,36 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
           owner_id: userId,
           title: document.title || 'Quiz sans titre',
         });
-        const updatedDoc = { ...document, content: { ...document.content, quizId: newQuiz.id } };
+        const updatedDoc = { ...document, content: { quizId: newQuiz.id } };
         onSave(updatedDoc);
         setQuiz(newQuiz);
+
+        // Apply template questions if any
+        const templateQuestions = (document.content as any)?.templateQuestions;
+        if (templateQuestions && Array.isArray(templateQuestions) && templateQuestions.length > 0) {
+          const createdQuestions: QuizQuestion[] = [];
+          for (let i = 0; i < templateQuestions.length; i++) {
+            const tq = templateQuestions[i];
+            const defaultOptions = tq.options || (tq.type === 'true_false' 
+              ? [{ id: 'true', text: 'Vrai', isCorrect: true }, { id: 'false', text: 'Faux', isCorrect: false }]
+              : []);
+            const q = await quizService.createQuestion({
+              quiz_id: newQuiz.id,
+              question_type: tq.type as any,
+              title: tq.title || 'Question',
+              order_index: i,
+              options: defaultOptions,
+              time_limit: tq.time || 20,
+              matching_pairs: tq.matchingPairs || [],
+              correct_order: tq.correctOrder || [],
+              accepted_answers: tq.acceptedAnswers || [],
+              slider_correct: tq.sliderCorrect ?? null,
+            });
+            createdQuestions.push(q);
+          }
+          setQuestions(createdQuestions);
+        }
+
         setLoading(false);
       } catch (err: any) {
         toast.error('Erreur création quiz');

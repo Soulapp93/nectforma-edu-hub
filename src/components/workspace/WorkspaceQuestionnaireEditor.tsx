@@ -90,6 +90,32 @@ const WorkspaceQuestionnaireEditor: React.FC<Props> = ({ document: doc, onSave, 
           });
           setQuestionnaire(q);
           await onSave({ ...doc, content: { questionnaire_id: q.id }, title: q.title });
+
+          // Apply template questions if any
+          const templateQuestions = (doc.content as any)?.templateQuestions;
+          if (templateQuestions && Array.isArray(templateQuestions) && templateQuestions.length > 0) {
+            const createdQuestions: QuestionnaireQuestion[] = [];
+            for (let i = 0; i < templateQuestions.length; i++) {
+              const tq = templateQuestions[i];
+              const newQ = await questionnaireService.createQuestion({
+                questionnaire_id: q.id,
+                question_type: tq.type,
+                title: tq.title || '',
+                order_index: i,
+                is_required: tq.required || false,
+                points: tq.points || 0,
+                settings: tq.settings || (tq.type === 'linear_scale' ? { min: 1, max: 5, minLabel: '', maxLabel: '' } : {}),
+              });
+              if (tq.options && Array.isArray(tq.options) && ['single_choice', 'multiple_choice', 'dropdown'].includes(tq.type)) {
+                const opts = await Promise.all(
+                  tq.options.map((label: string, idx: number) => questionnaireService.createOption({ question_id: newQ.id, label, order_index: idx }))
+                );
+                newQ.options = opts;
+              }
+              createdQuestions.push(newQ);
+            }
+            setQuestions(createdQuestions);
+          }
         }
       } catch (err: any) {
         console.error(err);
