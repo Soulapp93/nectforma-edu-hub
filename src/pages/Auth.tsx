@@ -57,14 +57,17 @@ const Auth = () => {
     setError(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('reset-password-native', {
-        body: {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/reset-password-native`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           email: resetEmail,
           redirect_url: window.location.origin,
-        },
+        }),
       });
 
-      if (error) {
+      if (!response.ok) {
         setError('Erreur lors de l\'envoi du lien. Veuillez réessayer.');
         setResetLoading(false);
         return;
