@@ -94,7 +94,7 @@ const EspaceTravail = () => {
   const handleCreateDocument = async (type: WorkspaceDocument['document_type'], template?: DocumentTemplate) => {
     if (!userId) return;
     try {
-      const defaultContent = template?.content || (type === 'text' ? { html: '' } : type === 'spreadsheet' ? { cells: {}, numRows: 50, numCols: 26 } : type === 'presentation' ? { slides: [{ id: '1', elements: [], background: '#ffffff' }] } : type === 'whiteboard' ? { elements: [], background: '#ffffff', gridVisible: true } : type === 'questionnaire' ? { sections: [], questions: [], settings: {} } : type === 'quiz' ? { quizId: null } : { width: 1080, height: 1080, background: '#ffffff', elements: [] });
+      const defaultContent = template?.content || (type === 'text' ? { html: '' } : type === 'spreadsheet' ? { cells: {}, numRows: 50, numCols: 26 } : type === 'presentation' ? { slides: [{ id: '1', elements: [], background: '#ffffff' }] } : type === 'whiteboard' ? { elements: [], background: '#ffffff', gridVisible: true } : type === 'questionnaire' ? { templateQuestions: [] } : type === 'quiz' ? { quizId: null, templateQuestions: [] } : { width: 1080, height: 1080, background: '#ffffff', elements: [] });
       const doc = await workspaceService.createDocument({
         title: template?.name && template.id.indexOf('blank') === -1 ? template.name : 'Sans titre',
         document_type: type,
@@ -474,7 +474,7 @@ const EspaceTravail = () => {
                 {DOC_TYPES.map(dt => (
                   <button
                     key={dt.type}
-                    onClick={() => (dt.type === 'questionnaire' || dt.type === 'quiz') ? handleCreateDocument(dt.type) : setSelectedDocType(dt.type)}
+                    onClick={() => setSelectedDocType(dt.type)}
                     className="flex flex-col items-center gap-3 p-4 rounded-2xl border-2 border-primary/20 hover:border-primary hover:bg-primary/5 transition-all group"
                   >
                     <div className={`p-3.5 rounded-xl bg-gradient-to-br ${dt.color} text-white shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all`}>

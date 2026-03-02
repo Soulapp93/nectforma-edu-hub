@@ -784,6 +784,512 @@ const whiteboardTemplates: DocumentTemplate[] = [
   },
 ];
 
+// ========== QUESTIONNAIRE TEMPLATES ==========
+const questionnaireTemplates: DocumentTemplate[] = [
+  {
+    id: 'questionnaire-blank', name: 'Questionnaire vierge', description: 'Commencer de zéro', category: 'Basique',
+    type: 'questionnaire', thumbnail: '📋', color: '#8b5cf6',
+    content: { templateQuestions: [] }
+  },
+  {
+    id: 'questionnaire-satisfaction-formation', name: 'Satisfaction formation', description: 'Évaluer une formation dispensée', category: 'Éducation',
+    type: 'questionnaire', thumbnail: '🎓', color: '#7c3aed',
+    content: { templateQuestions: [
+      { type: 'rating', title: 'Comment évaluez-vous la qualité globale de la formation ?', required: true },
+      { type: 'rating', title: 'Le contenu était-il adapté à vos besoins ?', required: true },
+      { type: 'rating', title: 'Comment évaluez-vous la pédagogie du formateur ?', required: true },
+      { type: 'single_choice', title: 'Le rythme de la formation était...', required: true, options: ['Trop lent', 'Adapté', 'Trop rapide'] },
+      { type: 'linear_scale', title: 'Recommanderiez-vous cette formation ?', required: true, settings: { min: 0, max: 10, minLabel: 'Pas du tout', maxLabel: 'Absolument' } },
+      { type: 'multiple_choice', title: 'Quels aspects avez-vous le plus appréciés ?', options: ['Contenu théorique', 'Exercices pratiques', 'Supports de cours', 'Interactions avec le formateur', 'Ambiance du groupe'] },
+      { type: 'long_text', title: 'Avez-vous des suggestions d\'amélioration ?' },
+    ] }
+  },
+  {
+    id: 'questionnaire-evaluation-cours', name: 'Évaluation de cours', description: 'Feedback étudiant sur un cours', category: 'Éducation',
+    type: 'questionnaire', thumbnail: '📚', color: '#6366f1',
+    content: { templateQuestions: [
+      { type: 'rating', title: 'Clarté des explications du professeur', required: true },
+      { type: 'rating', title: 'Qualité des supports pédagogiques', required: true },
+      { type: 'rating', title: 'Pertinence des exercices et travaux pratiques', required: true },
+      { type: 'single_choice', title: 'La charge de travail est...', required: true, options: ['Insuffisante', 'Raisonnable', 'Lourde', 'Excessive'] },
+      { type: 'rating', title: 'Disponibilité du professeur pour les questions', required: true },
+      { type: 'long_text', title: 'Qu\'avez-vous le plus apprécié dans ce cours ?' },
+      { type: 'long_text', title: 'Que souhaiteriez-vous améliorer ?' },
+    ] }
+  },
+  {
+    id: 'questionnaire-besoins-formation', name: 'Analyse des besoins', description: 'Identifier les besoins de formation', category: 'Éducation',
+    type: 'questionnaire', thumbnail: '🎯', color: '#0ea5e9',
+    content: { templateQuestions: [
+      { type: 'short_text', title: 'Quel est votre poste actuel ?', required: true },
+      { type: 'multiple_choice', title: 'Dans quels domaines souhaitez-vous vous former ?', required: true, options: ['Management', 'Communication', 'Technique', 'Langues', 'Digital', 'Soft skills'] },
+      { type: 'single_choice', title: 'Quel format de formation préférez-vous ?', options: ['Présentiel', 'Distanciel', 'Hybride', 'E-learning'] },
+      { type: 'single_choice', title: 'Quelle durée idéale ?', options: ['1 journée', '2-3 jours', '1 semaine', 'Plus d\'une semaine'] },
+      { type: 'linear_scale', title: 'Quel est votre niveau actuel dans le domaine souhaité ?', settings: { min: 1, max: 5, minLabel: 'Débutant', maxLabel: 'Expert' } },
+      { type: 'long_text', title: 'Décrivez vos objectifs d\'apprentissage' },
+    ] }
+  },
+  {
+    id: 'questionnaire-satisfaction-client', name: 'Satisfaction client', description: 'Mesurer la satisfaction de vos clients', category: 'Business',
+    type: 'questionnaire', thumbnail: '⭐', color: '#f59e0b',
+    content: { templateQuestions: [
+      { type: 'rating', title: 'Satisfaction globale avec nos services', required: true },
+      { type: 'single_choice', title: 'Depuis combien de temps êtes-vous client ?', options: ['Moins de 6 mois', '6 mois - 1 an', '1 - 3 ans', 'Plus de 3 ans'] },
+      { type: 'rating', title: 'Qualité du service client', required: true },
+      { type: 'rating', title: 'Rapport qualité-prix', required: true },
+      { type: 'linear_scale', title: 'Recommanderiez-vous nos services ? (NPS)', required: true, settings: { min: 0, max: 10, minLabel: 'Pas du tout', maxLabel: 'Certainement' } },
+      { type: 'multiple_choice', title: 'Qu\'appréciez-vous le plus ?', options: ['Qualité', 'Prix', 'Service client', 'Innovation', 'Fiabilité'] },
+      { type: 'long_text', title: 'Comment pouvons-nous nous améliorer ?' },
+    ] }
+  },
+  {
+    id: 'questionnaire-event-feedback', name: 'Feedback événement', description: 'Retours après un événement', category: 'Événements',
+    type: 'questionnaire', thumbnail: '🎉', color: '#ec4899',
+    content: { templateQuestions: [
+      { type: 'rating', title: 'Comment évaluez-vous l\'événement dans son ensemble ?', required: true },
+      { type: 'single_choice', title: 'Comment avez-vous entendu parler de cet événement ?', options: ['Email', 'Réseaux sociaux', 'Bouche à oreille', 'Site web', 'Autre'] },
+      { type: 'rating', title: 'Qualité des intervenants', required: true },
+      { type: 'rating', title: 'Organisation et logistique', required: true },
+      { type: 'single_choice', title: 'Participeriez-vous à un prochain événement ?', required: true, options: ['Oui, certainement', 'Probablement', 'Pas sûr', 'Non'] },
+      { type: 'long_text', title: 'Quel a été le moment fort de l\'événement ?' },
+      { type: 'long_text', title: 'Suggestions pour les prochains événements' },
+    ] }
+  },
+  {
+    id: 'questionnaire-onboarding', name: 'Onboarding employé', description: 'Accueil des nouveaux collaborateurs', category: 'RH',
+    type: 'questionnaire', thumbnail: '👋', color: '#10b981',
+    content: { templateQuestions: [
+      { type: 'rating', title: 'Comment évaluez-vous votre accueil le premier jour ?', required: true },
+      { type: 'single_choice', title: 'Avez-vous reçu tout le matériel nécessaire ?', required: true, options: ['Oui, tout', 'Partiellement', 'Non'] },
+      { type: 'rating', title: 'Clarté des informations sur votre poste et vos missions', required: true },
+      { type: 'rating', title: 'Disponibilité de votre manager pour vous accompagner', required: true },
+      { type: 'rating', title: 'Intégration dans l\'équipe', required: true },
+      { type: 'multiple_choice', title: 'Quels aspects pourraient être améliorés ?', options: ['Documentation', 'Formation initiale', 'Présentation de l\'équipe', 'Outils de travail', 'Communication'] },
+      { type: 'long_text', title: 'Commentaires ou suggestions' },
+    ] }
+  },
+  {
+    id: 'questionnaire-climat-social', name: 'Climat social', description: 'Baromètre du bien-être au travail', category: 'RH',
+    type: 'questionnaire', thumbnail: '🌡️', color: '#ef4444',
+    content: { templateQuestions: [
+      { type: 'linear_scale', title: 'Êtes-vous satisfait(e) de votre environnement de travail ?', required: true, settings: { min: 1, max: 5, minLabel: 'Pas du tout', maxLabel: 'Très satisfait' } },
+      { type: 'rating', title: 'Qualité des relations avec vos collègues', required: true },
+      { type: 'rating', title: 'Qualité du management', required: true },
+      { type: 'single_choice', title: 'Votre charge de travail est...', required: true, options: ['Trop légère', 'Équilibrée', 'Lourde', 'Excessive'] },
+      { type: 'rating', title: 'Équilibre vie professionnelle / vie personnelle', required: true },
+      { type: 'linear_scale', title: 'Recommanderiez-vous votre entreprise comme employeur ?', settings: { min: 0, max: 10, minLabel: 'Pas du tout', maxLabel: 'Absolument' } },
+      { type: 'long_text', title: 'Qu\'est-ce qui vous motive le plus au quotidien ?' },
+      { type: 'long_text', title: 'Qu\'est-ce qui pourrait être amélioré ?' },
+    ] }
+  },
+  {
+    id: 'questionnaire-entretien-annuel', name: 'Entretien annuel', description: 'Support d\'entretien d\'évaluation', category: 'RH',
+    type: 'questionnaire', thumbnail: '📊', color: '#3b82f6',
+    content: { templateQuestions: [
+      { type: 'long_text', title: 'Quelles sont vos principales réalisations cette année ?', required: true },
+      { type: 'linear_scale', title: 'Atteinte de vos objectifs annuels', required: true, settings: { min: 1, max: 5, minLabel: 'Non atteints', maxLabel: 'Largement dépassés' } },
+      { type: 'multiple_choice', title: 'Compétences développées cette année', options: ['Leadership', 'Technique', 'Communication', 'Gestion de projet', 'Créativité', 'Organisation'] },
+      { type: 'long_text', title: 'Quels sont vos objectifs pour l\'année prochaine ?' },
+      { type: 'long_text', title: 'Quelles formations souhaiteriez-vous suivre ?' },
+      { type: 'single_choice', title: 'Souhaitez-vous évoluer vers un nouveau poste ?', options: ['Oui', 'Non', 'À discuter'] },
+      { type: 'long_text', title: 'Commentaires supplémentaires' },
+    ] }
+  },
+  {
+    id: 'questionnaire-etude-marche', name: 'Étude de marché', description: 'Sondage pour validation produit/service', category: 'Business',
+    type: 'questionnaire', thumbnail: '📈', color: '#0891b2',
+    content: { templateQuestions: [
+      { type: 'single_choice', title: 'Quelle est votre tranche d\'âge ?', required: true, options: ['18-25', '26-35', '36-45', '46-55', '55+'] },
+      { type: 'single_choice', title: 'Connaissez-vous ce type de produit/service ?', required: true, options: ['Oui, j\'utilise déjà', 'Oui, j\'en ai entendu parler', 'Non, pas du tout'] },
+      { type: 'multiple_choice', title: 'Quels critères sont les plus importants pour vous ?', required: true, options: ['Prix', 'Qualité', 'Innovation', 'Service client', 'Marque', 'Durabilité'] },
+      { type: 'single_choice', title: 'Quel budget seriez-vous prêt à consacrer ?', options: ['< 50€', '50-100€', '100-200€', '200-500€', '500€+'] },
+      { type: 'linear_scale', title: 'À quel point seriez-vous intéressé(e) par ce produit ?', settings: { min: 1, max: 10, minLabel: 'Pas du tout', maxLabel: 'Très intéressé' } },
+      { type: 'long_text', title: 'Quelles fonctionnalités attendez-vous en priorité ?' },
+    ] }
+  },
+  {
+    id: 'questionnaire-inscription-event', name: 'Inscription événement', description: 'Formulaire d\'inscription avec infos pratiques', category: 'Événements',
+    type: 'questionnaire', thumbnail: '📝', color: '#059669',
+    content: { templateQuestions: [
+      { type: 'short_text', title: 'Nom complet', required: true },
+      { type: 'email', title: 'Adresse email', required: true },
+      { type: 'phone', title: 'Numéro de téléphone' },
+      { type: 'short_text', title: 'Organisation / Entreprise' },
+      { type: 'single_choice', title: 'Comment participez-vous ?', required: true, options: ['En présentiel', 'En distanciel'] },
+      { type: 'multiple_choice', title: 'À quelles sessions souhaitez-vous assister ?', options: ['Conférence d\'ouverture', 'Atelier 1', 'Atelier 2', 'Table ronde', 'Networking'] },
+      { type: 'single_choice', title: 'Régime alimentaire (si buffet)', options: ['Standard', 'Végétarien', 'Végan', 'Sans gluten', 'Autre'] },
+      { type: 'long_text', title: 'Questions ou besoins particuliers' },
+    ] }
+  },
+  {
+    id: 'questionnaire-feedback-produit', name: 'Feedback produit', description: 'Retours utilisateurs sur un produit', category: 'Business',
+    type: 'questionnaire', thumbnail: '💡', color: '#f97316',
+    content: { templateQuestions: [
+      { type: 'single_choice', title: 'À quelle fréquence utilisez-vous notre produit ?', required: true, options: ['Quotidiennement', 'Plusieurs fois par semaine', 'Hebdomadairement', 'Mensuellement', 'Rarement'] },
+      { type: 'rating', title: 'Facilité d\'utilisation', required: true },
+      { type: 'rating', title: 'Performance et fiabilité', required: true },
+      { type: 'rating', title: 'Design et ergonomie', required: true },
+      { type: 'multiple_choice', title: 'Quelles fonctionnalités utilisez-vous le plus ?', options: ['Tableau de bord', 'Rapports', 'Collaboration', 'Intégrations', 'API'] },
+      { type: 'long_text', title: 'Quelle fonctionnalité manquante aimeriez-vous voir ajoutée ?' },
+      { type: 'linear_scale', title: 'Recommanderiez-vous ce produit ?', settings: { min: 0, max: 10, minLabel: 'Pas du tout', maxLabel: 'Absolument' } },
+    ] }
+  },
+  {
+    id: 'questionnaire-sante-mentale', name: 'Bien-être mental', description: 'Évaluation du bien-être psychologique', category: 'Santé',
+    type: 'questionnaire', thumbnail: '🧠', color: '#a855f7',
+    content: { templateQuestions: [
+      { type: 'linear_scale', title: 'Comment évaluez-vous votre niveau de stress actuel ?', required: true, settings: { min: 1, max: 10, minLabel: 'Très calme', maxLabel: 'Très stressé' } },
+      { type: 'single_choice', title: 'Dormez-vous suffisamment ?', required: true, options: ['Oui, très bien', 'Assez bien', 'Difficulté à dormir', 'Insomnie fréquente'] },
+      { type: 'rating', title: 'Niveau d\'énergie général au quotidien', required: true },
+      { type: 'multiple_choice', title: 'Qu\'est-ce qui vous aide à vous sentir mieux ?', options: ['Sport', 'Méditation', 'Sorties entre amis', 'Lecture', 'Musique', 'Nature'] },
+      { type: 'single_choice', title: 'Avez-vous accès à un soutien psychologique ?', options: ['Oui', 'Non', 'Je ne sais pas'] },
+      { type: 'long_text', title: 'Y a-t-il quelque chose que vous aimeriez partager ?' },
+    ] }
+  },
+  {
+    id: 'questionnaire-360-feedback', name: 'Feedback 360°', description: 'Évaluation multi-sources d\'un collaborateur', category: 'RH',
+    type: 'questionnaire', thumbnail: '🔄', color: '#0d9488',
+    content: { templateQuestions: [
+      { type: 'single_choice', title: 'Quelle est votre relation avec la personne évaluée ?', required: true, options: ['Manager', 'Collègue', 'Subordonné', 'Client interne'] },
+      { type: 'linear_scale', title: 'Communication et écoute', required: true, settings: { min: 1, max: 5, minLabel: 'À améliorer', maxLabel: 'Excellent' } },
+      { type: 'linear_scale', title: 'Leadership et prise d\'initiative', required: true, settings: { min: 1, max: 5, minLabel: 'À améliorer', maxLabel: 'Excellent' } },
+      { type: 'linear_scale', title: 'Travail en équipe et collaboration', required: true, settings: { min: 1, max: 5, minLabel: 'À améliorer', maxLabel: 'Excellent' } },
+      { type: 'linear_scale', title: 'Qualité du travail et rigueur', required: true, settings: { min: 1, max: 5, minLabel: 'À améliorer', maxLabel: 'Excellent' } },
+      { type: 'linear_scale', title: 'Gestion du temps et des priorités', required: true, settings: { min: 1, max: 5, minLabel: 'À améliorer', maxLabel: 'Excellent' } },
+      { type: 'long_text', title: 'Points forts de cette personne' },
+      { type: 'long_text', title: 'Axes d\'amélioration suggérés' },
+    ] }
+  },
+  {
+    id: 'questionnaire-candidature', name: 'Candidature emploi', description: 'Formulaire de candidature structuré', category: 'RH',
+    type: 'questionnaire', thumbnail: '💼', color: '#1d4ed8',
+    content: { templateQuestions: [
+      { type: 'short_text', title: 'Nom complet', required: true },
+      { type: 'email', title: 'Adresse email', required: true },
+      { type: 'phone', title: 'Téléphone', required: true },
+      { type: 'short_text', title: 'Poste souhaité', required: true },
+      { type: 'single_choice', title: 'Niveau d\'expérience', required: true, options: ['Junior (0-2 ans)', 'Confirmé (3-5 ans)', 'Senior (5-10 ans)', 'Expert (10+ ans)'] },
+      { type: 'single_choice', title: 'Disponibilité', required: true, options: ['Immédiate', '1 mois', '2 mois', '3 mois+'] },
+      { type: 'long_text', title: 'Présentez-vous en quelques lignes', required: true },
+      { type: 'file_upload', title: 'Téléchargez votre CV' },
+      { type: 'url', title: 'Profil LinkedIn (optionnel)' },
+    ] }
+  },
+  {
+    id: 'questionnaire-qualite-service', name: 'Qualité de service', description: 'Audit qualité interne', category: 'Business',
+    type: 'questionnaire', thumbnail: '✅', color: '#16a34a',
+    content: { templateQuestions: [
+      { type: 'single_choice', title: 'Service évalué', required: true, options: ['Accueil', 'Support technique', 'Commercial', 'Logistique', 'Administratif'] },
+      { type: 'date', title: 'Date de l\'interaction', required: true },
+      { type: 'rating', title: 'Délai de prise en charge', required: true },
+      { type: 'rating', title: 'Compétence de l\'interlocuteur', required: true },
+      { type: 'rating', title: 'Résolution du problème', required: true },
+      { type: 'single_choice', title: 'Votre demande a-t-elle été résolue ?', required: true, options: ['Oui, complètement', 'Partiellement', 'Non'] },
+      { type: 'long_text', title: 'Commentaires supplémentaires' },
+    ] }
+  },
+  {
+    id: 'questionnaire-sondage-rapide', name: 'Sondage rapide', description: 'Micro-sondage en 3 questions', category: 'Basique',
+    type: 'questionnaire', thumbnail: '⚡', color: '#eab308',
+    content: { templateQuestions: [
+      { type: 'single_choice', title: 'Question principale ?', required: true, options: ['Option A', 'Option B', 'Option C'] },
+      { type: 'rating', title: 'Évaluation rapide', required: true },
+      { type: 'short_text', title: 'Un mot pour résumer votre avis' },
+    ] }
+  },
+  {
+    id: 'questionnaire-ergonomie-site', name: 'Test UX / Ergonomie', description: 'Évaluer l\'ergonomie d\'un site ou appli', category: 'Tech',
+    type: 'questionnaire', thumbnail: '🖥️', color: '#6d28d9',
+    content: { templateQuestions: [
+      { type: 'single_choice', title: 'Quel appareil avez-vous utilisé ?', required: true, options: ['Ordinateur', 'Smartphone', 'Tablette'] },
+      { type: 'rating', title: 'Facilité de navigation', required: true },
+      { type: 'rating', title: 'Vitesse de chargement', required: true },
+      { type: 'rating', title: 'Lisibilité et design', required: true },
+      { type: 'single_choice', title: 'Avez-vous trouvé ce que vous cherchiez ?', required: true, options: ['Oui, facilement', 'Oui, avec difficulté', 'Non'] },
+      { type: 'linear_scale', title: 'Facilité d\'utilisation globale (SUS)', settings: { min: 1, max: 10, minLabel: 'Très difficile', maxLabel: 'Très facile' } },
+      { type: 'long_text', title: 'Points de friction rencontrés' },
+    ] }
+  },
+  {
+    id: 'questionnaire-sortie-employe', name: 'Entretien de sortie', description: 'Feedback de départ d\'un collaborateur', category: 'RH',
+    type: 'questionnaire', thumbnail: '🚪', color: '#dc2626',
+    content: { templateQuestions: [
+      { type: 'single_choice', title: 'Raison principale de votre départ', required: true, options: ['Opportunité externe', 'Évolution de carrière', 'Rémunération', 'Ambiance de travail', 'Raison personnelle', 'Autre'] },
+      { type: 'rating', title: 'Satisfaction globale durant votre période chez nous', required: true },
+      { type: 'rating', title: 'Qualité du management', required: true },
+      { type: 'single_choice', title: 'Envisageriez-vous de revenir un jour ?', options: ['Oui', 'Peut-être', 'Non'] },
+      { type: 'long_text', title: 'Qu\'avez-vous le plus apprécié ?' },
+      { type: 'long_text', title: 'Que recommanderiez-vous d\'améliorer ?' },
+    ] }
+  },
+  {
+    id: 'questionnaire-risques-pro', name: 'Risques professionnels', description: 'Évaluation des risques au poste de travail', category: 'Santé',
+    type: 'questionnaire', thumbnail: '⚠️', color: '#ea580c',
+    content: { templateQuestions: [
+      { type: 'short_text', title: 'Poste de travail / Service', required: true },
+      { type: 'multiple_choice', title: 'Types de risques identifiés', required: true, options: ['Physique', 'Chimique', 'Biologique', 'Ergonomique', 'Psychosocial', 'Électrique'] },
+      { type: 'single_choice', title: 'Fréquence d\'exposition', required: true, options: ['Quotidienne', 'Hebdomadaire', 'Mensuelle', 'Occasionnelle'] },
+      { type: 'linear_scale', title: 'Gravité potentielle', settings: { min: 1, max: 5, minLabel: 'Faible', maxLabel: 'Critique' } },
+      { type: 'single_choice', title: 'Des mesures de prévention existent-elles ?', required: true, options: ['Oui, efficaces', 'Oui, insuffisantes', 'Non'] },
+      { type: 'long_text', title: 'Mesures correctives proposées' },
+    ] }
+  },
+  {
+    id: 'questionnaire-projet-feedback', name: 'Bilan de projet', description: 'Retour d\'expérience post-projet', category: 'Business',
+    type: 'questionnaire', thumbnail: '🏁', color: '#2563eb',
+    content: { templateQuestions: [
+      { type: 'short_text', title: 'Nom du projet', required: true },
+      { type: 'rating', title: 'Respect des délais', required: true },
+      { type: 'rating', title: 'Qualité des livrables', required: true },
+      { type: 'rating', title: 'Communication au sein de l\'équipe', required: true },
+      { type: 'rating', title: 'Gestion du budget', required: true },
+      { type: 'multiple_choice', title: 'Principales difficultés rencontrées', options: ['Délais trop courts', 'Périmètre flou', 'Ressources insuffisantes', 'Communication', 'Technique'] },
+      { type: 'long_text', title: 'Leçons apprises et recommandations pour les futurs projets' },
+    ] }
+  },
+  {
+    id: 'questionnaire-accessibilite', name: 'Accessibilité', description: 'Audit d\'accessibilité d\'un lieu ou service', category: 'Santé',
+    type: 'questionnaire', thumbnail: '♿', color: '#0284c7',
+    content: { templateQuestions: [
+      { type: 'short_text', title: 'Lieu / Service évalué', required: true },
+      { type: 'single_choice', title: 'Accès PMR (rampes, ascenseurs)', required: true, options: ['Conforme', 'Partiellement', 'Non conforme'] },
+      { type: 'single_choice', title: 'Signalétique adaptée (braille, contrastes)', options: ['Oui', 'Partiellement', 'Non'] },
+      { type: 'single_choice', title: 'Accessibilité numérique', options: ['Conforme RGAA', 'Partiellement', 'Non conforme'] },
+      { type: 'rating', title: 'Accueil et accompagnement des personnes en situation de handicap' },
+      { type: 'long_text', title: 'Points d\'amélioration identifiés' },
+    ] }
+  },
+];
+
+// ========== QUIZ TEMPLATES ==========
+const quizTemplates: DocumentTemplate[] = [
+  {
+    id: 'quiz-blank', name: 'Quiz vierge', description: 'Commencer de zéro', category: 'Basique',
+    type: 'quiz', thumbnail: '⚡', color: '#f59e0b',
+    content: { templateQuestions: [] }
+  },
+  {
+    id: 'quiz-culture-generale', name: 'Culture générale', description: 'Quiz de culture générale variée', category: 'Culture',
+    type: 'quiz', thumbnail: '🌍', color: '#3b82f6',
+    content: { templateQuestions: [
+      { type: 'mcq', title: 'Quelle est la capitale de l\'Australie ?', options: [{ text: 'Sydney', isCorrect: false }, { text: 'Melbourne', isCorrect: false }, { text: 'Canberra', isCorrect: true }, { text: 'Brisbane', isCorrect: false }], time: 20 },
+      { type: 'mcq', title: 'En quelle année l\'homme a-t-il marché sur la Lune ?', options: [{ text: '1965', isCorrect: false }, { text: '1969', isCorrect: true }, { text: '1972', isCorrect: false }, { text: '1967', isCorrect: false }], time: 15 },
+      { type: 'true_false', title: 'Le soleil est une étoile.', options: [{ text: 'Vrai', isCorrect: true }, { text: 'Faux', isCorrect: false }], time: 10 },
+      { type: 'mcq', title: 'Quel est le plus grand océan du monde ?', options: [{ text: 'Atlantique', isCorrect: false }, { text: 'Indien', isCorrect: false }, { text: 'Pacifique', isCorrect: true }, { text: 'Arctique', isCorrect: false }], time: 15 },
+      { type: 'mcq', title: 'Qui a peint la Joconde ?', options: [{ text: 'Raphaël', isCorrect: false }, { text: 'Michel-Ange', isCorrect: false }, { text: 'Léonard de Vinci', isCorrect: true }, { text: 'Botticelli', isCorrect: false }], time: 15 },
+    ] }
+  },
+  {
+    id: 'quiz-maths-bases', name: 'Mathématiques - Bases', description: 'Calcul mental et logique', category: 'Sciences',
+    type: 'quiz', thumbnail: '🔢', color: '#8b5cf6',
+    content: { templateQuestions: [
+      { type: 'mcq', title: 'Combien font 15 × 12 ?', options: [{ text: '170', isCorrect: false }, { text: '180', isCorrect: true }, { text: '190', isCorrect: false }, { text: '200', isCorrect: false }], time: 15 },
+      { type: 'mcq', title: 'Quel est le carré de 13 ?', options: [{ text: '156', isCorrect: false }, { text: '169', isCorrect: true }, { text: '196', isCorrect: false }, { text: '143', isCorrect: false }], time: 15 },
+      { type: 'true_false', title: 'La racine carrée de 144 est 12.', options: [{ text: 'Vrai', isCorrect: true }, { text: 'Faux', isCorrect: false }], time: 10 },
+      { type: 'mcq', title: 'Quel nombre est premier ?', options: [{ text: '15', isCorrect: false }, { text: '21', isCorrect: false }, { text: '29', isCorrect: true }, { text: '33', isCorrect: false }], time: 20 },
+      { type: 'slider', title: 'Combien font 7³ ?', sliderCorrect: 343, time: 20 },
+    ] }
+  },
+  {
+    id: 'quiz-francais-orthographe', name: 'Orthographe française', description: 'Testez votre maîtrise de l\'orthographe', category: 'Langues',
+    type: 'quiz', thumbnail: '📝', color: '#ec4899',
+    content: { templateQuestions: [
+      { type: 'mcq', title: 'Quelle est la bonne orthographe ?', options: [{ text: 'Aceuil', isCorrect: false }, { text: 'Accueil', isCorrect: true }, { text: 'Acceuil', isCorrect: false }, { text: 'Acueil', isCorrect: false }], time: 15 },
+      { type: 'mcq', title: 'Choisissez la forme correcte : "Les enfants ___ joué dehors."', options: [{ text: 'à', isCorrect: false }, { text: 'on', isCorrect: false }, { text: 'ont', isCorrect: true }, { text: 'son', isCorrect: false }], time: 15 },
+      { type: 'true_false', title: '"Parmis" est correctement orthographié.', options: [{ text: 'Vrai', isCorrect: false }, { text: 'Faux', isCorrect: true }], time: 10 },
+      { type: 'mcq', title: 'Quel mot contient une faute ?', options: [{ text: 'Développement', isCorrect: false }, { text: 'Environnement', isCorrect: false }, { text: 'Événement', isCorrect: false }, { text: 'Évennement', isCorrect: true }], time: 20 },
+      { type: 'fill_blank', title: 'Complétez : "Il faut que nous _____ (aller) à la réunion."', acceptedAnswers: ['allions'], time: 20 },
+    ] }
+  },
+  {
+    id: 'quiz-anglais-vocabulaire', name: 'English Vocabulary', description: 'Vocabulaire anglais courant', category: 'Langues',
+    type: 'quiz', thumbnail: '🇬🇧', color: '#0ea5e9',
+    content: { templateQuestions: [
+      { type: 'mcq', title: 'What does "serendipity" mean?', options: [{ text: 'Bad luck', isCorrect: false }, { text: 'A happy accident', isCorrect: true }, { text: 'Sadness', isCorrect: false }, { text: 'Confusion', isCorrect: false }], time: 20 },
+      { type: 'mcq', title: 'Choose the correct word: "She is very ___ about her work."', options: [{ text: 'Conscientious', isCorrect: true }, { text: 'Conscious', isCorrect: false }, { text: 'Conscience', isCorrect: false }, { text: 'Consensual', isCorrect: false }], time: 20 },
+      { type: 'true_false', title: '"Affect" and "Effect" have the same meaning.', options: [{ text: 'True', isCorrect: false }, { text: 'False', isCorrect: true }], time: 10 },
+      { type: 'matching', title: 'Match the synonyms', matchingPairs: [{ left: 'Happy', right: 'Joyful' }, { left: 'Sad', right: 'Sorrowful' }, { left: 'Big', right: 'Large' }], time: 30 },
+      { type: 'fill_blank', title: 'Complete: "If I ___ (know) the answer, I would tell you."', acceptedAnswers: ['knew'], time: 15 },
+    ] }
+  },
+  {
+    id: 'quiz-sciences-nature', name: 'Sciences naturelles', description: 'Biologie, physique, chimie', category: 'Sciences',
+    type: 'quiz', thumbnail: '🔬', color: '#10b981',
+    content: { templateQuestions: [
+      { type: 'mcq', title: 'Quel gaz les plantes absorbent-elles lors de la photosynthèse ?', options: [{ text: 'Oxygène', isCorrect: false }, { text: 'Azote', isCorrect: false }, { text: 'Dioxyde de carbone', isCorrect: true }, { text: 'Hydrogène', isCorrect: false }], time: 15 },
+      { type: 'mcq', title: 'Quel est le symbole chimique de l\'or ?', options: [{ text: 'Ag', isCorrect: false }, { text: 'Au', isCorrect: true }, { text: 'Or', isCorrect: false }, { text: 'Go', isCorrect: false }], time: 10 },
+      { type: 'true_false', title: 'L\'eau bout à 100°C au niveau de la mer.', options: [{ text: 'Vrai', isCorrect: true }, { text: 'Faux', isCorrect: false }], time: 10 },
+      { type: 'ordering', title: 'Classez ces planètes de la plus proche à la plus éloignée du Soleil', correctOrder: ['Mercure', 'Vénus', 'Terre', 'Mars'], time: 30 },
+      { type: 'mcq', title: 'Combien d\'os compte le corps humain adulte ?', options: [{ text: '186', isCorrect: false }, { text: '206', isCorrect: true }, { text: '226', isCorrect: false }, { text: '256', isCorrect: false }], time: 20 },
+    ] }
+  },
+  {
+    id: 'quiz-histoire-france', name: 'Histoire de France', description: 'Événements majeurs de l\'histoire française', category: 'Culture',
+    type: 'quiz', thumbnail: '🏰', color: '#6366f1',
+    content: { templateQuestions: [
+      { type: 'mcq', title: 'En quelle année a eu lieu la Révolution française ?', options: [{ text: '1776', isCorrect: false }, { text: '1789', isCorrect: true }, { text: '1804', isCorrect: false }, { text: '1815', isCorrect: false }], time: 15 },
+      { type: 'mcq', title: 'Qui était le "Roi-Soleil" ?', options: [{ text: 'Louis XIII', isCorrect: false }, { text: 'Louis XIV', isCorrect: true }, { text: 'Louis XV', isCorrect: false }, { text: 'Louis XVI', isCorrect: false }], time: 15 },
+      { type: 'true_false', title: 'Napoléon est né en Corse.', options: [{ text: 'Vrai', isCorrect: true }, { text: 'Faux', isCorrect: false }], time: 10 },
+      { type: 'mcq', title: 'Quel événement a marqué le 6 juin 1944 ?', options: [{ text: 'Libération de Paris', isCorrect: false }, { text: 'Débarquement en Normandie', isCorrect: true }, { text: 'Armistice', isCorrect: false }, { text: 'Bataille de Verdun', isCorrect: false }], time: 15 },
+      { type: 'ordering', title: 'Classez ces événements par ordre chronologique', correctOrder: ['Baptême de Clovis', 'Couronnement de Charlemagne', 'Révolution française', 'Première Guerre mondiale'], time: 30 },
+    ] }
+  },
+  {
+    id: 'quiz-geographie-monde', name: 'Géographie mondiale', description: 'Pays, capitales et continents', category: 'Culture',
+    type: 'quiz', thumbnail: '🗺️', color: '#059669',
+    content: { templateQuestions: [
+      { type: 'mcq', title: 'Quel est le plus petit pays du monde ?', options: [{ text: 'Monaco', isCorrect: false }, { text: 'Vatican', isCorrect: true }, { text: 'Saint-Marin', isCorrect: false }, { text: 'Liechtenstein', isCorrect: false }], time: 15 },
+      { type: 'matching', title: 'Associez les pays à leur capitale', matchingPairs: [{ left: 'Japon', right: 'Tokyo' }, { left: 'Brésil', right: 'Brasília' }, { left: 'Égypte', right: 'Le Caire' }], time: 30 },
+      { type: 'true_false', title: 'L\'Australie est à la fois un pays et un continent.', options: [{ text: 'Vrai', isCorrect: true }, { text: 'Faux', isCorrect: false }], time: 10 },
+      { type: 'mcq', title: 'Quel fleuve traverse Paris ?', options: [{ text: 'Le Rhône', isCorrect: false }, { text: 'La Loire', isCorrect: false }, { text: 'La Seine', isCorrect: true }, { text: 'La Garonne', isCorrect: false }], time: 10 },
+      { type: 'slider', title: 'Combien de pays composent l\'Union européenne (2024) ?', sliderCorrect: 27, time: 20 },
+    ] }
+  },
+  {
+    id: 'quiz-securite-informatique', name: 'Cybersécurité', description: 'Bonnes pratiques de sécurité informatique', category: 'Tech',
+    type: 'quiz', thumbnail: '🔐', color: '#dc2626',
+    content: { templateQuestions: [
+      { type: 'mcq', title: 'Quel est le type d\'attaque qui consiste à se faire passer pour un organisme de confiance ?', options: [{ text: 'DDoS', isCorrect: false }, { text: 'Phishing', isCorrect: true }, { text: 'Brute force', isCorrect: false }, { text: 'SQL Injection', isCorrect: false }], time: 20 },
+      { type: 'true_false', title: 'Un mot de passe de 8 caractères avec uniquement des lettres est considéré comme sûr.', options: [{ text: 'Vrai', isCorrect: false }, { text: 'Faux', isCorrect: true }], time: 15 },
+      { type: 'mcq', title: 'Que signifie HTTPS ?', options: [{ text: 'HyperText Transfer Protocol Standard', isCorrect: false }, { text: 'HyperText Transfer Protocol Secure', isCorrect: true }, { text: 'High Transfer Protocol Security', isCorrect: false }, { text: 'HyperText Transmission Protected System', isCorrect: false }], time: 20 },
+      { type: 'multiple_choice', title: 'Quelles sont de bonnes pratiques de sécurité ?', options: [{ text: 'Utiliser un gestionnaire de mots de passe', isCorrect: true }, { text: 'Réutiliser le même mot de passe', isCorrect: false }, { text: 'Activer la double authentification', isCorrect: true }, { text: 'Cliquer sur tous les liens reçus', isCorrect: false }], time: 25 },
+      { type: 'mcq', title: 'Qu\'est-ce qu\'un ransomware ?', options: [{ text: 'Un antivirus', isCorrect: false }, { text: 'Un logiciel qui chiffre vos données et demande une rançon', isCorrect: true }, { text: 'Un pare-feu', isCorrect: false }, { text: 'Un VPN', isCorrect: false }], time: 20 },
+    ] }
+  },
+  {
+    id: 'quiz-droit-travail', name: 'Droit du travail', description: 'Connaissance du droit du travail français', category: 'Professionnel',
+    type: 'quiz', thumbnail: '⚖️', color: '#78716c',
+    content: { templateQuestions: [
+      { type: 'mcq', title: 'Quelle est la durée légale du travail en France ?', options: [{ text: '32h/semaine', isCorrect: false }, { text: '35h/semaine', isCorrect: true }, { text: '38h/semaine', isCorrect: false }, { text: '40h/semaine', isCorrect: false }], time: 15 },
+      { type: 'true_false', title: 'Un CDD peut être renouvelé indéfiniment.', options: [{ text: 'Vrai', isCorrect: false }, { text: 'Faux', isCorrect: true }], time: 10 },
+      { type: 'mcq', title: 'Quel est le nombre minimum de jours de congés payés par an ?', options: [{ text: '20 jours', isCorrect: false }, { text: '25 jours ouvrables', isCorrect: true }, { text: '30 jours', isCorrect: false }, { text: '22 jours', isCorrect: false }], time: 20 },
+      { type: 'mcq', title: 'La période d\'essai d\'un CDI pour un cadre est de...', options: [{ text: '2 mois', isCorrect: false }, { text: '3 mois', isCorrect: false }, { text: '4 mois', isCorrect: true }, { text: '6 mois', isCorrect: false }], time: 20 },
+      { type: 'true_false', title: 'Le salarié peut démissionner sans préavis pendant la période d\'essai.', options: [{ text: 'Vrai', isCorrect: true }, { text: 'Faux', isCorrect: false }], time: 15 },
+    ] }
+  },
+  {
+    id: 'quiz-securite-travail', name: 'Sécurité au travail', description: 'Prévention des risques professionnels', category: 'Professionnel',
+    type: 'quiz', thumbnail: '🦺', color: '#f97316',
+    content: { templateQuestions: [
+      { type: 'mcq', title: 'Que signifie EPI ?', options: [{ text: 'Équipement Personnel d\'Information', isCorrect: false }, { text: 'Équipement de Protection Individuelle', isCorrect: true }, { text: 'Évaluation des Postes Internes', isCorrect: false }, { text: 'Espace de Prévention Interne', isCorrect: false }], time: 15 },
+      { type: 'true_false', title: 'L\'employeur est responsable de fournir les EPI.', options: [{ text: 'Vrai', isCorrect: true }, { text: 'Faux', isCorrect: false }], time: 10 },
+      { type: 'mcq', title: 'Quel pictogramme représente un risque chimique corrosif ?', options: [{ text: 'Flamme', isCorrect: false }, { text: 'Tête de mort', isCorrect: false }, { text: 'Main rongée', isCorrect: true }, { text: 'Point d\'exclamation', isCorrect: false }], time: 20 },
+      { type: 'ordering', title: 'Ordre de priorité en cas d\'incendie', correctOrder: ['Alerter', 'Protéger', 'Évacuer', 'Secourir'], time: 25 },
+      { type: 'mcq', title: 'Quel est le numéro d\'urgence européen ?', options: [{ text: '15', isCorrect: false }, { text: '18', isCorrect: false }, { text: '112', isCorrect: true }, { text: '911', isCorrect: false }], time: 10 },
+    ] }
+  },
+  {
+    id: 'quiz-environnement', name: 'Écologie & Environnement', description: 'Développement durable et écologie', category: 'Sciences',
+    type: 'quiz', thumbnail: '🌱', color: '#16a34a',
+    content: { templateQuestions: [
+      { type: 'mcq', title: 'Quel gaz est principalement responsable de l\'effet de serre ?', options: [{ text: 'Oxygène', isCorrect: false }, { text: 'Méthane', isCorrect: false }, { text: 'CO₂', isCorrect: true }, { text: 'Azote', isCorrect: false }], time: 15 },
+      { type: 'true_false', title: 'Le plastique met environ 450 ans à se décomposer dans la nature.', options: [{ text: 'Vrai', isCorrect: true }, { text: 'Faux', isCorrect: false }], time: 10 },
+      { type: 'mcq', title: 'Quel pourcentage de la surface terrestre est couvert d\'eau ?', options: [{ text: '51%', isCorrect: false }, { text: '61%', isCorrect: false }, { text: '71%', isCorrect: true }, { text: '81%', isCorrect: false }], time: 15 },
+      { type: 'ordering', title: 'Classez par durée de décomposition (court → long)', correctOrder: ['Papier', 'Mégot', 'Canette alu', 'Bouteille plastique'], time: 30 },
+      { type: 'mcq', title: 'Qu\'est-ce que le "greenwashing" ?', options: [{ text: 'Recycler ses déchets', isCorrect: false }, { text: 'Marketing trompeur sur l\'écologie', isCorrect: true }, { text: 'Planter des arbres', isCorrect: false }, { text: 'Utiliser des énergies vertes', isCorrect: false }], time: 20 },
+    ] }
+  },
+  {
+    id: 'quiz-musique', name: 'Musique & Artistes', description: 'Testez vos connaissances musicales', category: 'Culture',
+    type: 'quiz', thumbnail: '🎵', color: '#a855f7',
+    content: { templateQuestions: [
+      { type: 'mcq', title: 'Quel instrument a 88 touches ?', options: [{ text: 'Guitare', isCorrect: false }, { text: 'Piano', isCorrect: true }, { text: 'Accordéon', isCorrect: false }, { text: 'Orgue', isCorrect: false }], time: 10 },
+      { type: 'matching', title: 'Associez l\'artiste à sa chanson', matchingPairs: [{ left: 'Édith Piaf', right: 'La Vie en rose' }, { left: 'Queen', right: 'Bohemian Rhapsody' }, { left: 'Bob Marley', right: 'No Woman No Cry' }], time: 30 },
+      { type: 'true_false', title: 'Mozart est né en Autriche.', options: [{ text: 'Vrai', isCorrect: true }, { text: 'Faux', isCorrect: false }], time: 10 },
+      { type: 'mcq', title: 'Combien de cordes possède un violon ?', options: [{ text: '3', isCorrect: false }, { text: '4', isCorrect: true }, { text: '5', isCorrect: false }, { text: '6', isCorrect: false }], time: 15 },
+      { type: 'mcq', title: 'Quel genre musical est né à La Nouvelle-Orléans ?', options: [{ text: 'Rock', isCorrect: false }, { text: 'Blues', isCorrect: false }, { text: 'Jazz', isCorrect: true }, { text: 'Country', isCorrect: false }], time: 15 },
+    ] }
+  },
+  {
+    id: 'quiz-nutrition', name: 'Nutrition & Alimentation', description: 'Connaissances en nutrition', category: 'Santé',
+    type: 'quiz', thumbnail: '🥗', color: '#22c55e',
+    content: { templateQuestions: [
+      { type: 'mcq', title: 'Quel nutriment fournit le plus d\'énergie par gramme ?', options: [{ text: 'Protéines', isCorrect: false }, { text: 'Glucides', isCorrect: false }, { text: 'Lipides', isCorrect: true }, { text: 'Vitamines', isCorrect: false }], time: 15 },
+      { type: 'true_false', title: 'La vitamine C se trouve uniquement dans les agrumes.', options: [{ text: 'Vrai', isCorrect: false }, { text: 'Faux', isCorrect: true }], time: 10 },
+      { type: 'mcq', title: 'Combien de litres d\'eau est-il recommandé de boire par jour ?', options: [{ text: '0.5L', isCorrect: false }, { text: '1L', isCorrect: false }, { text: '1.5L', isCorrect: true }, { text: '3L', isCorrect: false }], time: 15 },
+      { type: 'matching', title: 'Associez l\'aliment à sa principale vitamine', matchingPairs: [{ left: 'Carotte', right: 'Vitamine A' }, { left: 'Orange', right: 'Vitamine C' }, { left: 'Poisson gras', right: 'Vitamine D' }], time: 25 },
+      { type: 'mcq', title: 'Quel minéral est essentiel pour les os ?', options: [{ text: 'Fer', isCorrect: false }, { text: 'Zinc', isCorrect: false }, { text: 'Calcium', isCorrect: true }, { text: 'Potassium', isCorrect: false }], time: 15 },
+    ] }
+  },
+  {
+    id: 'quiz-premiers-secours', name: 'Premiers secours', description: 'Gestes qui sauvent (PSC1)', category: 'Santé',
+    type: 'quiz', thumbnail: '🚑', color: '#ef4444',
+    content: { templateQuestions: [
+      { type: 'ordering', title: 'Ordre des gestes d\'urgence (PAS)', correctOrder: ['Protéger', 'Alerter', 'Secourir'], time: 20 },
+      { type: 'mcq', title: 'Quel est le rythme de compression en RCP ?', options: [{ text: '60/min', isCorrect: false }, { text: '80/min', isCorrect: false }, { text: '100-120/min', isCorrect: true }, { text: '140/min', isCorrect: false }], time: 15 },
+      { type: 'true_false', title: 'Il faut mettre une personne inconsciente qui respire en PLS.', options: [{ text: 'Vrai', isCorrect: true }, { text: 'Faux', isCorrect: false }], time: 10 },
+      { type: 'mcq', title: 'En cas de brûlure, que faire en premier ?', options: [{ text: 'Appliquer du beurre', isCorrect: false }, { text: 'Passer sous l\'eau froide 15 min', isCorrect: true }, { text: 'Appliquer de la glace', isCorrect: false }, { text: 'Ne rien faire', isCorrect: false }], time: 15 },
+      { type: 'mcq', title: 'Quel numéro pour le SAMU ?', options: [{ text: '17', isCorrect: false }, { text: '18', isCorrect: false }, { text: '15', isCorrect: true }, { text: '112', isCorrect: false }], time: 10 },
+    ] }
+  },
+  {
+    id: 'quiz-rgpd', name: 'RGPD & Données personnelles', description: 'Protection des données personnelles', category: 'Professionnel',
+    type: 'quiz', thumbnail: '🛡️', color: '#0284c7',
+    content: { templateQuestions: [
+      { type: 'mcq', title: 'Que signifie RGPD ?', options: [{ text: 'Règlement Général sur la Propriété Digitale', isCorrect: false }, { text: 'Règlement Général sur la Protection des Données', isCorrect: true }, { text: 'Règle Générale de Publication des Données', isCorrect: false }, { text: 'Régulation Globale pour la Protection Digitale', isCorrect: false }], time: 15 },
+      { type: 'true_false', title: 'Le RGPD s\'applique uniquement aux entreprises européennes.', options: [{ text: 'Vrai', isCorrect: false }, { text: 'Faux', isCorrect: true }], time: 15 },
+      { type: 'mcq', title: 'Qui est le DPO ?', options: [{ text: 'Directeur du Personnel et des Opérations', isCorrect: false }, { text: 'Délégué à la Protection des Données', isCorrect: true }, { text: 'Directeur de la Politique d\'Organisation', isCorrect: false }, { text: 'Développeur Principal des Outils', isCorrect: false }], time: 20 },
+      { type: 'multiple_choice', title: 'Quels droits le RGPD garantit-il ?', options: [{ text: 'Droit d\'accès', isCorrect: true }, { text: 'Droit à l\'oubli', isCorrect: true }, { text: 'Droit à la portabilité', isCorrect: true }, { text: 'Droit de veto illimité', isCorrect: false }], time: 25 },
+      { type: 'mcq', title: 'Quelle amende maximale prévue par le RGPD ?', options: [{ text: '1M€', isCorrect: false }, { text: '10M€', isCorrect: false }, { text: '20M€ ou 4% du CA mondial', isCorrect: true }, { text: '50M€', isCorrect: false }], time: 20 },
+    ] }
+  },
+  {
+    id: 'quiz-management', name: 'Management & Leadership', description: 'Compétences managériales', category: 'Professionnel',
+    type: 'quiz', thumbnail: '👨‍💼', color: '#1d4ed8',
+    content: { templateQuestions: [
+      { type: 'mcq', title: 'Quel style de management favorise l\'autonomie des collaborateurs ?', options: [{ text: 'Directif', isCorrect: false }, { text: 'Délégatif', isCorrect: true }, { text: 'Participatif', isCorrect: false }, { text: 'Persuasif', isCorrect: false }], time: 20 },
+      { type: 'true_false', title: 'Le feedback constructif doit être donné en public.', options: [{ text: 'Vrai', isCorrect: false }, { text: 'Faux', isCorrect: true }], time: 10 },
+      { type: 'mcq', title: 'Qu\'est-ce que la matrice d\'Eisenhower ?', options: [{ text: 'Un outil de recrutement', isCorrect: false }, { text: 'Un outil de priorisation', isCorrect: true }, { text: 'Un outil financier', isCorrect: false }, { text: 'Un outil marketing', isCorrect: false }], time: 20 },
+      { type: 'ordering', title: 'Pyramide de Maslow (base → sommet)', correctOrder: ['Besoins physiologiques', 'Sécurité', 'Appartenance', 'Estime', 'Réalisation de soi'], time: 30 },
+      { type: 'mcq', title: 'Qu\'est-ce qu\'un OKR ?', options: [{ text: 'Outil de Qualification des Résultats', isCorrect: false }, { text: 'Objectives and Key Results', isCorrect: true }, { text: 'Organisation des Ressources', isCorrect: false }, { text: 'Opérations et KPI de Rendement', isCorrect: false }], time: 20 },
+    ] }
+  },
+  {
+    id: 'quiz-sport', name: 'Sport & Olympisme', description: 'Connaissances sportives', category: 'Culture',
+    type: 'quiz', thumbnail: '🏅', color: '#d97706',
+    content: { templateQuestions: [
+      { type: 'mcq', title: 'En quelle année ont eu lieu les premiers JO modernes ?', options: [{ text: '1886', isCorrect: false }, { text: '1896', isCorrect: true }, { text: '1900', isCorrect: false }, { text: '1912', isCorrect: false }], time: 15 },
+      { type: 'true_false', title: 'Le marathon fait exactement 42,195 km.', options: [{ text: 'Vrai', isCorrect: true }, { text: 'Faux', isCorrect: false }], time: 10 },
+      { type: 'matching', title: 'Associez le sport à son nombre de joueurs par équipe', matchingPairs: [{ left: 'Football', right: '11' }, { left: 'Basketball', right: '5' }, { left: 'Volleyball', right: '6' }], time: 25 },
+      { type: 'mcq', title: 'Quel pays a remporté le plus de Coupes du monde de football ?', options: [{ text: 'Allemagne', isCorrect: false }, { text: 'Argentine', isCorrect: false }, { text: 'Brésil', isCorrect: true }, { text: 'Italie', isCorrect: false }], time: 15 },
+      { type: 'slider', title: 'Combien de sports aux JO d\'été 2024 à Paris ?', sliderCorrect: 32, time: 20 },
+    ] }
+  },
+  {
+    id: 'quiz-cinema', name: 'Cinéma & Séries', description: 'Culture cinématographique', category: 'Culture',
+    type: 'quiz', thumbnail: '🎬', color: '#7c3aed',
+    content: { templateQuestions: [
+      { type: 'mcq', title: 'Qui a réalisé le film "Inception" ?', options: [{ text: 'Steven Spielberg', isCorrect: false }, { text: 'Christopher Nolan', isCorrect: true }, { text: 'James Cameron', isCorrect: false }, { text: 'Denis Villeneuve', isCorrect: false }], time: 15 },
+      { type: 'matching', title: 'Associez l\'acteur au personnage', matchingPairs: [{ left: 'Robert Downey Jr.', right: 'Iron Man' }, { left: 'Daniel Craig', right: 'James Bond' }, { left: 'Johnny Depp', right: 'Jack Sparrow' }], time: 25 },
+      { type: 'true_false', title: 'Le film "Titanic" a remporté 11 Oscars.', options: [{ text: 'Vrai', isCorrect: true }, { text: 'Faux', isCorrect: false }], time: 10 },
+      { type: 'mcq', title: 'Quel film d\'animation Pixar est sorti en premier ?', options: [{ text: 'Le Monde de Nemo', isCorrect: false }, { text: '1001 Pattes', isCorrect: false }, { text: 'Toy Story', isCorrect: true }, { text: 'Monstres & Cie', isCorrect: false }], time: 15 },
+      { type: 'mcq', title: 'Dans quelle saga trouve-t-on le personnage de Gandalf ?', options: [{ text: 'Harry Potter', isCorrect: false }, { text: 'Star Wars', isCorrect: false }, { text: 'Le Seigneur des Anneaux', isCorrect: true }, { text: 'Narnia', isCorrect: false }], time: 10 },
+    ] }
+  },
+  {
+    id: 'quiz-informatique-bases', name: 'Informatique - Bases', description: 'Fondamentaux de l\'informatique', category: 'Tech',
+    type: 'quiz', thumbnail: '💻', color: '#0891b2',
+    content: { templateQuestions: [
+      { type: 'mcq', title: 'Que signifie CPU ?', options: [{ text: 'Central Processing Unit', isCorrect: true }, { text: 'Computer Personal Unit', isCorrect: false }, { text: 'Central Power Unit', isCorrect: false }, { text: 'Core Processing Utility', isCorrect: false }], time: 15 },
+      { type: 'true_false', title: '1 Go = 1024 Mo.', options: [{ text: 'Vrai', isCorrect: true }, { text: 'Faux', isCorrect: false }], time: 10 },
+      { type: 'mcq', title: 'Quel langage est utilisé pour styliser les pages web ?', options: [{ text: 'HTML', isCorrect: false }, { text: 'JavaScript', isCorrect: false }, { text: 'CSS', isCorrect: true }, { text: 'Python', isCorrect: false }], time: 15 },
+      { type: 'ordering', title: 'Classez les unités de stockage (petit → grand)', correctOrder: ['Bit', 'Octet', 'Kilo-octet', 'Méga-octet', 'Giga-octet'], time: 25 },
+      { type: 'mcq', title: 'Qu\'est-ce qu\'un SSD ?', options: [{ text: 'Super Speed Drive', isCorrect: false }, { text: 'Solid State Drive', isCorrect: true }, { text: 'Standard Storage Disk', isCorrect: false }, { text: 'System Service Device', isCorrect: false }], time: 15 },
+    ] }
+  },
+  {
+    id: 'quiz-icebreaker', name: 'Brise-glace fun', description: 'Pour animer un début de session', category: 'Fun',
+    type: 'quiz', thumbnail: '🎉', color: '#ec4899',
+    content: { templateQuestions: [
+      { type: 'mcq', title: 'Quel animal peut dormir debout ?', options: [{ text: 'Chat', isCorrect: false }, { text: 'Cheval', isCorrect: true }, { text: 'Chien', isCorrect: false }, { text: 'Hamster', isCorrect: false }], time: 15 },
+      { type: 'true_false', title: 'Une journée sur Vénus est plus longue qu\'une année sur Vénus.', options: [{ text: 'Vrai', isCorrect: true }, { text: 'Faux', isCorrect: false }], time: 15 },
+      { type: 'mcq', title: 'Quel est le seul continent sans désert ?', options: [{ text: 'Asie', isCorrect: false }, { text: 'Amérique du Sud', isCorrect: false }, { text: 'Europe', isCorrect: true }, { text: 'Afrique', isCorrect: false }], time: 20 },
+      { type: 'mcq', title: 'Combien de temps dure la mémoire d\'un poisson rouge ?', options: [{ text: '3 secondes', isCorrect: false }, { text: '3 minutes', isCorrect: false }, { text: 'Plusieurs mois', isCorrect: true }, { text: '1 heure', isCorrect: false }], time: 15 },
+      { type: 'mcq', title: 'Quelle est la couleur du sang des pieuvres ?', options: [{ text: 'Rouge', isCorrect: false }, { text: 'Vert', isCorrect: false }, { text: 'Bleu', isCorrect: true }, { text: 'Jaune', isCorrect: false }], time: 15 },
+    ] }
+  },
+];
+
 // Combine all templates
 export const ALL_TEMPLATES: DocumentTemplate[] = [
   ...textTemplates,
@@ -791,6 +1297,8 @@ export const ALL_TEMPLATES: DocumentTemplate[] = [
   ...presentationTemplates,
   ...visualTemplates,
   ...whiteboardTemplates,
+  ...questionnaireTemplates,
+  ...quizTemplates,
 ];
 
 export const getTemplatesByType = (type: DocumentTemplate['type']): DocumentTemplate[] => {
