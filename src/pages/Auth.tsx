@@ -57,8 +57,11 @@ const Auth = () => {
     setError(null);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      const { data, error } = await supabase.functions.invoke('reset-password-native', {
+        body: {
+          email: resetEmail,
+          redirect_url: window.location.origin,
+        },
       });
 
       if (error) {
