@@ -248,64 +248,64 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
   const currentQuestion = selectedQuestion !== null ? questions[selectedQuestion] : null;
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/95 backdrop-blur-xl">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={onClose} className="rounded-xl">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border-b border-border bg-background/95 backdrop-blur-xl gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto min-w-0">
+          <Button variant="ghost" size="icon" onClick={onClose} className="rounded-xl shrink-0">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-              <Zap className="h-4 w-4 text-white" />
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shrink-0">
+              <Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
             </div>
             <Input
               value={quiz?.title || ''}
               onChange={e => setQuiz(prev => prev ? { ...prev, title: e.target.value } : null)}
               onBlur={() => quiz && saveQuizSettings({ title: quiz.title })}
-              className="border-none text-lg font-bold bg-transparent focus-visible:ring-0 p-0 h-auto"
+              className="border-none text-base sm:text-lg font-bold bg-transparent focus-visible:ring-0 p-0 h-auto min-w-0"
               placeholder="Titre du quiz"
             />
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant={quiz?.is_published ? 'default' : 'secondary'} className="gap-1">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap w-full sm:w-auto justify-end">
+          <Badge variant={quiz?.is_published ? 'default' : 'secondary'} className="gap-1 text-xs">
             {quiz?.is_published ? <Eye className="h-3 w-3" /> : null}
             {quiz?.is_published ? 'Publié' : 'Brouillon'}
           </Badge>
-          <Badge variant="outline" className="gap-1">
-            <Target className="h-3 w-3" /> {questions.length} questions
+          <Badge variant="outline" className="gap-1 text-xs">
+            <Target className="h-3 w-3" /> {questions.length}
           </Badge>
-          <Button variant="outline" size="sm" onClick={() => setShowSettings(true)} className="gap-1.5 rounded-xl">
-            <Settings className="h-4 w-4" /> Paramètres
+          <Button variant="outline" size="xs" onClick={() => setShowSettings(true)} className="gap-1 rounded-xl">
+            <Settings className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Paramètres</span>
           </Button>
-          <Button size="sm" onClick={() => saveQuizSettings({ is_published: !quiz?.is_published })} 
-            variant={quiz?.is_published ? 'secondary' : 'default'} className="gap-1.5 rounded-xl">
+          <Button size="xs" onClick={() => saveQuizSettings({ is_published: !quiz?.is_published })} 
+            variant={quiz?.is_published ? 'secondary' : 'default'} className="gap-1 rounded-xl">
             {quiz?.is_published ? 'Dépublier' : 'Publier'}
           </Button>
         </div>
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <div className="border-b border-border px-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+        <div className="border-b border-border px-3 sm:px-4 overflow-x-auto">
           <TabsList className="bg-transparent">
-            <TabsTrigger value="questions" className="gap-1.5"><Target className="h-4 w-4" /> Questions</TabsTrigger>
-            <TabsTrigger value="play" className="gap-1.5"><Play className="h-4 w-4" /> Lancer</TabsTrigger>
-            <TabsTrigger value="reports" className="gap-1.5"><BarChart3 className="h-4 w-4" /> Rapports</TabsTrigger>
+            <TabsTrigger value="questions" className="gap-1 text-xs sm:text-sm"><Target className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Questions</TabsTrigger>
+            <TabsTrigger value="play" className="gap-1 text-xs sm:text-sm"><Play className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Lancer</TabsTrigger>
+            <TabsTrigger value="reports" className="gap-1 text-xs sm:text-sm"><BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Rapports</TabsTrigger>
           </TabsList>
         </div>
 
         {/* Questions Tab */}
-        <TabsContent value="questions" className="flex-1 flex overflow-hidden m-0">
-          {/* Question list sidebar */}
-          <div className="w-72 border-r border-border flex flex-col bg-muted/30">
-            <div className="p-3 border-b border-border">
+        <TabsContent value="questions" className="flex-1 flex flex-col md:flex-row overflow-hidden m-0 min-h-0">
+          {/* Question list sidebar - horizontal scroll on mobile, vertical on desktop */}
+          <div className="md:w-72 border-b md:border-b-0 md:border-r border-border flex flex-col bg-muted/30 shrink-0">
+            <div className="p-2 sm:p-3 border-b border-border">
               <Button onClick={() => setShowAddQuestion(true)} className="w-full gap-1.5 rounded-xl" size="sm">
                 <Plus className="h-4 w-4" /> Ajouter une question
               </Button>
             </div>
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 max-h-[30vh] md:max-h-none">
               <div className="p-2 space-y-1">
                 {questions.map((q, i) => {
                   const TypeIcon = QUESTION_TYPES.find(t => t.value === q.question_type)?.icon || Target;
@@ -313,7 +313,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                     <button
                       key={q.id}
                       onClick={() => setSelectedQuestion(i)}
-                      className={`w-full text-left p-3 rounded-xl transition-all group flex items-start gap-2 ${
+                      className={`w-full text-left p-2 sm:p-3 rounded-xl transition-all group flex items-start gap-2 ${
                         selectedQuestion === i 
                           ? 'bg-primary/10 border border-primary/30 shadow-sm' 
                           : 'hover:bg-muted border border-transparent'
@@ -339,7 +339,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                   );
                 })}
                 {questions.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
+                  <div className="text-center py-6 sm:py-8 text-muted-foreground">
                     <Target className="h-8 w-8 mx-auto mb-2 opacity-40" />
                     <p className="text-sm">Aucune question</p>
                     <p className="text-xs">Cliquez sur + pour commencer</p>
@@ -350,7 +350,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
           </div>
 
           {/* Question editor */}
-          <div className="flex-1 overflow-auto p-6">
+          <div className="flex-1 overflow-auto p-3 sm:p-6 min-h-0">
             {currentQuestion ? (
               <QuestionEditor
                 question={currentQuestion}
@@ -359,9 +359,9 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                 onDelete={() => deleteQuestion(selectedQuestion!)}
               />
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                <Sparkles className="h-16 w-16 mb-4 opacity-20" />
-                <p className="text-lg font-medium">Sélectionnez une question</p>
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-12">
+                <Sparkles className="h-12 sm:h-16 w-12 sm:w-16 mb-4 opacity-20" />
+                <p className="text-base sm:text-lg font-medium">Sélectionnez une question</p>
                 <p className="text-sm">ou ajoutez-en une nouvelle</p>
               </div>
             )}
@@ -505,91 +505,93 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
 
       {/* Settings Modal */}
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
+        <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
+          <DialogHeader className="shrink-0">
             <DialogTitle className="flex items-center gap-2"><Settings className="h-5 w-5" /> Paramètres du quiz</DialogTitle>
           </DialogHeader>
           {quiz && (
-            <div className="space-y-4">
-              <div>
-                <Label>Description</Label>
-                <Textarea value={quiz.description || ''} onChange={e => setQuiz({ ...quiz, description: e.target.value })}
-                  placeholder="Description du quiz..." className="mt-1" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+            <ScrollArea className="flex-1 min-h-0 pr-3">
+              <div className="space-y-4 pb-2">
                 <div>
-                  <Label>Temps par question (sec)</Label>
-                  <Input type="number" value={quiz.time_per_question} onChange={e => setQuiz({ ...quiz, time_per_question: parseInt(e.target.value) || 30 })} className="mt-1" />
+                  <Label>Description</Label>
+                  <Textarea value={quiz.description || ''} onChange={e => setQuiz({ ...quiz, description: e.target.value })}
+                    placeholder="Description du quiz..." className="mt-1" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Temps par question (sec)</Label>
+                    <Input type="number" value={quiz.time_per_question} onChange={e => setQuiz({ ...quiz, time_per_question: parseInt(e.target.value) || 30 })} className="mt-1" />
+                  </div>
+                  <div>
+                    <Label>Points par question</Label>
+                    <Input type="number" value={quiz.points_per_question} onChange={e => setQuiz({ ...quiz, points_per_question: parseInt(e.target.value) || 1000 })} className="mt-1" />
+                  </div>
                 </div>
                 <div>
-                  <Label>Points par question</Label>
-                  <Input type="number" value={quiz.points_per_question} onChange={e => setQuiz({ ...quiz, points_per_question: parseInt(e.target.value) || 1000 })} className="mt-1" />
+                  <Label>Mode de jeu</Label>
+                  <Select value={quiz.mode} onValueChange={v => setQuiz({ ...quiz, mode: v as any })}>
+                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="live">Live uniquement</SelectItem>
+                      <SelectItem value="async">Asynchrone uniquement</SelectItem>
+                      <SelectItem value="both">Les deux</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              </div>
-              <div>
-                <Label>Mode de jeu</Label>
-                <Select value={quiz.mode} onValueChange={v => setQuiz({ ...quiz, mode: v as any })}>
-                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="live">Live uniquement</SelectItem>
-                    <SelectItem value="async">Asynchrone uniquement</SelectItem>
-                    <SelectItem value="both">Les deux</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {/* Theme Preset */}
-              <div>
-                <Label>🎨 Thème visuel</Label>
-                <div className="grid grid-cols-4 gap-2 mt-2">
-                  {Object.values(QUIZ_THEMES).map(t => (
-                    <button key={t.id}
-                      onClick={() => setQuiz({ ...quiz, theme_preset: t.id })}
-                      className={`p-2 rounded-xl border-2 transition-all text-xs font-medium ${
-                        quiz.theme_preset === t.id ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/50'
-                      }`}>
-                      <div className="w-full h-6 rounded-lg mb-1" style={{ background: t.bgGradient }} />
-                      {t.name}
-                    </button>
+                {/* Theme Preset */}
+                <div>
+                  <Label>🎨 Thème visuel</Label>
+                  <div className="grid grid-cols-4 gap-2 mt-2">
+                    {Object.values(QUIZ_THEMES).map(t => (
+                      <button key={t.id}
+                        onClick={() => setQuiz({ ...quiz, theme_preset: t.id })}
+                        className={`p-2 rounded-xl border-2 transition-all text-xs font-medium ${
+                          quiz.theme_preset === t.id ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/50'
+                        }`}>
+                        <div className="w-full h-6 rounded-lg mb-1" style={{ background: t.bgGradient }} />
+                        {t.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {/* Audio toggle */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">🎵 Audio en jeu</p>
+                    <p className="text-xs text-muted-foreground">Sons et effets pendant le quiz</p>
+                  </div>
+                  <Switch checked={quiz.audio_enabled} onCheckedChange={v => setQuiz({ ...quiz, audio_enabled: v })} />
+                </div>
+                <div className="space-y-3">
+                  {[
+                    { key: 'bonus_speed_points', label: 'Bonus de vitesse', desc: 'Plus de points si réponse rapide' },
+                    { key: 'streak_bonus_enabled', label: 'Bonus de série', desc: 'Points bonus pour réponses consécutives correctes' },
+                    { key: 'shuffle_questions', label: 'Mélanger les questions', desc: 'Ordre aléatoire à chaque session' },
+                    { key: 'shuffle_options', label: 'Mélanger les options', desc: 'Ordre aléatoire des réponses' },
+                    { key: 'show_correct_answer', label: 'Afficher la bonne réponse', desc: 'Montrer la correction après chaque question' },
+                    { key: 'show_leaderboard_after_each', label: 'Classement après chaque question', desc: 'Afficher le top du classement' },
+                    { key: 'allow_teams', label: 'Mode équipes', desc: 'Permettre de jouer en équipes' },
+                    { key: 'power_ups_enabled', label: 'Power-ups', desc: 'Bonus spéciaux pendant le jeu' },
+                  ].map(setting => (
+                    <div key={setting.key} className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium">{setting.label}</p>
+                        <p className="text-xs text-muted-foreground">{setting.desc}</p>
+                      </div>
+                      <Switch checked={(quiz as any)[setting.key]} onCheckedChange={v => setQuiz({ ...quiz, [setting.key]: v })} className="shrink-0" />
+                    </div>
                   ))}
                 </div>
-              </div>
-              {/* Audio toggle */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">🎵 Audio en jeu</p>
-                  <p className="text-xs text-muted-foreground">Sons et effets pendant le quiz</p>
-                </div>
-                <Switch checked={quiz.audio_enabled} onCheckedChange={v => setQuiz({ ...quiz, audio_enabled: v })} />
-              </div>
-              <div className="space-y-3">
-                {[
-                  { key: 'bonus_speed_points', label: 'Bonus de vitesse', desc: 'Plus de points si réponse rapide' },
-                  { key: 'streak_bonus_enabled', label: 'Bonus de série', desc: 'Points bonus pour réponses consécutives correctes' },
-                  { key: 'shuffle_questions', label: 'Mélanger les questions', desc: 'Ordre aléatoire à chaque session' },
-                  { key: 'shuffle_options', label: 'Mélanger les options', desc: 'Ordre aléatoire des réponses' },
-                  { key: 'show_correct_answer', label: 'Afficher la bonne réponse', desc: 'Montrer la correction après chaque question' },
-                  { key: 'show_leaderboard_after_each', label: 'Classement après chaque question', desc: 'Afficher le top du classement' },
-                  { key: 'allow_teams', label: 'Mode équipes', desc: 'Permettre de jouer en équipes' },
-                  { key: 'power_ups_enabled', label: 'Power-ups', desc: 'Bonus spéciaux pendant le jeu' },
-                ].map(setting => (
-                  <div key={setting.key} className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">{setting.label}</p>
-                      <p className="text-xs text-muted-foreground">{setting.desc}</p>
-                    </div>
-                    <Switch checked={(quiz as any)[setting.key]} onCheckedChange={v => setQuiz({ ...quiz, [setting.key]: v })} />
+                {quiz.allow_teams && (
+                  <div>
+                    <Label>Taille max des équipes</Label>
+                    <Input type="number" value={quiz.max_team_size} onChange={e => setQuiz({ ...quiz, max_team_size: parseInt(e.target.value) || 4 })} className="mt-1" />
                   </div>
-                ))}
+                )}
               </div>
-              {quiz.allow_teams && (
-                <div>
-                  <Label>Taille max des équipes</Label>
-                  <Input type="number" value={quiz.max_team_size} onChange={e => setQuiz({ ...quiz, max_team_size: parseInt(e.target.value) || 4 })} className="mt-1" />
-                </div>
-              )}
-            </div>
+            </ScrollArea>
           )}
-          <DialogFooter>
+          <DialogFooter className="shrink-0">
             <Button onClick={() => { if (quiz) saveQuizSettings(quiz); setShowSettings(false); }} className="rounded-xl">
               Sauvegarder
             </Button>
@@ -632,7 +634,7 @@ const QuestionEditor: React.FC<{
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between">
         <Badge className="gap-1">Question {index + 1}</Badge>
         <Button variant="ghost" size="sm" onClick={onDelete} className="text-destructive hover:text-destructive gap-1">
@@ -644,10 +646,10 @@ const QuestionEditor: React.FC<{
         <Label>Question</Label>
         <Textarea value={localQ.title} onChange={e => setLocalQ({ ...localQ, title: e.target.value })}
           onBlur={() => save({ title: localQ.title })}
-          className="mt-1 text-lg font-medium" rows={2} />
+          className="mt-1 text-lg sm:text-xl font-bold text-center min-h-[80px]" rows={3} />
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <div>
           <Label className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> Temps (sec)</Label>
           <Input type="number" value={localQ.time_limit} onChange={e => save({ time_limit: parseInt(e.target.value) || 30 })} className="mt-1" />
@@ -749,7 +751,7 @@ const QuestionEditor: React.FC<{
 
       {/* Slider */}
       {localQ.question_type === 'slider' && (
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           <div>
             <Label>Min</Label>
             <Input type="number" value={localQ.slider_min} onChange={e => save({ slider_min: parseInt(e.target.value) || 0 })} className="mt-1" />
