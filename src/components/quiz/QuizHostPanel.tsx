@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useQuizTheme } from './QuizThemeProvider';
 import { Quiz, QuizQuestion, QuizSession, QuizParticipant } from '@/services/quizService';
+import QuizQRCodeModal from './QuizQRCodeModal';
 import { 
   Play, SkipForward, BarChart3, Users, Trophy, Target, 
   Clock, Zap, StopCircle, ArrowLeft, Volume2, VolumeX,
-  ChevronRight
+  ChevronRight, QrCode
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +30,7 @@ const QuizHostPanel: React.FC<Props> = ({
   phase, onStart, onNextQuestion, onShowLeaderboard, onEndGame, onExit,
 }) => {
   const theme = useQuizTheme();
+  const [showQR, setShowQR] = useState(false);
   const sorted = [...participants].sort((a, b) => b.total_score - a.total_score);
   const currentQuestion = questions[currentQuestionIndex];
 
@@ -73,11 +75,18 @@ const QuizHostPanel: React.FC<Props> = ({
                 <p className="text-lg" style={{ color: theme.textColor + '80' }}>
                   {participants.length} joueur{participants.length > 1 ? 's' : ''} connecté{participants.length > 1 ? 's' : ''}
                 </p>
-                <Button onClick={onStart} disabled={participants.length === 0}
-                  className="px-8 py-6 text-xl font-black rounded-2xl gap-2"
-                  style={{ background: `linear-gradient(135deg, ${theme.primaryColor}, ${theme.secondaryColor})`, color: '#fff' }}>
-                  <Play className="h-6 w-6" /> Lancer le Quiz
-                </Button>
+                <div className="flex gap-3 justify-center">
+                  <Button onClick={() => setShowQR(true)}
+                    variant="outline"
+                    className="px-6 py-5 text-lg rounded-2xl gap-2 border-white/20 text-white hover:bg-white/10">
+                    <QrCode className="h-5 w-5" /> QR Code
+                  </Button>
+                  <Button onClick={onStart} disabled={participants.length === 0}
+                    className="px-8 py-5 text-xl font-black rounded-2xl gap-2"
+                    style={{ background: `linear-gradient(135deg, ${theme.primaryColor}, ${theme.secondaryColor})`, color: '#fff' }}>
+                    <Play className="h-6 w-6" /> Commencer
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -197,6 +206,7 @@ const QuizHostPanel: React.FC<Props> = ({
           )}
         </div>
       </div>
+      <QuizQRCodeModal open={showQR} onOpenChange={setShowQR} pinCode={session.pin_code} />
     </div>
   );
 };
