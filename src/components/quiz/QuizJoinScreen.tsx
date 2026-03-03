@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { quizService, QuizSession, QuizParticipant } from '@/services/quizService';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
 import QuizGameOrchestrator from './QuizGameOrchestrator';
-import { useQuizTheme, QUIZ_THEMES } from './QuizThemeProvider';
 import QuizParticles from './QuizParticles';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
@@ -25,6 +23,17 @@ function randomPseudo(): string {
   return `${adjectives[Math.floor(Math.random() * adjectives.length)]}${nouns[Math.floor(Math.random() * nouns.length)]}`;
 }
 
+/** Generate or retrieve a persistent anonymous ID for this browser */
+function getAnonymousId(): string {
+  const key = 'quiz_anonymous_id';
+  let id = localStorage.getItem(key);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(key, id);
+  }
+  return id;
+}
+
 type Step = 'pin' | 'profile' | 'lobby' | 'game';
 
 interface Props {
@@ -33,8 +42,8 @@ interface Props {
 }
 
 const QuizJoinScreen: React.FC<Props> = ({ initialPin = '', onClose }) => {
-  const { userId } = useCurrentUser();
-  const [step, setStep] = useState<Step>(initialPin ? 'pin' : 'pin');
+  const anonymousId = getAnonymousId();
+  const [step, setStep] = useState<Step>('pin');
   const [pin, setPin] = useState(initialPin);
   const [loading, setLoading] = useState(false);
   const [session, setSession] = useState<QuizSession | null>(null);
@@ -65,12 +74,10 @@ const QuizJoinScreen: React.FC<Props> = ({ initialPin = '', onClose }) => {
         return;
       }
       setSession(s);
-      // Load quiz title
       try {
         const quiz = await quizService.getQuiz(s.quiz_id);
         setQuizTitle(quiz.title);
       } catch {}
-      // Generate a random pseudo
       setNickname(randomPseudo());
       setSelectedEmoji(EMOJI_LIST[Math.floor(Math.random() * EMOJI_LIST.length)]);
       setStep('profile');
@@ -82,7 +89,7 @@ const QuizJoinScreen: React.FC<Props> = ({ initialPin = '', onClose }) => {
   };
 
   const handleJoinSession = async () => {
-    if (!session || !userId) return;
+    if (!session) return;
     if (!nickname.trim()) {
       toast.error('Choisis un pseudo');
       return;
@@ -93,9 +100,8 @@ const QuizJoinScreen: React.FC<Props> = ({ initialPin = '', onClose }) => {
     }
     setLoading(true);
     try {
-      const p = await quizService.joinSession(session.id, userId, nickname, selectedEmoji);
+      const p = await quizService.joinSessionAnonymous(session.id, anonymousId, nickname, selectedEmoji);
       setMyParticipant(p);
-      // Load existing participants
       const ps = await quizService.getParticipants(session.id);
       setParticipants(ps);
       setStep('lobby');
@@ -104,7 +110,7 @@ const QuizJoinScreen: React.FC<Props> = ({ initialPin = '', onClose }) => {
       if (err?.code === '23505') {
         // Already joined
         const ps = await quizService.getParticipants(session.id);
-        const me = ps.find(p => p.user_id === userId);
+        const me = ps.find(p => p.anonymous_id === anonymousId);
         if (me) {
           setMyParticipant(me);
           setParticipants(ps);
@@ -296,7 +302,7 @@ const QuizJoinScreen: React.FC<Props> = ({ initialPin = '', onClose }) => {
                 {participants.map(p => (
                   <div key={p.id}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${
-                      p.user_id === userId ? 'bg-amber-500/30 ring-1 ring-amber-400/50' : 'bg-white/10'
+                      p.anonymous_id === anonymousId ? 'bg-amber-500/30 ring-1 ring-amber-400/50' : 'bg-white/10'
                     }`}>
                     <span className="text-lg">{p.avatar_emoji || '😎'}</span>
                     <span className="text-white">{p.nickname || 'Joueur'}</span>

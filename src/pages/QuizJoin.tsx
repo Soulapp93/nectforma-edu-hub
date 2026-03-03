@@ -6,7 +6,7 @@ const QuizJoin: React.FC = () => {
   const [searchParams] = useSearchParams();
   const pinFromUrl = searchParams.get('pin') || '';
 
-  return <QuizJoinScreen initialPin={pinFromUrl} onClose={() => window.close()} />;
+  return <QuizJoinScreen initialPin={pinFromUrl} onClose={() => window.history.back()} />;
 };
 
 export default QuizJoin;

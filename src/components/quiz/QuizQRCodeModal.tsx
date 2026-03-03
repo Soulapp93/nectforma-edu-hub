@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Copy, Check, QrCode, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getAppBaseUrl } from '@/lib/appBaseUrl';
 
 interface Props {
   open: boolean;
@@ -15,7 +16,7 @@ const QuizQRCodeModal: React.FC<Props> = ({ open, onOpenChange, pinCode }) => {
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [copied, setCopied] = useState(false);
 
-  const joinUrl = `${window.location.origin}/quiz/join?pin=${pinCode}`;
+  const joinUrl = `${getAppBaseUrl()}/quiz/join?pin=${pinCode}`;
 
   useEffect(() => {
     if (open && pinCode) {

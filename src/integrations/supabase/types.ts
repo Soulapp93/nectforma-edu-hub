@@ -2751,6 +2751,8 @@ export type Database = {
       }
       quiz_participants: {
         Row: {
+          anonymous_id: string | null
+          avatar_emoji: string | null
           avatar_url: string | null
           badges: Json | null
           best_streak: number | null
@@ -2764,9 +2766,11 @@ export type Database = {
           team_id: string | null
           total_answered: number | null
           total_score: number | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
+          anonymous_id?: string | null
+          avatar_emoji?: string | null
           avatar_url?: string | null
           badges?: Json | null
           best_streak?: number | null
@@ -2780,9 +2784,11 @@ export type Database = {
           team_id?: string | null
           total_answered?: number | null
           total_score?: number | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
+          anonymous_id?: string | null
+          avatar_emoji?: string | null
           avatar_url?: string | null
           badges?: Json | null
           best_streak?: number | null
@@ -2796,7 +2802,7 @@ export type Database = {
           team_id?: string | null
           total_answered?: number | null
           total_score?: number | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
