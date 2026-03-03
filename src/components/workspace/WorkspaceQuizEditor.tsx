@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { WorkspaceDocument } from '@/services/workspaceService';
 import { quizService, Quiz, QuizQuestion, QuizSession } from '@/services/quizService';
+import { QUIZ_THEMES } from '@/components/quiz/QuizThemeProvider';
+import QuizGameOrchestrator from '@/components/quiz/QuizGameOrchestrator';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -52,6 +54,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
   const [sessions, setSessions] = useState<QuizSession[]>([]);
   const [showReport, setShowReport] = useState<string | null>(null);
   const [reportData, setReportData] = useState<any>(null);
+  const [activeGameSession, setActiveGameSession] = useState<string | null>(null);
 
   const quizId = (document.content as any)?.quizId;
 
@@ -197,8 +200,8 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
         host_id: userId,
         mode: 'live',
       });
-      toast.success(`Session live créée ! PIN : ${session.pin_code}`);
       setSessions(prev => [session, ...prev]);
+      setActiveGameSession(session.id);
     } catch { toast.error('Erreur'); }
   };
 
@@ -228,6 +231,17 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
       <div className="flex items-center justify-center h-screen bg-background">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
       </div>
+    );
+  }
+
+  // If game is active, show orchestrator
+  if (activeGameSession) {
+    return (
+      <QuizGameOrchestrator
+        sessionId={activeGameSession}
+        isHost={true}
+        onExit={() => { setActiveGameSession(null); loadQuiz(); }}
+      />
     );
   }
 
@@ -407,6 +421,11 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                         )}
                       </div>
                       <div className="flex gap-2">
+                        {s.status !== 'finished' && (
+                          <Button size="sm" onClick={() => setActiveGameSession(s.id)} className="rounded-xl gap-1">
+                            <Play className="h-3.5 w-3.5" /> Ouvrir
+                          </Button>
+                        )}
                         <Button size="sm" variant="outline" onClick={() => loadReport(s.id)} className="rounded-xl gap-1">
                           <BarChart3 className="h-3.5 w-3.5" /> Rapport
                         </Button>
@@ -517,6 +536,30 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                     <SelectItem value="both">Les deux</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              {/* Theme Preset */}
+              <div>
+                <Label>🎨 Thème visuel</Label>
+                <div className="grid grid-cols-4 gap-2 mt-2">
+                  {Object.values(QUIZ_THEMES).map(t => (
+                    <button key={t.id}
+                      onClick={() => setQuiz({ ...quiz, theme_preset: t.id })}
+                      className={`p-2 rounded-xl border-2 transition-all text-xs font-medium ${
+                        quiz.theme_preset === t.id ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/50'
+                      }`}>
+                      <div className="w-full h-6 rounded-lg mb-1" style={{ background: t.bgGradient }} />
+                      {t.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {/* Audio toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">🎵 Audio en jeu</p>
+                  <p className="text-xs text-muted-foreground">Sons et effets pendant le quiz</p>
+                </div>
+                <Switch checked={quiz.audio_enabled} onCheckedChange={v => setQuiz({ ...quiz, audio_enabled: v })} />
               </div>
               <div className="space-y-3">
                 {[

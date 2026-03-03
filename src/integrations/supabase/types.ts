@@ -2701,6 +2701,54 @@ export type Database = {
           },
         ]
       }
+      quiz_leaderboard_history: {
+        Row: {
+          created_at: string
+          id: string
+          participant_id: string
+          question_index: number
+          rank: number
+          score: number
+          session_id: string
+          streak: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          participant_id: string
+          question_index: number
+          rank: number
+          score: number
+          session_id: string
+          streak?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          participant_id?: string
+          question_index?: number
+          rank?: number
+          score?: number
+          session_id?: string
+          streak?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_leaderboard_history_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_leaderboard_history_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quiz_participants: {
         Row: {
           avatar_url: string | null
@@ -2763,6 +2811,61 @@ export type Database = {
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "quiz_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_power_ups: {
+        Row: {
+          created_at: string
+          id: string
+          participant_id: string
+          power_up_type: string
+          question_index: number | null
+          session_id: string
+          target_participant_id: string | null
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          participant_id: string
+          power_up_type: string
+          question_index?: number | null
+          session_id: string
+          target_participant_id?: string | null
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          participant_id?: string
+          power_up_type?: string
+          question_index?: number | null
+          session_id?: string
+          target_participant_id?: string | null
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_power_ups_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_power_ups_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_power_ups_target_participant_id_fkey"
+            columns: ["target_participant_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_participants"
             referencedColumns: ["id"]
           },
         ]
