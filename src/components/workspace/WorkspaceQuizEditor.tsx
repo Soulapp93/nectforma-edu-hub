@@ -287,8 +287,8 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-        <div className="border-b border-border px-3 sm:px-4 overflow-x-auto">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="border-b border-border px-3 sm:px-4 overflow-x-auto shrink-0">
           <TabsList className="bg-transparent">
             <TabsTrigger value="questions" className="gap-1 text-xs sm:text-sm"><Target className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Questions</TabsTrigger>
             <TabsTrigger value="play" className="gap-1 text-xs sm:text-sm"><Play className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Lancer</TabsTrigger>
@@ -298,14 +298,14 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
 
         {/* Questions Tab */}
         <TabsContent value="questions" className="flex-1 flex flex-col md:flex-row overflow-hidden m-0 min-h-0">
-          {/* Question list sidebar - horizontal scroll on mobile, vertical on desktop */}
-          <div className="md:w-72 border-b md:border-b-0 md:border-r border-border flex flex-col bg-muted/30 shrink-0">
-            <div className="p-2 sm:p-3 border-b border-border">
+          {/* Question list sidebar */}
+          <div className="md:w-72 border-b md:border-b-0 md:border-r border-border flex flex-col bg-muted/30 shrink-0 min-h-0">
+            <div className="p-2 sm:p-3 border-b border-border shrink-0">
               <Button onClick={() => setShowAddQuestion(true)} className="w-full gap-1.5 rounded-xl" size="sm">
                 <Plus className="h-4 w-4" /> Ajouter une question
               </Button>
             </div>
-            <ScrollArea className="flex-1 max-h-[30vh] md:max-h-none">
+            <ScrollArea className="flex-1 min-h-0">
               <div className="p-2 space-y-1">
                 {questions.map((q, i) => {
                   const TypeIcon = QUESTION_TYPES.find(t => t.value === q.question_type)?.icon || Target;
@@ -313,22 +313,22 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                     <button
                       key={q.id}
                       onClick={() => setSelectedQuestion(i)}
-                      className={`w-full text-left p-2 sm:p-3 rounded-xl transition-all group flex items-start gap-2 ${
+                      className={`w-full text-left p-2 sm:p-2.5 rounded-xl transition-all group flex items-start gap-2 ${
                         selectedQuestion === i 
                           ? 'bg-primary/10 border border-primary/30 shadow-sm' 
                           : 'hover:bg-muted border border-transparent'
                       }`}
                     >
-                      <span className="text-xs font-bold text-muted-foreground mt-0.5 min-w-[20px]">{i + 1}</span>
+                      <span className="text-xs font-bold text-muted-foreground mt-0.5 min-w-[18px]">{i + 1}</span>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <TypeIcon className="h-3.5 w-3.5 text-primary" />
-                          <span className="text-xs text-muted-foreground">{QUESTION_TYPES.find(t => t.value === q.question_type)?.label}</span>
+                        <div className="flex items-center gap-1 mb-0.5">
+                          <TypeIcon className="h-3 w-3 text-primary shrink-0" />
+                          <span className="text-[10px] text-muted-foreground truncate">{QUESTION_TYPES.find(t => t.value === q.question_type)?.label}</span>
                         </div>
-                        <p className="text-sm font-medium truncate">{q.title}</p>
-                        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-0.5"><Clock className="h-3 w-3" />{q.time_limit}s</span>
-                          <span className="flex items-center gap-0.5"><Trophy className="h-3 w-3" />{q.points}pts</span>
+                        <p className="text-xs sm:text-sm font-medium truncate">{q.title}</p>
+                        <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
+                          <span className="flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" />{q.time_limit}s</span>
+                          <span className="flex items-center gap-0.5"><Trophy className="h-2.5 w-2.5" />{q.points}pts</span>
                         </div>
                       </div>
                       <div className="opacity-0 group-hover:opacity-100 flex flex-col gap-0.5">
@@ -339,7 +339,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                   );
                 })}
                 {questions.length === 0 && (
-                  <div className="text-center py-6 sm:py-8 text-muted-foreground">
+                  <div className="text-center py-6 text-muted-foreground">
                     <Target className="h-8 w-8 mx-auto mb-2 opacity-40" />
                     <p className="text-sm">Aucune question</p>
                     <p className="text-xs">Cliquez sur + pour commencer</p>
@@ -369,9 +369,9 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
         </TabsContent>
 
         {/* Play Tab */}
-        <TabsContent value="play" className="flex-1 overflow-auto m-0 p-6">
-          <div className="max-w-2xl mx-auto space-y-6">
-            <Card className="p-6 border-2 border-primary/20">
+        <TabsContent value="play" className="flex-1 overflow-auto m-0 p-4 sm:p-6">
+          <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
+            <Card className="p-4 sm:p-6 border-2 border-primary/20">
               <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                 <Play className="h-5 w-5 text-primary" /> Lancer une session
               </h3>
@@ -439,7 +439,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
         </TabsContent>
 
         {/* Reports Tab */}
-        <TabsContent value="reports" className="flex-1 overflow-auto m-0 p-6">
+        <TabsContent value="reports" className="flex-1 overflow-auto m-0 p-4 sm:p-6">
           {reportData ? (
             <ReportView data={reportData} onClose={() => { setReportData(null); setShowReport(null); }} />
           ) : (
