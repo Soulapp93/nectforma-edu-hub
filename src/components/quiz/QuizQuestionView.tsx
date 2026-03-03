@@ -102,17 +102,17 @@ const QuizQuestionView: React.FC<Props> = ({
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col overflow-hidden" style={{ background: theme.bgGradient }}>
+    <div className="relative h-screen flex flex-col overflow-hidden" style={{ background: theme.bgGradient }}>
       <QuizParticles count={15} />
 
       {/* Top bar */}
-      <div className="relative z-10 flex items-center justify-between px-4 py-3">
+      <div className="relative z-10 flex items-center justify-between px-3 sm:px-4 py-2 shrink-0">
         <div className="flex items-center gap-2">
-          <span className="px-3 py-1 rounded-full text-sm font-bold" style={{ background: theme.cardBg, color: theme.textColor }}>
+          <span className="px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-bold" style={{ background: theme.cardBg, color: theme.textColor }}>
             {questionIndex + 1} / {totalQuestions}
           </span>
         </div>
-        <QuizCircularTimer duration={timeLimit} isRunning={timerRunning} onTimeUp={handleTimeUp} size={80} />
+        <QuizCircularTimer duration={timeLimit} isRunning={timerRunning} onTimeUp={handleTimeUp} size={60} />
         {/* Power-ups */}
         {powerUps && !answered && (
           <div className="flex gap-2">
@@ -142,56 +142,60 @@ const QuizQuestionView: React.FC<Props> = ({
       </div>
 
       {/* Question text */}
-      <div className="relative z-10 px-4 sm:px-8 py-6 sm:py-10 text-center flex-1 flex flex-col items-center justify-center">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black leading-tight max-w-4xl"
+      <div className="relative z-10 px-3 sm:px-6 py-3 sm:py-6 text-center flex flex-col items-center justify-center shrink">
+        <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black leading-tight max-w-4xl"
           style={{ color: theme.textColor, fontFamily: theme.fontFamily }}>
           {question.title}
         </h2>
         {question.description && (
-          <p className="mt-3 text-sm sm:text-base opacity-70 max-w-2xl" style={{ color: theme.textColor }}>{question.description}</p>
+          <p className="mt-2 text-xs sm:text-sm opacity-70 max-w-2xl" style={{ color: theme.textColor }}>{question.description}</p>
         )}
         {question.image_url && (
-          <img src={question.image_url} alt="" className="mt-4 mx-auto max-h-48 sm:max-h-64 rounded-2xl object-cover" />
+          <img src={question.image_url} alt="" className="mt-3 mx-auto max-h-32 sm:max-h-48 rounded-2xl object-cover" />
         )}
       </div>
 
       {/* Result overlay */}
       {showResult && (
-        <div className="relative z-20 mx-4 mb-4 p-4 rounded-2xl text-center animate-scale-in backdrop-blur-xl"
+        <div className="relative z-20 mx-3 sm:mx-4 mb-2 p-3 rounded-2xl text-center animate-scale-in backdrop-blur-xl shrink-0"
           style={{ background: showResult.isCorrect ? theme.correctColor + '20' : theme.wrongColor + '20' }}>
-          <span className="text-4xl">{showResult.isCorrect ? '✅' : '❌'}</span>
-          <p className="text-lg font-bold mt-1" style={{ color: theme.textColor }}>
-            {showResult.isCorrect ? 'Correct !' : 'Raté !'}
-          </p>
-          <p className="text-2xl font-black" style={{ color: showResult.isCorrect ? theme.correctColor : theme.wrongColor }}>
-            +{showResult.pointsEarned} pts
-          </p>
-          {showResult.streak >= 3 && (
-            <div className="mt-1 inline-flex items-center gap-1 px-3 py-1 rounded-full animate-pulse"
-              style={{ background: theme.accentColor + '30', color: theme.accentColor }}>
-              🔥 Streak x{showResult.streak}
+          <div className="flex items-center justify-center gap-3">
+            <span className="text-2xl sm:text-4xl">{showResult.isCorrect ? '✅' : '❌'}</span>
+            <div>
+              <p className="text-sm sm:text-lg font-bold" style={{ color: theme.textColor }}>
+                {showResult.isCorrect ? 'Correct !' : 'Raté !'}
+              </p>
+              <p className="text-lg sm:text-2xl font-black" style={{ color: showResult.isCorrect ? theme.correctColor : theme.wrongColor }}>
+                +{showResult.pointsEarned} pts
+              </p>
             </div>
-          )}
+            {showResult.streak >= 3 && (
+              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full animate-pulse text-xs sm:text-sm"
+                style={{ background: theme.accentColor + '30', color: theme.accentColor }}>
+                🔥 x{showResult.streak}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
       {/* Answer area */}
-      <div className="relative z-10 px-3 sm:px-6 pb-4 sm:pb-6 flex flex-col justify-end shrink-0">
+      <div className="relative z-10 px-3 sm:px-6 pb-3 sm:pb-4 shrink-0">
         {/* MCQ / True-False */}
         {(question.question_type === 'mcq' || question.question_type === 'true_false') && (
-          <div className={`grid gap-3 ${(question.options || []).length <= 2 ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
+          <div className={`grid gap-2 sm:gap-3 ${(question.options || []).length <= 2 ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
             {(question.options || []).map((opt: any, i: number) => (
               <button
                 key={opt.id}
                 onClick={() => handleOptionClick(opt.id)}
                 disabled={answered}
-                className={`relative p-4 sm:p-5 rounded-2xl text-white font-bold text-base sm:text-lg transition-all duration-300 ${
+                className={`relative p-3 sm:p-4 rounded-xl sm:rounded-2xl text-white font-bold text-sm sm:text-base transition-all duration-300 ${
                   !answered ? 'hover:scale-[1.02] active:scale-[0.98] cursor-pointer' : ''
                 }`}
                 style={getOptionStyle(opt, i)}
               >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl opacity-60">{OPTION_SHAPES[i % OPTION_SHAPES.length]}</span>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <span className="text-lg sm:text-2xl opacity-60">{OPTION_SHAPES[i % OPTION_SHAPES.length]}</span>
                   <span className="flex-1 text-left">{opt.text}</span>
                 </div>
               </button>
