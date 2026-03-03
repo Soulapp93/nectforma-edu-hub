@@ -4,6 +4,7 @@ import { useQuizAudio } from './QuizAudioManager';
 import QuizCircularTimer from './QuizCircularTimer';
 import QuizParticles from './QuizParticles';
 import { QuizQuestion } from '@/services/quizService';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Zap, Shield, Clock as ClockIcon } from 'lucide-react';
 
 const OPTION_COLORS = ['#E21B3C', '#1368CE', '#D89E00', '#26890C', '#9B59B6', '#E67E22', '#1ABC9C', '#E74C3C'];
@@ -102,7 +103,7 @@ const QuizQuestionView: React.FC<Props> = ({
   };
 
   return (
-    <div className="relative h-screen flex flex-col overflow-hidden" style={{ background: theme.bgGradient }}>
+    <div className="relative h-full min-h-0 flex flex-col overflow-hidden" style={{ background: theme.bgGradient }}>
       <QuizParticles count={15} />
 
       {/* Top bar */}
@@ -142,18 +143,20 @@ const QuizQuestionView: React.FC<Props> = ({
       </div>
 
       {/* Question text */}
-      <div className="relative z-10 px-3 sm:px-6 py-3 sm:py-6 text-center flex flex-col items-center justify-center shrink">
-        <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black leading-tight max-w-4xl"
-          style={{ color: theme.textColor, fontFamily: theme.fontFamily }}>
-          {question.title}
-        </h2>
-        {question.description && (
-          <p className="mt-2 text-xs sm:text-sm opacity-70 max-w-2xl" style={{ color: theme.textColor }}>{question.description}</p>
-        )}
-        {question.image_url && (
-          <img src={question.image_url} alt="" className="mt-3 mx-auto max-h-32 sm:max-h-48 rounded-2xl object-cover" />
-        )}
-      </div>
+      <ScrollArea className="relative z-10 flex-1 min-h-0 px-3 sm:px-6">
+        <div className="min-h-full py-2 sm:py-4 text-center flex flex-col items-center justify-start sm:justify-center">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black leading-tight max-w-4xl"
+            style={{ color: theme.textColor, fontFamily: theme.fontFamily }}>
+            {question.title}
+          </h2>
+          {question.description && (
+            <p className="mt-2 text-xs sm:text-sm opacity-70 max-w-2xl" style={{ color: theme.textColor }}>{question.description}</p>
+          )}
+          {question.image_url && (
+            <img src={question.image_url} alt="" className="mt-3 mx-auto max-h-32 sm:max-h-48 rounded-2xl object-cover" />
+          )}
+        </div>
+      </ScrollArea>
 
       {/* Result overlay */}
       {showResult && (

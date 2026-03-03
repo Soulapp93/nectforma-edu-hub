@@ -228,7 +228,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-background">
+      <div className="flex items-center justify-center h-full min-h-0 bg-background">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
       </div>
     );
@@ -237,20 +237,22 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
   // If game is active, show orchestrator
   if (activeGameSession) {
     return (
-      <QuizGameOrchestrator
-        sessionId={activeGameSession}
-        isHost={true}
-        onExit={() => { setActiveGameSession(null); loadQuiz(); }}
-      />
+      <div className="h-full min-h-0">
+        <QuizGameOrchestrator
+          sessionId={activeGameSession}
+          isHost={true}
+          onExit={() => { setActiveGameSession(null); loadQuiz(); }}
+        />
+      </div>
     );
   }
 
   const currentQuestion = selectedQuestion !== null ? questions[selectedQuestion] : null;
 
   return (
-    <div className="flex flex-col h-screen bg-background overflow-hidden">
+    <div className="flex flex-col h-full min-h-0 bg-background overflow-hidden">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border-b border-border bg-background/95 backdrop-blur-xl gap-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border-b border-border bg-background/95 backdrop-blur-xl gap-2 shrink-0">
         <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto min-w-0">
           <Button variant="ghost" size="icon" onClick={onClose} className="rounded-xl shrink-0">
             <ArrowLeft className="h-5 w-5" />
@@ -279,7 +281,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
           <Button variant="outline" size="xs" onClick={() => setShowSettings(true)} className="gap-1 rounded-xl">
             <Settings className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Paramètres</span>
           </Button>
-          <Button size="xs" onClick={() => saveQuizSettings({ is_published: !quiz?.is_published })} 
+          <Button size="xs" onClick={() => saveQuizSettings({ is_published: !quiz?.is_published })}
             variant={quiz?.is_published ? 'secondary' : 'default'} className="gap-1 rounded-xl">
             {quiz?.is_published ? 'Dépublier' : 'Publier'}
           </Button>
@@ -288,8 +290,8 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        <div className="border-b border-border px-3 sm:px-4 overflow-x-auto shrink-0">
-          <TabsList className="bg-transparent">
+        <div className="border-b border-border px-2 sm:px-4 py-2 shrink-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 overflow-x-auto">
+          <TabsList className="bg-muted/50 w-full sm:w-auto justify-start">
             <TabsTrigger value="questions" className="gap-1 text-xs sm:text-sm"><Target className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Questions</TabsTrigger>
             <TabsTrigger value="play" className="gap-1 text-xs sm:text-sm"><Play className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Lancer</TabsTrigger>
             <TabsTrigger value="reports" className="gap-1 text-xs sm:text-sm"><BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Rapports</TabsTrigger>
@@ -299,23 +301,23 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
         {/* Questions Tab */}
         <TabsContent value="questions" className="flex-1 flex flex-col md:flex-row overflow-hidden m-0 min-h-0">
           {/* Question list sidebar */}
-          <div className="md:w-72 border-b md:border-b-0 md:border-r border-border flex flex-col bg-muted/30 shrink-0 min-h-0">
+          <div className="w-full md:w-72 border-b md:border-b-0 md:border-r border-border flex flex-col bg-muted/30 shrink-0 min-h-[220px] max-h-[42dvh] md:max-h-none md:min-h-0">
             <div className="p-2 sm:p-3 border-b border-border shrink-0">
               <Button onClick={() => setShowAddQuestion(true)} className="w-full gap-1.5 rounded-xl" size="sm">
                 <Plus className="h-4 w-4" /> Ajouter une question
               </Button>
             </div>
             <ScrollArea className="flex-1 min-h-0">
-              <div className="p-2 space-y-1">
+              <div className="p-2 space-y-1.5">
                 {questions.map((q, i) => {
                   const TypeIcon = QUESTION_TYPES.find(t => t.value === q.question_type)?.icon || Target;
                   return (
                     <button
                       key={q.id}
                       onClick={() => setSelectedQuestion(i)}
-                      className={`w-full text-left p-2 sm:p-2.5 rounded-xl transition-all group flex items-start gap-2 ${
-                        selectedQuestion === i 
-                          ? 'bg-primary/10 border border-primary/30 shadow-sm' 
+                      className={`w-full text-left p-2.5 rounded-xl transition-all group flex items-start gap-2 ${
+                        selectedQuestion === i
+                          ? 'bg-primary/10 border border-primary/30 shadow-sm'
                           : 'hover:bg-muted border border-transparent'
                       }`}
                     >
@@ -325,13 +327,13 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                           <TypeIcon className="h-3 w-3 text-primary shrink-0" />
                           <span className="text-[10px] text-muted-foreground truncate">{QUESTION_TYPES.find(t => t.value === q.question_type)?.label}</span>
                         </div>
-                        <p className="text-xs sm:text-sm font-medium truncate">{q.title}</p>
+                        <p className="text-xs sm:text-sm font-medium leading-snug break-words">{q.title}</p>
                         <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
                           <span className="flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" />{q.time_limit}s</span>
                           <span className="flex items-center gap-0.5"><Trophy className="h-2.5 w-2.5" />{q.points}pts</span>
                         </div>
                       </div>
-                      <div className="opacity-0 group-hover:opacity-100 flex flex-col gap-0.5">
+                      <div className="opacity-100 md:opacity-0 md:group-hover:opacity-100 flex flex-col gap-0.5">
                         <button onClick={e => { e.stopPropagation(); moveQuestion(i, 'up'); }} className="p-0.5 hover:bg-muted rounded"><ChevronUp className="h-3 w-3" /></button>
                         <button onClick={e => { e.stopPropagation(); moveQuestion(i, 'down'); }} className="p-0.5 hover:bg-muted rounded"><ChevronDown className="h-3 w-3" /></button>
                       </div>
@@ -369,108 +371,116 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
         </TabsContent>
 
         {/* Play Tab */}
-        <TabsContent value="play" className="flex-1 overflow-auto m-0 p-4 sm:p-6">
-          <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
-            <Card className="p-4 sm:p-6 border-2 border-primary/20">
-              <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <Play className="h-5 w-5 text-primary" /> Lancer une session
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button
-                  onClick={startLiveSession}
-                  disabled={questions.length === 0}
-                  className="p-6 rounded-2xl border-2 border-primary/20 hover:border-primary hover:bg-primary/5 transition-all text-left disabled:opacity-50"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center mb-3">
-                    <Zap className="h-6 w-6 text-white" />
+        <TabsContent value="play" className="flex-1 m-0 min-h-0 overflow-hidden">
+          <ScrollArea className="h-full">
+            <div className="p-3 sm:p-6">
+              <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
+                <Card className="p-4 sm:p-6 border border-primary/20 bg-card/80 backdrop-blur-sm">
+                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                    <Play className="h-5 w-5 text-primary" /> Lancer une session
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button
+                      onClick={startLiveSession}
+                      disabled={questions.length === 0}
+                      className="p-4 sm:p-6 rounded-2xl border border-primary/20 hover:border-primary hover:bg-primary/5 transition-all text-left disabled:opacity-50"
+                    >
+                      <div className="w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center mb-3">
+                        <Zap className="h-5 w-5 text-primary" />
+                      </div>
+                      <h4 className="font-bold text-base">Mode Live</h4>
+                      <p className="text-sm text-muted-foreground mt-1">Tous les participants jouent en même temps avec un classement en temps réel</p>
+                    </button>
+                    <button
+                      onClick={startAsyncSession}
+                      disabled={questions.length === 0}
+                      className="p-4 sm:p-6 rounded-2xl border border-primary/20 hover:border-primary hover:bg-primary/5 transition-all text-left disabled:opacity-50"
+                    >
+                      <div className="w-11 h-11 rounded-xl bg-secondary/60 flex items-center justify-center mb-3">
+                        <Timer className="h-5 w-5 text-primary" />
+                      </div>
+                      <h4 className="font-bold text-base">Mode Asynchrone</h4>
+                      <p className="text-sm text-muted-foreground mt-1">Chaque participant joue à son rythme quand il le souhaite</p>
+                    </button>
                   </div>
-                  <h4 className="font-bold">Mode Live</h4>
-                  <p className="text-sm text-muted-foreground mt-1">Tous les participants jouent en même temps avec un classement en temps réel</p>
-                </button>
-                <button
-                  onClick={startAsyncSession}
-                  disabled={questions.length === 0}
-                  className="p-6 rounded-2xl border-2 border-primary/20 hover:border-primary hover:bg-primary/5 transition-all text-left disabled:opacity-50"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-3">
-                    <Timer className="h-6 w-6 text-white" />
-                  </div>
-                  <h4 className="font-bold">Mode Asynchrone</h4>
-                  <p className="text-sm text-muted-foreground mt-1">Chaque participant joue à son rythme quand il le souhaite</p>
-                </button>
-              </div>
-            </Card>
+                </Card>
 
-            {sessions.length > 0 && (
-              <Card className="p-6">
-                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <Users className="h-5 w-5" /> Sessions actives
-                </h3>
-                <div className="space-y-3">
-                  {sessions.map(s => (
-                    <div key={s.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/50 border">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={s.mode === 'live' ? 'destructive' : 'default'}>
-                            {s.mode === 'live' ? '🔴 Live' : '⏱ Async'}
-                          </Badge>
-                          <Badge variant="outline">{s.status}</Badge>
+                {sessions.length > 0 && (
+                  <Card className="p-4 sm:p-6 border border-border/60 bg-card/80 backdrop-blur-sm">
+                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                      <Users className="h-5 w-5" /> Sessions actives
+                    </h3>
+                    <div className="space-y-3">
+                      {sessions.map(s => (
+                        <div key={s.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-muted/40 border border-border/60">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge variant={s.mode === 'live' ? 'destructive' : 'default'}>
+                                {s.mode === 'live' ? '🔴 Live' : '⏱ Async'}
+                              </Badge>
+                              <Badge variant="outline">{s.status}</Badge>
+                            </div>
+                            {s.mode === 'live' && (
+                              <p className="text-lg font-mono font-bold mt-1">PIN: {s.pin_code}</p>
+                            )}
+                          </div>
+                          <div className="flex gap-2 w-full sm:w-auto">
+                            {s.status !== 'finished' && (
+                              <Button size="sm" onClick={() => setActiveGameSession(s.id)} className="rounded-xl gap-1 flex-1 sm:flex-none">
+                                <Play className="h-3.5 w-3.5" /> Ouvrir
+                              </Button>
+                            )}
+                            <Button size="sm" variant="outline" onClick={() => loadReport(s.id)} className="rounded-xl gap-1 flex-1 sm:flex-none">
+                              <BarChart3 className="h-3.5 w-3.5" /> Rapport
+                            </Button>
+                          </div>
                         </div>
-                        {s.mode === 'live' && (
-                          <p className="text-lg font-mono font-bold mt-1">PIN: {s.pin_code}</p>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        {s.status !== 'finished' && (
-                          <Button size="sm" onClick={() => setActiveGameSession(s.id)} className="rounded-xl gap-1">
-                            <Play className="h-3.5 w-3.5" /> Ouvrir
-                          </Button>
-                        )}
-                        <Button size="sm" variant="outline" onClick={() => loadReport(s.id)} className="rounded-xl gap-1">
-                          <BarChart3 className="h-3.5 w-3.5" /> Rapport
-                        </Button>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </Card>
-            )}
-          </div>
+                  </Card>
+                )}
+              </div>
+            </div>
+          </ScrollArea>
         </TabsContent>
 
         {/* Reports Tab */}
-        <TabsContent value="reports" className="flex-1 overflow-auto m-0 p-4 sm:p-6">
-          {reportData ? (
-            <ReportView data={reportData} onClose={() => { setReportData(null); setShowReport(null); }} />
-          ) : (
-            <div className="max-w-2xl mx-auto">
-              <Card className="p-6">
-                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" /> Historique des sessions
-                </h3>
-                {sessions.length > 0 ? (
-                  <div className="space-y-2">
-                    {sessions.map(s => (
-                      <button key={s.id} onClick={() => loadReport(s.id)}
-                        className="w-full text-left p-3 rounded-xl hover:bg-muted border transition-all flex items-center justify-between">
-                        <div>
-                          <Badge variant={s.mode === 'live' ? 'destructive' : 'default'} className="mb-1">
-                            {s.mode === 'live' ? 'Live' : 'Async'}
-                          </Badge>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(s.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                          </p>
-                        </div>
-                        <BarChart3 className="h-5 w-5 text-muted-foreground" />
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-center text-muted-foreground py-8">Aucune session terminée</p>
-                )}
-              </Card>
+        <TabsContent value="reports" className="flex-1 m-0 min-h-0 overflow-hidden">
+          <ScrollArea className="h-full">
+            <div className="p-3 sm:p-6">
+              {reportData ? (
+                <ReportView data={reportData} onClose={() => { setReportData(null); setShowReport(null); }} />
+              ) : (
+                <div className="max-w-3xl mx-auto">
+                  <Card className="p-4 sm:p-6 border border-border/60 bg-card/80 backdrop-blur-sm">
+                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5" /> Historique des sessions
+                    </h3>
+                    {sessions.length > 0 ? (
+                      <div className="space-y-2">
+                        {sessions.map(s => (
+                          <button key={s.id} onClick={() => loadReport(s.id)}
+                            className="w-full text-left p-3 rounded-xl hover:bg-muted border border-border/60 transition-all flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <Badge variant={s.mode === 'live' ? 'destructive' : 'default'} className="mb-1">
+                                {s.mode === 'live' ? 'Live' : 'Async'}
+                              </Badge>
+                              <p className="text-sm text-muted-foreground">
+                                {new Date(s.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                            </div>
+                            <BarChart3 className="h-5 w-5 text-muted-foreground shrink-0" />
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-center text-muted-foreground py-8">Aucune session terminée</p>
+                    )}
+                  </Card>
+                </div>
+              )}
             </div>
-          )}
+          </ScrollArea>
         </TabsContent>
       </Tabs>
 
@@ -505,12 +515,12 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
 
       {/* Settings Modal */}
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
+        <DialogContent className="w-[95vw] max-w-lg h-[88dvh] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden">
           <DialogHeader className="shrink-0">
             <DialogTitle className="flex items-center gap-2"><Settings className="h-5 w-5" /> Paramètres du quiz</DialogTitle>
           </DialogHeader>
           {quiz && (
-            <ScrollArea className="flex-1 min-h-0 pr-3">
+            <ScrollArea className="flex-1 min-h-0 -mr-2 pr-2 sm:pr-3">
               <div className="space-y-4 pb-2">
                 <div>
                   <Label>Description</Label>
@@ -541,7 +551,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                 {/* Theme Preset */}
                 <div>
                   <Label>🎨 Thème visuel</Label>
-                  <div className="grid grid-cols-4 gap-2 mt-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
                     {Object.values(QUIZ_THEMES).map(t => (
                       <button key={t.id}
                         onClick={() => setQuiz({ ...quiz, theme_preset: t.id })}

@@ -35,7 +35,7 @@ const QuizHostPanel: React.FC<Props> = ({
   const currentQuestion = questions[currentQuestionIndex];
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden" style={{ background: theme.bgGradient }}>
+    <div className="h-full min-h-0 flex flex-col overflow-hidden" style={{ background: theme.bgGradient }}>
       {/* Header */}
       <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 backdrop-blur-xl shrink-0" style={{ background: theme.cardBg }}>
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -47,8 +47,8 @@ const QuizHostPanel: React.FC<Props> = ({
             <div className="flex items-center gap-1.5 text-xs">
               <Badge variant="outline" className="border-white/20 text-white/80 text-[10px] px-1.5 py-0">PIN: {session.pin_code}</Badge>
               <Badge variant={session.status === 'waiting' ? 'secondary' : 'default'} className="gap-0.5 text-[10px] px-1.5 py-0">
-                {session.status === 'waiting' ? '⏳ Attente' : 
-                 session.status === 'question_active' ? '🔴 En cours' : 
+                {session.status === 'waiting' ? '⏳ Attente' :
+                 session.status === 'question_active' ? '🔴 En cours' :
                  session.status === 'showing_results' ? '📊 Résultats' : session.status}
               </Badge>
             </div>
@@ -92,8 +92,8 @@ const QuizHostPanel: React.FC<Props> = ({
           {/* Question phase */}
           {phase === 'question' && currentQuestion && (
             <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-              <div className="p-3 sm:p-4 rounded-2xl flex-1 flex flex-col min-h-0" style={{ background: theme.cardBg }}>
-                <div className="flex items-center justify-between mb-2 shrink-0">
+              <div className="p-3 sm:p-4 rounded-2xl min-h-0 max-h-full flex flex-col gap-3" style={{ background: theme.cardBg }}>
+                <div className="flex items-center justify-between shrink-0">
                   <Badge className="gap-1 text-xs" style={{ background: theme.primaryColor + '30', color: theme.textColor }}>
                     <Target className="h-3 w-3" /> Question {currentQuestionIndex + 1}/{questions.length}
                   </Badge>
@@ -101,27 +101,32 @@ const QuizHostPanel: React.FC<Props> = ({
                     <Clock className="h-3 w-3" /> {currentQuestion.time_limit}s
                   </Badge>
                 </div>
-                <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black flex items-center justify-center text-center leading-tight py-2 sm:py-4" style={{ color: theme.textColor }}>
-                  {currentQuestion.title}
-                </h3>
-                {(currentQuestion.options || []).length > 0 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-auto shrink-0">
-                    {(currentQuestion.options || []).map((opt: any, i: number) => {
-                      const colors = ['#E21B3C', '#1368CE', '#D89E00', '#26890C'];
-                      return (
-                        <div key={opt.id} className="p-2 sm:p-2.5 rounded-xl text-white font-medium flex items-center gap-2 text-xs sm:text-sm"
-                          style={{ background: colors[i % colors.length], opacity: opt.isCorrect ? 1 : 0.6 }}>
-                          {opt.isCorrect && <span>✓</span>}
-                          <span>{opt.text}</span>
-                        </div>
-                      );
-                    })}
+
+                <ScrollArea className="min-h-0 max-h-[48dvh] sm:max-h-[52dvh]">
+                  <div className="space-y-3 pr-1">
+                    <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-center leading-tight" style={{ color: theme.textColor }}>
+                      {currentQuestion.title}
+                    </h3>
+                    {(currentQuestion.options || []).length > 0 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {(currentQuestion.options || []).map((opt: any, i: number) => {
+                          const colors = ['#E21B3C', '#1368CE', '#D89E00', '#26890C'];
+                          return (
+                            <div key={opt.id} className="p-2 sm:p-2.5 rounded-xl text-white font-medium flex items-center gap-2 text-xs sm:text-sm"
+                              style={{ background: colors[i % colors.length], opacity: opt.isCorrect ? 1 : 0.6 }}>
+                              {opt.isCorrect && <span>✓</span>}
+                              <span>{opt.text}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                )}
+                </ScrollArea>
               </div>
 
               {/* Host controls */}
-              <div className="flex gap-2 sm:gap-3 mt-2 sm:mt-3 shrink-0">
+              <div className="flex gap-2 sm:gap-3 mt-2 shrink-0">
                 {quiz.show_leaderboard_after_each && (
                   <Button onClick={onShowLeaderboard} className="flex-1 py-2.5 sm:py-3 rounded-xl gap-1.5 text-sm"
                     style={{ background: theme.accentColor, color: '#fff' }}>
