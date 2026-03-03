@@ -81,7 +81,8 @@ export interface QuizSession {
 export interface QuizParticipant {
   id: string;
   session_id: string;
-  user_id: string;
+  user_id: string | null;
+  anonymous_id: string | null;
   team_id: string | null;
   nickname: string | null;
   avatar_url: string | null;
@@ -224,6 +225,17 @@ export const quizService = {
     const { data, error } = await db.from('quiz_participants').insert({
       session_id: sessionId,
       user_id: userId,
+      nickname,
+      avatar_emoji: avatarEmoji || '😎',
+    }).select().single();
+    if (error) throw error;
+    return data;
+  },
+
+  async joinSessionAnonymous(sessionId: string, anonymousId: string, nickname?: string, avatarEmoji?: string): Promise<QuizParticipant> {
+    const { data, error } = await db.from('quiz_participants').insert({
+      session_id: sessionId,
+      anonymous_id: anonymousId,
       nickname,
       avatar_emoji: avatarEmoji || '😎',
     }).select().single();
