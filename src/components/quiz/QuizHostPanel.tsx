@@ -92,25 +92,25 @@ const QuizHostPanel: React.FC<Props> = ({
           )}
 
           {phase === 'question' && currentQuestion && (
-            <div className="flex-1 flex flex-col">
-              <div className="p-6 rounded-2xl flex-1 flex flex-col" style={{ background: theme.cardBg }}>
-                <div className="flex items-center justify-between mb-4">
-                  <Badge className="gap-1 text-sm" style={{ background: theme.primaryColor + '30', color: theme.textColor }}>
-                    <Target className="h-4 w-4" /> Question {currentQuestionIndex + 1}/{questions.length}
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="p-4 sm:p-6 rounded-2xl flex-1 flex flex-col" style={{ background: theme.cardBg }}>
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <Badge className="gap-1 text-xs sm:text-sm" style={{ background: theme.primaryColor + '30', color: theme.textColor }}>
+                    <Target className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Question {currentQuestionIndex + 1}/{questions.length}
                   </Badge>
-                  <Badge className="gap-1" style={{ background: theme.accentColor + '30', color: theme.accentColor }}>
+                  <Badge className="gap-1 text-xs" style={{ background: theme.accentColor + '30', color: theme.accentColor }}>
                     <Clock className="h-3 w-3" /> {currentQuestion.time_limit}s
                   </Badge>
                 </div>
-                <h3 className="text-2xl font-bold flex-1 flex items-center" style={{ color: theme.textColor }}>
+                <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black flex-1 flex items-center justify-center text-center leading-tight" style={{ color: theme.textColor }}>
                   {currentQuestion.title}
                 </h3>
                 {(currentQuestion.options || []).length > 0 && (
-                  <div className="grid grid-cols-2 gap-3 mt-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mt-4">
                     {(currentQuestion.options || []).map((opt: any, i: number) => {
                       const colors = ['#E21B3C', '#1368CE', '#D89E00', '#26890C'];
                       return (
-                        <div key={opt.id} className="p-3 rounded-xl text-white font-medium flex items-center gap-2"
+                        <div key={opt.id} className="p-2.5 sm:p-3 rounded-xl text-white font-medium flex items-center gap-2 text-sm sm:text-base"
                           style={{ background: colors[i % colors.length], opacity: opt.isCorrect ? 1 : 0.6 }}>
                           {opt.isCorrect && <span>✓</span>}
                           <span>{opt.text}</span>

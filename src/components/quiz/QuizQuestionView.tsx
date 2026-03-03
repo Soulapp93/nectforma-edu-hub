@@ -142,16 +142,16 @@ const QuizQuestionView: React.FC<Props> = ({
       </div>
 
       {/* Question text */}
-      <div className="relative z-10 px-4 py-6 text-center flex-shrink-0">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-black leading-tight"
+      <div className="relative z-10 px-4 sm:px-8 py-6 sm:py-10 text-center flex-1 flex flex-col items-center justify-center">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black leading-tight max-w-4xl"
           style={{ color: theme.textColor, fontFamily: theme.fontFamily }}>
           {question.title}
         </h2>
         {question.description && (
-          <p className="mt-2 text-sm opacity-70" style={{ color: theme.textColor }}>{question.description}</p>
+          <p className="mt-3 text-sm sm:text-base opacity-70 max-w-2xl" style={{ color: theme.textColor }}>{question.description}</p>
         )}
         {question.image_url && (
-          <img src={question.image_url} alt="" className="mt-4 mx-auto max-h-48 rounded-2xl object-cover" />
+          <img src={question.image_url} alt="" className="mt-4 mx-auto max-h-48 sm:max-h-64 rounded-2xl object-cover" />
         )}
       </div>
 
@@ -176,7 +176,7 @@ const QuizQuestionView: React.FC<Props> = ({
       )}
 
       {/* Answer area */}
-      <div className="relative z-10 flex-1 px-4 pb-6 flex flex-col justify-end">
+      <div className="relative z-10 px-3 sm:px-6 pb-4 sm:pb-6 flex flex-col justify-end shrink-0">
         {/* MCQ / True-False */}
         {(question.question_type === 'mcq' || question.question_type === 'true_false') && (
           <div className={`grid gap-3 ${(question.options || []).length <= 2 ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
