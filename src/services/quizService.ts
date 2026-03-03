@@ -10,6 +10,14 @@ export interface Quiz {
   description: string | null;
   cover_image_url: string | null;
   theme_color: string;
+  theme_preset: string;
+  theme_config: any;
+  audio_enabled: boolean;
+  primary_color: string;
+  secondary_color: string;
+  font_family: string;
+  background_image_url: string | null;
+  background_music_url: string | null;
   time_per_question: number;
   points_per_question: number;
   bonus_speed_points: boolean;
@@ -60,6 +68,9 @@ export interface QuizSession {
   current_question_index: number;
   current_question_started_at: string | null;
   mode: 'live' | 'async';
+  session_type: string;
+  max_participants: number | null;
+  tournament_round: number;
   allow_late_join: boolean;
   started_at: string | null;
   finished_at: string | null;
@@ -74,6 +85,7 @@ export interface QuizParticipant {
   team_id: string | null;
   nickname: string | null;
   avatar_url: string | null;
+  avatar_emoji: string;
   total_score: number;
   current_streak: number;
   best_streak: number;
@@ -81,6 +93,8 @@ export interface QuizParticipant {
   total_answered: number;
   rank: number | null;
   badges: any[];
+  power_ups_used: any[];
+  perfect_rounds: number;
   joined_at: string;
 }
 
@@ -206,11 +220,12 @@ export const quizService = {
   },
 
   // ====== PARTICIPANTS ======
-  async joinSession(sessionId: string, userId: string, nickname?: string): Promise<QuizParticipant> {
+  async joinSession(sessionId: string, userId: string, nickname?: string, avatarEmoji?: string): Promise<QuizParticipant> {
     const { data, error } = await db.from('quiz_participants').insert({
       session_id: sessionId,
       user_id: userId,
       nickname,
+      avatar_emoji: avatarEmoji || '😎',
     }).select().single();
     if (error) throw error;
     return data;
