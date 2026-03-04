@@ -17,12 +17,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  ArrowLeft, Plus, Trash2, GripVertical, Play, Settings, BarChart3, 
-  Trophy, Zap, Clock, Target, CheckCircle2, XCircle, Image,
-  Users, Timer, Sparkles, Eye, Copy, ChevronUp, ChevronDown,
-  ListOrdered, Type, Sliders, Link2, PuzzleIcon
+  ArrowLeft, Plus, Trash2, Play, Settings, BarChart3, 
+  Trophy, Zap, Clock, Target, CheckCircle2, XCircle,
+  Users, Timer, Sparkles, Eye, ChevronUp, ChevronDown,
+  ListOrdered, Type, Sliders, Link2
 } from 'lucide-react';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const QUESTION_TYPES = [
   { value: 'mcq', label: 'QCM', icon: CheckCircle2, desc: 'Choix unique ou multiple' },
@@ -34,7 +34,7 @@ const QUESTION_TYPES = [
   { value: 'slider', label: 'Curseur', icon: Sliders, desc: 'Valeur numérique' },
 ];
 
-const COLORS = ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#EF4444', '#06B6D4', '#F97316'];
+const COLORS = ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--info))', 'hsl(var(--success))', 'hsl(var(--warning))', 'hsl(var(--destructive))', 'hsl(var(--secondary-foreground))', 'hsl(var(--muted-foreground))'];
 
 interface Props {
   document: WorkspaceDocument;
@@ -161,13 +161,14 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
   useEffect(() => {
     const target = activeTab === 'play' ? playScrollRef.current : activeTab === 'reports' ? reportScrollRef.current : null;
     if (target) target.scrollTo({ top: 0, behavior: 'auto' });
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }, [activeTab]);
 
   useEffect(() => {
     if (!showSettings) return;
     const frame = requestAnimationFrame(updateSettingsScrollState);
     return () => cancelAnimationFrame(frame);
-  }, [showSettings, updateSettingsScrollState]);
+  }, [showSettings, quiz, updateSettingsScrollState]);
 
   const saveQuizSettings = async (updates: Partial<Quiz>) => {
     if (!quiz) return;
@@ -294,58 +295,64 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
   const currentQuestion = selectedQuestion !== null ? questions[selectedQuestion] : null;
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-background overflow-hidden">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border-b border-border bg-background/95 backdrop-blur-xl gap-2 shrink-0">
-        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto min-w-0">
-          <Button variant="ghost" size="icon" onClick={onClose} className="rounded-xl shrink-0">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shrink-0">
-              <Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
-            </div>
-            <Input
-              value={quiz?.title || ''}
-              onChange={e => setQuiz(prev => prev ? { ...prev, title: e.target.value } : null)}
-              onBlur={() => quiz && saveQuizSettings({ title: quiz.title })}
-              className="border-none text-base sm:text-lg font-bold bg-transparent focus-visible:ring-0 p-0 h-auto min-w-0"
-              placeholder="Titre du quiz"
-            />
+    <div className="workspace-editor overflow-hidden">
+      <div className="workspace-header flex-wrap gap-2 sm:gap-3">
+        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 shrink-0 rounded-lg">
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+            <Zap className="h-4 w-4 text-primary" />
           </div>
+          <Input
+            value={quiz?.title || ''}
+            onChange={e => setQuiz(prev => (prev ? { ...prev, title: e.target.value } : null))}
+            onBlur={() => quiz && saveQuizSettings({ title: quiz.title })}
+            className="workspace-title-input flex-1 min-w-0 focus-visible:ring-0"
+            placeholder="Titre du quiz"
+          />
         </div>
-        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap w-full sm:w-auto justify-end">
-          <Badge variant={quiz?.is_published ? 'default' : 'secondary'} className="gap-1 text-xs">
+
+        <div className="ml-auto flex items-center gap-1.5 sm:gap-2 flex-wrap">
+          <Badge variant={quiz?.is_published ? 'default' : 'secondary'} className="gap-1 text-xs h-6">
             {quiz?.is_published ? <Eye className="h-3 w-3" /> : null}
             {quiz?.is_published ? 'Publié' : 'Brouillon'}
           </Badge>
-          <Badge variant="outline" className="gap-1 text-xs">
+          <Badge variant="outline" className="gap-1 text-xs h-6">
             <Target className="h-3 w-3" /> {questions.length}
           </Badge>
           <Button variant="outline" size="xs" onClick={() => setShowSettings(true)} className="gap-1 rounded-xl">
             <Settings className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Paramètres</span>
           </Button>
-          <Button size="xs" onClick={() => saveQuizSettings({ is_published: !quiz?.is_published })}
-            variant={quiz?.is_published ? 'secondary' : 'default'} className="gap-1 rounded-xl">
+          <Button
+            size="xs"
+            onClick={() => saveQuizSettings({ is_published: !quiz?.is_published })}
+            variant={quiz?.is_published ? 'secondary' : 'default'}
+            className="gap-1 rounded-xl"
+          >
             {quiz?.is_published ? 'Dépublier' : 'Publier'}
           </Button>
         </div>
       </div>
 
-      {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        <div className="border-b border-border px-2 sm:px-4 py-2 shrink-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 overflow-x-auto">
-          <TabsList className="bg-muted/50 w-full sm:w-auto justify-start">
-            <TabsTrigger value="questions" className="gap-1 text-xs sm:text-sm"><Target className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Questions</TabsTrigger>
-            <TabsTrigger value="play" className="gap-1 text-xs sm:text-sm"><Play className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Lancer</TabsTrigger>
-            <TabsTrigger value="reports" className="gap-1 text-xs sm:text-sm"><BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Rapports</TabsTrigger>
+        <div className="workspace-menubar px-2 sm:px-3 py-2 border-b border-border/50 overflow-x-auto">
+          <TabsList className="bg-muted/60 w-max min-w-full sm:min-w-0 sm:w-auto justify-start">
+            <TabsTrigger value="questions" className="gap-1 text-xs sm:text-sm">
+              <Target className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Questions
+            </TabsTrigger>
+            <TabsTrigger value="play" className="gap-1 text-xs sm:text-sm">
+              <Play className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Lancer
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="gap-1 text-xs sm:text-sm">
+              <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Rapports
+            </TabsTrigger>
           </TabsList>
         </div>
 
-        {/* Questions Tab */}
-        <TabsContent value="questions" className="flex-1 flex flex-col md:flex-row overflow-hidden m-0 min-h-0">
-          {/* Question list sidebar */}
-          <div className="w-full md:w-72 border-b md:border-b-0 md:border-r border-border flex flex-col bg-muted/30 shrink-0 min-h-[220px] max-h-[42dvh] md:max-h-none md:min-h-0">
+        <TabsContent value="questions" className="m-0 flex-1 min-h-0 overflow-hidden data-[state=active]:flex data-[state=inactive]:hidden flex-col md:flex-row">
+          <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-border flex flex-col bg-muted/30 shrink-0 min-h-[220px] max-h-[40dvh] md:max-h-none md:min-h-0">
             <div className="p-2 sm:p-3 border-b border-border shrink-0">
               <Button onClick={() => setShowAddQuestion(true)} className="w-full gap-1.5 rounded-xl" size="sm">
                 <Plus className="h-4 w-4" /> Ajouter une question
@@ -395,8 +402,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
             </ScrollArea>
           </div>
 
-          {/* Question editor */}
-          <div className="flex-1 overflow-auto p-3 sm:p-6 min-h-0">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-6 min-h-0">
             {currentQuestion ? (
               <QuestionEditor
                 question={currentQuestion}
@@ -414,121 +420,143 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
           </div>
         </TabsContent>
 
-        {/* Play Tab */}
-        <TabsContent value="play" className="flex-1 m-0 min-h-0 overflow-hidden">
-          <div ref={playScrollRef} className="h-full overflow-y-auto overflow-x-hidden">
-            <div className="p-3 sm:p-6">
-              <div className="mx-auto w-full max-w-4xl space-y-4 sm:space-y-6">
-                <Card className="p-4 sm:p-6 border border-primary/20 bg-card/80 backdrop-blur-sm">
-                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                    <Play className="h-5 w-5 text-primary" /> Lancer une session
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <button
-                      onClick={startLiveSession}
-                      disabled={questions.length === 0}
-                      className="p-4 sm:p-6 rounded-2xl border border-primary/20 hover:border-primary hover:bg-primary/5 transition-all text-left disabled:opacity-50"
-                    >
-                      <div className="w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center mb-3">
-                        <Zap className="h-5 w-5 text-primary" />
-                      </div>
-                      <h4 className="font-bold text-base">Mode Live</h4>
-                      <p className="text-sm text-muted-foreground mt-1">Tous les participants jouent en même temps avec un classement en temps réel</p>
-                    </button>
-                    <button
-                      onClick={startAsyncSession}
-                      disabled={questions.length === 0}
-                      className="p-4 sm:p-6 rounded-2xl border border-primary/20 hover:border-primary hover:bg-primary/5 transition-all text-left disabled:opacity-50"
-                    >
-                      <div className="w-11 h-11 rounded-xl bg-secondary/60 flex items-center justify-center mb-3">
-                        <Timer className="h-5 w-5 text-primary" />
-                      </div>
-                      <h4 className="font-bold text-base">Mode Asynchrone</h4>
-                      <p className="text-sm text-muted-foreground mt-1">Chaque participant joue à son rythme quand il le souhaite</p>
-                    </button>
-                  </div>
-                </Card>
-
-                {sessions.length > 0 && (
-                  <Card className="p-4 sm:p-6 border border-border/60 bg-card/80 backdrop-blur-sm">
-                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                      <Users className="h-5 w-5" /> Sessions actives
+        <TabsContent value="play" className="m-0 flex-1 min-h-0 overflow-hidden data-[state=active]:block">
+          <div ref={playScrollRef} className="h-full min-h-0 overflow-y-auto overflow-x-hidden">
+            <div className="mx-auto w-full max-w-5xl p-3 sm:p-5 lg:p-6 space-y-4">
+              <Card className="p-4 sm:p-5 border-border/60 bg-card/95">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                  <div>
+                    <h3 className="text-lg font-bold flex items-center gap-2">
+                      <Play className="h-5 w-5 text-primary" /> Lancer une session
                     </h3>
-                    <div className="space-y-3">
-                      {sessions.map(s => (
-                        <div key={s.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-muted/40 border border-border/60">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <Badge variant={s.mode === 'live' ? 'destructive' : 'default'}>
-                                {s.mode === 'live' ? '🔴 Live' : '⏱ Async'}
-                              </Badge>
-                              <Badge variant="outline">{s.status}</Badge>
-                            </div>
-                            {s.mode === 'live' && (
-                              <p className="text-lg font-mono font-bold mt-1">PIN: {s.pin_code}</p>
-                            )}
-                          </div>
-                          <div className="flex gap-2 w-full sm:w-auto">
-                            {s.status !== 'finished' && (
-                              <Button size="sm" onClick={() => setActiveGameSession(s.id)} className="rounded-xl gap-1 flex-1 sm:flex-none">
-                                <Play className="h-3.5 w-3.5" /> Ouvrir
-                              </Button>
-                            )}
-                            <Button size="sm" variant="outline" onClick={() => loadReport(s.id)} className="rounded-xl gap-1 flex-1 sm:flex-none">
-                              <BarChart3 className="h-3.5 w-3.5" /> Rapport
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
+                    <p className="text-sm text-muted-foreground mt-1">Démarrez rapidement une session en direct ou asynchrone.</p>
+                  </div>
+                  <Badge variant="outline" className="w-fit">{questions.length} question{questions.length > 1 ? 's' : ''}</Badge>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <button
+                    onClick={startLiveSession}
+                    disabled={questions.length === 0}
+                    className="p-4 sm:p-5 rounded-2xl border border-primary/20 hover:border-primary hover:bg-primary/5 transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center mb-3">
+                      <Zap className="h-5 w-5 text-primary" />
                     </div>
-                  </Card>
+                    <h4 className="font-bold text-base">Mode Live</h4>
+                    <p className="text-sm text-muted-foreground mt-1">Tous les participants jouent en même temps avec un classement en temps réel.</p>
+                  </button>
+
+                  <button
+                    onClick={startAsyncSession}
+                    disabled={questions.length === 0}
+                    className="p-4 sm:p-5 rounded-2xl border border-border hover:border-primary/40 hover:bg-muted/30 transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center mb-3">
+                      <Timer className="h-5 w-5 text-primary" />
+                    </div>
+                    <h4 className="font-bold text-base">Mode Asynchrone</h4>
+                    <p className="text-sm text-muted-foreground mt-1">Chaque participant joue à son rythme quand il le souhaite.</p>
+                  </button>
+                </div>
+              </Card>
+
+              <Card className="p-4 sm:p-5 border-border/60 bg-card/95">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold flex items-center gap-2">
+                    <Users className="h-5 w-5" /> Sessions actives
+                  </h3>
+                  <Badge variant="secondary">{sessions.length}</Badge>
+                </div>
+
+                {sessions.length > 0 ? (
+                  <div className="space-y-3">
+                    {sessions.map(s => (
+                      <div key={s.id} className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 p-3 rounded-xl bg-muted/35 border border-border/60">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge variant={s.mode === 'live' ? 'destructive' : 'default'}>
+                              {s.mode === 'live' ? '🔴 Live' : '⏱ Async'}
+                            </Badge>
+                            <Badge variant="outline">{s.status}</Badge>
+                          </div>
+                          {s.mode === 'live' && <p className="text-base sm:text-lg font-mono font-bold mt-1">PIN: {s.pin_code}</p>}
+                        </div>
+                        <div className="flex gap-2 w-full lg:w-auto">
+                          {s.status !== 'finished' && (
+                            <Button size="sm" onClick={() => setActiveGameSession(s.id)} className="rounded-xl gap-1 flex-1 lg:flex-none">
+                              <Play className="h-3.5 w-3.5" /> Ouvrir
+                            </Button>
+                          )}
+                          <Button size="sm" variant="outline" onClick={() => loadReport(s.id)} className="rounded-xl gap-1 flex-1 lg:flex-none">
+                            <BarChart3 className="h-3.5 w-3.5" /> Rapport
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+                    Aucune session active pour le moment.
+                  </div>
                 )}
-              </div>
+              </Card>
             </div>
           </div>
         </TabsContent>
 
-        {/* Reports Tab */}
-        <TabsContent value="reports" className="flex-1 m-0 min-h-0 overflow-hidden">
-          <div ref={reportScrollRef} className="h-full overflow-y-auto overflow-x-hidden">
-            <div className="p-3 sm:p-6">
+        <TabsContent value="reports" className="m-0 flex-1 min-h-0 overflow-hidden data-[state=active]:block">
+          <div ref={reportScrollRef} className="h-full min-h-0 overflow-y-auto overflow-x-hidden">
+            <div className="mx-auto w-full max-w-5xl p-3 sm:p-5 lg:p-6">
               {reportData ? (
                 <ReportView data={reportData} onClose={() => { setReportData(null); setShowReport(null); }} />
               ) : (
-                <div className="mx-auto w-full max-w-4xl">
-                  <Card className="p-4 sm:p-6 border border-border/60 bg-card/80 backdrop-blur-sm">
-                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <Card className="p-4 sm:p-6 border-border/60 bg-card/95">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold flex items-center gap-2">
                       <BarChart3 className="h-5 w-5" /> Historique des sessions
                     </h3>
-                    {sessions.length > 0 ? (
-                      <div className="space-y-2">
-                        {sessions.map(s => (
-                          <button key={s.id} onClick={() => loadReport(s.id)}
-                            className="w-full text-left p-3 rounded-xl hover:bg-muted border border-border/60 transition-all flex items-center justify-between gap-3">
-                            <div className="min-w-0">
-                              <Badge variant={s.mode === 'live' ? 'destructive' : 'default'} className="mb-1">
-                                {s.mode === 'live' ? 'Live' : 'Async'}
-                              </Badge>
-                              <p className="text-sm text-muted-foreground">
-                                {new Date(s.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                              </p>
-                            </div>
-                            <BarChart3 className="h-5 w-5 text-muted-foreground shrink-0" />
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-center text-muted-foreground py-8">Aucune session terminée</p>
-                    )}
-                  </Card>
-                </div>
+                    <Badge variant="secondary">{sessions.length}</Badge>
+                  </div>
+
+                  {sessions.length > 0 ? (
+                    <div className="space-y-2.5">
+                      {sessions.map(s => (
+                        <button
+                          key={s.id}
+                          onClick={() => loadReport(s.id)}
+                          className="w-full text-left p-3 rounded-xl hover:bg-muted/60 border border-border/60 transition-all flex items-center justify-between gap-3"
+                        >
+                          <div className="min-w-0">
+                            <Badge variant={s.mode === 'live' ? 'destructive' : 'default'} className="mb-1">
+                              {s.mode === 'live' ? 'Live' : 'Async'}
+                            </Badge>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(s.created_at).toLocaleDateString('fr-FR', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </p>
+                          </div>
+                          <BarChart3 className="h-5 w-5 text-muted-foreground shrink-0" />
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
+                      Aucune session disponible pour le moment.
+                    </div>
+                  )}
+                </Card>
               )}
             </div>
           </div>
         </TabsContent>
       </Tabs>
 
-      {/* Add Question Modal */}
       <Dialog open={showAddQuestion} onOpenChange={setShowAddQuestion}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -557,34 +585,52 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
         </DialogContent>
       </Dialog>
 
-      {/* Settings Modal */}
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="relative w-[95vw] max-w-lg h-[88dvh] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden">
-          <DialogHeader className="shrink-0">
-            <DialogTitle className="flex items-center gap-2"><Settings className="h-5 w-5" /> Paramètres du quiz</DialogTitle>
+        <DialogContent className="relative w-[96vw] max-w-2xl h-[90dvh] sm:h-auto sm:max-h-[90dvh] p-0 gap-0 overflow-hidden">
+          <DialogHeader className="px-4 sm:px-5 py-4 border-b border-border/60 shrink-0">
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" /> Paramètres du quiz
+            </DialogTitle>
           </DialogHeader>
+
           {quiz && (
             <div
               ref={settingsScrollRef}
               onScroll={updateSettingsScrollState}
-              className="flex-1 min-h-0 overflow-y-auto -mr-2 pr-2 sm:pr-3"
+              className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-5 py-4"
             >
-              <div className="space-y-4 pb-6">
+              <div className="space-y-4 pb-8">
                 <div>
                   <Label>Description</Label>
-                  <Textarea value={quiz.description || ''} onChange={e => setQuiz({ ...quiz, description: e.target.value })}
-                    placeholder="Description du quiz..." className="mt-1" />
+                  <Textarea
+                    value={quiz.description || ''}
+                    onChange={e => setQuiz({ ...quiz, description: e.target.value })}
+                    placeholder="Description du quiz..."
+                    className="mt-1"
+                  />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label>Temps par question (sec)</Label>
-                    <Input type="number" value={quiz.time_per_question} onChange={e => setQuiz({ ...quiz, time_per_question: parseInt(e.target.value) || 30 })} className="mt-1" />
+                    <Input
+                      type="number"
+                      value={quiz.time_per_question}
+                      onChange={e => setQuiz({ ...quiz, time_per_question: parseInt(e.target.value) || 30 })}
+                      className="mt-1"
+                    />
                   </div>
                   <div>
                     <Label>Points par question</Label>
-                    <Input type="number" value={quiz.points_per_question} onChange={e => setQuiz({ ...quiz, points_per_question: parseInt(e.target.value) || 1000 })} className="mt-1" />
+                    <Input
+                      type="number"
+                      value={quiz.points_per_question}
+                      onChange={e => setQuiz({ ...quiz, points_per_question: parseInt(e.target.value) || 1000 })}
+                      className="mt-1"
+                    />
                   </div>
                 </div>
+
                 <div>
                   <Label>Mode de jeu</Label>
                   <Select value={quiz.mode} onValueChange={v => setQuiz({ ...quiz, mode: v as any })}>
@@ -596,23 +642,27 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                     </SelectContent>
                   </Select>
                 </div>
-                {/* Theme Preset */}
+
                 <div>
                   <Label>🎨 Thème visuel</Label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
                     {Object.values(QUIZ_THEMES).map(t => (
-                      <button key={t.id}
+                      <button
+                        key={t.id}
                         onClick={() => setQuiz({ ...quiz, theme_preset: t.id })}
                         className={`p-2 rounded-xl border-2 transition-all text-xs font-medium ${
-                          quiz.theme_preset === t.id ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/50'
-                        }`}>
+                          quiz.theme_preset === t.id
+                            ? 'border-primary ring-2 ring-primary/20'
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                      >
                         <div className="w-full h-6 rounded-lg mb-1" style={{ background: t.bgGradient }} />
                         {t.name}
                       </button>
                     ))}
                   </div>
                 </div>
-                {/* Audio toggle */}
+
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium">🎵 Audio en jeu</p>
@@ -620,6 +670,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                   </div>
                   <Switch checked={quiz.audio_enabled} onCheckedChange={v => setQuiz({ ...quiz, audio_enabled: v })} />
                 </div>
+
                 <div className="space-y-3">
                   {[
                     { key: 'bonus_speed_points', label: 'Bonus de vitesse', desc: 'Plus de points si réponse rapide' },
@@ -636,14 +687,24 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                         <p className="text-sm font-medium">{setting.label}</p>
                         <p className="text-xs text-muted-foreground">{setting.desc}</p>
                       </div>
-                      <Switch checked={(quiz as any)[setting.key]} onCheckedChange={v => setQuiz({ ...quiz, [setting.key]: v })} className="shrink-0" />
+                      <Switch
+                        checked={(quiz as any)[setting.key]}
+                        onCheckedChange={v => setQuiz({ ...quiz, [setting.key]: v })}
+                        className="shrink-0"
+                      />
                     </div>
                   ))}
                 </div>
+
                 {quiz.allow_teams && (
                   <div>
                     <Label>Taille max des équipes</Label>
-                    <Input type="number" value={quiz.max_team_size} onChange={e => setQuiz({ ...quiz, max_team_size: parseInt(e.target.value) || 4 })} className="mt-1" />
+                    <Input
+                      type="number"
+                      value={quiz.max_team_size}
+                      onChange={e => setQuiz({ ...quiz, max_team_size: parseInt(e.target.value) || 4 })}
+                      className="mt-1"
+                    />
                   </div>
                 )}
               </div>
@@ -663,7 +724,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
             </Button>
           )}
 
-          <DialogFooter className="shrink-0">
+          <DialogFooter className="shrink-0 px-4 sm:px-5 py-3 border-t border-border/60">
             <Button onClick={() => { if (quiz) saveQuizSettings(quiz); setShowSettings(false); }} className="rounded-xl">
               Sauvegarder
             </Button>
@@ -747,11 +808,11 @@ const QuestionEditor: React.FC<{
           <Label>Options de réponse</Label>
           {(localQ.options || []).map((opt: any, i: number) => (
             <div key={opt.id} className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
-              opt.isCorrect ? 'border-green-500/50 bg-green-50 dark:bg-green-950/20' : 'border-border'
+              opt.isCorrect ? 'border-success/40 bg-success/10' : 'border-border'
             }`}>
               <button onClick={() => updateOption(i, { isCorrect: !opt.isCorrect })}
                 className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all ${
-                  opt.isCorrect ? 'bg-green-500 text-white' : 'bg-muted hover:bg-muted-foreground/20'
+                  opt.isCorrect ? 'bg-success text-success-foreground' : 'bg-muted hover:bg-muted-foreground/20'
                 }`}>
                 {opt.isCorrect ? <CheckCircle2 className="h-5 w-5" /> : <XCircle className="h-5 w-5 text-muted-foreground" />}
               </button>
