@@ -139,20 +139,23 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
       return;
     }
 
-    const maxScrollTop = container.scrollHeight - container.clientHeight;
-    setCanScrollSettings(maxScrollTop > 16);
-    setSettingsScrollToTop(container.scrollTop > Math.max(32, maxScrollTop - 140));
+    const maxScrollTop = Math.max(0, container.scrollHeight - container.clientHeight);
+    const isScrollable = maxScrollTop > 2;
+    const isNearBottom = container.scrollTop >= maxScrollTop - 8;
+
+    setCanScrollSettings(isScrollable);
+    setSettingsScrollToTop(isScrollable && isNearBottom);
   }, []);
 
   const scrollSettingsForm = () => {
     const container = settingsScrollRef.current;
-    if (!container) return;
+    if (!container || !canScrollSettings) return;
 
     const targetTop = settingsScrollToTop
       ? 0
       : Math.min(
           container.scrollHeight,
-          container.scrollTop + Math.max(220, Math.floor(container.clientHeight * 0.65))
+          container.scrollTop + Math.max(260, Math.floor(container.clientHeight * 0.75))
         );
 
     container.scrollTo({ top: targetTop, behavior: 'smooth' });
@@ -167,20 +170,27 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
   useEffect(() => {
     if (!showSettings) return;
 
-    const frame = requestAnimationFrame(updateSettingsScrollState);
+    const syncScrollState = () => requestAnimationFrame(updateSettingsScrollState);
+    syncScrollState();
+
+    const timeoutId = window.setTimeout(syncScrollState, 180);
     const container = settingsScrollRef.current;
-    const resizeObserver = container ? new ResizeObserver(updateSettingsScrollState) : null;
+    const resizeObserver = container ? new ResizeObserver(syncScrollState) : null;
 
     if (container && resizeObserver) {
       resizeObserver.observe(container);
+      const content = container.firstElementChild;
+      if (content instanceof HTMLElement) {
+        resizeObserver.observe(content);
+      }
     }
 
-    window.addEventListener('resize', updateSettingsScrollState);
+    window.addEventListener('resize', syncScrollState);
 
     return () => {
-      cancelAnimationFrame(frame);
+      window.clearTimeout(timeoutId);
       resizeObserver?.disconnect();
-      window.removeEventListener('resize', updateSettingsScrollState);
+      window.removeEventListener('resize', syncScrollState);
     };
   }, [showSettings, quiz, updateSettingsScrollState]);
 
@@ -724,23 +734,21 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                   )}
                 </div>
               </div>
-
-              {canScrollSettings && (
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="secondary"
-                  onClick={scrollSettingsForm}
-                  className="absolute bottom-4 right-4 z-10 rounded-full shadow-sm border border-border"
-                  aria-label={settingsScrollToTop ? 'Revenir en haut du formulaire' : 'Descendre dans le formulaire'}
-                >
-                  {settingsScrollToTop ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </Button>
-              )}
             </div>
           )}
 
-          <DialogFooter className="shrink-0 border-t border-border/60 bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-5">
+          <DialogFooter className="shrink-0 flex-row items-center justify-between border-t border-border/60 bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-5">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={scrollSettingsForm}
+              disabled={!canScrollSettings}
+              className="rounded-full"
+              aria-label={settingsScrollToTop ? 'Revenir en haut du formulaire' : 'Descendre dans le formulaire'}
+            >
+              {settingsScrollToTop ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
             <Button onClick={() => { if (quiz) saveQuizSettings(quiz); setShowSettings(false); }} className="rounded-xl">
               Sauvegarder
             </Button>
