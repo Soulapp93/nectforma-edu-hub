@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { WorkspaceDocument } from '@/services/workspaceService';
 import { quizService, Quiz, QuizQuestion, QuizSession } from '@/services/quizService';
 import { QUIZ_THEMES } from '@/components/quiz/QuizThemeProvider';
@@ -55,6 +55,12 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
   const [showReport, setShowReport] = useState<string | null>(null);
   const [reportData, setReportData] = useState<any>(null);
   const [activeGameSession, setActiveGameSession] = useState<string | null>(null);
+  const [canScrollSettings, setCanScrollSettings] = useState(false);
+  const [settingsScrollToTop, setSettingsScrollToTop] = useState(false);
+
+  const playScrollRef = useRef<HTMLDivElement | null>(null);
+  const reportScrollRef = useRef<HTMLDivElement | null>(null);
+  const settingsScrollRef = useRef<HTMLDivElement | null>(null);
 
   const quizId = (document.content as any)?.quizId;
 
@@ -124,6 +130,44 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
   }, [quizId, userId, document, onSave]);
 
   useEffect(() => { loadQuiz(); }, [loadQuiz]);
+
+  const updateSettingsScrollState = useCallback(() => {
+    const container = settingsScrollRef.current;
+    if (!container) {
+      setCanScrollSettings(false);
+      setSettingsScrollToTop(false);
+      return;
+    }
+
+    const maxScrollTop = container.scrollHeight - container.clientHeight;
+    setCanScrollSettings(maxScrollTop > 16);
+    setSettingsScrollToTop(container.scrollTop > Math.max(32, maxScrollTop - 140));
+  }, []);
+
+  const scrollSettingsForm = () => {
+    const container = settingsScrollRef.current;
+    if (!container) return;
+
+    const targetTop = settingsScrollToTop
+      ? 0
+      : Math.min(
+          container.scrollHeight,
+          container.scrollTop + Math.max(220, Math.floor(container.clientHeight * 0.65))
+        );
+
+    container.scrollTo({ top: targetTop, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    const target = activeTab === 'play' ? playScrollRef.current : activeTab === 'reports' ? reportScrollRef.current : null;
+    if (target) target.scrollTo({ top: 0, behavior: 'auto' });
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (!showSettings) return;
+    const frame = requestAnimationFrame(updateSettingsScrollState);
+    return () => cancelAnimationFrame(frame);
+  }, [showSettings, updateSettingsScrollState]);
 
   const saveQuizSettings = async (updates: Partial<Quiz>) => {
     if (!quiz) return;
@@ -372,9 +416,9 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
 
         {/* Play Tab */}
         <TabsContent value="play" className="flex-1 m-0 min-h-0 overflow-hidden">
-          <ScrollArea className="h-full">
+          <div ref={playScrollRef} className="h-full overflow-y-auto overflow-x-hidden">
             <div className="p-3 sm:p-6">
-              <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
+              <div className="mx-auto w-full max-w-4xl space-y-4 sm:space-y-6">
                 <Card className="p-4 sm:p-6 border border-primary/20 bg-card/80 backdrop-blur-sm">
                   <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                     <Play className="h-5 w-5 text-primary" /> Lancer une session
@@ -441,17 +485,17 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                 )}
               </div>
             </div>
-          </ScrollArea>
+          </div>
         </TabsContent>
 
         {/* Reports Tab */}
         <TabsContent value="reports" className="flex-1 m-0 min-h-0 overflow-hidden">
-          <ScrollArea className="h-full">
+          <div ref={reportScrollRef} className="h-full overflow-y-auto overflow-x-hidden">
             <div className="p-3 sm:p-6">
               {reportData ? (
                 <ReportView data={reportData} onClose={() => { setReportData(null); setShowReport(null); }} />
               ) : (
-                <div className="max-w-3xl mx-auto">
+                <div className="mx-auto w-full max-w-4xl">
                   <Card className="p-4 sm:p-6 border border-border/60 bg-card/80 backdrop-blur-sm">
                     <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                       <BarChart3 className="h-5 w-5" /> Historique des sessions
@@ -480,7 +524,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                 </div>
               )}
             </div>
-          </ScrollArea>
+          </div>
         </TabsContent>
       </Tabs>
 
@@ -515,13 +559,17 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
 
       {/* Settings Modal */}
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="w-[95vw] max-w-lg h-[88dvh] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden">
+        <DialogContent className="relative w-[95vw] max-w-lg h-[88dvh] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden">
           <DialogHeader className="shrink-0">
             <DialogTitle className="flex items-center gap-2"><Settings className="h-5 w-5" /> Paramètres du quiz</DialogTitle>
           </DialogHeader>
           {quiz && (
-            <ScrollArea className="flex-1 min-h-0 -mr-2 pr-2 sm:pr-3">
-              <div className="space-y-4 pb-2">
+            <div
+              ref={settingsScrollRef}
+              onScroll={updateSettingsScrollState}
+              className="flex-1 min-h-0 overflow-y-auto -mr-2 pr-2 sm:pr-3"
+            >
+              <div className="space-y-4 pb-6">
                 <div>
                   <Label>Description</Label>
                   <Textarea value={quiz.description || ''} onChange={e => setQuiz({ ...quiz, description: e.target.value })}
@@ -599,8 +647,22 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                   </div>
                 )}
               </div>
-            </ScrollArea>
+            </div>
           )}
+
+          {canScrollSettings && (
+            <Button
+              type="button"
+              size="icon"
+              variant="secondary"
+              onClick={scrollSettingsForm}
+              className="absolute bottom-20 right-4 z-10 rounded-full shadow-sm border border-border"
+              aria-label={settingsScrollToTop ? 'Revenir en haut du formulaire' : 'Descendre dans le formulaire'}
+            >
+              {settingsScrollToTop ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
+          )}
+
           <DialogFooter className="shrink-0">
             <Button onClick={() => { if (quiz) saveQuizSettings(quiz); setShowSettings(false); }} className="rounded-xl">
               Sauvegarder
