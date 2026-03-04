@@ -166,8 +166,22 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
 
   useEffect(() => {
     if (!showSettings) return;
+
     const frame = requestAnimationFrame(updateSettingsScrollState);
-    return () => cancelAnimationFrame(frame);
+    const container = settingsScrollRef.current;
+    const resizeObserver = container ? new ResizeObserver(updateSettingsScrollState) : null;
+
+    if (container && resizeObserver) {
+      resizeObserver.observe(container);
+    }
+
+    window.addEventListener('resize', updateSettingsScrollState);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', updateSettingsScrollState);
+    };
   }, [showSettings, quiz, updateSettingsScrollState]);
 
   const saveQuizSettings = async (updates: Partial<Quiz>) => {
@@ -586,7 +600,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
       </Dialog>
 
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="relative w-[96vw] max-w-2xl h-[90dvh] sm:h-auto sm:max-h-[90dvh] p-0 gap-0 overflow-hidden">
+        <DialogContent className="relative flex w-[96vw] max-w-2xl flex-col overflow-hidden gap-0 p-0 max-h-[92dvh] sm:w-[92vw] sm:max-h-[90dvh]">
           <DialogHeader className="px-4 sm:px-5 py-4 border-b border-border/60 shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" /> Paramètres du quiz
@@ -597,9 +611,9 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
             <div
               ref={settingsScrollRef}
               onScroll={updateSettingsScrollState}
-              className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-5 py-4"
+              className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5"
             >
-              <div className="space-y-4 pb-8">
+              <div className="space-y-4 pb-20">
                 <div>
                   <Label>Description</Label>
                   <Textarea
@@ -717,14 +731,14 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
               size="icon"
               variant="secondary"
               onClick={scrollSettingsForm}
-              className="absolute bottom-20 right-4 z-10 rounded-full shadow-sm border border-border"
+              className="absolute bottom-16 right-4 z-10 rounded-full shadow-sm border border-border"
               aria-label={settingsScrollToTop ? 'Revenir en haut du formulaire' : 'Descendre dans le formulaire'}
             >
               {settingsScrollToTop ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
           )}
 
-          <DialogFooter className="shrink-0 px-4 sm:px-5 py-3 border-t border-border/60">
+          <DialogFooter className="shrink-0 border-t border-border/60 bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-5">
             <Button onClick={() => { if (quiz) saveQuizSettings(quiz); setShowSettings(false); }} className="rounded-xl">
               Sauvegarder
             </Button>
