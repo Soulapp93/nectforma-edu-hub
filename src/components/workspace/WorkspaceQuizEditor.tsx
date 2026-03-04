@@ -42,6 +42,73 @@ interface Props {
   onClose: () => void;
 }
 
+const DEFAULT_QUIZ_THEME_ID = 'classique';
+
+const resolveThemeForQuiz = (quiz: Partial<Quiz>) => {
+  const themeByPreset = quiz.theme_preset
+    ? Object.values(QUIZ_THEMES).find((theme) => theme.id === quiz.theme_preset)
+    : undefined;
+
+  if (themeByPreset) {
+    return themeByPreset;
+  }
+
+  const themeColor = typeof quiz.theme_color === 'string' ? quiz.theme_color.toLowerCase() : null;
+  const themeByColor = themeColor
+    ? Object.values(QUIZ_THEMES).find((theme) => theme.primaryColor.toLowerCase() === themeColor)
+    : undefined;
+
+  return themeByColor ?? QUIZ_THEMES[DEFAULT_QUIZ_THEME_ID];
+};
+
+const normalizeQuizForEditor = (source: Quiz): Quiz => {
+  const theme = resolveThemeForQuiz(source);
+
+  return {
+    ...source,
+    description: source.description ?? '',
+    mode: (source.mode as Quiz['mode']) || 'live',
+    time_per_question: source.time_per_question ?? 30,
+    points_per_question: source.points_per_question ?? 1000,
+    bonus_speed_points: source.bonus_speed_points ?? true,
+    streak_bonus_enabled: source.streak_bonus_enabled ?? true,
+    shuffle_questions: source.shuffle_questions ?? false,
+    shuffle_options: source.shuffle_options ?? false,
+    show_correct_answer: source.show_correct_answer ?? true,
+    show_leaderboard_after_each: source.show_leaderboard_after_each ?? true,
+    allow_teams: source.allow_teams ?? false,
+    is_published: source.is_published ?? false,
+    power_ups_enabled: source.power_ups_enabled ?? false,
+    max_team_size: source.max_team_size ?? 4,
+    theme_color: source.theme_color ?? theme.primaryColor,
+    theme_preset: source.theme_preset ?? theme.id,
+    audio_enabled: source.audio_enabled ?? true,
+  };
+};
+
+const buildQuizSettingsPayload = (source: Quiz): Partial<Quiz> => {
+  const theme = resolveThemeForQuiz(source);
+
+  return {
+    title: source.title,
+    description: source.description || null,
+    theme_color: theme.primaryColor,
+    time_per_question: source.time_per_question,
+    points_per_question: source.points_per_question,
+    bonus_speed_points: source.bonus_speed_points,
+    streak_bonus_enabled: source.streak_bonus_enabled,
+    shuffle_questions: source.shuffle_questions,
+    shuffle_options: source.shuffle_options,
+    show_correct_answer: source.show_correct_answer,
+    show_leaderboard_after_each: source.show_leaderboard_after_each,
+    allow_teams: source.allow_teams,
+    power_ups_enabled: source.power_ups_enabled,
+    max_team_size: source.max_team_size,
+    mode: source.mode,
+    is_published: Boolean(source.is_published),
+  };
+};
+
 const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => {
   const { userId } = useCurrentUser();
   const [quiz, setQuiz] = useState<Quiz | null>(null);
@@ -75,7 +142,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
         });
         const updatedDoc = { ...document, content: { quizId: newQuiz.id } };
         onSave(updatedDoc);
-        setQuiz(newQuiz);
+        setQuiz(normalizeQuizForEditor(newQuiz));
 
         // Apply template questions if any
         const templateQuestions = (document.content as any)?.templateQuestions;
@@ -118,7 +185,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
         quizService.getQuestions(quizId),
         quizService.getActiveSessions(quizId),
       ]);
-      setQuiz(q);
+      setQuiz(normalizeQuizForEditor(q));
       setQuestions(qs);
       setSessions(ss);
     } catch (err) {
@@ -194,13 +261,34 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
     };
   }, [showSettings, quiz, updateSettingsScrollState]);
 
-  const saveQuizSettings = async (updates: Partial<Quiz>) => {
-    if (!quiz) return;
+  const updateQuizDraft = useCallback((updates: Partial<Quiz>) => {
+    setQuiz((previous) => (previous ? normalizeQuizForEditor({ ...previous, ...updates } as Quiz) : previous));
+  }, []);
+
+  const saveQuizSettings = async (updates: Partial<Quiz>): Promise<boolean> => {
+    if (!quiz) return false;
+
+    const nextQuiz = normalizeQuizForEditor({ ...quiz, ...updates } as Quiz);
+    const payload = buildQuizSettingsPayload(nextQuiz);
+
     try {
-      const updated = await quizService.updateQuiz(quiz.id, updates);
-      setQuiz(updated);
+      const updated = await quizService.updateQuiz(quiz.id, payload);
+      setQuiz(normalizeQuizForEditor({ ...nextQuiz, ...updated } as Quiz));
       toast.success('Paramètres sauvegardés');
-    } catch { toast.error('Erreur'); }
+      return true;
+    } catch {
+      toast.error('Erreur lors de la sauvegarde des paramètres');
+      return false;
+    }
+  };
+
+  const handleSettingsSave = async () => {
+    if (!quiz) return;
+
+    const isSaved = await saveQuizSettings(quiz);
+    if (isSaved) {
+      setShowSettings(false);
+    }
   };
 
   const addQuestion = async (type: string) => {
@@ -624,12 +712,12 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                 onScroll={updateSettingsScrollState}
                 className="h-full overflow-y-auto px-4 py-4 sm:px-5"
               >
-                <div className="space-y-4 pb-20">
+                <div className="space-y-4 pb-24">
                   <div>
                     <Label>Description</Label>
                     <Textarea
-                      value={quiz.description || ''}
-                      onChange={e => setQuiz({ ...quiz, description: e.target.value })}
+                      value={quiz.description ?? ''}
+                      onChange={e => updateQuizDraft({ description: e.target.value })}
                       placeholder="Description du quiz..."
                       className="mt-1"
                     />
@@ -641,7 +729,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                       <Input
                         type="number"
                         value={quiz.time_per_question}
-                        onChange={e => setQuiz({ ...quiz, time_per_question: parseInt(e.target.value) || 30 })}
+                        onChange={e => updateQuizDraft({ time_per_question: parseInt(e.target.value, 10) || 30 })}
                         className="mt-1"
                       />
                     </div>
@@ -650,7 +738,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                       <Input
                         type="number"
                         value={quiz.points_per_question}
-                        onChange={e => setQuiz({ ...quiz, points_per_question: parseInt(e.target.value) || 1000 })}
+                        onChange={e => updateQuizDraft({ points_per_question: parseInt(e.target.value, 10) || 1000 })}
                         className="mt-1"
                       />
                     </div>
@@ -658,7 +746,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
 
                   <div>
                     <Label>Mode de jeu</Label>
-                    <Select value={quiz.mode} onValueChange={v => setQuiz({ ...quiz, mode: v as any })}>
+                    <Select value={quiz.mode} onValueChange={v => updateQuizDraft({ mode: v as Quiz['mode'] })}>
                       <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="live">Live uniquement</SelectItem>
@@ -674,7 +762,8 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                       {Object.values(QUIZ_THEMES).map(t => (
                         <button
                           key={t.id}
-                          onClick={() => setQuiz({ ...quiz, theme_preset: t.id })}
+                          type="button"
+                          onClick={() => updateQuizDraft({ theme_preset: t.id, theme_color: t.primaryColor })}
                           className={`p-2 rounded-xl border-2 transition-all text-xs font-medium ${
                             quiz.theme_preset === t.id
                               ? 'border-primary ring-2 ring-primary/20'
@@ -693,7 +782,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                       <p className="text-sm font-medium">🎵 Audio en jeu</p>
                       <p className="text-xs text-muted-foreground">Sons et effets pendant le quiz</p>
                     </div>
-                    <Switch checked={quiz.audio_enabled} onCheckedChange={v => setQuiz({ ...quiz, audio_enabled: v })} />
+                    <Switch checked={Boolean(quiz.audio_enabled)} onCheckedChange={v => updateQuizDraft({ audio_enabled: v })} />
                   </div>
 
                   <div className="space-y-3">
@@ -713,8 +802,8 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                           <p className="text-xs text-muted-foreground">{setting.desc}</p>
                         </div>
                         <Switch
-                          checked={(quiz as any)[setting.key]}
-                          onCheckedChange={v => setQuiz({ ...quiz, [setting.key]: v })}
+                          checked={Boolean((quiz as any)[setting.key])}
+                          onCheckedChange={v => updateQuizDraft({ [setting.key]: v } as Partial<Quiz>)}
                           className="shrink-0"
                         />
                       </div>
@@ -727,7 +816,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
                       <Input
                         type="number"
                         value={quiz.max_team_size}
-                        onChange={e => setQuiz({ ...quiz, max_team_size: parseInt(e.target.value) || 4 })}
+                        onChange={e => updateQuizDraft({ max_team_size: parseInt(e.target.value, 10) || 4 })}
                         className="mt-1"
                       />
                     </div>
@@ -738,18 +827,21 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
           )}
 
           <DialogFooter className="shrink-0 flex-row items-center justify-between border-t border-border/60 bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-5">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={scrollSettingsForm}
-              disabled={!canScrollSettings}
-              className="rounded-full"
-              aria-label={settingsScrollToTop ? 'Revenir en haut du formulaire' : 'Descendre dans le formulaire'}
-            >
-              {settingsScrollToTop ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </Button>
-            <Button onClick={() => { if (quiz) saveQuizSettings(quiz); setShowSettings(false); }} className="rounded-xl">
+            {canScrollSettings ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={scrollSettingsForm}
+                className="rounded-full"
+                aria-label={settingsScrollToTop ? 'Revenir en haut du formulaire' : 'Descendre dans le formulaire'}
+              >
+                {settingsScrollToTop ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+            ) : (
+              <span className="h-9 w-9" aria-hidden="true" />
+            )}
+            <Button onClick={handleSettingsSave} className="rounded-xl">
               Sauvegarder
             </Button>
           </DialogFooter>
