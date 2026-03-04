@@ -600,7 +600,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
       </Dialog>
 
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="relative flex w-[96vw] max-w-2xl flex-col overflow-hidden gap-0 p-0 max-h-[92dvh] sm:w-[92vw] sm:max-h-[90dvh]">
+        <DialogContent className="relative !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 flex h-[min(88dvh,760px)] w-[96vw] max-w-3xl flex-col overflow-hidden gap-0 border-border/60 p-0 sm:w-[92vw] data-[state=open]:slide-in-from-top-0 data-[state=closed]:slide-out-to-top-0">
           <DialogHeader className="px-4 sm:px-5 py-4 border-b border-border/60 shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" /> Paramètres du quiz
