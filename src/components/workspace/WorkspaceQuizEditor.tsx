@@ -600,7 +600,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
       </Dialog>
 
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="relative !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 flex h-[min(88dvh,760px)] w-[96vw] max-w-3xl flex-col overflow-hidden gap-0 border-border/60 p-0 sm:w-[92vw] data-[state=open]:slide-in-from-top-0 data-[state=closed]:slide-out-to-top-0">
+        <DialogContent className="w-[96vw] max-w-3xl max-h-[90dvh] sm:max-h-[88dvh] flex flex-col overflow-hidden gap-0 border-border/60 p-0 sm:w-[92vw]">
           <DialogHeader className="px-4 sm:px-5 py-4 border-b border-border/60 shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" /> Paramètres du quiz
@@ -608,134 +608,136 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
           </DialogHeader>
 
           {quiz && (
-            <div
-              ref={settingsScrollRef}
-              onScroll={updateSettingsScrollState}
-              className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5"
-            >
-              <div className="space-y-4 pb-20">
-                <div>
-                  <Label>Description</Label>
-                  <Textarea
-                    value={quiz.description || ''}
-                    onChange={e => setQuiz({ ...quiz, description: e.target.value })}
-                    placeholder="Description du quiz..."
-                    className="mt-1"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="relative min-h-0 flex-1">
+              <div
+                ref={settingsScrollRef}
+                onScroll={updateSettingsScrollState}
+                className="h-full overflow-y-auto px-4 py-4 sm:px-5"
+              >
+                <div className="space-y-4 pb-20">
                   <div>
-                    <Label>Temps par question (sec)</Label>
-                    <Input
-                      type="number"
-                      value={quiz.time_per_question}
-                      onChange={e => setQuiz({ ...quiz, time_per_question: parseInt(e.target.value) || 30 })}
+                    <Label>Description</Label>
+                    <Textarea
+                      value={quiz.description || ''}
+                      onChange={e => setQuiz({ ...quiz, description: e.target.value })}
+                      placeholder="Description du quiz..."
                       className="mt-1"
                     />
                   </div>
-                  <div>
-                    <Label>Points par question</Label>
-                    <Input
-                      type="number"
-                      value={quiz.points_per_question}
-                      onChange={e => setQuiz({ ...quiz, points_per_question: parseInt(e.target.value) || 1000 })}
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
 
-                <div>
-                  <Label>Mode de jeu</Label>
-                  <Select value={quiz.mode} onValueChange={v => setQuiz({ ...quiz, mode: v as any })}>
-                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="live">Live uniquement</SelectItem>
-                      <SelectItem value="async">Asynchrone uniquement</SelectItem>
-                      <SelectItem value="both">Les deux</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label>🎨 Thème visuel</Label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
-                    {Object.values(QUIZ_THEMES).map(t => (
-                      <button
-                        key={t.id}
-                        onClick={() => setQuiz({ ...quiz, theme_preset: t.id })}
-                        className={`p-2 rounded-xl border-2 transition-all text-xs font-medium ${
-                          quiz.theme_preset === t.id
-                            ? 'border-primary ring-2 ring-primary/20'
-                            : 'border-border hover:border-primary/50'
-                        }`}
-                      >
-                        <div className="w-full h-6 rounded-lg mb-1" style={{ background: t.bgGradient }} />
-                        {t.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">🎵 Audio en jeu</p>
-                    <p className="text-xs text-muted-foreground">Sons et effets pendant le quiz</p>
-                  </div>
-                  <Switch checked={quiz.audio_enabled} onCheckedChange={v => setQuiz({ ...quiz, audio_enabled: v })} />
-                </div>
-
-                <div className="space-y-3">
-                  {[
-                    { key: 'bonus_speed_points', label: 'Bonus de vitesse', desc: 'Plus de points si réponse rapide' },
-                    { key: 'streak_bonus_enabled', label: 'Bonus de série', desc: 'Points bonus pour réponses consécutives correctes' },
-                    { key: 'shuffle_questions', label: 'Mélanger les questions', desc: 'Ordre aléatoire à chaque session' },
-                    { key: 'shuffle_options', label: 'Mélanger les options', desc: 'Ordre aléatoire des réponses' },
-                    { key: 'show_correct_answer', label: 'Afficher la bonne réponse', desc: 'Montrer la correction après chaque question' },
-                    { key: 'show_leaderboard_after_each', label: 'Classement après chaque question', desc: 'Afficher le top du classement' },
-                    { key: 'allow_teams', label: 'Mode équipes', desc: 'Permettre de jouer en équipes' },
-                    { key: 'power_ups_enabled', label: 'Power-ups', desc: 'Bonus spéciaux pendant le jeu' },
-                  ].map(setting => (
-                    <div key={setting.key} className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium">{setting.label}</p>
-                        <p className="text-xs text-muted-foreground">{setting.desc}</p>
-                      </div>
-                      <Switch
-                        checked={(quiz as any)[setting.key]}
-                        onCheckedChange={v => setQuiz({ ...quiz, [setting.key]: v })}
-                        className="shrink-0"
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Temps par question (sec)</Label>
+                      <Input
+                        type="number"
+                        value={quiz.time_per_question}
+                        onChange={e => setQuiz({ ...quiz, time_per_question: parseInt(e.target.value) || 30 })}
+                        className="mt-1"
                       />
                     </div>
-                  ))}
-                </div>
-
-                {quiz.allow_teams && (
-                  <div>
-                    <Label>Taille max des équipes</Label>
-                    <Input
-                      type="number"
-                      value={quiz.max_team_size}
-                      onChange={e => setQuiz({ ...quiz, max_team_size: parseInt(e.target.value) || 4 })}
-                      className="mt-1"
-                    />
+                    <div>
+                      <Label>Points par question</Label>
+                      <Input
+                        type="number"
+                        value={quiz.points_per_question}
+                        onChange={e => setQuiz({ ...quiz, points_per_question: parseInt(e.target.value) || 1000 })}
+                        className="mt-1"
+                      />
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
-          )}
 
-          {canScrollSettings && (
-            <Button
-              type="button"
-              size="icon"
-              variant="secondary"
-              onClick={scrollSettingsForm}
-              className="absolute bottom-16 right-4 z-10 rounded-full shadow-sm border border-border"
-              aria-label={settingsScrollToTop ? 'Revenir en haut du formulaire' : 'Descendre dans le formulaire'}
-            >
-              {settingsScrollToTop ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </Button>
+                  <div>
+                    <Label>Mode de jeu</Label>
+                    <Select value={quiz.mode} onValueChange={v => setQuiz({ ...quiz, mode: v as any })}>
+                      <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="live">Live uniquement</SelectItem>
+                        <SelectItem value="async">Asynchrone uniquement</SelectItem>
+                        <SelectItem value="both">Les deux</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>🎨 Thème visuel</Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
+                      {Object.values(QUIZ_THEMES).map(t => (
+                        <button
+                          key={t.id}
+                          onClick={() => setQuiz({ ...quiz, theme_preset: t.id })}
+                          className={`p-2 rounded-xl border-2 transition-all text-xs font-medium ${
+                            quiz.theme_preset === t.id
+                              ? 'border-primary ring-2 ring-primary/20'
+                              : 'border-border hover:border-primary/50'
+                          }`}
+                        >
+                          <div className="w-full h-6 rounded-lg mb-1" style={{ background: t.bgGradient }} />
+                          {t.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">🎵 Audio en jeu</p>
+                      <p className="text-xs text-muted-foreground">Sons et effets pendant le quiz</p>
+                    </div>
+                    <Switch checked={quiz.audio_enabled} onCheckedChange={v => setQuiz({ ...quiz, audio_enabled: v })} />
+                  </div>
+
+                  <div className="space-y-3">
+                    {[
+                      { key: 'bonus_speed_points', label: 'Bonus de vitesse', desc: 'Plus de points si réponse rapide' },
+                      { key: 'streak_bonus_enabled', label: 'Bonus de série', desc: 'Points bonus pour réponses consécutives correctes' },
+                      { key: 'shuffle_questions', label: 'Mélanger les questions', desc: 'Ordre aléatoire à chaque session' },
+                      { key: 'shuffle_options', label: 'Mélanger les options', desc: 'Ordre aléatoire des réponses' },
+                      { key: 'show_correct_answer', label: 'Afficher la bonne réponse', desc: 'Montrer la correction après chaque question' },
+                      { key: 'show_leaderboard_after_each', label: 'Classement après chaque question', desc: 'Afficher le top du classement' },
+                      { key: 'allow_teams', label: 'Mode équipes', desc: 'Permettre de jouer en équipes' },
+                      { key: 'power_ups_enabled', label: 'Power-ups', desc: 'Bonus spéciaux pendant le jeu' },
+                    ].map(setting => (
+                      <div key={setting.key} className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium">{setting.label}</p>
+                          <p className="text-xs text-muted-foreground">{setting.desc}</p>
+                        </div>
+                        <Switch
+                          checked={(quiz as any)[setting.key]}
+                          onCheckedChange={v => setQuiz({ ...quiz, [setting.key]: v })}
+                          className="shrink-0"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {quiz.allow_teams && (
+                    <div>
+                      <Label>Taille max des équipes</Label>
+                      <Input
+                        type="number"
+                        value={quiz.max_team_size}
+                        onChange={e => setQuiz({ ...quiz, max_team_size: parseInt(e.target.value) || 4 })}
+                        className="mt-1"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {canScrollSettings && (
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="secondary"
+                  onClick={scrollSettingsForm}
+                  className="absolute bottom-4 right-4 z-10 rounded-full shadow-sm border border-border"
+                  aria-label={settingsScrollToTop ? 'Revenir en haut du formulaire' : 'Descendre dans le formulaire'}
+                >
+                  {settingsScrollToTop ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
+              )}
+            </div>
           )}
 
           <DialogFooter className="shrink-0 border-t border-border/60 bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:px-5">
