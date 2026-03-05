@@ -59,7 +59,7 @@ import Finance from './pages/Finance';
 import RessourcesHumaines from './pages/RessourcesHumaines';
 import Comptabilite from './pages/Comptabilite';
 import QuestionnairePublic from './pages/QuestionnairePublic';
-import QuizJoin from './pages/QuizJoin';
+
 
 
 const queryClient = new QueryClient({
@@ -93,16 +93,16 @@ const AppContent = () => {
   // après redirection depuis /auth
   const isSignaturePage = location.pathname.startsWith('/emargement/signer/');
   const isLinkedInCallback = location.pathname === '/linkedin-callback';
-  const isQuizJoinPage = location.pathname === '/quiz/join';
+  
 
-  if (isSignaturePage || isLinkedInCallback || isQuizJoinPage) {
+  if (isSignaturePage || isLinkedInCallback) {
     return (
       <div className="min-h-screen w-full">
         <Routes>
           <Route path="/emargement/signer/:token" element={<SignaturePublique />} />
           <Route path="/questionnaire/:token" element={<QuestionnairePublic />} />
           <Route path="/linkedin-callback" element={<LinkedInCallback />} />
-          <Route path="/quiz/join" element={<QuizJoin />} />
+          
         </Routes>
         <Toaster />
       </div>

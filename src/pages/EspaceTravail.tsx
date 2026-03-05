@@ -20,17 +20,15 @@ import WorkspacePresentationEditor from '@/components/workspace/WorkspacePresent
 import WorkspaceVisualEditor from '@/components/workspace/WorkspaceVisualEditor';
 import WorkspaceWhiteboardEditor from '@/components/workspace/WorkspaceWhiteboardEditor';
 import WorkspaceQuestionnaireEditor from '@/components/workspace/WorkspaceQuestionnaireEditor';
-import WorkspaceQuizEditor from '@/components/workspace/WorkspaceQuizEditor';
-import { ClipboardList, Zap } from 'lucide-react';
+import { ClipboardList } from 'lucide-react';
 
 const DOC_TYPES = [
-  { type: 'text' as const, label: 'Document texte', icon: FileText, color: 'from-blue-500 to-blue-600', bgLight: 'bg-blue-50 dark:bg-blue-950/30', textColor: 'text-blue-600 dark:text-blue-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Comme Word' },
-  { type: 'spreadsheet' as const, label: 'Tableau', icon: Table2, color: 'from-emerald-500 to-emerald-600', bgLight: 'bg-emerald-50 dark:bg-emerald-950/30', textColor: 'text-emerald-600 dark:text-emerald-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Comme Excel' },
-  { type: 'presentation' as const, label: 'Présentation', icon: Presentation, color: 'from-orange-500 to-orange-600', bgLight: 'bg-orange-50 dark:bg-orange-950/30', textColor: 'text-orange-600 dark:text-orange-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Comme PowerPoint' },
-  { type: 'visual' as const, label: 'Visuel', icon: Image, color: 'from-pink-500 to-pink-600', bgLight: 'bg-pink-50 dark:bg-pink-950/30', textColor: 'text-pink-600 dark:text-pink-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Comme Canva' },
-  { type: 'whiteboard' as const, label: 'Tableau blanc', icon: PenLine, color: 'from-cyan-500 to-cyan-600', bgLight: 'bg-cyan-50 dark:bg-cyan-950/30', textColor: 'text-cyan-600 dark:text-cyan-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Whiteboard infini' },
-  { type: 'questionnaire' as const, label: 'Questionnaire', icon: ClipboardList, color: 'from-violet-500 to-violet-600', bgLight: 'bg-violet-50 dark:bg-violet-950/30', textColor: 'text-violet-600 dark:text-violet-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Comme Google Forms' },
-  { type: 'quiz' as const, label: 'Quiz interactif', icon: Zap, color: 'from-amber-500 to-orange-600', bgLight: 'bg-amber-50 dark:bg-amber-950/30', textColor: 'text-amber-600 dark:text-amber-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Comme Kahoot' },
+  { type: 'text' as const, label: 'Document', icon: FileText, color: 'from-blue-500 to-blue-600', bgLight: 'bg-blue-50 dark:bg-blue-950/30', textColor: 'text-blue-600 dark:text-blue-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Traitement de texte' },
+  { type: 'spreadsheet' as const, label: 'Tableur', icon: Table2, color: 'from-emerald-500 to-emerald-600', bgLight: 'bg-emerald-50 dark:bg-emerald-950/30', textColor: 'text-emerald-600 dark:text-emerald-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Feuilles de calcul' },
+  { type: 'presentation' as const, label: 'Présentation', icon: Presentation, color: 'from-orange-500 to-orange-600', bgLight: 'bg-orange-50 dark:bg-orange-950/30', textColor: 'text-orange-600 dark:text-orange-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Diaporamas & slides' },
+  { type: 'visual' as const, label: 'Visuel', icon: Image, color: 'from-pink-500 to-pink-600', bgLight: 'bg-pink-50 dark:bg-pink-950/30', textColor: 'text-pink-600 dark:text-pink-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Design & création' },
+  { type: 'whiteboard' as const, label: 'Tableau blanc', icon: PenLine, color: 'from-cyan-500 to-cyan-600', bgLight: 'bg-cyan-50 dark:bg-cyan-950/30', textColor: 'text-cyan-600 dark:text-cyan-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Espace collaboratif' },
+  { type: 'questionnaire' as const, label: 'Questionnaire', icon: ClipboardList, color: 'from-violet-500 to-violet-600', bgLight: 'bg-violet-50 dark:bg-violet-950/30', textColor: 'text-violet-600 dark:text-violet-400', borderColor: 'border-primary/40', cardBg: 'bg-primary/5 dark:bg-primary/10', desc: 'Formulaires & sondages' },
 ];
 
 const getDocMeta = (type: string) => {
@@ -94,7 +92,7 @@ const EspaceTravail = () => {
   const handleCreateDocument = async (type: WorkspaceDocument['document_type'], template?: DocumentTemplate) => {
     if (!userId) return;
     try {
-      const defaultContent = template?.content || (type === 'text' ? { html: '' } : type === 'spreadsheet' ? { cells: {}, numRows: 50, numCols: 26 } : type === 'presentation' ? { slides: [{ id: '1', elements: [], background: '#ffffff' }] } : type === 'whiteboard' ? { elements: [], background: '#ffffff', gridVisible: true } : type === 'questionnaire' ? { templateQuestions: [] } : type === 'quiz' ? { quizId: null, templateQuestions: [] } : { width: 1080, height: 1080, background: '#ffffff', elements: [] });
+      const defaultContent = template?.content || (type === 'text' ? { html: '' } : type === 'spreadsheet' ? { cells: {}, numRows: 50, numCols: 26 } : type === 'presentation' ? { slides: [{ id: '1', elements: [], background: '#ffffff' }] } : type === 'whiteboard' ? { elements: [], background: '#ffffff', gridVisible: true } : type === 'questionnaire' ? { templateQuestions: [] } : { width: 1080, height: 1080, background: '#ffffff', elements: [] });
       const doc = await workspaceService.createDocument({
         title: template?.name && template.id.indexOf('blank') === -1 ? template.name : 'Sans titre',
         document_type: type,
@@ -260,7 +258,7 @@ const EspaceTravail = () => {
       case 'visual': return <WorkspaceVisualEditor {...editorProps} />;
       case 'whiteboard': return <WorkspaceWhiteboardEditor {...editorProps} />;
       case 'questionnaire': return <WorkspaceQuestionnaireEditor {...editorProps} />;
-      case 'quiz': return <WorkspaceQuizEditor {...editorProps} />;
+      
       default: return <WorkspaceTextEditor {...editorProps} />;
     }
   }
