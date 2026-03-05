@@ -48,7 +48,11 @@ const NotificationBell = () => {
       markAsRead(notification.id);
     }
     setSelectedNotification(notification);
-    setIsDialogOpen(true);
+    // Close dropdown first to avoid focus conflict, then open dialog
+    setIsOpen(false);
+    setTimeout(() => {
+      setIsDialogOpen(true);
+    }, 150);
   };
 
   const handleNavigateToAction = (notification: Notification) => {
@@ -125,7 +129,7 @@ const NotificationBell = () => {
 
   return (
     <>
-      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+      <DropdownMenu open={isOpen} onOpenChange={setIsOpen} modal={false}>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm" className="relative h-9 w-9 p-0 hover:bg-primary/10">
             <Bell className="h-5 w-5 text-muted-foreground" />
