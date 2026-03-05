@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { QrCode, Users, Send, CheckCircle, ArrowRight, PenTool, Calendar, Clock, MapPin, BookOpen, Wifi, Shield, FileText } from 'lucide-react';
+import { QrCode, Users, Send, CheckCircle, ArrowRight, PenTool, Calendar, Clock, MapPin, BookOpen, Wifi, Shield, FileText, UserX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -43,6 +43,8 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [moduleInfo, setModuleInfo] = useState<{ title: string } | null>(null);
+  const [instructorAbsent, setInstructorAbsent] = useState(false);
+  const [togglingInstructorAbsent, setTogglingInstructorAbsent] = useState(false);
 
   const isInteractionLocked = showInstructorSignModal;
   const lastLoadAtRef = useRef<number>(0);
@@ -80,7 +82,17 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
       const instructorSignature = signatures?.find(s => s.user_type === 'instructor' && s.user_id === instructorId);
       const signedStudents = studentSignatures.length;
       const instructorSigned = !!instructorSignature;
-      const canSendToAdmin = signedStudents === totalStudents && instructorSigned && totalStudents > 0;
+
+      // Charger le statut instructor_absent depuis la feuille
+      const { data: sheetData } = await supabase
+        .from('attendance_sheets')
+        .select('instructor_absent')
+        .eq('id', attendanceSheet.id)
+        .single();
+      const isInstructorAbsent = sheetData?.instructor_absent === true;
+      setInstructorAbsent(isInstructorAbsent);
+
+      const canSendToAdmin = signedStudents === totalStudents && (instructorSigned || isInstructorAbsent) && totalStudents > 0;
 
       setStats({ totalStudents, signedStudents, instructorSigned, canSendToAdmin });
     } catch (error) {
@@ -297,7 +309,12 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
             <PenTool className="w-4 h-4 text-muted-foreground" />
             <span className="text-xs sm:text-sm text-muted-foreground">Signature formateur</span>
           </div>
-          {stats.instructorSigned ? (
+          {instructorAbsent ? (
+            <Badge className="bg-red-100 text-red-800 border-red-200">
+              <UserX className="w-3 h-3 mr-1" />
+              Formateur absent
+            </Badge>
+          ) : stats.instructorSigned ? (
             <Badge className="bg-green-100 text-green-800 border-green-200">
               <CheckCircle className="w-3 h-3 mr-1" />
               Signé
@@ -342,10 +359,78 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
         )}
 
         {/* Signer formateur */}
-        {!stats.instructorSigned && (attendanceSheet.status === 'En cours') && (
+        {!stats.instructorSigned && !instructorAbsent && (attendanceSheet.status === 'En cours') && (
           <Button onClick={() => setShowInstructorSignModal(true)} variant="outline" className="w-full rounded-xl h-11">
             <PenTool className="w-4 h-4 mr-2" />
             Signer en tant que formateur
+          </Button>
+        )}
+
+        {/* Marquer formateur absent */}
+        {!stats.instructorSigned && !instructorAbsent && (attendanceSheet.status === 'En cours') && (
+          <Button 
+            onClick={async () => {
+              try {
+                setTogglingInstructorAbsent(true);
+                const { error } = await supabase
+                  .from('attendance_sheets')
+                  .update({ instructor_absent: true })
+                  .eq('id', attendanceSheet.id);
+                if (error) throw error;
+                setInstructorAbsent(true);
+                toast.success('Formateur marqué comme absent');
+                loadStats();
+                onUpdate();
+              } catch (error) {
+                toast.error('Erreur lors du marquage du formateur absent');
+              } finally {
+                setTogglingInstructorAbsent(false);
+              }
+            }} 
+            variant="outline" 
+            disabled={togglingInstructorAbsent}
+            className="w-full rounded-xl h-11 border-red-300 text-red-600 hover:bg-red-50"
+          >
+            {togglingInstructorAbsent ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-2" />
+            ) : (
+              <UserX className="w-4 h-4 mr-2" />
+            )}
+            Marquer le formateur absent
+          </Button>
+        )}
+
+        {/* Annuler absence formateur */}
+        {instructorAbsent && !stats.instructorSigned && (attendanceSheet.status === 'En cours') && (
+          <Button 
+            onClick={async () => {
+              try {
+                setTogglingInstructorAbsent(true);
+                const { error } = await supabase
+                  .from('attendance_sheets')
+                  .update({ instructor_absent: false })
+                  .eq('id', attendanceSheet.id);
+                if (error) throw error;
+                setInstructorAbsent(false);
+                toast.success('Absence du formateur annulée');
+                loadStats();
+                onUpdate();
+              } catch (error) {
+                toast.error('Erreur lors de l\'annulation');
+              } finally {
+                setTogglingInstructorAbsent(false);
+              }
+            }} 
+            variant="outline" 
+            disabled={togglingInstructorAbsent}
+            className="w-full rounded-xl h-11 border-orange-300 text-orange-600 hover:bg-orange-50"
+          >
+            {togglingInstructorAbsent ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600 mr-2" />
+            ) : (
+              <CheckCircle className="w-4 h-4 mr-2" />
+            )}
+            Annuler l'absence du formateur
           </Button>
         )}
 

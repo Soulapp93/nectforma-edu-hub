@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Edit, Download, CheckCircle2, CheckCircle, XCircle, Clock, Building, UserX, ToggleLeft, ToggleRight } from 'lucide-react';
+import { X, Edit, Download, CheckCircle2, CheckCircle, XCircle, Clock, Building, UserX, ToggleLeft, ToggleRight, PenTool } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -70,6 +70,8 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
   const [togglingStudentId, setTogglingStudentId] = useState<string | null>(null);
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [establishmentInfo, setEstablishmentInfo] = useState<{ logo_url: string | null; name: string } | null>(null);
+  const [isInstructorAbsentLocal, setIsInstructorAbsentLocal] = useState(false);
+  const [togglingInstructorAbsent, setTogglingInstructorAbsent] = useState(false);
 
   // Charger les données de la feuille d'émargement
   const loadAttendanceData = async () => {
@@ -219,6 +221,14 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
           }
         }
       }
+
+      // Sync instructor_absent state
+      const { data: sheetRefresh } = await supabase
+        .from('attendance_sheets')
+        .select('instructor_absent')
+        .eq('id', attendanceSheet.id)
+        .single();
+      setIsInstructorAbsentLocal(sheetRefresh?.instructor_absent === true);
 
     } catch (error) {
       console.error('Error loading attendance data:', error);
@@ -547,7 +557,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
               // AUDIT: Différenciation claire entre "formateur absent" et "session autonomie"
               // - instructor_absent = true → Session avec formateur absent (afficher 2 colonnes avec ABSENT en rouge)
               // - session_type = 'autonomie' → Session en autonomie réelle (pas de formateur prévu)
-              const isInstructorAbsent = Boolean((attendanceSheet as any).instructor_absent);
+              const isInstructorAbsent = isInstructorAbsentLocal;
               const isAutonomySession = attendanceSheet.session_type === 'autonomie';
               
               // Le nom du formateur doit toujours être affiché (même si absent)
@@ -590,7 +600,53 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
                 <div className="grid gap-8 grid-cols-1 md:grid-cols-2">
                   {/* Signature formateur - toujours affichée avec nom du formateur */}
                   <div>
-                    <h4 className="font-semibold mb-3">Signature du Formateur</h4>
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-semibold">Signature du Formateur</h4>
+                      {attendanceSheet.status !== 'Validé' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={togglingInstructorAbsent}
+                          onClick={async () => {
+                            try {
+                              setTogglingInstructorAbsent(true);
+                              const newAbsentState = !isInstructorAbsent;
+                              const { error } = await supabase
+                                .from('attendance_sheets')
+                                .update({ instructor_absent: newAbsentState })
+                                .eq('id', attendanceSheet.id);
+                              if (error) throw error;
+                              setIsInstructorAbsentLocal(newAbsentState);
+                              toast.success(newAbsentState ? 'Formateur marqué absent' : 'Absence du formateur annulée');
+                              onUpdate();
+                            } catch (error) {
+                              toast.error('Erreur lors du changement de statut');
+                            } finally {
+                              setTogglingInstructorAbsent(false);
+                            }
+                          }}
+                          className={`text-xs ${
+                            isInstructorAbsent
+                              ? 'border-green-300 text-green-600 hover:bg-green-50'
+                              : 'border-red-300 text-red-600 hover:bg-red-50'
+                          }`}
+                        >
+                          {togglingInstructorAbsent ? (
+                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current" />
+                          ) : isInstructorAbsent ? (
+                            <>
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Marquer présent
+                            </>
+                          ) : (
+                            <>
+                              <UserX className="h-3 w-3 mr-1" />
+                              Marquer absent
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
                     {isInstructorAbsent ? (
                       <>
                         <div className="border border-border rounded-lg h-24 bg-muted flex items-center justify-center p-2">
