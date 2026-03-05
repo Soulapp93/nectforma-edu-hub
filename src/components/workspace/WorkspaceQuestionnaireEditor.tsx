@@ -16,6 +16,7 @@ import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import ShareDocumentModal from './ShareDocumentModal';
 import {
   ArrowLeft, Save, Plus, Trash2, GripVertical, Copy, Eye, Settings,
   BarChart3, Share2, Link2, CheckCircle2, Circle, Square, CheckSquare,
@@ -62,6 +63,7 @@ const WorkspaceQuestionnaireEditor: React.FC<Props> = ({ document: doc, onSave, 
   const [loading, setLoading] = useState(true);
   const [selectedQuestion, setSelectedQuestion] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showCollaboratorsModal, setShowCollaboratorsModal] = useState(false);
   const [analytics, setAnalytics] = useState<any>(null);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
@@ -298,7 +300,8 @@ const WorkspaceQuestionnaireEditor: React.FC<Props> = ({ document: doc, onSave, 
     return (
       <Card
         key={q.id}
-        className={`p-4 sm:p-5 transition-all cursor-pointer border-2 ${isSelected ? 'border-primary shadow-lg shadow-primary/10' : 'border-border hover:border-primary/30'}`}
+        className={`p-4 sm:p-5 transition-all cursor-pointer border-2 ${isSelected ? 'shadow-lg' : 'border-border hover:border-primary/30'}`}
+        style={isSelected ? { borderColor: questionnaire.theme_color || 'hsl(var(--primary))', boxShadow: `0 10px 15px -3px ${questionnaire.theme_color || 'hsl(var(--primary))'}20` } : undefined}
         onClick={() => setSelectedQuestion(q.id)}
       >
         <div className="space-y-3">
@@ -650,7 +653,7 @@ const WorkspaceQuestionnaireEditor: React.FC<Props> = ({ document: doc, onSave, 
           <TabsContent value="editor" className="mt-4 pb-24">
             <div className="space-y-4">
               {/* Description */}
-              <Card className="p-5 border-t-4 border-t-primary">
+              <Card className="p-5 border-t-4" style={{ borderTopColor: questionnaire.theme_color || 'hsl(var(--primary))' }}>
                 <Textarea
                   value={questionnaire.description || ''}
                   onChange={e => {
@@ -669,7 +672,7 @@ const WorkspaceQuestionnaireEditor: React.FC<Props> = ({ document: doc, onSave, 
               {questions.map(q => renderQuestionEditor(q))}
 
               {/* Add question */}
-              <Card className="p-4 border-dashed border-2 border-primary/30">
+              <Card className="p-4 border-dashed border-2" style={{ borderColor: (questionnaire.theme_color || 'hsl(var(--primary))') + '50' }}>
                 <p className="text-sm font-medium text-primary mb-3 text-center">Ajouter une question</p>
                 <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
                   {QUESTION_TYPES.slice(0, 8).map(t => (
@@ -724,7 +727,8 @@ const WorkspaceQuestionnaireEditor: React.FC<Props> = ({ document: doc, onSave, 
                     checked={questionnaire.scoring_enabled}
                     onCheckedChange={v => {
                       setQuestionnaire(prev => prev ? { ...prev, scoring_enabled: v } : null);
-                      questionnaireService.updateQuestionnaire(questionnaire.id, { scoring_enabled: v });
+                      questionnaireService.updateQuestionnaire(questionnaire.id, { scoring_enabled: v })
+                        .then(() => toast.success('Paramètre mis à jour'));
                     }}
                   />
                 </div>
@@ -738,7 +742,8 @@ const WorkspaceQuestionnaireEditor: React.FC<Props> = ({ document: doc, onSave, 
                     checked={questionnaire.requires_auth}
                     onCheckedChange={v => {
                       setQuestionnaire(prev => prev ? { ...prev, requires_auth: v } : null);
-                      questionnaireService.updateQuestionnaire(questionnaire.id, { requires_auth: v });
+                      questionnaireService.updateQuestionnaire(questionnaire.id, { requires_auth: v })
+                        .then(() => toast.success('Paramètre mis à jour'));
                     }}
                   />
                 </div>
@@ -752,7 +757,8 @@ const WorkspaceQuestionnaireEditor: React.FC<Props> = ({ document: doc, onSave, 
                     checked={questionnaire.allow_multiple_responses}
                     onCheckedChange={v => {
                       setQuestionnaire(prev => prev ? { ...prev, allow_multiple_responses: v } : null);
-                      questionnaireService.updateQuestionnaire(questionnaire.id, { allow_multiple_responses: v });
+                      questionnaireService.updateQuestionnaire(questionnaire.id, { allow_multiple_responses: v })
+                        .then(() => toast.success('Paramètre mis à jour'));
                     }}
                   />
                 </div>
@@ -766,7 +772,8 @@ const WorkspaceQuestionnaireEditor: React.FC<Props> = ({ document: doc, onSave, 
                     checked={questionnaire.shuffle_questions}
                     onCheckedChange={v => {
                       setQuestionnaire(prev => prev ? { ...prev, shuffle_questions: v } : null);
-                      questionnaireService.updateQuestionnaire(questionnaire.id, { shuffle_questions: v });
+                      questionnaireService.updateQuestionnaire(questionnaire.id, { shuffle_questions: v })
+                        .then(() => toast.success('Paramètre mis à jour'));
                     }}
                   />
                 </div>
@@ -780,7 +787,8 @@ const WorkspaceQuestionnaireEditor: React.FC<Props> = ({ document: doc, onSave, 
                     checked={questionnaire.show_progress_bar}
                     onCheckedChange={v => {
                       setQuestionnaire(prev => prev ? { ...prev, show_progress_bar: v } : null);
-                      questionnaireService.updateQuestionnaire(questionnaire.id, { show_progress_bar: v });
+                      questionnaireService.updateQuestionnaire(questionnaire.id, { show_progress_bar: v })
+                        .then(() => toast.success('Paramètre mis à jour'));
                     }}
                   />
                 </div>
@@ -794,7 +802,8 @@ const WorkspaceQuestionnaireEditor: React.FC<Props> = ({ document: doc, onSave, 
                     checked={questionnaire.is_accepting_responses}
                     onCheckedChange={v => {
                       setQuestionnaire(prev => prev ? { ...prev, is_accepting_responses: v } : null);
-                      questionnaireService.updateQuestionnaire(questionnaire.id, { is_accepting_responses: v });
+                      questionnaireService.updateQuestionnaire(questionnaire.id, { is_accepting_responses: v })
+                        .then(() => toast.success('Paramètre mis à jour'));
                     }}
                   />
                 </div>
@@ -818,7 +827,8 @@ const WorkspaceQuestionnaireEditor: React.FC<Props> = ({ document: doc, onSave, 
                         key={c}
                         onClick={() => {
                           setQuestionnaire(prev => prev ? { ...prev, theme_color: c } : null);
-                          questionnaireService.updateQuestionnaire(questionnaire.id, { theme_color: c });
+                          questionnaireService.updateQuestionnaire(questionnaire.id, { theme_color: c })
+                            .then(() => toast.success('Couleur du thème mise à jour'));
                         }}
                         className={`w-8 h-8 rounded-full border-2 transition-all ${questionnaire.theme_color === c ? 'border-foreground scale-110' : 'border-transparent'}`}
                         style={{ backgroundColor: c }}
@@ -832,19 +842,40 @@ const WorkspaceQuestionnaireEditor: React.FC<Props> = ({ document: doc, onSave, 
         </Tabs>
       </div>
 
-      {/* Share modal */}
+      {/* Share modal: Public link */}
       <Dialog open={showShareModal} onOpenChange={setShowShareModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Share2 className="h-5 w-5" /> Partager le questionnaire
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 pt-2">
+            {/* Mode toggle */}
+            <div className="flex gap-2">
+              <Button variant="default" size="sm" className="flex-1 gap-1.5">
+                <Link2 className="h-4 w-4" /> Lien public
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 gap-1.5"
+                onClick={() => {
+                  setShowShareModal(false);
+                  setTimeout(() => setShowCollaboratorsModal(true), 150);
+                }}
+              >
+                <Users className="h-4 w-4" /> Collaborateurs
+              </Button>
+            </div>
+
+            <Separator />
+
             <div>
-              <Label className="text-sm font-medium">Lien public</Label>
-              <div className="flex gap-2 mt-1.5">
-                <Input value={getPublicUrl()} readOnly className="text-sm" />
+              <Label className="text-sm font-medium">Lien d'accès direct (sans connexion)</Label>
+              <p className="text-xs text-muted-foreground mt-0.5 mb-2">Toute personne possédant ce lien peut répondre au questionnaire, comme un Google Form.</p>
+              <div className="flex gap-2">
+                <Input value={getPublicUrl()} readOnly className="text-sm font-mono" />
                 <Button size="sm" onClick={copyLink} className="gap-1.5 shrink-0">
                   <Link2 className="h-4 w-4" /> Copier
                 </Button>
@@ -862,6 +893,21 @@ const WorkspaceQuestionnaireEditor: React.FC<Props> = ({ document: doc, onSave, 
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Collaborators modal (ShareDocumentModal) */}
+      {userId && (
+        <ShareDocumentModal
+          open={showCollaboratorsModal}
+          onOpenChange={(open) => {
+            setShowCollaboratorsModal(open);
+            if (!open) {
+              // Optionally go back to share modal
+            }
+          }}
+          documentId={doc.id}
+          userId={userId}
+        />
+      )}
     </div>
   );
 };

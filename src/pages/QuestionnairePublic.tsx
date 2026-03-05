@@ -199,9 +199,9 @@ const QuestionnairePublic = () => {
         return (
           <div className="space-y-2">
             {q.options?.map(opt => (
-              <label key={opt.id} className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${value === opt.label ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`}>
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${value === opt.label ? 'border-primary' : 'border-muted-foreground/30'}`}>
-                  {value === opt.label && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+              <label key={opt.id} className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${value === opt.label ? '' : 'border-border hover:border-primary/30'}`} style={value === opt.label ? { borderColor: questionnaire.theme_color, backgroundColor: questionnaire.theme_color + '10' } : undefined}>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center`} style={value === opt.label ? { borderColor: questionnaire.theme_color } : { borderColor: 'hsl(var(--muted-foreground) / 0.3)' }}>
+                  {value === opt.label && <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: questionnaire.theme_color }} />}
                 </div>
                 <span className="text-sm">{opt.label}</span>
                 <input type="radio" name={q.id} value={opt.label} checked={value === opt.label} onChange={() => setAnswer(q.id, opt.label)} className="sr-only" />
@@ -216,9 +216,9 @@ const QuestionnairePublic = () => {
             {q.options?.map(opt => {
               const selected = Array.isArray(value) && value.includes(opt.label);
               return (
-                <label key={opt.id} className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${selected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`}>
-                  <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center ${selected ? 'border-primary bg-primary' : 'border-muted-foreground/30'}`}>
-                    {selected && <CheckCircle2 className="h-3 w-3 text-primary-foreground" />}
+                <label key={opt.id} className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${selected ? '' : 'border-border hover:border-primary/30'}`} style={selected ? { borderColor: questionnaire.theme_color, backgroundColor: questionnaire.theme_color + '10' } : undefined}>
+                  <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center`} style={selected ? { borderColor: questionnaire.theme_color, backgroundColor: questionnaire.theme_color } : { borderColor: 'hsl(var(--muted-foreground) / 0.3)' }}>
+                    {selected && <CheckCircle2 className="h-3 w-3 text-white" />}
                   </div>
                   <span className="text-sm">{opt.label}</span>
                   <input type="checkbox" checked={selected} onChange={() => {
@@ -246,7 +246,8 @@ const QuestionnairePublic = () => {
                 <button
                   key={n}
                   onClick={() => setAnswer(q.id, String(n))}
-                  className={`w-10 h-10 rounded-full border-2 font-medium text-sm transition-all ${String(value) === String(n) ? 'border-primary bg-primary text-primary-foreground' : 'border-border hover:border-primary/30'}`}
+                  className={`w-10 h-10 rounded-full border-2 font-medium text-sm transition-all ${String(value) === String(n) ? 'text-white' : 'border-border hover:border-primary/30'}`}
+                  style={String(value) === String(n) ? { borderColor: questionnaire.theme_color, backgroundColor: questionnaire.theme_color } : undefined}
                 >
                   {n}
                 </button>
