@@ -1,46 +1,31 @@
 
 
-## Plan: Gestion de l'absence du formateur dans le système d'émargement
+## Diagnostic
 
-### Problème identifié
+Le problème principal : la zone éditable (`word-editable-area`) n'a **aucun padding vertical** (ligne 1096 : `padding: 0 var(--page-padding-x)`). Le texte saisi commence donc à y=0, mais l'overlay `::after` (z-index 1) masque les 96px du haut avec du blanc. Résultat : le texte est tapé derrière la marge blanche et reste invisible.
 
-Actuellement, dans `QRAttendanceManager.tsx` (ligne 83), la condition pour envoyer la feuille à l'administration exige la signature du formateur :
-
-```text
-canSendToAdmin = signedStudents === totalStudents && instructorSigned && totalStudents > 0
-```
-
-Cela bloque totalement le flux quand le formateur est absent. De plus, dans la modale de validation admin (`EnhancedAttendanceSheetModal`), il n'existe pas de bouton pour marquer le formateur absent.
+De plus, l'overlay `::after` a `z-index: 1` et `::before` a `z-index: 2`, ce qui empêche les clics dans certaines zones de la page (même avec `pointer-events: none`, le curseur de saisie ne se positionne pas correctement car le contenu n'est pas aligné avec les zones visibles).
 
 ---
 
-### Modifications prévues
+## Plan de correction
 
-**1. QRAttendanceManager.tsx — Ajouter un bouton "Marquer le formateur absent"**
+### 1. Corriger le padding vertical de la zone éditable
+**Fichier** : `src/components/workspace/WorkspaceTextEditor.tsx`
 
-- Ajouter un état `instructorAbsent` synchronisé avec le champ `instructor_absent` de la feuille en base
-- Ajouter un bouton dans la section "Signature formateur" permettant de marquer le formateur absent (met à jour `instructor_absent = true` en base)
-- Modifier la condition `canSendToAdmin` : autoriser l'envoi si le formateur est marqué absent OU s'il a signé :
-  ```text
-  canSendToAdmin = signedStudents === totalStudents && (instructorSigned || instructorAbsent) && totalStudents > 0
-  ```
-- Masquer le bouton "Signer en tant que formateur" quand le formateur est marqué absent
-- Afficher un badge "Formateur absent" au lieu de "En attente" quand applicable
+- Ligne 1096 : changer `padding: 0 var(--page-padding-x)` en `padding: var(--page-padding-y) var(--page-padding-x)`
+- Cela aligne le texte avec la zone visible entre les marges hautes et basses de chaque page simulée
 
-**2. EnhancedAttendanceSheetModal.tsx — Ajouter un toggle de présence du formateur**
+### 2. Ajuster le repeating-gradient de l'overlay `::after`
+L'overlay doit tenir compte du fait que le contenu commence maintenant à 96px. Le gradient actuel masque déjà correctement les marges si le padding est correct — aucun changement nécessaire sur le gradient lui-même.
 
-- Ajouter un bouton toggle dans la section signatures, à côté du nom du formateur, permettant de basculer entre "Présent" et "Absent" (similaire au toggle des étudiants)
-- Ce toggle met à jour `instructor_absent` sur la table `attendance_sheets`
-- Quand le formateur est marqué absent, la zone de signature affiche "ABSENT" en rouge (déjà géré par le code existant via `isInstructorAbsent`)
-
-**3. Aucune migration nécessaire** — Le champ `instructor_absent` existe déjà dans la table `attendance_sheets`.
+### 3. S'assurer que le contenu initial est un paragraphe vide cliquable
+- Dans le `useEffect` d'initialisation (ligne 124-129), si `doc.content?.html` est vide/absent, injecter `<p><br></p>` pour que le curseur se place correctement au premier clic.
 
 ---
 
-### Fichiers modifiés
-
-| Fichier | Modification |
-|---|---|
-| `src/components/emargement/QRAttendanceManager.tsx` | Bouton "Marquer formateur absent", condition `canSendToAdmin` assouplie |
-| `src/components/administration/EnhancedAttendanceSheetModal.tsx` | Toggle présence/absence du formateur avant validation |
+### Résultat attendu
+- Le texte saisi sera visible immédiatement dans la zone blanche de la page
+- Le clic n'importe où sur la page positionnera le curseur correctement
+- Le comportement multi-pages reste identique (marges hautes/basses simulées par les overlays)
 
