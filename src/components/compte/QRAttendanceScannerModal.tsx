@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, QrCode, Check, AlertCircle, Camera, User, Calendar, Clock, Hash, ScanLine } from 'lucide-react';
+import { Loader2, QrCode, Check, AlertCircle, Camera, User, Calendar, Clock, Hash, ScanLine, PenTool } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import QrScanner from 'qr-scanner';
+import SignaturePad from '@/components/ui/signature-pad';
 
 interface QRAttendanceScannerModalProps {
   isOpen: boolean;
@@ -23,7 +24,7 @@ interface SessionInfo {
   room: string;
 }
 
-type ScanStep = 'scanning' | 'validating' | 'confirmed' | 'error';
+type ScanStep = 'scanning' | 'validating' | 'confirmed' | 'signing' | 'error';
 
 const QRAttendanceScannerModal: React.FC<QRAttendanceScannerModalProps> = ({
   isOpen,
@@ -70,6 +71,8 @@ const QRAttendanceScannerModal: React.FC<QRAttendanceScannerModalProps> = ({
           
         if (signatureData?.signature_data) {
           setUserSignature(signatureData.signature_data);
+        } else {
+          setUserSignature(null);
         }
       } catch (error) {
         console.error('Error loading user data:', error);
@@ -183,7 +186,7 @@ const QRAttendanceScannerModal: React.FC<QRAttendanceScannerModalProps> = ({
 
       const result = { sheet_id: sheetByQr.id, formation_id: sheetByQr.formation_id };
 
-      // Get full session details using a simpler query that works with RLS
+      // Get full session details
       const { data: sheetData, error: sheetError } = await supabase
         .from('attendance_sheets')
         .select(`
@@ -200,7 +203,6 @@ const QRAttendanceScannerModal: React.FC<QRAttendanceScannerModalProps> = ({
         .maybeSingle();
 
       if (sheetError || !sheetData) {
-        console.error('Sheet fetch error:', sheetError);
         throw new Error('Session non trouvée ou accès refusé');
       }
 
@@ -270,12 +272,17 @@ const QRAttendanceScannerModal: React.FC<QRAttendanceScannerModalProps> = ({
     }
   }, [userId, isProcessing]);
 
-  const handleValidatePresence = async () => {
+  // When user clicks "Pointer ma présence", go to signature step
+  const handleProceedToSignature = () => {
+    setStep('signing');
+  };
+
+  // Handle signature from signature pad
+  const handleSignatureSave = async (signatureData: string) => {
     if (!sessionInfo || !userId) return;
     setIsProcessing(true);
 
     try {
-      // Create attendance signature with user's stored signature
       const { error: signatureError } = await supabase
         .from('attendance_signatures')
         .insert({
@@ -283,15 +290,13 @@ const QRAttendanceScannerModal: React.FC<QRAttendanceScannerModalProps> = ({
           user_id: userId,
           user_type: 'student',
           present: true,
-          signature_data: userSignature,
+          signature_data: signatureData,
           signed_at: new Date().toISOString()
         });
 
       if (signatureError) throw signatureError;
 
-      // Log action is optional - the function may not exist
       console.log('Présence validée pour:', sessionInfo.sheetId);
-
       toast.success('Présence validée avec succès !');
       onClose();
     } catch (error: any) {
@@ -299,6 +304,10 @@ const QRAttendanceScannerModal: React.FC<QRAttendanceScannerModalProps> = ({
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleCancelSignature = () => {
+    setStep('confirmed');
   };
 
   const handleRetry = () => {
@@ -377,17 +386,6 @@ const QRAttendanceScannerModal: React.FC<QRAttendanceScannerModalProps> = ({
               <p className="text-center text-sm text-muted-foreground">
                 Pointez la caméra vers le QR code affiché par votre formateur
               </p>
-
-              {!userSignature && (
-                <Card className="border-amber-200 bg-amber-50">
-                  <CardContent className="p-3 flex items-start gap-2">
-                    <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-amber-800">
-                      <strong>Signature manquante :</strong> Enregistrez votre signature dans votre profil pour un émargement automatique complet.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
             </div>
           )}
 
@@ -402,7 +400,7 @@ const QRAttendanceScannerModal: React.FC<QRAttendanceScannerModalProps> = ({
             </div>
           )}
 
-          {/* Confirmed Step */}
+          {/* Confirmed Step - Show session info, then proceed to signature */}
           {step === 'confirmed' && sessionInfo && (
             <div className="space-y-5">
               <div className="text-center">
@@ -410,7 +408,7 @@ const QRAttendanceScannerModal: React.FC<QRAttendanceScannerModalProps> = ({
                   <Check className="h-8 w-8 text-emerald-600" />
                 </div>
                 <h3 className="font-semibold text-lg">Session identifiée !</h3>
-                <p className="text-sm text-muted-foreground">Vérifiez les informations et validez</p>
+                <p className="text-sm text-muted-foreground">Vérifiez les informations puis signez</p>
               </div>
 
               <Card>
@@ -457,35 +455,44 @@ const QRAttendanceScannerModal: React.FC<QRAttendanceScannerModalProps> = ({
                 </CardContent>
               </Card>
 
-              {/* Signature preview */}
-              {userSignature && (
-                <div className="p-3 border rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-2">Votre signature :</p>
-                  <img 
-                    src={userSignature} 
-                    alt="Signature" 
-                    className="max-h-16 mx-auto object-contain"
-                  />
-                </div>
-              )}
-
               <Button 
-                onClick={handleValidatePresence} 
-                disabled={isProcessing}
+                onClick={handleProceedToSignature} 
                 className="w-full h-12 text-base font-medium"
               >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    Validation...
-                  </>
-                ) : (
-                  <>
-                    <Check className="h-5 w-5 mr-2" />
-                    Valider ma présence
-                  </>
-                )}
+                <PenTool className="h-5 w-5 mr-2" />
+                Signer ma présence
               </Button>
+            </div>
+          )}
+
+          {/* Signing Step - Always show signature pad */}
+          {step === 'signing' && sessionInfo && (
+            <div className="space-y-4">
+              <div className="text-center">
+                <h3 className="font-semibold text-lg">Signature électronique</h3>
+                <p className="text-sm text-muted-foreground">
+                  {userSignature 
+                    ? 'Votre signature enregistrée est pré-remplie. Vous pouvez la modifier ou valider directement.'
+                    : 'Signez ci-dessous pour confirmer votre présence'}
+                </p>
+              </div>
+
+              <div className="flex justify-center">
+                <SignaturePad
+                  width={400}
+                  height={200}
+                  onSave={handleSignatureSave}
+                  onCancel={handleCancelSignature}
+                  initialSignature={userSignature || undefined}
+                />
+              </div>
+
+              {isProcessing && (
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Enregistrement en cours...
+                </div>
+              )}
             </div>
           )}
 

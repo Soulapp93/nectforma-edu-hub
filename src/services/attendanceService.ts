@@ -722,7 +722,7 @@ export const attendanceService = {
     attendanceSheetId: string,
     studentId: string,
     newPresent: boolean
-  ): Promise<any> {
+  ): Promise<{ data: any; hasSavedSignature: boolean }> {
     try {
       // Vérifier si une signature existe déjà
       const { data: existingSig, error: existingError } = await supabase
@@ -743,6 +743,7 @@ export const attendanceService = {
           .maybeSingle();
 
         const signatureData = userSig?.signature_data || null;
+        const hasSavedSignature = !!signatureData;
 
         if (existingSig) {
           // Mettre à jour la signature existante
@@ -760,7 +761,7 @@ export const attendanceService = {
             .single();
 
           if (error) throw error;
-          return data;
+          return { data, hasSavedSignature };
         } else {
           // Créer une nouvelle signature
           const { data, error } = await supabase
@@ -777,7 +778,7 @@ export const attendanceService = {
             .single();
 
           if (error) throw error;
-          return data;
+          return { data, hasSavedSignature };
         }
       } else {
         // Présent → Absent
@@ -794,7 +795,7 @@ export const attendanceService = {
             .single();
 
           if (error) throw error;
-          return data;
+          return { data, hasSavedSignature: false };
         } else {
           // Créer une entrée absent
           const { data, error } = await supabase
@@ -810,7 +811,7 @@ export const attendanceService = {
             .single();
 
           if (error) throw error;
-          return data;
+          return { data, hasSavedSignature: false };
         }
       }
     } catch (error) {
