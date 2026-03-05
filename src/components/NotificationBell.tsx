@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Bell, 
   CheckCheck, 
@@ -38,7 +38,24 @@ const NotificationBell = () => {
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+  const [pendingNotification, setPendingNotification] = useState<Notification | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  useEffect(() => {
+    // Open dialog only after dropdown is fully closed (prevents focus-lock race conditions)
+    if (!isOpen && pendingNotification) {
+      setSelectedNotification(pendingNotification);
+      setIsDialogOpen(true);
+      setPendingNotification(null);
+    }
+  }, [isOpen, pendingNotification]);
+
+  useEffect(() => {
+    // Safety net: ensure pointer events are restored if a focus/overlay race occurred
+    if (!isOpen && !isDialogOpen) {
+      document.body.style.pointerEvents = '';
+    }
+  }, [isOpen, isDialogOpen]);
 
   // Show only latest 10 notifications in the dropdown
   const recentNotifications = notifications.slice(0, 10);
@@ -47,12 +64,8 @@ const NotificationBell = () => {
     if (!notification.is_read) {
       markAsRead(notification.id);
     }
-    setSelectedNotification(notification);
-    // Close dropdown first to avoid focus conflict, then open dialog
+    setPendingNotification(notification);
     setIsOpen(false);
-    setTimeout(() => {
-      setIsDialogOpen(true);
-    }, 150);
   };
 
   const handleNavigateToAction = (notification: Notification) => {
@@ -141,7 +154,14 @@ const NotificationBell = () => {
           </Button>
         </DropdownMenuTrigger>
         
-        <DropdownMenuContent align="end" className="w-96 p-0 shadow-xl border-primary/20 bg-card rounded-xl overflow-hidden">
+        <DropdownMenuContent
+          align="end"
+          className="w-96 p-0 shadow-xl border-primary/20 bg-card rounded-xl overflow-hidden"
+          onCloseAutoFocus={(event) => {
+            // Prevent focus bounce that can lock interactions in some browsers
+            event.preventDefault();
+          }}
+        >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-primary/10 to-primary/5 border-b border-primary/20">
             <div className="flex items-center gap-3">
@@ -268,7 +288,15 @@ const NotificationBell = () => {
       </DropdownMenu>
 
       {/* Notification Detail Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) {
+            setSelectedNotification(null);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <div className="flex items-center gap-3">
