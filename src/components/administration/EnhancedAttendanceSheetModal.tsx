@@ -274,8 +274,22 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
     try {
       setTogglingStudentId(studentId);
       const newPresent = !currentlyPresent;
-      await attendanceService.toggleStudentPresence(attendanceSheet.id, studentId, newPresent);
-      toast.success(newPresent ? 'Étudiant marqué présent' : 'Étudiant marqué absent');
+      const result = await attendanceService.toggleStudentPresence(attendanceSheet.id, studentId, newPresent);
+      
+      if (newPresent && !result.hasSavedSignature) {
+        // L'étudiant n'a pas de signature enregistrée — envoyer un lien de signature
+        toast.success('Étudiant marqué présent. Un lien de signature lui est envoyé...');
+        try {
+          await attendanceService.sendSignatureLink(attendanceSheet.id, [studentId]);
+          toast.success('Lien de signature envoyé à l\'étudiant');
+        } catch (linkError) {
+          console.error('Error sending signature link:', linkError);
+          toast.warning('Étudiant marqué présent mais le lien de signature n\'a pas pu être envoyé');
+        }
+      } else {
+        toast.success(newPresent ? 'Étudiant marqué présent' : 'Étudiant marqué absent');
+      }
+      
       await loadAttendanceData();
       onUpdate();
     } catch (error) {

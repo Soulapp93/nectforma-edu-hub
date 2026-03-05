@@ -26,6 +26,7 @@ interface StudentInfo {
   last_name: string;
   email: string;
   hasSignature: boolean;
+  savedSignature: string | null;
 }
 
 const StudentAttendancePortal: React.FC<StudentAttendancePortalProps> = ({
@@ -81,10 +82,22 @@ const StudentAttendancePortal: React.FC<StudentAttendancePortalProps> = ({
           .select('id, first_name, last_name, email, role')
           .in('id', userIds);
 
+        // Récupérer les signatures sauvegardées des étudiants
+        const { data: savedSigs } = await supabase
+          .from('user_signatures')
+          .select('user_id, signature_data')
+          .in('user_id', userIds);
+
+        const savedSigsMap = new Map(savedSigs?.map(s => [s.user_id, s.signature_data]) || []);
+
         if (usersData) {
           enrolledStudents = usersData
             .filter((user: any) => user.role === 'Étudiant')
-            .map((user: any) => ({ student_id: user.id, users: user }));
+            .map((user: any) => ({ 
+              student_id: user.id, 
+              users: user,
+              savedSignature: savedSigsMap.get(user.id) || null
+            }));
         }
       }
 
@@ -107,7 +120,8 @@ const StudentAttendancePortal: React.FC<StudentAttendancePortalProps> = ({
         first_name: enrollment.users?.first_name || '',
         last_name: enrollment.users?.last_name || '',
         email: enrollment.users?.email || '',
-        hasSignature: signedUserIds.has(enrollment.users?.id || enrollment.student_id)
+        hasSignature: signedUserIds.has(enrollment.users?.id || enrollment.student_id),
+        savedSignature: enrollment.savedSignature || null
       }));
 
       setStudents(studentsWithSignature);
@@ -413,6 +427,7 @@ const StudentAttendancePortal: React.FC<StudentAttendancePortalProps> = ({
                     height={200}
                     onSave={handleSignature}
                     onCancel={handleCancelSignature}
+                    initialSignature={selectedStudent?.savedSignature || undefined}
                   />
                   
                   {signing && (
