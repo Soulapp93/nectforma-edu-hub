@@ -40,7 +40,7 @@ interface Student {
   };
 }
 
-const MIN_REFRESH_MS = 120_000; // 2 minutes
+const MIN_REFRESH_MS = 5_000; // 5 secondes pour un vrai temps réel
 
 const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
   attendanceSheetId,
@@ -86,7 +86,9 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
 
       if (signaturesError) throw signaturesError;
 
-      setAttendanceSheet({ ...sheetData, signatures } as any);
+      // Map the 'users' alias from query to 'instructor' expected by the component
+      const instructorData = (sheetData as any).users;
+      setAttendanceSheet({ ...sheetData, instructor: instructorData, signatures } as any);
 
       // Charger la signature administrative depuis user_signatures
       let adminSig: string | null = null;
@@ -321,12 +323,13 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
   };
 
   const getStatusInfo = (student: Student) => {
+    // Si l'étudiant n'a pas encore signé → En attente (rien à afficher)
     if (!student.signature) {
       return {
-        status: 'Absent',
-        icon: <XCircle className="w-4 h-4 text-red-500" />,
-        bgColor: 'bg-red-50',
-        textColor: 'text-red-700'
+        status: 'En attente',
+        icon: <Clock className="w-4 h-4 text-gray-400" />,
+        bgColor: 'bg-gray-50',
+        textColor: 'text-gray-500'
       };
     }
     
@@ -437,7 +440,11 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
             </div>
             <div className="flex items-center gap-2">
               <XCircle className="w-4 h-4 text-red-500" />
-              <span className="text-red-700">Absents: {students.filter(s => !s.signature || !s.signature.present).length}</span>
+              <span className="text-red-700">Absents: {students.filter(s => s.signature && !s.signature.present).length}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-gray-400" />
+              <span className="text-gray-500">En attente: {students.filter(s => !s.signature).length}</span>
             </div>
           </div>
           
@@ -501,8 +508,8 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
                         </div>
                       </div>
                     ) : (
-                      <div className="w-24 h-12 border-2 border-dashed border-gray-300 rounded bg-gray-50 flex items-center justify-center">
-                        <span className="text-xs text-gray-400">Non signé</span>
+                      <div className="w-24 h-12 flex items-center justify-center">
+                        <span className="text-xs text-gray-400">—</span>
                       </div>
                     )}
                   </div>
