@@ -122,8 +122,12 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
   const rulerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (editorRef.current && doc.content?.html) {
-      editorRef.current.innerHTML = doc.content.html;
+    if (editorRef.current) {
+      if (doc.content?.html) {
+        editorRef.current.innerHTML = doc.content.html;
+      } else {
+        editorRef.current.innerHTML = '<p><br></p>';
+      }
       updateWordCount();
     }
   }, []);
@@ -1093,7 +1097,7 @@ const WorkspaceTextEditor: React.FC<Props> = ({ document: doc, onSave, onClose }
           }
 
           .word-editable-area {
-            padding: 0 var(--page-padding-x);
+            padding: var(--page-padding-y) var(--page-padding-x);
             min-height: var(--page-height);
             position: relative;
             background-color: #f0f0f0;
