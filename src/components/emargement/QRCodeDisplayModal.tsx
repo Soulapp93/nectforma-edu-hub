@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { QrCode, Hash, Users, Clock, RefreshCw, Eye, EyeOff } from 'lucide-react';
+import { QrCode, Hash, Users, Clock, RefreshCw, Eye, EyeOff, Wifi, Calendar, MapPin, Timer } from 'lucide-react';
 import QRCode from 'qrcode';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { AttendanceSheet } from '@/services/attendanceService';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -25,127 +25,92 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
 }) => {
   const [currentCode, setCurrentCode] = useState('');
   const [qrCodeImage, setQRCodeImage] = useState('');
-  const [timeRemaining, setTimeRemaining] = useState(30 * 60); // 30 minutes
+  const [timeRemaining, setTimeRemaining] = useState(30 * 60);
   const [signedCount, setSignedCount] = useState(0);
   const [totalStudents, setTotalStudents] = useState(0);
   const [showCode, setShowCode] = useState(true);
   const [isRegenerating, setIsRegenerating] = useState(false);
 
-  // Charger les statistiques réelles d'émargement
   const loadRealStats = async () => {
     try {
-      // Récupérer le nombre total d'étudiants (role = 'Étudiant' uniquement)
       let total = 0;
-      
       const { data: ufaData } = await supabase
         .from('user_formation_assignments')
         .select('user_id')
         .eq('formation_id', attendanceSheet.formation_id);
 
       if (ufaData && ufaData.length > 0) {
-        // Récupérer les détails des utilisateurs
         const userIds = ufaData.map((e: any) => e.user_id);
         const { data: usersData } = await supabase
           .from('users')
           .select('id, role')
           .in('id', userIds);
-
         if (usersData) {
           total = usersData.filter((user: any) => user.role === 'Étudiant').length;
         }
       }
-
       setTotalStudents(total);
 
-      // Récupérer le nombre de signatures étudiants
       const { data: signatures } = await supabase
         .from('attendance_signatures')
         .select('user_id')
         .eq('attendance_sheet_id', attendanceSheet.id)
         .eq('user_type', 'student');
-
       setSignedCount(signatures?.length || 0);
     } catch (error) {
       console.error('Error loading real stats:', error);
     }
   };
 
-  // Écouter les mises à jour en temps réel des signatures
   useEffect(() => {
     if (!isOpen) return;
-
     loadRealStats();
 
-    // S'abonner aux nouvelles signatures en temps réel
     const channel = supabase
       .channel(`qr_display_${attendanceSheet.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'attendance_signatures',
-          filter: `attendance_sheet_id=eq.${attendanceSheet.id}`
-        },
-        (payload) => {
-          if (payload.new.user_type === 'student') {
-            setSignedCount(prev => prev + 1);
-          }
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'attendance_signatures',
+        filter: `attendance_sheet_id=eq.${attendanceSheet.id}`
+      }, (payload) => {
+        if (payload.new.user_type === 'student') {
+          setSignedCount(prev => prev + 1);
         }
-      )
+      })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [isOpen, attendanceSheet.id]);
 
-  // Countdown timer
   useEffect(() => {
     if (!isOpen || timeRemaining <= 0) return;
-
     const timer = setInterval(() => {
       setTimeRemaining(prev => Math.max(0, prev - 1));
     }, 1000);
-
     return () => clearInterval(timer);
   }, [isOpen, timeRemaining]);
 
-  // Générer un nouveau QR code avec validation sécurisée
   const generateNewCode = async () => {
     setIsRegenerating(true);
-    
     try {
-      // Générer un nouveau code unique (6 chiffres)
       const newCode = Math.floor(100000 + Math.random() * 900000).toString();
-      
-      // URL que le QR code encode
       const qrData = `${window.location.origin}/emargement-qr?code=${newCode}`;
-      
-      // Générer l'image QR code
       const qrImageUrl = await QRCode.toDataURL(qrData, {
         width: 300,
         margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        }
+        color: { dark: '#000000', light: '#FFFFFF' }
       });
       
-      // Sauvegarder le code dans la base de données
       const { error } = await supabase
         .from('attendance_sheets')
-        .update({ 
-          qr_code: newCode
-        })
+        .update({ qr_code: newCode })
         .eq('id', attendanceSheet.id);
-
       if (error) throw error;
 
       setCurrentCode(newCode);
       setQRCodeImage(qrImageUrl);
-      setTimeRemaining(30 * 60); // Reset timer
-      
+      setTimeRemaining(30 * 60);
       toast.success('Nouveau code QR généré !');
     } catch (error: any) {
       console.error('Error generating QR code:', error);
@@ -155,11 +120,8 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
     }
   };
 
-  // Initialiser le QR code à l'ouverture
   useEffect(() => {
-    if (isOpen) {
-      generateNewCode();
-    }
+    if (isOpen) generateNewCode();
   }, [isOpen, attendanceSheet.id]);
 
   const formatTime = (seconds: number) => {
@@ -173,156 +135,154 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <QrCode className="w-5 h-5" />
-            Émargement QR Code - {attendanceSheet.formations?.title}
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+        {/* Header fixe avec gradient */}
+        <div className="shrink-0 bg-gradient-to-r from-primary via-primary/90 to-accent p-4 sm:p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <QrCode className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-white font-semibold text-base sm:text-lg leading-tight">Session en cours</h2>
+                <p className="text-white/70 text-xs sm:text-sm truncate max-w-[200px] sm:max-w-[280px]">
+                  {attendanceSheet.formations?.title}
+                </p>
+              </div>
+            </div>
+            <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm">
+              <span className="w-2 h-2 bg-green-400 rounded-full mr-1.5 animate-pulse" />
+              En direct
+            </Badge>
+          </div>
+          
+          {/* Info session compacte */}
+          <div className="flex flex-wrap gap-3 mt-3 text-white/80 text-xs">
+            <span className="flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5" />
+              {format(new Date(attendanceSheet.date), 'd MMM yyyy', { locale: fr })}
+            </span>
+            <span className="flex items-center gap-1">
+              <Timer className="w-3.5 h-3.5" />
+              {attendanceSheet.start_time.substring(0, 5)} - {attendanceSheet.end_time.substring(0, 5)}
+            </span>
+            {attendanceSheet.room && (
+              <span className="flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5" />
+                {attendanceSheet.room}
+              </span>
+            )}
+          </div>
+        </div>
 
-        <div className="space-y-6">
-          {/* Informations de la session */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Session en cours</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Date:</span>
-                <span>{format(new Date(attendanceSheet.date), 'PPP', { locale: fr })}</span>
+        {/* Contenu scrollable */}
+        <ScrollArea className="flex-1 min-h-0">
+          <div className="p-4 sm:p-5 space-y-4">
+            
+            {/* QR Code */}
+            <div className="bg-card rounded-2xl border border-border/50 p-4 sm:p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <QrCode className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold text-foreground">QR Code d'émargement</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Horaire:</span>
-                <span>{attendanceSheet.start_time.substring(0, 5)} - {attendanceSheet.end_time.substring(0, 5)}</span>
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-40 h-40 sm:w-48 sm:h-48 bg-white border-2 border-border/30 rounded-2xl flex items-center justify-center shadow-sm">
+                  {qrCodeImage ? (
+                    <img src={qrCodeImage} alt="QR Code" className="w-36 h-36 sm:w-44 sm:h-44 object-contain" />
+                  ) : (
+                    <div className="w-36 h-36 bg-muted rounded-xl flex items-center justify-center">
+                      <span className="text-muted-foreground text-sm">Génération...</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span className="text-xs font-medium">Expire dans {formatTime(timeRemaining)}</span>
+                </div>
+                <Progress value={progressPercentage} className="h-1.5 w-full" />
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Salle:</span>
-                <span>{attendanceSheet.room || 'Non spécifiée'}</span>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* QR Code */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <QrCode className="w-4 h-4" />
-                QR Code d'émargement
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-center space-y-4">
-              {/* QR Code réel */}
-              <div className="mx-auto w-48 h-48 bg-white border-4 border-gray-200 rounded-lg flex items-center justify-center">
-                {qrCodeImage ? (
-                  <img 
-                    src={qrCodeImage} 
-                    alt="QR Code d'émargement" 
-                    className="w-44 h-44 object-contain"
-                  />
+            {/* Code numérique */}
+            <div className="bg-card rounded-2xl border border-border/50 p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Hash className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-semibold text-foreground">Code numérique</span>
+                </div>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setShowCode(!showCode)}>
+                  {showCode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </Button>
+              </div>
+              <div className="text-center">
+                {showCode ? (
+                  <div className="text-3xl sm:text-4xl font-mono font-bold tracking-[0.3em] text-primary">
+                    {currentCode || '------'}
+                  </div>
                 ) : (
-                  <div className="w-40 h-40 bg-gray-100 rounded flex items-center justify-center">
-                    <span className="text-gray-500">Génération...</span>
+                  <div className="text-3xl sm:text-4xl font-mono font-bold tracking-[0.3em] text-muted-foreground">
+                    ••••••
                   </div>
                 )}
+                <p className="text-xs text-muted-foreground mt-2">
+                  Les étudiants peuvent saisir ce code pour s'émarger
+                </p>
+              </div>
+            </div>
+
+            {/* Stats temps réel */}
+            <div className="bg-card rounded-2xl border border-border/50 p-4 sm:p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-semibold text-foreground">Émargement en temps réel</span>
+                </div>
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-[10px] px-2 py-0.5">
+                  <Wifi className="w-3 h-3 mr-1" />
+                  Direct
+                </Badge>
               </div>
 
-              <div className="flex items-center justify-center gap-2">
-                <Clock className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">
-                  Expire dans {formatTime(timeRemaining)}
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs text-muted-foreground">Étudiants émargés</span>
+                <span className="text-xs font-semibold text-foreground">
+                  {signedCount}/{totalStudents} ({attendanceRate}%)
                 </span>
               </div>
+              <Progress value={attendanceRate} className="h-2 mb-4" />
 
-              <Progress value={progressPercentage} className="h-2" />
-            </CardContent>
-          </Card>
-
-          {/* Code numérique */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Hash className="w-4 h-4" />
-                Code numérique
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowCode(!showCode)}
-                >
-                  {showCode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-center space-y-4">
-              {showCode ? (
-                <div className="text-4xl font-mono font-bold tracking-widest text-primary">
-                  {currentCode || '------'}
-                </div>
-              ) : (
-                <div className="text-4xl font-mono font-bold tracking-widest text-muted-foreground">
-                  ••••••
-                </div>
-              )}
-              <p className="text-sm text-muted-foreground">
-                Les étudiants peuvent saisir ce code pour s'émarger
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Statistiques temps réel */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                Émargement en temps réel
-                <Badge variant="outline" className="ml-auto bg-green-50 text-green-700 border-green-200">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span>
-                  En direct
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Étudiants émargés:</span>
-                <Badge variant="secondary">
-                  {signedCount}/{totalStudents} ({attendanceRate}%)
-                </Badge>
-              </div>
-              
-              <Progress value={attendanceRate} className="h-3" />
-              
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-green-50/80 rounded-xl p-3 text-center">
                   <div className="text-2xl font-bold text-green-600">{signedCount}</div>
-                  <div className="text-xs text-muted-foreground">Présents</div>
+                  <div className="text-[11px] text-green-700 font-medium">Présents</div>
                 </div>
-                <div>
+                <div className="bg-orange-50/80 rounded-xl p-3 text-center">
                   <div className="text-2xl font-bold text-orange-600">{totalStudents - signedCount}</div>
-                  <div className="text-xs text-muted-foreground">En attente</div>
+                  <div className="text-[11px] text-orange-700 font-medium">En attente</div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Actions */}
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={generateNewCode}
-              disabled={isRegenerating}
-              className="flex-1"
-            >
-              {isRegenerating ? (
-                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <RefreshCw className="w-4 h-4 mr-2" />
-              )}
-              Nouveau code
-            </Button>
-            <Button onClick={onClose} className="flex-1">
-              Fermer
-            </Button>
+            </div>
           </div>
+        </ScrollArea>
+
+        {/* Footer fixe */}
+        <div className="shrink-0 border-t border-border/50 p-3 sm:p-4 flex gap-2 bg-card">
+          <Button
+            variant="outline"
+            onClick={generateNewCode}
+            disabled={isRegenerating}
+            className="flex-1 rounded-xl"
+          >
+            {isRegenerating ? (
+              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4 mr-2" />
+            )}
+            Nouveau code
+          </Button>
+          <Button onClick={onClose} className="flex-1 rounded-xl bg-primary hover:bg-primary/90">
+            Fermer
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

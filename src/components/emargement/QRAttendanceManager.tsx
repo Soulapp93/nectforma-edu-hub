@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { QrCode, Users, Send, CheckCircle, ArrowRight, PenTool } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { QrCode, Users, Send, CheckCircle, ArrowRight, PenTool, Calendar, Clock, MapPin, BookOpen, Wifi, Shield, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -27,7 +26,7 @@ interface AttendanceStats {
   canSendToAdmin: boolean;
 }
 
-const MIN_REFRESH_MS = 120_000; // 2 minutes
+const MIN_REFRESH_MS = 120_000;
 
 const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
   attendanceSheet,
@@ -35,10 +34,7 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
   onUpdate
 }) => {
   const [stats, setStats] = useState<AttendanceStats>({
-    totalStudents: 0,
-    signedStudents: 0,
-    instructorSigned: false,
-    canSendToAdmin: false
+    totalStudents: 0, signedStudents: 0, instructorSigned: false, canSendToAdmin: false
   });
   const [showQRModal, setShowQRModal] = useState(false);
   const [showInstructorSignModal, setShowInstructorSignModal] = useState(false);
@@ -48,98 +44,62 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [moduleInfo, setModuleInfo] = useState<{ title: string } | null>(null);
 
-  // Throttle helpers
   const isInteractionLocked = showInstructorSignModal;
   const lastLoadAtRef = useRef<number>(0);
   const refreshTimerRef = useRef<number | null>(null);
   const queuedRefreshRef = useRef<boolean>(false);
 
-  // Charger les statistiques d'émargement
   const loadStats = async () => {
     try {
-      // Récupérer UNIQUEMENT les étudiants inscrits (exclure formateur et admins)
       let totalStudents = 0;
-
-      // Utiliser user_formation_assignments
       const { data: ufaEnrollments } = await supabase
         .from('user_formation_assignments')
         .select('user_id')
         .eq('formation_id', attendanceSheet.formation_id);
       
       if (ufaEnrollments && ufaEnrollments.length > 0) {
-        // Récupérer les détails des utilisateurs
         const userIds = ufaEnrollments.map((e: any) => e.user_id);
         const { data: usersData } = await supabase
           .from('users')
           .select('id, role')
           .in('id', userIds);
-
         if (usersData) {
-          // STRICTEMENT étudiants uniquement ET exclure formateur
           totalStudents = usersData.filter(
             (user: any) => user.role === 'Étudiant' && user.id !== attendanceSheet.instructor_id
           ).length;
         }
       }
 
-      // Récupérer les signatures
       const { data: signatures, error: signaturesError } = await supabase
         .from('attendance_signatures')
         .select('user_id, user_type, present')
         .eq('attendance_sheet_id', attendanceSheet.id);
-
       if (signaturesError) throw signaturesError;
 
-      // Compter UNIQUEMENT les signatures d'étudiants (user_type = 'student')
       const studentSignatures = signatures?.filter(s => s.user_type === 'student') || [];
       const instructorSignature = signatures?.find(s => s.user_type === 'instructor' && s.user_id === instructorId);
-      
       const signedStudents = studentSignatures.length;
       const instructorSigned = !!instructorSignature;
-      
-      // Le formateur peut envoyer à l'admin si tous les étudiants ont signé et que lui-même a signé
       const canSendToAdmin = signedStudents === totalStudents && instructorSigned && totalStudents > 0;
 
-      console.log('Stats émargement (étudiants uniquement):', { totalStudents, signedStudents, instructorSigned, instructorExcluded: attendanceSheet.instructor_id });
-
-      setStats({
-        totalStudents,
-        signedStudents,
-        instructorSigned,
-        canSendToAdmin
-      });
+      setStats({ totalStudents, signedStudents, instructorSigned, canSendToAdmin });
     } catch (error) {
       console.error('Error loading attendance stats:', error);
     }
   };
 
-  // Fonction de throttle pour éviter les rafraîchissements trop fréquents
   const scheduleRefresh = () => {
-    // Ne pas rafraîchir si une interaction (signature) est en cours
-    if (isInteractionLocked) {
-      queuedRefreshRef.current = true;
-      return;
-    }
-
+    if (isInteractionLocked) { queuedRefreshRef.current = true; return; }
     const now = Date.now();
     const elapsed = now - lastLoadAtRef.current;
-
     const doRefresh = () => {
       lastLoadAtRef.current = Date.now();
       setLastUpdate(new Date());
       loadStats();
       onUpdate();
     };
-
-    // Si assez de temps s'est écoulé, rafraîchir immédiatement
-    if (elapsed >= MIN_REFRESH_MS || lastLoadAtRef.current === 0) {
-      doRefresh();
-      return;
-    }
-
-    // Sinon, planifier un refresh différé (si pas déjà planifié)
+    if (elapsed >= MIN_REFRESH_MS || lastLoadAtRef.current === 0) { doRefresh(); return; }
     if (refreshTimerRef.current) return;
-
     const waitMs = Math.max(0, MIN_REFRESH_MS - elapsed);
     refreshTimerRef.current = window.setTimeout(() => {
       refreshTimerRef.current = null;
@@ -147,25 +107,18 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
     }, waitMs);
   };
 
-  // Écouter les mises à jour temps réel
   useEffect(() => {
-    // Premier chargement immédiat
     lastLoadAtRef.current = Date.now();
     loadStats();
 
-    // Charger les informations du module
     const loadModuleInfo = async () => {
       try {
         if (attendanceSheet.schedule_slot_id) {
           const { data: slotData } = await supabase
             .from('schedule_slots')
-            .select(`
-              module_id,
-              formation_modules!module_id(title)
-            `)
+            .select(`module_id, formation_modules!module_id(title)`)
             .eq('id', attendanceSheet.schedule_slot_id)
             .single();
-
           if (slotData?.formation_modules) {
             setModuleInfo(slotData.formation_modules as { title: string });
           } else {
@@ -175,67 +128,31 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
           setModuleInfo({ title: attendanceSheet.title || 'Module non spécifié' });
         }
       } catch (error) {
-        console.error('Error loading module info:', error);
         setModuleInfo({ title: attendanceSheet.title || 'Module non spécifié' });
       }
     };
-
     loadModuleInfo();
 
     const channelName = `qr_manager_${attendanceSheet.id}_${Date.now()}`;
-    console.log('📡 QRManager: Setting up realtime channel:', channelName);
-    
     const channel = supabase
       .channel(channelName)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'attendance_signatures'
-        },
-        (payload) => {
-          console.log('🔄 QRManager: Signature INSERT:', payload);
-          if (payload.new && (payload.new as any).attendance_sheet_id === attendanceSheet.id) {
-            scheduleRefresh();
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'attendance_signatures'
-        },
-        (payload) => {
-          if (payload.new && (payload.new as any).attendance_sheet_id === attendanceSheet.id) {
-            scheduleRefresh();
-          }
-        }
-      )
-      .subscribe((status, err) => {
-        console.log('📡 QRManager realtime status:', status, err);
-        setIsRealtimeConnected(status === 'SUBSCRIBED');
-      });
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'attendance_signatures' }, (payload) => {
+        if (payload.new && (payload.new as any).attendance_sheet_id === attendanceSheet.id) scheduleRefresh();
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'attendance_signatures' }, (payload) => {
+        if (payload.new && (payload.new as any).attendance_sheet_id === attendanceSheet.id) scheduleRefresh();
+      })
+      .subscribe((status) => { setIsRealtimeConnected(status === 'SUBSCRIBED'); });
 
-    // Polling de secours toutes les 2 minutes
-    const pollingInterval = window.setInterval(() => {
-      console.log('🔄 QRManager: Polling refresh (2min)...');
-      scheduleRefresh();
-    }, MIN_REFRESH_MS);
+    const pollingInterval = window.setInterval(() => scheduleRefresh(), MIN_REFRESH_MS);
 
     return () => {
       supabase.removeChannel(channel);
       window.clearInterval(pollingInterval);
-      if (refreshTimerRef.current) {
-        window.clearTimeout(refreshTimerRef.current);
-        refreshTimerRef.current = null;
-      }
+      if (refreshTimerRef.current) { window.clearTimeout(refreshTimerRef.current); refreshTimerRef.current = null; }
     };
   }, [attendanceSheet.id, instructorId]);
 
-  // Reprise du refresh après interaction (signature formateur)
   useEffect(() => {
     if (!isInteractionLocked && queuedRefreshRef.current) {
       queuedRefreshRef.current = false;
@@ -245,51 +162,31 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
 
   const handleStartQRSession = async () => {
     try {
-      // Ouvrir la session si elle est encore en attente
       if (attendanceSheet.status === 'En attente' || !attendanceSheet.is_open_for_signing) {
         const { error } = await supabase
           .from('attendance_sheets')
-          .update({
-            status: 'En cours',
-            is_open_for_signing: true,
-            opened_at: new Date().toISOString(),
-          })
+          .update({ status: 'En cours', is_open_for_signing: true, opened_at: new Date().toISOString() })
           .eq('id', attendanceSheet.id);
-
         if (error) throw error;
         onUpdate();
       }
-
       setShowQRModal(true);
     } catch (error) {
-      console.error('Error starting QR session:', error);
       toast.error("Impossible d'ouvrir l'émargement pour cette session");
     }
-  };
-
-  const handleInstructorSign = () => {
-    setShowInstructorSignModal(true);
   };
 
   const handleSendToAdmin = async () => {
     try {
       setSendingToAdmin(true);
-      
-      // Mettre à jour le statut de la feuille d'émargement à "En attente de validation"
       const { error } = await supabase
         .from('attendance_sheets')
-        .update({ 
-          status: 'En attente de validation',
-          closed_at: new Date().toISOString()
-        })
+        .update({ status: 'En attente de validation', closed_at: new Date().toISOString() })
         .eq('id', attendanceSheet.id);
-
       if (error) throw error;
-
-      toast.success('Feuille d\'émargement envoyée à l\'administration pour validation !');
+      toast.success('Feuille d\'émargement envoyée à l\'administration !');
       onUpdate();
     } catch (error) {
-      console.error('Error sending to admin:', error);
       toast.error('Erreur lors de l\'envoi à l\'administration');
     } finally {
       setSendingToAdmin(false);
@@ -298,247 +195,211 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
 
   const attendanceRate = stats.totalStudents > 0 ? (stats.signedStudents / stats.totalStudents) * 100 : 0;
 
+  const statusConfig = {
+    'En cours': { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200', dot: 'bg-green-500' },
+    'En attente de validation': { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200', dot: 'bg-orange-500' },
+    'Validé': { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200', dot: 'bg-blue-500' },
+  };
+  const currentStatus = statusConfig[attendanceSheet.status as keyof typeof statusConfig] || { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border', dot: 'bg-muted-foreground' };
+
   return (
-    <div className="space-y-6">
-      {/* État de la session */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <QrCode className="w-5 h-5" />
-            Session d'émargement - {attendanceSheet.formations?.title}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Informations de la session */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-            <div>
-              <span className="text-gray-500">Formation:</span>
-              <div className="font-medium">{attendanceSheet.formations?.title}</div>
-            </div>
-            <div>
-              <span className="text-gray-500">Module:</span>
-              <div className="font-medium">
-                {moduleInfo?.title || attendanceSheet.title || 'Module non spécifié'}
+    <div className="space-y-4 sm:space-y-6 pb-6">
+      {/* En-tête principal avec gradient */}
+      <div className="bg-gradient-to-r from-primary via-primary/90 to-accent rounded-2xl p-4 sm:p-6 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNhKSIvPjwvc3ZnPg==')] opacity-50" />
+        <div className="relative z-10">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center shrink-0">
+                <QrCode className="w-6 h-6" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl font-bold leading-tight truncate">
+                  Session d'émargement
+                </h1>
+                <p className="text-white/70 text-sm truncate">
+                  {attendanceSheet.formations?.title}
+                </p>
               </div>
             </div>
-            <div>
-              <span className="text-gray-500">Date:</span>
-              <div className="font-medium">
-                {format(new Date(attendanceSheet.date), 'EEEE d MMMM yyyy', { locale: fr })}
-              </div>
-            </div>
-            <div>
-              <span className="text-gray-500">Horaires:</span>
-              <div className="font-medium">
-                {attendanceSheet.start_time.substring(0, 5)} - {attendanceSheet.end_time.substring(0, 5)}
-              </div>
-            </div>
+            <Badge className={`${currentStatus.bg} ${currentStatus.text} ${currentStatus.border} self-start sm:self-auto`}>
+              <span className={`w-2 h-2 ${currentStatus.dot} rounded-full mr-1.5 ${attendanceSheet.status === 'En cours' ? 'animate-pulse' : ''}`} />
+              {attendanceSheet.status}
+            </Badge>
           </div>
 
-          {/* Informations supplémentaires */}
-          {attendanceSheet.room && (
-            <div className="pt-2 border-t">
-              <span className="text-gray-500 text-sm">Salle:</span>
-              <span className="font-medium ml-2">{attendanceSheet.room}</span>
-            </div>
-          )}
-
-          {/* Statut */}
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">Statut:</span>
-              <Badge 
-                className={
-                  attendanceSheet.status === 'En cours'
-                    ? 'bg-green-100 text-green-800 border-green-200'
-                    : attendanceSheet.status === 'En attente de validation'
-                    ? 'bg-orange-100 text-orange-800 border-orange-200'
-                    : attendanceSheet.status === 'Validé'
-                    ? 'bg-blue-100 text-blue-800 border-blue-200'
-                    : 'bg-gray-100 text-gray-800 border-gray-200'
-                }
-              >
-                {attendanceSheet.status}
-              </Badge>
-            </div>
-            {/* Badge type de session */}
-            {attendanceSheet.session_type === 'autonomie' && (
-              <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-                Session en autonomie
-              </Badge>
+          {/* Infos session */}
+          <div className="flex flex-wrap gap-x-4 gap-y-2 mt-4 text-sm text-white/80">
+            <span className="flex items-center gap-1.5">
+              <Calendar className="w-4 h-4 text-white/60" />
+              {format(new Date(attendanceSheet.date), 'EEEE d MMMM yyyy', { locale: fr })}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Clock className="w-4 h-4 text-white/60" />
+              {attendanceSheet.start_time.substring(0, 5)} - {attendanceSheet.end_time.substring(0, 5)}
+            </span>
+            {attendanceSheet.room && (
+              <span className="flex items-center gap-1.5">
+                <MapPin className="w-4 h-4 text-white/60" />
+                {attendanceSheet.room}
+              </span>
             )}
+            <span className="flex items-center gap-1.5">
+              <BookOpen className="w-4 h-4 text-white/60" />
+              {moduleInfo?.title || 'Module non spécifié'}
+            </span>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Statistiques d'émargement */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              Suivi des signatures
+      {/* Statistiques */}
+      <div className="bg-card rounded-2xl border border-border/50 p-4 sm:p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Users className="w-4 h-4 text-primary" />
             </div>
-            <RealtimeAttendanceIndicator 
-              isConnected={isRealtimeConnected} 
-              lastUpdate={lastUpdate}
-            />
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Progress bar */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Étudiants signés</span>
-              <span>{stats.signedStudents}/{stats.totalStudents} ({Math.round(attendanceRate)}%)</span>
-            </div>
-            <Progress value={attendanceRate} className="h-3" />
+            <h2 className="font-semibold text-foreground text-sm sm:text-base">Suivi des signatures</h2>
           </div>
+          <RealtimeAttendanceIndicator isConnected={isRealtimeConnected} lastUpdate={lastUpdate} />
+        </div>
 
-          {/* Statistiques détaillées */}
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div className="bg-blue-50 p-3 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">{stats.totalStudents}</div>
-              <div className="text-sm text-blue-700">Inscrits</div>
-            </div>
-            <div className="bg-green-50 p-3 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">{stats.signedStudents}</div>
-              <div className="text-sm text-green-700">Signés</div>
-            </div>
-            <div className="bg-orange-50 p-3 rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">{stats.totalStudents - stats.signedStudents}</div>
-              <div className="text-sm text-orange-700">En attente</div>
-            </div>
+        {/* Progress */}
+        <div className="space-y-2 mb-4">
+          <div className="flex justify-between text-xs sm:text-sm">
+            <span className="text-muted-foreground">Étudiants signés</span>
+            <span className="font-semibold text-foreground">
+              {stats.signedStudents}/{stats.totalStudents} ({Math.round(attendanceRate)}%)
+            </span>
           </div>
+          <Progress value={attendanceRate} className="h-2.5" />
+        </div>
 
-          {/* Statut formateur */}
-          <div className="flex items-center justify-between pt-4 border-t">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">Signature formateur:</span>
-              {stats.instructorSigned ? (
-                <Badge className="bg-green-100 text-green-800 border-green-200">
-                  <CheckCircle className="w-3 h-3 mr-1" />
-                  Signé
-                </Badge>
-              ) : (
-                <Badge variant="outline">En attente</Badge>
-              )}
-            </div>
+        {/* Compteurs */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-primary/5 rounded-xl p-3 text-center border border-primary/10">
+            <div className="text-xl sm:text-2xl font-bold text-primary">{stats.totalStudents}</div>
+            <div className="text-[11px] sm:text-xs text-primary/70 font-medium mt-0.5">Inscrits</div>
           </div>
-        </CardContent>
-      </Card>
+          <div className="bg-green-50 rounded-xl p-3 text-center border border-green-100">
+            <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.signedStudents}</div>
+            <div className="text-[11px] sm:text-xs text-green-600/70 font-medium mt-0.5">Signés</div>
+          </div>
+          <div className="bg-orange-50 rounded-xl p-3 text-center border border-orange-100">
+            <div className="text-xl sm:text-2xl font-bold text-orange-600">{stats.totalStudents - stats.signedStudents}</div>
+            <div className="text-[11px] sm:text-xs text-orange-600/70 font-medium mt-0.5">En attente</div>
+          </div>
+        </div>
+
+        {/* Signature formateur */}
+        <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/40">
+          <div className="flex items-center gap-2">
+            <PenTool className="w-4 h-4 text-muted-foreground" />
+            <span className="text-xs sm:text-sm text-muted-foreground">Signature formateur</span>
+          </div>
+          {stats.instructorSigned ? (
+            <Badge className="bg-green-100 text-green-800 border-green-200">
+              <CheckCircle className="w-3 h-3 mr-1" />
+              Signé
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="text-xs">En attente</Badge>
+          )}
+        </div>
+      </div>
 
       {/* Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Actions</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {/* Démarrer / Afficher le QR code - uniquement pour les sessions encadrées */}
-          {attendanceSheet.session_type !== 'autonomie' && (attendanceSheet.status === 'En cours' || attendanceSheet.status === 'En attente') && (
-            <Button 
-              onClick={handleStartQRSession}
-              className="w-full bg-purple-600 hover:bg-purple-700"
-              size="lg"
-            >
-              <QrCode className="w-4 h-4 mr-2" />
-              {attendanceSheet.status === 'En attente' || !attendanceSheet.is_open_for_signing
-                ? "Ouvrir l'émargement & afficher le QR Code"
-                : 'Afficher le QR Code aux étudiants'}
-            </Button>
-          )}
+      <div className="bg-card rounded-2xl border border-border/50 p-4 sm:p-5 shadow-sm space-y-3">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Shield className="w-4 h-4 text-primary" />
+          </div>
+          <h2 className="font-semibold text-foreground text-sm sm:text-base">Actions</h2>
+        </div>
 
-          {/* Message pour les sessions en autonomie */}
-          {attendanceSheet.session_type === 'autonomie' && (attendanceSheet.status === 'En cours' || attendanceSheet.status === 'En attente') && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 text-blue-800">
-                <Users className="w-4 h-4" />
-                <span className="font-medium">Session en autonomie</span>
-              </div>
-              <p className="text-sm text-blue-600 mt-1">
-                Le QR Code n'est pas disponible pour les sessions en autonomie. 
-                L'émargement se fait via les liens envoyés par l'administration.
-              </p>
-            </div>
-          )}
-
-
-          {/* Consulter la feuille d'émargement */}
-          <Button 
-            onClick={() => setShowAttendanceSheet(true)}
-            variant="outline"
-            className="w-full"
-          >
-            Consulter la feuille d'émargement
+        {/* QR - sessions encadrées */}
+        {attendanceSheet.session_type !== 'autonomie' && (attendanceSheet.status === 'En cours' || attendanceSheet.status === 'En attente') && (
+          <Button onClick={handleStartQRSession} className="w-full rounded-xl bg-primary hover:bg-primary/90 h-11" size="lg">
+            <QrCode className="w-4 h-4 mr-2" />
+            {attendanceSheet.status === 'En attente' || !attendanceSheet.is_open_for_signing
+              ? "Ouvrir l'émargement & afficher le QR Code"
+              : 'Afficher le QR Code aux étudiants'}
           </Button>
+        )}
 
-          {/* Envoyer à l'administration */}
-          {stats.canSendToAdmin && attendanceSheet.status === 'En cours' && (
-            <Button 
-              onClick={handleSendToAdmin}
-              disabled={sendingToAdmin}
-              className="w-full bg-orange-600 hover:bg-orange-700"
-              size="lg"
-            >
-              {sendingToAdmin ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              ) : (
-                <Send className="w-4 h-4 mr-2" />
-              )}
-              Envoyer à l'administration
-            </Button>
-          )}
-
-          {/* Informations sur l'envoi */}
-          {attendanceSheet.status === 'En attente de validation' && (
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 text-orange-800">
-                <ArrowRight className="w-4 h-4" />
-                <span className="font-medium">Feuille envoyée à l'administration</span>
-              </div>
-              <p className="text-sm text-orange-600 mt-1">
-                En attente de validation par l'équipe administrative.
-              </p>
+        {/* Autonomie info */}
+        {attendanceSheet.session_type === 'autonomie' && (attendanceSheet.status === 'En cours' || attendanceSheet.status === 'En attente') && (
+          <div className="bg-primary/5 border border-primary/15 rounded-xl p-4">
+            <div className="flex items-center gap-2 text-primary">
+              <Users className="w-4 h-4" />
+              <span className="font-medium text-sm">Session en autonomie</span>
             </div>
-          )}
+            <p className="text-xs text-muted-foreground mt-1.5">
+              Le QR Code n'est pas disponible pour les sessions en autonomie. 
+              L'émargement se fait via les liens envoyés par l'administration.
+            </p>
+          </div>
+        )}
 
-          {attendanceSheet.status === 'Validé' && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 text-green-800">
-                <CheckCircle className="w-4 h-4" />
-                <span className="font-medium">Feuille validée</span>
-              </div>
-              <p className="text-sm text-green-600 mt-1">
-                La feuille d'émargement a été validée par l'administration.
-              </p>
+        {/* Signer formateur */}
+        {!stats.instructorSigned && (attendanceSheet.status === 'En cours') && (
+          <Button onClick={() => setShowInstructorSignModal(true)} variant="outline" className="w-full rounded-xl h-11">
+            <PenTool className="w-4 h-4 mr-2" />
+            Signer en tant que formateur
+          </Button>
+        )}
+
+        {/* Consulter feuille */}
+        <Button onClick={() => setShowAttendanceSheet(true)} variant="outline" className="w-full rounded-xl h-11">
+          <FileText className="w-4 h-4 mr-2" />
+          Consulter la feuille d'émargement
+        </Button>
+
+        {/* Envoyer admin */}
+        {stats.canSendToAdmin && attendanceSheet.status === 'En cours' && (
+          <Button onClick={handleSendToAdmin} disabled={sendingToAdmin} className="w-full rounded-xl bg-orange-600 hover:bg-orange-700 h-11" size="lg">
+            {sendingToAdmin ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+            ) : (
+              <Send className="w-4 h-4 mr-2" />
+            )}
+            Envoyer à l'administration
+          </Button>
+        )}
+
+        {/* Statut messages */}
+        {attendanceSheet.status === 'En attente de validation' && (
+          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+            <div className="flex items-center gap-2 text-orange-800">
+              <ArrowRight className="w-4 h-4" />
+              <span className="font-medium text-sm">Feuille envoyée à l'administration</span>
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <p className="text-xs text-orange-600 mt-1">En attente de validation par l'équipe administrative.</p>
+          </div>
+        )}
+
+        {attendanceSheet.status === 'Validé' && (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+            <div className="flex items-center gap-2 text-green-800">
+              <CheckCircle className="w-4 h-4" />
+              <span className="font-medium text-sm">Feuille validée</span>
+            </div>
+            <p className="text-xs text-green-600 mt-1">La feuille d'émargement a été validée par l'administration.</p>
+          </div>
+        )}
+      </div>
 
       {/* Modals */}
-      <QRCodeDisplayModal
-        isOpen={showQRModal}
-        onClose={() => setShowQRModal(false)}
-        attendanceSheet={attendanceSheet}
-      />
-
+      <QRCodeDisplayModal isOpen={showQRModal} onClose={() => setShowQRModal(false)} attendanceSheet={attendanceSheet} />
       <InstructorSigningModal
         isOpen={showInstructorSignModal}
         onClose={() => setShowInstructorSignModal(false)}
         attendanceSheet={attendanceSheet}
         instructorId={instructorId}
-        onSigned={() => {
-          loadStats();
-          onUpdate();
-        }}
+        onSigned={() => { loadStats(); onUpdate(); }}
       />
-
       {showAttendanceSheet && (
-        <GeneratedAttendanceSheet
-          attendanceSheetId={attendanceSheet.id}
-          onClose={() => setShowAttendanceSheet(false)}
-        />
+        <GeneratedAttendanceSheet attendanceSheetId={attendanceSheet.id} onClose={() => setShowAttendanceSheet(false)} />
       )}
     </div>
   );
