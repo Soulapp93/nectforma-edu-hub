@@ -40,7 +40,7 @@ interface Student {
   };
 }
 
-const MIN_REFRESH_MS = 5_000; // 5 secondes pour un vrai temps réel
+const MIN_REFRESH_MS = 15_000; // 15 secondes de throttle, combiné avec Realtime Supabase
 
 const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
   attendanceSheetId,
@@ -289,11 +289,12 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
         setIsRealtimeConnected(status === 'SUBSCRIBED');
       });
 
-    // Polling de secours toutes les 2 minutes
+    // Polling de secours toutes les 2 minutes (fallback si Realtime échoue)
+    const FALLBACK_POLLING_MS = 120_000;
     const pollingInterval = window.setInterval(() => {
-      console.log('🔄 Polling refresh (2min)...');
+      console.log('🔄 Polling fallback refresh (2min)...');
       scheduleRefresh();
-    }, MIN_REFRESH_MS);
+    }, FALLBACK_POLLING_MS);
 
     return () => {
       console.log('🔌 Cleaning up realtime channel:', channelName);
