@@ -158,9 +158,8 @@ serve(async (req: Request): Promise<Response> => {
         </head>
         <body style="margin:0;padding:0;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background-color:#f4f4f5;">
           <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;margin-top:40px;margin-bottom:40px;box-shadow:0 4px 6px rgba(0,0,0,0.1);">
-            <div style="background:linear-gradient(135deg,#8B5CF6 0%,#7C3AED 50%,#9333EA 100%);padding:24px 30px;text-align:center;">
-              <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/email-logo-landing.png" alt="Nectforma" width="52" height="58" style="display:block;margin:0 auto 10px;border:none;outline:none;" />
-              <span style="color:#ffffff;font-size:18px;font-weight:700;letter-spacing:0.5px;font-family:'Segoe UI',Arial,sans-serif;">Nectforma</span>
+            <div style="background:linear-gradient(135deg,#8B5CF6 0%,#7C3AED 50%,#9333EA 100%);padding:32px 30px;text-align:center;">
+              <span style="color:#ffffff;font-size:28px;font-weight:800;letter-spacing:3px;text-transform:uppercase;font-family:'Segoe UI',Arial,sans-serif;">NECTFORMA</span>
             </div>
             <div style="padding:40px 30px;">
               <p style="font-size:16px;color:#374151;margin-bottom:20px;">
