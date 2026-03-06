@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { moduleDocumentService, ModuleDocument } from '@/services/moduleDocumentService';
 import CreateDocumentModal from './CreateDocumentModal';
 import ModuleFileViewerModal from './ModuleFileViewerModal';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { toast } from 'sonner';
 
 interface ModuleDocumentsTabProps {
@@ -11,6 +12,8 @@ interface ModuleDocumentsTabProps {
 }
 
 const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => {
+  const { userRole } = useCurrentUser();
+  const isTutor = userRole === 'Tuteur';
   const [documents, setDocuments] = useState<ModuleDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -132,10 +135,12 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <h2 className="text-lg sm:text-xl font-bold text-foreground">Documents</h2>
-        <Button onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 shadow-lg">
-          <Plus className="h-4 w-4 mr-2" />
-          Ajouter un document
-        </Button>
+        {!isTutor && (
+          <Button onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 shadow-lg">
+            <Plus className="h-4 w-4 mr-2" />
+            Ajouter un document
+          </Button>
+        )}
       </div>
 
       {documents.length > 0 ? (
@@ -191,25 +196,27 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
                     <span className="sm:hidden">DL</span>
                   </Button>
 
-                  <div className="flex items-center gap-1 ml-auto">
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      onClick={() => handleEdit(document)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
-                    </Button>
-                    
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      className="text-red-600 h-8 w-8 p-0"
-                      onClick={() => handleDelete(document.id)}
-                    >
-                      <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                    </Button>
-                  </div>
+                  {!isTutor && (
+                    <div className="flex items-center gap-1 ml-auto">
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => handleEdit(document)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                      </Button>
+                      
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="text-red-600 h-8 w-8 p-0"
+                        onClick={() => handleDelete(document.id)}
+                      >
+                        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

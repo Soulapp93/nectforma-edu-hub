@@ -163,7 +163,7 @@ const Sidebar = () => {
           {/* Logo Row with Collapse Button */}
           <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'}`}>
             <div className="flex items-center gap-3">
-              <NectformaLogo variant="light" size={collapsed ? 'sm' : 'md'} showIcon={false} />
+              <NectformaLogo variant="light" size={collapsed ? 'sm' : 'md'} showIcon={true} />
             </div>
             
             {/* Modern Collapse Toggle Button */}
