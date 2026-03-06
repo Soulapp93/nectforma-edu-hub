@@ -117,8 +117,8 @@ const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-lg w-full max-w-md max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-background rounded-lg w-full max-w-[95vw] sm:max-w-md max-h-[85vh] sm:max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border shrink-0">
           <h2 className="text-lg font-semibold text-foreground">
             {editDocument ? 'Modifier le document' : 'Ajouter un document'}
