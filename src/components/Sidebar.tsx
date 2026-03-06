@@ -19,9 +19,6 @@ import {
   PanelLeftClose,
   PanelLeft,
   FolderKanban,
-  Receipt,
-  Users2,
-  Calculator,
 } from 'lucide-react';
 import {
   Sidebar as SidebarWrapper,
@@ -112,9 +109,6 @@ const Sidebar = () => {
     { name: 'Messagerie', href: '/messagerie', icon: Mail },
     { name: 'Groupes', href: '/groupes', icon: UsersRound },
     { name: 'Espace de travail', href: '/espace-travail', icon: FolderKanban },
-    { name: 'Finance', href: '/finance', icon: Receipt },
-    { name: 'RH & Paie', href: '/ressources-humaines', icon: Users2 },
-    { name: 'Comptabilité', href: '/comptabilite', icon: Calculator },
     { name: 'Gestion du compte', href: '/gestion-etablissement', icon: Building2 },
     { name: 'Mon profil', href: '/compte', icon: UserCircle },
   ];
@@ -127,9 +121,6 @@ const Sidebar = () => {
     { name: 'Messagerie', href: '/messagerie', icon: Mail },
     { name: 'Groupes', href: '/groupes', icon: UsersRound },
     { name: 'Espace de travail', href: '/espace-travail', icon: FolderKanban },
-    { name: 'Finance', href: '/finance', icon: Receipt },
-    { name: 'RH & Paie', href: '/ressources-humaines', icon: Users2 },
-    { name: 'Comptabilité', href: '/comptabilite', icon: Calculator },
     { name: 'Mon profil', href: '/compte', icon: UserCircle },
   ];
 
