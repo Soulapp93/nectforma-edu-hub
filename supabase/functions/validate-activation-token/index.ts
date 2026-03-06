@@ -57,47 +57,74 @@ serve(async (req) => {
 
     console.log("[validate-activation-token] ✅ Token valid, fetching user:", tokenData.user_id);
 
-    // Step 2: Get the user data separately
+    // Step 2: Try to get user from users table first
     const { data: userData, error: userError } = await supabaseAdmin
       .from("users")
       .select("id, email, first_name, last_name, role, establishment_id")
       .eq("id", tokenData.user_id)
-      .single();
+      .maybeSingle();
 
-    if (userError || !userData) {
-      console.warn("[validate-activation-token] ❌ User not found", { userError: userError?.message });
-      return new Response(
-        JSON.stringify({ error: "Utilisateur introuvable" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+    // Step 2b: If not found in users, try tutors table
+    let isTutor = false;
+    let resolvedUser: { id: string; email: string; first_name: string; last_name: string; role: string; establishment_id: string | null } | null = null;
+
+    if (userData) {
+      resolvedUser = userData;
+    } else {
+      console.log("[validate-activation-token] 🔄 User not in users table, checking tutors...");
+      const { data: tutorData, error: tutorError } = await supabaseAdmin
+        .from("tutors")
+        .select("id, email, first_name, last_name, establishment_id")
+        .eq("id", tokenData.user_id)
+        .maybeSingle();
+
+      if (tutorData) {
+        isTutor = true;
+        resolvedUser = {
+          id: tutorData.id,
+          email: tutorData.email,
+          first_name: tutorData.first_name,
+          last_name: tutorData.last_name,
+          role: "Tuteur",
+          establishment_id: tutorData.establishment_id,
+        };
+        console.log("[validate-activation-token] ✅ Found tutor:", tutorData.email);
+      } else {
+        console.warn("[validate-activation-token] ❌ User not found in users or tutors", { userError: userError?.message, tutorError: tutorError?.message });
+        return new Response(
+          JSON.stringify({ error: "Utilisateur introuvable" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
     }
 
     // Step 3: Get establishment name
     let establishmentName = "NECTFORMA";
-    if (userData.establishment_id) {
+    if (resolvedUser.establishment_id) {
       const { data: estData } = await supabaseAdmin
         .from("establishments")
         .select("name")
-        .eq("id", userData.establishment_id)
+        .eq("id", resolvedUser.establishment_id)
         .single();
       if (estData?.name) {
         establishmentName = estData.name;
       }
     }
 
-    console.log("[validate-activation-token] ✅ User found:", userData.email);
+    console.log("[validate-activation-token] ✅ User found:", resolvedUser.email, isTutor ? "(tutor)" : "");
 
     return new Response(
       JSON.stringify({
         success: true,
         user: {
-          id: userData.id,
-          email: userData.email,
-          first_name: userData.first_name,
-          last_name: userData.last_name,
-          role: userData.role,
-          establishment_id: userData.establishment_id,
+          id: resolvedUser.id,
+          email: resolvedUser.email,
+          first_name: resolvedUser.first_name,
+          last_name: resolvedUser.last_name,
+          role: resolvedUser.role,
+          establishment_id: resolvedUser.establishment_id,
           establishment_name: establishmentName,
+          is_tutor: isTutor,
         },
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
