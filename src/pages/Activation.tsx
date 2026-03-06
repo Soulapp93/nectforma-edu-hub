@@ -32,6 +32,7 @@ const getRoleLabel = (role: string): string => {
     'Administrateur principal': 'Administrateur Principal',
     'Formateur': 'Formateur',
     'Étudiant': 'Étudiant',
+    'Tuteur': 'Tuteur',
   };
   return labels[role] || role;
 };

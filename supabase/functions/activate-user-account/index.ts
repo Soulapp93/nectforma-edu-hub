@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.2";
 
 // Version for deployment verification
-const VERSION = "v2.1.0";
+const VERSION = "v3.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -70,7 +70,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const nowIso = new Date().toISOString();
 
-    // Step 1: Get the token data (WITHOUT join - no foreign key relationship)
+    // Step 1: Get the token data
     const { data: tokenData, error: tokenError } = await supabase
       .from('user_activation_tokens')
       .select('user_id, token, expires_at, used_at')
@@ -89,26 +89,52 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`[${VERSION}] ✅ Token valid, fetching user:`, tokenData.user_id);
 
-    // Step 2: Get the user data separately
-    const { data: userData, error: userError } = await supabase
+    // Step 2: Try users table first, then tutors
+    const { data: userData } = await supabase
       .from('users')
       .select('id, email, first_name, last_name, role, establishment_id')
       .eq('id', tokenData.user_id)
-      .single();
+      .maybeSingle();
 
-    if (userError || !userData) {
-      console.error(`[${VERSION}] ❌ User not found:`, userError);
-      return new Response(
-        JSON.stringify({ error: "Utilisateur introuvable", _version: VERSION }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+    let isTutor = false;
+    let resolvedUser: { id: string; email: string; first_name: string; last_name: string; role: string; establishment_id: string | null } | null = null;
+
+    if (userData) {
+      resolvedUser = userData;
+    } else {
+      // Fallback: check tutors table
+      console.log(`[${VERSION}] 🔄 User not in users table, checking tutors...`);
+      const { data: tutorData, error: tutorError } = await supabase
+        .from('tutors')
+        .select('id, email, first_name, last_name, establishment_id')
+        .eq('id', tokenData.user_id)
+        .maybeSingle();
+
+      if (tutorData) {
+        isTutor = true;
+        resolvedUser = {
+          id: tutorData.id,
+          email: tutorData.email,
+          first_name: tutorData.first_name,
+          last_name: tutorData.last_name,
+          role: "Tuteur",
+          establishment_id: tutorData.establishment_id,
+        };
+        console.log(`[${VERSION}] ✅ Found tutor:`, tutorData.email);
+      } else {
+        console.error(`[${VERSION}] ❌ User not found in users or tutors:`, tutorError);
+        return new Response(
+          JSON.stringify({ error: "Utilisateur introuvable", _version: VERSION }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
     }
 
-    const userId = userData.id;
-    console.log(`[${VERSION}] ✅ Activating account for user:`, userData.email);
+    const userId = resolvedUser.id;
+    console.log(`[${VERSION}] ✅ Activating account for ${isTutor ? 'tutor' : 'user'}:`, resolvedUser.email);
 
     // Find Auth user reliably (pagination safe)
-    const existingAuthUserId = await findAuthUserIdByEmail(supabase, userData.email);
+    const existingAuthUserId = await findAuthUserIdByEmail(supabase, resolvedUser.email);
     let authUserId: string | null = existingAuthUserId;
 
     if (authUserId) {
@@ -117,10 +143,10 @@ const handler = async (req: Request): Promise<Response> => {
         password,
         email_confirm: true,
         user_metadata: {
-          first_name: userData.first_name,
-          last_name: userData.last_name,
-          role: userData.role,
-          establishment_id: userData.establishment_id,
+          first_name: resolvedUser.first_name,
+          last_name: resolvedUser.last_name,
+          role: resolvedUser.role,
+          establishment_id: resolvedUser.establishment_id,
         },
       });
 
@@ -133,16 +159,16 @@ const handler = async (req: Request): Promise<Response> => {
       }
     } else {
       // Fallback: if Auth user doesn't exist, create it
-      console.log(`[${VERSION}] ➕ Creating new auth user for:`, userData.email);
+      console.log(`[${VERSION}] ➕ Creating new auth user for:`, resolvedUser.email);
       const { data: createdAuth, error: createError } = await supabase.auth.admin.createUser({
-        email: userData.email,
+        email: resolvedUser.email,
         password,
         email_confirm: true,
         user_metadata: {
-          first_name: userData.first_name,
-          last_name: userData.last_name,
-          role: userData.role,
-          establishment_id: userData.establishment_id,
+          first_name: resolvedUser.first_name,
+          last_name: resolvedUser.last_name,
+          role: resolvedUser.role,
+          establishment_id: resolvedUser.establishment_id,
         },
       });
 
@@ -164,21 +190,36 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Update public profile row
-    const { error: updateUserError } = await supabase
-      .from("users")
-      .update({
-        is_activated: true,
-        status: "Actif",
-      })
-      .eq("id", userId);
+    // Update public profile row (users or tutors)
+    if (isTutor) {
+      const { error: updateTutorError } = await supabase
+        .from("tutors")
+        .update({ is_activated: true })
+        .eq("id", userId);
 
-    if (updateUserError) {
-      console.error(`[${VERSION}] ❌ Error updating public.users activation flags:`, updateUserError);
-      return new Response(
-        JSON.stringify({ error: "Erreur lors de la mise à jour du profil utilisateur", _version: VERSION }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+      if (updateTutorError) {
+        console.error(`[${VERSION}] ❌ Error updating tutors activation:`, updateTutorError);
+        return new Response(
+          JSON.stringify({ error: "Erreur lors de la mise à jour du profil tuteur", _version: VERSION }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+    } else {
+      const { error: updateUserError } = await supabase
+        .from("users")
+        .update({
+          is_activated: true,
+          status: "Actif",
+        })
+        .eq("id", userId);
+
+      if (updateUserError) {
+        console.error(`[${VERSION}] ❌ Error updating public.users activation flags:`, updateUserError);
+        return new Response(
+          JSON.stringify({ error: "Erreur lors de la mise à jour du profil utilisateur", _version: VERSION }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
     }
 
     // Mark token as used
@@ -187,13 +228,14 @@ const handler = async (req: Request): Promise<Response> => {
       .update({ used_at: new Date().toISOString() })
       .eq('token', token);
 
-    console.log(`[${VERSION}] ✅ Account activated successfully for user:`, authUserId);
+    console.log(`[${VERSION}] ✅ Account activated successfully for ${isTutor ? 'tutor' : 'user'}:`, authUserId);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         user_id: authUserId,
-        email: userData.email,
+        email: resolvedUser.email,
+        is_tutor: isTutor,
         message: "Compte activé avec succès",
         _version: VERSION
       }),
