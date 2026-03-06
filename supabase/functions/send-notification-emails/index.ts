@@ -52,7 +52,7 @@ function generateEmailHtml(
       <td align="center">
         <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
           <tr>
-            <td style="background: linear-gradient(135deg, #C084FC 0%, #A78BFA 50%, #E879F9 100%); padding: 24px 40px; text-align: center; border-radius: 12px 12px 0 0;">
+            <td style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 50%, #9333EA 100%); padding: 24px 40px; text-align: center; border-radius: 12px 12px 0 0;">
               <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/email-logo-landing.png" alt="Nectforma" width="52" height="58" style="display:block;margin:0 auto 10px;border:none;outline:none;" />
               <span style="color:#ffffff;font-size:18px;font-weight:700;letter-spacing:0.5px;font-family:'Segoe UI',Arial,sans-serif;">Nectforma</span>
             </td>
