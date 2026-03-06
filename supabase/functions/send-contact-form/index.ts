@@ -80,9 +80,8 @@ serve(async (req: Request): Promise<Response> => {
 </head>
 <body>
   <div class="container">
-    <div class="header" style="background:linear-gradient(135deg,#8B5CF6 0%,#7C3AED 50%,#9333EA 100%);padding:24px 30px;text-align:center;border-radius:10px 10px 0 0;">
-      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/email-logo-landing.png" alt="Nectforma" width="52" height="58" style="display:block;margin:0 auto 10px;border:none;outline:none;" />
-      <span style="color:#ffffff;font-size:18px;font-weight:700;letter-spacing:0.5px;font-family:Arial,sans-serif;">Nectforma</span>
+    <div class="header" style="background:linear-gradient(135deg,#8B5CF6 0%,#7C3AED 50%,#9333EA 100%);padding:32px 30px;text-align:center;border-radius:10px 10px 0 0;">
+      <span style="color:#ffffff;font-size:28px;font-weight:800;letter-spacing:3px;text-transform:uppercase;font-family:Arial,sans-serif;">NECTFORMA</span>
     </div>
     <div style="padding: 15px 30px; background: #f9fafb;">
       <h2 style="margin: 0; color: #1a1a1a;">📩 Nouveau message de contact</h2>
@@ -166,9 +165,8 @@ serve(async (req: Request): Promise<Response> => {
 </head>
 <body>
   <div class="container">
-    <div class="header" style="background:linear-gradient(135deg,#8B5CF6 0%,#7C3AED 50%,#9333EA 100%);padding:24px 30px;text-align:center;border-radius:10px 10px 0 0;">
-      <img src="https://utjdigcdlwqztwmgoomv.supabase.co/storage/v1/object/public/email-assets/email-logo-landing.png" alt="Nectforma" width="52" height="58" style="display:block;margin:0 auto 10px;border:none;outline:none;" />
-      <span style="color:#ffffff;font-size:18px;font-weight:700;letter-spacing:0.5px;font-family:Arial,sans-serif;">Nectforma</span>
+    <div class="header" style="background:linear-gradient(135deg,#8B5CF6 0%,#7C3AED 50%,#9333EA 100%);padding:32px 30px;text-align:center;border-radius:10px 10px 0 0;">
+      <span style="color:#ffffff;font-size:28px;font-weight:800;letter-spacing:3px;text-transform:uppercase;font-family:Arial,sans-serif;">NECTFORMA</span>
     </div>
     <div class="content">
       <p>Bonjour ${body.firstName},</p>
