@@ -113,24 +113,24 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
 
   const overlapMap = detectOverlaps(daySlots);
 
-  // Calculer la position et hauteur d'un créneau avec précision à la minute près
+  // Hauteur d'une heure en rem (synchronisé avec h-20 = 5rem de la grille)
+  const HOUR_HEIGHT_REM = 5;
+
+  // Calculer la position et hauteur d'un créneau en rem (synchronisé avec la grille)
   const getSlotPosition = (slot: ScheduleSlot) => {
     const startMinutes = timeToMinutes(slot.start_time);
     const endMinutes = timeToMinutes(slot.end_time);
-    const baseMinutes = START_HOUR * 60; // Début de la journée à 8h
+    const baseMinutes = START_HOUR * 60;
     
-    const HOUR_HEIGHT = 80; // Hauteur d'une heure en pixels (1h = 80px)
-    
-    // Limiter l'affichage à la plage horaire visible
     const visibleStartMinutes = Math.max(startMinutes, baseMinutes);
     const visibleEndMinutes = Math.min(endMinutes, END_HOUR * 60);
     
-    // Position exacte à la minute près
-    const top = ((visibleStartMinutes - baseMinutes) / 60) * HOUR_HEIGHT;
-    // Hauteur proportionnelle à la durée (1h = 80px, 2h = 160px, etc.)
-    const height = ((visibleEndMinutes - visibleStartMinutes) / 60) * HOUR_HEIGHT;
+    const effectiveEnd = visibleEndMinutes <= visibleStartMinutes ? visibleStartMinutes + 30 : visibleEndMinutes;
     
-    return { top, height: Math.max(height, 60) }; // Hauteur minimum 60px pour lisibilité
+    const topRem = ((visibleStartMinutes - baseMinutes) / 60) * HOUR_HEIGHT_REM;
+    const heightRem = ((effectiveEnd - visibleStartMinutes) / 60) * HOUR_HEIGHT_REM;
+    
+    return { topRem, heightRem: Math.max(heightRem, 1) };
   };
 
   return (
@@ -177,19 +177,19 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                 </div>
                 
                 {/* Zone des cours */}
-                <div className="flex-1 relative" style={{ height: `${(END_HOUR - START_HOUR) * 80}px` }}>
+                <div className="flex-1 relative" style={{ height: `${(END_HOUR - START_HOUR) * HOUR_HEIGHT_REM}rem` }}>
                   {/* Lignes de grille horizontales avec séparateurs clairs */}
                   {timeSlots.map((time, index) => (
                     <div 
                       key={time} 
                       className="absolute w-full border-b border-border/30"
-                      style={{ top: `${index * 80}px`, height: '80px' }}
+                      style={{ top: `${index * HOUR_HEIGHT_REM}rem`, height: `${HOUR_HEIGHT_REM}rem` }}
                     />
                   ))}
                   
                   {/* Créneaux de cours positionnés absolument avec gestion des chevauchements */}
                   {daySlots.map((slot, index) => {
-                    const { top, height } = getSlotPosition(slot);
+                    const { topRem, heightRem } = getSlotPosition(slot);
                     const duration = formatDuration(slot);
                     const durationMinutes = timeToMinutes(slot.end_time) - timeToMinutes(slot.start_time);
                     
@@ -211,12 +211,12 @@ export const ScheduleDayView: React.FC<ScheduleDayViewProps> = ({
                         key={slot.id || index}
                         className="absolute rounded-lg shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden group"
                         style={{ 
-                          top: `${top}px`,
-                          height: `${height}px`,
+                          top: `${topRem}rem`,
+                          height: `${heightRem}rem`,
                           left: `calc(${leftPercent}% + 8px)`,
                           width: `calc(${widthPercent}% - ${totalColumns > 1 ? '12px' : '16px'})`,
                           backgroundColor: slot.color || '#3B82F6',
-                          minHeight: '60px'
+                          minHeight: '1rem'
                         }}
                         onClick={() => onEditSlot?.(slot)}
                       >
