@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { moduleDocumentService, ModuleDocument } from '@/services/moduleDocumentService';
 import { fileUploadService } from '@/services/fileUploadService';
 import FileUpload from '@/components/ui/file-upload';
@@ -46,65 +46,44 @@ const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
     setError(null);
 
     try {
-      console.log('Saving document with:', { formData, files: selectedFiles, editMode: !!editDocument });
-
       if (editDocument) {
-        // Mode édition
         let fileUrl = editDocument.file_url;
         let fileName = editDocument.file_name;
         let fileSize = editDocument.file_size;
 
         if (selectedFiles.length > 0) {
           const file = selectedFiles[0];
-          console.log('Uploading new file:', file);
           fileUrl = await fileUploadService.uploadFile(file);
           fileName = file.name;
           fileSize = file.size;
-          console.log('New file uploaded, URL:', fileUrl);
         }
 
-        const documentData = {
+        await moduleDocumentService.updateDocument(editDocument.id, {
           ...formData,
           file_url: fileUrl,
           file_name: fileName,
           file_size: fileSize
-        };
-
-        console.log('Updating document in database:', documentData);
-        await moduleDocumentService.updateDocument(editDocument.id, documentData);
-        console.log('Document updated successfully');
+        });
       } else {
-        // Mode création
         if (selectedFiles.length === 0) {
           throw new Error('Veuillez sélectionner un fichier');
         }
 
         const file = selectedFiles[0];
-        console.log('Uploading file:', file);
-
         const fileUrl = await fileUploadService.uploadFile(file);
-        console.log('File uploaded, URL:', fileUrl);
 
-        const documentData = {
+        await moduleDocumentService.createDocument({
           ...formData,
           module_id: moduleId,
           file_url: fileUrl,
           file_name: file.name,
           file_size: file.size
-        };
-
-        console.log('Creating document in database:', documentData);
-        await moduleDocumentService.createDocument(documentData);
-        console.log('Document created successfully');
+        });
       }
 
       onSuccess();
       onClose();
-      setFormData({
-        title: '',
-        description: '',
-        document_type: 'support'
-      });
+      setFormData({ title: '', description: '', document_type: 'support' });
       setSelectedFiles([]);
     } catch (error: any) {
       console.error('Error saving document:', error);
@@ -114,21 +93,16 @@ const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
-      <div className="bg-background rounded-lg w-full max-w-[95vw] sm:max-w-md max-h-[85vh] sm:max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border shrink-0">
-          <h2 className="text-lg font-semibold text-foreground">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="w-[95vw] max-w-md max-h-[85vh] flex flex-col p-0">
+        <DialogHeader className="p-4 sm:p-6 pb-0 shrink-0">
+          <DialogTitle>
             {editDocument ? 'Modifier le document' : 'Ajouter un document'}
-          </h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+          </DialogTitle>
+        </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4">
           {error && (
             <div className="bg-destructive/10 border border-destructive/30 text-destructive px-4 py-3 rounded-lg text-sm">
               {error}
@@ -193,18 +167,24 @@ const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
               </p>
             )}
           </div>
-
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
-              Annuler
-            </Button>
-            <Button type="submit" disabled={loading || (!editDocument && selectedFiles.length === 0)}>
-              {loading ? (editDocument ? 'Modification...' : 'Création...') : (editDocument ? 'Modifier' : 'Créer')}
-            </Button>
-          </div>
         </form>
-      </div>
-    </div>
+
+        <DialogFooter className="p-4 sm:p-6 pt-0 shrink-0">
+          <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
+            Annuler
+          </Button>
+          <Button 
+            onClick={(e) => {
+              const form = (e.target as HTMLElement).closest('[role="dialog"]')?.querySelector('form');
+              if (form) form.requestSubmit();
+            }}
+            disabled={loading || (!editDocument && selectedFiles.length === 0)}
+          >
+            {loading ? (editDocument ? 'Modification...' : 'Création...') : (editDocument ? 'Modifier' : 'Créer')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
