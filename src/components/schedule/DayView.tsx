@@ -123,7 +123,7 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
       console.log(`Cours partiellement hors grille: ${event.startTime}-${event.endTime}`, event);
     }
     
-    return { top, height: Math.max(height, 60) }; // Hauteur minimum 60px
+    return { top, height: Math.max(height, 20) }; // Hauteur minimum réduite pour respecter les horaires
   };
 
   return (
@@ -205,7 +205,7 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
                           left: `calc(${leftPercent}% + 8px)`,
                           width: `calc(${widthPercent}% - ${totalColumns > 1 ? '12px' : '16px'})`,
                           backgroundColor: event.color || '#3B82F6',
-                          minHeight: '60px',
+                          minHeight: '20px',
                           zIndex: 10
                         }}
                         onClick={(e) => {
