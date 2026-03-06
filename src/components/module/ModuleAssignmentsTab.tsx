@@ -9,6 +9,7 @@ import SubmitAssignmentModal from './SubmitAssignmentModal';
 import StudentCorrectionViewModal from './StudentCorrectionViewModal';
 import AssignmentDetailModal from './AssignmentDetailModal';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ModuleAssignmentsTabProps {
   moduleId: string;
@@ -24,14 +25,32 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
   const [showCorrectionModal, setShowCorrectionModal] = useState<{ assignment: Assignment; submission: AssignmentSubmission } | null>(null);
   const [showDetailModal, setShowDetailModal] = useState<Assignment | null>(null);
   const [studentSubmissions, setStudentSubmissions] = useState<Record<string, AssignmentSubmission | null>>({});
+  const [apprenticeId, setApprenticeId] = useState<string | null>(null);
 
   const { userId, userRole, loading: userLoading } = useCurrentUser();
 
   // Définir les permissions basées sur le rôle
   const isFormateur = userRole === 'Formateur';
   const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
+  const isTuteur = userRole === 'Tuteur';
   const canCreateAssignment = isFormateur || isAdmin;
   const isEtudiant = userRole === 'Étudiant';
+
+  // Récupérer l'apprenti du tuteur
+  useEffect(() => {
+    if (isTuteur && userId) {
+      supabase
+        .from('tutor_student_assignments')
+        .select('student_id')
+        .eq('tutor_id', userId)
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) setApprenticeId(data.student_id);
+        });
+    }
+  }, [isTuteur, userId]);
 
   // Fonction pour vérifier si l'utilisateur peut modifier un devoir
   const canEditAssignment = (assignment: Assignment) => {
@@ -46,12 +65,14 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
       setAssignments(data || []);
 
       // Pour les étudiants, récupérer leurs soumissions
-      if (isEtudiant && userId && data) {
+      // Pour les tuteurs, récupérer les soumissions de leur apprenti
+      const targetStudentId = isEtudiant ? userId : (isTuteur ? apprenticeId : null);
+      if (targetStudentId && data) {
         const submissionsMap: Record<string, AssignmentSubmission | null> = {};
         for (const assignment of data) {
           const submissions = await assignmentService.getAssignmentSubmissions(assignment.id);
-          const mySubmission = submissions.find(s => s.student_id === userId);
-          submissionsMap[assignment.id] = mySubmission || null;
+          const targetSubmission = submissions.find(s => s.student_id === targetStudentId);
+          submissionsMap[assignment.id] = targetSubmission || null;
         }
         setStudentSubmissions(submissionsMap);
       }
@@ -65,9 +86,10 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
 
   useEffect(() => {
     if (!userLoading) {
+      if (isTuteur && !apprenticeId) return; // attendre l'apprenti
       fetchAssignments();
     }
-  }, [moduleId, userLoading, userId, userRole]);
+  }, [moduleId, userLoading, userId, userRole, apprenticeId]);
 
   const handleCreateSuccess = () => {
     fetchAssignments();
@@ -149,7 +171,7 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
       {assignments.length > 0 ? (
         <div className="space-y-4">
           {assignments.map((assignment) => {
-            const submissionStatus = isEtudiant ? getSubmissionStatus(assignment.id) : null;
+            const submissionStatus = (isEtudiant || isTuteur) ? getSubmissionStatus(assignment.id) : null;
             const hasSubmitted = !!submissionStatus;
             const isOverdue = assignment.due_date && new Date(assignment.due_date) < new Date();
             
@@ -167,8 +189,8 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
                           Publié
                         </span>
                       )}
-                      {/* Statut de soumission pour étudiant */}
-                      {isEtudiant && submissionStatus && (
+                      {/* Statut de soumission pour étudiant ou tuteur */}
+                      {(isEtudiant || isTuteur) && submissionStatus && (
                         <span className={`px-2 py-0.5 rounded-full text-xs ${submissionStatus.color}`}>
                           {submissionStatus.label}
                         </span>
@@ -235,6 +257,21 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
                           </Button>
                         )}
                       </>
+                    )}
+
+                    {/* === BOUTONS TUTEUR (lecture seule) === */}
+                    {isTuteur && hasSubmitted && (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => setShowCorrectionModal({ 
+                          assignment, 
+                          submission: submissionStatus!.submission 
+                        })}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        {submissionStatus?.status === 'corrected' ? 'Voir correction' : 'Voir soumission'}
+                      </Button>
                     )}
 
                     {/* === BOUTONS FORMATEUR/ADMIN === */}

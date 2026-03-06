@@ -35,11 +35,29 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
   const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
   
   const { userId, userRole, loading: userLoading } = useCurrentUser();
+  const [apprenticeId, setApprenticeId] = useState<string | null>(null);
 
   const isFormateur = userRole === 'Formateur';
   const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
+  const isTuteur = userRole === 'Tuteur';
   const canViewCorrections = isFormateur || isAdmin;
   const isEtudiant = userRole === 'Étudiant';
+
+  // Récupérer l'apprenti du tuteur
+  useEffect(() => {
+    if (isTuteur && userId) {
+      supabase
+        .from('tutor_student_assignments')
+        .select('student_id')
+        .eq('tutor_id', userId)
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) setApprenticeId(data.student_id);
+        });
+    }
+  }, [isTuteur, userId]);
 
   const canCorrectSubmission = (assignment: Assignment) => {
     if ((isFormateur || isAdmin) && assignment.created_by && assignment.created_by === userId) return true;
@@ -64,9 +82,14 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
             s.student_id === userId && 
             s.correction?.published_at !== null
           );
+        } else if (isTuteur && apprenticeId) {
+          filteredSubmissions = submissions.filter(s => 
+            s.student_id === apprenticeId && 
+            s.correction?.published_at !== null
+          );
         }
         
-        if (filteredSubmissions.length > 0 || canViewCorrections) {
+        if (filteredSubmissions.length > 0 || canViewCorrections || isTuteur) {
           result.push({
             assignment,
             submissions: filteredSubmissions
@@ -89,9 +112,10 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
 
   useEffect(() => {
     if (!userLoading && userId && userRole) {
+      if (isTuteur && !apprenticeId) return; // attendre l'apprenti
       fetchData();
     }
-  }, [moduleId, userId, userRole, userLoading]);
+  }, [moduleId, userId, userRole, userLoading, apprenticeId]);
 
   const toggleAssignment = (assignmentId: string) => {
     setExpandedAssignments(prev => {
@@ -212,8 +236,8 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
     );
   }
 
-  // Vue Étudiant
-  if (isEtudiant) {
+  // Vue Étudiant ou Tuteur (lecture seule)
+  if (isEtudiant || isTuteur) {
     const myCorrections = assignmentsWithSubmissions
       .flatMap(aws => aws.submissions.map(s => ({ ...s, assignmentTitle: aws.assignment.title })));
 
@@ -237,7 +261,7 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
           <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
             <Award className="h-5 w-5 text-primary" />
           </div>
-          <h2 className="text-xl font-semibold text-foreground">Mes corrections</h2>
+          <h2 className="text-xl font-semibold text-foreground">{isTuteur ? 'Corrections de mon apprenti' : 'Mes corrections'}</h2>
         </div>
         
         <div className="space-y-3">
