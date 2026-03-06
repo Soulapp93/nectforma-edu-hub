@@ -735,14 +735,22 @@ export const attendanceService = {
       if (existingError) throw existingError;
 
       if (newPresent) {
-        // Absent → Présent : récupérer la signature du profil de l'étudiant
-        const { data: userSig } = await supabase
-          .from('user_signatures')
-          .select('signature_data')
-          .eq('user_id', studentId)
-          .maybeSingle();
+        // Absent → Présent : d'abord vérifier si une signature existe déjà dans attendance_signatures
+        // puis chercher dans user_signatures (profil) en fallback
+        let signatureData: string | null = existingSig?.signature_data || null;
 
-        const signatureData = userSig?.signature_data || null;
+        if (!signatureData) {
+          const { data: userSig } = await supabase
+            .from('user_signatures')
+            .select('signature_data')
+            .eq('user_id', studentId)
+            .order('updated_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          signatureData = userSig?.signature_data || null;
+        }
+
         const hasSavedSignature = !!signatureData;
 
         if (existingSig) {
@@ -787,7 +795,6 @@ export const attendanceService = {
             .from('attendance_signatures')
             .update({
               present: false,
-              signature_data: null,
               signed_at: new Date().toISOString()
             })
             .eq('id', existingSig.id)
