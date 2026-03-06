@@ -499,8 +499,8 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
                               className="h-8 w-auto mx-auto mb-1"
                             />
                           ) : (
-                            <div className="h-8 flex items-center justify-center text-xs text-gray-500">
-                              Signé électroniquement
+                            <div className="h-8 flex items-center justify-center text-xs text-amber-600 italic">
+                              Présent (signature à compléter)
                             </div>
                           )}
                           <div className="text-xs text-gray-500">
