@@ -705,6 +705,93 @@ body:has(.fullscreen-container) {
     }
   }
 
+  /* Feature illustration animations */
+  @keyframes feature-ken-burns {
+    0%, 100% {
+      transform: scale(1) translate(0, 0);
+    }
+    25% {
+      transform: scale(1.05) translate(-1%, -1%);
+    }
+    50% {
+      transform: scale(1.03) translate(1%, 0.5%);
+    }
+    75% {
+      transform: scale(1.06) translate(-0.5%, 1%);
+    }
+  }
+
+  @keyframes feature-subtle-pulse {
+    0%, 100% {
+      filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3)) brightness(1);
+    }
+    50% {
+      filter: drop-shadow(0 15px 40px rgba(139, 92, 246, 0.2)) brightness(1.03);
+    }
+  }
+
+  @keyframes feature-particle-float {
+    0%, 100% {
+      transform: translateY(0) translateX(0) scale(1);
+      opacity: 0.6;
+    }
+    25% {
+      transform: translateY(-15px) translateX(5px) scale(1.2);
+      opacity: 1;
+    }
+    50% {
+      transform: translateY(-8px) translateX(-8px) scale(0.8);
+      opacity: 0.4;
+    }
+    75% {
+      transform: translateY(-20px) translateX(3px) scale(1.1);
+      opacity: 0.9;
+    }
+  }
+
+  @keyframes feature-circuit-draw {
+    0% {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    20% {
+      opacity: 1;
+    }
+    50% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    80% {
+      opacity: 0.3;
+    }
+    100% {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+  }
+
+  @keyframes feature-node-pulse {
+    0%, 100% {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    40%, 60% {
+      opacity: 1;
+      transform: scale(1.5);
+    }
+  }
+
+  @keyframes feature-halo-pulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.4;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 0.6;
+    }
+  }
+
   @keyframes fade-in-up {
     0% {
       opacity: 0;
