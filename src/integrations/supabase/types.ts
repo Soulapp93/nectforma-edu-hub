@@ -4378,12 +4378,20 @@ export type Database = {
       get_tutor_apprentice_formations: {
         Args: never
         Returns: {
+          formation_color: string
+          formation_description: string
+          formation_duration: number
+          formation_end_date: string
           formation_id: string
           formation_level: string
+          formation_start_date: string
           formation_status: string
           formation_title: string
+          modules_count: number
+          student_email: string
+          student_first_name: string
           student_id: string
-          student_name: string
+          student_last_name: string
         }[]
       }
       has_platform_role: {

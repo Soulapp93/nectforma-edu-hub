@@ -9,6 +9,7 @@ export interface TutorFormation {
   formation_start_date: string;
   formation_end_date: string;
   formation_color?: string;
+  formation_status?: string;
   formation_duration?: number;
   modules_count?: number;
   student_id: string;
@@ -22,8 +23,16 @@ interface RpcFormationResult {
   formation_title: string;
   formation_level: string;
   formation_status: string;
+  formation_description: string | null;
+  formation_start_date: string;
+  formation_end_date: string;
+  formation_color: string | null;
+  formation_duration: number;
+  modules_count: number;
   student_id: string;
-  student_name: string;
+  student_first_name: string;
+  student_last_name: string;
+  student_email: string;
 }
 
 /**
@@ -72,20 +81,22 @@ export const useTutorFormations = () => {
       }
 
       // Transformer les données RPC vers le format TutorFormation
-      const transformedFormations: TutorFormation[] = data.map(f => {
-        const nameParts = (f.student_name || '').split(' ');
-        return {
-          formation_id: f.formation_id,
-          formation_title: f.formation_title,
-          formation_level: f.formation_level,
-          formation_start_date: '',
-          formation_end_date: '',
-          student_id: f.student_id,
-          student_first_name: nameParts[0] || '',
-          student_last_name: nameParts.slice(1).join(' ') || '',
-          student_email: ''
-        };
-      });
+      const transformedFormations: TutorFormation[] = data.map((f) => ({
+        formation_id: f.formation_id,
+        formation_title: f.formation_title,
+        formation_level: f.formation_level,
+        formation_status: f.formation_status,
+        formation_description: f.formation_description || undefined,
+        formation_start_date: f.formation_start_date,
+        formation_end_date: f.formation_end_date,
+        formation_color: f.formation_color || undefined,
+        formation_duration: f.formation_duration,
+        modules_count: f.modules_count,
+        student_id: f.student_id,
+        student_first_name: f.student_first_name,
+        student_last_name: f.student_last_name,
+        student_email: f.student_email
+      }));
       
       setFormations(transformedFormations);
       if (data.length > 0) {
