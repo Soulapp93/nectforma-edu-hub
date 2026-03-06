@@ -735,10 +735,25 @@ export const attendanceService = {
       if (existingError) throw existingError;
 
       if (newPresent) {
-        // Absent → Présent : d'abord vérifier si une signature existe déjà dans attendance_signatures
-        // puis chercher dans user_signatures (profil) en fallback
+        // Absent → Présent : chaîne de fallback pour récupérer la signature
+        // 1. Signature déjà présente sur la ligne attendance_signatures
         let signatureData: string | null = existingSig?.signature_data || null;
 
+        // 2. Dernière signature connue dans l'historique attendance_signatures de l'étudiant
+        if (!signatureData) {
+          const { data: historySig } = await supabase
+            .from('attendance_signatures')
+            .select('signature_data')
+            .eq('user_id', studentId)
+            .not('signature_data', 'is', null)
+            .order('signed_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          signatureData = historySig?.signature_data || null;
+        }
+
+        // 3. Signature profil user_signatures (nécessite la policy admin SELECT)
         if (!signatureData) {
           const { data: userSig } = await supabase
             .from('user_signatures')
