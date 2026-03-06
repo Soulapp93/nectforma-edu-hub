@@ -1,46 +1,51 @@
 
+Objectif: corriger définitivement le décalage des cartes en vue jour (tuteur + autres interfaces) pour que chaque carte respecte exactement l’heure de début et de fin.
 
-## Diagnostic
+1) Diagnostic précis (pourquoi c’est encore faux)
+- La grille horaire est en `rem` via `h-20` (5rem).
+- Les cartes sont positionnées en **pixels fixes** avec `HOUR_HEIGHT = 80`.
+- Or votre app force `html { font-size: 12px }` sur desktop (`src/index.css`), donc:
+  - 1 heure de grille = 5rem = 60px
+  - 1 heure de carte = 80px
+  - => cartes ~33% trop hautes (exactement ce qu’on voit sur votre capture).
+- Le patch précédent (minHeight 60 -> 20) ne corrige pas cette cause racine.
+- Le même problème existe aussi dans `src/components/administration/ScheduleDayView.tsx` (même logique en 80px), donc incohérence selon écrans/rôles.
 
-### Problème 1 : Emails de réinitialisation non envoyés
+2) Plan de correction (hotfix production, faible risque)
+- Corriger `src/components/schedule/DayView.tsx`:
+  - Supprimer le calcul vertical en px fixes.
+  - Utiliser une échelle unique basée sur la même unité que la grille (`rem`) ou en `%` du conteneur.
+  - Aligner les hauteurs de lignes et le calcul `top/height` sur la même constante.
+  - Supprimer la distorsion artificielle (`minHeight` trop agressif) qui casse la précision des petits créneaux.
+- Corriger `src/components/administration/ScheduleDayView.tsx` de la même manière pour éviter un bug “corrigé ici mais pas ailleurs”.
+- Garder les textes compactés pour créneaux courts (si besoin), mais sans changer la hauteur réelle du créneau.
 
-**Cause racine identifiée** dans les logs : l'email `soulsang383@gmail.com` n'existe PAS dans la table `public.users`. C'est un compte SuperAdmin qui n'a d'entrée que dans `platform_user_roles` et `auth.users`. La fonction `reset-password-native` ne cherche que dans `public.users` (ligne 149-154), et si l'utilisateur n'est pas trouvé, elle retourne silencieusement un succès SANS envoyer d'email (ligne 160-167).
+3) Détails techniques (implémentation)
+- Remplacer:
+  - `HOUR_HEIGHT = 80` (px)
+  - `h-20` implicite non synchronisé
+- Par une source unique (exemple):
+  - `const HOUR_HEIGHT_REM = 5;`
+  - `topRem = ((start - base) / 60) * HOUR_HEIGHT_REM`
+  - `heightRem = ((end - start) / 60) * HOUR_HEIGHT_REM`
+  - styles: `top: ${topRem}rem`, `height: ${heightRem}rem`
+- Ou alternative robuste:
+  - calculer `top`/`height` en `%` de la plage horaire visible.
+- Ajouter garde-fou:
+  - si `end <= start`, ne pas casser l’affichage (normalisation + log debug).
 
-De même, les comptes Tuteurs (table `tutors`) ne sont pas recherchés — un tuteur qui demande un reset ne recevrait pas d'email non plus.
+4) Vérification ciblée (avant mise en prod)
+- Cas réel de votre capture:
+  - `08:00 → 14:00` doit commencer exactement sur la ligne 08:00 et finir exactement sur 14:00.
+- Cas 30 min:
+  - ex. `10:00 → 10:30` doit occuper exactement une demi-case.
+- Vérifier sur compte tuteur ET interface administration (même rendu temporel).
 
-**Correction** : Modifier `reset-password-native` pour chercher séquentiellement dans :
-1. `public.users` (utilisateurs classiques)
-2. `public.tutors` (tuteurs)
-3. `auth.users` via `supabaseAdmin.auth.admin.listUsers()` (SuperAdmins sans profil dans les tables métier)
+5) Fichiers concernés
+- `src/components/schedule/DayView.tsx`
+- `src/components/administration/ScheduleDayView.tsx`
 
-Si trouvé dans `auth.users` uniquement (cas SuperAdmin), utiliser `supabase.auth.admin.generateLink({ type: 'recovery' })` pour générer un vrai lien de reset Supabase Auth natif, car ces comptes n'utilisent pas le système de tokens custom.
-
-### Problème 2 : Remplacement du logo email
-
-Le logo actuel (`email-logo-landing.png`) est un SVG renommé en PNG — il s'affiche mal dans Gmail/Outlook. L'utilisateur fournit `image-728.png` (le petit chapeau de diplômé violet) comme remplacement.
-
-**Correction** :
-1. Copier `image-728.png` → `src/assets/email-logo-new.png`
-2. Mettre à jour les 10 Edge Functions pour pointer vers le nouveau fichier dans le bucket `email-assets`
-3. Comme on ne peut pas uploader directement dans le bucket via le code, on va utiliser le même chemin (`email-logo-landing.png`) mais en s'assurant que le nouveau fichier PNG est bien un vrai PNG
-
-En fait, le plus simple : uploader `image-728.png` dans le bucket sous le même nom `email-logo-landing.png` pour remplacer l'ancien sans modifier aucune Edge Function.
-
----
-
-## Plan d'implémentation
-
-### 1. Corriger `reset-password-native` — recherche multi-tables
-- Après la recherche dans `users`, ajouter une recherche dans `tutors`
-- Si toujours pas trouvé, chercher dans `auth.users` via l'API admin
-- Pour les tuteurs : utiliser le même flux de tokens custom
-- Pour les utilisateurs auth-only (SuperAdmin) : utiliser `supabaseAdmin.auth.admin.generateLink({ type: 'recovery' })` et envoyer l'email via Brevo avec le lien généré
-
-### 2. Remplacer le logo dans le bucket email-assets
-- Copier `image-728.png` comme nouvel asset
-- Le fichier sera uploadé dans le bucket `email-assets` sous le nom `email-logo-landing.png` pour remplacer l'ancien sans modifier les URLs dans les 10 Edge Functions
-
-### Fichiers modifiés
-- `supabase/functions/reset-password-native/index.ts` (ajout recherche tutors + auth.users)
-- Upload du nouveau logo dans le bucket `email-assets`
-
+Résultat attendu:
+- Plus de carte “étirée” artificiellement.
+- Synchronisation parfaite entre horaires affichés et position visuelle des créneaux.
+- Comportement cohérent sur toutes les interfaces/rôles.
