@@ -17,6 +17,7 @@ import AnimatedSection from '@/components/landing/AnimatedSection';
 import AnimatedCounter from '@/components/landing/AnimatedCounter';
 import TextReveal from '@/components/landing/TextReveal';
 import ParallaxSection from '@/components/landing/ParallaxSection';
+import AnimatedFeatureImage from '@/components/landing/AnimatedFeatureImage';
 
 import Hover3DCard from '@/components/landing/Hover3DCard';
 import AnimatedButton from '@/components/landing/AnimatedButton';
@@ -872,86 +873,15 @@ const Index = () => {
                     </div>
                   </div>
 
-                  {/* Images - style couverture article blog */}
+                  {/* Images - animated feature illustration */}
                   <div className="flex-1 w-full max-w-2xl">
                     {feature.images && feature.images.length > 0 ? (
-                      <div className="relative group">
-                        {/* Halo lumineux derrière */}
-                        <div 
-                          className="absolute -inset-6 rounded-3xl opacity-40 group-hover:opacity-60 transition-opacity duration-700 blur-2xl"
-                          style={{
-                            background: `radial-gradient(ellipse at center, hsl(262 83% 55% / 0.3) 0%, hsl(280 65% 45% / 0.15) 50%, transparent 80%)`
-                          }}
-                        />
-                        
-                        <Hover3DCard intensity={6}>
-                          <div className="relative overflow-hidden rounded-2xl shadow-2xl" style={{
-                            background: 'linear-gradient(135deg, hsl(262 83% 30%) 0%, hsl(270 75% 25%) 40%, hsl(280 65% 20%) 100%)'
-                          }}>
-                            {/* Decorative shapes - style ArticleCoverImage */}
-                            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                              <div className="absolute -top-[20%] -left-[10%] w-[55%] h-[80%] rounded-full bg-white/[0.06] blur-sm" />
-                              <div className="absolute -bottom-[15%] -right-[8%] w-[45%] h-[70%] rounded-full bg-white/[0.04] blur-sm" />
-                              <div className="absolute top-[15%] right-[20%] w-[18%] h-[28%] rounded-full bg-white/[0.08]" />
-                              {/* Dot pattern */}
-                              <div className="absolute top-[10%] left-[60%] w-[30%] h-[30%] opacity-20"
-                                style={{
-                                  backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
-                                  backgroundSize: '10px 10px',
-                                }}
-                              />
-                              {/* Lines and accents */}
-                              <div className="absolute bottom-[25%] left-[5%] w-[35%] h-[2px] bg-white/15 rounded-full" />
-                              <div className="absolute top-[60%] left-[45%] w-[6%] h-[10%] bg-white/10 rounded-lg rotate-12" />
-                              <div className="absolute top-[20%] left-[30%] w-[4%] h-[7%] bg-white/[0.06] rounded-md -rotate-6" />
-                              {/* Glowing circuit-like lines */}
-                              <div className="absolute bottom-0 left-0 right-0 h-[40%] opacity-10"
-                                style={{
-                                  background: 'linear-gradient(180deg, transparent 0%, hsl(262 83% 60% / 0.3) 100%)'
-                                }}
-                              />
-                            </div>
-                            
-                            {/* Image */}
-                            <div className="relative z-10 p-4 md:p-6">
-                              <img 
-                                src={feature.images[0]} 
-                                alt={`${feature.title} - Illustration`}
-                                className="w-full h-auto object-contain transition-transform duration-700 group-hover:scale-[1.03]"
-                                style={{
-                                  filter: 'drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3))',
-                                }}
-                              />
-                            </div>
-                            
-                            {/* Gradient overlay bottom */}
-                            <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[hsl(262_83%_20%_/_0.8)] via-[hsl(270_75%_25%_/_0.4)] to-transparent pointer-events-none z-20" />
-                            
-                            {/* Bottom bar with title + logo */}
-                            <div className="absolute bottom-0 inset-x-0 z-30 flex items-end justify-between p-4 md:p-5">
-                              <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 bg-white/15 backdrop-blur-sm rounded-lg flex items-center justify-center">
-                                  <Icon className="h-4 w-4 text-white" />
-                                </div>
-                                <span className="text-white/90 text-sm font-medium">{feature.title}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm rounded-lg px-2.5 py-1.5">
-                                <span className="text-xs font-semibold text-white">NF</span>
-                                <span className="text-xs text-white/80">Nectforma</span>
-                              </div>
-                            </div>
-                            
-                            {/* Shine effect on hover */}
-                            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-30">
-                              <div style={{
-                                position: 'absolute', top: 0, left: '-100%', width: '60%', height: '100%',
-                                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)',
-                                animation: 'logo-shine 4s ease-in-out infinite'
-                              }} />
-                            </div>
-                          </div>
-                        </Hover3DCard>
-                      </div>
+                      <AnimatedFeatureImage
+                        images={feature.images}
+                        title={feature.title}
+                        icon={Icon}
+                        index={index}
+                      />
                     ) : (
                       <div className="relative group">
                         <Hover3DCard intensity={6}>
