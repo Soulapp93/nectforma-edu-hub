@@ -77,7 +77,7 @@ function renderPage(title: string, message: string, success: boolean): string {
     ${icon}
     <h1 style="color:#1f2937;font-size:22px;margin-bottom:12px;">${title}</h1>
     <p style="color:#6b7280;font-size:15px;line-height:1.6;">${message}</p>
-    <a href="https://nectforme.lovable.app" style="display:inline-block;margin-top:24px;background:linear-gradient(135deg,#8B5CF6,#A855F7);color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Retour à Nectforma</a>
+    <a href="https://nectforma.com" style="display:inline-block;margin-top:24px;background:linear-gradient(135deg,#8B5CF6,#A855F7);color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">Retour à Nectforma</a>
   </div>
 </body>
 </html>`;

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
+import DOMPurify from 'dompurify';
 import {
   Bold, Italic, Underline, Strikethrough, List, ListOrdered,
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
@@ -562,7 +563,7 @@ export const EnhancedArticleEditor: React.FC<EnhancedArticleEditorProps> = ({
         onBlur={handleContentChange}
         className="min-h-[400px] p-6 border rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 prose prose-sm max-w-none"
         style={{ lineHeight: '1.8' }}
-        dangerouslySetInnerHTML={{ __html: content }}
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
       />
 
       {/* Quick insert buttons */}

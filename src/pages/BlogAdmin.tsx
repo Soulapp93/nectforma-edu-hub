@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import DOMPurify from 'dompurify';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -165,7 +166,7 @@ const ArticlePreviewPanel = ({ formData, category }: { formData: Partial<BlogPos
                   [&_.warning-box]:bg-amber-50 [&_.warning-box]:rounded-lg [&_.warning-box]:p-3 [&_.warning-box]:my-4 [&_.warning-box]:text-xs
                   [&_.article-cta]:bg-primary [&_.article-cta]:text-white [&_.article-cta]:rounded-xl [&_.article-cta]:p-4 [&_.article-cta]:my-4 [&_.article-cta]:text-center [&_.article-cta]:text-xs
                   [&_.schema-box]:border [&_.schema-box]:rounded-xl [&_.schema-box]:p-3 [&_.schema-box]:my-4 [&_.schema-box]:text-xs"
-                dangerouslySetInnerHTML={{ __html: formData.content || '<p class="text-muted-foreground">Aucun contenu</p>' }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(formData.content || '<p class="text-muted-foreground">Aucun contenu</p>') }}
               />
             </div>
           </div>
