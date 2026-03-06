@@ -1,30 +1,36 @@
 
 
-## Diagnostic
+## Problème identifié
 
-Le problème est clair : les Edge Functions `validate-activation-token` et `activate-user-account` cherchent l'utilisateur **uniquement dans la table `users`**, mais les tuteurs sont stockés dans la table `tutors`. Quand un tuteur clique sur son lien d'activation :
+Les tuteurs ne voient **aucune correction** de leurs apprentis dans l'onglet "Corrections" des modules. 
 
-1. Le token est trouvé dans `user_activation_tokens` (OK)
-2. Le `user_id` du token pointe vers un tuteur
-3. La requête `SELECT ... FROM users WHERE id = user_id` retourne vide
-4. L'erreur "Utilisateur introuvable" / "Token invalide" s'affiche
+**Cause racine** : dans `ModuleCorrectionsTab.tsx` (ligne 41), seuls les rôles `Formateur` et `Admin` sont considérés comme pouvant voir les corrections. Le rôle `Tuteur` n'est pas géré — il tombe dans un "no man's land" (ni étudiant, ni admin/formateur), donc rien ne s'affiche.
+
+Même problème dans `ModuleAssignmentsTab.tsx` : les tuteurs ne voient pas les soumissions/corrections de leurs apprentis.
+
+---
 
 ## Plan de correction
 
-### 1. Modifier `validate-activation-token` (Edge Function)
-- Après l'échec de la recherche dans `users`, ajouter un fallback vers la table `tutors`
-- Retourner le rôle "Tuteur" dans la réponse si trouvé dans `tutors`
+### 1. `ModuleCorrectionsTab.tsx` — Ajouter la vue tuteur
 
-### 2. Modifier `activate-user-account` (Edge Function)
-- Même logique de fallback : chercher dans `tutors` si non trouvé dans `users`
-- Lors de l'activation, mettre à jour `tutors.is_activated = true` au lieu de `users.status = 'Actif'`
+- Détecter `isTuteur = userRole === 'Tuteur'`
+- Récupérer l'ID de l'apprenti du tuteur via `tutor_student_assignments`
+- Filtrer les soumissions pour ne montrer que celles de l'apprenti (comme la vue étudiant, mais avec l'ID de l'apprenti au lieu de `userId`)
+- Afficher les corrections publiées en lecture seule (même UI que la vue étudiant)
 
-### 3. Modifier `Activation.tsx` (page front)
-- Ajouter "Tuteur" dans le mapping `getRoleLabel`
-- S'assurer que le submit gère correctement le cas tuteur dans le legacy flow (déjà OK car il appelle `activate-user-account`)
+### 2. `ModuleAssignmentsTab.tsx` — Ajouter la vue tuteur
 
-### Fichiers concernés
-- `supabase/functions/validate-activation-token/index.ts`
-- `supabase/functions/activate-user-account/index.ts`
-- `src/pages/Activation.tsx`
+- Détecter `isTuteur`
+- Récupérer l'ID de l'apprenti
+- Montrer les devoirs avec le statut de soumission de l'apprenti (lecture seule, pas de bouton "Rendre mon devoir")
+- Permettre de voir les corrections publiées via le bouton "Voir correction"
+
+### 3. Vérification RLS
+
+- Les tables `assignment_submissions` et `assignment_corrections` utilisent `can_access_module()` qui gère déjà les tuteurs (via `tutor_student_assignments`). Pas de modification RLS nécessaire.
+
+### Fichiers modifiés
+- `src/components/module/ModuleCorrectionsTab.tsx`
+- `src/components/module/ModuleAssignmentsTab.tsx`
 
