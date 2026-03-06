@@ -103,27 +103,26 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
 
   const overlapMap = detectOverlaps(dayEvents);
 
-  // Calculer la position et hauteur d'un événement
+  // Hauteur d'une heure en rem (synchronisé avec h-20 = 5rem de la grille)
+  const HOUR_HEIGHT_REM = 5;
+
+  // Calculer la position et hauteur d'un événement en rem
   const getEventPosition = (event: ScheduleEvent) => {
     const startMinutes = timeToMinutes(event.startTime);
     const endMinutes = timeToMinutes(event.endTime);
     const baseMinutes = START_HOUR * 60;
     
-    const HOUR_HEIGHT = 80; // Hauteur d'une heure en pixels
-    
     // Limiter l'affichage à la plage horaire visible
     const visibleStartMinutes = Math.max(startMinutes, baseMinutes);
     const visibleEndMinutes = Math.min(endMinutes, END_HOUR * 60);
     
-    const top = ((visibleStartMinutes - baseMinutes) / 60) * HOUR_HEIGHT;
-    const height = ((visibleEndMinutes - visibleStartMinutes) / 60) * HOUR_HEIGHT;
+    // Garde-fou: si end <= start, forcer une durée minimale
+    const effectiveEnd = visibleEndMinutes <= visibleStartMinutes ? visibleStartMinutes + 30 : visibleEndMinutes;
     
-    // Log pour déboggage
-    if (startMinutes < baseMinutes || endMinutes > END_HOUR * 60) {
-      console.log(`Cours partiellement hors grille: ${event.startTime}-${event.endTime}`, event);
-    }
+    const topRem = ((visibleStartMinutes - baseMinutes) / 60) * HOUR_HEIGHT_REM;
+    const heightRem = ((effectiveEnd - visibleStartMinutes) / 60) * HOUR_HEIGHT_REM;
     
-    return { top, height: Math.max(height, 20) }; // Hauteur minimum réduite pour respecter les horaires
+    return { topRem, heightRem: Math.max(heightRem, 1) }; // min 1rem (~12px)
   };
 
   return (
@@ -182,7 +181,7 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
                   
                   {/* Événements positionnés absolument avec gestion des chevauchements */}
                   {dayEvents.map((event) => {
-                    const { top, height } = getEventPosition(event);
+                    const { topRem, heightRem } = getEventPosition(event);
                     const duration = formatDuration(event);
                     const isAutonomie = event.sessionType === 'autonomie';
                     
@@ -200,12 +199,12 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
                         key={event.id}
                         className="absolute rounded-lg shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden hover:scale-[1.02]"
                         style={{ 
-                          top: `${top}px`,
-                          height: `${height}px`,
+                          top: `${topRem}rem`,
+                          height: `${heightRem}rem`,
                           left: `calc(${leftPercent}% + 8px)`,
                           width: `calc(${widthPercent}% - ${totalColumns > 1 ? '12px' : '16px'})`,
                           backgroundColor: event.color || '#3B82F6',
-                          minHeight: '20px',
+                          minHeight: '1rem',
                           zIndex: 10
                         }}
                         onClick={(e) => {
