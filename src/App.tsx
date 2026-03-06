@@ -56,6 +56,7 @@ import CookieConsent from '@/components/CookieConsent';
 import LinkedInCallback from '@/pages/LinkedInCallback';
 import EspaceTravail from './pages/EspaceTravail';
 import QuestionnairePublic from './pages/QuestionnairePublic';
+import Presentation from './pages/Presentation';
 
 
 
@@ -90,7 +91,17 @@ const AppContent = () => {
   // après redirection depuis /auth
   const isSignaturePage = location.pathname.startsWith('/emargement/signer/');
   const isLinkedInCallback = location.pathname === '/linkedin-callback';
-  
+  const isPresentationPage = location.pathname === '/presentation';
+
+  if (isPresentationPage) {
+    return (
+      <div className="min-h-screen w-full">
+        <Routes>
+          <Route path="/presentation" element={<Presentation />} />
+        </Routes>
+      </div>
+    );
+  }
 
   if (isSignaturePage || isLinkedInCallback) {
     return (
