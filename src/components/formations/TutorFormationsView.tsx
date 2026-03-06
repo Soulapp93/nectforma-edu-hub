@@ -116,7 +116,7 @@ export const TutorFormationsView: React.FC = () => {
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {formations.map((formation) => {
-            const formationColor = formation.formation_color || '#8B5CF6';
+            const formationColor = formation.formation_color || 'hsl(var(--primary))';
             
             return (
               <div 
@@ -137,8 +137,8 @@ export const TutorFormationsView: React.FC = () => {
                         <span className={`px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium rounded-full ${getLevelColor(formation.formation_level)}`}>
                           {formation.formation_level}
                         </span>
-                        <span className={`px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium rounded-full ${getStatusColor('Actif')}`}>
-                          Actif
+                        <span className={`px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium rounded-full ${getStatusColor(formation.formation_status || 'Actif')}`}>
+                          {formation.formation_status || 'Actif'}
                         </span>
                       </div>
                       <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1 line-clamp-2">
@@ -238,7 +238,10 @@ export const TutorFormationsView: React.FC = () => {
                       <Badge 
                         variant="outline"
                         className="font-medium"
-                        style={{ borderColor: formation.formation_color, color: formation.formation_color }}
+                        style={{
+                          borderColor: formation.formation_color || 'hsl(var(--primary))',
+                          color: formation.formation_color || 'hsl(var(--primary))'
+                        }}
                       >
                         {formation.formation_level}
                       </Badge>
