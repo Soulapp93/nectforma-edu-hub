@@ -36,7 +36,7 @@ function generateEmailHtml(
   ctaUrl?: string,
   additionalInfo?: Record<string, string>
 ): string {
-  const appUrl = 'https://nectforme.lovable.app';
+  const appUrl = 'https://nectforma.com';
   const fullCtaUrl = ctaUrl ? `${appUrl}${ctaUrl}` : appUrl;
   
   return `

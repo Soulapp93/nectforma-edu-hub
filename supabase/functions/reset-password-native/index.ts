@@ -180,7 +180,7 @@ serve(async (req) => {
     const statusRaw = (userData.status || "").toString();
     const isPendingStatus = ["pending", "en attente", "En attente"].includes(statusRaw) || statusRaw.toLowerCase() === "en attente";
 
-    const baseUrl = redirect_url || `${req.headers.get("origin") || "https://nectforme.lovable.app"}`;
+    const baseUrl = redirect_url || `${req.headers.get("origin") || "https://nectforma.com"}`;
 
     // If user is not activated, resend activation email instead
     if (!userData.is_activated || isPendingStatus) {

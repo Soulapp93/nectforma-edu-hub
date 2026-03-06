@@ -4312,15 +4312,17 @@ export type Database = {
     Views: {
       tutor_students_view: {
         Row: {
-          assigned_at: string | null
-          id: string | null
+          assignment_id: string | null
+          establishment_id: string | null
           is_active: boolean | null
           student_email: string | null
           student_first_name: string | null
           student_id: string | null
           student_last_name: string | null
-          student_photo: string | null
+          tutor_email: string | null
+          tutor_first_name: string | null
           tutor_id: string | null
+          tutor_last_name: string | null
         }
         Relationships: [
           {
@@ -4335,6 +4337,13 @@ export type Database = {
             columns: ["tutor_id"]
             isOneToOne: false
             referencedRelation: "tutors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tutors_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
             referencedColumns: ["id"]
           },
         ]

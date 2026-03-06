@@ -179,7 +179,7 @@ serve(async (req) => {
     }
 
     // Generate activation link
-    const baseUrl = redirect_url || `${req.headers.get("origin") || "https://nectforme.lovable.app"}`;
+    const baseUrl = redirect_url || `${req.headers.get("origin") || "https://nectforma.com"}`;
     const activationLink = `${baseUrl}/activation?token=${activationToken}`;
 
     console.log(`[resend-invitation-native] 📧 Sending email via Brevo to ${email}`);
