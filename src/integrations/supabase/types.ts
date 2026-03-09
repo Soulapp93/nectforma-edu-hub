@@ -1158,6 +1158,125 @@ export type Database = {
         }
         Relationships: []
       }
+      evaluation_periods: {
+        Row: {
+          created_at: string
+          end_date: string
+          formation_id: string
+          id: string
+          is_locked: boolean
+          locked_at: string | null
+          locked_by: string | null
+          name: string
+          order_index: number
+          period_type: string
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          formation_id: string
+          id?: string
+          is_locked?: boolean
+          locked_at?: string | null
+          locked_by?: string | null
+          name: string
+          order_index?: number
+          period_type?: string
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          formation_id?: string
+          id?: string
+          is_locked?: boolean
+          locked_at?: string | null
+          locked_by?: string | null
+          name?: string
+          order_index?: number
+          period_type?: string
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_periods_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluations: {
+        Row: {
+          coefficient: number
+          created_at: string
+          description: string | null
+          evaluation_date: string | null
+          evaluation_type: string
+          id: string
+          instructor_id: string
+          is_published: boolean
+          module_id: string
+          period_id: string | null
+          scale: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          coefficient?: number
+          created_at?: string
+          description?: string | null
+          evaluation_date?: string | null
+          evaluation_type?: string
+          id?: string
+          instructor_id: string
+          is_published?: boolean
+          module_id: string
+          period_id?: string | null
+          scale?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          coefficient?: number
+          created_at?: string
+          description?: string | null
+          evaluation_date?: string | null
+          evaluation_type?: string
+          id?: string
+          instructor_id?: string
+          is_published?: boolean
+          module_id?: string
+          period_id?: string | null
+          scale?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluations_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "formation_modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluations_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "evaluation_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expense_reports: {
         Row: {
           amount: number
@@ -1242,32 +1361,41 @@ export type Database = {
       }
       formation_modules: {
         Row: {
+          coefficient: number
           created_at: string
+          credits: number | null
           description: string | null
           duration_hours: number
           formation_id: string
           id: string
           order_index: number
+          teaching_unit_id: string | null
           title: string
           updated_at: string
         }
         Insert: {
+          coefficient?: number
           created_at?: string
+          credits?: number | null
           description?: string | null
           duration_hours?: number
           formation_id: string
           id?: string
           order_index?: number
+          teaching_unit_id?: string | null
           title: string
           updated_at?: string
         }
         Update: {
+          coefficient?: number
           created_at?: string
+          credits?: number | null
           description?: string | null
           duration_hours?: number
           formation_id?: string
           id?: string
           order_index?: number
+          teaching_unit_id?: string | null
           title?: string
           updated_at?: string
         }
@@ -1277,6 +1405,13 @@ export type Database = {
             columns: ["formation_id"]
             isOneToOne: false
             referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "formation_modules_teaching_unit_id_fkey"
+            columns: ["teaching_unit_id"]
+            isOneToOne: false
+            referencedRelation: "teaching_units"
             referencedColumns: ["id"]
           },
         ]
@@ -1416,6 +1551,165 @@ export type Database = {
             foreignKeyName: "funding_sources_formation_id_fkey"
             columns: ["formation_id"]
             isOneToOne: false
+            referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grade_history: {
+        Row: {
+          change_reason: string | null
+          changed_by: string
+          created_at: string
+          grade_id: string
+          id: string
+          new_status: string | null
+          new_value: number | null
+          old_status: string | null
+          old_value: number | null
+        }
+        Insert: {
+          change_reason?: string | null
+          changed_by: string
+          created_at?: string
+          grade_id: string
+          id?: string
+          new_status?: string | null
+          new_value?: number | null
+          old_status?: string | null
+          old_value?: number | null
+        }
+        Update: {
+          change_reason?: string | null
+          changed_by?: string
+          created_at?: string
+          grade_id?: string
+          id?: string
+          new_status?: string | null
+          new_value?: number | null
+          old_status?: string | null
+          old_value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grade_history_grade_id_fkey"
+            columns: ["grade_id"]
+            isOneToOne: false
+            referencedRelation: "grades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grades: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          evaluation_id: string
+          id: string
+          internal_comment: string | null
+          is_absent: boolean
+          is_cheating: boolean
+          is_dispensed: boolean
+          is_excused: boolean
+          status: string
+          student_id: string
+          updated_at: string
+          updated_by: string | null
+          value: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          evaluation_id: string
+          id?: string
+          internal_comment?: string | null
+          is_absent?: boolean
+          is_cheating?: boolean
+          is_dispensed?: boolean
+          is_excused?: boolean
+          status?: string
+          student_id: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          evaluation_id?: string
+          id?: string
+          internal_comment?: string | null
+          is_absent?: boolean
+          is_cheating?: boolean
+          is_dispensed?: boolean
+          is_excused?: boolean
+          status?: string
+          student_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grades_evaluation_id_fkey"
+            columns: ["evaluation_id"]
+            isOneToOne: false
+            referencedRelation: "evaluations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grading_rules: {
+        Row: {
+          allow_compensation: boolean
+          compensation_threshold: number | null
+          created_at: string
+          credits_per_semester: number | null
+          credits_system: string | null
+          formation_id: string
+          id: string
+          mention_ab_threshold: number | null
+          mention_bien_threshold: number | null
+          mention_passable_threshold: number | null
+          mention_tb_threshold: number | null
+          updated_at: string
+          validation_threshold: number
+        }
+        Insert: {
+          allow_compensation?: boolean
+          compensation_threshold?: number | null
+          created_at?: string
+          credits_per_semester?: number | null
+          credits_system?: string | null
+          formation_id: string
+          id?: string
+          mention_ab_threshold?: number | null
+          mention_bien_threshold?: number | null
+          mention_passable_threshold?: number | null
+          mention_tb_threshold?: number | null
+          updated_at?: string
+          validation_threshold?: number
+        }
+        Update: {
+          allow_compensation?: boolean
+          compensation_threshold?: number | null
+          created_at?: string
+          credits_per_semester?: number | null
+          credits_system?: string | null
+          formation_id?: string
+          id?: string
+          mention_ab_threshold?: number | null
+          mention_bien_threshold?: number | null
+          mention_passable_threshold?: number | null
+          mention_tb_threshold?: number | null
+          updated_at?: string
+          validation_threshold?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grading_rules_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: true
             referencedRelation: "formations"
             referencedColumns: ["id"]
           },
@@ -3782,6 +4076,50 @@ export type Database = {
           },
         ]
       }
+      teaching_units: {
+        Row: {
+          code: string | null
+          coefficient: number
+          created_at: string
+          credits: number | null
+          formation_id: string
+          id: string
+          order_index: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          code?: string | null
+          coefficient?: number
+          created_at?: string
+          credits?: number | null
+          formation_id: string
+          id?: string
+          order_index?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string | null
+          coefficient?: number
+          created_at?: string
+          credits?: number | null
+          formation_id?: string
+          id?: string
+          order_index?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teaching_units_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       text_book_entries: {
         Row: {
           content: string
@@ -3926,6 +4264,142 @@ export type Database = {
             columns: ["formation_id"]
             isOneToOne: false
             referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transcript_modules: {
+        Row: {
+          coefficient: number
+          created_at: string
+          credits_earned: number | null
+          credits_possible: number | null
+          id: string
+          is_validated: boolean
+          module_average: number | null
+          module_id: string
+          teaching_unit_id: string | null
+          transcript_id: string
+        }
+        Insert: {
+          coefficient?: number
+          created_at?: string
+          credits_earned?: number | null
+          credits_possible?: number | null
+          id?: string
+          is_validated?: boolean
+          module_average?: number | null
+          module_id: string
+          teaching_unit_id?: string | null
+          transcript_id: string
+        }
+        Update: {
+          coefficient?: number
+          created_at?: string
+          credits_earned?: number | null
+          credits_possible?: number | null
+          id?: string
+          is_validated?: boolean
+          module_average?: number | null
+          module_id?: string
+          teaching_unit_id?: string | null
+          transcript_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transcript_modules_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "formation_modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transcript_modules_teaching_unit_id_fkey"
+            columns: ["teaching_unit_id"]
+            isOneToOne: false
+            referencedRelation: "teaching_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transcript_modules_transcript_id_fkey"
+            columns: ["transcript_id"]
+            isOneToOne: false
+            referencedRelation: "transcripts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transcripts: {
+        Row: {
+          created_at: string
+          decision: string | null
+          formation_id: string
+          general_average: number | null
+          generated_at: string | null
+          id: string
+          is_published: boolean
+          jury_comment: string | null
+          jury_date: string | null
+          mention: string | null
+          pdf_url: string | null
+          period_id: string | null
+          published_at: string | null
+          student_id: string
+          total_credits: number | null
+          updated_at: string
+          validated_credits: number | null
+        }
+        Insert: {
+          created_at?: string
+          decision?: string | null
+          formation_id: string
+          general_average?: number | null
+          generated_at?: string | null
+          id?: string
+          is_published?: boolean
+          jury_comment?: string | null
+          jury_date?: string | null
+          mention?: string | null
+          pdf_url?: string | null
+          period_id?: string | null
+          published_at?: string | null
+          student_id: string
+          total_credits?: number | null
+          updated_at?: string
+          validated_credits?: number | null
+        }
+        Update: {
+          created_at?: string
+          decision?: string | null
+          formation_id?: string
+          general_average?: number | null
+          generated_at?: string | null
+          id?: string
+          is_published?: boolean
+          jury_comment?: string | null
+          jury_date?: string | null
+          mention?: string | null
+          pdf_url?: string | null
+          period_id?: string | null
+          published_at?: string | null
+          student_id?: string
+          total_credits?: number | null
+          updated_at?: string
+          validated_credits?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transcripts_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transcripts_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "evaluation_periods"
             referencedColumns: ["id"]
           },
         ]
@@ -4351,9 +4825,17 @@ export type Database = {
     }
     Functions: {
       calculate_read_time: { Args: { content: string }; Returns: number }
+      can_access_formation_grades: {
+        Args: { _formation_id: string }
+        Returns: boolean
+      }
       can_access_message: { Args: { _message_id: string }; Returns: boolean }
       can_access_module: { Args: { _module_id: string }; Returns: boolean }
       can_manage_blog: { Args: never; Returns: boolean }
+      can_manage_evaluation: {
+        Args: { _evaluation_id: string }
+        Returns: boolean
+      }
       can_manage_module: { Args: { _module_id: string }; Returns: boolean }
       generate_signature_token: { Args: { sheet_id: string }; Returns: string }
       get_current_user_establishment: { Args: never; Returns: string }
