@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { 
+import {
   LayoutDashboard, 
   Users, 
   GraduationCap,
@@ -19,6 +19,7 @@ import {
   PanelLeftClose,
   PanelLeft,
   FolderKanban,
+  Award,
 } from 'lucide-react';
 import {
   Sidebar as SidebarWrapper,
