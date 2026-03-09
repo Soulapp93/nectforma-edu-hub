@@ -150,8 +150,8 @@ const GradeEntryPanel: React.FC = () => {
           is_dispensed: grade.is_dispensed || false,
           is_cheating: grade.is_cheating || false,
           internal_comment: grade.internal_comment || null,
-          created_by: userId,
-          updated_by: userId,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         });
       });
       // Save history for modified grades

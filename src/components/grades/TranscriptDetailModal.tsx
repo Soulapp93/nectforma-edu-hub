@@ -198,7 +198,7 @@ const TranscriptDetailModal: React.FC<Props> = ({ isOpen, onClose, transcript })
 
           {/* Pied de page */}
           <div className="flex justify-between text-xs text-muted-foreground pt-4 border-t">
-            <span>Document généré le {new Date(transcript.generated_at || transcript.created_at).toLocaleDateString('fr-FR')}</span>
+            <span>Document généré le {new Date(transcript.generated_at || '').toLocaleDateString('fr-FR')}</span>
             <span>{establishment?.name}</span>
           </div>
         </div>
