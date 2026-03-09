@@ -21,6 +21,7 @@ import {
   Receipt,
   Users2,
   Calculator,
+  Award,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -105,6 +106,7 @@ const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({ isOpen, onClose }) 
     { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Administration', href: '/administration', icon: ShieldCheck, subItems: administrationSubItems },
     { name: 'Formations', href: '/formations', icon: GraduationCap },
+    { name: 'Notes & Évaluations', href: '/notes', icon: Award },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarClock },
     { name: 'Messagerie', href: '/messagerie', icon: Mail },
     { name: 'Groupes', href: '/groupes', icon: UsersRound },
@@ -120,6 +122,7 @@ const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({ isOpen, onClose }) 
     { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Administration', href: '/administration', icon: ShieldCheck, subItems: administrationSubItems },
     { name: 'Formations', href: '/formations', icon: GraduationCap },
+    { name: 'Notes & Évaluations', href: '/notes', icon: Award },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarClock },
     { name: 'Messagerie', href: '/messagerie', icon: Mail },
     { name: 'Groupes', href: '/groupes', icon: UsersRound },
@@ -132,6 +135,7 @@ const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({ isOpen, onClose }) 
 
   const tutorNavigation: NavigationItem[] = [
     { name: 'Formation apprenti', href: '/formations', icon: GraduationCap },
+    { name: 'Notes apprenti', href: '/notes', icon: Award },
     { name: 'Suivi émargement apprenti', href: '/suivi-emargement', icon: ClipboardCheck },
     { name: 'Emploi du temps apprenti', href: '/emploi-temps', icon: CalendarClock },
     { name: 'Mon profil', href: '/compte', icon: UserCircle },
@@ -139,6 +143,7 @@ const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({ isOpen, onClose }) 
 
   const limitedNavigation: NavigationItem[] = [
     { name: 'Formations', href: '/formations', icon: GraduationCap },
+    { name: 'Notes', href: '/notes', icon: Award },
     { name: 'Suivi émargement', href: '/suivi-emargement', icon: ClipboardCheck },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarClock },
     { name: 'Messagerie', href: '/messagerie', icon: Mail },

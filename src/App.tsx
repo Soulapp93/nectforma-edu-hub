@@ -56,6 +56,7 @@ import CookieConsent from '@/components/CookieConsent';
 import LinkedInCallback from '@/pages/LinkedInCallback';
 import EspaceTravail from './pages/EspaceTravail';
 import QuestionnairePublic from './pages/QuestionnairePublic';
+import Notes from './pages/Notes';
 
 
 
@@ -412,7 +413,8 @@ const AppContent = () => {
             <Route path="/gestion-etablissement" element={<ProtectedRoute><AdminPrincipalRoute><GestionEtablissement /></AdminPrincipalRoute></ProtectedRoute>} />
             <Route path="/compte" element={<ProtectedRoute><Compte /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-            <Route path="/espace-travail" element={<ProtectedRoute><EspaceTravail /></ProtectedRoute>} />
+            <Route path="/espace-travail" element={<ProtectedRoute><TutorRestrictedRoute><EspaceTravail /></TutorRestrictedRoute></ProtectedRoute>} />
+            <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
