@@ -124,9 +124,6 @@ const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({ isOpen, onClose }) 
     { name: 'Messagerie', href: '/messagerie', icon: Mail },
     { name: 'Groupes', href: '/groupes', icon: UsersRound },
     { name: 'Espace de travail', href: '/espace-travail', icon: FolderKanban },
-    { name: 'Finance', href: '/finance', icon: Receipt },
-    { name: 'RH & Paie', href: '/ressources-humaines', icon: Users2 },
-    { name: 'Comptabilité', href: '/comptabilite', icon: Calculator },
     { name: 'Mon profil', href: '/compte', icon: UserCircle },
   ];
 
