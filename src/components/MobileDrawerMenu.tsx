@@ -18,9 +18,6 @@ import {
   UsersRound,
   ShieldCheck,
   FolderKanban,
-  Receipt,
-  Users2,
-  Calculator,
   Award,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
