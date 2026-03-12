@@ -1271,6 +1271,7 @@ export type Database = {
           module_id: string
           period_id: string | null
           scale: number
+          scale_type: string | null
           status: string
           title: string
           updated_at: string
@@ -1287,6 +1288,7 @@ export type Database = {
           module_id: string
           period_id?: string | null
           scale?: number
+          scale_type?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -1303,6 +1305,7 @@ export type Database = {
           module_id?: string
           period_id?: string | null
           scale?: number
+          scale_type?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -1726,6 +1729,8 @@ export type Database = {
           mention_bien_threshold: number | null
           mention_passable_threshold: number | null
           mention_tb_threshold: number | null
+          scale_id: string | null
+          transcript_template_id: string | null
           updated_at: string
           validation_threshold: number
         }
@@ -1745,6 +1750,8 @@ export type Database = {
           mention_bien_threshold?: number | null
           mention_passable_threshold?: number | null
           mention_tb_threshold?: number | null
+          scale_id?: string | null
+          transcript_template_id?: string | null
           updated_at?: string
           validation_threshold?: number
         }
@@ -1764,6 +1771,8 @@ export type Database = {
           mention_bien_threshold?: number | null
           mention_passable_threshold?: number | null
           mention_tb_threshold?: number | null
+          scale_id?: string | null
+          transcript_template_id?: string | null
           updated_at?: string
           validation_threshold?: number
         }
@@ -1773,6 +1782,70 @@ export type Database = {
             columns: ["formation_id"]
             isOneToOne: true
             referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grading_rules_scale_id_fkey"
+            columns: ["scale_id"]
+            isOneToOne: false
+            referencedRelation: "grading_scales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grading_rules_transcript_template_id_fkey"
+            columns: ["transcript_template_id"]
+            isOneToOne: false
+            referencedRelation: "transcript_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grading_scales: {
+        Row: {
+          created_at: string
+          establishment_id: string
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          max_value: number | null
+          name: string
+          passing_value: number | null
+          scale_levels: Json | null
+          scale_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          establishment_id: string
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          max_value?: number | null
+          name: string
+          passing_value?: number | null
+          scale_levels?: Json | null
+          scale_type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          establishment_id?: string
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          max_value?: number | null
+          name?: string
+          passing_value?: number | null
+          scale_levels?: Json | null
+          scale_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grading_scales_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
             referencedColumns: ["id"]
           },
         ]
@@ -4397,6 +4470,62 @@ export type Database = {
             columns: ["transcript_id"]
             isOneToOne: false
             referencedRelation: "transcripts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transcript_templates: {
+        Row: {
+          columns_config: Json | null
+          created_at: string
+          description: string | null
+          establishment_id: string
+          footer_config: Json | null
+          header_config: Json | null
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          name: string
+          style_config: Json | null
+          template_type: string
+          updated_at: string
+        }
+        Insert: {
+          columns_config?: Json | null
+          created_at?: string
+          description?: string | null
+          establishment_id: string
+          footer_config?: Json | null
+          header_config?: Json | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name: string
+          style_config?: Json | null
+          template_type?: string
+          updated_at?: string
+        }
+        Update: {
+          columns_config?: Json | null
+          created_at?: string
+          description?: string | null
+          establishment_id?: string
+          footer_config?: Json | null
+          header_config?: Json | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name?: string
+          style_config?: Json | null
+          template_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transcript_templates_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
             referencedColumns: ["id"]
           },
         ]
