@@ -487,8 +487,9 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
                         <tr className="bg-muted/40">
                           <th className="sticky left-0 bg-muted/40 z-10 p-2 border-b border-r border-border"></th>
                           <th className="sticky left-8 bg-muted/40 z-10 p-2 border-b border-r border-border"></th>
-                          {evaluations.map((ev, i) => (
-                            <th key={ev.id} className="text-center p-2 border-b border-r border-border min-w-[90px]">
+                          {/* CC evaluations first, then EB */}
+                          {[...evaluations.filter(e => e.evaluation_type !== 'examen_blanc'), ...evaluations.filter(e => e.evaluation_type === 'examen_blanc')].map((ev, i) => (
+                            <th key={ev.id} className={`text-center p-2 border-b border-r border-border min-w-[90px] ${ev.evaluation_type === 'examen_blanc' ? 'bg-amber-50/50 dark:bg-amber-950/20' : ''}`}>
                               <div className="text-xs font-semibold text-foreground">{formatEvalHeader(ev, i)}</div>
                               {ev.evaluation_date && (
                                 <div className="text-[10px] text-muted-foreground mt-0.5">{formatEvalDate(ev)}</div>
