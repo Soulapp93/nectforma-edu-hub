@@ -949,53 +949,6 @@ export type Database = {
           },
         ]
       }
-      competency_blocks: {
-        Row: {
-          code: string | null
-          coefficient: number
-          created_at: string
-          description: string | null
-          formation_id: string
-          id: string
-          is_validated_independently: boolean
-          order_index: number
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          code?: string | null
-          coefficient?: number
-          created_at?: string
-          description?: string | null
-          formation_id: string
-          id?: string
-          is_validated_independently?: boolean
-          order_index?: number
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          code?: string | null
-          coefficient?: number
-          created_at?: string
-          description?: string | null
-          formation_id?: string
-          id?: string
-          is_validated_independently?: boolean
-          order_index?: number
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "competency_blocks_formation_id_fkey"
-            columns: ["formation_id"]
-            isOneToOne: false
-            referencedRelation: "formations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       contracts: {
         Row: {
           contract_type: Database["public"]["Enums"]["contract_type"]
@@ -1271,7 +1224,6 @@ export type Database = {
           module_id: string
           period_id: string | null
           scale: number
-          scale_type: string | null
           status: string
           title: string
           updated_at: string
@@ -1288,7 +1240,6 @@ export type Database = {
           module_id: string
           period_id?: string | null
           scale?: number
-          scale_type?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -1305,7 +1256,6 @@ export type Database = {
           module_id?: string
           period_id?: string | null
           scale?: number
-          scale_type?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -1416,7 +1366,6 @@ export type Database = {
           credits: number | null
           description: string | null
           duration_hours: number
-          evaluation_mode: string
           formation_id: string
           id: string
           order_index: number
@@ -1430,7 +1379,6 @@ export type Database = {
           credits?: number | null
           description?: string | null
           duration_hours?: number
-          evaluation_mode?: string
           formation_id: string
           id?: string
           order_index?: number
@@ -1444,7 +1392,6 @@ export type Database = {
           credits?: number | null
           description?: string | null
           duration_hours?: number
-          evaluation_mode?: string
           formation_id?: string
           id?: string
           order_index?: number
@@ -1715,64 +1662,46 @@ export type Database = {
       grading_rules: {
         Row: {
           allow_compensation: boolean
-          allow_inter_block_compensation: boolean
-          compensation_mode: string
           compensation_threshold: number | null
           created_at: string
           credits_per_semester: number | null
           credits_system: string | null
-          eliminatory_threshold: number | null
           formation_id: string
-          has_eliminatory_threshold: boolean
           id: string
           mention_ab_threshold: number | null
           mention_bien_threshold: number | null
           mention_passable_threshold: number | null
           mention_tb_threshold: number | null
-          scale_id: string | null
-          transcript_template_id: string | null
           updated_at: string
           validation_threshold: number
         }
         Insert: {
           allow_compensation?: boolean
-          allow_inter_block_compensation?: boolean
-          compensation_mode?: string
           compensation_threshold?: number | null
           created_at?: string
           credits_per_semester?: number | null
           credits_system?: string | null
-          eliminatory_threshold?: number | null
           formation_id: string
-          has_eliminatory_threshold?: boolean
           id?: string
           mention_ab_threshold?: number | null
           mention_bien_threshold?: number | null
           mention_passable_threshold?: number | null
           mention_tb_threshold?: number | null
-          scale_id?: string | null
-          transcript_template_id?: string | null
           updated_at?: string
           validation_threshold?: number
         }
         Update: {
           allow_compensation?: boolean
-          allow_inter_block_compensation?: boolean
-          compensation_mode?: string
           compensation_threshold?: number | null
           created_at?: string
           credits_per_semester?: number | null
           credits_system?: string | null
-          eliminatory_threshold?: number | null
           formation_id?: string
-          has_eliminatory_threshold?: boolean
           id?: string
           mention_ab_threshold?: number | null
           mention_bien_threshold?: number | null
           mention_passable_threshold?: number | null
           mention_tb_threshold?: number | null
-          scale_id?: string | null
-          transcript_template_id?: string | null
           updated_at?: string
           validation_threshold?: number
         }
@@ -1782,70 +1711,6 @@ export type Database = {
             columns: ["formation_id"]
             isOneToOne: true
             referencedRelation: "formations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "grading_rules_scale_id_fkey"
-            columns: ["scale_id"]
-            isOneToOne: false
-            referencedRelation: "grading_scales"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "grading_rules_transcript_template_id_fkey"
-            columns: ["transcript_template_id"]
-            isOneToOne: false
-            referencedRelation: "transcript_templates"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      grading_scales: {
-        Row: {
-          created_at: string
-          establishment_id: string
-          id: string
-          is_active: boolean | null
-          is_default: boolean | null
-          max_value: number | null
-          name: string
-          passing_value: number | null
-          scale_levels: Json | null
-          scale_type: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          establishment_id: string
-          id?: string
-          is_active?: boolean | null
-          is_default?: boolean | null
-          max_value?: number | null
-          name: string
-          passing_value?: number | null
-          scale_levels?: Json | null
-          scale_type?: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          establishment_id?: string
-          id?: string
-          is_active?: boolean | null
-          is_default?: boolean | null
-          max_value?: number | null
-          name?: string
-          passing_value?: number | null
-          scale_levels?: Json | null
-          scale_type?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "grading_scales_establishment_id_fkey"
-            columns: ["establishment_id"]
-            isOneToOne: false
-            referencedRelation: "establishments"
             referencedColumns: ["id"]
           },
         ]
@@ -4213,7 +4078,6 @@ export type Database = {
       }
       teaching_units: {
         Row: {
-          block_id: string | null
           code: string | null
           coefficient: number
           created_at: string
@@ -4225,7 +4089,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          block_id?: string | null
           code?: string | null
           coefficient?: number
           created_at?: string
@@ -4237,7 +4100,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          block_id?: string | null
           code?: string | null
           coefficient?: number
           created_at?: string
@@ -4249,13 +4111,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "teaching_units_block_id_fkey"
-            columns: ["block_id"]
-            isOneToOne: false
-            referencedRelation: "competency_blocks"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "teaching_units_formation_id_fkey"
             columns: ["formation_id"]
@@ -4470,62 +4325,6 @@ export type Database = {
             columns: ["transcript_id"]
             isOneToOne: false
             referencedRelation: "transcripts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      transcript_templates: {
-        Row: {
-          columns_config: Json | null
-          created_at: string
-          description: string | null
-          establishment_id: string
-          footer_config: Json | null
-          header_config: Json | null
-          id: string
-          is_active: boolean | null
-          is_default: boolean | null
-          name: string
-          style_config: Json | null
-          template_type: string
-          updated_at: string
-        }
-        Insert: {
-          columns_config?: Json | null
-          created_at?: string
-          description?: string | null
-          establishment_id: string
-          footer_config?: Json | null
-          header_config?: Json | null
-          id?: string
-          is_active?: boolean | null
-          is_default?: boolean | null
-          name: string
-          style_config?: Json | null
-          template_type?: string
-          updated_at?: string
-        }
-        Update: {
-          columns_config?: Json | null
-          created_at?: string
-          description?: string | null
-          establishment_id?: string
-          footer_config?: Json | null
-          header_config?: Json | null
-          id?: string
-          is_active?: boolean | null
-          is_default?: boolean | null
-          name?: string
-          style_config?: Json | null
-          template_type?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "transcript_templates_establishment_id_fkey"
-            columns: ["establishment_id"]
-            isOneToOne: false
-            referencedRelation: "establishments"
             referencedColumns: ["id"]
           },
         ]
