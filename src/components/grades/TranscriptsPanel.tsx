@@ -333,7 +333,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId }) => {
                 <SelectValue placeholder="Toutes les périodes" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Toutes</SelectItem>
+                <SelectItem value="all">Toutes</SelectItem>
                 {periods.map((p) => (
                   <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                 ))}
