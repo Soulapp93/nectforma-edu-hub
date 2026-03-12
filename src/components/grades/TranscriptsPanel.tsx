@@ -127,7 +127,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId }) => {
     queryKey: ['evaluations-transcripts', selectedFormation, selectedPeriod],
     queryFn: async () => {
       const allEvals = await getEvaluations(selectedFormation);
-      if (selectedPeriod) return allEvals.filter(e => e.period_id === selectedPeriod);
+      if (selectedPeriod && selectedPeriod !== 'all') return allEvals.filter(e => e.period_id === selectedPeriod);
       return allEvals;
     },
     enabled: !!selectedFormation,
@@ -333,7 +333,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId }) => {
                 <SelectValue placeholder="Toutes les périodes" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Toutes</SelectItem>
+                <SelectItem value="all">Toutes</SelectItem>
                 {periods.map((p) => (
                   <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                 ))}
