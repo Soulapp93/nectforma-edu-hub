@@ -949,6 +949,53 @@ export type Database = {
           },
         ]
       }
+      competency_blocks: {
+        Row: {
+          code: string | null
+          coefficient: number
+          created_at: string
+          description: string | null
+          formation_id: string
+          id: string
+          is_validated_independently: boolean
+          order_index: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          code?: string | null
+          coefficient?: number
+          created_at?: string
+          description?: string | null
+          formation_id: string
+          id?: string
+          is_validated_independently?: boolean
+          order_index?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string | null
+          coefficient?: number
+          created_at?: string
+          description?: string | null
+          formation_id?: string
+          id?: string
+          is_validated_independently?: boolean
+          order_index?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competency_blocks_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           contract_type: Database["public"]["Enums"]["contract_type"]
@@ -1366,6 +1413,7 @@ export type Database = {
           credits: number | null
           description: string | null
           duration_hours: number
+          evaluation_mode: string
           formation_id: string
           id: string
           order_index: number
@@ -1379,6 +1427,7 @@ export type Database = {
           credits?: number | null
           description?: string | null
           duration_hours?: number
+          evaluation_mode?: string
           formation_id: string
           id?: string
           order_index?: number
@@ -1392,6 +1441,7 @@ export type Database = {
           credits?: number | null
           description?: string | null
           duration_hours?: number
+          evaluation_mode?: string
           formation_id?: string
           id?: string
           order_index?: number
@@ -1662,11 +1712,15 @@ export type Database = {
       grading_rules: {
         Row: {
           allow_compensation: boolean
+          allow_inter_block_compensation: boolean
+          compensation_mode: string
           compensation_threshold: number | null
           created_at: string
           credits_per_semester: number | null
           credits_system: string | null
+          eliminatory_threshold: number | null
           formation_id: string
+          has_eliminatory_threshold: boolean
           id: string
           mention_ab_threshold: number | null
           mention_bien_threshold: number | null
@@ -1677,11 +1731,15 @@ export type Database = {
         }
         Insert: {
           allow_compensation?: boolean
+          allow_inter_block_compensation?: boolean
+          compensation_mode?: string
           compensation_threshold?: number | null
           created_at?: string
           credits_per_semester?: number | null
           credits_system?: string | null
+          eliminatory_threshold?: number | null
           formation_id: string
+          has_eliminatory_threshold?: boolean
           id?: string
           mention_ab_threshold?: number | null
           mention_bien_threshold?: number | null
@@ -1692,11 +1750,15 @@ export type Database = {
         }
         Update: {
           allow_compensation?: boolean
+          allow_inter_block_compensation?: boolean
+          compensation_mode?: string
           compensation_threshold?: number | null
           created_at?: string
           credits_per_semester?: number | null
           credits_system?: string | null
+          eliminatory_threshold?: number | null
           formation_id?: string
+          has_eliminatory_threshold?: boolean
           id?: string
           mention_ab_threshold?: number | null
           mention_bien_threshold?: number | null
@@ -4078,6 +4140,7 @@ export type Database = {
       }
       teaching_units: {
         Row: {
+          block_id: string | null
           code: string | null
           coefficient: number
           created_at: string
@@ -4089,6 +4152,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          block_id?: string | null
           code?: string | null
           coefficient?: number
           created_at?: string
@@ -4100,6 +4164,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          block_id?: string | null
           code?: string | null
           coefficient?: number
           created_at?: string
@@ -4111,6 +4176,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "teaching_units_block_id_fkey"
+            columns: ["block_id"]
+            isOneToOne: false
+            referencedRelation: "competency_blocks"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "teaching_units_formation_id_fkey"
             columns: ["formation_id"]
