@@ -445,18 +445,37 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
                           <th className="sticky left-8 bg-muted/60 z-10 text-left p-2 border-b border-r border-border font-semibold text-foreground min-w-[180px]">
                             Apprenant
                           </th>
-                          {evaluations.length > 0 ? (
-                            <th
-                              colSpan={evaluations.length}
-                              className="text-center p-2 border-b border-r border-border font-semibold text-foreground"
-                            >
-                              Contrôle Continu
-                            </th>
-                          ) : (
-                            <th className="text-center p-2 border-b border-r border-border text-muted-foreground italic">
-                              Aucune évaluation
-                            </th>
-                          )}
+                          {(() => {
+                            const ccEvals = evaluations.filter(e => e.evaluation_type !== 'examen_blanc');
+                            const ebEvals = evaluations.filter(e => e.evaluation_type === 'examen_blanc');
+                            if (evaluations.length === 0) {
+                              return (
+                                <th className="text-center p-2 border-b border-r border-border text-muted-foreground italic">
+                                  Aucune évaluation
+                                </th>
+                              );
+                            }
+                            return (
+                              <>
+                                {ccEvals.length > 0 && (
+                                  <th
+                                    colSpan={ccEvals.length}
+                                    className="text-center p-2 border-b border-r border-border font-semibold text-foreground bg-blue-50 dark:bg-blue-950/30"
+                                  >
+                                    Contrôle Continu
+                                  </th>
+                                )}
+                                {ebEvals.length > 0 && (
+                                  <th
+                                    colSpan={ebEvals.length}
+                                    className="text-center p-2 border-b border-r border-border font-semibold text-foreground bg-amber-50 dark:bg-amber-950/30"
+                                  >
+                                    Examen Blanc
+                                  </th>
+                                )}
+                              </>
+                            );
+                          })()}
                           <th className="text-center p-2 border-b border-r border-border font-semibold text-foreground w-20">
                             Moyenne
                           </th>
@@ -468,8 +487,9 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
                         <tr className="bg-muted/40">
                           <th className="sticky left-0 bg-muted/40 z-10 p-2 border-b border-r border-border"></th>
                           <th className="sticky left-8 bg-muted/40 z-10 p-2 border-b border-r border-border"></th>
-                          {evaluations.map((ev, i) => (
-                            <th key={ev.id} className="text-center p-2 border-b border-r border-border min-w-[90px]">
+                          {/* CC evaluations first, then EB */}
+                          {[...evaluations.filter(e => e.evaluation_type !== 'examen_blanc'), ...evaluations.filter(e => e.evaluation_type === 'examen_blanc')].map((ev, i) => (
+                            <th key={ev.id} className={`text-center p-2 border-b border-r border-border min-w-[90px] ${ev.evaluation_type === 'examen_blanc' ? 'bg-amber-50/50 dark:bg-amber-950/20' : ''}`}>
                               <div className="text-xs font-semibold text-foreground">{formatEvalHeader(ev, i)}</div>
                               {ev.evaluation_date && (
                                 <div className="text-[10px] text-muted-foreground mt-0.5">{formatEvalDate(ev)}</div>
@@ -498,14 +518,14 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
                               <td className="sticky left-8 bg-card z-10 p-2 border-r border-border font-medium text-foreground whitespace-nowrap">
                                 {student.last_name} {student.first_name}
                               </td>
-                              {/* Grade cells */}
-                              {evaluations.map((ev, colIdx) => {
+                              {/* Grade cells - CC first, then EB */}
+                              {[...evaluations.filter(e => e.evaluation_type !== 'examen_blanc'), ...evaluations.filter(e => e.evaluation_type === 'examen_blanc')].map((ev, colIdx) => {
                                 const studentGrades = localGrades.get(student.user_id);
                                 const value = studentGrades?.get(ev.id);
                                 const canEdit = mode === 'admin' || ev.instructor_id === userId;
                                 const isOpen = ev.status === 'ouvert' || ev.status === 'brouillon';
                                 return (
-                                  <td key={ev.id} className="p-1 border-r border-border text-center">
+                                  <td key={ev.id} className={`p-1 border-r border-border text-center ${ev.evaluation_type === 'examen_blanc' ? 'bg-amber-50/30 dark:bg-amber-950/10' : ''}`}>
                                     {canEdit && isOpen ? (
                                       <Input
                                         ref={(el) => { if (el) inputRefs.current.set(`${student.user_id}-${ev.id}`, el); }}
@@ -572,10 +592,10 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
                             <td className="sticky left-8 bg-muted/50 z-10 p-2 border-r border-border text-right text-xs text-muted-foreground uppercase tracking-wide">
                               Moyenne de classe
                             </td>
-                            {evaluations.map(ev => {
+                            {[...evaluations.filter(e => e.evaluation_type !== 'examen_blanc'), ...evaluations.filter(e => e.evaluation_type === 'examen_blanc')].map(ev => {
                               const evalAvg = getEvalAverage(ev.id);
                               return (
-                                <td key={ev.id} className="p-2 border-r border-border text-center">
+                                <td key={ev.id} className={`p-2 border-r border-border text-center ${ev.evaluation_type === 'examen_blanc' ? 'bg-amber-50/30 dark:bg-amber-950/10' : ''}`}>
                                   <span className={`text-sm font-bold ${
                                     evalAvg === null ? 'text-muted-foreground' :
                                     evalAvg >= 10 ? 'text-green-600 dark:text-green-400' :
