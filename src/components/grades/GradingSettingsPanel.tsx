@@ -8,9 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Trash2, Save, Settings2, Calendar, BookOpen, Lock, Unlock, Layers, Shield, GraduationCap } from 'lucide-react';
+import { Plus, Trash2, Save, Settings2, Calendar, BookOpen, Lock, Unlock, Layers, Shield, GraduationCap, Ruler, FileText, Palette, Eye, Copy } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useEstablishment } from '@/hooks/useEstablishment';
 import { toast } from 'sonner';
 import {
   getGradingRules,
@@ -27,21 +29,37 @@ import {
   createCompetencyBlock,
   deleteCompetencyBlock,
   updateModuleEvaluationMode,
+  getGradingScales,
+  createGradingScale,
+  deleteGradingScale,
+  getTranscriptTemplates,
+  createTranscriptTemplate,
+  deleteTranscriptTemplate,
+  updateTranscriptTemplate,
   PERIOD_TYPES,
   CREDITS_SYSTEMS,
   EVALUATION_MODES,
   COMPENSATION_MODES,
+  SCALE_TYPES,
+  PRESET_TEMPLATES,
+  getDefaultHeaderConfig,
+  getDefaultColumnsConfig,
+  getDefaultFooterConfig,
+  getDefaultStyleConfig,
   type GradingRules,
   type EvaluationPeriod,
   type TeachingUnit,
   type CompetencyBlock,
+  type GradingScale,
+  type ScaleLevel,
+  type TranscriptTemplate,
 } from '@/services/gradesService';
 
 const GradingSettingsPanel: React.FC = () => {
   const queryClient = useQueryClient();
+  const { establishment } = useEstablishment();
   const [selectedFormation, setSelectedFormation] = useState('');
 
-  // Formations
   const { data: formations = [] } = useQuery({
     queryKey: ['formations-settings'],
     queryFn: async () => {
@@ -54,35 +72,31 @@ const GradingSettingsPanel: React.FC = () => {
     if (formations.length > 0 && !selectedFormation) setSelectedFormation(formations[0].id);
   }, [formations]);
 
-  // Rules
+  // Queries
   const { data: rules } = useQuery({
     queryKey: ['grading-rules', selectedFormation],
     queryFn: () => getGradingRules(selectedFormation),
     enabled: !!selectedFormation,
   });
 
-  // Periods
   const { data: periods = [] } = useQuery({
     queryKey: ['evaluation-periods-settings', selectedFormation],
     queryFn: () => getEvaluationPeriods(selectedFormation),
     enabled: !!selectedFormation,
   });
 
-  // Teaching units
   const { data: units = [] } = useQuery({
     queryKey: ['teaching-units-settings', selectedFormation],
     queryFn: () => getTeachingUnits(selectedFormation),
     enabled: !!selectedFormation,
   });
 
-  // Competency blocks
   const { data: blocks = [] } = useQuery({
     queryKey: ['competency-blocks-settings', selectedFormation],
     queryFn: () => getCompetencyBlocks(selectedFormation),
     enabled: !!selectedFormation,
   });
 
-  // Modules
   const { data: modules = [] } = useQuery({
     queryKey: ['modules-settings', selectedFormation],
     queryFn: async () => {
@@ -96,7 +110,19 @@ const GradingSettingsPanel: React.FC = () => {
     enabled: !!selectedFormation,
   });
 
-  // Local state for rules form
+  const { data: scales = [] } = useQuery({
+    queryKey: ['grading-scales', establishment?.id],
+    queryFn: () => getGradingScales(establishment!.id),
+    enabled: !!establishment?.id,
+  });
+
+  const { data: templates = [] } = useQuery({
+    queryKey: ['transcript-templates', establishment?.id],
+    queryFn: () => getTranscriptTemplates(establishment!.id),
+    enabled: !!establishment?.id,
+  });
+
+  // Local rules state
   const [localRules, setLocalRules] = useState<Partial<GradingRules>>({});
   useEffect(() => {
     setLocalRules(rules || {
@@ -114,16 +140,19 @@ const GradingSettingsPanel: React.FC = () => {
       allow_inter_block_compensation: false,
       eliminatory_threshold: null,
       has_eliminatory_threshold: false,
+      scale_id: null,
+      transcript_template_id: null,
     });
   }, [rules, selectedFormation]);
 
-  // Period form
+  // Form states
   const [newPeriod, setNewPeriod] = useState({ name: '', period_type: 'semestre', start_date: '', end_date: '' });
-  // UE form
   const [newUnit, setNewUnit] = useState({ title: '', code: '', coefficient: '1', credits: '', block_id: '' });
-  // Block form
   const [newBlock, setNewBlock] = useState({ title: '', code: '', coefficient: '1', description: '' });
+  const [newScale, setNewScale] = useState({ name: '', scale_type: 'numeric_20', max_value: '20', passing_value: '10' });
+  const [newScaleLevels, setNewScaleLevels] = useState<ScaleLevel[]>([]);
 
+  // Mutations
   const rulesMutation = useMutation({
     mutationFn: () => upsertGradingRules({ ...localRules, formation_id: selectedFormation }),
     onSuccess: () => {
@@ -194,6 +223,55 @@ const GradingSettingsPanel: React.FC = () => {
     onError: () => toast.error('Erreur'),
   });
 
+  const scaleMutation = useMutation({
+    mutationFn: () => createGradingScale({
+      establishment_id: establishment!.id,
+      name: newScale.name,
+      scale_type: newScale.scale_type,
+      max_value: parseFloat(newScale.max_value),
+      passing_value: parseFloat(newScale.passing_value),
+      scale_levels: newScale.scale_type === 'custom' ? newScaleLevels : [],
+      is_default: scales.length === 0,
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['grading-scales'] });
+      setNewScale({ name: '', scale_type: 'numeric_20', max_value: '20', passing_value: '10' });
+      setNewScaleLevels([]);
+      toast.success('Barème créé');
+    },
+    onError: () => toast.error('Erreur'),
+  });
+
+  const templateFromPresetMutation = useMutation({
+    mutationFn: (preset: typeof PRESET_TEMPLATES[0]) => createTranscriptTemplate({
+      establishment_id: establishment!.id,
+      name: preset.name,
+      description: preset.description,
+      template_type: preset.type,
+      is_default: templates.length === 0,
+      ...preset.config,
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transcript-templates'] });
+      toast.success('Modèle de relevé créé');
+    },
+    onError: () => toast.error('Erreur'),
+  });
+
+  const addScaleLevel = () => {
+    setNewScaleLevels([...newScaleLevels, { label: '', min_value: 0, max_value: 20, is_passing: false }]);
+  };
+
+  const updateScaleLevel = (idx: number, field: keyof ScaleLevel, value: any) => {
+    const updated = [...newScaleLevels];
+    (updated[idx] as any)[field] = value;
+    setNewScaleLevels(updated);
+  };
+
+  const removeScaleLevel = (idx: number) => {
+    setNewScaleLevels(newScaleLevels.filter((_, i) => i !== idx));
+  };
+
   return (
     <div className="space-y-4">
       <Select value={selectedFormation} onValueChange={setSelectedFormation}>
@@ -209,26 +287,30 @@ const GradingSettingsPanel: React.FC = () => {
 
       {selectedFormation && (
         <Tabs defaultValue="rules" className="space-y-4">
-          <TabsList className="flex flex-wrap gap-1 w-full max-w-2xl">
-            <TabsTrigger value="rules"><Settings2 className="h-4 w-4 mr-1" /> Règles</TabsTrigger>
-            <TabsTrigger value="compensation"><Shield className="h-4 w-4 mr-1" /> Compensation</TabsTrigger>
-            <TabsTrigger value="blocks"><Layers className="h-4 w-4 mr-1" /> Blocs</TabsTrigger>
-            <TabsTrigger value="units"><BookOpen className="h-4 w-4 mr-1" /> UE</TabsTrigger>
-            <TabsTrigger value="eval-modes"><GraduationCap className="h-4 w-4 mr-1" /> Modules</TabsTrigger>
-            <TabsTrigger value="periods"><Calendar className="h-4 w-4 mr-1" /> Périodes</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto">
+            <TabsList className="inline-flex gap-1 w-auto">
+              <TabsTrigger value="rules"><Settings2 className="h-4 w-4 mr-1" /> Règles</TabsTrigger>
+              <TabsTrigger value="scales"><Ruler className="h-4 w-4 mr-1" /> Barèmes</TabsTrigger>
+              <TabsTrigger value="compensation"><Shield className="h-4 w-4 mr-1" /> Compensation</TabsTrigger>
+              <TabsTrigger value="blocks"><Layers className="h-4 w-4 mr-1" /> Blocs</TabsTrigger>
+              <TabsTrigger value="units"><BookOpen className="h-4 w-4 mr-1" /> UE</TabsTrigger>
+              <TabsTrigger value="eval-modes"><GraduationCap className="h-4 w-4 mr-1" /> Modules</TabsTrigger>
+              <TabsTrigger value="periods"><Calendar className="h-4 w-4 mr-1" /> Périodes</TabsTrigger>
+              <TabsTrigger value="templates"><FileText className="h-4 w-4 mr-1" /> Relevés</TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* ==================== RÈGLES ==================== */}
           <TabsContent value="rules">
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Règles de notation</CardTitle>
-                <CardDescription>Seuils de validation et mentions</CardDescription>
+                <CardDescription>Seuils de validation, mentions et barème par défaut</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <Label>Seuil de validation (/20)</Label>
+                    <Label>Seuil de validation</Label>
                     <Input
                       type="number"
                       value={localRules.validation_threshold ?? 10}
@@ -249,6 +331,23 @@ const GradingSettingsPanel: React.FC = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  {scales.length > 0 && (
+                    <div>
+                      <Label>Barème par défaut</Label>
+                      <Select
+                        value={localRules.scale_id || 'none'}
+                        onValueChange={(v) => setLocalRules({ ...localRules, scale_id: v === 'none' ? null : v })}
+                      >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Standard /20</SelectItem>
+                          {scales.map(s => (
+                            <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
                 {localRules.credits_system !== 'none' && (
                   <div className="w-48">
@@ -278,10 +377,158 @@ const GradingSettingsPanel: React.FC = () => {
                     <Input type="number" value={localRules.mention_tb_threshold ?? 16} onChange={(e) => setLocalRules({ ...localRules, mention_tb_threshold: parseFloat(e.target.value) })} />
                   </div>
                 </div>
+                {templates.length > 0 && (
+                  <div className="w-72">
+                    <Label>Modèle de relevé de notes</Label>
+                    <Select
+                      value={localRules.transcript_template_id || 'none'}
+                      onValueChange={(v) => setLocalRules({ ...localRules, transcript_template_id: v === 'none' ? null : v })}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Par défaut</SelectItem>
+                        {templates.map(t => (
+                          <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <Button onClick={() => rulesMutation.mutate()} disabled={rulesMutation.isPending} className="gap-2">
                   <Save className="h-4 w-4" />
                   Enregistrer
                 </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ==================== BARÈMES ==================== */}
+          <TabsContent value="scales">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Barèmes de notation</CardTitle>
+                <CardDescription>Créez vos propres échelles de notation (/20, /100, lettres, compétences, personnalisé)</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Existing scales */}
+                {scales.map(s => (
+                  <div key={s.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{s.name}</p>
+                        <Badge variant="secondary" className="text-[10px]">
+                          {SCALE_TYPES.find(st => st.value === s.scale_type)?.label || s.scale_type}
+                        </Badge>
+                        {s.is_default && <Badge className="text-[10px] bg-primary/20 text-primary">Par défaut</Badge>}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Max: {s.max_value} • Passage: {s.passing_value}
+                        {s.scale_levels?.length > 0 && ` • ${s.scale_levels.length} niveaux`}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm" variant="ghost" className="text-destructive"
+                      onClick={() => {
+                        if (confirm('Supprimer ce barème ?')) {
+                          deleteGradingScale(s.id).then(() => {
+                            queryClient.invalidateQueries({ queryKey: ['grading-scales'] });
+                            toast.success('Barème supprimé');
+                          });
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+
+                {/* Quick create from presets */}
+                {scales.length === 0 && (
+                  <div className="p-4 rounded-lg border border-dashed border-primary/30 bg-primary/5">
+                    <p className="text-sm font-medium mb-3">Barèmes prédéfinis — cliquez pour ajouter :</p>
+                    <div className="flex flex-wrap gap-2">
+                      {SCALE_TYPES.map(st => (
+                        <Button
+                          key={st.value}
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            createGradingScale({
+                              establishment_id: establishment!.id,
+                              name: st.label,
+                              scale_type: st.value,
+                              max_value: st.value === 'numeric_100' ? 100 : 20,
+                              passing_value: st.value === 'numeric_100' ? 50 : 10,
+                              scale_levels: [],
+                              is_default: scales.length === 0,
+                            }).then(() => {
+                              queryClient.invalidateQueries({ queryKey: ['grading-scales'] });
+                              toast.success(`Barème "${st.label}" créé`);
+                            });
+                          }}
+                          className="gap-1"
+                        >
+                          <Plus className="h-3 w-3" />
+                          {st.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Custom scale form */}
+                <div className="border-t pt-4 space-y-3">
+                  <p className="text-sm font-medium">Créer un barème personnalisé</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+                    <div>
+                      <Label>Nom</Label>
+                      <Input value={newScale.name} onChange={(e) => setNewScale({ ...newScale, name: e.target.value })} placeholder="Mon barème" />
+                    </div>
+                    <div>
+                      <Label>Type</Label>
+                      <Select value={newScale.scale_type} onValueChange={(v) => setNewScale({ ...newScale, scale_type: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {SCALE_TYPES.map(st => (
+                            <SelectItem key={st.value} value={st.value}>{st.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Valeur max</Label>
+                      <Input type="number" value={newScale.max_value} onChange={(e) => setNewScale({ ...newScale, max_value: e.target.value })} />
+                    </div>
+                    <Button
+                      onClick={() => scaleMutation.mutate()}
+                      disabled={!newScale.name || scaleMutation.isPending}
+                      className="gap-1"
+                    >
+                      <Plus className="h-4 w-4" /> Créer
+                    </Button>
+                  </div>
+
+                  {newScale.scale_type === 'custom' && (
+                    <div className="space-y-2 p-3 rounded-lg bg-muted/20 border">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-medium">Niveaux de l'échelle</Label>
+                        <Button size="sm" variant="outline" onClick={addScaleLevel} className="gap-1">
+                          <Plus className="h-3 w-3" /> Ajouter
+                        </Button>
+                      </div>
+                      {newScaleLevels.map((level, idx) => (
+                        <div key={idx} className="grid grid-cols-5 gap-2 items-center">
+                          <Input placeholder="Libellé" value={level.label} onChange={(e) => updateScaleLevel(idx, 'label', e.target.value)} className="col-span-2" />
+                          <Input type="number" placeholder="Min" value={level.min_value} onChange={(e) => updateScaleLevel(idx, 'min_value', parseFloat(e.target.value))} />
+                          <Input type="number" placeholder="Max" value={level.max_value} onChange={(e) => updateScaleLevel(idx, 'max_value', parseFloat(e.target.value))} />
+                          <Button size="icon" variant="ghost" className="text-destructive" onClick={() => removeScaleLevel(idx)}>
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -325,15 +572,12 @@ const GradingSettingsPanel: React.FC = () => {
                     </div>
 
                     <div className="w-64">
-                      <Label>Seuil minimum pour la compensation (/20)</Label>
+                      <Label>Seuil minimum pour la compensation</Label>
                       <Input
                         type="number"
                         value={localRules.compensation_threshold ?? 8}
                         onChange={(e) => setLocalRules({ ...localRules, compensation_threshold: parseFloat(e.target.value) })}
                       />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Note en dessous de laquelle la compensation s'applique (rattrapage)
-                      </p>
                     </div>
 
                     <div className="border-t pt-4 space-y-3">
@@ -346,14 +590,14 @@ const GradingSettingsPanel: React.FC = () => {
                       </div>
                       {localRules.has_eliminatory_threshold && (
                         <div className="w-64">
-                          <Label>Seuil éliminatoire (/20)</Label>
+                          <Label>Seuil éliminatoire</Label>
                           <Input
                             type="number"
                             value={localRules.eliminatory_threshold ?? 6}
                             onChange={(e) => setLocalRules({ ...localRules, eliminatory_threshold: parseFloat(e.target.value) })}
                           />
                           <p className="text-xs text-muted-foreground mt-1">
-                            En dessous de cette note, aucune compensation n'est possible (éliminatoire)
+                            En dessous de cette note, aucune compensation n'est possible
                           </p>
                         </div>
                       )}
@@ -395,9 +639,7 @@ const GradingSettingsPanel: React.FC = () => {
                       </div>
                     </div>
                     <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-destructive"
+                      size="sm" variant="ghost" className="text-destructive"
                       onClick={() => {
                         if (confirm('Supprimer ce bloc ?')) {
                           deleteCompetencyBlock(b.id).then(() => {
@@ -425,8 +667,7 @@ const GradingSettingsPanel: React.FC = () => {
                     <Input type="number" value={newBlock.coefficient} onChange={(e) => setNewBlock({ ...newBlock, coefficient: e.target.value })} />
                   </div>
                   <Button
-                    size="icon"
-                    className="mt-6"
+                    size="icon" className="mt-6"
                     onClick={() => blockMutation.mutate()}
                     disabled={!newBlock.title}
                   >
@@ -477,9 +718,7 @@ const GradingSettingsPanel: React.FC = () => {
                         </Select>
                       )}
                       <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-destructive"
+                        size="sm" variant="ghost" className="text-destructive"
                         onClick={() => {
                           if (confirm('Supprimer cette UE ?')) {
                             deleteTeachingUnit(u.id).then(() => {
@@ -526,8 +765,7 @@ const GradingSettingsPanel: React.FC = () => {
                     </div>
                   )}
                   <Button
-                    size="icon"
-                    className="mt-6"
+                    size="icon" className="mt-6"
                     onClick={() => unitMutation.mutate()}
                     disabled={!newUnit.title}
                   >
@@ -593,8 +831,7 @@ const GradingSettingsPanel: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
-                        size="sm"
-                        variant="ghost"
+                        size="sm" variant="ghost"
                         onClick={() => {
                           togglePeriodLock(p.id, !p.is_locked).then(() => {
                             queryClient.invalidateQueries({ queryKey: ['evaluation-periods-settings'] });
@@ -605,9 +842,7 @@ const GradingSettingsPanel: React.FC = () => {
                         {p.is_locked ? <Lock className="h-4 w-4 text-red-500" /> : <Unlock className="h-4 w-4 text-green-500" />}
                       </Button>
                       <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-destructive"
+                        size="sm" variant="ghost" className="text-destructive"
                         onClick={() => {
                           if (confirm('Supprimer cette période ?')) {
                             deleteEvaluationPeriod(p.id).then(() => {
@@ -648,8 +883,7 @@ const GradingSettingsPanel: React.FC = () => {
                       <Input type="date" value={newPeriod.end_date} onChange={(e) => setNewPeriod({ ...newPeriod, end_date: e.target.value })} />
                     </div>
                     <Button
-                      size="icon"
-                      className="mt-6"
+                      size="icon" className="mt-6"
                       onClick={() => periodMutation.mutate()}
                       disabled={!newPeriod.name || !newPeriod.start_date || !newPeriod.end_date}
                     >
@@ -659,6 +893,91 @@ const GradingSettingsPanel: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* ==================== TEMPLATES DE RELEVÉS ==================== */}
+          <TabsContent value="templates">
+            <div className="space-y-4">
+              {/* Existing templates */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Modèles de relevés de notes</CardTitle>
+                  <CardDescription>Sélectionnez un modèle prédéfini ou personnalisez les colonnes et le style de vos bulletins</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {templates.map(t => (
+                    <div key={t.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{t.name}</p>
+                          <Badge variant="secondary" className="text-[10px]">{t.template_type}</Badge>
+                          {t.is_default && <Badge className="text-[10px] bg-primary/20 text-primary">Par défaut</Badge>}
+                        </div>
+                        {t.description && <p className="text-xs text-muted-foreground mt-0.5">{t.description}</p>}
+                        <div className="flex gap-1 mt-2 flex-wrap">
+                          {(t.columns_config || []).filter((c: any) => c.enabled).map((c: any) => (
+                            <Badge key={c.key} variant="outline" className="text-[9px]">{c.label}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm" variant="ghost" className="text-destructive"
+                          onClick={() => {
+                            if (confirm('Supprimer ce modèle ?')) {
+                              deleteTranscriptTemplate(t.id).then(() => {
+                                queryClient.invalidateQueries({ queryKey: ['transcript-templates'] });
+                                toast.success('Modèle supprimé');
+                              });
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {templates.length === 0 && (
+                    <div className="text-center py-6 text-sm text-muted-foreground">
+                      Aucun modèle créé. Choisissez un modèle prédéfini ci-dessous pour commencer.
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Preset templates gallery */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Modèles prédéfinis</CardTitle>
+                  <CardDescription>Cliquez pour ajouter un modèle de relevé de notes à votre établissement</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {PRESET_TEMPLATES.map((preset, idx) => (
+                      <div
+                        key={idx}
+                        className="p-4 rounded-lg border border-border hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group"
+                        onClick={() => templateFromPresetMutation.mutate(preset)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h4 className="font-semibold text-sm group-hover:text-primary transition-colors">{preset.name}</h4>
+                            <p className="text-xs text-muted-foreground mt-1">{preset.description}</p>
+                          </div>
+                          <Copy className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                        </div>
+                        <div className="flex gap-1 mt-3 flex-wrap">
+                          {(preset.config.columns_config || []).filter((c: any) => c.enabled).map((c: any, i: number) => (
+                            <Badge key={i} variant="outline" className="text-[9px]">{c.label}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       )}
