@@ -127,7 +127,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId }) => {
     queryKey: ['evaluations-transcripts', selectedFormation, selectedPeriod],
     queryFn: async () => {
       const allEvals = await getEvaluations(selectedFormation);
-      if (selectedPeriod) return allEvals.filter(e => e.period_id === selectedPeriod);
+      if (selectedPeriod && selectedPeriod !== 'all') return allEvals.filter(e => e.period_id === selectedPeriod);
       return allEvals;
     },
     enabled: !!selectedFormation,
