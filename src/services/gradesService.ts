@@ -4,6 +4,19 @@ import { supabase } from '@/integrations/supabase/client';
 // TYPES
 // =====================================================
 
+export interface CompetencyBlock {
+  id: string;
+  formation_id: string;
+  title: string;
+  code: string | null;
+  description: string | null;
+  coefficient: number;
+  order_index: number;
+  is_validated_independently: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface TeachingUnit {
   id: string;
   formation_id: string;
@@ -12,6 +25,7 @@ export interface TeachingUnit {
   coefficient: number;
   credits: number | null;
   order_index: number;
+  block_id: string | null;
 }
 
 export interface EvaluationPeriod {
@@ -79,6 +93,11 @@ export interface GradingRules {
   mention_ab_threshold: number;
   mention_bien_threshold: number;
   mention_tb_threshold: number;
+  // New fields
+  compensation_mode: string; // 'intra_block' | 'inter_block' | 'both' | 'none'
+  allow_inter_block_compensation: boolean;
+  eliminatory_threshold: number | null;
+  has_eliminatory_threshold: boolean;
 }
 
 export interface Transcript {
@@ -116,6 +135,46 @@ export interface TranscriptModule {
   module_title?: string;
   ue_title?: string;
 }
+
+// =====================================================
+// COMPETENCY BLOCKS
+// =====================================================
+
+export const getCompetencyBlocks = async (formationId: string): Promise<CompetencyBlock[]> => {
+  const { data, error } = await supabase
+    .from('competency_blocks')
+    .select('*')
+    .eq('formation_id', formationId)
+    .order('order_index');
+  if (error) throw error;
+  return (data || []) as unknown as CompetencyBlock[];
+};
+
+export const createCompetencyBlock = async (block: Partial<CompetencyBlock>): Promise<CompetencyBlock> => {
+  const { data, error } = await supabase
+    .from('competency_blocks')
+    .insert(block as any)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as unknown as CompetencyBlock;
+};
+
+export const updateCompetencyBlock = async (id: string, updates: Partial<CompetencyBlock>): Promise<CompetencyBlock> => {
+  const { data, error } = await supabase
+    .from('competency_blocks')
+    .update(updates as any)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as unknown as CompetencyBlock;
+};
+
+export const deleteCompetencyBlock = async (id: string): Promise<void> => {
+  const { error } = await supabase.from('competency_blocks').delete().eq('id', id);
+  if (error) throw error;
+};
 
 // =====================================================
 // EVALUATION PERIODS
@@ -205,6 +264,18 @@ export const updateTeachingUnit = async (id: string, updates: Partial<TeachingUn
 
 export const deleteTeachingUnit = async (id: string): Promise<void> => {
   const { error } = await supabase.from('teaching_units').delete().eq('id', id);
+  if (error) throw error;
+};
+
+// =====================================================
+// MODULE EVALUATION MODE
+// =====================================================
+
+export const updateModuleEvaluationMode = async (moduleId: string, evaluationMode: string): Promise<void> => {
+  const { error } = await supabase
+    .from('formation_modules')
+    .update({ evaluation_mode: evaluationMode } as any)
+    .eq('id', moduleId);
   if (error) throw error;
 };
 
@@ -462,7 +533,6 @@ export const calculateModuleAverage = (grades: Grade[], scale: number = 20): num
   );
   if (validGrades.length === 0) return null;
   
-  // Normaliser les notes cheating à 0
   const normalizedGrades = validGrades.map(g => ({
     ...g,
     value: g.is_cheating ? 0 : g.value!,
@@ -482,6 +552,45 @@ export const calculateWeightedAverage = (
   const weightedSum = valid.reduce((acc, m) => acc + (m.average! * m.coefficient), 0);
   
   return Math.round((weightedSum / totalCoeff) * 100) / 100;
+};
+
+/**
+ * Check if a module average is above the eliminatory threshold
+ */
+export const isAboveEliminatoryThreshold = (
+  average: number | null,
+  rules: GradingRules
+): boolean => {
+  if (!rules.has_eliminatory_threshold || rules.eliminatory_threshold === null) return true;
+  if (average === null) return true; // no grade yet
+  return average >= rules.eliminatory_threshold;
+};
+
+/**
+ * Calculate block average from its UE/modules
+ */
+export const calculateBlockAverage = (
+  moduleAverages: { average: number | null; coefficient: number }[]
+): number | null => {
+  return calculateWeightedAverage(moduleAverages);
+};
+
+/**
+ * Check if compensation is allowed for a student based on rules
+ */
+export const canCompensate = (
+  moduleAverage: number | null,
+  rules: GradingRules
+): boolean => {
+  if (!rules.allow_compensation) return false;
+  if (moduleAverage === null) return false;
+  // Check eliminatory threshold
+  if (rules.has_eliminatory_threshold && rules.eliminatory_threshold !== null) {
+    if (moduleAverage < rules.eliminatory_threshold) return false;
+  }
+  // Check compensation threshold
+  if (rules.compensation_threshold !== null && moduleAverage < rules.compensation_threshold) return false;
+  return true;
 };
 
 export const getMention = (average: number, rules: GradingRules): string | null => {
@@ -504,6 +613,7 @@ export const getDecision = (average: number, rules: GradingRules): string => {
 
 export const EVALUATION_TYPES = [
   { value: 'controle_continu', label: 'Contrôle continu' },
+  { value: 'examen_blanc', label: 'Examen blanc' },
   { value: 'examen_final', label: 'Examen final' },
   { value: 'rattrapage', label: 'Rattrapage' },
   { value: 'projet', label: 'Projet' },
@@ -524,6 +634,19 @@ export const PERIOD_TYPES = [
   { value: 'annee', label: 'Année' },
   { value: 'bloc', label: 'Bloc de compétences' },
   { value: 'custom', label: 'Personnalisé' },
+];
+
+export const EVALUATION_MODES = [
+  { value: 'cc_only', label: 'Contrôle continu uniquement' },
+  { value: 'exam_only', label: 'Examen blanc uniquement' },
+  { value: 'both', label: 'CC + Examen blanc' },
+];
+
+export const COMPENSATION_MODES = [
+  { value: 'none', label: 'Aucune compensation' },
+  { value: 'intra_block', label: 'Compensation intra-bloc (entre modules d\'un même bloc)' },
+  { value: 'inter_block', label: 'Compensation inter-blocs (entre blocs)' },
+  { value: 'both', label: 'Compensation intra et inter-blocs' },
 ];
 
 export const DECISIONS = [
