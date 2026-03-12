@@ -518,14 +518,14 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
                               <td className="sticky left-8 bg-card z-10 p-2 border-r border-border font-medium text-foreground whitespace-nowrap">
                                 {student.last_name} {student.first_name}
                               </td>
-                              {/* Grade cells */}
-                              {evaluations.map((ev, colIdx) => {
+                              {/* Grade cells - CC first, then EB */}
+                              {[...evaluations.filter(e => e.evaluation_type !== 'examen_blanc'), ...evaluations.filter(e => e.evaluation_type === 'examen_blanc')].map((ev, colIdx) => {
                                 const studentGrades = localGrades.get(student.user_id);
                                 const value = studentGrades?.get(ev.id);
                                 const canEdit = mode === 'admin' || ev.instructor_id === userId;
                                 const isOpen = ev.status === 'ouvert' || ev.status === 'brouillon';
                                 return (
-                                  <td key={ev.id} className="p-1 border-r border-border text-center">
+                                  <td key={ev.id} className={`p-1 border-r border-border text-center ${ev.evaluation_type === 'examen_blanc' ? 'bg-amber-50/30 dark:bg-amber-950/10' : ''}`}>
                                     {canEdit && isOpen ? (
                                       <Input
                                         ref={(el) => { if (el) inputRefs.current.set(`${student.user_id}-${ev.id}`, el); }}
