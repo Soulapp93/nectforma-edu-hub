@@ -445,18 +445,37 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
                           <th className="sticky left-8 bg-muted/60 z-10 text-left p-2 border-b border-r border-border font-semibold text-foreground min-w-[180px]">
                             Apprenant
                           </th>
-                          {evaluations.length > 0 ? (
-                            <th
-                              colSpan={evaluations.length}
-                              className="text-center p-2 border-b border-r border-border font-semibold text-foreground"
-                            >
-                              Contrôle Continu
-                            </th>
-                          ) : (
-                            <th className="text-center p-2 border-b border-r border-border text-muted-foreground italic">
-                              Aucune évaluation
-                            </th>
-                          )}
+                          {(() => {
+                            const ccEvals = evaluations.filter(e => e.evaluation_type !== 'examen_blanc');
+                            const ebEvals = evaluations.filter(e => e.evaluation_type === 'examen_blanc');
+                            if (evaluations.length === 0) {
+                              return (
+                                <th className="text-center p-2 border-b border-r border-border text-muted-foreground italic">
+                                  Aucune évaluation
+                                </th>
+                              );
+                            }
+                            return (
+                              <>
+                                {ccEvals.length > 0 && (
+                                  <th
+                                    colSpan={ccEvals.length}
+                                    className="text-center p-2 border-b border-r border-border font-semibold text-foreground bg-blue-50 dark:bg-blue-950/30"
+                                  >
+                                    Contrôle Continu
+                                  </th>
+                                )}
+                                {ebEvals.length > 0 && (
+                                  <th
+                                    colSpan={ebEvals.length}
+                                    className="text-center p-2 border-b border-r border-border font-semibold text-foreground bg-amber-50 dark:bg-amber-950/30"
+                                  >
+                                    Examen Blanc
+                                  </th>
+                                )}
+                              </>
+                            );
+                          })()}
                           <th className="text-center p-2 border-b border-r border-border font-semibold text-foreground w-20">
                             Moyenne
                           </th>
