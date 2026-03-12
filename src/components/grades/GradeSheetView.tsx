@@ -592,10 +592,10 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
                             <td className="sticky left-8 bg-muted/50 z-10 p-2 border-r border-border text-right text-xs text-muted-foreground uppercase tracking-wide">
                               Moyenne de classe
                             </td>
-                            {evaluations.map(ev => {
+                            {[...evaluations.filter(e => e.evaluation_type !== 'examen_blanc'), ...evaluations.filter(e => e.evaluation_type === 'examen_blanc')].map(ev => {
                               const evalAvg = getEvalAverage(ev.id);
                               return (
-                                <td key={ev.id} className="p-2 border-r border-border text-center">
+                                <td key={ev.id} className={`p-2 border-r border-border text-center ${ev.evaluation_type === 'examen_blanc' ? 'bg-amber-50/30 dark:bg-amber-950/10' : ''}`}>
                                   <span className={`text-sm font-bold ${
                                     evalAvg === null ? 'text-muted-foreground' :
                                     evalAvg >= 10 ? 'text-green-600 dark:text-green-400' :
