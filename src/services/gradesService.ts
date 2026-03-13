@@ -504,6 +504,7 @@ export const getDecision = (average: number, rules: GradingRules): string => {
 
 export const EVALUATION_TYPES = [
   { value: 'controle_continu', label: 'Contrôle continu' },
+  { value: 'examen_blanc', label: 'Examen blanc' },
   { value: 'examen_final', label: 'Examen final' },
   { value: 'rattrapage', label: 'Rattrapage' },
   { value: 'projet', label: 'Projet' },
