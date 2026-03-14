@@ -568,28 +568,33 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
                                 <td className="p-1.5 border border-border/50 text-center text-[10px] text-muted-foreground">
                                   {getAppreciation(ccAvg)}
                                 </td>
-                                {/* Exam Notes */}
-                                <td className="p-1 border border-border/50 text-center bg-emerald-50/30 dark:bg-emerald-900/5">
-                                  {examEvaluations.length > 0 ? (
-                                    examEvaluations.map(ev => (
-                                      <div key={ev.id}>{renderGradeCell(student.user_id, ev, canEditExam)}</div>
-                                    ))
-                                  ) : (
-                                    <span className="text-muted-foreground/30">—</span>
-                                  )}
-                                </td>
-                                {/* Exam Coefficient */}
-                                <td className="p-1.5 border border-border/50 text-center text-muted-foreground">
-                                  {mod.coefficient}
-                                </td>
-                                {/* Exam Points */}
-                                <td className={`p-1.5 border border-border/50 text-center font-bold ${avgColor(examScore)}`}>
-                                  {examPoints !== null ? examPoints.toFixed(2) : '—'}
-                                </td>
-                                {/* Exam Appreciation */}
-                                <td className="p-1.5 border border-border/50 text-center text-[10px] text-muted-foreground">
-                                  {getAppreciation(examScore)}
-                                </td>
+                                {/* Exam columns (conditional) */}
+                                {showExamSection && (
+                                  <>
+                                    {/* Exam Notes */}
+                                    <td className="p-1 border border-border/50 text-center bg-emerald-50/30 dark:bg-emerald-900/5">
+                                      {examEvaluations.length > 0 ? (
+                                        examEvaluations.map(ev => (
+                                          <div key={ev.id}>{renderGradeCell(student.user_id, ev, canEditExam)}</div>
+                                        ))
+                                      ) : (
+                                        <span className="text-muted-foreground/30">—</span>
+                                      )}
+                                    </td>
+                                    {/* Exam Coefficient */}
+                                    <td className="p-1.5 border border-border/50 text-center text-muted-foreground">
+                                      {mod.coefficient}
+                                    </td>
+                                    {/* Exam Points */}
+                                    <td className={`p-1.5 border border-border/50 text-center font-bold ${avgColor(examScore)}`}>
+                                      {examPoints !== null ? examPoints.toFixed(2) : '—'}
+                                    </td>
+                                    {/* Exam Appreciation */}
+                                    <td className="p-1.5 border border-border/50 text-center text-[10px] text-muted-foreground">
+                                      {getAppreciation(examScore)}
+                                    </td>
+                                  </>
+                                )}
                               </tr>
                             );
                           })}
