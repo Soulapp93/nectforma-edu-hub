@@ -291,7 +291,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     setTimeout(() => win.print(), 300);
   };
 
-  const currentFormation = formations.find((f: any) => f.id === selectedFormation);
+  const currentFormation = currentFormationData;
   const currentPeriod = periods.find(p => p.id === selectedPeriod);
   const currentModule = modules.find((m: any) => m.id === selectedModule);
 
