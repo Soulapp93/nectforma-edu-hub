@@ -134,7 +134,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   );
 
   // All evaluations displayed (for grade fetching)
-  const displayedEvaluations = useMemo(() => [...ccEvaluations, ...examEvaluations], [ccEvaluations, examEvaluations]);
+  const displayedEvaluations = useMemo(() => [...ccEvaluations, ...(showExamSection ? examEvaluations : [])], [ccEvaluations, examEvaluations, showExamSection]);
 
   // Max CC columns (at least 2)
   const maxCCControls = useMemo(() => Math.max(ccEvaluations.length, 2), [ccEvaluations]);
