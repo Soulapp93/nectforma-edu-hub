@@ -612,12 +612,16 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
                               </td>
                               <td className="p-1.5 border border-border"></td>
                               <td className="p-1.5 border border-border"></td>
-                              <td className={`p-1.5 border border-border text-center bg-emerald-100/50 dark:bg-emerald-800/30 ${avgColor(classExamAvg)}`}>
-                                {classExamAvg !== null ? classExamAvg.toFixed(2) : '—'}
-                              </td>
-                              <td className="p-1.5 border border-border"></td>
-                              <td className="p-1.5 border border-border"></td>
-                              <td className="p-1.5 border border-border"></td>
+                              {showExamSection && (
+                                <>
+                                  <td className={`p-1.5 border border-border text-center bg-emerald-100/50 dark:bg-emerald-800/30 ${avgColor(classExamAvg)}`}>
+                                    {classExamAvg !== null ? classExamAvg.toFixed(2) : '—'}
+                                  </td>
+                                  <td className="p-1.5 border border-border"></td>
+                                  <td className="p-1.5 border border-border"></td>
+                                  <td className="p-1.5 border border-border"></td>
+                                </>
+                              )}
                             </tr>
                           )}
                         </tbody>
