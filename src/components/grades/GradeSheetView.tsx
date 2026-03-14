@@ -36,6 +36,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [selectedModule, setSelectedModule] = useState('');
   const [examType, setExamType] = useState<'examen_blanc' | 'examen_final'>('examen_blanc');
+  const [showExamSection, setShowExamSection] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [localGrades, setLocalGrades] = useState<Map<string, Map<string, number | null>>>(new Map());
   const [isDirty, setIsDirty] = useState(false);
@@ -106,6 +107,12 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     enabled: !!selectedFormation,
   });
 
+  // Auto-detect if exam evaluations exist for this formation
+  useEffect(() => {
+    const hasExams = allEvaluations.some(e => e.evaluation_type === 'examen_blanc' || e.evaluation_type === 'examen_final');
+    if (hasExams) setShowExamSection(true);
+  }, [allEvaluations]);
+
   // Filter evaluations by period + module
   const moduleEvaluations = useMemo(() => {
     let evals = allEvaluations;
@@ -127,7 +134,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   );
 
   // All evaluations displayed (for grade fetching)
-  const displayedEvaluations = useMemo(() => [...ccEvaluations, ...examEvaluations], [ccEvaluations, examEvaluations]);
+  const displayedEvaluations = useMemo(() => [...ccEvaluations, ...(showExamSection ? examEvaluations : [])], [ccEvaluations, examEvaluations, showExamSection]);
 
   // Max CC columns (at least 2)
   const maxCCControls = useMemo(() => Math.max(ccEvaluations.length, 2), [ccEvaluations]);
@@ -376,6 +383,12 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
               Non enregistré
             </Badge>
           )}
+          {!showExamSection && (
+            <Button size="sm" variant="outline" className="gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950" onClick={() => setShowExamSection(true)}>
+              <Plus className="h-4 w-4" />
+              Ajouter un examen
+            </Button>
+          )}
           <Button size="sm" variant="outline" className="gap-2" onClick={() => setShowCreateModal(true)}>
             <Plus className="h-4 w-4" />
             Évaluation
@@ -457,21 +470,30 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
                               Contrôle Continu
                             </th>
                             {/* Exam section header with selector */}
-                            <th
-                              colSpan={4}
-                              className="bg-emerald-600 text-white text-center p-2 text-sm font-bold uppercase tracking-wider border border-emerald-700"
-                            >
-                              <div className="flex items-center justify-center gap-2">
-                                <select
-                                  value={examType}
-                                  onChange={(e) => setExamType(e.target.value as 'examen_blanc' | 'examen_final')}
-                                  className="bg-emerald-700 text-white border-none rounded px-2 py-0.5 text-xs font-bold cursor-pointer focus:outline-none"
-                                >
-                                  <option value="examen_blanc">Examen Blanc</option>
-                                  <option value="examen_final">Examen Final</option>
-                                </select>
-                              </div>
-                            </th>
+                            {showExamSection && (
+                              <th
+                                colSpan={4}
+                                className="bg-emerald-600 text-white text-center p-2 text-sm font-bold uppercase tracking-wider border border-emerald-700"
+                              >
+                                <div className="flex items-center justify-center gap-2">
+                                  <select
+                                    value={examType}
+                                    onChange={(e) => setExamType(e.target.value as 'examen_blanc' | 'examen_final')}
+                                    className="bg-emerald-700 text-white border-none rounded px-2 py-0.5 text-xs font-bold cursor-pointer focus:outline-none"
+                                  >
+                                    <option value="examen_blanc">Examen Blanc</option>
+                                    <option value="examen_final">Examen Final</option>
+                                  </select>
+                                  <button
+                                    onClick={() => setShowExamSection(false)}
+                                    className="ml-1 text-white/70 hover:text-white text-xs"
+                                    title="Masquer la section examen"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              </th>
+                            )}
                           </tr>
                           {/* Column sub-headers */}
                           <tr className="bg-muted/40">
@@ -491,18 +513,22 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
                               Appréciation
                             </th>
                             {/* Exam columns */}
-                            <th className="text-center p-2 border border-border font-semibold w-16 bg-emerald-100 dark:bg-emerald-900/30 text-[10px]">
-                              Notes
-                            </th>
-                            <th className="text-center p-2 border border-border font-semibold w-14 text-[10px]">
-                              Coef.
-                            </th>
-                            <th className="text-center p-2 border border-border font-semibold w-16 text-[10px]">
-                              Points
-                            </th>
-                            <th className="text-center p-2 border border-border font-semibold min-w-[100px] text-[10px]">
-                              Appréciation
-                            </th>
+                            {showExamSection && (
+                              <>
+                                <th className="text-center p-2 border border-border font-semibold w-16 bg-emerald-100 dark:bg-emerald-900/30 text-[10px]">
+                                  Notes
+                                </th>
+                                <th className="text-center p-2 border border-border font-semibold w-14 text-[10px]">
+                                  Coef.
+                                </th>
+                                <th className="text-center p-2 border border-border font-semibold w-16 text-[10px]">
+                                  Points
+                                </th>
+                                <th className="text-center p-2 border border-border font-semibold min-w-[100px] text-[10px]">
+                                  Appréciation
+                                </th>
+                              </>
+                            )}
                           </tr>
                         </thead>
                         <tbody>
@@ -542,28 +568,33 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
                                 <td className="p-1.5 border border-border/50 text-center text-[10px] text-muted-foreground">
                                   {getAppreciation(ccAvg)}
                                 </td>
-                                {/* Exam Notes */}
-                                <td className="p-1 border border-border/50 text-center bg-emerald-50/30 dark:bg-emerald-900/5">
-                                  {examEvaluations.length > 0 ? (
-                                    examEvaluations.map(ev => (
-                                      <div key={ev.id}>{renderGradeCell(student.user_id, ev, canEditExam)}</div>
-                                    ))
-                                  ) : (
-                                    <span className="text-muted-foreground/30">—</span>
-                                  )}
-                                </td>
-                                {/* Exam Coefficient */}
-                                <td className="p-1.5 border border-border/50 text-center text-muted-foreground">
-                                  {mod.coefficient}
-                                </td>
-                                {/* Exam Points */}
-                                <td className={`p-1.5 border border-border/50 text-center font-bold ${avgColor(examScore)}`}>
-                                  {examPoints !== null ? examPoints.toFixed(2) : '—'}
-                                </td>
-                                {/* Exam Appreciation */}
-                                <td className="p-1.5 border border-border/50 text-center text-[10px] text-muted-foreground">
-                                  {getAppreciation(examScore)}
-                                </td>
+                                {/* Exam columns (conditional) */}
+                                {showExamSection && (
+                                  <>
+                                    {/* Exam Notes */}
+                                    <td className="p-1 border border-border/50 text-center bg-emerald-50/30 dark:bg-emerald-900/5">
+                                      {examEvaluations.length > 0 ? (
+                                        examEvaluations.map(ev => (
+                                          <div key={ev.id}>{renderGradeCell(student.user_id, ev, canEditExam)}</div>
+                                        ))
+                                      ) : (
+                                        <span className="text-muted-foreground/30">—</span>
+                                      )}
+                                    </td>
+                                    {/* Exam Coefficient */}
+                                    <td className="p-1.5 border border-border/50 text-center text-muted-foreground">
+                                      {mod.coefficient}
+                                    </td>
+                                    {/* Exam Points */}
+                                    <td className={`p-1.5 border border-border/50 text-center font-bold ${avgColor(examScore)}`}>
+                                      {examPoints !== null ? examPoints.toFixed(2) : '—'}
+                                    </td>
+                                    {/* Exam Appreciation */}
+                                    <td className="p-1.5 border border-border/50 text-center text-[10px] text-muted-foreground">
+                                      {getAppreciation(examScore)}
+                                    </td>
+                                  </>
+                                )}
                               </tr>
                             );
                           })}
@@ -581,12 +612,16 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
                               </td>
                               <td className="p-1.5 border border-border"></td>
                               <td className="p-1.5 border border-border"></td>
-                              <td className={`p-1.5 border border-border text-center bg-emerald-100/50 dark:bg-emerald-800/30 ${avgColor(classExamAvg)}`}>
-                                {classExamAvg !== null ? classExamAvg.toFixed(2) : '—'}
-                              </td>
-                              <td className="p-1.5 border border-border"></td>
-                              <td className="p-1.5 border border-border"></td>
-                              <td className="p-1.5 border border-border"></td>
+                              {showExamSection && (
+                                <>
+                                  <td className={`p-1.5 border border-border text-center bg-emerald-100/50 dark:bg-emerald-800/30 ${avgColor(classExamAvg)}`}>
+                                    {classExamAvg !== null ? classExamAvg.toFixed(2) : '—'}
+                                  </td>
+                                  <td className="p-1.5 border border-border"></td>
+                                  <td className="p-1.5 border border-border"></td>
+                                  <td className="p-1.5 border border-border"></td>
+                                </>
+                              )}
                             </tr>
                           )}
                         </tbody>
@@ -598,7 +633,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
                   <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
                     <span>
                       {students.length} étudiant{students.length > 1 ? 's' : ''} •{' '}
-                      {ccEvaluations.length} CC • {examEvaluations.length} examen{examEvaluations.length > 1 ? 's' : ''}
+                      {ccEvaluations.length} CC{showExamSection ? ` • ${examEvaluations.length} examen${examEvaluations.length > 1 ? 's' : ''}` : ''}
                     </span>
                   </div>
                 </div>
