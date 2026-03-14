@@ -36,6 +36,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [selectedModule, setSelectedModule] = useState('');
   const [examType, setExamType] = useState<'examen_blanc' | 'examen_final'>('examen_blanc');
+  const [showExamSection, setShowExamSection] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [localGrades, setLocalGrades] = useState<Map<string, Map<string, number | null>>>(new Map());
   const [isDirty, setIsDirty] = useState(false);
