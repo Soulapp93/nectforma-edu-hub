@@ -59,8 +59,7 @@ const Notes = () => {
         const { count } = await supabase
           .from('user_formation_assignments')
           .select('id', { count: 'exact', head: true })
-          .eq('formation_id', f.id)
-          .eq('role', 'Étudiant');
+          .eq('formation_id', f.id);
         counts[f.id] = count || 0;
       }
       return counts;
