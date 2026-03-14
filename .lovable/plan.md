@@ -1,46 +1,51 @@
 
+Objectif: corriger définitivement le décalage des cartes en vue jour (tuteur + autres interfaces) pour que chaque carte respecte exactement l’heure de début et de fin.
 
-## Plan: Restructurer la page Notes avec navigation par formation
+1) Diagnostic précis (pourquoi c’est encore faux)
+- La grille horaire est en `rem` via `h-20` (5rem).
+- Les cartes sont positionnées en **pixels fixes** avec `HOUR_HEIGHT = 80`.
+- Or votre app force `html { font-size: 12px }` sur desktop (`src/index.css`), donc:
+  - 1 heure de grille = 5rem = 60px
+  - 1 heure de carte = 80px
+  - => cartes ~33% trop hautes (exactement ce qu’on voit sur votre capture).
+- Le patch précédent (minHeight 60 -> 20) ne corrige pas cette cause racine.
+- Le même problème existe aussi dans `src/components/administration/ScheduleDayView.tsx` (même logique en 80px), donc incohérence selon écrans/rôles.
 
-### Objectif
-Réorganiser la page Notes & Évaluations pour afficher d'abord la liste des formations (comme la page Émargements), puis au clic sur une formation, afficher les onglets "Feuilles de notes" et "Relevés de notes" avec navigation par modules.
+2) Plan de correction (hotfix production, faible risque)
+- Corriger `src/components/schedule/DayView.tsx`:
+  - Supprimer le calcul vertical en px fixes.
+  - Utiliser une échelle unique basée sur la même unité que la grille (`rem`) ou en `%` du conteneur.
+  - Aligner les hauteurs de lignes et le calcul `top/height` sur la même constante.
+  - Supprimer la distorsion artificielle (`minHeight` trop agressif) qui casse la précision des petits créneaux.
+- Corriger `src/components/administration/ScheduleDayView.tsx` de la même manière pour éviter un bug “corrigé ici mais pas ailleurs”.
+- Garder les textes compactés pour créneaux courts (si besoin), mais sans changer la hauteur réelle du créneau.
 
-### Modifications
+3) Détails techniques (implémentation)
+- Remplacer:
+  - `HOUR_HEIGHT = 80` (px)
+  - `h-20` implicite non synchronisé
+- Par une source unique (exemple):
+  - `const HOUR_HEIGHT_REM = 5;`
+  - `topRem = ((start - base) / 60) * HOUR_HEIGHT_REM`
+  - `heightRem = ((end - start) / 60) * HOUR_HEIGHT_REM`
+  - styles: `top: ${topRem}rem`, `height: ${heightRem}rem`
+- Ou alternative robuste:
+  - calculer `top`/`height` en `%` de la plage horaire visible.
+- Ajouter garde-fou:
+  - si `end <= start`, ne pas casser l’affichage (normalisation + log debug).
 
-**1. `src/pages/Notes.tsx`** — Réécriture
+4) Vérification ciblée (avant mise en prod)
+- Cas réel de votre capture:
+  - `08:00 → 14:00` doit commencer exactement sur la ligne 08:00 et finir exactement sur 14:00.
+- Cas 30 min:
+  - ex. `10:00 → 10:30` doit occuper exactement une demi-case.
+- Vérifier sur compte tuteur ET interface administration (même rendu temporel).
 
-- Ajouter un état `selectedFormationId` pour gérer la navigation formations → détail
-- **Vue liste** : Afficher toutes les formations sous forme de cartes cliquables (même pattern que `AttendanceManagement.tsx`) avec couleur, titre, niveau, dates, statut
-- **Vue détail** : Au clic, afficher un bouton "Retour aux formations" + onglets "Feuilles de notes" / "Relevés de notes"
-- Passer `formationId` en prop à `GradeSheetView` et `TranscriptsPanel` au lieu de laisser ces composants gérer leur propre sélecteur de formation
-- Bouton "Paramètres de notation" accessible depuis la vue liste (admin uniquement)
-- Les vues Étudiant et Tuteur restent inchangées
+5) Fichiers concernés
+- `src/components/schedule/DayView.tsx`
+- `src/components/administration/ScheduleDayView.tsx`
 
-**2. `src/components/grades/GradeSheetView.tsx`** — Modification des props
-
-- Ajouter prop `formationId: string` à l'interface `GradeSheetViewProps`
-- Supprimer le sélecteur de formation interne (le `Select` de formation en haut)
-- Utiliser directement `props.formationId` au lieu de `selectedFormation` pour toutes les requêtes
-- Conserver la navigation par modules (onglets), le sélecteur de période, et le tableau CC + Examen
-
-**3. `src/components/grades/TranscriptsPanel.tsx`** — Modification des props
-
-- Ajouter prop optionnelle `formationId?: string` à l'interface `Props`
-- Si `formationId` est fourni, l'utiliser directement au lieu du sélecteur interne
-- Masquer le sélecteur de formation quand `formationId` est passé en prop
-
-### Structure de navigation
-
-```text
-Notes & Évaluations
-├── [Formation BTS GPME]  ──click──►  Feuilles de notes | Relevés de notes
-├── [Formation BTS MCO]   ──click──►  Feuilles de notes | Relevés de notes
-├── [Formation ...]       ──click──►  ...
-└── [⚙ Paramètres]        (admin)
-```
-
-### Détails techniques
-- Requête formations : admin = toutes, formateur = via `user_formation_assignments`
-- Pattern identique à `AttendanceManagement` : état `view` implicite via `selectedFormationId` (null = liste, string = détail)
-- Aucun changement de base de données requis
-
+Résultat attendu:
+- Plus de carte “étirée” artificiellement.
+- Synchronisation parfaite entre horaires affichés et position visuelle des créneaux.
+- Comportement cohérent sur toutes les interfaces/rôles.

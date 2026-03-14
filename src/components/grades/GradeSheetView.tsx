@@ -24,14 +24,15 @@ import CreateEvaluationModal from './CreateEvaluationModal';
 
 interface GradeSheetViewProps {
   mode: 'admin' | 'instructor';
+  formationId: string;
 }
 
-const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
+const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) => {
   const { userId, userRole } = useCurrentUser();
   const { establishment } = useEstablishment();
   const queryClient = useQueryClient();
   const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
-  const [selectedFormation, setSelectedFormation] = useState('');
+  const selectedFormation = formationId;
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [selectedModule, setSelectedModule] = useState('');
   const [examType, setExamType] = useState<'examen_blanc' | 'examen_final'>('examen_blanc');
@@ -41,26 +42,15 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
   const inputRefs = useRef<Map<string, HTMLInputElement>>(new Map());
   const printRef = useRef<HTMLDivElement>(null);
 
-  // Formations
-  const { data: formations = [] } = useQuery({
-    queryKey: ['formations-grade-sheet'],
+  // Formation data
+  const { data: currentFormationData } = useQuery({
+    queryKey: ['formation-data-sheet', selectedFormation],
     queryFn: async () => {
-      if (!isAdmin) {
-        const { data } = await supabase
-          .from('user_formation_assignments')
-          .select('formation_id, formations(id, title, status, color, level, start_date, end_date)')
-          .eq('user_id', userId!);
-        return (data || []).map((d: any) => d.formations).filter(Boolean);
-      }
-      const { data } = await supabase.from('formations').select('id, title, status, color, level, start_date, end_date').order('title');
-      return data || [];
+      const { data } = await supabase.from('formations').select('id, title, status, color, level, start_date, end_date').eq('id', selectedFormation).single();
+      return data;
     },
-    enabled: !!userId,
+    enabled: !!selectedFormation,
   });
-
-  useEffect(() => {
-    if (formations.length > 0 && !selectedFormation) setSelectedFormation(formations[0].id);
-  }, [formations]);
 
   // Modules de la formation
   const { data: modules = [] } = useQuery({
@@ -301,7 +291,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
     setTimeout(() => win.print(), 300);
   };
 
-  const currentFormation = formations.find((f: any) => f.id === selectedFormation);
+  const currentFormation = currentFormationData;
   const currentPeriod = periods.find(p => p.id === selectedPeriod);
   const currentModule = modules.find((m: any) => m.id === selectedModule);
 
@@ -350,18 +340,8 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
 
   return (
     <div className="space-y-4">
-      {/* Top bar: Formation + Period + Actions */}
+      {/* Top bar: Period + Actions */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
-        <Select value={selectedFormation} onValueChange={(v) => { setSelectedFormation(v); setSelectedModule(''); setSelectedPeriod(''); }}>
-          <SelectTrigger className="w-full sm:w-72">
-            <SelectValue placeholder="Sélectionner une formation" />
-          </SelectTrigger>
-          <SelectContent>
-            {formations.map((f: any) => (
-              <SelectItem key={f.id} value={f.id}>{f.title}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
 
         {periods.length > 0 && (
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
