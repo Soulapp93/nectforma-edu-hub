@@ -28,6 +28,7 @@ import { fr } from 'date-fns/locale';
 interface Props {
   mode: 'admin' | 'student';
   studentId?: string;
+  formationId?: string;
 }
 
 interface ModuleBulletinData {

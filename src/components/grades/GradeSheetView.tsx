@@ -340,18 +340,8 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
 
   return (
     <div className="space-y-4">
-      {/* Top bar: Formation + Period + Actions */}
+      {/* Top bar: Period + Actions */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
-        <Select value={selectedFormation} onValueChange={(v) => { setSelectedFormation(v); setSelectedModule(''); setSelectedPeriod(''); }}>
-          <SelectTrigger className="w-full sm:w-72">
-            <SelectValue placeholder="Sélectionner une formation" />
-          </SelectTrigger>
-          <SelectContent>
-            {formations.map((f: any) => (
-              <SelectItem key={f.id} value={f.id}>{f.title}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
 
         {periods.length > 0 && (
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
