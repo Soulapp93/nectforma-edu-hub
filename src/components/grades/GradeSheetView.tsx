@@ -107,6 +107,12 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     enabled: !!selectedFormation,
   });
 
+  // Auto-detect if exam evaluations exist for this formation
+  useEffect(() => {
+    const hasExams = allEvaluations.some(e => e.evaluation_type === 'examen_blanc' || e.evaluation_type === 'examen_final');
+    if (hasExams) setShowExamSection(true);
+  }, [allEvaluations]);
+
   // Filter evaluations by period + module
   const moduleEvaluations = useMemo(() => {
     let evals = allEvaluations;
