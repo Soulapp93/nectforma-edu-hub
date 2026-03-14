@@ -1,51 +1,55 @@
 
-Objectif: corriger définitivement le décalage des cartes en vue jour (tuteur + autres interfaces) pour que chaque carte respecte exactement l’heure de début et de fin.
 
-1) Diagnostic précis (pourquoi c’est encore faux)
-- La grille horaire est en `rem` via `h-20` (5rem).
-- Les cartes sont positionnées en **pixels fixes** avec `HOUR_HEIGHT = 80`.
-- Or votre app force `html { font-size: 12px }` sur desktop (`src/index.css`), donc:
-  - 1 heure de grille = 5rem = 60px
-  - 1 heure de carte = 80px
-  - => cartes ~33% trop hautes (exactement ce qu’on voit sur votre capture).
-- Le patch précédent (minHeight 60 -> 20) ne corrige pas cette cause racine.
-- Le même problème existe aussi dans `src/components/administration/ScheduleDayView.tsx` (même logique en 80px), donc incohérence selon écrans/rôles.
+## Plan: Refonte de la feuille de notes selon le template PDF
 
-2) Plan de correction (hotfix production, faible risque)
-- Corriger `src/components/schedule/DayView.tsx`:
-  - Supprimer le calcul vertical en px fixes.
-  - Utiliser une échelle unique basée sur la même unité que la grille (`rem`) ou en `%` du conteneur.
-  - Aligner les hauteurs de lignes et le calcul `top/height` sur la même constante.
-  - Supprimer la distorsion artificielle (`minHeight` trop agressif) qui casse la précision des petits créneaux.
-- Corriger `src/components/administration/ScheduleDayView.tsx` de la même manière pour éviter un bug “corrigé ici mais pas ailleurs”.
-- Garder les textes compactés pour créneaux courts (si besoin), mais sans changer la hauteur réelle du créneau.
+### Résumé
 
-3) Détails techniques (implémentation)
-- Remplacer:
-  - `HOUR_HEIGHT = 80` (px)
-  - `h-20` implicite non synchronisé
-- Par une source unique (exemple):
-  - `const HOUR_HEIGHT_REM = 5;`
-  - `topRem = ((start - base) / 60) * HOUR_HEIGHT_REM`
-  - `heightRem = ((end - start) / 60) * HOUR_HEIGHT_REM`
-  - styles: `top: ${topRem}rem`, `height: ${heightRem}rem`
-- Ou alternative robuste:
-  - calculer `top`/`height` en `%` de la plage horaire visible.
-- Ajouter garde-fou:
-  - si `end <= start`, ne pas casser l’affichage (normalisation + log debug).
+Restructurer la feuille de notes pour correspondre au template PDF fourni : un tableau unique par module avec **Contrôle Continu à gauche** et **Examen (Blanc ou Final) à droite**, navigation par modules via onglets, et possibilité de dupliquer par semestre.
 
-4) Vérification ciblée (avant mise en prod)
-- Cas réel de votre capture:
-  - `08:00 → 14:00` doit commencer exactement sur la ligne 08:00 et finir exactement sur 14:00.
-- Cas 30 min:
-  - ex. `10:00 → 10:30` doit occuper exactement une demi-case.
-- Vérifier sur compte tuteur ET interface administration (même rendu temporel).
+### Structure cible (d'après le PDF)
 
-5) Fichiers concernés
-- `src/components/schedule/DayView.tsx`
-- `src/components/administration/ScheduleDayView.tsx`
+```text
+┌─────────────────────────────────────────────────────────────────────┐
+│  [Semestre 1 ▼] [+ Dupliquer semestre]                              │
+│  Onglets: [Module 1] [Module 2] [Module 3] ...                      │
+├──────────────────────────────┬──────────────────────────────────────┤
+│      CONTRÔLE CONTINU        │     EXAMEN BLANC / FINAL ▼          │
+├──────┬──────┬───────┬────┬───┼──────┬────┬───────┬─────────────────┤
+│Appren│Ctrl1 │Ctrl2  │Moy │Coef│Appré│Notes│Coef│Points│Appréciation│
+├──────┼──────┼───────┼────┼───┼──────┼────┼──────┼─────────────────┤
+│Dupont│ 12   │ 14    │13.0│ 2 │ Bien │ 15 │ 2  │ 30   │ Très bien  │
+│Martin│ 08   │ 10    │09.0│ 2 │Moyen │ 11 │ 2  │ 22   │ Passable   │
+├──────┴──────┴───────┴────┴───┴──────┴────┴──────┴─────────────────┤
+│ MOYENNE CLASSE: 11.00        │                                     │
+└──────────────────────────────┴─────────────────────────────────────┘
+```
 
-Résultat attendu:
-- Plus de carte “étirée” artificiellement.
-- Synchronisation parfaite entre horaires affichés et position visuelle des créneaux.
-- Comportement cohérent sur toutes les interfaces/rôles.
+### Modifications techniques
+
+**Fichier: `src/components/grades/GradeSheetView.tsx`** (réécriture majeure)
+
+1. **Navigation par modules** : Ajouter des onglets (Tabs) pour naviguer entre les modules de la formation, au lieu d'afficher tous les modules sur une seule page.
+
+2. **Sélecteur de semestre/période** : Remplacer le filtre "Toutes les périodes" par un vrai sélecteur de semestre avec possibilité de **dupliquer un semestre** (bouton "Dupliquer ce semestre" qui crée une nouvelle période avec le même jeu d'évaluations).
+
+3. **Tableau unifié CC + Examen** : Un seul tableau avec deux sections côte à côte :
+   - **Gauche (CC)** : Colonnes Contrôle 1, Contrôle 2, ..., Moyenne, Coefficient, Appréciation
+   - **Droite (Examen)** : Sélecteur "Examen Blanc" / "Examen Final" en en-tête, puis colonnes Notes, Coefficient, Points, Appréciation
+
+4. **Sélecteur type d'examen** : Dropdown dans l'en-tête de la section examen permettant de basculer entre "Examen Blanc" et "Examen Final".
+
+5. **Ligne Moyenne de classe** en bas du tableau.
+
+**Fichier: `src/services/gradesService.ts`**
+- Ajouter une fonction `duplicatePeriodWithEvaluations(sourcePeriodId, newPeriodName)` qui crée une nouvelle période et duplique les évaluations associées (sans les notes).
+
+**Fichier: `src/components/grades/CreateEvaluationModal.tsx`**
+- Aucune modification majeure, le modal existant est déjà fonctionnel.
+
+### Détails d'implémentation
+
+- Les onglets modules utilisent le composant `Tabs` existant
+- Le sélecteur de type d'examen est un état local (`examType: 'examen_blanc' | 'examen_final'`) qui filtre les évaluations affichées dans la partie droite
+- La duplication de semestre appelle une fonction service qui insère une nouvelle `evaluation_period` puis duplique toutes les `evaluations` de la période source avec les mêmes paramètres mais la nouvelle `period_id`
+- Le tableau reste éditable avec les mêmes inputs et la même logique de sauvegarde
+
