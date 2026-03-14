@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Save, Plus, AlertCircle, BookOpen, GraduationCap, FileSpreadsheet, Printer } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Save, Plus, AlertCircle, BookOpen, GraduationCap, Printer, Copy } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -15,6 +16,7 @@ import {
   getGradesByEvaluation,
   upsertGrades,
   getEvaluationPeriods,
+  duplicatePeriodWithEvaluations,
   type Evaluation,
   type Grade,
 } from '@/services/gradesService';
@@ -30,7 +32,9 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
   const queryClient = useQueryClient();
   const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
   const [selectedFormation, setSelectedFormation] = useState('');
-  const [selectedPeriod, setSelectedPeriod] = useState('all');
+  const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [selectedModule, setSelectedModule] = useState('');
+  const [examType, setExamType] = useState<'examen_blanc' | 'examen_final'>('examen_blanc');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [localGrades, setLocalGrades] = useState<Map<string, Map<string, number | null>>>(new Map());
   const [isDirty, setIsDirty] = useState(false);
@@ -72,19 +76,10 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
     enabled: !!selectedFormation,
   });
 
-  // Teaching units
-  const { data: teachingUnits = [] } = useQuery({
-    queryKey: ['teaching-units-sheet', selectedFormation],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('teaching_units')
-        .select('id, title, code, order_index')
-        .eq('formation_id', selectedFormation)
-        .order('order_index');
-      return data || [];
-    },
-    enabled: !!selectedFormation,
-  });
+  // Auto-select first module
+  useEffect(() => {
+    if (modules.length > 0 && !selectedModule) setSelectedModule(modules[0].id);
+  }, [modules]);
 
   // Périodes
   const { data: periods = [] } = useQuery({
@@ -92,6 +87,11 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
     queryFn: () => getEvaluationPeriods(selectedFormation),
     enabled: !!selectedFormation,
   });
+
+  // Auto-select first period
+  useEffect(() => {
+    if (periods.length > 0 && !selectedPeriod) setSelectedPeriod(periods[0].id);
+  }, [periods]);
 
   // Étudiants
   const { data: students = [] } = useQuery({
@@ -112,67 +112,48 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
   // All evaluations for the formation
   const { data: allEvaluations = [] } = useQuery({
     queryKey: ['evaluations-sheet-all', selectedFormation],
-    queryFn: async () => {
-      const allEvals = await getEvaluations(selectedFormation);
-      return allEvals;
-    },
+    queryFn: async () => getEvaluations(selectedFormation),
     enabled: !!selectedFormation,
   });
 
-  // Filter evaluations by period
-  const filteredEvaluations = useMemo(() => {
-    if (selectedPeriod === 'all') return allEvaluations;
-    return allEvaluations.filter(e => e.period_id === selectedPeriod);
-  }, [allEvaluations, selectedPeriod]);
+  // Filter evaluations by period + module
+  const moduleEvaluations = useMemo(() => {
+    let evals = allEvaluations;
+    if (selectedPeriod) evals = evals.filter(e => e.period_id === selectedPeriod);
+    if (selectedModule) evals = evals.filter(e => e.module_id === selectedModule);
+    return evals;
+  }, [allEvaluations, selectedPeriod, selectedModule]);
 
-  // Split CC vs Examen Blanc
+  // CC evaluations for current module
   const ccEvaluations = useMemo(() =>
-    filteredEvaluations.filter(e => e.evaluation_type === 'controle_continu' || e.evaluation_type === 'projet' || e.evaluation_type === 'tp'),
-    [filteredEvaluations]
+    moduleEvaluations.filter(e => e.evaluation_type === 'controle_continu' || e.evaluation_type === 'projet' || e.evaluation_type === 'tp'),
+    [moduleEvaluations]
   );
 
+  // Exam evaluations for current module filtered by examType
   const examEvaluations = useMemo(() =>
-    filteredEvaluations.filter(e => e.evaluation_type === 'examen_blanc' || e.evaluation_type === 'examen_final'),
-    [filteredEvaluations]
+    moduleEvaluations.filter(e => e.evaluation_type === examType),
+    [moduleEvaluations, examType]
   );
 
-  // Group CC evaluations by module
-  const ccByModule = useMemo(() => {
-    const map = new Map<string, Evaluation[]>();
-    for (const mod of modules) {
-      map.set(mod.id, ccEvaluations.filter(e => e.module_id === mod.id));
-    }
-    return map;
-  }, [modules, ccEvaluations]);
+  // All evaluations displayed (for grade fetching)
+  const displayedEvaluations = useMemo(() => [...ccEvaluations, ...examEvaluations], [ccEvaluations, examEvaluations]);
 
-  // Group Exam evaluations by module
-  const examByModule = useMemo(() => {
-    const map = new Map<string, Evaluation[]>();
-    for (const mod of modules) {
-      map.set(mod.id, examEvaluations.filter(e => e.module_id === mod.id));
-    }
-    return map;
-  }, [modules, examEvaluations]);
+  // Max CC columns (at least 2)
+  const maxCCControls = useMemo(() => Math.max(ccEvaluations.length, 2), [ccEvaluations]);
 
-  // Max CC controls across modules
-  const maxCCControls = useMemo(() => {
-    let max = 0;
-    ccByModule.forEach(evals => { if (evals.length > max) max = evals.length; });
-    return Math.max(max, 2); // min 2 columns
-  }, [ccByModule]);
-
-  // Fetch all grades
+  // Fetch all grades for displayed evaluations
   const { data: allGradesData = [] } = useQuery({
-    queryKey: ['all-grades-sheet', filteredEvaluations.map(e => e.id).join(',')],
+    queryKey: ['all-grades-sheet', displayedEvaluations.map(e => e.id).join(',')],
     queryFn: async () => {
       const results: { evalId: string; grades: Grade[] }[] = [];
-      for (const ev of filteredEvaluations) {
+      for (const ev of displayedEvaluations) {
         const grades = await getGradesByEvaluation(ev.id);
         results.push({ evalId: ev.id, grades });
       }
       return results;
     },
-    enabled: filteredEvaluations.length > 0,
+    enabled: displayedEvaluations.length > 0,
   });
 
   // Init local grades
@@ -180,7 +161,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
     const gradeMap = new Map<string, Map<string, number | null>>();
     students.forEach((s: any) => {
       const studentGrades = new Map<string, number | null>();
-      filteredEvaluations.forEach(ev => {
+      displayedEvaluations.forEach(ev => {
         const gradeData = allGradesData.find(g => g.evalId === ev.id);
         const grade = gradeData?.grades.find(g => g.student_id === s.user_id);
         studentGrades.set(ev.id, grade?.value ?? null);
@@ -189,7 +170,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
     });
     setLocalGrades(gradeMap);
     setIsDirty(false);
-  }, [students, filteredEvaluations, allGradesData]);
+  }, [students, displayedEvaluations, allGradesData]);
 
   const updateGrade = useCallback((studentId: string, evaluationId: string, value: number | null) => {
     setLocalGrades(prev => {
@@ -202,60 +183,49 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
     setIsDirty(true);
   }, []);
 
-  // Get CC average for a student on a module
-  const getModuleCCAverage = useCallback((studentId: string, moduleId: string): number | null => {
-    const evals = ccByModule.get(moduleId) || [];
+  // CC average for a student
+  const getCCAverage = useCallback((studentId: string): number | null => {
     const studentGrades = localGrades.get(studentId);
-    if (!studentGrades || evals.length === 0) return null;
+    if (!studentGrades || ccEvaluations.length === 0) return null;
     const values: number[] = [];
-    evals.forEach(ev => {
+    ccEvaluations.forEach(ev => {
       const v = studentGrades.get(ev.id);
       if (v !== null && v !== undefined) values.push(v);
     });
     if (values.length === 0) return null;
     return Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 100) / 100;
-  }, [ccByModule, localGrades]);
+  }, [ccEvaluations, localGrades]);
 
-  // Get exam score for a student on a module (single note or average)
-  const getModuleExamScore = useCallback((studentId: string, moduleId: string): number | null => {
-    const evals = examByModule.get(moduleId) || [];
+  // Exam score for a student
+  const getExamScore = useCallback((studentId: string): number | null => {
     const studentGrades = localGrades.get(studentId);
-    if (!studentGrades || evals.length === 0) return null;
+    if (!studentGrades || examEvaluations.length === 0) return null;
     const values: number[] = [];
-    evals.forEach(ev => {
+    examEvaluations.forEach(ev => {
       const v = studentGrades.get(ev.id);
       if (v !== null && v !== undefined) values.push(v);
     });
     if (values.length === 0) return null;
     return Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 100) / 100;
-  }, [examByModule, localGrades]);
+  }, [examEvaluations, localGrades]);
 
-  // Class average for a module CC
-  const getClassModuleCCAvg = useCallback((moduleId: string): number | null => {
-    const avgs: number[] = [];
-    students.forEach((s: any) => {
-      const avg = getModuleCCAverage(s.user_id, moduleId);
-      if (avg !== null) avgs.push(avg);
-    });
+  // Class averages
+  const classCCAvg = useMemo(() => {
+    const avgs = students.map((s: any) => getCCAverage(s.user_id)).filter((v): v is number => v !== null);
     if (avgs.length === 0) return null;
     return Math.round((avgs.reduce((a, b) => a + b, 0) / avgs.length) * 100) / 100;
-  }, [students, getModuleCCAverage]);
+  }, [students, getCCAverage]);
 
-  // Class average for exam
-  const getClassModuleExamAvg = useCallback((moduleId: string): number | null => {
-    const avgs: number[] = [];
-    students.forEach((s: any) => {
-      const avg = getModuleExamScore(s.user_id, moduleId);
-      if (avg !== null) avgs.push(avg);
-    });
+  const classExamAvg = useMemo(() => {
+    const avgs = students.map((s: any) => getExamScore(s.user_id)).filter((v): v is number => v !== null);
     if (avgs.length === 0) return null;
     return Math.round((avgs.reduce((a, b) => a + b, 0) / avgs.length) * 100) / 100;
-  }, [students, getModuleExamScore]);
+  }, [students, getExamScore]);
 
   // Save
   const saveMutation = useMutation({
     mutationFn: async () => {
-      for (const ev of filteredEvaluations) {
+      for (const ev of displayedEvaluations) {
         const gradesToSave: Partial<Grade>[] = [];
         students.forEach((s: any) => {
           const studentGrades = localGrades.get(s.user_id);
@@ -284,6 +254,23 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
     onError: (e: any) => toast.error(e.message || 'Erreur lors de l\'enregistrement'),
   });
 
+  // Duplicate period
+  const duplicateMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedPeriod || !selectedFormation) throw new Error('Sélectionnez une période');
+      const currentPeriod = periods.find(p => p.id === selectedPeriod);
+      const newName = `${currentPeriod?.name || 'Semestre'} (copie)`;
+      return duplicatePeriodWithEvaluations(selectedPeriod, newName, selectedFormation);
+    },
+    onSuccess: (newPeriod) => {
+      queryClient.invalidateQueries({ queryKey: ['periods-sheet'] });
+      queryClient.invalidateQueries({ queryKey: ['evaluations-sheet-all'] });
+      setSelectedPeriod(newPeriod.id);
+      toast.success('Semestre dupliqué avec succès');
+    },
+    onError: (e: any) => toast.error(e.message || 'Erreur lors de la duplication'),
+  });
+
   const handlePrint = () => {
     const content = printRef.current;
     if (!content) return;
@@ -293,16 +280,18 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
       <html><head><title>Feuille de notes</title>
       <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; color: #1a1a1a; font-size: 11px; }
-        h2 { text-align: center; color: #1e40af; margin: 10px 0 5px; font-size: 14px; }
-        h3 { text-align: center; font-size: 12px; margin: 5px 0; }
+        .header { text-align: center; margin-bottom: 15px; }
+        .header h2 { color: #1e40af; margin: 5px 0; font-size: 16px; }
+        .header h3 { font-size: 13px; margin: 3px 0; }
+        .header p { font-size: 11px; color: #666; }
         table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 10px; }
         th, td { border: 1px solid #94a3b8; padding: 4px 6px; }
-        th { background: #3b82f6; color: white; font-weight: 600; }
-        .section-header { background: #dbeafe; font-weight: bold; text-align: center; color: #1e40af; }
-        .ue-header { background: #e0e7ff; font-weight: 600; }
+        .section-cc { background: #1e40af; color: white; font-weight: 700; text-align: center; font-size: 11px; }
+        .section-exam { background: #059669; color: white; font-weight: 700; text-align: center; font-size: 11px; }
+        .col-header { background: #e2e8f0; font-weight: 600; text-align: center; font-size: 9px; }
         .avg-green { color: #16a34a; font-weight: bold; }
         .avg-red { color: #dc2626; font-weight: bold; }
-        .total-row { background: #bfdbfe; font-weight: bold; }
+        .class-avg-row { background: #dbeafe; font-weight: bold; }
         @media print { body { padding: 10px; } }
       </style></head><body>
       ${content.innerHTML}
@@ -314,36 +303,22 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
 
   const currentFormation = formations.find((f: any) => f.id === selectedFormation);
   const currentPeriod = periods.find(p => p.id === selectedPeriod);
+  const currentModule = modules.find((m: any) => m.id === selectedModule);
 
   const avgColor = (val: number | null) => {
     if (val === null) return '';
     return val >= 10 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
   };
 
-  // Group modules by teaching unit
-  const modulesByUnit = useMemo(() => {
-    const grouped: { unitId: string | null; unitTitle: string; modules: typeof modules }[] = [];
-    const unitsUsed = new Set<string>();
-
-    for (const tu of teachingUnits) {
-      const unitModules = modules.filter(m => m.teaching_unit_id === tu.id);
-      if (unitModules.length > 0) {
-        grouped.push({ unitId: tu.id, unitTitle: tu.title, modules: unitModules });
-        unitsUsed.add(tu.id);
-      }
-    }
-
-    const unassigned = modules.filter(m => !m.teaching_unit_id || !unitsUsed.has(m.teaching_unit_id));
-    if (unassigned.length > 0) {
-      grouped.push({ unitId: null, unitTitle: 'Matières', modules: unassigned });
-    }
-
-    if (grouped.length === 0 && modules.length > 0) {
-      grouped.push({ unitId: null, unitTitle: 'Matières', modules });
-    }
-
-    return grouped;
-  }, [modules, teachingUnits]);
+  const getAppreciation = (avg: number | null): string => {
+    if (avg === null) return '';
+    if (avg >= 16) return 'Très bien';
+    if (avg >= 14) return 'Bien';
+    if (avg >= 12) return 'Assez bien';
+    if (avg >= 10) return 'Passable';
+    if (avg >= 8) return 'Insuffisant';
+    return 'Très insuffisant';
+  };
 
   // Render a grade input cell
   const renderGradeCell = (studentId: string, ev: Evaluation, canEdit: boolean) => {
@@ -373,13 +348,11 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
     );
   };
 
-  const hasExamEvals = examEvaluations.length > 0;
-
   return (
     <div className="space-y-4">
-      {/* Top bar */}
-      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-        <Select value={selectedFormation} onValueChange={(v) => { setSelectedFormation(v); }}>
+      {/* Top bar: Formation + Period + Actions */}
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
+        <Select value={selectedFormation} onValueChange={(v) => { setSelectedFormation(v); setSelectedModule(''); setSelectedPeriod(''); }}>
           <SelectTrigger className="w-full sm:w-72">
             <SelectValue placeholder="Sélectionner une formation" />
           </SelectTrigger>
@@ -393,15 +366,27 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
         {periods.length > 0 && (
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
             <SelectTrigger className="w-full sm:w-52">
-              <SelectValue placeholder="Période" />
+              <SelectValue placeholder="Sélectionner un semestre" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Toutes les périodes</SelectItem>
               {periods.map(p => (
                 <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
+        )}
+
+        {selectedPeriod && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-2"
+            onClick={() => duplicateMutation.mutate()}
+            disabled={duplicateMutation.isPending}
+          >
+            <Copy className="h-4 w-4" />
+            {duplicateMutation.isPending ? 'Duplication...' : 'Dupliquer ce semestre'}
+          </Button>
         )}
 
         <div className="flex items-center gap-2 ml-auto">
@@ -413,11 +398,10 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
           )}
           <Button size="sm" variant="outline" className="gap-2" onClick={() => setShowCreateModal(true)}>
             <Plus className="h-4 w-4" />
-            Ajouter une évaluation
+            Évaluation
           </Button>
           <Button size="sm" variant="outline" onClick={handlePrint} className="gap-2">
             <Printer className="h-4 w-4" />
-            Imprimer
           </Button>
           <Button
             onClick={() => saveMutation.mutate()}
@@ -448,272 +432,200 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode }) => {
           </CardContent>
         </Card>
       ) : (
-        <div ref={printRef}>
-          {/* Header info */}
-          <div className="text-center mb-4 print:mb-2">
-            {establishment?.logo_url && (
-              <img src={establishment.logo_url} alt="" className="h-12 mx-auto mb-2" />
-            )}
-            <h2 className="text-base font-bold text-foreground">{establishment?.name}</h2>
-            <h3 className="text-sm font-semibold text-primary">
-              {currentFormation?.title} {currentFormation?.level ? `— ${currentFormation.level}` : ''}
-            </h3>
-            {currentPeriod && <p className="text-xs text-muted-foreground">{currentPeriod.name}</p>}
-          </div>
+        <>
+          {/* Module tabs navigation */}
+          <Tabs value={selectedModule} onValueChange={setSelectedModule}>
+            <TabsList className="w-full flex flex-wrap h-auto gap-1 bg-muted/30 p-1">
+              {modules.map((mod: any) => (
+                <TabsTrigger key={mod.id} value={mod.id} className="text-xs px-3 py-1.5">
+                  {mod.title}
+                </TabsTrigger>
+              ))}
+            </TabsList>
 
-          {/* ============ SECTION CONTRÔLE CONTINU ============ */}
-          <div className="rounded-lg border border-border shadow-sm bg-card overflow-hidden mb-6">
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs border-collapse">
-                <thead>
-                  {/* Section title */}
-                  <tr>
-                    <th colSpan={maxCCControls + 4} className="bg-blue-600 text-white text-center p-2 text-sm font-bold uppercase tracking-wider">
-                      Contrôle Continu
-                    </th>
-                  </tr>
-                  {/* Column headers */}
-                  <tr className="bg-blue-100 dark:bg-blue-900/30">
-                    <th className="text-left p-2 border border-border font-semibold min-w-[180px] sticky left-0 bg-blue-100 dark:bg-blue-900/30 z-10">
-                      Apprenant
-                    </th>
-                    {Array.from({ length: maxCCControls }, (_, i) => (
-                      <th key={i} className="text-center p-2 border border-border font-semibold w-16">
-                        Contrôle {i + 1}
-                      </th>
-                    ))}
-                    <th className="text-center p-2 border border-border font-semibold w-16 bg-blue-200/50 dark:bg-blue-800/30">
-                      Moyenne
-                    </th>
-                    <th className="text-center p-2 border border-border font-semibold w-14">
-                      Coef.
-                    </th>
-                    <th className="text-center p-2 border border-border font-semibold min-w-[120px]">
-                      Appréciation
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {students.map((student: any) => (
-                    <React.Fragment key={student.user_id}>
-                      {/* Student name row spanning all module rows */}
-                      <tr className="bg-muted/40 border-t-2 border-primary/20">
-                        <td colSpan={maxCCControls + 4} className="p-2 font-bold text-foreground">
-                          {student.last_name} {student.first_name}
-                        </td>
-                      </tr>
-                      {/* One row per module group */}
-                      {modulesByUnit.map(group => (
-                        <React.Fragment key={group.unitId || 'ungrouped'}>
-                          {teachingUnits.length > 0 && (
-                            <tr>
-                              <td colSpan={maxCCControls + 4} className="bg-indigo-50 dark:bg-indigo-900/20 p-1.5 pl-4 text-[10px] font-semibold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider border border-border">
-                                {group.unitTitle}
-                              </td>
-                            </tr>
-                          )}
-                          {group.modules.map((mod: any) => {
-                            const moduleEvals = ccByModule.get(mod.id) || [];
-                            const canEdit = mode === 'admin' || moduleEvals.some(ev => ev.instructor_id === userId);
-                            const avg = getModuleCCAverage(student.user_id, mod.id);
+            {modules.map((mod: any) => (
+              <TabsContent key={mod.id} value={mod.id}>
+                <div ref={printRef}>
+                  {/* Header info */}
+                  <div className="text-center mb-4 print:mb-2">
+                    {establishment?.logo_url && (
+                      <img src={establishment.logo_url} alt="" className="h-12 mx-auto mb-2" />
+                    )}
+                    <h2 className="text-base font-bold text-foreground">{establishment?.name}</h2>
+                    <h3 className="text-sm font-semibold text-primary">
+                      {currentFormation?.title} {currentFormation?.level ? `— ${currentFormation.level}` : ''}
+                    </h3>
+                    {currentPeriod && <p className="text-xs text-muted-foreground">{currentPeriod.name}</p>}
+                    <p className="text-xs font-medium text-foreground mt-1">Module : {mod.title} (Coef. {mod.coefficient})</p>
+                  </div>
+
+                  {/* Unified table: CC left + Exam right */}
+                  <div className="rounded-lg border border-border shadow-sm bg-card overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs border-collapse">
+                        <thead>
+                          {/* Section headers row */}
+                          <tr>
+                            <th rowSpan={2} className="text-left p-2 border border-border font-semibold min-w-[180px] bg-muted/50 sticky left-0 z-10">
+                              Apprenant
+                            </th>
+                            {/* CC section header */}
+                            <th
+                              colSpan={maxCCControls + 3}
+                              className="bg-blue-600 text-white text-center p-2 text-sm font-bold uppercase tracking-wider border border-blue-700"
+                            >
+                              Contrôle Continu
+                            </th>
+                            {/* Exam section header with selector */}
+                            <th
+                              colSpan={4}
+                              className="bg-emerald-600 text-white text-center p-2 text-sm font-bold uppercase tracking-wider border border-emerald-700"
+                            >
+                              <div className="flex items-center justify-center gap-2">
+                                <select
+                                  value={examType}
+                                  onChange={(e) => setExamType(e.target.value as 'examen_blanc' | 'examen_final')}
+                                  className="bg-emerald-700 text-white border-none rounded px-2 py-0.5 text-xs font-bold cursor-pointer focus:outline-none"
+                                >
+                                  <option value="examen_blanc">Examen Blanc</option>
+                                  <option value="examen_final">Examen Final</option>
+                                </select>
+                              </div>
+                            </th>
+                          </tr>
+                          {/* Column sub-headers */}
+                          <tr className="bg-muted/40">
+                            {/* CC columns */}
+                            {Array.from({ length: maxCCControls }, (_, i) => (
+                              <th key={`cc-${i}`} className="text-center p-2 border border-border font-semibold w-16 text-[10px]">
+                                {ccEvaluations[i]?.title || `Ctrl ${i + 1}`}
+                              </th>
+                            ))}
+                            <th className="text-center p-2 border border-border font-semibold w-16 bg-blue-100 dark:bg-blue-900/30 text-[10px]">
+                              Moyenne
+                            </th>
+                            <th className="text-center p-2 border border-border font-semibold w-14 text-[10px]">
+                              Coef.
+                            </th>
+                            <th className="text-center p-2 border border-border font-semibold min-w-[100px] text-[10px]">
+                              Appréciation
+                            </th>
+                            {/* Exam columns */}
+                            <th className="text-center p-2 border border-border font-semibold w-16 bg-emerald-100 dark:bg-emerald-900/30 text-[10px]">
+                              Notes
+                            </th>
+                            <th className="text-center p-2 border border-border font-semibold w-14 text-[10px]">
+                              Coef.
+                            </th>
+                            <th className="text-center p-2 border border-border font-semibold w-16 text-[10px]">
+                              Points
+                            </th>
+                            <th className="text-center p-2 border border-border font-semibold min-w-[100px] text-[10px]">
+                              Appréciation
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {students.map((student: any, idx: number) => {
+                            const canEditCC = mode === 'admin' || ccEvaluations.some(ev => ev.instructor_id === userId);
+                            const canEditExam = mode === 'admin' || examEvaluations.some(ev => ev.instructor_id === userId);
+                            const ccAvg = getCCAverage(student.user_id);
+                            const examScore = getExamScore(student.user_id);
+                            const examPoints = examScore !== null ? Math.round(examScore * (mod.coefficient || 1) * 100) / 100 : null;
 
                             return (
-                              <tr key={mod.id} className="hover:bg-muted/20 border-b border-border/30">
-                                <td className="p-1.5 pl-6 border border-border/50 text-foreground sticky left-0 bg-card z-10">
-                                  {mod.title}
+                              <tr key={student.user_id} className={`hover:bg-muted/20 ${idx % 2 === 0 ? 'bg-card' : 'bg-muted/10'}`}>
+                                {/* Student name */}
+                                <td className="p-2 border border-border/50 font-medium text-foreground sticky left-0 bg-card z-10">
+                                  {student.last_name} {student.first_name}
                                 </td>
+                                {/* CC grade cells */}
                                 {Array.from({ length: maxCCControls }, (_, i) => {
-                                  const ev = moduleEvals[i];
+                                  const ev = ccEvaluations[i];
                                   return (
-                                    <td key={i} className="p-1 border border-border/50 text-center">
-                                      {ev ? renderGradeCell(student.user_id, ev, canEdit) : (
+                                    <td key={`cc-${i}`} className="p-1 border border-border/50 text-center">
+                                      {ev ? renderGradeCell(student.user_id, ev, canEditCC) : (
                                         <span className="text-muted-foreground/30">—</span>
                                       )}
                                     </td>
                                   );
                                 })}
-                                <td className={`p-1.5 border border-border/50 text-center font-bold bg-blue-50/50 dark:bg-blue-900/10 ${avgColor(avg)}`}>
-                                  {avg !== null ? avg.toFixed(2) : '—'}
+                                {/* CC Average */}
+                                <td className={`p-1.5 border border-border/50 text-center font-bold bg-blue-50/50 dark:bg-blue-900/10 ${avgColor(ccAvg)}`}>
+                                  {ccAvg !== null ? ccAvg.toFixed(2) : '—'}
                                 </td>
+                                {/* CC Coefficient */}
                                 <td className="p-1.5 border border-border/50 text-center text-muted-foreground">
                                   {mod.coefficient}
                                 </td>
-                                <td className="p-1 border border-border/50">
-                                  {/* Empty appreciation cell for now */}
+                                {/* CC Appreciation */}
+                                <td className="p-1.5 border border-border/50 text-center text-[10px] text-muted-foreground">
+                                  {getAppreciation(ccAvg)}
+                                </td>
+                                {/* Exam Notes */}
+                                <td className="p-1 border border-border/50 text-center bg-emerald-50/30 dark:bg-emerald-900/5">
+                                  {examEvaluations.length > 0 ? (
+                                    examEvaluations.map(ev => (
+                                      <div key={ev.id}>{renderGradeCell(student.user_id, ev, canEditExam)}</div>
+                                    ))
+                                  ) : (
+                                    <span className="text-muted-foreground/30">—</span>
+                                  )}
+                                </td>
+                                {/* Exam Coefficient */}
+                                <td className="p-1.5 border border-border/50 text-center text-muted-foreground">
+                                  {mod.coefficient}
+                                </td>
+                                {/* Exam Points */}
+                                <td className={`p-1.5 border border-border/50 text-center font-bold ${avgColor(examScore)}`}>
+                                  {examPoints !== null ? examPoints.toFixed(2) : '—'}
+                                </td>
+                                {/* Exam Appreciation */}
+                                <td className="p-1.5 border border-border/50 text-center text-[10px] text-muted-foreground">
+                                  {getAppreciation(examScore)}
                                 </td>
                               </tr>
                             );
                           })}
-                        </React.Fragment>
-                      ))}
-                    </React.Fragment>
-                  ))}
-                  {/* Class average row */}
-                  {students.length > 0 && (
-                    <tr className="bg-blue-100 dark:bg-blue-900/30 font-bold border-t-2 border-blue-400">
-                      <td className="p-2 border border-border text-right uppercase text-[10px] tracking-wider sticky left-0 bg-blue-100 dark:bg-blue-900/30 z-10">
-                        Moyenne de classe
-                      </td>
-                      {Array.from({ length: maxCCControls }, (_, i) => (
-                        <td key={i} className="p-1.5 border border-border text-center">—</td>
-                      ))}
-                      <td className="p-1.5 border border-border text-center bg-blue-200/50 dark:bg-blue-800/30">
-                        {/* Global CC average */}
-                        {(() => {
-                          const allAvgs: number[] = [];
-                          students.forEach((s: any) => {
-                            const modAvgs = modules.map((m: any) => ({
-                              average: getModuleCCAverage(s.user_id, m.id),
-                              coefficient: m.coefficient || 1,
-                            }));
-                            const valid = modAvgs.filter(x => x.average !== null);
-                            if (valid.length > 0) {
-                              const totalCoeff = valid.reduce((a, x) => a + x.coefficient, 0);
-                              const weightedSum = valid.reduce((a, x) => a + (x.average! * x.coefficient), 0);
-                              allAvgs.push(weightedSum / totalCoeff);
-                            }
-                          });
-                          if (allAvgs.length === 0) return '—';
-                          const avg = Math.round((allAvgs.reduce((a, b) => a + b, 0) / allAvgs.length) * 100) / 100;
-                          return <span className={avgColor(avg)}>{avg.toFixed(2)}</span>;
-                        })()}
-                      </td>
-                      <td className="p-1.5 border border-border"></td>
-                      <td className="p-1.5 border border-border"></td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                          {/* Class average row */}
+                          {students.length > 0 && (
+                            <tr className="bg-blue-100 dark:bg-blue-900/30 font-bold border-t-2 border-blue-400">
+                              <td className="p-2 border border-border text-right uppercase text-[10px] tracking-wider sticky left-0 bg-blue-100 dark:bg-blue-900/30 z-10">
+                                Moyenne de classe
+                              </td>
+                              {Array.from({ length: maxCCControls }, (_, i) => (
+                                <td key={i} className="p-1.5 border border-border text-center text-muted-foreground">—</td>
+                              ))}
+                              <td className={`p-1.5 border border-border text-center bg-blue-200/50 dark:bg-blue-800/30 ${avgColor(classCCAvg)}`}>
+                                {classCCAvg !== null ? classCCAvg.toFixed(2) : '—'}
+                              </td>
+                              <td className="p-1.5 border border-border"></td>
+                              <td className="p-1.5 border border-border"></td>
+                              <td className={`p-1.5 border border-border text-center bg-emerald-100/50 dark:bg-emerald-800/30 ${avgColor(classExamAvg)}`}>
+                                {classExamAvg !== null ? classExamAvg.toFixed(2) : '—'}
+                              </td>
+                              <td className="p-1.5 border border-border"></td>
+                              <td className="p-1.5 border border-border"></td>
+                              <td className="p-1.5 border border-border"></td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
 
-          {/* ============ SECTION EXAMEN BLANC ============ */}
-          {(hasExamEvals || true) && (
-            <div className="rounded-lg border border-border shadow-sm bg-card overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs border-collapse">
-                  <thead>
-                    <tr>
-                      <th colSpan={5} className="bg-blue-600 text-white text-center p-2 text-sm font-bold uppercase tracking-wider">
-                        Examen Blanc
-                      </th>
-                    </tr>
-                    <tr className="bg-blue-100 dark:bg-blue-900/30">
-                      <th className="text-left p-2 border border-border font-semibold min-w-[180px] sticky left-0 bg-blue-100 dark:bg-blue-900/30 z-10">
-                        Apprenant
-                      </th>
-                      <th className="text-center p-2 border border-border font-semibold w-16">Notes</th>
-                      <th className="text-center p-2 border border-border font-semibold w-14">Coef.</th>
-                      <th className="text-center p-2 border border-border font-semibold w-16">Points</th>
-                      <th className="text-center p-2 border border-border font-semibold min-w-[150px]">Appréciation générale</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {students.map((student: any) => (
-                      <React.Fragment key={student.user_id}>
-                        <tr className="bg-muted/40 border-t-2 border-primary/20">
-                          <td colSpan={5} className="p-2 font-bold text-foreground">
-                            {student.last_name} {student.first_name}
-                          </td>
-                        </tr>
-                        {modulesByUnit.map(group => (
-                          <React.Fragment key={group.unitId || 'ungrouped'}>
-                            {teachingUnits.length > 0 && (
-                              <tr>
-                                <td colSpan={5} className="bg-indigo-50 dark:bg-indigo-900/20 p-1.5 pl-4 text-[10px] font-semibold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider border border-border">
-                                  {group.unitTitle}
-                                </td>
-                              </tr>
-                            )}
-                            {group.modules.map((mod: any) => {
-                              const moduleExamEvals = examByModule.get(mod.id) || [];
-                              const canEdit = mode === 'admin' || moduleExamEvals.some(ev => ev.instructor_id === userId);
-                              const examScore = getModuleExamScore(student.user_id, mod.id);
-                              const points = examScore !== null ? Math.round(examScore * (mod.coefficient || 1) * 100) / 100 : null;
-
-                              return (
-                                <tr key={mod.id} className="hover:bg-muted/20 border-b border-border/30">
-                                  <td className="p-1.5 pl-6 border border-border/50 text-foreground sticky left-0 bg-card z-10">
-                                    {mod.title}
-                                  </td>
-                                  <td className="p-1 border border-border/50 text-center">
-                                    {moduleExamEvals.length > 0 ? (
-                                      moduleExamEvals.map(ev => (
-                                        <div key={ev.id}>{renderGradeCell(student.user_id, ev, canEdit)}</div>
-                                      ))
-                                    ) : (
-                                      <span className="text-muted-foreground/30">—</span>
-                                    )}
-                                  </td>
-                                  <td className="p-1.5 border border-border/50 text-center text-muted-foreground">
-                                    {mod.coefficient}
-                                  </td>
-                                  <td className={`p-1.5 border border-border/50 text-center font-bold ${avgColor(points)}`}>
-                                    {points !== null ? points.toFixed(2) : '0,00'}
-                                  </td>
-                                  <td className="p-1 border border-border/50"></td>
-                                </tr>
-                              );
-                            })}
-                          </React.Fragment>
-                        ))}
-                        {/* Student total */}
-                        <tr className="bg-blue-50 dark:bg-blue-900/20 font-bold">
-                          <td className="p-1.5 border border-border text-right uppercase text-[10px] sticky left-0 bg-blue-50 dark:bg-blue-900/20 z-10">
-                            TOTAL
-                          </td>
-                          <td className="p-1.5 border border-border"></td>
-                          <td className="p-1.5 border border-border text-center">
-                            {modules.reduce((sum: number, m: any) => sum + (m.coefficient || 1), 0)}
-                          </td>
-                          <td className={`p-1.5 border border-border text-center ${avgColor(
-                            (() => {
-                              let total = 0;
-                              modules.forEach((mod: any) => {
-                                const score = getModuleExamScore(student.user_id, mod.id);
-                                if (score !== null) total += score * (mod.coefficient || 1);
-                              });
-                              return total;
-                            })()
-                          )}`}>
-                            {(() => {
-                              let total = 0;
-                              modules.forEach((mod: any) => {
-                                const score = getModuleExamScore(student.user_id, mod.id);
-                                if (score !== null) total += score * (mod.coefficient || 1);
-                              });
-                              return total.toFixed(2);
-                            })()}
-                          </td>
-                          <td className="p-1.5 border border-border text-center">
-                            {(() => {
-                              const totalCoeff = modules.reduce((sum: number, m: any) => sum + (m.coefficient || 1), 0);
-                              const totalPoints = modules.reduce((sum: number, mod: any) => {
-                                const score = getModuleExamScore(student.user_id, mod.id);
-                                return sum + (score !== null ? score * (mod.coefficient || 1) : 0);
-                              }, 0);
-                              const threshold = totalCoeff * 10;
-                              return totalPoints >= threshold ? (
-                                <Badge variant="outline" className="text-green-600 border-green-300 text-[10px]">ADMIS</Badge>
-                              ) : (
-                                <Badge variant="outline" className="text-red-600 border-red-300 text-[10px]">NON ADMIS</Badge>
-                              );
-                            })()}
-                          </td>
-                        </tr>
-                      </React.Fragment>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* Footer */}
-          <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-            <span>{students.length} étudiant{students.length > 1 ? 's' : ''} • {modules.length} matière{modules.length > 1 ? 's' : ''} • {filteredEvaluations.length} évaluation{filteredEvaluations.length > 1 ? 's' : ''}</span>
-          </div>
-        </div>
+                  {/* Footer */}
+                  <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                    <span>
+                      {students.length} étudiant{students.length > 1 ? 's' : ''} •{' '}
+                      {ccEvaluations.length} CC • {examEvaluations.length} examen{examEvaluations.length > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                </div>
+              </TabsContent>
+            ))}
+          </Tabs>
+        </>
       )}
 
       {showCreateModal && (
