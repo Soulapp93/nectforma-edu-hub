@@ -499,6 +499,71 @@ export const getDecision = (average: number, rules: GradingRules): string => {
 };
 
 // =====================================================
+// DUPLICATE PERIOD WITH EVALUATIONS
+// =====================================================
+
+export const duplicatePeriodWithEvaluations = async (
+  sourcePeriodId: string,
+  newPeriodName: string,
+  formationId: string
+): Promise<EvaluationPeriod> => {
+  const { data: sourcePeriod, error: periodError } = await supabase
+    .from('evaluation_periods')
+    .select('*')
+    .eq('id', sourcePeriodId)
+    .single();
+  if (periodError || !sourcePeriod) throw new Error('Période source introuvable');
+
+  const { data: allPeriods } = await supabase
+    .from('evaluation_periods')
+    .select('order_index')
+    .eq('formation_id', formationId)
+    .order('order_index', { ascending: false })
+    .limit(1);
+  const nextIndex = (allPeriods?.[0]?.order_index ?? 0) + 1;
+
+  const { data: newPeriod, error: createError } = await supabase
+    .from('evaluation_periods')
+    .insert({
+      formation_id: formationId,
+      name: newPeriodName,
+      period_type: (sourcePeriod as any).period_type,
+      start_date: (sourcePeriod as any).start_date,
+      end_date: (sourcePeriod as any).end_date,
+      order_index: nextIndex,
+      is_locked: false,
+    } as any)
+    .select()
+    .single();
+  if (createError || !newPeriod) throw createError || new Error('Erreur création période');
+
+  const { data: sourceEvals, error: evalsError } = await supabase
+    .from('evaluations')
+    .select('*')
+    .eq('period_id', sourcePeriodId);
+  if (evalsError) throw evalsError;
+
+  if (sourceEvals && sourceEvals.length > 0) {
+    const newEvals = sourceEvals.map((ev: any) => ({
+      module_id: ev.module_id,
+      period_id: (newPeriod as any).id,
+      instructor_id: ev.instructor_id,
+      title: ev.title,
+      description: ev.description,
+      evaluation_type: ev.evaluation_type,
+      scale: ev.scale,
+      coefficient: ev.coefficient,
+      status: 'brouillon',
+      is_published: false,
+    }));
+    const { error: insertError } = await supabase.from('evaluations').insert(newEvals as any[]);
+    if (insertError) throw insertError;
+  }
+
+  return newPeriod as unknown as EvaluationPeriod;
+};
+
+// =====================================================
 // LABELS & HELPERS
 // =====================================================
 
