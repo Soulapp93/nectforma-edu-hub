@@ -338,16 +338,18 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div className="flex gap-3 flex-wrap">
-          <Select value={selectedFormation} onValueChange={(v) => { setSelectedFormation(v); setSelectedPeriod(''); setCurrentStudentIndex(0); setViewMode('list'); }}>
-            <SelectTrigger className="w-64">
-              <SelectValue placeholder="Sélectionner une formation" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableFormations.map((f: any) => (
-                <SelectItem key={f.id} value={f.id}>{f.title}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {!propFormationId && (
+            <Select value={selectedFormation} onValueChange={(v) => { setInternalFormation(v); setSelectedPeriod(''); setCurrentStudentIndex(0); setViewMode('list'); }}>
+              <SelectTrigger className="w-64">
+                <SelectValue placeholder="Sélectionner une formation" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableFormations.map((f: any) => (
+                  <SelectItem key={f.id} value={f.id}>{f.title}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           {periods.length > 0 && (
             <Select value={selectedPeriod} onValueChange={(v) => { setSelectedPeriod(v); setCurrentStudentIndex(0); }}>
               <SelectTrigger className="w-48">
