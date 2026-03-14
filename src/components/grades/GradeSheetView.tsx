@@ -470,21 +470,30 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
                               Contrôle Continu
                             </th>
                             {/* Exam section header with selector */}
-                            <th
-                              colSpan={4}
-                              className="bg-emerald-600 text-white text-center p-2 text-sm font-bold uppercase tracking-wider border border-emerald-700"
-                            >
-                              <div className="flex items-center justify-center gap-2">
-                                <select
-                                  value={examType}
-                                  onChange={(e) => setExamType(e.target.value as 'examen_blanc' | 'examen_final')}
-                                  className="bg-emerald-700 text-white border-none rounded px-2 py-0.5 text-xs font-bold cursor-pointer focus:outline-none"
-                                >
-                                  <option value="examen_blanc">Examen Blanc</option>
-                                  <option value="examen_final">Examen Final</option>
-                                </select>
-                              </div>
-                            </th>
+                            {showExamSection && (
+                              <th
+                                colSpan={4}
+                                className="bg-emerald-600 text-white text-center p-2 text-sm font-bold uppercase tracking-wider border border-emerald-700"
+                              >
+                                <div className="flex items-center justify-center gap-2">
+                                  <select
+                                    value={examType}
+                                    onChange={(e) => setExamType(e.target.value as 'examen_blanc' | 'examen_final')}
+                                    className="bg-emerald-700 text-white border-none rounded px-2 py-0.5 text-xs font-bold cursor-pointer focus:outline-none"
+                                  >
+                                    <option value="examen_blanc">Examen Blanc</option>
+                                    <option value="examen_final">Examen Final</option>
+                                  </select>
+                                  <button
+                                    onClick={() => setShowExamSection(false)}
+                                    className="ml-1 text-white/70 hover:text-white text-xs"
+                                    title="Masquer la section examen"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              </th>
+                            )}
                           </tr>
                           {/* Column sub-headers */}
                           <tr className="bg-muted/40">
@@ -504,18 +513,22 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
                               Appréciation
                             </th>
                             {/* Exam columns */}
-                            <th className="text-center p-2 border border-border font-semibold w-16 bg-emerald-100 dark:bg-emerald-900/30 text-[10px]">
-                              Notes
-                            </th>
-                            <th className="text-center p-2 border border-border font-semibold w-14 text-[10px]">
-                              Coef.
-                            </th>
-                            <th className="text-center p-2 border border-border font-semibold w-16 text-[10px]">
-                              Points
-                            </th>
-                            <th className="text-center p-2 border border-border font-semibold min-w-[100px] text-[10px]">
-                              Appréciation
-                            </th>
+                            {showExamSection && (
+                              <>
+                                <th className="text-center p-2 border border-border font-semibold w-16 bg-emerald-100 dark:bg-emerald-900/30 text-[10px]">
+                                  Notes
+                                </th>
+                                <th className="text-center p-2 border border-border font-semibold w-14 text-[10px]">
+                                  Coef.
+                                </th>
+                                <th className="text-center p-2 border border-border font-semibold w-16 text-[10px]">
+                                  Points
+                                </th>
+                                <th className="text-center p-2 border border-border font-semibold min-w-[100px] text-[10px]">
+                                  Appréciation
+                                </th>
+                              </>
+                            )}
                           </tr>
                         </thead>
                         <tbody>
