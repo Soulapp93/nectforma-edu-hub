@@ -57,23 +57,24 @@ interface StudentBulletin {
   mention: string | null;
 }
 
-const TranscriptsPanel: React.FC<Props> = ({ mode, studentId }) => {
+const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propFormationId }) => {
   const { userId } = useCurrentUser();
   const { establishment } = useEstablishment();
-  const [selectedFormation, setSelectedFormation] = useState('');
+  const [internalFormation, setInternalFormation] = useState('');
+  const selectedFormation = propFormationId || internalFormation;
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [currentStudentIndex, setCurrentStudentIndex] = useState(0);
   const [viewMode, setViewMode] = useState<'list' | 'bulletin'>('list');
   const printRef = useRef<HTMLDivElement>(null);
 
-  // Formations
+  // Formations (only needed when no formationId prop)
   const { data: formations = [] } = useQuery({
     queryKey: ['formations-for-transcripts'],
     queryFn: async () => {
       const { data } = await supabase.from('formations').select('id, title, level, start_date, end_date').order('title');
       return data || [];
     },
-    enabled: mode === 'admin',
+    enabled: mode === 'admin' && !propFormationId,
   });
 
   const { data: studentFormations = [] } = useQuery({
