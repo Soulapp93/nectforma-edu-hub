@@ -633,7 +633,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
                   <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
                     <span>
                       {students.length} étudiant{students.length > 1 ? 's' : ''} •{' '}
-                      {ccEvaluations.length} CC • {examEvaluations.length} examen{examEvaluations.length > 1 ? 's' : ''}
+                      {ccEvaluations.length} CC{showExamSection ? ` • ${examEvaluations.length} examen${examEvaluations.length > 1 ? 's' : ''}` : ''}
                     </span>
                   </div>
                 </div>
