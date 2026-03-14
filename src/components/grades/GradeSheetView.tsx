@@ -383,6 +383,12 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
               Non enregistré
             </Badge>
           )}
+          {!showExamSection && (
+            <Button size="sm" variant="outline" className="gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950" onClick={() => setShowExamSection(true)}>
+              <Plus className="h-4 w-4" />
+              Ajouter un examen
+            </Button>
+          )}
           <Button size="sm" variant="outline" className="gap-2" onClick={() => setShowCreateModal(true)}>
             <Plus className="h-4 w-4" />
             Évaluation
