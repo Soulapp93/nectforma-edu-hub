@@ -25,8 +25,8 @@ const Notes = () => {
   const isStudent = userRole === 'Étudiant';
   const isTutor = userRole === 'Tuteur';
 
+
   const [selectedFormationId, setSelectedFormationId] = useState<string | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
 
   // Fetch formations for admin/formateur
   const { data: formations = [], isLoading } = useQuery({
