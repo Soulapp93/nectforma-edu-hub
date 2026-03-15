@@ -183,12 +183,6 @@ const Notes = () => {
           description="Sélectionnez une formation pour gérer les notes"
           icon={GraduationCap}
         />
-        {isAdmin && (
-          <Button variant="outline" size="sm" onClick={() => setShowSettings(true)} className="gap-2">
-            <Settings2 className="h-4 w-4" />
-            Paramètres
-          </Button>
-        )}
       </div>
 
       {isLoading ? (
