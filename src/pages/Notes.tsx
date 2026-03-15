@@ -158,6 +158,12 @@ const Notes = () => {
               <FileText className="h-4 w-4" />
               Relevés de notes
             </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="settings" className="flex items-center gap-2">
+                <Settings2 className="h-4 w-4" />
+                Paramètres
+              </TabsTrigger>
+            )}
           </TabsList>
           <TabsContent value="feuilles">
             <GradeSheetView mode={isAdmin ? 'admin' : 'instructor'} formationId={selectedFormationId} />
@@ -165,6 +171,11 @@ const Notes = () => {
           <TabsContent value="releves">
             <TranscriptsPanel mode="admin" formationId={selectedFormationId} />
           </TabsContent>
+          {isAdmin && (
+            <TabsContent value="settings">
+              <GradingSettingsPanel />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     );
