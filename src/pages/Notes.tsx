@@ -112,26 +112,6 @@ const Notes = () => {
     );
   }
 
-  // Admin/Formateur: Settings view
-  if (showSettings && isAdmin) {
-    return (
-      <div className="p-4 md:p-6 space-y-6 pb-20 md:pb-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => setShowSettings(false)} className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Retour aux formations
-          </Button>
-        </div>
-        <PageHeader
-          title="Paramètres de notation"
-          description="Configurez les règles de notation et barèmes"
-          icon={Settings2}
-        />
-        <GradingSettingsPanel />
-      </div>
-    );
-  }
-
   // Admin/Formateur: Formation detail view
   if (selectedFormationId) {
     const selectedFormation = formations.find((f: any) => f.id === selectedFormationId);
