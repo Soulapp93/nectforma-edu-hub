@@ -1,51 +1,90 @@
 
-Objectif: corriger définitivement le décalage des cartes en vue jour (tuteur + autres interfaces) pour que chaque carte respecte exactement l’heure de début et de fin.
 
-1) Diagnostic précis (pourquoi c’est encore faux)
-- La grille horaire est en `rem` via `h-20` (5rem).
-- Les cartes sont positionnées en **pixels fixes** avec `HOUR_HEIGHT = 80`.
-- Or votre app force `html { font-size: 12px }` sur desktop (`src/index.css`), donc:
-  - 1 heure de grille = 5rem = 60px
-  - 1 heure de carte = 80px
-  - => cartes ~33% trop hautes (exactement ce qu’on voit sur votre capture).
-- Le patch précédent (minHeight 60 -> 20) ne corrige pas cette cause racine.
-- Le même problème existe aussi dans `src/components/administration/ScheduleDayView.tsx` (même logique en 80px), donc incohérence selon écrans/rôles.
+## Plan: Système de relevés de notes personnalisables par formation
 
-2) Plan de correction (hotfix production, faible risque)
-- Corriger `src/components/schedule/DayView.tsx`:
-  - Supprimer le calcul vertical en px fixes.
-  - Utiliser une échelle unique basée sur la même unité que la grille (`rem`) ou en `%` du conteneur.
-  - Aligner les hauteurs de lignes et le calcul `top/height` sur la même constante.
-  - Supprimer la distorsion artificielle (`minHeight` trop agressif) qui casse la précision des petits créneaux.
-- Corriger `src/components/administration/ScheduleDayView.tsx` de la même manière pour éviter un bug “corrigé ici mais pas ailleurs”.
-- Garder les textes compactés pour créneaux courts (si besoin), mais sans changer la hauteur réelle du créneau.
+### Objectif
+Permettre à chaque établissement de créer et personnaliser ses propres modèles de bulletin (relevé de notes) par formation, en exploitant la table `transcript_templates` déjà existante en base.
 
-3) Détails techniques (implémentation)
-- Remplacer:
-  - `HOUR_HEIGHT = 80` (px)
-  - `h-20` implicite non synchronisé
-- Par une source unique (exemple):
-  - `const HOUR_HEIGHT_REM = 5;`
-  - `topRem = ((start - base) / 60) * HOUR_HEIGHT_REM`
-  - `heightRem = ((end - start) / 60) * HOUR_HEIGHT_REM`
-  - styles: `top: ${topRem}rem`, `height: ${heightRem}rem`
-- Ou alternative robuste:
-  - calculer `top`/`height` en `%` de la plage horaire visible.
-- Ajouter garde-fou:
-  - si `end <= start`, ne pas casser l’affichage (normalisation + log debug).
+### Architecture
 
-4) Vérification ciblée (avant mise en prod)
-- Cas réel de votre capture:
-  - `08:00 → 14:00` doit commencer exactement sur la ligne 08:00 et finir exactement sur 14:00.
-- Cas 30 min:
-  - ex. `10:00 → 10:30` doit occuper exactement une demi-case.
-- Vérifier sur compte tuteur ET interface administration (même rendu temporel).
+```text
+Formation sélectionnée
+├── Feuilles de notes
+├── Relevés de notes
+│   ├── Bouton ⚙ "Configurer le modèle" (par formation)
+│   │   └── Ouvre un éditeur de template
+│   └── Affichage du bulletin selon le template configuré
+```
 
-5) Fichiers concernés
-- `src/components/schedule/DayView.tsx`
-- `src/components/administration/ScheduleDayView.tsx`
+### Modifications
 
-Résultat attendu:
-- Plus de carte “étirée” artificiellement.
-- Synchronisation parfaite entre horaires affichés et position visuelle des créneaux.
-- Comportement cohérent sur toutes les interfaces/rôles.
+**1. Nouveau composant `src/components/grades/TranscriptTemplateEditor.tsx`**
+
+Éditeur de modèle de bulletin accessible depuis l'onglet "Relevés de notes" via un bouton ⚙. Il permet de configurer :
+
+- **Sections du bulletin** (catégories) : L'établissement peut créer/réordonner des catégories (ex: "MATIÈRES GÉNÉRALES", "MATIÈRES PROFESSIONNELLES", "ORAUX") et y affecter des modules par drag ou sélection. Cela se stocke dans `columns_config` sous forme de JSON `{ sections: [{ id, title, moduleIds: [] }] }`.
+- **En-tête** (`header_config`) : Choix d'afficher ou non le logo, le titre personnalisé du bulletin, les infos de session, un sous-titre.
+- **Colonnes visibles** : Choix des colonnes à afficher dans la section CC (Moyenne Stagiaire, Moyenne Classe, Appréciations) et Examen (Notes, Coef, Points, Appréciation). Stocké dans `columns_config.visibleColumns`.
+- **Pied de page** (`footer_config`) : Texte personnalisé, signature, mention d'assiduité.
+- **Style** (`style_config`) : Couleur principale du tableau (au lieu du bleu par défaut).
+- **Nom du modèle** et possibilité d'en avoir un par formation via `grading_rules.transcript_template_id`.
+
+**2. Modification de `src/components/grades/TranscriptsPanel.tsx`**
+
+- Ajouter un bouton ⚙ "Configurer le modèle" à côté des contrôles (visible admin uniquement)
+- Charger le `transcript_template` associé à la formation (via `grading_rules.transcript_template_id` ou template par défaut de l'établissement)
+- Remplacer l'affichage statique par un rendu dynamique basé sur le template :
+  - Les modules sont regroupés par **sections personnalisées** au lieu du groupement par UE uniquement
+  - Les colonnes affichées suivent la config du template
+  - Les couleurs et en-tête/pied de page suivent la config
+
+**3. Modification de `src/services/gradesService.ts`**
+
+Ajouter les fonctions CRUD pour les templates :
+- `getTranscriptTemplate(formationId)` — récupère le template lié via grading_rules ou le défaut
+- `upsertTranscriptTemplate(template)` — crée ou met à jour un template
+- `getEstablishmentTemplates(establishmentId)` — liste les templates de l'établissement
+
+**4. Modification de `src/pages/Notes.tsx`**
+
+- Déplacer le bouton "Paramètres" global vers un bouton ⚙ par formation (dans la vue détail de chaque formation, à côté des onglets), afin que chaque formation ait ses propres paramètres.
+
+### Structure JSON du template (stockée dans `transcript_templates`)
+
+```json
+{
+  "columns_config": {
+    "sections": [
+      { "id": "s1", "title": "MATIÈRES GÉNÉRALES", "moduleIds": ["mod-1", "mod-2"] },
+      { "id": "s2", "title": "MATIÈRES PROFESSIONNELLES", "moduleIds": ["mod-3", "mod-4"] },
+      { "id": "s3", "title": "ORAUX", "moduleIds": ["mod-5"] }
+    ],
+    "ccColumns": ["moyenne_stagiaire", "moyenne_classe", "appreciation"],
+    "examColumns": ["notes", "coefficient", "points", "appreciation"],
+    "showExamSection": true
+  },
+  "header_config": {
+    "title": "Bulletin de Formation",
+    "showLogo": true,
+    "showSession": true,
+    "subtitle": ""
+  },
+  "footer_config": {
+    "showAssiduity": true,
+    "customText": "",
+    "showSignature": true
+  },
+  "style_config": {
+    "primaryColor": "#3b82f6",
+    "fontFamily": "Segoe UI"
+  }
+}
+```
+
+### Détails techniques
+
+- La table `transcript_templates` existe déjà avec tous les champs nécessaires (`columns_config`, `header_config`, `footer_config`, `style_config`, `establishment_id`). Aucune migration requise.
+- Le lien formation → template passe par `grading_rules.transcript_template_id` (FK existante).
+- Le rendu du bulletin dans `TranscriptsPanel` devient dynamique : si un template existe, les modules sont groupés par sections du template ; sinon, fallback sur le groupement par UE actuel.
+- L'éditeur de template s'ouvre dans un Dialog/Sheet depuis la vue relevés.
+
