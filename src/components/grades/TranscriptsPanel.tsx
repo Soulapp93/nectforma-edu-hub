@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileText, Eye, Printer, ChevronLeft, ChevronRight, Users } from 'lucide-react';
+import { FileText, Eye, Printer, ChevronLeft, ChevronRight, Users, Settings2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -17,13 +17,19 @@ import {
   calculateWeightedAverage,
   getMention,
   getDecision,
+  getTranscriptTemplate,
   DECISIONS,
   MENTIONS,
   type Evaluation,
   type Grade,
+  type TranscriptTemplateConfig,
+  type TranscriptHeaderConfig,
+  type TranscriptFooterConfig,
+  type TranscriptStyleConfig,
 } from '@/services/gradesService';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import TranscriptTemplateEditor from './TranscriptTemplateEditor';
 
 interface Props {
   mode: 'admin' | 'student';
@@ -58,13 +64,15 @@ interface StudentBulletin {
 }
 
 const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propFormationId }) => {
-  const { userId } = useCurrentUser();
+  const { userId, userRole } = useCurrentUser();
   const { establishment } = useEstablishment();
+  const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
   const [internalFormation, setInternalFormation] = useState('');
   const selectedFormation = propFormationId || internalFormation;
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [currentStudentIndex, setCurrentStudentIndex] = useState(0);
   const [viewMode, setViewMode] = useState<'list' | 'bulletin'>('list');
+  const [showTemplateEditor, setShowTemplateEditor] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
   // Formations (only needed when no formationId prop)
@@ -165,6 +173,35 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     enabled: !!selectedFormation,
   });
 
+  // Load transcript template
+  const { data: template } = useQuery({
+    queryKey: ['transcript-template', selectedFormation],
+    queryFn: () => getTranscriptTemplate(selectedFormation),
+    enabled: !!selectedFormation,
+  });
+
+  const tplColumns: TranscriptTemplateConfig = template?.columns_config || {
+    sections: [],
+    ccColumns: ['moyenne_stagiaire', 'moyenne_classe', 'appreciation'],
+    examColumns: ['notes', 'coefficient', 'points', 'appreciation'],
+    showExamSection: true,
+  };
+  const tplHeader: TranscriptHeaderConfig = template?.header_config || {
+    title: 'Bulletin de Formation',
+    showLogo: true,
+    showSession: true,
+    subtitle: '',
+  };
+  const tplFooter: TranscriptFooterConfig = template?.footer_config || {
+    showAssiduity: true,
+    customText: '',
+    showSignature: true,
+  };
+  const tplStyle: TranscriptStyleConfig = template?.style_config || {
+    primaryColor: '#3b82f6',
+    fontFamily: 'Segoe UI',
+  };
+
   // Split evaluations by type
   const ccEvaluations = useMemo(() =>
     evaluations.filter(e => e.evaluation_type !== 'examen_blanc' && e.evaluation_type !== 'examen_final'),
@@ -176,25 +213,49 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     [evaluations]
   );
 
-  // Module grouping by teaching unit
-  const modulesByUnit = useMemo(() => {
-    const grouped: { unitId: string | null; unitTitle: string; mods: typeof modules }[] = [];
+  // Module grouping: use template sections if available, otherwise fallback to teaching units
+  const moduleGroups = useMemo(() => {
+    // If template has sections defined, use them
+    if (tplColumns.sections.length > 0) {
+      const groups: { id: string; title: string; mods: typeof modules }[] = [];
+      const assignedIds = new Set<string>();
+
+      for (const section of tplColumns.sections) {
+        const sectionMods = section.moduleIds
+          .map(id => modules.find(m => m.id === id))
+          .filter(Boolean) as typeof modules;
+        if (sectionMods.length > 0) {
+          groups.push({ id: section.id, title: section.title, mods: sectionMods });
+          sectionMods.forEach(m => assignedIds.add(m.id));
+        }
+      }
+
+      const unassigned = modules.filter(m => !assignedIds.has(m.id));
+      if (unassigned.length > 0) {
+        groups.push({ id: 'other', title: 'Autres', mods: unassigned });
+      }
+
+      return groups;
+    }
+
+    // Fallback: group by teaching unit
+    const grouped: { id: string; title: string; mods: typeof modules }[] = [];
     const unitsUsed = new Set<string>();
 
     for (const tu of teachingUnits) {
       const unitMods = modules.filter(m => m.teaching_unit_id === tu.id);
       if (unitMods.length > 0) {
-        grouped.push({ unitId: tu.id, unitTitle: tu.title, mods: unitMods });
+        grouped.push({ id: tu.id, title: tu.title, mods: unitMods });
         unitsUsed.add(tu.id);
       }
     }
 
     const unassigned = modules.filter(m => !m.teaching_unit_id || !unitsUsed.has(m.teaching_unit_id));
-    if (unassigned.length > 0) grouped.push({ unitId: null, unitTitle: 'Matières', mods: unassigned });
-    if (grouped.length === 0 && modules.length > 0) grouped.push({ unitId: null, unitTitle: 'Matières', mods: modules });
+    if (unassigned.length > 0) grouped.push({ id: 'ungrouped', title: 'Matières', mods: unassigned });
+    if (grouped.length === 0 && modules.length > 0) grouped.push({ id: 'all', title: 'Matières', mods: modules });
 
     return grouped;
-  }, [modules, teachingUnits]);
+  }, [modules, teachingUnits, tplColumns.sections]);
 
   // Build bulletins
   const bulletins: StudentBulletin[] = useMemo(() => {
@@ -206,14 +267,12 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     };
     const rules = gradingRules || defaultRules;
 
-    // Helper: get student's CC average for a module
     const getStudentModuleCCAvg = (sId: string, modId: string): number | null => {
       const modCCEvals = ccEvaluations.filter(e => e.module_id === modId);
       const grades = modCCEvals.map(e => allGrades.get(e.id)?.find((g: any) => g.student_id === sId)).filter(Boolean);
       return calculateModuleAverage(grades, 20);
     };
 
-    // Helper: get student's exam score for a module
     const getStudentModuleExamScore = (sId: string, modId: string): number | null => {
       const modExamEvals = examEvaluations.filter(e => e.module_id === modId);
       const grades = modExamEvals.map(e => allGrades.get(e.id)?.find((g: any) => g.student_id === sId)).filter(Boolean);
@@ -225,7 +284,6 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
         const ccAvg = getStudentModuleCCAvg(student.user_id, mod.id);
         const examScore = getStudentModuleExamScore(student.user_id, mod.id);
 
-        // Class averages
         const classCCAvgs = students.map(s => getStudentModuleCCAvg(s.user_id, mod.id)).filter(v => v !== null) as number[];
         const classExamAvgs = students.map(s => getStudentModuleExamScore(s.user_id, mod.id)).filter(v => v !== null) as number[];
 
@@ -246,12 +304,10 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
         };
       });
 
-      // CC general average (weighted)
       const ccGeneralAvg = calculateWeightedAverage(
         studentModules.map(m => ({ average: m.ccAverage, coefficient: m.coefficient }))
       );
 
-      // CC class general average
       const allStudentCCAvgs = students.map(s => {
         const mods = modules.map(mod => ({
           average: getStudentModuleCCAvg(s.user_id, mod.id),
@@ -264,11 +320,10 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
         ? Math.round((allStudentCCAvgs.reduce((a, b) => a + b, 0) / allStudentCCAvgs.length) * 100) / 100
         : null;
 
-      // Exam total points
       const examTotalPoints = studentModules.reduce((sum, m) => sum + (m.examPoints || 0), 0);
       const examTotalCoeff = modules.reduce((sum, m) => sum + ((m as any).coefficient || 1), 0);
 
-      const generalAvg = ccGeneralAvg; // Use CC average for decision
+      const generalAvg = ccGeneralAvg;
       const decision = generalAvg !== null ? getDecision(generalAvg, rules as any) : 'en_cours';
       const mention = generalAvg !== null ? getMention(generalAvg, rules as any) : null;
 
@@ -294,22 +349,22 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   const handlePrint = () => {
     const content = printRef.current;
     if (!content) return;
+    const pc = tplStyle.primaryColor;
     const win = window.open('', '_blank');
     if (!win) return;
     win.document.write(`
       <html><head><title>Bulletin - ${currentBulletin?.studentName}</title>
       <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; color: #1a1a1a; font-size: 12px; }
+        body { font-family: '${tplStyle.fontFamily}', Arial, sans-serif; padding: 20px; color: #1a1a1a; font-size: 12px; }
         .bulletin-header { text-align: center; margin-bottom: 15px; }
-        .bulletin-header h1 { font-size: 16px; color: #2563eb; margin: 5px 0; }
+        .bulletin-header h1 { font-size: 16px; color: ${pc}; margin: 5px 0; }
         .bulletin-header h2 { font-size: 13px; margin: 3px 0; }
-        .student-bar { background: #bfdbfe; padding: 8px 15px; text-align: center; font-weight: bold; font-size: 14px; margin: 10px 0; }
+        .student-bar { background: ${pc}33; padding: 8px 15px; text-align: center; font-weight: bold; font-size: 14px; margin: 10px 0; }
         table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 11px; }
         th, td { border: 1px solid #94a3b8; padding: 5px 8px; }
-        th { background: #3b82f6; color: white; font-weight: 600; }
-        .section-title { background: #3b82f6; color: white; text-align: center; font-weight: bold; padding: 6px; }
-        .ue-row { background: #e0e7ff; font-weight: 600; font-size: 10px; }
-        .total-row { background: #bfdbfe; font-weight: bold; }
+        th { background: ${pc}; color: white; font-weight: 600; }
+        .section-title { background: ${pc}22; color: ${pc}; text-align: center; font-weight: bold; padding: 6px; }
+        .total-row { background: ${pc}33; font-weight: bold; }
         .avg-green { color: #16a34a; }
         .avg-red { color: #dc2626; }
         .decision { text-align: center; padding: 10px; font-weight: bold; font-size: 14px; margin-top: 10px; border: 2px solid; }
@@ -332,6 +387,20 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   const decisionLabel = (d: string) => DECISIONS.find(x => x.value === d)?.label || 'En cours';
 
   const hasExamData = examEvaluations.length > 0;
+  const showExam = tplColumns.showExamSection && hasExamData;
+
+  // CC columns visibility
+  const showCCMoyenne = tplColumns.ccColumns.includes('moyenne_stagiaire');
+  const showCCClasseMoyenne = tplColumns.ccColumns.includes('moyenne_classe');
+  const showCCAppreciation = tplColumns.ccColumns.includes('appreciation');
+  const ccColCount = 1 + (showCCMoyenne ? 1 : 0) + (showCCClasseMoyenne ? 1 : 0) + (showCCAppreciation ? 1 : 0);
+
+  // Exam columns visibility
+  const showExamNotes = tplColumns.examColumns.includes('notes');
+  const showExamCoeff = tplColumns.examColumns.includes('coefficient');
+  const showExamPoints = tplColumns.examColumns.includes('points');
+  const showExamAppreciation = tplColumns.examColumns.includes('appreciation');
+  const examColCount = 1 + (showExamNotes ? 1 : 0) + (showExamCoeff ? 1 : 0) + (showExamPoints ? 1 : 0) + (showExamAppreciation ? 1 : 0);
 
   return (
     <div className="space-y-4">
@@ -362,17 +431,35 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
             </Select>
           )}
         </div>
-        {selectedFormation && bulletins.length > 0 && (
-          <Button
-            variant={viewMode === 'bulletin' ? 'default' : 'outline'}
-            onClick={() => setViewMode(viewMode === 'bulletin' ? 'list' : 'bulletin')}
-            className="gap-2"
-          >
-            <FileText className="h-4 w-4" />
-            {viewMode === 'bulletin' ? 'Vue liste' : 'Vue bulletin'}
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {isAdmin && selectedFormation && establishment?.id && (
+            <Button variant="outline" size="sm" onClick={() => setShowTemplateEditor(true)} className="gap-2">
+              <Settings2 className="h-4 w-4" />
+              Configurer le modèle
+            </Button>
+          )}
+          {selectedFormation && bulletins.length > 0 && (
+            <Button
+              variant={viewMode === 'bulletin' ? 'default' : 'outline'}
+              onClick={() => setViewMode(viewMode === 'bulletin' ? 'list' : 'bulletin')}
+              className="gap-2"
+            >
+              <FileText className="h-4 w-4" />
+              {viewMode === 'bulletin' ? 'Vue liste' : 'Vue bulletin'}
+            </Button>
+          )}
+        </div>
       </div>
+
+      {/* Template Editor Dialog */}
+      {isAdmin && selectedFormation && establishment?.id && (
+        <TranscriptTemplateEditor
+          open={showTemplateEditor}
+          onOpenChange={setShowTemplateEditor}
+          formationId={selectedFormation}
+          establishmentId={establishment.id}
+        />
+      )}
 
       {!selectedFormation ? (
         <Card>
@@ -468,18 +555,21 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
             <CardContent className="p-0">
               <div ref={printRef} className="bulletin">
                 {/* ===== EN-TÊTE ===== */}
-                <div className="p-6 border-b-2 border-blue-400">
+                <div className="p-6 border-b-2" style={{ borderColor: tplStyle.primaryColor }}>
                   <div className="flex items-start justify-between">
                     <div>
-                      {establishment?.logo_url && <img src={establishment.logo_url} alt="" className="h-14 mb-2" />}
+                      {tplHeader.showLogo && establishment?.logo_url && <img src={establishment.logo_url} alt="" className="h-14 mb-2" />}
                       <p className="text-xs font-semibold">{establishment?.name}</p>
                       {establishment?.address && <p className="text-[10px] text-muted-foreground">{establishment.address}</p>}
                     </div>
                     <div className="text-right">
-                      <h1 className="text-lg font-bold text-blue-600">Bulletin de Formation N°...</h1>
+                      <h1 className="text-lg font-bold" style={{ color: tplStyle.primaryColor }}>
+                        {tplHeader.title} N°...
+                      </h1>
+                      {tplHeader.subtitle && <p className="text-xs text-muted-foreground">{tplHeader.subtitle}</p>}
                       <h2 className="text-sm font-bold mt-1">{selectedFormationData?.title}</h2>
                       {selectedFormationData?.level && <p className="text-xs text-muted-foreground">{selectedFormationData.level}</p>}
-                      {selectedFormationData?.start_date && selectedFormationData?.end_date && (
+                      {tplHeader.showSession && selectedFormationData?.start_date && selectedFormationData?.end_date && (
                         <p className="text-xs text-muted-foreground">
                           SESSION {format(new Date(selectedFormationData.start_date), 'yyyy')} - {format(new Date(selectedFormationData.end_date), 'yyyy')}
                         </p>
@@ -490,7 +580,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                 </div>
 
                 {/* ===== NOM ÉTUDIANT ===== */}
-                <div className="bg-blue-200 dark:bg-blue-800 py-2 px-6 text-center">
+                <div className="py-2 px-6 text-center" style={{ backgroundColor: `${tplStyle.primaryColor}33` }}>
                   <p className="font-bold text-sm">{currentBulletin.studentName}</p>
                 </div>
 
@@ -499,95 +589,116 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                   <table className="w-full text-xs border-collapse">
                     <thead>
                       <tr>
-                        <th className="bg-blue-500 text-white text-left p-2 border border-blue-400 font-semibold" style={{ width: '40%' }}>
+                        <th className="text-white text-left p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '40%' }}>
                           Contrôle continu
                         </th>
-                        <th className="bg-blue-500 text-white text-center p-2 border border-blue-400 font-semibold" style={{ width: '15%' }}>
-                          Moyenne du Stagiaire
-                        </th>
-                        <th className="bg-blue-500 text-white text-center p-2 border border-blue-400 font-semibold" style={{ width: '15%' }}>
-                          Moyenne de Classe
-                        </th>
-                        <th className="bg-blue-500 text-white text-center p-2 border border-blue-400 font-semibold" style={{ width: '30%' }}>
-                          Appréciations<br /><span className="font-normal text-[10px]">(travail et comportement)</span>
-                        </th>
+                        {showCCMoyenne && (
+                          <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '15%' }}>
+                            Moyenne du Stagiaire
+                          </th>
+                        )}
+                        {showCCClasseMoyenne && (
+                          <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '15%' }}>
+                            Moyenne de Classe
+                          </th>
+                        )}
+                        {showCCAppreciation && (
+                          <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '30%' }}>
+                            Appréciations<br /><span className="font-normal text-[10px]">(travail et comportement)</span>
+                          </th>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
-                      {modulesByUnit.map(group => (
-                        <React.Fragment key={group.unitId || 'ungrouped'}>
-                          {teachingUnits.length > 0 && (
+                      {moduleGroups.map(group => (
+                        <React.Fragment key={group.id}>
+                          {moduleGroups.length > 1 && (
                             <tr>
-                              <td colSpan={4} className="bg-blue-50 dark:bg-blue-900/20 p-1.5 pl-3 text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wider border border-border/50">
-                                {group.unitTitle}
+                              <td colSpan={ccColCount} className="p-1.5 pl-3 text-[10px] font-bold uppercase tracking-wider border border-border/50" style={{ backgroundColor: `${tplStyle.primaryColor}11`, color: tplStyle.primaryColor }}>
+                                {group.title}
                               </td>
                             </tr>
                           )}
                           {group.mods.map(mod => {
                             const modData = currentBulletin.modules.find(m => m.moduleId === mod.id);
-                            // Find instructor for this module
-                            const moduleEval = evaluations.find(e => e.module_id === mod.id);
                             return (
                               <tr key={mod.id} className="border-b border-border/30">
                                 <td className="p-2 border border-border/50">
                                   <div className="font-medium">{mod.title}</div>
-                                  {moduleEval?.instructor_name && (
-                                    <div className="text-[10px] text-muted-foreground italic">{moduleEval.instructor_name}</div>
-                                  )}
                                 </td>
-                                <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData?.ccAverage ?? null)}`}>
-                                  {modData?.ccAverage !== null && modData?.ccAverage !== undefined ? modData.ccAverage.toFixed(2) : '—'}
-                                </td>
-                                <td className={`p-2 border border-border/50 text-center font-semibold ${avgColor(modData?.ccClassAverage ?? null)}`}>
-                                  {modData?.ccClassAverage !== null && modData?.ccClassAverage !== undefined ? modData.ccClassAverage.toFixed(2) : '—'}
-                                </td>
-                                <td className="p-2 border border-border/50 text-center text-muted-foreground text-[10px]">
-                                  {modData?.appreciation || ''}
-                                </td>
+                                {showCCMoyenne && (
+                                  <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData?.ccAverage ?? null)}`}>
+                                    {modData?.ccAverage !== null && modData?.ccAverage !== undefined ? modData.ccAverage.toFixed(2) : '—'}
+                                  </td>
+                                )}
+                                {showCCClasseMoyenne && (
+                                  <td className={`p-2 border border-border/50 text-center font-semibold ${avgColor(modData?.ccClassAverage ?? null)}`}>
+                                    {modData?.ccClassAverage !== null && modData?.ccClassAverage !== undefined ? modData.ccClassAverage.toFixed(2) : '—'}
+                                  </td>
+                                )}
+                                {showCCAppreciation && (
+                                  <td className="p-2 border border-border/50 text-center text-muted-foreground text-[10px]">
+                                    {modData?.appreciation || ''}
+                                  </td>
+                                )}
                               </tr>
                             );
                           })}
                         </React.Fragment>
                       ))}
                       {/* Moyenne Générale CC */}
-                      <tr className="bg-blue-200 dark:bg-blue-800/50 font-bold">
-                        <td className="p-2.5 border border-blue-300 text-sm uppercase tracking-wider">
+                      <tr className="font-bold" style={{ backgroundColor: `${tplStyle.primaryColor}33` }}>
+                        <td className="p-2.5 border text-sm uppercase tracking-wider" style={{ borderColor: `${tplStyle.primaryColor}66` }}>
                           Moyenne Générale
                         </td>
-                        <td className={`p-2.5 border border-blue-300 text-center text-base ${avgColor(currentBulletin.ccGeneralAverage)}`}>
-                          {currentBulletin.ccGeneralAverage !== null ? currentBulletin.ccGeneralAverage.toFixed(2) : '—'}
-                        </td>
-                        <td className={`p-2.5 border border-blue-300 text-center ${avgColor(currentBulletin.ccClassGeneralAverage)}`}>
-                          {currentBulletin.ccClassGeneralAverage !== null ? currentBulletin.ccClassGeneralAverage.toFixed(2) : '—'}
-                        </td>
-                        <td className="p-2.5 border border-blue-300"></td>
+                        {showCCMoyenne && (
+                          <td className={`p-2.5 border text-center text-base ${avgColor(currentBulletin.ccGeneralAverage)}`} style={{ borderColor: `${tplStyle.primaryColor}66` }}>
+                            {currentBulletin.ccGeneralAverage !== null ? currentBulletin.ccGeneralAverage.toFixed(2) : '—'}
+                          </td>
+                        )}
+                        {showCCClasseMoyenne && (
+                          <td className={`p-2.5 border text-center ${avgColor(currentBulletin.ccClassGeneralAverage)}`} style={{ borderColor: `${tplStyle.primaryColor}66` }}>
+                            {currentBulletin.ccClassGeneralAverage !== null ? currentBulletin.ccClassGeneralAverage.toFixed(2) : '—'}
+                          </td>
+                        )}
+                        {showCCAppreciation && (
+                          <td className="p-2.5 border" style={{ borderColor: `${tplStyle.primaryColor}66` }}></td>
+                        )}
                       </tr>
                     </tbody>
                   </table>
                 </div>
 
                 {/* ===== SECTION EXAMEN BLANC ===== */}
-                {hasExamData && (
+                {showExam && (
                   <div className="px-4 pt-4">
                     <table className="w-full text-xs border-collapse">
                       <thead>
                         <tr>
-                          <th className="bg-blue-500 text-white text-left p-2 border border-blue-400 font-semibold" style={{ width: '40%' }}>
+                          <th className="text-white text-left p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '40%' }}>
                             Examen Blanc
                           </th>
-                          <th className="bg-blue-500 text-white text-center p-2 border border-blue-400 font-semibold" style={{ width: '10%' }}>Notes</th>
-                          <th className="bg-blue-500 text-white text-center p-2 border border-blue-400 font-semibold" style={{ width: '8%' }}>C</th>
-                          <th className="bg-blue-500 text-white text-center p-2 border border-blue-400 font-semibold" style={{ width: '12%' }}>Points</th>
-                          <th className="bg-blue-500 text-white text-center p-2 border border-blue-400 font-semibold" style={{ width: '30%' }}>Appréciation générale</th>
+                          {showExamNotes && (
+                            <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '10%' }}>Notes</th>
+                          )}
+                          {showExamCoeff && (
+                            <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '8%' }}>C</th>
+                          )}
+                          {showExamPoints && (
+                            <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '12%' }}>Points</th>
+                          )}
+                          {showExamAppreciation && (
+                            <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '30%' }}>Appréciation générale</th>
+                          )}
                         </tr>
                       </thead>
                       <tbody>
-                        {modulesByUnit.map(group => (
-                          <React.Fragment key={group.unitId || 'ungrouped'}>
-                            {teachingUnits.length > 0 && (
+                        {moduleGroups.map(group => (
+                          <React.Fragment key={group.id}>
+                            {moduleGroups.length > 1 && (
                               <tr>
-                                <td colSpan={5} className="bg-blue-50 dark:bg-blue-900/20 p-1.5 pl-3 text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wider border border-border/50">
-                                  {group.unitTitle}
+                                <td colSpan={examColCount} className="p-1.5 pl-3 text-[10px] font-bold uppercase tracking-wider border border-border/50" style={{ backgroundColor: `${tplStyle.primaryColor}11`, color: tplStyle.primaryColor }}>
+                                  {group.title}
                                 </td>
                               </tr>
                             )}
@@ -595,43 +706,55 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                               const modData = currentBulletin.modules.find(m => m.moduleId === mod.id);
                               return (
                                 <tr key={mod.id} className="border-b border-border/30">
-                                  <td className="p-2 border border-border/50 font-medium">
-                                    {mod.title}
-                                  </td>
-                                  <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData?.examScore ?? null)}`}>
-                                    {modData?.examScore !== null && modData?.examScore !== undefined ? modData.examScore.toFixed(2) : ''}
-                                  </td>
-                                  <td className="p-2 border border-border/50 text-center text-muted-foreground">
-                                    {modData?.coefficient}
-                                  </td>
-                                  <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData?.examPoints ?? null)}`}>
-                                    {modData?.examPoints !== null && modData?.examPoints !== undefined ? modData.examPoints.toFixed(2) : '0,00'}
-                                  </td>
-                                  <td className="p-2 border border-border/50"></td>
+                                  <td className="p-2 border border-border/50 font-medium">{mod.title}</td>
+                                  {showExamNotes && (
+                                    <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData?.examScore ?? null)}`}>
+                                      {modData?.examScore !== null && modData?.examScore !== undefined ? modData.examScore.toFixed(2) : ''}
+                                    </td>
+                                  )}
+                                  {showExamCoeff && (
+                                    <td className="p-2 border border-border/50 text-center text-muted-foreground">
+                                      {modData?.coefficient}
+                                    </td>
+                                  )}
+                                  {showExamPoints && (
+                                    <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData?.examPoints ?? null)}`}>
+                                      {modData?.examPoints !== null && modData?.examPoints !== undefined ? modData.examPoints.toFixed(2) : '0,00'}
+                                    </td>
+                                  )}
+                                  {showExamAppreciation && (
+                                    <td className="p-2 border border-border/50"></td>
+                                  )}
                                 </tr>
                               );
                             })}
                           </React.Fragment>
                         ))}
                         {/* TOTAL row */}
-                        <tr className="bg-blue-200 dark:bg-blue-800/50 font-bold">
-                          <td className="p-2.5 border border-blue-300 text-right text-xs uppercase">
+                        <tr className="font-bold" style={{ backgroundColor: `${tplStyle.primaryColor}33` }}>
+                          <td className="p-2.5 border text-right text-xs uppercase" style={{ borderColor: `${tplStyle.primaryColor}66` }}>
                             TOTAL (Admis si &gt; ou = {currentBulletin.examTotalCoeff * 10})
                           </td>
-                          <td className="p-2.5 border border-blue-300"></td>
-                          <td className="p-2.5 border border-blue-300 text-center">
-                            {currentBulletin.examTotalCoeff}
-                          </td>
-                          <td className={`p-2.5 border border-blue-300 text-center text-base ${avgColor(currentBulletin.examTotalPoints / Math.max(currentBulletin.examTotalCoeff, 1))}`}>
-                            {currentBulletin.examTotalPoints.toFixed(2)}
-                          </td>
-                          <td className="p-2.5 border border-blue-300 text-center font-bold">
-                            {currentBulletin.examTotalPoints >= currentBulletin.examTotalCoeff * 10 ? (
-                              <span className="text-green-600">ADMIS</span>
-                            ) : (
-                              <span className="text-red-600">NON ADMIS</span>
-                            )}
-                          </td>
+                          {showExamNotes && <td className="p-2.5 border" style={{ borderColor: `${tplStyle.primaryColor}66` }}></td>}
+                          {showExamCoeff && (
+                            <td className="p-2.5 border text-center" style={{ borderColor: `${tplStyle.primaryColor}66` }}>
+                              {currentBulletin.examTotalCoeff}
+                            </td>
+                          )}
+                          {showExamPoints && (
+                            <td className={`p-2.5 border text-center text-base ${avgColor(currentBulletin.examTotalPoints / Math.max(currentBulletin.examTotalCoeff, 1))}`} style={{ borderColor: `${tplStyle.primaryColor}66` }}>
+                              {currentBulletin.examTotalPoints.toFixed(2)}
+                            </td>
+                          )}
+                          {showExamAppreciation && (
+                            <td className="p-2.5 border text-center font-bold" style={{ borderColor: `${tplStyle.primaryColor}66` }}>
+                              {currentBulletin.examTotalPoints >= currentBulletin.examTotalCoeff * 10 ? (
+                                <span className="text-green-600">ADMIS</span>
+                              ) : (
+                                <span className="text-red-600">NON ADMIS</span>
+                              )}
+                            </td>
+                          )}
                         </tr>
                       </tbody>
                     </table>
@@ -659,9 +782,25 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                 </div>
 
                 {/* Footer */}
-                <div className="px-6 pb-4 flex justify-between text-[10px] text-muted-foreground border-t border-border/50 pt-3">
-                  <span>Document généré le {format(new Date(), 'dd/MM/yyyy', { locale: fr })}</span>
-                  <span>{establishment?.name} {establishment?.phone ? `• Tél : ${establishment.phone}` : ''}</span>
+                <div className="px-6 pb-4 space-y-2">
+                  {tplFooter.showAssiduity && (
+                    <p className="text-[10px] text-muted-foreground italic">Assiduité : .............................</p>
+                  )}
+                  {tplFooter.customText && (
+                    <p className="text-[10px] text-muted-foreground">{tplFooter.customText}</p>
+                  )}
+                  {tplFooter.showSignature && (
+                    <div className="flex justify-end mt-4">
+                      <div className="text-center">
+                        <p className="text-[10px] text-muted-foreground">Signature du directeur</p>
+                        <div className="w-32 h-12 border-b border-border mt-1"></div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-[10px] text-muted-foreground border-t border-border/50 pt-3 mt-3">
+                    <span>Document généré le {format(new Date(), 'dd/MM/yyyy', { locale: fr })}</span>
+                    <span>{establishment?.name} {establishment?.phone ? `• Tél : ${establishment.phone}` : ''}</span>
+                  </div>
                 </div>
               </div>
             </CardContent>
