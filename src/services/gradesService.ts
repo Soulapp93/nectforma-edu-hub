@@ -564,6 +564,109 @@ export const duplicatePeriodWithEvaluations = async (
 };
 
 // =====================================================
+// TRANSCRIPT TEMPLATES
+// =====================================================
+
+export interface TranscriptTemplateConfig {
+  sections: { id: string; title: string; moduleIds: string[] }[];
+  ccColumns: string[];
+  examColumns: string[];
+  showExamSection: boolean;
+}
+
+export interface TranscriptHeaderConfig {
+  title: string;
+  showLogo: boolean;
+  showSession: boolean;
+  subtitle: string;
+}
+
+export interface TranscriptFooterConfig {
+  showAssiduity: boolean;
+  customText: string;
+  showSignature: boolean;
+}
+
+export interface TranscriptStyleConfig {
+  primaryColor: string;
+  fontFamily: string;
+}
+
+export interface TranscriptTemplate {
+  id: string;
+  name: string;
+  description: string | null;
+  establishment_id: string;
+  template_type: string;
+  is_default: boolean | null;
+  is_active: boolean | null;
+  columns_config: TranscriptTemplateConfig | null;
+  header_config: TranscriptHeaderConfig | null;
+  footer_config: TranscriptFooterConfig | null;
+  style_config: TranscriptStyleConfig | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const getTranscriptTemplate = async (formationId: string): Promise<TranscriptTemplate | null> => {
+  // First try to get template linked via grading_rules
+  const { data: rules } = await supabase
+    .from('grading_rules')
+    .select('transcript_template_id')
+    .eq('formation_id', formationId)
+    .maybeSingle();
+
+  if (rules?.transcript_template_id) {
+    const { data, error } = await supabase
+      .from('transcript_templates')
+      .select('*')
+      .eq('id', rules.transcript_template_id)
+      .single();
+    if (!error && data) return data as unknown as TranscriptTemplate;
+  }
+
+  return null;
+};
+
+export const upsertTranscriptTemplate = async (
+  template: Partial<TranscriptTemplate> & { establishment_id: string; name: string }
+): Promise<TranscriptTemplate> => {
+  const payload = {
+    ...template,
+    columns_config: template.columns_config ? JSON.parse(JSON.stringify(template.columns_config)) : null,
+    header_config: template.header_config ? JSON.parse(JSON.stringify(template.header_config)) : null,
+    footer_config: template.footer_config ? JSON.parse(JSON.stringify(template.footer_config)) : null,
+    style_config: template.style_config ? JSON.parse(JSON.stringify(template.style_config)) : null,
+  };
+
+  if (template.id) {
+    const { data, error } = await supabase
+      .from('transcript_templates')
+      .update(payload as any)
+      .eq('id', template.id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as unknown as TranscriptTemplate;
+  } else {
+    const { data, error } = await supabase
+      .from('transcript_templates')
+      .insert(payload as any)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as unknown as TranscriptTemplate;
+  }
+};
+
+export const linkTemplateToFormation = async (formationId: string, templateId: string): Promise<void> => {
+  const { error } = await supabase
+    .from('grading_rules')
+    .upsert({ formation_id: formationId, transcript_template_id: templateId } as any, { onConflict: 'formation_id' });
+  if (error) throw error;
+};
+
+// =====================================================
 // LABELS & HELPERS
 // =====================================================
 

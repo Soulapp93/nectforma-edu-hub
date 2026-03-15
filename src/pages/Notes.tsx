@@ -25,8 +25,8 @@ const Notes = () => {
   const isStudent = userRole === 'Étudiant';
   const isTutor = userRole === 'Tuteur';
 
+
   const [selectedFormationId, setSelectedFormationId] = useState<string | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
 
   // Fetch formations for admin/formateur
   const { data: formations = [], isLoading } = useQuery({
@@ -112,26 +112,6 @@ const Notes = () => {
     );
   }
 
-  // Admin/Formateur: Settings view
-  if (showSettings && isAdmin) {
-    return (
-      <div className="p-4 md:p-6 space-y-6 pb-20 md:pb-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => setShowSettings(false)} className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Retour aux formations
-          </Button>
-        </div>
-        <PageHeader
-          title="Paramètres de notation"
-          description="Configurez les règles de notation et barèmes"
-          icon={Settings2}
-        />
-        <GradingSettingsPanel />
-      </div>
-    );
-  }
-
   // Admin/Formateur: Formation detail view
   if (selectedFormationId) {
     const selectedFormation = formations.find((f: any) => f.id === selectedFormationId);
@@ -158,6 +138,12 @@ const Notes = () => {
               <FileText className="h-4 w-4" />
               Relevés de notes
             </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="settings" className="flex items-center gap-2">
+                <Settings2 className="h-4 w-4" />
+                Paramètres
+              </TabsTrigger>
+            )}
           </TabsList>
           <TabsContent value="feuilles">
             <GradeSheetView mode={isAdmin ? 'admin' : 'instructor'} formationId={selectedFormationId} />
@@ -165,6 +151,11 @@ const Notes = () => {
           <TabsContent value="releves">
             <TranscriptsPanel mode="admin" formationId={selectedFormationId} />
           </TabsContent>
+          {isAdmin && (
+            <TabsContent value="settings">
+              <GradingSettingsPanel />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     );
@@ -192,12 +183,6 @@ const Notes = () => {
           description="Sélectionnez une formation pour gérer les notes"
           icon={GraduationCap}
         />
-        {isAdmin && (
-          <Button variant="outline" size="sm" onClick={() => setShowSettings(true)} className="gap-2">
-            <Settings2 className="h-4 w-4" />
-            Paramètres
-          </Button>
-        )}
       </div>
 
       {isLoading ? (
