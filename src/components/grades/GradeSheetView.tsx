@@ -440,16 +440,34 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
               <TabsContent key={mod.id} value={mod.id}>
                 <div ref={printRef}>
                   {/* Header info */}
-                  <div className="text-center mb-4 print:mb-2">
-                    {establishment?.logo_url && (
-                      <img src={establishment.logo_url} alt="" className="h-12 mx-auto mb-2" />
-                    )}
-                    <h2 className="text-base font-bold text-foreground">{establishment?.name}</h2>
-                    <h3 className="text-sm font-semibold text-primary">
-                      {currentFormation?.title} {currentFormation?.level ? `— ${currentFormation.level}` : ''}
-                    </h3>
-                    {currentPeriod && <p className="text-xs text-muted-foreground">{currentPeriod.name}</p>}
-                    <p className="text-xs font-medium text-foreground mt-1">Module : {mod.title} (Coef. {mod.coefficient})</p>
+                  <div className="flex items-center justify-between gap-4 mb-4 print:mb-2 px-2">
+                    {/* Left: Logo + Establishment name */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {establishment?.logo_url && (
+                        <img src={establishment.logo_url} alt="" className="h-8 w-8 rounded-md object-contain" />
+                      )}
+                      <div className="leading-tight">
+                        <h2 className="text-sm font-bold text-foreground">{establishment?.name}</h2>
+                        {currentPeriod && <p className="text-[10px] text-muted-foreground">{currentPeriod.name}</p>}
+                      </div>
+                    </div>
+
+                    {/* Center: Module */}
+                    <div className="text-center flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-primary truncate">
+                        Module : {mod.title} (Coef. {mod.coefficient})
+                      </p>
+                    </div>
+
+                    {/* Right: Formation */}
+                    <div className="text-right flex-shrink-0">
+                      <h3 className="text-sm font-semibold text-foreground">
+                        {currentFormation?.title}
+                      </h3>
+                      {currentFormation?.level && (
+                        <p className="text-[10px] text-muted-foreground">{currentFormation.level}</p>
+                      )}
+                    </div>
                   </div>
 
                   {/* Unified table: CC left + Exam right */}
