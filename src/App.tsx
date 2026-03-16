@@ -57,6 +57,7 @@ import LinkedInCallback from '@/pages/LinkedInCallback';
 import EspaceTravail from './pages/EspaceTravail';
 import QuestionnairePublic from './pages/QuestionnairePublic';
 import Notes from './pages/Notes';
+import PromotionDetail from './pages/PromotionDetail';
 
 
 
