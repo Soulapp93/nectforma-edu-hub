@@ -78,7 +78,8 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
         end_date: formation.end_date,
         status: formation.status,
         color: formation.color || '#8B5CF6',
-        duration: formation.duration
+        duration: formation.duration,
+        academic_year: (formation as any).academic_year || `${currentYear}-${currentYear + 1}`
       });
 
       // Charger les modules existants
