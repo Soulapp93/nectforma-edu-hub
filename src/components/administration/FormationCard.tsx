@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, Users, Clock, Calendar, User, Edit, Trash2, Eye } from 'lucide-react';
+import { BookOpen, Users, Clock, Calendar, User, Edit, Trash2, Eye, Copy } from 'lucide-react';
 import { Formation } from '@/services/formationService';
 import { useNavigate } from 'react-router-dom';
 import FormationParticipantsModal from './FormationParticipantsModal';
