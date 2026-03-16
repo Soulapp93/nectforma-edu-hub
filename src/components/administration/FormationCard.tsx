@@ -40,6 +40,7 @@ const FormationCard: React.FC<FormationCardProps> = ({
   participantsCount = 0,
   onEdit,
   onDelete,
+  onDuplicate,
   isAdmin = true
 }) => {
   const navigate = useNavigate();
