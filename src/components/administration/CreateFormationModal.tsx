@@ -24,13 +24,26 @@ interface FormationFormData {
   status: string;
   color: string;
   duration: number;
+  academic_year: string;
 }
+
+// Generate academic year options
+const generateAcademicYears = () => {
+  const currentYear = new Date().getFullYear();
+  const years: string[] = [];
+  for (let i = -1; i <= 3; i++) {
+    const y = currentYear + i;
+    years.push(`${y}-${y + 1}`);
+  }
+  return years;
+};
 
 const CreateFormationModal: React.FC<CreateFormationModalProps> = ({ 
   isOpen, 
   onClose, 
   onSuccess 
 }) => {
+  const currentYear = new Date().getFullYear();
   const [formData, setFormData] = useState<FormationFormData>({
     title: '',
     description: '',
@@ -39,12 +52,15 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
     end_date: '',
     status: 'Actif',
     color: '#8B5CF6',
-    duration: 0
+    duration: 0,
+    academic_year: `${currentYear}-${currentYear + 1}`
   });
 
   const [modules, setModules] = useState<ModuleFormData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const academicYears = generateAcademicYears();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -56,10 +72,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
   };
 
   const handleColorChange = (color: string) => {
-    setFormData(prev => ({
-      ...prev,
-      color: color
-    }));
+    setFormData(prev => ({ ...prev, color }));
     if (error) setError(null);
   };
 
@@ -68,7 +81,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
       title: '',
       description: '',
       instructorIds: [],
-      duration_hours: 0
+      duration_hours: 0,
+      subModules: []
     }]);
   };
 
@@ -92,9 +106,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         return;
       }
 
-      console.log('Récupération de l\'établissement...');
       const establishment = await establishmentService.getOrCreateDefaultEstablishment();
-      console.log('Établissement récupéré:', establishment);
 
       const today = new Date();
       const defaultStartDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -110,30 +122,42 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         establishment_id: establishment.id
       };
 
-      console.log('Données de formation à envoyer:', formationData);
+      const formation = await formationService.createFormation(formationData as any);
 
-      const formation = await formationService.createFormation(formationData);
-      console.log('Formation créée avec succès:', formation);
-
-      // Créer les modules
+      // Créer les modules et sous-modules
       for (let i = 0; i < modules.length; i++) {
         const module = modules[i];
         if (module.title.trim()) {
-          await moduleService.createModule({
+          const createdModule = await moduleService.createModule({
             formation_id: formation.id,
             title: module.title,
             description: module.description,
             duration_hours: module.duration_hours || 0,
             order_index: i
           }, module.instructorIds);
+
+          // Create sub-modules
+          if (module.subModules && module.subModules.length > 0) {
+            for (let j = 0; j < module.subModules.length; j++) {
+              const sub = module.subModules[j];
+              if (sub.title.trim()) {
+                await moduleService.createSubModule({
+                  module_id: createdModule.id,
+                  title: sub.title,
+                  description: sub.description,
+                  duration_hours: sub.duration_hours || 0,
+                  order_index: j,
+                  coefficient: sub.coefficient || 1,
+                });
+              }
+            }
+          }
         }
       }
 
-      console.log('Formation et modules créés avec succès');
       onSuccess();
       onClose();
       
-      // Réinitialiser le formulaire
       setFormData({
         title: '',
         description: '',
@@ -142,7 +166,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         end_date: '',
         status: 'Actif',
         color: '#8B5CF6',
-        duration: 0
+        duration: 0,
+        academic_year: `${currentYear}-${currentYear + 1}`
       });
       setModules([]);
       
@@ -159,7 +184,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-background rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border-2 border-primary/20">
-        <div className="flex items-center justify-between p-6 border-b border-border/50 sticky top-0 bg-background/95 backdrop-blur-sm">
+        <div className="flex items-center justify-between p-6 border-b border-border/50 sticky top-0 bg-background/95 backdrop-blur-sm z-10">
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
               <GraduationCap className="h-5 w-5 text-primary-foreground" />
@@ -211,23 +236,31 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                 />
               </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Description
+              {/* Année académique */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  Année académique *
                 </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full px-4 py-2.5 border border-input rounded-xl bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none"
-                />
+                <Select 
+                  value={formData.academic_year} 
+                  onValueChange={(v) => setFormData((p) => ({ ...p, academic_year: v }))}
+                >
+                  <SelectTrigger className="h-11 rounded-xl border-2 border-primary/30">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {academicYears.map(year => (
+                      <SelectItem key={year} value={year}>{year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Niveau</label>
                 <Select value={formData.level} onValueChange={(v) => setFormData((p) => ({ ...p, level: v }))}>
-                  <SelectTrigger className="h-11 rounded-xl">
+                  <SelectTrigger className="h-11 rounded-xl border-2 border-primary/30">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -243,7 +276,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Statut</label>
                 <Select value={formData.status} onValueChange={(v) => setFormData((p) => ({ ...p, status: v }))}>
-                  <SelectTrigger className="h-11 rounded-xl">
+                  <SelectTrigger className="h-11 rounded-xl border-2 border-primary/30">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -252,6 +285,20 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                     <SelectItem value="Brouillon">Brouillon</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">
+                  Durée de la formation (heures)
+                </label>
+                <input
+                  type="number"
+                  name="duration"
+                  value={formData.duration}
+                  onChange={handleChange}
+                  min="0"
+                  className="w-full px-4 py-2.5 border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary hover:border-primary/50 transition-all"
+                />
               </div>
 
               <div>
@@ -265,7 +312,6 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                   onChange={(v) => setFormData((p) => ({ ...p, start_date: v }))}
                   placeholder="jj/mm/aaaa"
                 />
-                <p className="text-xs text-muted-foreground mt-1.5">Si vide, la date d'aujourd'hui sera utilisée</p>
               </div>
 
               <div>
@@ -278,21 +324,6 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                   value={formData.end_date}
                   onChange={(v) => setFormData((p) => ({ ...p, end_date: v }))}
                   placeholder="jj/mm/aaaa"
-                />
-                <p className="text-xs text-muted-foreground mt-1.5">Si vide, une date dans un an sera utilisée</p>
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Durée de la formation (nombre d'heures)
-                </label>
-                <input
-                  type="number"
-                  name="duration"
-                  value={formData.duration}
-                  onChange={handleChange}
-                  min="0"
-                  className="w-full px-4 py-2.5 border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary hover:border-primary/50 transition-all"
                 />
               </div>
 
@@ -325,7 +356,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
               <div className="border-2 border-dashed border-primary/30 rounded-xl p-8 text-center bg-primary/5">
                 <BookOpen className="h-10 w-10 text-primary/50 mx-auto mb-3" />
                 <p className="text-muted-foreground font-medium">Aucun module ajouté</p>
-                <p className="text-sm text-muted-foreground/70 mt-1">Les modules peuvent être ajoutés maintenant ou plus tard</p>
+                <p className="text-sm text-muted-foreground/70 mt-1">Les modules et sous-modules peuvent être ajoutés maintenant ou plus tard</p>
               </div>
             ) : (
               <div className="space-y-4">
