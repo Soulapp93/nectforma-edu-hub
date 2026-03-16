@@ -306,9 +306,9 @@ const FormationsList: React.FC = () => {
           )}
         </div>
       ) : (
-        /* All formations view */
+        /* All formations view - grouped by name, no action buttons */
         <>
-          {filteredFormations.length === 0 ? (
+          {filteredGroups.length === 0 ? (
             <EmptyState
               icon={Plus}
               title={searchTerm || selectedLevel !== 'all' ? 'Aucune formation trouvée' : 'Aucune formation'}
@@ -323,25 +323,50 @@ const FormationsList: React.FC = () => {
             />
           ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredFormations.map((formation) => (
-                <div key={formation.id} className="relative">
-                  {formation.academic_year && (
-                    <div className="absolute -top-2 left-4 z-10">
-                      <Badge className="bg-primary/90 text-primary-foreground text-[10px] px-2 py-0.5 shadow-sm">
-                        {formation.academic_year}
-                      </Badge>
+              {filteredGroups.map((name) => {
+                const group = formationGroups[name];
+                const latest = group[0]; // most recent year
+                return (
+                  <div
+                    key={name}
+                    onClick={() => setSelectedFormationName(name)}
+                    className="bg-card rounded-2xl shadow-sm border-2 border-primary/20 hover:shadow-lg hover:border-primary/40 transition-all duration-200 cursor-pointer group overflow-hidden"
+                  >
+                    <div className="h-2 sm:h-2.5" style={{ backgroundColor: latest?.color || '#8B5CF6' }} />
+                    <div className="p-3 sm:p-4">
+                      <div className="flex items-center gap-1.5 sm:gap-2 mb-2 flex-wrap">
+                        <span className={`px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium rounded-full ${getLevelColor(latest?.level)}`}>
+                          {latest?.level}
+                        </span>
+                        <Badge variant="outline" className="text-[10px] sm:text-xs border-primary/30 text-primary">
+                          {group.length} promotion{group.length > 1 ? 's' : ''}
+                        </Badge>
+                      </div>
+                      <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1 line-clamp-2">{name}</h3>
+                      {latest?.description && (
+                        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 mb-3">{latest.description}</p>
+                      )}
+                      <div className="space-y-1.5 sm:space-y-2">
+                        <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+                          <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-muted-foreground/70 flex-shrink-0" />
+                          <span className="truncate">Du {new Date(latest?.start_date).toLocaleDateString('fr-FR')} au {new Date(latest?.end_date).toLocaleDateString('fr-FR')}</span>
+                        </div>
+                        <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+                          <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-muted-foreground/70 flex-shrink-0" />
+                          <span>{latest?.duration}h de formation</span>
+                        </div>
+                        <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+                          <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-muted-foreground/70 flex-shrink-0" />
+                          <span>{latest?.formation_modules?.length || 0} module{(latest?.formation_modules?.length || 0) > 1 ? 's' : ''}</span>
+                        </div>
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-border flex items-center justify-end text-xs text-primary font-medium group-hover:translate-x-1 transition-transform">
+                        Voir les promotions <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                      </div>
                     </div>
-                  )}
-                  <FormationCard
-                    {...formation}
-                    modules={formation.formation_modules || []}
-                    onEdit={isAdmin ? () => handleEditFormation(formation.id) : undefined}
-                    onDelete={isAdmin ? () => handleDeleteFormation(formation.id) : undefined}
-                    onDuplicate={isAdmin ? () => handleDuplicate(formation) : undefined}
-                    isAdmin={isAdmin}
-                  />
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="bg-card rounded-xl overflow-hidden border border-border">
@@ -350,77 +375,46 @@ const FormationsList: React.FC = () => {
                   <thead className="bg-primary/5 border-b border-primary/10">
                     <tr>
                       <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Formation</th>
-                      <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Année</th>
-                      <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Dates</th>
-                      <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Participants</th>
+                      <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Niveau</th>
+                      <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Durée</th>
                       <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Modules</th>
-                      <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Statut</th>
-                      <th className="px-6 py-3.5 text-right text-sm font-medium text-primary/80">Actions</th>
+                      <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Promotions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {filteredFormations.map((formation) => (
-                      <tr key={formation.id} className="hover:bg-muted/20 transition-colors">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ backgroundColor: formation.color }} />
-                            <div>
-                              <div className="font-medium text-foreground">{formation.title}</div>
-                              <Badge variant="outline" className="text-[10px] mt-0.5" style={{ borderColor: formation.color, color: formation.color }}>
-                                {formation.level}
-                              </Badge>
+                    {filteredGroups.map((name) => {
+                      const group = formationGroups[name];
+                      const latest = group[0];
+                      return (
+                        <tr
+                          key={name}
+                          className="hover:bg-muted/20 transition-colors cursor-pointer"
+                          onClick={() => setSelectedFormationName(name)}
+                        >
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ backgroundColor: latest?.color || '#8B5CF6' }} />
+                              <div>
+                                <div className="font-medium text-foreground">{name}</div>
+                                {latest?.description && (
+                                  <div className="text-xs text-muted-foreground line-clamp-1 max-w-[250px]">{latest.description}</div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-sm text-foreground">{formation.academic_year || '—'}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-muted-foreground">
-                            <div>{new Date(formation.start_date).toLocaleDateString('fr-FR')}</div>
-                            <div>{new Date(formation.end_date).toLocaleDateString('fr-FR')}</div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 rounded-md">
-                            {formation.participantsCount || 0} / {formation.max_students}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4">
-                          <Badge variant="outline" className="bg-muted/50 text-muted-foreground border-border rounded-md">
-                            {formation.formation_modules?.length || 0}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4">
-                          <Badge variant="outline" className={formation.status === 'Actif' 
-                            ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30 rounded-md' 
-                            : 'bg-muted text-muted-foreground border-border rounded-md'
-                          }>
-                            {formation.status}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <Button variant="outline" size="sm" onClick={() => window.location.href = `/formations/${formation.id}`} className="text-xs h-7">
-                              Détail
-                            </Button>
-                            {isAdmin && (
-                              <>
-                                <Button variant="outline" size="sm" onClick={() => handleEditFormation(formation.id)} className="text-xs h-7">
-                                  Modifier
-                                </Button>
-                                <Button variant="outline" size="sm" onClick={() => handleDuplicate(formation)} className="text-xs h-7">
-                                  <Copy className="h-3 w-3" />
-                                </Button>
-                                <Button variant="destructive" size="sm" onClick={() => handleDeleteFormation(formation.id)} className="text-xs h-7">
-                                  Suppr.
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getLevelColor(latest?.level)}`}>{latest?.level}</span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-foreground">{latest?.duration}h</td>
+                          <td className="px-6 py-4 text-sm text-muted-foreground">{latest?.formation_modules?.length || 0} module{(latest?.formation_modules?.length || 0) > 1 ? 's' : ''}</td>
+                          <td className="px-6 py-4">
+                            <Badge variant="outline" className="text-xs border-primary/30 text-primary">
+                              {group.length} promotion{group.length > 1 ? 's' : ''}
+                            </Badge>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
