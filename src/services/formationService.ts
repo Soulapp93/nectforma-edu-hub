@@ -14,6 +14,7 @@ export interface Formation {
   duration: number;
   max_students: number;
   price?: number;
+  semesters_count?: number;
   establishment_id: string;
   created_at: string;
   updated_at: string;

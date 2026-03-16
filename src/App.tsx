@@ -57,6 +57,7 @@ import LinkedInCallback from '@/pages/LinkedInCallback';
 import EspaceTravail from './pages/EspaceTravail';
 import QuestionnairePublic from './pages/QuestionnairePublic';
 import Notes from './pages/Notes';
+import PromotionDetail from './pages/PromotionDetail';
 
 
 
@@ -399,6 +400,7 @@ const AppContent = () => {
             <Route path="/administration" element={<ProtectedRoute><AdminRoute><Administration /></AdminRoute></ProtectedRoute>} />
             <Route path="/formations" element={<ProtectedRoute><Formations /></ProtectedRoute>} />
             <Route path="/formations/:formationId" element={<ProtectedRoute><FormationDetail /></ProtectedRoute>} />
+            <Route path="/promotions/:promotionId" element={<ProtectedRoute><PromotionDetail /></ProtectedRoute>} />
             <Route path="/cahier-texte/:textBookId" element={<ProtectedRoute><TextBookDetail /></ProtectedRoute>} />
             <Route path="/cahier-texte/formation/:formationId" element={<ProtectedRoute><TextBookByFormation /></ProtectedRoute>} />
             <Route path="/suivi-emargement" element={<ProtectedRoute><SuiviEmargement /></ProtectedRoute>} />

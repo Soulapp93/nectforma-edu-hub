@@ -24,6 +24,7 @@ interface FormationFormData {
   status: string;
   color: string;
   duration: number;
+  semesters_count: number;
 }
 
 const CreateFormationModal: React.FC<CreateFormationModalProps> = ({ 
@@ -39,7 +40,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
     end_date: '',
     status: 'Actif',
     color: '#8B5CF6',
-    duration: 0
+    duration: 0,
+    semesters_count: 2
   });
 
   const [modules, setModules] = useState<ModuleFormData[]>([]);
@@ -142,7 +144,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         end_date: '',
         status: 'Actif',
         color: '#8B5CF6',
-        duration: 0
+        duration: 0,
+        semesters_count: 2
       });
       setModules([]);
       
@@ -282,9 +285,9 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                 <p className="text-xs text-muted-foreground mt-1.5">Si vide, une date dans un an sera utilisée</p>
               </div>
 
-              <div className="md:col-span-2">
+              <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Durée de la formation (nombre d'heures)
+                  Durée totale (heures)
                 </label>
                 <input
                   type="number"
@@ -294,6 +297,22 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                   min="0"
                   className="w-full px-4 py-2.5 border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary hover:border-primary/50 transition-all"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">
+                  Nombre de semestres
+                </label>
+                <input
+                  type="number"
+                  name="semesters_count"
+                  value={formData.semesters_count}
+                  onChange={handleChange}
+                  min="1"
+                  max="10"
+                  className="w-full px-4 py-2.5 border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary hover:border-primary/50 transition-all"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Nombre de semestres par promotion</p>
               </div>
 
               <div className="md:col-span-2">
