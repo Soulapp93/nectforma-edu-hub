@@ -28,6 +28,7 @@ interface EditFormationData {
   status: string;
   color: string;
   duration: number;
+  academic_year: string;
 }
 
 const EditFormationModal: React.FC<EditFormationModalProps> = ({ 
