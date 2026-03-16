@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Grid3x3, List, GraduationCap, Clock, Calendar, BookOpen, ArrowLeft, ChevronRight } from 'lucide-react';
+import { Search, Grid3x3, List, GraduationCap, Clock, Calendar, BookOpen, ArrowLeft, ChevronRight, Users, Eye } from 'lucide-react';
 import { useFormations } from '@/hooks/useFormations';
 import { formationService } from '@/services/formationService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ErrorState } from '@/components/ui/error-state';
 import { LoadingState } from '@/components/ui/loading-state';
 import { Card, CardContent } from '@/components/ui/card';
+import FormationParticipantsModal from '@/components/administration/FormationParticipantsModal';
 
 const Formations = () => {
   const { userRole } = useCurrentUser();
@@ -59,6 +60,9 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
   const [selectedLevel, setSelectedLevel] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const [participantsFormationId, setParticipantsFormationId] = useState<string | null>(null);
+  const [participantsFormationTitle, setParticipantsFormationTitle] = useState('');
+  const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const navigate = useNavigate();
 
   const { formations, loading, error, refetch } = useFormations();
@@ -177,8 +181,7 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
             {group.years.map((year) => (
               <Card
                 key={year.id}
-                className="cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all duration-200 overflow-hidden"
-                onClick={() => navigate(`/formations/${year.id}`)}
+                className="hover:shadow-lg hover:border-primary/40 transition-all duration-200 overflow-hidden"
               >
                 <div className="h-2" style={{ backgroundColor: year.color || group.color }} />
                 <CardContent className="p-4">
@@ -213,14 +216,48 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
                     </div>
                   </div>
 
-                  <div className="mt-3 pt-3 border-t border-border flex items-center justify-end text-xs text-primary font-medium">
-                    Voir les détails <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                  <div className="mt-3 pt-3 border-t border-border flex items-center justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setParticipantsFormationId(year.id);
+                        setParticipantsFormationTitle(group.name + (year.academic_year ? ` (${year.academic_year})` : ''));
+                        setShowParticipantsModal(true);
+                      }}
+                    >
+                      <Users className="h-3.5 w-3.5 mr-1" />
+                      Participants
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/formations/${year.id}`);
+                      }}
+                    >
+                      <Eye className="h-3.5 w-3.5 mr-1" />
+                      Détails
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         </div>
+
+        {/* Participants Modal */}
+        {participantsFormationId && (
+          <FormationParticipantsModal
+            isOpen={showParticipantsModal}
+            onClose={() => { setShowParticipantsModal(false); setParticipantsFormationId(null); }}
+            formationId={participantsFormationId}
+            formationTitle={participantsFormationTitle}
+          />
+        )}
       </div>
     );
   }
