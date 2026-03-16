@@ -87,7 +87,8 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
         title: mod.title,
         description: mod.description || '',
         instructorIds: mod.module_instructors?.map((mi: any) => mi.instructor_id) || [],
-        duration_hours: mod.duration_hours || 0
+        duration_hours: mod.duration_hours || 0,
+        subModules: []
       }));
       setModules(modulesData);
     } catch (error) {
