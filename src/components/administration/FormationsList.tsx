@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Plus, Grid3x3, List, GraduationCap, Copy, ArrowRightLeft, Calendar, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Search, Plus, Grid3x3, List, GraduationCap, Copy, ArrowRightLeft, Calendar, ChevronRight, ArrowLeft, Clock, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LoadingState } from '@/components/ui/loading-state';
