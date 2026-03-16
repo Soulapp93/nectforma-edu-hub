@@ -20,6 +20,7 @@ interface FormationCardProps extends Formation {
   participantsCount?: number;
   onEdit?: () => void;
   onDelete?: () => void;
+  onDuplicate?: () => void;
   isAdmin?: boolean;
 }
 
