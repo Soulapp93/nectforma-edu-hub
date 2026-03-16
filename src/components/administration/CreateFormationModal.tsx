@@ -40,7 +40,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
     end_date: '',
     status: 'Actif',
     color: '#8B5CF6',
-    duration: 0
+    duration: 0,
+    semesters_count: 2
   });
 
   const [modules, setModules] = useState<ModuleFormData[]>([]);
