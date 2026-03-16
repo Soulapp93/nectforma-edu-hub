@@ -372,6 +372,7 @@ export type Database = {
           instructor_id: string | null
           is_open_for_signing: boolean | null
           opened_at: string | null
+          promotion_id: string | null
           qr_code: string | null
           room: string | null
           schedule_slot_id: string
@@ -398,6 +399,7 @@ export type Database = {
           instructor_id?: string | null
           is_open_for_signing?: boolean | null
           opened_at?: string | null
+          promotion_id?: string | null
           qr_code?: string | null
           room?: string | null
           schedule_slot_id: string
@@ -424,6 +426,7 @@ export type Database = {
           instructor_id?: string | null
           is_open_for_signing?: boolean | null
           opened_at?: string | null
+          promotion_id?: string | null
           qr_code?: string | null
           room?: string | null
           schedule_slot_id?: string
@@ -451,6 +454,13 @@ export type Database = {
             columns: ["instructor_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_sheets_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
             referencedColumns: ["id"]
           },
           {
@@ -1217,6 +1227,7 @@ export type Database = {
           name: string
           order_index: number
           period_type: string
+          promotion_id: string | null
           start_date: string
           updated_at: string
         }
@@ -1231,6 +1242,7 @@ export type Database = {
           name: string
           order_index?: number
           period_type?: string
+          promotion_id?: string | null
           start_date: string
           updated_at?: string
         }
@@ -1245,6 +1257,7 @@ export type Database = {
           name?: string
           order_index?: number
           period_type?: string
+          promotion_id?: string | null
           start_date?: string
           updated_at?: string
         }
@@ -1254,6 +1267,13 @@ export type Database = {
             columns: ["formation_id"]
             isOneToOne: false
             referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluation_periods_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
             referencedColumns: ["id"]
           },
         ]
@@ -1471,6 +1491,7 @@ export type Database = {
       }
       formations: {
         Row: {
+          academic_year: string | null
           color: string | null
           created_at: string
           description: string | null
@@ -1481,12 +1502,14 @@ export type Database = {
           level: string
           max_students: number
           price: number | null
+          semesters_count: number | null
           start_date: string
           status: string
           title: string
           updated_at: string
         }
         Insert: {
+          academic_year?: string | null
           color?: string | null
           created_at?: string
           description?: string | null
@@ -1497,12 +1520,14 @@ export type Database = {
           level: string
           max_students?: number
           price?: number | null
+          semesters_count?: number | null
           start_date: string
           status?: string
           title: string
           updated_at?: string
         }
         Update: {
+          academic_year?: string | null
           color?: string | null
           created_at?: string
           description?: string | null
@@ -1513,6 +1538,7 @@ export type Database = {
           level?: string
           max_students?: number
           price?: number | null
+          semesters_count?: number | null
           start_date?: string
           status?: string
           title?: string
@@ -2710,6 +2736,63 @@ export type Database = {
         }
         Relationships: []
       }
+      promotions: {
+        Row: {
+          academic_year: string
+          capacity: number | null
+          created_at: string | null
+          end_date: string
+          establishment_id: string
+          formation_id: string
+          id: string
+          name: string
+          start_date: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          academic_year: string
+          capacity?: number | null
+          created_at?: string | null
+          end_date: string
+          establishment_id: string
+          formation_id: string
+          id?: string
+          name: string
+          start_date: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          academic_year?: string
+          capacity?: number | null
+          created_at?: string | null
+          end_date?: string
+          establishment_id?: string
+          formation_id?: string
+          id?: string
+          name?: string
+          start_date?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotions_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotions_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       questionnaire_answers: {
         Row: {
           answer_file_url: string | null
@@ -3757,6 +3840,7 @@ export type Database = {
           description: string | null
           formation_id: string
           id: string
+          promotion_id: string | null
           title: string
           updated_at: string
         }
@@ -3765,6 +3849,7 @@ export type Database = {
           description?: string | null
           formation_id: string
           id?: string
+          promotion_id?: string | null
           title: string
           updated_at?: string
         }
@@ -3773,6 +3858,7 @@ export type Database = {
           description?: string | null
           formation_id?: string
           id?: string
+          promotion_id?: string | null
           title?: string
           updated_at?: string
         }
@@ -3782,6 +3868,13 @@ export type Database = {
             columns: ["formation_id"]
             isOneToOne: false
             referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedules_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
             referencedColumns: ["id"]
           },
         ]
@@ -4172,6 +4265,79 @@ export type Database = {
             columns: ["formation_id"]
             isOneToOne: false
             referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_promotion_assignments: {
+        Row: {
+          assigned_at: string | null
+          id: string
+          promotion_id: string
+          student_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          id?: string
+          promotion_id: string
+          student_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          id?: string
+          promotion_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_promotion_assignments_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sub_modules: {
+        Row: {
+          coefficient: number
+          created_at: string
+          description: string | null
+          duration_hours: number
+          id: string
+          module_id: string
+          order_index: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          coefficient?: number
+          created_at?: string
+          description?: string | null
+          duration_hours?: number
+          id?: string
+          module_id: string
+          order_index?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          coefficient?: number
+          created_at?: string
+          description?: string | null
+          duration_hours?: number
+          id?: string
+          module_id?: string
+          order_index?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sub_modules_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "formation_modules"
             referencedColumns: ["id"]
           },
         ]
@@ -5058,6 +5224,17 @@ export type Database = {
       }
       get_my_context: { Args: never; Returns: Json }
       get_my_profile: { Args: never; Returns: Json }
+      get_promotion_students: {
+        Args: { promotion_id_param: string }
+        Returns: {
+          email: string
+          first_name: string
+          last_name: string
+          phone: string
+          profile_photo_url: string
+          user_id: string
+        }[]
+      }
       get_tutor_apprentice_formations: {
         Args: never
         Returns: {

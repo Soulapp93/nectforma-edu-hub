@@ -15,10 +15,13 @@ export interface Formation {
   max_students: number;
   price?: number;
   establishment_id: string;
+  academic_year?: string;
   created_at: string;
   updated_at: string;
   formation_modules?: any[];
 }
+
+const db = supabase as any;
 
 const RETRY_OPTIONS = {
   maxRetries: 3,
@@ -133,7 +136,6 @@ export const formationService = {
     console.log('Suppression de la formation:', id);
     
     try {
-      // D'abord supprimer les modules associés
       const { error: modulesError } = await supabase
         .from('formation_modules')
         .delete()
@@ -144,7 +146,6 @@ export const formationService = {
         throw new Error(`Erreur lors de la suppression des modules: ${modulesError.message}`);
       }
 
-      // Ensuite supprimer la formation
       const { error: formationError } = await supabase
         .from('formations')
         .delete()
@@ -164,10 +165,100 @@ export const formationService = {
     }
   },
 
+  async duplicateFormationForNewYear(formationId: string, newAcademicYear: string, newStartDate: string, newEndDate: string) {
+    console.log('Duplication de la formation pour nouvelle année:', formationId, newAcademicYear);
+    
+    // Get original formation
+    const original = await this.getFormationById(formationId);
+    if (!original) throw new Error('Formation introuvable');
+
+    // Create new formation with new academic year
+    const newFormationData = {
+      title: original.title,
+      description: original.description || '',
+      level: original.level,
+      start_date: newStartDate,
+      end_date: newEndDate,
+      status: 'Actif',
+      color: original.color || '#8B5CF6',
+      duration: original.duration,
+      max_students: original.max_students,
+      price: original.price || 0,
+      establishment_id: original.establishment_id,
+      academic_year: newAcademicYear,
+    };
+
+    const newFormation = await this.createFormation(newFormationData as any);
+
+    // Duplicate modules with sub-modules
+    const { moduleService } = await import('./moduleService');
+    const modules = await moduleService.getFormationModules(formationId);
+    
+    for (const mod of modules) {
+      const newModule = await moduleService.createModule({
+        formation_id: newFormation.id,
+        title: mod.title,
+        description: mod.description,
+        duration_hours: mod.duration_hours,
+        order_index: mod.order_index,
+      }, mod.module_instructors?.map((mi: any) => mi.instructor_id) || []);
+
+      // Duplicate sub-modules
+      const subModules = await moduleService.getSubModules(mod.id);
+      for (const sub of subModules) {
+        await moduleService.createSubModule({
+          module_id: newModule.id,
+          title: sub.title,
+          description: sub.description,
+          duration_hours: sub.duration_hours,
+          order_index: sub.order_index,
+          coefficient: sub.coefficient,
+        });
+      }
+    }
+
+    return newFormation;
+  },
+
+  async migrateStudents(studentIds: string[], fromFormationId: string, toFormationId: string) {
+    console.log('Migration des étudiants:', studentIds, 'de', fromFormationId, 'vers', toFormationId);
+    
+    // Remove from old formation
+    for (const studentId of studentIds) {
+      const { error: deleteError } = await db
+        .from('user_formation_assignments')
+        .delete()
+        .eq('user_id', studentId)
+        .eq('formation_id', fromFormationId);
+
+      if (deleteError) {
+        console.error('Erreur suppression assignation:', deleteError);
+        throw deleteError;
+      }
+    }
+
+    // Add to new formation
+    const assignments = studentIds.map(studentId => ({
+      user_id: studentId,
+      formation_id: toFormationId,
+    }));
+
+    const { error: insertError } = await db
+      .from('user_formation_assignments')
+      .insert(assignments);
+
+    if (insertError) {
+      console.error('Erreur insertion assignation:', insertError);
+      throw insertError;
+    }
+
+    console.log('Migration réussie');
+    return true;
+  },
+
   async getFormationParticipantsCount(formationId: string): Promise<number> {
     console.log('Récupération du nombre de participants pour la formation:', formationId);
     
-    // Utiliser la fonction RPC qui filtre uniquement les étudiants avec retry
     const { data, error } = await rpcWithRetry(
       () => supabase.rpc('get_formation_students', {
         formation_id_param: formationId
@@ -183,10 +274,22 @@ export const formationService = {
     return (data as any[])?.length || 0;
   },
 
+  async getFormationStudents(formationId: string) {
+    const { data, error } = await supabase.rpc('get_formation_students', {
+      formation_id_param: formationId
+    });
+
+    if (error) {
+      console.error('Erreur:', error);
+      return [];
+    }
+
+    return data || [];
+  },
+
   async getFormationInstructors(formationId: string): Promise<{ id: string; first_name: string; last_name: string }[]> {
     console.log('Récupération des formateurs pour la formation:', formationId);
     
-    // D'abord récupérer tous les modules de cette formation
     const { data: modules, error: modulesError } = await supabase
       .from('formation_modules')
       .select('id')
@@ -202,9 +305,7 @@ export const formationService = {
     }
 
     const moduleIds = modules.map(m => m.id);
-    const db = supabase as any;
 
-    // Récupérer tous les formateurs assignés aux modules de cette formation
     const { data: instructorAssignments, error: assignError } = await db
       .from('module_instructors')
       .select('instructor_id')
@@ -219,10 +320,8 @@ export const formationService = {
       return [];
     }
 
-    // Obtenir les IDs uniques des formateurs
     const uniqueInstructorIds = [...new Set(instructorAssignments.map((a: any) => a.instructor_id))] as string[];
 
-    // Récupérer les informations des formateurs
     const { data: instructors, error: usersError } = await supabase
       .from('users')
       .select('id, first_name, last_name')

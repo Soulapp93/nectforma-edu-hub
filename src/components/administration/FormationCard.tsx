@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, Users, Clock, Calendar, User, Edit, Trash2, Eye } from 'lucide-react';
+import { BookOpen, Users, Clock, Calendar, User, Edit, Trash2, Eye, Copy } from 'lucide-react';
 import { Formation } from '@/services/formationService';
 import { useNavigate } from 'react-router-dom';
 import FormationParticipantsModal from './FormationParticipantsModal';
@@ -20,6 +20,7 @@ interface FormationCardProps extends Formation {
   participantsCount?: number;
   onEdit?: () => void;
   onDelete?: () => void;
+  onDuplicate?: () => void;
   isAdmin?: boolean;
 }
 
@@ -39,6 +40,7 @@ const FormationCard: React.FC<FormationCardProps> = ({
   participantsCount = 0,
   onEdit,
   onDelete,
+  onDuplicate,
   isAdmin = true
 }) => {
   const navigate = useNavigate();
@@ -114,6 +116,15 @@ const FormationCard: React.FC<FormationCardProps> = ({
             
             {isAdmin && (
               <div className="flex space-x-1 sm:space-x-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+                {onDuplicate && (
+                  <button
+                    onClick={onDuplicate}
+                    className="p-1.5 sm:p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                    title="Nouvelle année académique"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </button>
+                )}
                 {onEdit && (
                   <button
                     onClick={onEdit}

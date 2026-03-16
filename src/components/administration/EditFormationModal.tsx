@@ -28,6 +28,7 @@ interface EditFormationData {
   status: string;
   color: string;
   duration: number;
+  academic_year: string;
 }
 
 const EditFormationModal: React.FC<EditFormationModalProps> = ({ 
@@ -36,6 +37,7 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
   onSuccess,
   formationId
 }) => {
+  const currentYear = new Date().getFullYear();
   const [formData, setFormData] = useState<EditFormationData>({
     title: '',
     description: '',
@@ -44,7 +46,8 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
     end_date: '',
     status: 'Actif',
     color: '#8B5CF6',
-    duration: 0
+    duration: 0,
+    academic_year: `${currentYear}-${currentYear + 1}`
   });
 
   const [modules, setModules] = useState<ModuleFormData[]>([]);
@@ -75,7 +78,8 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
         end_date: formation.end_date,
         status: formation.status,
         color: formation.color || '#8B5CF6',
-        duration: formation.duration
+        duration: formation.duration,
+        academic_year: (formation as any).academic_year || `${currentYear}-${currentYear + 1}`
       });
 
       // Charger les modules existants
@@ -87,7 +91,8 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
         title: mod.title,
         description: mod.description || '',
         instructorIds: mod.module_instructors?.map((mi: any) => mi.instructor_id) || [],
-        duration_hours: mod.duration_hours || 0
+        duration_hours: mod.duration_hours || 0,
+        subModules: []
       }));
       setModules(modulesData);
     } catch (error) {
@@ -120,7 +125,8 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
       title: '',
       description: '',
       instructorIds: [],
-      duration_hours: 0
+      duration_hours: 0,
+      subModules: []
     }]);
   };
 
@@ -248,6 +254,21 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
                     onChange={handleChange}
                     rows={3}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Année académique</Label>
+                  <Select value={formData.academic_year} onValueChange={(value) => setFormData(prev => ({ ...prev, academic_year: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 5 }, (_, i) => {
+                        const y = currentYear - 1 + i;
+                        return <SelectItem key={y} value={`${y}-${y + 1}`}>{y}-{y + 1}</SelectItem>;
+                      })}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
