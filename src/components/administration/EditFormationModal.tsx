@@ -121,7 +121,8 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
       title: '',
       description: '',
       instructorIds: [],
-      duration_hours: 0
+      duration_hours: 0,
+      subModules: []
     }]);
   };
 
