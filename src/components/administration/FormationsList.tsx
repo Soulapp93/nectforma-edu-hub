@@ -118,14 +118,28 @@ const FormationsList: React.FC = () => {
     }
   };
 
-  // Filtered formations for the "all" view
-  const filteredFormations = formations.filter(formation => {
-    const matchesSearch = formation.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         formation.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLevel = selectedLevel === 'all' || formation.level === selectedLevel;
-    const matchesStatus = selectedStatus === 'all' || formation.status === selectedStatus;
-    return matchesSearch && matchesLevel && matchesStatus;
-  });
+  // Filtered formation groups for the catalogue view
+  const filteredGroups = useMemo(() => {
+    return formationNames.filter(name => {
+      const group = formationGroups[name];
+      const latest = group[0];
+      const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        latest?.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesLevel = selectedLevel === 'all' || latest?.level === selectedLevel;
+      return matchesSearch && matchesLevel;
+    });
+  }, [formationNames, formationGroups, searchTerm, selectedLevel]);
+
+  const getLevelColor = (level: string) => {
+    const colors: Record<string, string> = {
+      'BAC+1': 'bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-300',
+      'BAC+2': 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300',
+      'BAC+3': 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-300',
+      'BAC+4': 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-300',
+      'BAC+5': 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-300'
+    };
+    return colors[level] || 'bg-muted text-muted-foreground';
+  };
 
   if (loading) {
     return <LoadingState message="Chargement des formations..." />;
