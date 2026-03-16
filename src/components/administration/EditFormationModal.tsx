@@ -37,6 +37,7 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
   onSuccess,
   formationId
 }) => {
+  const currentYear = new Date().getFullYear();
   const [formData, setFormData] = useState<EditFormationData>({
     title: '',
     description: '',
@@ -45,7 +46,8 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
     end_date: '',
     status: 'Actif',
     color: '#8B5CF6',
-    duration: 0
+    duration: 0,
+    academic_year: `${currentYear}-${currentYear + 1}`
   });
 
   const [modules, setModules] = useState<ModuleFormData[]>([]);
