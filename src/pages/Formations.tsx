@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Grid3x3, List, GraduationCap, Clock, Calendar, BookOpen, ArrowLeft, ChevronRight } from 'lucide-react';
+import { Search, Grid3x3, List, GraduationCap, Clock, Calendar, BookOpen, ArrowLeft, ChevronRight, Users, Eye } from 'lucide-react';
 import { useFormations } from '@/hooks/useFormations';
 import { formationService } from '@/services/formationService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ErrorState } from '@/components/ui/error-state';
 import { LoadingState } from '@/components/ui/loading-state';
 import { Card, CardContent } from '@/components/ui/card';
+import FormationParticipantsModal from '@/components/administration/FormationParticipantsModal';
 
 const Formations = () => {
   const { userRole } = useCurrentUser();
