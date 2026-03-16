@@ -138,17 +138,24 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
 
           // Create sub-modules
           if (module.subModules && module.subModules.length > 0) {
+            console.log(`Création de ${module.subModules.length} sous-modules pour le module ${createdModule.id}`);
             for (let j = 0; j < module.subModules.length; j++) {
               const sub = module.subModules[j];
               if (sub.title.trim()) {
-                await moduleService.createSubModule({
-                  module_id: createdModule.id,
-                  title: sub.title,
-                  description: sub.description,
-                  duration_hours: sub.duration_hours || 0,
-                  order_index: j,
-                  coefficient: sub.coefficient || 1,
-                });
+                try {
+                  console.log(`Création sous-module: ${sub.title} pour module_id: ${createdModule.id}`);
+                  await moduleService.createSubModule({
+                    module_id: createdModule.id,
+                    title: sub.title,
+                    description: sub.description || '',
+                    duration_hours: sub.duration_hours || 0,
+                    order_index: j,
+                    coefficient: sub.coefficient || 1,
+                  });
+                  console.log(`Sous-module "${sub.title}" créé avec succès`);
+                } catch (subError) {
+                  console.error(`Erreur création sous-module "${sub.title}":`, subError);
+                }
               }
             }
           }
