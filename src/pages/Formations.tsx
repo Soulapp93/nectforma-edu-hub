@@ -60,6 +60,9 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
   const [selectedLevel, setSelectedLevel] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const [participantsFormationId, setParticipantsFormationId] = useState<string | null>(null);
+  const [participantsFormationTitle, setParticipantsFormationTitle] = useState('');
+  const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const navigate = useNavigate();
 
   const { formations, loading, error, refetch } = useFormations();
