@@ -1491,6 +1491,7 @@ export type Database = {
       }
       formations: {
         Row: {
+          academic_year: string | null
           color: string | null
           created_at: string
           description: string | null
@@ -1508,6 +1509,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          academic_year?: string | null
           color?: string | null
           created_at?: string
           description?: string | null
@@ -1525,6 +1527,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          academic_year?: string | null
           color?: string | null
           created_at?: string
           description?: string | null
@@ -4291,6 +4294,50 @@ export type Database = {
             columns: ["promotion_id"]
             isOneToOne: false
             referencedRelation: "promotions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sub_modules: {
+        Row: {
+          coefficient: number
+          created_at: string
+          description: string | null
+          duration_hours: number
+          id: string
+          module_id: string
+          order_index: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          coefficient?: number
+          created_at?: string
+          description?: string | null
+          duration_hours?: number
+          id?: string
+          module_id: string
+          order_index?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          coefficient?: number
+          created_at?: string
+          description?: string | null
+          duration_hours?: number
+          id?: string
+          module_id?: string
+          order_index?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sub_modules_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "formation_modules"
             referencedColumns: ["id"]
           },
         ]
