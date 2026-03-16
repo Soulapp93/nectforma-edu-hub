@@ -137,6 +137,11 @@ const FormationCard: React.FC<FormationCardProps> = ({
           {/* Informations principales */}
           <div className="space-y-1.5 sm:space-y-2 mb-3">
             <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+              <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-muted-foreground/70 flex-shrink-0" />
+              <span className="truncate">Du {new Date(start_date).toLocaleDateString('fr-FR')} au {new Date(end_date).toLocaleDateString('fr-FR')}</span>
+            </div>
+            
+            <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
               <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-muted-foreground/70 flex-shrink-0" />
               <span>{duration}h de formation</span>
             </div>
