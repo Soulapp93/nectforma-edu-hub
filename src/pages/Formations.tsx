@@ -1,13 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Search, Filter, Users, Clock, Star, Grid3x3, List, GraduationCap } from 'lucide-react';
-import FormationCard from '../components/administration/FormationCard';
-import CreateFormationModal from '@/components/administration/CreateFormationModal';
-import EditFormationModal from '@/components/administration/EditFormationModal';
-import FormationParticipantsModal from '@/components/administration/FormationParticipantsModal';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Search, Grid3x3, List, GraduationCap, Clock, Calendar, BookOpen, ArrowLeft, ChevronRight } from 'lucide-react';
 import { useFormations } from '@/hooks/useFormations';
 import { formationService } from '@/services/formationService';
-import { toast } from 'sonner';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TutorFormationsView } from '@/components/formations/TutorFormationsView';
@@ -15,11 +11,11 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ErrorState } from '@/components/ui/error-state';
 import { LoadingState } from '@/components/ui/loading-state';
+import { Card, CardContent } from '@/components/ui/card';
 
 const Formations = () => {
   const { userRole } = useCurrentUser();
   
-  // Si c'est un tuteur, afficher la vue tuteur spécifique
   if (userRole === 'Tuteur') {
     return (
       <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 min-h-screen">
@@ -36,173 +32,239 @@ const Formations = () => {
   return <FormationsContent userRole={userRole} />;
 };
 
+// --- Types ---
+interface FormationGroup {
+  name: string;
+  color: string;
+  level: string;
+  description?: string;
+  duration: number;
+  modulesCount: number;
+  years: Array<{
+    id: string;
+    academic_year?: string;
+    start_date: string;
+    end_date: string;
+    status: string;
+    level: string;
+    color?: string;
+    duration: number;
+    max_students: number;
+    modulesCount: number;
+  }>;
+}
+
 const FormationsContent = ({ userRole }: { userRole: string | null }) => {
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingFormationId, setEditingFormationId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('all');
-  const [formationsWithParticipants, setFormationsWithParticipants] = useState<any[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [isParticipantsModalOpen, setIsParticipantsModalOpen] = useState(false);
-  const [selectedFormationId, setSelectedFormationId] = useState<string | null>(null);
-  
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const navigate = useNavigate();
+
   const { formations, loading, error, refetch } = useFormations();
-  
-  const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
 
-  const fetchParticipantsCount = async () => {
-    if (formations && formations.length > 0) {
-      const formationsWithCounts = await Promise.all(
-        formations.map(async (formation) => {
-          const participantsCount = await formationService.getFormationParticipantsCount(formation.id);
-          return {
-            ...formation,
-            participantsCount
-          };
-        })
-      );
-      setFormationsWithParticipants(formationsWithCounts);
-    }
-  };
-
-  // Récupérer le nombre de participants pour chaque formation
-  useEffect(() => {
-    fetchParticipantsCount();
+  // Group formations by title (programme name)
+  const formationGroups = useMemo(() => {
+    const groups: Record<string, FormationGroup> = {};
+    (formations || []).forEach(f => {
+      const name = f.title;
+      if (!groups[name]) {
+        groups[name] = {
+          name,
+          color: f.color || '#8B5CF6',
+          level: f.level,
+          description: f.description,
+          duration: f.duration,
+          modulesCount: f.formation_modules?.length || 0,
+          years: []
+        };
+      }
+      groups[name].years.push({
+        id: f.id,
+        academic_year: f.academic_year,
+        start_date: f.start_date,
+        end_date: f.end_date,
+        status: f.status,
+        level: f.level,
+        color: f.color,
+        duration: f.duration,
+        max_students: f.max_students,
+        modulesCount: f.formation_modules?.length || 0,
+      });
+    });
+    // Sort years desc
+    Object.values(groups).forEach(g => {
+      g.years.sort((a, b) => (b.academic_year || '').localeCompare(a.academic_year || ''));
+    });
+    return groups;
   }, [formations]);
 
-  const handleCreateFormation = () => {
-    setIsCreateModalOpen(true);
-  };
+  const groupNames = useMemo(() => Object.keys(formationGroups).sort(), [formationGroups]);
 
-  const handleEditFormation = (formation: any) => {
-    setEditingFormationId(formation.id);
-    setIsEditModalOpen(true);
-  };
-
-  const handleDeleteFormation = async (formationId: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette formation ?')) {
-      try {
-        await formationService.deleteFormation(formationId);
-        toast.success('Formation supprimée avec succès');
-        refetch();
-      } catch (error) {
-        console.error('Erreur lors de la suppression:', error);
-        toast.error('Erreur lors de la suppression de la formation');
-      }
-    }
-  };
-
-  const handleViewParticipants = (formationId: string) => {
-    setSelectedFormationId(formationId);
-    setIsParticipantsModalOpen(true);
-  };
-
-  const handleSuccess = () => {
-    refetch();
-    toast.success('Formation mise à jour avec succès');
-  };
-
-  const handleCreateSuccess = () => {
-    refetch();
-    toast.success('Formation créée avec succès');
-  };
-
-  const filteredFormations = formationsWithParticipants.filter(formation => {
-    const matchesSearch = formation.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         formation.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLevel = selectedLevel === 'all' || formation.level === selectedLevel;
-    const matchesStatus = selectedStatus === 'all' || formation.status === selectedStatus;
-    return matchesSearch && matchesLevel && matchesStatus;
-  });
+  // Filter groups
+  const filteredGroups = useMemo(() => {
+    return groupNames.filter(name => {
+      const group = formationGroups[name];
+      const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        group.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesLevel = selectedLevel === 'all' || group.level === selectedLevel;
+      return matchesSearch && matchesLevel;
+    });
+  }, [groupNames, formationGroups, searchTerm, selectedLevel]);
 
   const levels = ['BAC+1', 'BAC+2', 'BAC+3', 'BAC+4', 'BAC+5'];
 
   const isNetworkError = error?.toLowerCase().includes('load failed') || 
-                         error?.toLowerCase().includes('failed to fetch') ||
-                         error?.toLowerCase().includes('connexion');
+                         error?.toLowerCase().includes('failed to fetch');
 
   if (loading) {
-    return (
-      <div className="p-8">
-        <LoadingState message="Chargement des formations..." />
-      </div>
-    );
+    return <div className="p-8"><LoadingState message="Chargement des formations..." /></div>;
   }
 
   if (error) {
+    return <div className="p-8"><ErrorState title="Erreur de chargement" message={error} onRetry={refetch} isNetworkError={isNetworkError} /></div>;
+  }
+
+  const getLevelColor = (level: string) => {
+    const colors: Record<string, string> = {
+      'BAC+1': 'bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-300',
+      'BAC+2': 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300',
+      'BAC+3': 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-300',
+      'BAC+4': 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-300',
+      'BAC+5': 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-300'
+    };
+    return colors[level] || 'bg-muted text-muted-foreground';
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Actif': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300';
+      case 'Inactif': return 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300';
+      default: return 'bg-muted text-muted-foreground';
+    }
+  };
+
+  // --- Vue détail d'une formation (promotions par année) ---
+  if (selectedGroup) {
+    const group = formationGroups[selectedGroup];
+    if (!group) {
+      setSelectedGroup(null);
+      return null;
+    }
+
     return (
-      <div className="p-8">
-        <ErrorState 
-          title="Erreur de chargement"
-          message={error}
-          onRetry={refetch}
-          isNetworkError={isNetworkError}
-        />
+      <div className="min-h-screen">
+        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border shadow-sm">
+          <div className="w-full px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="sm" onClick={() => setSelectedGroup(null)} className="text-muted-foreground hover:text-foreground">
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Retour
+              </Button>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg" style={{ backgroundColor: group.color }}>
+                <GraduationCap className="h-5 w-5" />
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground">{group.name}</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground">{group.years.length} année(s) académique(s)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-6 lg:p-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
+            {group.years.map((year) => (
+              <Card
+                key={year.id}
+                className="cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all duration-200 overflow-hidden"
+                onClick={() => navigate(`/formations/${year.id}`)}
+              >
+                <div className="h-2" style={{ backgroundColor: year.color || group.color }} />
+                <CardContent className="p-4">
+                  {year.academic_year && (
+                    <Badge className="mb-3 text-xs font-semibold" style={{ backgroundColor: year.color || group.color, color: 'white' }}>
+                      📅 {year.academic_year}
+                    </Badge>
+                  )}
+                  <div className="flex items-center gap-2 mb-3 flex-wrap">
+                    <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getLevelColor(year.level)}`}>
+                      {year.level}
+                    </span>
+                    <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(year.status)}`}>
+                      {year.status}
+                    </span>
+                  </div>
+
+                  <h3 className="text-base font-semibold text-foreground mb-2">{group.name}</h3>
+
+                  <div className="space-y-1.5 text-sm text-muted-foreground">
+                    <div className="flex items-center">
+                      <Calendar className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                      Du {new Date(year.start_date).toLocaleDateString('fr-FR')} au {new Date(year.end_date).toLocaleDateString('fr-FR')}
+                    </div>
+                    <div className="flex items-center">
+                      <Clock className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                      {year.duration}h de formation
+                    </div>
+                    <div className="flex items-center">
+                      <BookOpen className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                      {year.modulesCount} module{year.modulesCount > 1 ? 's' : ''}
+                    </div>
+                  </div>
+
+                  <div className="mt-3 pt-3 border-t border-border flex items-center justify-end text-xs text-primary font-medium">
+                    Voir les détails <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
+  // --- Vue catalogue (liste des programmes) ---
   return (
     <div className="min-h-screen">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border shadow-sm">
         <div className="w-full px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25 flex-shrink-0">
-                <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">
-                  Formations
-                </h1>
-                <p className="text-xs sm:text-sm text-muted-foreground truncate mt-0.5">
-                  Découvrez notre catalogue de formations
-                </p>
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
+              <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">Formations</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground">Découvrez notre catalogue de formations</p>
             </div>
           </div>
         </div>
       </div>
       
-      <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
-
-      {/* Filters */}
-      <div className="bg-card rounded-2xl shadow-lg border-2 border-primary/20 p-5 sm:p-6 lg:p-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-primary/10 rounded-xl">
-              <GraduationCap className="h-5 w-5 text-primary" />
+      <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* Filters */}
+        <div className="bg-card rounded-2xl shadow-lg border-2 border-primary/20 p-5 sm:p-6">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-primary/10 rounded-xl">
+                <GraduationCap className="h-5 w-5 text-primary" />
+              </div>
+              <h2 className="text-lg font-semibold text-foreground">Catalogue des formations</h2>
             </div>
-            <h2 className="text-lg font-semibold text-foreground">Catalogue des formations</h2>
+            <div className="flex items-center bg-muted rounded-xl p-1 border border-primary/10">
+              <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('grid')} className="h-8 px-3 rounded-lg">
+                <Grid3x3 className="h-4 w-4" />
+              </Button>
+              <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('list')} className="h-8 px-3 rounded-lg">
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
           
-          {/* Toggle vue grille/liste */}
-          <div className="flex items-center bg-muted rounded-xl p-1 border border-primary/10">
-            <Button
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              className="h-8 px-3 rounded-lg"
-            >
-              <Grid3x3 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              className="h-8 px-3 rounded-lg"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <input
                 type="text"
@@ -212,229 +274,129 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
                 className="w-full pl-12 pr-4 py-3 text-base border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               />
             </div>
+            <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+              <SelectTrigger className="w-[180px] border-2 border-primary/30 rounded-xl">
+                <SelectValue placeholder="Tous les niveaux" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les niveaux</SelectItem>
+                {levels.map(level => (
+                  <SelectItem key={level} value={level}>{level}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-            <SelectTrigger className="w-[180px] border-2 border-primary/30 rounded-xl">
-              <SelectValue placeholder="Tous les niveaux" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les niveaux</SelectItem>
-              {levels.map(level => (
-                <SelectItem key={level} value={level}>{level}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-            <SelectTrigger className="w-[180px] border-2 border-primary/30 rounded-xl">
-              <SelectValue placeholder="Tous les statuts" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les statuts</SelectItem>
-              <SelectItem value="Actif">Actif</SelectItem>
-              <SelectItem value="Inactif">Inactif</SelectItem>
-              <SelectItem value="Brouillon">Brouillon</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
-      </div>
 
-
-      {/* Formations Grid ou Liste */}
-      {filteredFormations.length === 0 ? (
-        <div className="bg-card rounded-xl shadow-sm border border-border p-8 sm:p-10 lg:p-12 text-center">
-          <div className="max-w-md mx-auto">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <GraduationCap className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
+        {/* Formations Grid */}
+        {filteredGroups.length === 0 ? (
+          <div className="bg-card rounded-xl shadow-sm border border-border p-8 text-center">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <GraduationCap className="h-8 w-8 text-primary" />
             </div>
-            <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-3">
-              {searchTerm || selectedLevel !== 'all' || selectedStatus !== 'all' 
-                ? 'Aucune formation trouvée' 
-                : 'Aucune formation'
-              }
+            <h3 className="text-lg font-semibold text-foreground mb-3">
+              {searchTerm || selectedLevel !== 'all' ? 'Aucune formation trouvée' : 'Aucune formation'}
             </h3>
-            <p className="text-base sm:text-lg text-muted-foreground mb-6">
-              {searchTerm || selectedLevel !== 'all' || selectedStatus !== 'all'
-                ? 'Essayez de modifier vos critères de recherche.'
-                : 'Aucune formation disponible pour le moment.'
-              }
+            <p className="text-muted-foreground">
+              {searchTerm || selectedLevel !== 'all' ? 'Essayez de modifier vos critères de recherche.' : 'Aucune formation disponible pour le moment.'}
             </p>
           </div>
-        </div>
-      ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
-          {filteredFormations.map((formation) => (
-            <FormationCard
-              key={formation.id}
-              {...formation}
-              modules={formation.formation_modules || []}
-              onEdit={isAdmin ? () => handleEditFormation(formation) : undefined}
-              onDelete={isAdmin ? () => handleDeleteFormation(formation.id) : undefined}
-              isAdmin={isAdmin}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="bg-card rounded-xl overflow-hidden border border-border">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-primary/5 border-b border-primary/10">
-                <tr>
-                  <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Formation</th>
-                  <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Dates</th>
-                  <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Durée</th>
-                  <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Participants</th>
-                  <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Modules</th>
-                  <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Statut</th>
-                  <th className="px-6 py-3.5 text-right text-sm font-medium text-primary/80">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {filteredFormations.map((formation) => (
-                  <tr 
-                    key={formation.id} 
-                    className="hover:bg-muted/20 transition-colors"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div 
-                          className="w-1 h-14 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: formation.color }}
-                        />
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <Badge 
-                              variant="outline"
-                              className="font-medium text-xs rounded-md px-2 py-0.5"
-                              style={{ 
-                                borderColor: formation.color, 
-                                color: formation.color,
-                                backgroundColor: `${formation.color}10`
-                              }}
-                            >
-                              {formation.level}
-                            </Badge>
-                          </div>
-                          <div className="font-medium text-foreground">{formation.title}</div>
-                          {formation.description && (
-                            <div className="text-xs text-muted-foreground line-clamp-1 mt-0.5 max-w-[250px]">
-                              {formation.description}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-muted-foreground">
-                        <div>Du {new Date(formation.start_date).toLocaleDateString('fr-FR')}</div>
-                        <div>au {new Date(formation.end_date).toLocaleDateString('fr-FR')}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm font-medium text-foreground">{formation.duration}h</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge 
-                        variant="outline"
-                        className="bg-primary/5 text-primary border-primary/20 rounded-md"
-                      >
-                        {formation.participantsCount || 0} / {formation.max_students}
+        ) : viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
+            {filteredGroups.map((name) => {
+              const group = formationGroups[name];
+              return (
+                <Card
+                  key={name}
+                  className="cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all duration-200 group overflow-hidden"
+                  onClick={() => setSelectedGroup(name)}
+                >
+                  <div className="h-2" style={{ backgroundColor: group.color }} />
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2 mb-3 flex-wrap">
+                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getLevelColor(group.level)}`}>
+                        {group.level}
+                      </span>
+                      <Badge variant="outline" className="text-xs border-primary/30 text-primary">
+                        {group.years.length} promotion{group.years.length > 1 ? 's' : ''}
                       </Badge>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge 
-                        variant="outline"
-                        className="bg-muted/50 text-muted-foreground border-border rounded-md"
-                      >
-                        {formation.formation_modules?.length || 0} modules
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge 
-                        variant="outline"
-                        className={formation.status === 'Actif' 
-                          ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30 rounded-md' 
-                          : 'bg-muted text-muted-foreground border-border rounded-md'
-                        }
-                      >
-                        {formation.status}
-                      </Badge>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => window.location.href = `/formations/${formation.id}`}
-                          className="text-xs h-8 border-border hover:bg-muted"
-                        >
-                          Voir détail
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewParticipants(formation.id)}
-                          className="text-xs h-8 border-border hover:bg-muted"
-                        >
-                          Voir les participants ({formation.participantsCount || 0})
-                        </Button>
-                        {isAdmin && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEditFormation(formation)}
-                              className="text-xs h-8 border-border hover:bg-muted"
-                            >
-                              Modifier
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDeleteFormation(formation.id)}
-                              className="text-xs h-8"
-                            >
-                              Supprimer
-                            </Button>
-                          </>
-                        )}
+                    </div>
+
+                    <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1 line-clamp-2">{group.name}</h3>
+                    {group.description && (
+                      <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 mb-3">{group.description}</p>
+                    )}
+
+                    <div className="space-y-1.5 text-sm text-muted-foreground">
+                      <div className="flex items-center">
+                        <Clock className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                        {group.duration}h de formation
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <div className="flex items-center">
+                        <BookOpen className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                        {group.modulesCount} module{group.modulesCount > 1 ? 's' : ''}
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-3 border-t border-border flex items-center justify-end text-xs text-primary font-medium group-hover:translate-x-1 transition-transform">
+                      Voir les promotions <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-        </div>
-      )}
-      {/* Modals */}
-      <CreateFormationModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={handleCreateSuccess}
-      />
-
-      <EditFormationModal
-        isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setEditingFormationId(null);
-        }}
-        onSuccess={handleSuccess}
-        formationId={editingFormationId}
-      />
-
-      {selectedFormationId && (
-        <FormationParticipantsModal
-          isOpen={isParticipantsModalOpen}
-          onClose={() => {
-            setIsParticipantsModalOpen(false);
-            setSelectedFormationId(null);
-          }}
-          formationId={selectedFormationId}
-          formationTitle={filteredFormations.find(f => f.id === selectedFormationId)?.title || ''}
-          formationColor={filteredFormations.find(f => f.id === selectedFormationId)?.color}
-        />
-      )}
+        ) : (
+          <div className="bg-card rounded-xl overflow-hidden border border-border">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-primary/5 border-b border-primary/10">
+                  <tr>
+                    <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Formation</th>
+                    <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Niveau</th>
+                    <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Durée</th>
+                    <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Modules</th>
+                    <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Promotions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filteredGroups.map((name) => {
+                    const group = formationGroups[name];
+                    return (
+                      <tr
+                        key={name}
+                        className="hover:bg-muted/20 transition-colors cursor-pointer"
+                        onClick={() => setSelectedGroup(name)}
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-1 h-10 rounded-full" style={{ backgroundColor: group.color }} />
+                            <div>
+                              <div className="font-medium text-foreground">{group.name}</div>
+                              {group.description && (
+                                <div className="text-xs text-muted-foreground line-clamp-1 max-w-[250px]">{group.description}</div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getLevelColor(group.level)}`}>{group.level}</span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-foreground">{group.duration}h</td>
+                        <td className="px-6 py-4 text-sm text-muted-foreground">{group.modulesCount} module{group.modulesCount > 1 ? 's' : ''}</td>
+                        <td className="px-6 py-4">
+                          <Badge variant="outline" className="text-xs border-primary/30 text-primary">
+                            {group.years.length} promotion{group.years.length > 1 ? 's' : ''}
+                          </Badge>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
