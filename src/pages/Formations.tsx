@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Grid3x3, List, GraduationCap, Clock, Calendar, BookOpen, ArrowLeft, ChevronRight, Users, Eye } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, Grid3x3, List, GraduationCap, Clock, Calendar, BookOpen, Users, Eye } from 'lucide-react';
 import { useFormations } from '@/hooks/useFormations';
-import { formationService } from '@/services/formationService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -33,33 +32,11 @@ const Formations = () => {
   return <FormationsContent userRole={userRole} />;
 };
 
-// --- Types ---
-interface FormationGroup {
-  name: string;
-  color: string;
-  level: string;
-  description?: string;
-  duration: number;
-  modulesCount: number;
-  years: Array<{
-    id: string;
-    academic_year?: string;
-    start_date: string;
-    end_date: string;
-    status: string;
-    level: string;
-    color?: string;
-    duration: number;
-    max_students: number;
-    modulesCount: number;
-  }>;
-}
-
 const FormationsContent = ({ userRole }: { userRole: string | null }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [participantsFormationId, setParticipantsFormationId] = useState<string | null>(null);
   const [participantsFormationTitle, setParticipantsFormationTitle] = useState('');
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
@@ -67,56 +44,15 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
 
   const { formations, loading, error, refetch } = useFormations();
 
-  // Group formations by title (programme name)
-  const formationGroups = useMemo(() => {
-    const groups: Record<string, FormationGroup> = {};
-    (formations || []).forEach(f => {
-      const name = f.title;
-      if (!groups[name]) {
-        groups[name] = {
-          name,
-          color: f.color || '#8B5CF6',
-          level: f.level,
-          description: f.description,
-          duration: f.duration,
-          modulesCount: f.formation_modules?.length || 0,
-          years: []
-        };
-      }
-      groups[name].years.push({
-        id: f.id,
-        academic_year: f.academic_year,
-        start_date: f.start_date,
-        end_date: f.end_date,
-        status: f.status,
-        level: f.level,
-        color: f.color,
-        duration: f.duration,
-        max_students: f.max_students,
-        modulesCount: f.formation_modules?.length || 0,
-      });
-    });
-    // Sort years desc
-    Object.values(groups).forEach(g => {
-      g.years.sort((a, b) => (b.academic_year || '').localeCompare(a.academic_year || ''));
-    });
-    return groups;
-  }, [formations]);
-
-  const groupNames = useMemo(() => Object.keys(formationGroups).sort(), [formationGroups]);
-
-  // Filter groups
-  const filteredGroups = useMemo(() => {
-    return groupNames.filter(name => {
-      const group = formationGroups[name];
-      const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        group.description?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesLevel = selectedLevel === 'all' || group.level === selectedLevel;
-      return matchesSearch && matchesLevel;
-    });
-  }, [groupNames, formationGroups, searchTerm, selectedLevel]);
-
   const levels = ['BAC+1', 'BAC+2', 'BAC+3', 'BAC+4', 'BAC+5'];
+
+  const filteredFormations = (formations || []).filter(f => {
+    const matchesSearch = f.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      f.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesLevel = selectedLevel === 'all' || f.level === selectedLevel;
+    const matchesStatus = selectedStatus === 'all' || f.status === selectedStatus;
+    return matchesSearch && matchesLevel && matchesStatus;
+  });
 
   const isNetworkError = error?.toLowerCase().includes('load failed') || 
                          error?.toLowerCase().includes('failed to fetch');
@@ -148,121 +84,6 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
     }
   };
 
-  // --- Vue détail d'une formation (promotions par année) ---
-  if (selectedGroup) {
-    const group = formationGroups[selectedGroup];
-    if (!group) {
-      setSelectedGroup(null);
-      return null;
-    }
-
-    return (
-      <div className="min-h-screen">
-        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border shadow-sm">
-          <div className="w-full px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" onClick={() => setSelectedGroup(null)} className="text-muted-foreground hover:text-foreground">
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Retour
-              </Button>
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg" style={{ backgroundColor: group.color }}>
-                <GraduationCap className="h-5 w-5" />
-              </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-foreground">{group.name}</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground">{group.years.length} année(s) académique(s)</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-4 sm:p-6 lg:p-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
-            {group.years.map((year) => (
-              <Card
-                key={year.id}
-                className="hover:shadow-lg hover:border-primary/40 transition-all duration-200 overflow-hidden"
-              >
-                <div className="h-2" style={{ backgroundColor: year.color || group.color }} />
-                <CardContent className="p-4">
-                  {year.academic_year && (
-                    <Badge className="mb-3 text-xs font-semibold" style={{ backgroundColor: year.color || group.color, color: 'white' }}>
-                      📅 {year.academic_year}
-                    </Badge>
-                  )}
-                  <div className="flex items-center gap-2 mb-3 flex-wrap">
-                    <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getLevelColor(year.level)}`}>
-                      {year.level}
-                    </span>
-                    <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(year.status)}`}>
-                      {year.status}
-                    </span>
-                  </div>
-
-                  <h3 className="text-base font-semibold text-foreground mb-2">{group.name}</h3>
-
-                  <div className="space-y-1.5 text-sm text-muted-foreground">
-                    <div className="flex items-center">
-                      <Calendar className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
-                      Du {new Date(year.start_date).toLocaleDateString('fr-FR')} au {new Date(year.end_date).toLocaleDateString('fr-FR')}
-                    </div>
-                    <div className="flex items-center">
-                      <Clock className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
-                      {year.duration}h de formation
-                    </div>
-                    <div className="flex items-center">
-                      <BookOpen className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
-                      {year.modulesCount} module{year.modulesCount > 1 ? 's' : ''}
-                    </div>
-                  </div>
-
-                  <div className="mt-3 pt-3 border-t border-border flex items-center justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-xs"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setParticipantsFormationId(year.id);
-                        setParticipantsFormationTitle(group.name + (year.academic_year ? ` (${year.academic_year})` : ''));
-                        setShowParticipantsModal(true);
-                      }}
-                    >
-                      <Users className="h-3.5 w-3.5 mr-1" />
-                      Participants
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="text-xs"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/formations/${year.id}`);
-                      }}
-                    >
-                      <Eye className="h-3.5 w-3.5 mr-1" />
-                      Détails
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Participants Modal */}
-        {participantsFormationId && (
-          <FormationParticipantsModal
-            isOpen={showParticipantsModal}
-            onClose={() => { setShowParticipantsModal(false); setParticipantsFormationId(null); }}
-            formationId={participantsFormationId}
-            formationTitle={participantsFormationTitle}
-          />
-        )}
-      </div>
-    );
-  }
-
-  // --- Vue catalogue (liste des programmes) ---
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -322,66 +143,93 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
                 ))}
               </SelectContent>
             </Select>
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <SelectTrigger className="w-[180px] border-2 border-primary/30 rounded-xl">
+                <SelectValue placeholder="Tous les statuts" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="Actif">Actif</SelectItem>
+                <SelectItem value="Inactif">Inactif</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
         {/* Formations Grid */}
-        {filteredGroups.length === 0 ? (
+        {filteredFormations.length === 0 ? (
           <div className="bg-card rounded-xl shadow-sm border border-border p-8 text-center">
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
               <GraduationCap className="h-8 w-8 text-primary" />
             </div>
             <h3 className="text-lg font-semibold text-foreground mb-3">
-              {searchTerm || selectedLevel !== 'all' ? 'Aucune formation trouvée' : 'Aucune formation'}
+              {searchTerm || selectedLevel !== 'all' || selectedStatus !== 'all' ? 'Aucune formation trouvée' : 'Aucune formation'}
             </h3>
             <p className="text-muted-foreground">
-              {searchTerm || selectedLevel !== 'all' ? 'Essayez de modifier vos critères de recherche.' : 'Aucune formation disponible pour le moment.'}
+              {searchTerm || selectedLevel !== 'all' || selectedStatus !== 'all' ? 'Essayez de modifier vos critères de recherche.' : 'Aucune formation disponible pour le moment.'}
             </p>
           </div>
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
-            {filteredGroups.map((name) => {
-              const group = formationGroups[name];
-              return (
-                <Card
-                  key={name}
-                  className="cursor-pointer hover:shadow-lg hover:border-primary/40 transition-all duration-200 group overflow-hidden"
-                  onClick={() => setSelectedGroup(name)}
-                >
-                  <div className="h-2" style={{ backgroundColor: group.color }} />
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-3 flex-wrap">
-                      <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getLevelColor(group.level)}`}>
-                        {group.level}
-                      </span>
-                      <Badge variant="outline" className="text-xs border-primary/30 text-primary">
-                        {group.years.length} promotion{group.years.length > 1 ? 's' : ''}
-                      </Badge>
-                    </div>
+            {filteredFormations.map((formation) => (
+              <Card
+                key={formation.id}
+                className="hover:shadow-lg hover:border-primary/40 transition-all duration-200 overflow-hidden"
+              >
+                <div className="h-2" style={{ backgroundColor: formation.color || '#8B5CF6' }} />
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-3 flex-wrap">
+                    <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getLevelColor(formation.level)}`}>
+                      {formation.level}
+                    </span>
+                    <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(formation.status)}`}>
+                      {formation.status}
+                    </span>
+                  </div>
 
-                    <h3 className="text-base sm:text-lg font-semibold text-foreground mb-1 line-clamp-2">{group.name}</h3>
-                    {group.description && (
-                      <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 mb-3">{group.description}</p>
-                    )}
+                  <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2 line-clamp-2">{formation.title}</h3>
 
-                    <div className="space-y-1.5 text-sm text-muted-foreground">
-                      <div className="flex items-center">
-                        <Clock className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
-                        {group.duration}h de formation
-                      </div>
-                      <div className="flex items-center">
-                        <BookOpen className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
-                        {group.modulesCount} module{group.modulesCount > 1 ? 's' : ''}
-                      </div>
+                  <div className="space-y-1.5 text-sm text-muted-foreground">
+                    <div className="flex items-center">
+                      <Calendar className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                      Du {new Date(formation.start_date).toLocaleDateString('fr-FR')} au {new Date(formation.end_date).toLocaleDateString('fr-FR')}
                     </div>
+                    <div className="flex items-center">
+                      <Clock className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                      {formation.duration}h de formation
+                    </div>
+                    <div className="flex items-center">
+                      <BookOpen className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                      {formation.formation_modules?.length || 0} module{(formation.formation_modules?.length || 0) > 1 ? 's' : ''}
+                    </div>
+                  </div>
 
-                    <div className="mt-3 pt-3 border-t border-border flex items-center justify-end text-xs text-primary font-medium group-hover:translate-x-1 transition-transform">
-                      Voir les promotions <ChevronRight className="h-3.5 w-3.5 ml-1" />
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                  <div className="mt-3 pt-3 border-t border-border flex items-center justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => {
+                        setParticipantsFormationId(formation.id);
+                        setParticipantsFormationTitle(formation.title);
+                        setShowParticipantsModal(true);
+                      }}
+                    >
+                      <Users className="h-3.5 w-3.5 mr-1" />
+                      ({formation.max_students || 0})
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => navigate(`/formations/${formation.id}`)}
+                    >
+                      <Eye className="h-3.5 w-3.5 mr-1" />
+                      Détail
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         ) : (
           <div className="bg-card rounded-xl overflow-hidden border border-border">
@@ -391,50 +239,77 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
                   <tr>
                     <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Formation</th>
                     <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Niveau</th>
+                    <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Statut</th>
                     <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Durée</th>
                     <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Modules</th>
-                    <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Promotions</th>
+                    <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filteredGroups.map((name) => {
-                    const group = formationGroups[name];
-                    return (
-                      <tr
-                        key={name}
-                        className="hover:bg-muted/20 transition-colors cursor-pointer"
-                        onClick={() => setSelectedGroup(name)}
-                      >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-1 h-10 rounded-full" style={{ backgroundColor: group.color }} />
-                            <div>
-                              <div className="font-medium text-foreground">{group.name}</div>
-                              {group.description && (
-                                <div className="text-xs text-muted-foreground line-clamp-1 max-w-[250px]">{group.description}</div>
-                              )}
+                  {filteredFormations.map((formation) => (
+                    <tr key={formation.id} className="hover:bg-muted/20 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-1 h-10 rounded-full" style={{ backgroundColor: formation.color || '#8B5CF6' }} />
+                          <div>
+                            <div className="font-medium text-foreground">{formation.title}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {new Date(formation.start_date).toLocaleDateString('fr-FR')} - {new Date(formation.end_date).toLocaleDateString('fr-FR')}
                             </div>
                           </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getLevelColor(group.level)}`}>{group.level}</span>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-foreground">{group.duration}h</td>
-                        <td className="px-6 py-4 text-sm text-muted-foreground">{group.modulesCount} module{group.modulesCount > 1 ? 's' : ''}</td>
-                        <td className="px-6 py-4">
-                          <Badge variant="outline" className="text-xs border-primary/30 text-primary">
-                            {group.years.length} promotion{group.years.length > 1 ? 's' : ''}
-                          </Badge>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getLevelColor(formation.level)}`}>{formation.level}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(formation.status)}`}>{formation.status}</span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-foreground">{formation.duration}h</td>
+                      <td className="px-6 py-4 text-sm text-muted-foreground">{formation.formation_modules?.length || 0}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => {
+                              setParticipantsFormationId(formation.id);
+                              setParticipantsFormationTitle(formation.title);
+                              setShowParticipantsModal(true);
+                            }}
+                          >
+                            <Users className="h-3.5 w-3.5 mr-1" />
+                            ({formation.max_students || 0})
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="text-xs"
+                            onClick={() => navigate(`/formations/${formation.id}`)}
+                          >
+                            <Eye className="h-3.5 w-3.5 mr-1" />
+                            Détail
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           </div>
         )}
       </div>
+
+      {/* Participants Modal */}
+      {participantsFormationId && (
+        <FormationParticipantsModal
+          isOpen={showParticipantsModal}
+          onClose={() => { setShowParticipantsModal(false); setParticipantsFormationId(null); }}
+          formationId={participantsFormationId}
+          formationTitle={participantsFormationTitle}
+        />
+      )}
     </div>
   );
 };
