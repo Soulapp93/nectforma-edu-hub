@@ -116,6 +116,15 @@ const FormationCard: React.FC<FormationCardProps> = ({
             
             {isAdmin && (
               <div className="flex space-x-1 sm:space-x-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+                {onDuplicate && (
+                  <button
+                    onClick={onDuplicate}
+                    className="p-1.5 sm:p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                    title="Nouvelle année académique"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </button>
+                )}
                 {onEdit && (
                   <button
                     onClick={onEdit}
