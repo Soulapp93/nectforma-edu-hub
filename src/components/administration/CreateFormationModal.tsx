@@ -24,6 +24,7 @@ interface FormationFormData {
   status: string;
   color: string;
   duration: number;
+  semesters_count: number;
 }
 
 const CreateFormationModal: React.FC<CreateFormationModalProps> = ({ 
