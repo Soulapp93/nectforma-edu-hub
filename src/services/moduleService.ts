@@ -13,6 +13,16 @@ export interface FormationModule {
   instructors?: Instructor[];
 }
 
+export interface SubModule {
+  id: string;
+  module_id: string;
+  title: string;
+  description?: string;
+  duration_hours: number;
+  order_index: number;
+  coefficient: number;
+}
+
 export interface Instructor {
   id: string;
   first_name: string;
@@ -29,7 +39,6 @@ export interface ModuleInstructor {
 
 export const moduleService = {
   async getFormationModules(formationId: string) {
-    // Fetch modules first
     const { data: modules, error: modulesError } = await supabase
       .from('formation_modules')
       .select('*')
@@ -38,7 +47,6 @@ export const moduleService = {
     
     if (modulesError) throw modulesError;
     
-    // Fetch instructors for each module
     const modulesWithInstructors = await Promise.all(
       (modules || []).map(async (mod) => {
         const { data: instructorAssignments, error: assignError } = await db
@@ -86,7 +94,6 @@ export const moduleService = {
 
     if (moduleError) throw moduleError;
 
-    // Assigner les formateurs au module
     if (instructorIds.length > 0) {
       const assignments = instructorIds.map(instructorId => ({
         module_id: module.id,
@@ -107,7 +114,6 @@ export const moduleService = {
   },
 
   async updateModule(moduleId: string, moduleData: { title: string; description?: string; order_index: number; duration_hours?: number }, instructorIds: string[]) {
-    // Mettre à jour le module
     const { error: moduleError } = await supabase
       .from('formation_modules')
       .update({
@@ -120,7 +126,6 @@ export const moduleService = {
 
     if (moduleError) throw moduleError;
 
-    // Supprimer les anciennes assignations de formateurs
     const { error: deleteError } = await db
       .from('module_instructors')
       .delete()
@@ -131,7 +136,6 @@ export const moduleService = {
       throw deleteError;
     }
 
-    // Ajouter les nouvelles assignations de formateurs
     if (instructorIds.length > 0) {
       const assignments = instructorIds.map(instructorId => ({
         module_id: moduleId,
@@ -150,7 +154,16 @@ export const moduleService = {
   },
 
   async deleteModule(moduleId: string) {
-    // Supprimer d'abord les assignations de formateurs
+    // Delete sub-modules first
+    const { error: subModError } = await db
+      .from('sub_modules')
+      .delete()
+      .eq('module_id', moduleId);
+
+    if (subModError) {
+      console.warn('Erreur suppression sous-modules:', subModError);
+    }
+
     const { error: deleteAssignError } = await db
       .from('module_instructors')
       .delete()
@@ -160,11 +173,54 @@ export const moduleService = {
       console.warn('Erreur suppression assignations:', deleteAssignError);
     }
 
-    // Supprimer le module
     const { error } = await supabase
       .from('formation_modules')
       .delete()
       .eq('id', moduleId);
+
+    if (error) throw error;
+  },
+
+  // Sub-modules CRUD
+  async getSubModules(moduleId: string): Promise<SubModule[]> {
+    const { data, error } = await db
+      .from('sub_modules')
+      .select('*')
+      .eq('module_id', moduleId)
+      .order('order_index');
+
+    if (error) {
+      console.error('Erreur récupération sous-modules:', error);
+      return [];
+    }
+    return data || [];
+  },
+
+  async createSubModule(subModuleData: Omit<SubModule, 'id'>): Promise<SubModule> {
+    const { data, error } = await db
+      .from('sub_modules')
+      .insert(subModuleData)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async updateSubModule(subModuleId: string, subModuleData: Partial<SubModule>) {
+    const { error } = await db
+      .from('sub_modules')
+      .update(subModuleData)
+      .eq('id', subModuleId);
+
+    if (error) throw error;
+  },
+
+  async deleteSubModule(subModuleId: string) {
+    const { error } = await db
+      .from('sub_modules')
+      .delete()
+      .eq('id', subModuleId);
 
     if (error) throw error;
   },
