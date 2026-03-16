@@ -257,6 +257,21 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
                 </div>
 
                 <div className="space-y-2">
+                  <Label>Année académique</Label>
+                  <Select value={formData.academic_year} onValueChange={(value) => setFormData(prev => ({ ...prev, academic_year: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 5 }, (_, i) => {
+                        const y = currentYear - 1 + i;
+                        return <SelectItem key={y} value={`${y}-${y + 1}`}>{y}-{y + 1}</SelectItem>;
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="level">Niveau</Label>
                   <Select value={formData.level} onValueChange={(value) => setFormData(prev => ({ ...prev, level: value }))}>
                     <SelectTrigger>
