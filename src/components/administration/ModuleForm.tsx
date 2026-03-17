@@ -8,6 +8,7 @@ export interface SubModuleFormData {
   description: string;
   duration_hours: number;
   coefficient: number;
+  instructorId?: string;
 }
 
 export interface ModuleFormData {
