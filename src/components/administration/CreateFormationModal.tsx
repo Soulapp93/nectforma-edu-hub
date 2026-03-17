@@ -59,7 +59,9 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const academicYears = generateAcademicYears();
+  const yearOptions = generateYearOptions();
+  const academicYearStart = parseInt(formData.academic_year.split('-')[0]) || currentYear;
+  const academicYearEnd = parseInt(formData.academic_year.split('-')[1]) || currentYear + 1;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
