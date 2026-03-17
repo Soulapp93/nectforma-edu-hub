@@ -1,0 +1,1 @@
+ALTER TABLE public.sub_modules ADD COLUMN IF NOT EXISTS instructor_id UUID REFERENCES public.users(id) ON DELETE SET NULL;

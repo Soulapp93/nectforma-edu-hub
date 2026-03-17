@@ -4305,6 +4305,7 @@ export type Database = {
           description: string | null
           duration_hours: number
           id: string
+          instructor_id: string | null
           module_id: string
           order_index: number
           title: string
@@ -4316,6 +4317,7 @@ export type Database = {
           description?: string | null
           duration_hours?: number
           id?: string
+          instructor_id?: string | null
           module_id: string
           order_index?: number
           title: string
@@ -4327,12 +4329,20 @@ export type Database = {
           description?: string | null
           duration_hours?: number
           id?: string
+          instructor_id?: string | null
           module_id?: string
           order_index?: number
           title?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "sub_modules_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sub_modules_module_id_fkey"
             columns: ["module_id"]
