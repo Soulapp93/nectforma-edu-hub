@@ -174,56 +174,57 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
             {filteredFormations.map((formation) => (
               <Card
                 key={formation.id}
-                className="hover:shadow-lg hover:border-primary/40 transition-all duration-200 overflow-hidden"
+                className="hover:shadow-lg transition-all duration-200 overflow-hidden border border-border/60"
               >
-                <div className="h-2" style={{ backgroundColor: formation.color || '#8B5CF6' }} />
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-3 flex-wrap">
-                    <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getLevelColor(formation.level)}`}>
+                <div className="h-1.5 rounded-t-xl" style={{ backgroundColor: formation.color || '#8B5CF6' }} />
+                <CardContent className="p-4 pb-3">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <span className={`px-2.5 py-0.5 text-[11px] font-semibold rounded-md ${getLevelColor(formation.level)}`}>
                       {formation.level}
                     </span>
-                    <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(formation.status)}`}>
+                    <span className={`px-2.5 py-0.5 text-[11px] font-semibold rounded-md ${getStatusColor(formation.status)}`}>
                       {formation.status}
                     </span>
                   </div>
 
-                  <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2 line-clamp-2">{formation.title}</h3>
+                  <h3 className="text-base font-bold text-foreground mb-3 line-clamp-2">{formation.title}</h3>
 
-                  <div className="space-y-1.5 text-sm text-muted-foreground">
+                  <div className="space-y-2 text-[13px] text-muted-foreground mb-4">
                     <div className="flex items-center">
-                      <Calendar className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                      <Calendar className="h-3.5 w-3.5 mr-2 flex-shrink-0 text-muted-foreground/70" />
                       Du {new Date(formation.start_date).toLocaleDateString('fr-FR')} au {new Date(formation.end_date).toLocaleDateString('fr-FR')}
                     </div>
                     <div className="flex items-center">
-                      <Clock className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                      <Clock className="h-3.5 w-3.5 mr-2 flex-shrink-0 text-muted-foreground/70" />
                       {formation.duration}h de formation
                     </div>
                     <div className="flex items-center">
-                      <BookOpen className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                      <BookOpen className="h-3.5 w-3.5 mr-2 flex-shrink-0 text-muted-foreground/70" />
                       {formation.formation_modules?.length || 0} module{(formation.formation_modules?.length || 0) > 1 ? 's' : ''}
                     </div>
                   </div>
 
-                  <div className="mt-3 pt-3 border-t border-border flex items-center justify-end gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-xs"
+                      className="w-full text-xs bg-muted/50 border-border/60 text-muted-foreground hover:bg-muted"
                       onClick={() => {
                         setParticipantsFormationId(formation.id);
                         setParticipantsFormationTitle(formation.title);
                         setShowParticipantsModal(true);
                       }}
                     >
-                      <Users className="h-3.5 w-3.5 mr-1" />
+                      <Users className="h-3.5 w-3.5 mr-1.5" />
                       ({formation.max_students || 0})
                     </Button>
                     <Button
                       size="sm"
-                      className="text-xs"
+                      className="w-full text-xs text-white shadow-sm"
+                      style={{ backgroundColor: formation.color || '#8B5CF6' }}
                       onClick={() => navigate(`/formations/${formation.id}`)}
                     >
-                      <Eye className="h-3.5 w-3.5 mr-1" />
+                      <Eye className="h-3.5 w-3.5 mr-1.5" />
                       Détail
                     </Button>
                   </div>
