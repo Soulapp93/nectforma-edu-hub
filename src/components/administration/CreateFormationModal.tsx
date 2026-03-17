@@ -245,24 +245,45 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
               </div>
 
               {/* Année académique */}
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5">
                   <Calendar className="h-4 w-4 text-primary" />
                   Année académique *
                 </label>
-                <Select 
-                  value={formData.academic_year} 
-                  onValueChange={(v) => setFormData((p) => ({ ...p, academic_year: v }))}
-                >
-                  <SelectTrigger className="h-11 rounded-xl border-2 border-primary/30">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {academicYears.map(year => (
-                      <SelectItem key={year} value={year}>{year}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">Année début</label>
+                    <Select 
+                      value={String(academicYearStart)} 
+                      onValueChange={(v) => setFormData((p) => ({ ...p, academic_year: `${v}-${p.academic_year.split('-')[1]}` }))}
+                    >
+                      <SelectTrigger className="h-11 rounded-xl border-2 border-primary/30">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {yearOptions.map(y => (
+                          <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">Année fin</label>
+                    <Select 
+                      value={String(academicYearEnd)} 
+                      onValueChange={(v) => setFormData((p) => ({ ...p, academic_year: `${p.academic_year.split('-')[0]}-${v}` }))}
+                    >
+                      <SelectTrigger className="h-11 rounded-xl border-2 border-primary/30">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {yearOptions.map(y => (
+                          <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
 
               <div>

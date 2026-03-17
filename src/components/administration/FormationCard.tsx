@@ -120,7 +120,7 @@ const FormationCard: React.FC<FormationCardProps> = ({
                   <button
                     onClick={onDuplicate}
                     className="p-1.5 sm:p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                    title="Nouvelle année académique"
+                    title="Nouvelle promotion"
                   >
                     <Copy className="h-4 w-4" />
                   </button>

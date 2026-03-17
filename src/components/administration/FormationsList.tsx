@@ -314,7 +314,7 @@ const FormationsList: React.FC = () => {
                 className="border-dashed border-2 border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/50"
               >
                 <Copy className="h-4 w-4 mr-2" />
-                Créer une nouvelle année académique
+                Créer une nouvelle promotion
               </Button>
             </div>
           )}
