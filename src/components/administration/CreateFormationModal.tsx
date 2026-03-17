@@ -27,13 +27,12 @@ interface FormationFormData {
   academic_year: string;
 }
 
-// Generate academic year options
-const generateAcademicYears = () => {
+// Generate year options for academic year selection
+const generateYearOptions = () => {
   const currentYear = new Date().getFullYear();
-  const years: string[] = [];
-  for (let i = -1; i <= 3; i++) {
-    const y = currentYear + i;
-    years.push(`${y}-${y + 1}`);
+  const years: number[] = [];
+  for (let i = -1; i <= 5; i++) {
+    years.push(currentYear + i);
   }
   return years;
 };
