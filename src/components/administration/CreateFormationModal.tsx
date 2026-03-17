@@ -152,6 +152,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                     duration_hours: sub.duration_hours || 0,
                     order_index: j,
                     coefficient: sub.coefficient || 1,
+                    ...(sub.instructorId ? { instructor_id: sub.instructorId } : {}),
                   });
                   console.log(`Sous-module "${sub.title}" créé avec succès`);
                 } catch (subError) {
