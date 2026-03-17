@@ -68,7 +68,7 @@ const DuplicateFormationModal: React.FC<DuplicateFormationModalProps> = ({
         <div className="flex items-center justify-between p-5 border-b border-border/50">
           <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
             <Copy className="h-5 w-5 text-primary" />
-            Nouvelle année académique
+            Nouvelle promotion
           </h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition-colors">
             <X className="h-5 w-5" />
@@ -82,25 +82,45 @@ const DuplicateFormationModal: React.FC<DuplicateFormationModalProps> = ({
               <span className="text-sm font-medium text-foreground">{formation.title}</span>
             </div>
             {formation.academic_year && (
-              <span className="text-xs text-muted-foreground">Année actuelle : {formation.academic_year}</span>
+              <span className="text-xs text-muted-foreground">Promotion actuelle : {formation.academic_year}</span>
             )}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5">
               <Calendar className="h-4 w-4 text-primary" />
-              Nouvelle année académique *
+              Nouvelle promotion *
             </label>
-            <Select value={academicYear} onValueChange={setAcademicYear}>
-              <SelectTrigger className="h-11 rounded-xl border-2 border-primary/30">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {academicYears.map(y => (
-                  <SelectItem key={y} value={y}>{y}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1">Année début</label>
+                <Select value={academicYear.split('-')[0]} onValueChange={(v) => setAcademicYear(`${v}-${academicYear.split('-')[1]}`)}>
+                  <SelectTrigger className="h-11 rounded-xl border-2 border-primary/30">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 6 }, (_, i) => {
+                      const y = currentYear - 1 + i;
+                      return <SelectItem key={y} value={String(y)}>{y}</SelectItem>;
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground mb-1">Année fin</label>
+                <Select value={academicYear.split('-')[1]} onValueChange={(v) => setAcademicYear(`${academicYear.split('-')[0]}-${v}`)}>
+                  <SelectTrigger className="h-11 rounded-xl border-2 border-primary/30">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 6 }, (_, i) => {
+                      const y = currentYear + i;
+                      return <SelectItem key={y} value={String(y)}>{y}</SelectItem>;
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">

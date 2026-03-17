@@ -8,6 +8,7 @@ export interface SubModuleFormData {
   description: string;
   duration_hours: number;
   coefficient: number;
+  instructorId?: string;
 }
 
 export interface ModuleFormData {
@@ -71,7 +72,7 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex, i
   const addSubModule = () => {
     const newData = {
       ...formData,
-      subModules: [...formData.subModules, { title: '', description: '', duration_hours: 0, coefficient: 1 }]
+      subModules: [...formData.subModules, { title: '', description: '', duration_hours: 0, coefficient: 1, instructorId: '' }]
     };
     setFormData(newData);
     onAdd(newData);
@@ -199,52 +200,80 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex, i
           {showSubModules && formData.subModules.length > 0 && (
             <div className="space-y-3 pl-3 border-l-2 border-primary/20">
               {formData.subModules.map((sub, idx) => (
-                <div key={idx} className="bg-muted/30 rounded-lg p-3 border border-border">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-muted-foreground">Sous-module {idx + 1}</span>
+                <div key={idx} className="bg-muted/30 rounded-xl p-4 border border-border">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-foreground">Sous-module {idx + 1}</span>
                     <button
                       type="button"
                       onClick={() => removeSubModule(idx)}
-                      className="text-destructive hover:text-destructive/80 p-0.5"
+                      className="text-destructive hover:text-destructive/80 p-1 rounded-lg hover:bg-destructive/10 transition-colors"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <div className="md:col-span-2">
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-1">Titre du sous-module *</label>
                       <input
                         type="text"
-                        placeholder="Titre du sous-module *"
+                        placeholder="Titre du sous-module"
                         value={sub.title}
                         onChange={(e) => updateSubModule(idx, 'title', e.target.value)}
-                        className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:ring-1 focus:ring-primary/20 focus:border-primary transition-all"
+                        className="w-full px-3 py-2 text-sm border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                       />
                     </div>
-                    <input
-                      type="number"
-                      placeholder="Heures"
-                      value={sub.duration_hours}
-                      onChange={(e) => updateSubModule(idx, 'duration_hours', Number(e.target.value))}
-                      min="0"
-                      className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:ring-1 focus:ring-primary/20 focus:border-primary transition-all"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Coefficient"
-                      value={sub.coefficient}
-                      onChange={(e) => updateSubModule(idx, 'coefficient', Number(e.target.value))}
-                      min="0"
-                      step="0.5"
-                      className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:ring-1 focus:ring-primary/20 focus:border-primary transition-all"
-                    />
-                    <div className="md:col-span-2">
-                      <input
-                        type="text"
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-1">Description</label>
+                      <textarea
                         placeholder="Description (optionnel)"
                         value={sub.description}
                         onChange={(e) => updateSubModule(idx, 'description', e.target.value)}
-                        className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:ring-1 focus:ring-primary/20 focus:border-primary transition-all"
+                        rows={2}
+                        className="w-full px-3 py-2 text-sm border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
                       />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-1">Durée (heures)</label>
+                        <input
+                          type="number"
+                          placeholder="Heures"
+                          value={sub.duration_hours}
+                          onChange={(e) => updateSubModule(idx, 'duration_hours', Number(e.target.value))}
+                          min="0"
+                          className="w-full px-3 py-2 text-sm border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-1">Coefficient</label>
+                        <input
+                          type="number"
+                          placeholder="Coefficient"
+                          value={sub.coefficient}
+                          onChange={(e) => updateSubModule(idx, 'coefficient', Number(e.target.value))}
+                          min="0"
+                          step="0.5"
+                          className="w-full px-3 py-2 text-sm border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-1">
+                        <User className="h-4 w-4 inline mr-1" />
+                        Formateur (optionnel)
+                      </label>
+                      <select
+                        value={sub.instructorId || ''}
+                        onChange={(e) => updateSubModule(idx, 'instructorId', e.target.value)}
+                        className="w-full px-3 py-2 text-sm border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                      >
+                        <option value="">-- Aucun formateur --</option>
+                        {instructors.map(instructor => (
+                          <option key={instructor.id} value={instructor.id}>
+                            {instructor.first_name} {instructor.last_name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </div>

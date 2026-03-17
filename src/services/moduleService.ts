@@ -21,6 +21,7 @@ export interface SubModule {
   duration_hours: number;
   order_index: number;
   coefficient: number;
+  instructor_id?: string;
 }
 
 export interface Instructor {

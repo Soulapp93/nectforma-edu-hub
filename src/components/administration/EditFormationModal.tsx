@@ -256,19 +256,38 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="md:col-span-2 space-y-2">
                   <Label>Année académique</Label>
-                  <Select value={formData.academic_year} onValueChange={(value) => setFormData(prev => ({ ...prev, academic_year: value }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 5 }, (_, i) => {
-                        const y = currentYear - 1 + i;
-                        return <SelectItem key={y} value={`${y}-${y + 1}`}>{y}-{y + 1}</SelectItem>;
-                      })}
-                    </SelectContent>
-                  </Select>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-muted-foreground mb-1">Année début</label>
+                      <Select value={formData.academic_year.split('-')[0]} onValueChange={(v) => setFormData(prev => ({ ...prev, academic_year: `${v}-${prev.academic_year.split('-')[1]}` }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Début" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 7 }, (_, i) => {
+                            const y = currentYear - 1 + i;
+                            return <SelectItem key={y} value={String(y)}>{y}</SelectItem>;
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-muted-foreground mb-1">Année fin</label>
+                      <Select value={formData.academic_year.split('-')[1]} onValueChange={(v) => setFormData(prev => ({ ...prev, academic_year: `${prev.academic_year.split('-')[0]}-${v}` }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Fin" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 7 }, (_, i) => {
+                            const y = currentYear + i;
+                            return <SelectItem key={y} value={String(y)}>{y}</SelectItem>;
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-2">

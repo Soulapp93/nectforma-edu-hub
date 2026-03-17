@@ -27,13 +27,12 @@ interface FormationFormData {
   academic_year: string;
 }
 
-// Generate academic year options
-const generateAcademicYears = () => {
+// Generate year options for academic year selection
+const generateYearOptions = () => {
   const currentYear = new Date().getFullYear();
-  const years: string[] = [];
-  for (let i = -1; i <= 3; i++) {
-    const y = currentYear + i;
-    years.push(`${y}-${y + 1}`);
+  const years: number[] = [];
+  for (let i = -1; i <= 5; i++) {
+    years.push(currentYear + i);
   }
   return years;
 };
@@ -60,7 +59,9 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const academicYears = generateAcademicYears();
+  const yearOptions = generateYearOptions();
+  const academicYearStart = parseInt(formData.academic_year.split('-')[0]) || currentYear;
+  const academicYearEnd = parseInt(formData.academic_year.split('-')[1]) || currentYear + 1;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -151,6 +152,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                     duration_hours: sub.duration_hours || 0,
                     order_index: j,
                     coefficient: sub.coefficient || 1,
+                    ...(sub.instructorId ? { instructor_id: sub.instructorId } : {}),
                   });
                   console.log(`Sous-module "${sub.title}" créé avec succès`);
                 } catch (subError) {
@@ -244,24 +246,45 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
               </div>
 
               {/* Année académique */}
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5">
                   <Calendar className="h-4 w-4 text-primary" />
                   Année académique *
                 </label>
-                <Select 
-                  value={formData.academic_year} 
-                  onValueChange={(v) => setFormData((p) => ({ ...p, academic_year: v }))}
-                >
-                  <SelectTrigger className="h-11 rounded-xl border-2 border-primary/30">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {academicYears.map(year => (
-                      <SelectItem key={year} value={year}>{year}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">Année début</label>
+                    <Select 
+                      value={String(academicYearStart)} 
+                      onValueChange={(v) => setFormData((p) => ({ ...p, academic_year: `${v}-${p.academic_year.split('-')[1]}` }))}
+                    >
+                      <SelectTrigger className="h-11 rounded-xl border-2 border-primary/30">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {yearOptions.map(y => (
+                          <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">Année fin</label>
+                    <Select 
+                      value={String(academicYearEnd)} 
+                      onValueChange={(v) => setFormData((p) => ({ ...p, academic_year: `${p.academic_year.split('-')[0]}-${v}` }))}
+                    >
+                      <SelectTrigger className="h-11 rounded-xl border-2 border-primary/30">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {yearOptions.map(y => (
+                          <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
 
               <div>
