@@ -72,7 +72,7 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex, i
   const addSubModule = () => {
     const newData = {
       ...formData,
-      subModules: [...formData.subModules, { title: '', description: '', duration_hours: 0, coefficient: 1 }]
+      subModules: [...formData.subModules, { title: '', description: '', duration_hours: 0, coefficient: 1, instructorId: '' }]
     };
     setFormData(newData);
     onAdd(newData);
