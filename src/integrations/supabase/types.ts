@@ -5252,6 +5252,10 @@ export type Database = {
       }
       can_access_message: { Args: { _message_id: string }; Returns: boolean }
       can_access_module: { Args: { _module_id: string }; Returns: boolean }
+      can_manage_attendance_student_links: {
+        Args: { _sheet_id: string }
+        Returns: boolean
+      }
       can_manage_blog: { Args: never; Returns: boolean }
       can_manage_evaluation: {
         Args: { _evaluation_id: string }
