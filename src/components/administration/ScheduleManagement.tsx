@@ -62,6 +62,8 @@ import { navigateWeek, getWeekInfo, getWeekDays } from '@/utils/calendarUtils';
 import { formatTimeRange, isAutonomieSlot, getSlotModuleTitle, getSlotInstructorName } from '@/utils/slotDisplay';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import FormationPromotionSelector from './FormationPromotionSelector';
+import { formationService } from '@/services/formationService';
 
 type ViewMode = 'day' | 'week' | 'month' | 'list';
 
@@ -69,6 +71,12 @@ const ScheduleManagement = () => {
   const { schedules, loading, refetch } = useSchedules();
   const navigate = useNavigate();
   
+  // Hierarchical navigation state
+  const [hierarchicalView, setHierarchicalView] = useState<'selector' | 'schedule'>('selector');
+  const [allFormations, setAllFormations] = useState<any[]>([]);
+  const [formationsLoading, setFormationsLoading] = useState(true);
+  const [selectedPromotionFormation, setSelectedPromotionFormation] = useState<any | null>(null);
+
   // États principaux
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -90,6 +98,36 @@ const ScheduleManagement = () => {
   const [dragOverDay, setDragOverDay] = useState<string | null>(null);
   const [detailsEvent, setDetailsEvent] = useState<ScheduleEvent | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+
+  // Fetch formations for hierarchical nav
+  useEffect(() => {
+    const fetchFormations = async () => {
+      try {
+        setFormationsLoading(true);
+        const data = await formationService.getFormations();
+        setAllFormations(data || []);
+      } catch (e) {
+        console.error('Error fetching formations:', e);
+      } finally {
+        setFormationsLoading(false);
+      }
+    };
+    fetchFormations();
+  }, []);
+
+  // Handle promotion selection - find or auto-select schedule
+  const handlePromotionSelect = useCallback((formation: any) => {
+    setSelectedPromotionFormation(formation);
+    setHierarchicalView('schedule');
+    // Auto-select the schedule for this formation
+    const matchingSchedule = schedules.find(s => s.formation_id === formation.id);
+    if (matchingSchedule) {
+      setSelectedSchedule(matchingSchedule);
+      setViewMode('week');
+    } else {
+      setSelectedSchedule(null);
+    }
+  }, [schedules]);
 
   // Handlers pour les boutons principaux - Simplifiés
   const handleOpenAddSlotModal = useCallback(() => {
