@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { QrCode, Users, Send, CheckCircle, ArrowRight, PenTool, Calendar, Clock, MapPin, BookOpen, Wifi, Shield, FileText, UserX } from 'lucide-react';
+import { QrCode, Users, Send, CheckCircle, ArrowRight, PenTool, Calendar, Clock, MapPin, BookOpen, Wifi, Shield, FileText, UserX, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -12,6 +12,7 @@ import QRCodeDisplayModal from './QRCodeDisplayModal';
 import InstructorSigningModal from './InstructorSigningModal';
 import GeneratedAttendanceSheet from './GeneratedAttendanceSheet';
 import RealtimeAttendanceIndicator from './RealtimeAttendanceIndicator';
+import LinkAttendanceSetup from './LinkAttendanceSetup';
 
 interface QRAttendanceManagerProps {
   attendanceSheet: AttendanceSheet;
