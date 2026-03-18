@@ -75,7 +75,7 @@ const ScheduleManagement = () => {
   const [selectedPromotionFormation, setSelectedPromotionFormation] = useState<any | null>(null);
 
   // États principaux
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null);
