@@ -179,7 +179,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         const { scheduleService } = await import('@/services/scheduleService');
         await scheduleService.createSchedule({
           formation_id: formation.id,
-          title: `EDT - ${formData.title} ${formData.academic_year}`,
+          title: `Emploi du temps - ${formData.title} ${formData.academic_year}`,
         });
       } catch (e) {
         console.warn('Auto-création emploi du temps échouée:', e);
