@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { 
+import {
   Calendar,
   Clock,
   MapPin,
@@ -62,6 +62,8 @@ import { navigateWeek, getWeekInfo, getWeekDays } from '@/utils/calendarUtils';
 import { formatTimeRange, isAutonomieSlot, getSlotModuleTitle, getSlotInstructorName } from '@/utils/slotDisplay';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import FormationPromotionSelector from './FormationPromotionSelector';
+import { formationService } from '@/services/formationService';
 
 type ViewMode = 'day' | 'week' | 'month' | 'list';
 
@@ -69,6 +71,12 @@ const ScheduleManagement = () => {
   const { schedules, loading, refetch } = useSchedules();
   const navigate = useNavigate();
   
+  // Hierarchical navigation state
+  const [hierarchicalView, setHierarchicalView] = useState<'selector' | 'schedule'>('selector');
+  const [allFormations, setAllFormations] = useState<any[]>([]);
+  const [formationsLoading, setFormationsLoading] = useState(true);
+  const [selectedPromotionFormation, setSelectedPromotionFormation] = useState<any | null>(null);
+
   // États principaux
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -90,6 +98,36 @@ const ScheduleManagement = () => {
   const [dragOverDay, setDragOverDay] = useState<string | null>(null);
   const [detailsEvent, setDetailsEvent] = useState<ScheduleEvent | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+
+  // Fetch formations for hierarchical nav
+  useEffect(() => {
+    const fetchFormations = async () => {
+      try {
+        setFormationsLoading(true);
+        const data = await formationService.getFormations();
+        setAllFormations(data || []);
+      } catch (e) {
+        console.error('Error fetching formations:', e);
+      } finally {
+        setFormationsLoading(false);
+      }
+    };
+    fetchFormations();
+  }, []);
+
+  // Handle promotion selection - find or auto-select schedule
+  const handlePromotionSelect = useCallback((formation: any) => {
+    setSelectedPromotionFormation(formation);
+    setHierarchicalView('schedule');
+    // Auto-select the schedule for this formation
+    const matchingSchedule = schedules.find(s => s.formation_id === formation.id);
+    if (matchingSchedule) {
+      setSelectedSchedule(matchingSchedule);
+      setViewMode('week');
+    } else {
+      setSelectedSchedule(null);
+    }
+  }, [schedules]);
 
   // Handlers pour les boutons principaux - Simplifiés
   const handleOpenAddSlotModal = useCallback(() => {
@@ -1416,7 +1454,39 @@ const ScheduleManagement = () => {
     );
   }
 
-  // List view (default) - Interface identique à l'emploi du temps principal
+  // Hierarchical selector view
+  if (hierarchicalView === 'selector') {
+    return (
+      <>
+        <FormationPromotionSelector
+          formations={allFormations}
+          loading={formationsLoading || loading}
+          icon={Calendar}
+          title="Gestion des emplois du temps"
+          onPromotionSelect={handlePromotionSelect}
+          emptyMessage="Créez des formations pour gérer les emplois du temps."
+          headerActions={
+            <Button 
+              onClick={handleCreateSchedule}
+              className="bg-primary hover:bg-primary/90 shadow-md text-xs sm:text-sm"
+              size="sm"
+            >
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Créer un emploi du temps</span>
+              <span className="sm:hidden">Créer</span>
+            </Button>
+          }
+        />
+        <CreateScheduleModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSuccess={handleCreateSuccess}
+        />
+      </>
+    );
+  }
+
+  // Schedule detail/list view (after promotion selected)
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
       {/* Header moderne identique */}
@@ -1424,13 +1494,21 @@ const ScheduleManagement = () => {
         <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
             <div className="flex items-center space-x-3 sm:space-x-4">
+              <button
+                onClick={() => { setHierarchicalView('selector'); setSelectedSchedule(null); setSelectedPromotionFormation(null); }}
+                className="p-2 hover:bg-muted rounded-xl transition-colors"
+              >
+                <ChevronLeft className="h-5 w-5 text-foreground" />
+              </button>
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
                 <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-3xl font-bold text-foreground truncate">Gestion des emplois du temps</h1>
+                <h1 className="text-lg sm:text-3xl font-bold text-foreground truncate">
+                  {selectedPromotionFormation?.title || 'Emploi du temps'}
+                </h1>
                 <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                  Créez et gérez les emplois du temps pour chaque formation
+                  {selectedPromotionFormation?.academic_year || 'Gérez les créneaux'}
                 </p>
               </div>
             </div>

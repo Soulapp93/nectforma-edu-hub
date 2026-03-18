@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar, Clock, Users, CheckCircle2, XCircle, Edit3, FileText, Eye, ArrowLeft, ChevronRight, PenTool, Download, Send, Link, Video, FilePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +20,7 @@ import SendSignatureLinkModal from './SendSignatureLinkModal';
 import SendAttendanceLinkModal from './SendAttendanceLinkModal';
 import { pdfExportService } from '@/services/pdfExportService';
 import BlankAttendanceSlotModal from './BlankAttendanceSlotModal';
+import FormationPromotionSelector from './FormationPromotionSelector';
 
 const AttendanceManagement = () => {
   const [pendingSheets, setPendingSheets] = useState<AttendanceSheet[]>([]);
@@ -28,6 +29,7 @@ const AttendanceManagement = () => {
   const [loading, setLoading] = useState(false);
   const [selectedSheet, setSelectedSheet] = useState<AttendanceSheet | null>(null);
   const [selectedFormationId, setSelectedFormationId] = useState<string | null>(null);
+  const [selectedFormationObj, setSelectedFormationObj] = useState<any | null>(null);
   const [showSheetModal, setShowSheetModal] = useState(false);
   const [showReasonModal, setShowReasonModal] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
@@ -37,7 +39,7 @@ const AttendanceManagement = () => {
   const [showBlankSlotModal, setShowBlankSlotModal] = useState(false);
   const [selectedSignature, setSelectedSignature] = useState<any>(null);
   const [adminSignature, setAdminSignature] = useState<string | null>(null);
-  const [view, setView] = useState<'formations' | 'sheets'>('formations');
+  const [view, setView] = useState<'selector' | 'sheets'>('selector');
   const { userId } = useCurrentUser();
   const { formations, loading: formationsLoading } = useFormations();
 
@@ -160,8 +162,9 @@ const AttendanceManagement = () => {
   };
 
   const handleBackToFormations = () => {
-    setView('formations');
+    setView('selector');
     setSelectedFormationId(null);
+    setSelectedFormationObj(null);
     setFormationSheets([]);
   };
 
@@ -391,133 +394,80 @@ const AttendanceManagement = () => {
     );
   }
 
-  const selectedFormation = formations.find(f => f.id === selectedFormationId);
+  const selectedFormation = selectedFormationObj || formations.find(f => f.id === selectedFormationId);
+
+  const handlePromotionSelect = (formation: any) => {
+    setSelectedFormationId(formation.id);
+    setSelectedFormationObj(formation);
+    setView('sheets');
+    fetchFormationSheets(formation.id);
+  };
 
   return (
     <div className="space-y-6">
 
-      {/* Navigation et contenu principal */}
+      {view === 'selector' ? (
+        <FormationPromotionSelector
+          formations={formations}
+          loading={formationsLoading}
+          icon={FileText}
+          title="Gestion des émargements"
+          onPromotionSelect={handlePromotionSelect}
+          emptyMessage="Créez des formations pour gérer les émargements."
+          headerActions={
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                onClick={() => setShowSendAttendanceLinkModal(true)}
+                variant="outline"
+                size="sm"
+                className="rounded-full border-2 border-primary/30 text-xs sm:text-sm"
+              >
+                <Link className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Envoyer lien</span>
+              </Button>
+              <Button
+                onClick={() => setShowSignatureModal(true)}
+                variant="outline"
+                size="sm"
+                className="rounded-full border-2 border-primary/30 text-xs sm:text-sm"
+              >
+                <PenTool className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Signature</span>
+              </Button>
+              <Button
+                onClick={() => setShowBlankSlotModal(true)}
+                variant="outline"
+                size="sm"
+                className="rounded-full border-2 border-primary/30 text-xs sm:text-sm"
+              >
+                <FilePlus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Feuille vierge</span>
+              </Button>
+            </div>
+          }
+        />
+      ) : (
       <Card>
         <CardHeader className="p-3 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <CardTitle className="flex items-center text-base sm:text-lg">
-              {view === 'formations' ? (
-                <>
-                  <FileText className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                  <span className="truncate">Gestion des émargements par formation</span>
-                </>
-              ) : (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleBackToFormations}
-                    className="mr-2 p-1"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                  <FileText className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
-                  <span className="truncate">Feuilles - {selectedFormation?.title}</span>
-                </>
-              )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleBackToFormations}
+                  className="mr-2 p-1"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <FileText className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
+                <span className="truncate">Feuilles - {selectedFormation?.title} {selectedFormation?.academic_year ? `(${selectedFormation.academic_year})` : ''}</span>
             </CardTitle>
-            {view === 'formations' && (
-              <div className="flex gap-2 flex-wrap">
-                <Button
-                  onClick={() => setShowSendAttendanceLinkModal(true)}
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full border-2 border-blue-500 text-blue-600 hover:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20 text-xs sm:text-sm"
-                >
-                  <Link className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Envoyer lien d'émargement</span>
-                  <span className="sm:hidden">Lien</span>
-                </Button>
-                <Button
-                  onClick={() => setShowSignatureModal(true)}
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full border-2 border-primary text-primary hover:bg-primary/10 text-xs sm:text-sm"
-                >
-                  <PenTool className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Enregistrement signature</span>
-                  <span className="sm:hidden">Signature</span>
-                </Button>
-                <Button
-                  onClick={() => setShowBlankSlotModal(true)}
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full border-2 border-green-500 text-green-600 hover:bg-green-500/10 dark:text-green-400 dark:hover:bg-green-500/20 text-xs sm:text-sm"
-                >
-                  <FilePlus className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Feuille vierge</span>
-                  <span className="sm:hidden">Vierge</span>
-                </Button>
-              </div>
-            )}
           </div>
         </CardHeader>
         <CardContent>
-          {view === 'formations' ? (
-            // Vue des formations
-            <div className="space-y-4">
-              {formations.length === 0 ? (
-                 <div className="text-center py-8 text-muted-foreground">
-                  Aucune formation disponible
-                </div>
-              ) : (
-                 formations.map((formation) => {
-                   const pendingCount = getPendingCountForFormation(formation.id);
-                   
-                   return (
-                     <Card
-                       key={formation.id}
-                       className="hover:bg-muted/50 transition-colors"
-                     >
-                       <CardContent className="p-4">
-                         <div className="flex items-center justify-between">
-                           <div className="cursor-pointer flex-1" onClick={() => handleFormationClick(formation.id)}>
-                             <h3 className="font-semibold text-foreground">
-                               {formation.title}
-                             </h3>
-                             <div className="flex items-center space-x-4 mt-1 text-sm text-muted-foreground">
-                               <span>{formation.level}</span>
-                               <span>
-                                 {format(new Date(formation.start_date), 'dd/MM/yyyy', { locale: fr })} - {' '}
-                                 {format(new Date(formation.end_date), 'dd/MM/yyyy', { locale: fr })}
-                               </span>
-                               <Badge variant="secondary">{formation.status}</Badge>
-                             </div>
-                           </div>
-                           <div className="flex items-center space-x-2">
-                             {pendingCount > 0 && (
-                               <Badge 
-                                 className="bg-orange-100 text-orange-800 border-orange-200 cursor-pointer hover:bg-orange-200"
-                                 onClick={(e) => {
-                                   e.stopPropagation();
-                                   handleFormationClick(formation.id);
-                                 }}
-                               >
-                                 {pendingCount} à traiter
-                               </Badge>
-                             )}
-                             <div className="cursor-pointer" onClick={() => handleFormationClick(formation.id)}>
-                               <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                             </div>
-                           </div>
-                         </div>
-                       </CardContent>
-                     </Card>
-                   );
-                 })
-              )}
-             </div>
-           ) : (
-            // Vue des feuilles d'émargement pour une formation
-            <div>
               {formationSheets.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  Aucune feuille d'émargement pour cette formation
+                  Aucune feuille d'émargement pour cette promotion
                 </div>
               ) : (
                 <Table>
@@ -568,7 +518,6 @@ const AttendanceManagement = () => {
                         </TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()}>
                           <div className="flex gap-2">
-                            {/* Bouton pour envoyer le lien d'émargement en autonomie */}
                             {sheet.session_type === 'autonomie' && sheet.status === 'En attente' && (
                               <Button
                                 variant="outline"
@@ -607,10 +556,9 @@ const AttendanceManagement = () => {
                   </TableBody>
                 </Table>
               )}
-            </div>
-          )}
         </CardContent>
       </Card>
+      )}
 
       {/* Modals */}
       {selectedSheet && showSheetModal && (
