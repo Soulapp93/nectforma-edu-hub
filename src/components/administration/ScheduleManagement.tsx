@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import FormationPromotionSelector from './FormationPromotionSelector';
+import {
   Calendar,
   Clock,
   MapPin,
