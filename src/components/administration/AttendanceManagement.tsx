@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar, Clock, Users, CheckCircle2, XCircle, Edit3, FileText, Eye, ArrowLeft, ChevronRight, PenTool, Download, Send, Link, Video, FilePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +20,7 @@ import SendSignatureLinkModal from './SendSignatureLinkModal';
 import SendAttendanceLinkModal from './SendAttendanceLinkModal';
 import { pdfExportService } from '@/services/pdfExportService';
 import BlankAttendanceSlotModal from './BlankAttendanceSlotModal';
+import FormationPromotionSelector from './FormationPromotionSelector';
 
 const AttendanceManagement = () => {
   const [pendingSheets, setPendingSheets] = useState<AttendanceSheet[]>([]);
@@ -28,6 +29,7 @@ const AttendanceManagement = () => {
   const [loading, setLoading] = useState(false);
   const [selectedSheet, setSelectedSheet] = useState<AttendanceSheet | null>(null);
   const [selectedFormationId, setSelectedFormationId] = useState<string | null>(null);
+  const [selectedFormationObj, setSelectedFormationObj] = useState<any | null>(null);
   const [showSheetModal, setShowSheetModal] = useState(false);
   const [showReasonModal, setShowReasonModal] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
@@ -37,7 +39,7 @@ const AttendanceManagement = () => {
   const [showBlankSlotModal, setShowBlankSlotModal] = useState(false);
   const [selectedSignature, setSelectedSignature] = useState<any>(null);
   const [adminSignature, setAdminSignature] = useState<string | null>(null);
-  const [view, setView] = useState<'formations' | 'sheets'>('formations');
+  const [view, setView] = useState<'selector' | 'sheets'>('selector');
   const { userId } = useCurrentUser();
   const { formations, loading: formationsLoading } = useFormations();
 
