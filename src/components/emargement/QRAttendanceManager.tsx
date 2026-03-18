@@ -436,6 +436,18 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
           </Button>
         )}
 
+        {/* Envoyer liens d'émargement */}
+        {(attendanceSheet.status === 'En cours' || attendanceSheet.status === 'En attente') && (
+          <Button 
+            onClick={() => setShowLinkSetup(true)} 
+            variant="outline" 
+            className="w-full rounded-xl h-11"
+          >
+            <Link2 className="w-4 h-4 mr-2" />
+            Envoyer les liens d'émargement
+          </Button>
+        )}
+
         {/* Consulter feuille */}
         <Button onClick={() => setShowAttendanceSheet(true)} variant="outline" className="w-full rounded-xl h-11">
           <FileText className="w-4 h-4 mr-2" />
