@@ -589,52 +589,12 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
 
           {/* Inscription aux formations - Caché pour les administrateurs */}
           {formData.role !== 'Admin' && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
-                <Users className="h-5 w-5 text-primary" />
-                Inscription aux formations
-              </h3>
-              
-              {loadingFormations ? (
-                <div className="text-center py-4">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600 mx-auto"></div>
-                  <p className="text-sm text-muted-foreground mt-2">Chargement des formations...</p>
-                </div>
-              ) : formations.length > 0 ? (
-                <div className="space-y-2 max-h-60 overflow-y-auto border border-border rounded-lg p-4">
-                  {formations.map((formation) => (
-                    <div key={formation.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`formation-${formation.id}`}
-                        checked={selectedFormations.includes(formation.id)}
-                        onCheckedChange={(checked) => 
-                          handleFormationToggle(formation.id, checked as boolean)
-                        }
-                      />
-                      <Label 
-                        htmlFor={`formation-${formation.id}`}
-                        className="text-sm font-normal cursor-pointer flex-1"
-                      >
-                        <div>
-                          <div className="font-medium">{formation.title}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {formation.level} • Du {new Date(formation.start_date).toLocaleDateString('fr-FR')} au {new Date(formation.end_date).toLocaleDateString('fr-FR')}
-                          </div>
-                        </div>
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">Aucune formation disponible</p>
-              )}
-              
-              {selectedFormations.length > 0 && (
-                <p className="text-sm text-green-600">
-                  {selectedFormations.length} formation{selectedFormations.length > 1 ? 's' : ''} sélectionnée{selectedFormations.length > 1 ? 's' : ''}
-                </p>
-              )}
-            </div>
+            <FormationPromotionEnrollment
+              formations={formations}
+              loadingFormations={loadingFormations}
+              selectedFormations={selectedFormations}
+              onFormationToggle={handleFormationToggle}
+            />
           )}
 
           <div className="flex justify-end gap-3 pt-4 border-t border-border">
