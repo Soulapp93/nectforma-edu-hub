@@ -583,6 +583,7 @@ const SuiviEmargement = () => {
                   <TableHead>Salle</TableHead>
                   <TableHead>Formateur</TableHead>
                   <TableHead>Statut</TableHead>
+                  <TableHead>Retard</TableHead>
                   <TableHead>Observations</TableHead>
                 </TableRow>
               </TableHeader>
