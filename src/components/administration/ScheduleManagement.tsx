@@ -53,7 +53,7 @@ import AddSlotModal from '@/components/administration/AddSlotModal';
 import EditSlotModal from '@/components/administration/EditSlotModal';
 import SlotActionMenu from '@/components/administration/SlotActionMenu';
 import ExcelImportModal from '@/components/administration/ExcelImportModal';
-import CreateScheduleModal from './CreateScheduleModal';
+
 import { getModuleColor, extractModuleName } from '@/utils/moduleColors';
 import { navigateWeek, getWeekInfo, getWeekDays } from '@/utils/calendarUtils';
 import { formatTimeRange, isAutonomieSlot, getSlotModuleTitle, getSlotInstructorName } from '@/utils/slotDisplay';
