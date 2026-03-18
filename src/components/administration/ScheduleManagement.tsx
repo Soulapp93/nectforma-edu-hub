@@ -1494,13 +1494,22 @@ const ScheduleManagement = () => {
         <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
             <div className="flex items-center space-x-3 sm:space-x-4">
+              <button
+                onClick={() => { setHierarchicalView('selector'); setSelectedSchedule(null); setSelectedPromotionFormation(null); }}
+                className="p-2 hover:bg-muted rounded-xl transition-colors"
+              >
+                <ChevronLeft className="h-5 w-5 text-foreground" />
+              </button>
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
                 <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-3xl font-bold text-foreground truncate">Gestion des emplois du temps</h1>
+                <h1 className="text-lg sm:text-3xl font-bold text-foreground truncate">
+                  {selectedPromotionFormation?.title || 'Emploi du temps'}
+                </h1>
                 <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                  Créez et gérez les emplois du temps pour chaque formation
+                  {selectedPromotionFormation?.academic_year || 'Gérez les créneaux'}
+                </p>
                 </p>
               </div>
             </div>
