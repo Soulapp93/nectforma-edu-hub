@@ -529,6 +529,47 @@ export type Database = {
           },
         ]
       }
+      attendance_student_links: {
+        Row: {
+          attendance_sheet_id: string
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_used: boolean | null
+          student_id: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          attendance_sheet_id: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_used?: boolean | null
+          student_id: string
+          token?: string
+          used_at?: string | null
+        }
+        Update: {
+          attendance_sheet_id?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_used?: boolean | null
+          student_id?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_student_links_attendance_sheet_id_fkey"
+            columns: ["attendance_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "attendance_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       billing_clients: {
         Row: {
           address: string | null
@@ -5297,6 +5338,16 @@ export type Database = {
           error_message: string
           is_valid: boolean
           sheet_id: string
+        }[]
+      }
+      validate_student_link_token: {
+        Args: { token_param: string }
+        Returns: {
+          error_message: string
+          is_valid: boolean
+          link_id: string
+          sheet_id: string
+          student_id: string
         }[]
       }
     }
