@@ -292,8 +292,19 @@ const SuiviEmargement = () => {
     const present = filteredRecords.filter(r => r.status === 'Présent').length;
     const absent = filteredRecords.filter(r => r.status === 'Absent').length;
     const unsigned = filteredRecords.filter(r => r.status === 'Non signé').length;
+    const totalDelayMinutes = filteredRecords.reduce((sum, r) => sum + (r.delay_minutes || 0), 0);
+    const delayCount = filteredRecords.filter(r => (r.delay_minutes || 0) > 0).length;
     
     const attendanceRate = total > 0 ? (present / total * 100).toFixed(1) : '0';
+
+    const formatDelay = (minutes: number) => {
+      if (minutes >= 60) {
+        const h = Math.floor(minutes / 60);
+        const m = minutes % 60;
+        return m > 0 ? `${h}h${m}min` : `${h}h`;
+      }
+      return `${minutes} min`;
+    };
 
     return [
       {
@@ -316,6 +327,13 @@ const SuiviEmargement = () => {
         description: 'Cours manqués',
         icon: XCircle,
         color: 'text-red-600'
+      },
+      {
+        title: 'Retards',
+        value: delayCount > 0 ? `${delayCount} (${formatDelay(totalDelayMinutes)})` : '0',
+        description: `Total cumulé de retard`,
+        icon: Timer,
+        color: 'text-amber-600'
       }
     ];
   };
