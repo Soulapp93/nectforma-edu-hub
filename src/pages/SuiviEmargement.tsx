@@ -626,6 +626,16 @@ const SuiviEmargement = () => {
                       {getStatusBadge(record.status)}
                     </TableCell>
                     <TableCell>
+                      {(record.delay_minutes || 0) > 0 ? (
+                        <div className="flex items-center gap-1 text-amber-600">
+                          <Timer className="h-3 w-3" />
+                          <span className="text-sm font-medium">{record.delay_minutes} min</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       {record.absence_reason && (
                         <span className="text-sm text-muted-foreground">
                           {record.absence_reason}
