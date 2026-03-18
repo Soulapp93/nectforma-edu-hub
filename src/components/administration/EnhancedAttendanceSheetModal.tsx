@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Edit, Download, CheckCircle2, CheckCircle, XCircle, Clock, Building, UserX, ToggleLeft, ToggleRight, PenTool } from 'lucide-react';
+import { X, Edit, Download, CheckCircle2, CheckCircle, XCircle, Clock, Building, UserX, ToggleLeft, ToggleRight, PenTool, Timer } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
