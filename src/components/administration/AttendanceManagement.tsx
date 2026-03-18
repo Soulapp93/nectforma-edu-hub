@@ -162,8 +162,9 @@ const AttendanceManagement = () => {
   };
 
   const handleBackToFormations = () => {
-    setView('formations');
+    setView('selector');
     setSelectedFormationId(null);
+    setSelectedFormationObj(null);
     setFormationSheets([]);
   };
 
