@@ -1510,7 +1510,6 @@ const ScheduleManagement = () => {
                 <p className="text-xs sm:text-sm text-muted-foreground truncate">
                   {selectedPromotionFormation?.academic_year || 'Gérez les créneaux'}
                 </p>
-                </p>
               </div>
             </div>
 
