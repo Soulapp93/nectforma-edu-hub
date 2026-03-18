@@ -467,7 +467,7 @@ const AttendanceManagement = () => {
         <CardContent>
               {formationSheets.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  Aucune feuille d'émargement pour cette formation
+                  Aucune feuille d'émargement pour cette promotion
                 </div>
               ) : (
                 <Table>
@@ -518,7 +518,6 @@ const AttendanceManagement = () => {
                         </TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()}>
                           <div className="flex gap-2">
-                            {/* Bouton pour envoyer le lien d'émargement en autonomie */}
                             {sheet.session_type === 'autonomie' && sheet.status === 'En attente' && (
                               <Button
                                 variant="outline"
@@ -557,7 +556,6 @@ const AttendanceManagement = () => {
                   </TableBody>
                 </Table>
               )}
-            </div>
         </CardContent>
       </Card>
       )}
