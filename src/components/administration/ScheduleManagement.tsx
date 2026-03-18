@@ -5,9 +5,6 @@ import {
   MapPin,
   User,
   Book,
-  Grid3X3,
-  List,
-  Eye,
   Plus,
   ChevronLeft,
   ChevronRight,
@@ -56,7 +53,7 @@ import AddSlotModal from '@/components/administration/AddSlotModal';
 import EditSlotModal from '@/components/administration/EditSlotModal';
 import SlotActionMenu from '@/components/administration/SlotActionMenu';
 import ExcelImportModal from '@/components/administration/ExcelImportModal';
-import CreateScheduleModal from './CreateScheduleModal';
+
 import { getModuleColor, extractModuleName } from '@/utils/moduleColors';
 import { navigateWeek, getWeekInfo, getWeekDays } from '@/utils/calendarUtils';
 import { formatTimeRange, isAutonomieSlot, getSlotModuleTitle, getSlotInstructorName } from '@/utils/slotDisplay';
@@ -78,14 +75,14 @@ const ScheduleManagement = () => {
   const [selectedPromotionFormation, setSelectedPromotionFormation] = useState<any | null>(null);
 
   // États principaux
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null);
   const [slots, setSlots] = useState<ScheduleSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [scheduleListViewMode, setScheduleListViewMode] = useState<'grid' | 'list'>('grid');
+  
   const [isWeekNavigationOpen, setIsWeekNavigationOpen] = useState(true);
   
   // États pour les modales
@@ -115,6 +112,12 @@ const ScheduleManagement = () => {
     fetchFormations();
   }, []);
 
+  // Filter schedules for selected promotion
+  const promotionSchedules = useMemo(() => {
+    if (!selectedPromotionFormation) return [];
+    return schedules.filter(s => s.formation_id === selectedPromotionFormation.id);
+  }, [schedules, selectedPromotionFormation]);
+
   // Handle promotion selection - find or auto-select schedule
   const handlePromotionSelect = useCallback((formation: any) => {
     setSelectedPromotionFormation(formation);
@@ -125,9 +128,25 @@ const ScheduleManagement = () => {
       setSelectedSchedule(matchingSchedule);
       setViewMode('week');
     } else {
+      // Auto-create schedule if none exists
       setSelectedSchedule(null);
+      const autoCreate = async () => {
+        try {
+          const newSchedule = await scheduleService.createSchedule({
+            formation_id: formation.id,
+            title: `Emploi du temps - ${formation.title} ${formation.academic_year || ''}`.trim(),
+          });
+          refetch();
+          setSelectedSchedule(newSchedule);
+          setViewMode('week');
+          toast.success('Emploi du temps créé automatiquement');
+        } catch (e) {
+          console.error('Auto-création EDT échouée:', e);
+        }
+      };
+      autoCreate();
     }
-  }, [schedules]);
+  }, [schedules, refetch]);
 
   // Handlers pour les boutons principaux - Simplifiés
   const handleOpenAddSlotModal = useCallback(() => {
@@ -221,15 +240,6 @@ const ScheduleManagement = () => {
     fetchScheduleSlots();
   }, [fetchScheduleSlots]);
 
-  const handleCreateSchedule = () => {
-    setIsCreateModalOpen(true);
-  };
-
-  const handleCreateSuccess = () => {
-    refetch();
-    setIsCreateModalOpen(false);
-    toast.success('Emploi du temps créé avec succès');
-  };
 
   const handleDeleteSchedule = async (scheduleId: string, title: string) => {
     if (window.confirm(`Êtes-vous sûr de vouloir supprimer l'emploi du temps "${title}" ?`)) {
@@ -557,8 +567,9 @@ const ScheduleManagement = () => {
     };
   });
 
-  // Schedule detail view with same interface as main schedule
-  if (selectedSchedule && (viewMode === 'day' || viewMode === 'week' || viewMode === 'month' || viewMode === 'list')) {
+  // Render functions for schedule views
+  const renderScheduleViews = () => {
+    if (!selectedSchedule) return null;
     const events = convertSlotsToEvents(slots);
     
     // Render current view function
@@ -1263,38 +1274,66 @@ const ScheduleManagement = () => {
       );
     };
 
+    // Return the view content based on current mode
+    return renderCurrentView();
+  };
+
+  // Hierarchical selector view
+  if (hierarchicalView === 'selector') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
-        {/* Header moderne identique à l'emploi du temps */}
-        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border shadow-sm">
-          <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
-              <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setSelectedSchedule(null);
-                    setIsEditMode(false);
-                    setViewMode('list');
-                    setIsAddSlotModalOpen(false);
-                    setIsEditSlotModalOpen(false);
-                    setIsDetailsModalOpen(false);
-                  }}
-                  className="p-2 hover:bg-primary/10 flex-shrink-0"
-                  size="sm"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25 flex-shrink-0">
-                  <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-foreground truncate">{selectedSchedule.title}</h1>
-                  <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                    {`Semaine du ${weekInfo.start} au ${weekInfo.end}`}
-                  </p>
-                </div>
+      <FormationPromotionSelector
+        formations={allFormations}
+        loading={formationsLoading || loading}
+        icon={Calendar}
+        title="Gestion des emplois du temps"
+        onPromotionSelect={handlePromotionSelect}
+        emptyMessage="Créez des formations pour gérer les emplois du temps."
+      />
+    );
+  }
+
+  // Schedule detail/list view (after promotion selected)
+  // If no schedule yet (auto-creation in progress), show loading
+  if (!selectedSchedule) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <p className="text-muted-foreground">Création de l'emploi du temps...</p>
+          <Button variant="ghost" onClick={() => { setHierarchicalView('selector'); setSelectedPromotionFormation(null); }}>
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Retour
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
+      {/* Header moderne identique */}
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border shadow-sm">
+        <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              <button
+                onClick={() => { setHierarchicalView('selector'); setSelectedSchedule(null); setSelectedPromotionFormation(null); }}
+                className="p-2 hover:bg-muted rounded-xl transition-colors"
+              >
+                <ChevronLeft className="h-5 w-5 text-foreground" />
+              </button>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
+                <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
               </div>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-2xl font-bold text-foreground truncate">
+                  Emploi du temps - {selectedPromotionFormation?.title} {selectedPromotionFormation?.academic_year || ''}
+                </h1>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                  Promotion {selectedPromotionFormation?.academic_year || ''}
+                </p>
+              </div>
+            </div>
 
             <div className="flex items-center gap-2 flex-wrap justify-end">
               {isEditMode ? (
@@ -1309,19 +1348,6 @@ const ScheduleManagement = () => {
                     <Plus className="h-4 w-4 sm:mr-2" />
                     <span className="hidden sm:inline">Ajouter un créneau</span>
                   </Button>
-                  
-                  {selectedSchedule && (
-                    <Button 
-                      onClick={handlePublishSchedule}
-                      disabled={slots.length === 0}
-                      variant="success"
-                      size="sm"
-                      className="shadow-lg hover:shadow-xl transition-all text-xs"
-                    >
-                      <CheckCircle className="h-4 w-4 sm:mr-2" />
-                      <span className="hidden sm:inline">Publier</span>
-                    </Button>
-                  )}
                   
                   <Button 
                     onClick={handleOpenExcelImportModal}
@@ -1359,193 +1385,17 @@ const ScheduleManagement = () => {
             </div>
           </div>
 
-            {/* Navigation et vues identiques */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <WeekNavigator 
-                currentDate={selectedDate}
-                onNavigate={handleNavigate}
-              />
-
-              <ViewModeSelector
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-              />
-            </div>
-
-            {/* Barre de navigation par semaine - Collapsible */}
-            <Collapsible open={isWeekNavigationOpen} onOpenChange={setIsWeekNavigationOpen} className="mt-6">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-muted-foreground">Navigation par semaines</h3>
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    {isWeekNavigationOpen ? (
-                      <ChevronUp className="h-4 w-4" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4" />
-                    )}
-                  </Button>
-                </CollapsibleTrigger>
-              </div>
-              <CollapsibleContent>
-                <WeekNavigation
-                  selectedDate={selectedDate}
-                  onDateChange={setSelectedDate}
-                  onWeekSelect={(weekStartDate) => {
-                    setSelectedDate(weekStartDate);
-                    if (viewMode !== 'week') {
-                      setViewMode('week');
-                    }
-                  }}
-                  className="bg-background/95 backdrop-blur-sm border-border"
-                />
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
-        </div>
-
-        {/* Contenu principal */}
-        {renderCurrentView()}
-
-        {/* Modals - toujours montées pour éviter les problèmes d'ouverture */}
-        <AddSlotModal
-          isOpen={isAddSlotModalOpen}
-          onClose={() => setIsAddSlotModalOpen(false)}
-          onSuccess={handleSlotAdded}
-          scheduleId={selectedSchedule?.id || ''}
-          formationId={selectedSchedule?.formation_id || ''}
-          selectedSlot={selectedSlot}
-        />
-
-        <EditSlotModal
-          isOpen={isEditSlotModalOpen}
-          onClose={() => setIsEditSlotModalOpen(false)}
-          onSuccess={handleSlotEdited}
-          formationId={selectedSchedule?.formation_id || ''}
-          slot={slotToEdit}
-        />
-
-        <ExcelImportModal
-          isOpen={isExcelImportModalOpen}
-          onClose={() => setIsExcelImportModalOpen(false)}
-          onSuccess={handleExcelImportSuccess}
-          scheduleId={selectedSchedule?.id || ''}
-          formationId={selectedSchedule?.formation_id || ''}
-        />
-
-        <EventDetailsModal
-          event={detailsEvent}
-          isOpen={isDetailsModalOpen}
-          onClose={() => setIsDetailsModalOpen(false)}
-          onEdit={isEditMode ? (event) => {
-            const slot = slots.find(s => s.id === event.id);
-            if (slot) {
-              handleEditSlot(slot);
-            }
-          } : undefined}
-          onDelete={isEditMode ? (eventId) => {
-            const slot = slots.find(s => s.id === eventId);
-            if (slot) {
-              handleDeleteSlot(slot);
-            }
-          } : undefined}
-          canEdit={isEditMode}
-        />
-      </div>
-    );
-  }
-
-  // Hierarchical selector view
-  if (hierarchicalView === 'selector') {
-    return (
-      <>
-        <FormationPromotionSelector
-          formations={allFormations}
-          loading={formationsLoading || loading}
-          icon={Calendar}
-          title="Gestion des emplois du temps"
-          onPromotionSelect={handlePromotionSelect}
-          emptyMessage="Créez des formations pour gérer les emplois du temps."
-          headerActions={
-            <Button 
-              onClick={handleCreateSchedule}
-              className="bg-primary hover:bg-primary/90 shadow-md text-xs sm:text-sm"
-              size="sm"
-            >
-              <Plus className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Créer un emploi du temps</span>
-              <span className="sm:hidden">Créer</span>
-            </Button>
-          }
-        />
-        <CreateScheduleModal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          onSuccess={handleCreateSuccess}
-        />
-      </>
-    );
-  }
-
-  // Schedule detail/list view (after promotion selected)
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
-      {/* Header moderne identique */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border shadow-sm">
-        <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
-            <div className="flex items-center space-x-3 sm:space-x-4">
-              <button
-                onClick={() => { setHierarchicalView('selector'); setSelectedSchedule(null); setSelectedPromotionFormation(null); }}
-                className="p-2 hover:bg-muted rounded-xl transition-colors"
-              >
-                <ChevronLeft className="h-5 w-5 text-foreground" />
-              </button>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
-                <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
-              </div>
-              <div className="min-w-0">
-                <h1 className="text-lg sm:text-3xl font-bold text-foreground truncate">
-                  {selectedPromotionFormation?.title || 'Emploi du temps'}
-                </h1>
-                <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                  {selectedPromotionFormation?.academic_year || 'Gérez les créneaux'}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button 
-                onClick={handleCreateSchedule}
-                className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all hover:scale-105 text-xs sm:text-sm"
-                size="sm"
-              >
-                <Plus className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Créer un emploi du temps</span>
-                <span className="sm:hidden">Créer</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Navigation et vues identiques à l'emploi du temps */}
+          {/* Navigation et vues */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <WeekNavigator 
               currentDate={selectedDate}
               onNavigate={handleNavigate}
             />
 
-            <div className="flex items-center space-x-2 justify-end">
-              {/* Toggle vue liste/cartes */}
-              <Tabs value={scheduleListViewMode} onValueChange={(value) => setScheduleListViewMode(value as 'grid' | 'list')} className="w-auto">
-                <TabsList>
-                  <TabsTrigger value="grid" className="px-3">
-                    <Grid3X3 className="h-4 w-4" />
-                  </TabsTrigger>
-                  <TabsTrigger value="list" className="px-3">
-                    <List className="h-4 w-4" />
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
+            <ViewModeSelector
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+            />
           </div>
 
           {/* Barre de navigation par semaine - Collapsible */}
@@ -1566,6 +1416,12 @@ const ScheduleManagement = () => {
               <WeekNavigation
                 selectedDate={selectedDate}
                 onDateChange={setSelectedDate}
+                onWeekSelect={(weekStartDate) => {
+                  setSelectedDate(weekStartDate);
+                  if (viewMode !== 'week') {
+                    setViewMode('week');
+                  }
+                }}
                 className="bg-background/95 backdrop-blur-sm border-border"
               />
             </CollapsibleContent>
@@ -1573,159 +1429,16 @@ const ScheduleManagement = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-3 sm:px-6 py-4 sm:py-8">
-        {schedules.length === 0 ? (
-          <Card className="border-dashed border-2 border-border/50 bg-card/30">
-            <CardContent className="flex flex-col items-center justify-center py-8 sm:py-16 px-4">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                <Calendar className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">
-                Aucun emploi du temps
-              </h3>
-              <p className="text-muted-foreground text-center mb-6 max-w-md">
-                Commencez par créer votre premier emploi du temps pour organiser les cours et formations.
-              </p>
-              <Button onClick={handleCreateSchedule} className="bg-primary hover:bg-primary/90">
-                <Plus className="h-4 w-4 mr-2" />
-                Créer un emploi du temps
-              </Button>
-            </CardContent>
-          </Card>
-        ) : scheduleListViewMode === 'grid' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
-            {schedules.map((schedule) => (
-              <Card
-                key={schedule.id}
-                className={`overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-border/50 bg-card shadow-md hover:shadow-primary/10 cursor-pointer`}
-                onClick={() => handleViewSchedule(schedule.id)}
-              >
-                <CardHeader className="pb-3 p-3 sm:p-6 sm:pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="min-w-0 flex-1">
-                      <CardTitle className="text-sm sm:text-lg font-bold text-foreground truncate">
-                        {schedule.title}
-                      </CardTitle>
-                      <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1">
-                        <Badge variant="secondary" className="text-[10px] sm:text-xs bg-primary/10 text-primary border-primary/20 truncate max-w-[120px] sm:max-w-none">
-                          {schedule.formations?.title || 'Formation'}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                </CardHeader>
+      {/* Contenu principal - vue calendrier directe */}
+      {slotsLoading ? (
+        <div className="flex items-center justify-center py-16">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      ) : (
+        renderScheduleViews()
+      )}
 
-                <CardContent className="space-y-3 p-3 sm:p-6 pt-0">
-                  <div className="space-y-1">
-                    <div className="flex items-center text-[10px] sm:text-xs text-muted-foreground">
-                      <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
-                      <span>{new Date(schedule.created_at).toLocaleDateString('fr-FR')}</span>
-                    </div>
-                  </div>
-                  
-                  {/* Actions admin */}
-                  <div className="flex items-center gap-1 pt-2 border-t border-border/50">
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewSchedule(schedule.id);
-                      }}
-                      className="flex-1 text-[10px] sm:text-xs h-7 sm:h-8"
-                    >
-                      <Eye className="h-3 w-3 mr-1" />
-                      <span className="hidden sm:inline">Consulter</span>
-                      <span className="sm:hidden">Voir</span>
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteSchedule(schedule.id, schedule.title);
-                      }}
-                      className="text-[10px] sm:text-xs text-destructive hover:text-destructive h-7 sm:h-8 px-2"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-3 sm:space-y-4">
-            {schedules.map((schedule) => (
-              <Card
-                key={schedule.id}
-                className="overflow-hidden transition-all duration-200 hover:shadow-lg border-border/50 bg-card shadow-sm hover:shadow-primary/10 cursor-pointer"
-                onClick={() => handleViewSchedule(schedule.id)}
-              >
-                <CardContent className="p-3 sm:p-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-sm sm:text-lg font-bold text-foreground truncate">
-                            {schedule.title}
-                          </h3>
-                          <Badge variant="secondary" className="text-[10px] sm:text-xs bg-primary/10 text-primary border-primary/20 truncate max-w-[100px] sm:max-w-none">
-                            {schedule.formations?.title || 'Formation'}
-                          </Badge>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-1 sm:mt-2">
-                          <div className="flex items-center text-[10px] sm:text-sm text-muted-foreground">
-                            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1 flex-shrink-0" />
-                            <span>{new Date(schedule.created_at).toLocaleDateString('fr-FR')}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 justify-end">
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewSchedule(schedule.id);
-                        }}
-                        className="text-xs sm:text-sm h-8"
-                      >
-                        <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                        <span className="hidden sm:inline">Consulter</span>
-                        <span className="sm:hidden">Voir</span>
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="ghost"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteSchedule(schedule.id, schedule.title);
-                        }}
-                        className="text-destructive hover:text-destructive h-8 px-2"
-                      >
-                        <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Modals - Gestion simplifiée */}
-      <CreateScheduleModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={handleCreateSuccess}
-      />
-
+      {/* Modals */}
       <AddSlotModal
         isOpen={isAddSlotModalOpen}
         onClose={() => setIsAddSlotModalOpen(false)}
@@ -1756,7 +1469,6 @@ const ScheduleManagement = () => {
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
         onEdit={isEditMode ? (event) => {
-          // Trouver le slot correspondant pour l'éditer
           const slot = slots.find(s => s.id === event.id);
           if (slot) {
             handleEditSlot(slot);
