@@ -209,7 +209,8 @@ const SuiviEmargement = () => {
                 user_type,
                 signed_at,
                 present,
-                absence_reason
+                absence_reason,
+                delay_minutes
               )
             `)
             .in('formation_id', formationIds)
