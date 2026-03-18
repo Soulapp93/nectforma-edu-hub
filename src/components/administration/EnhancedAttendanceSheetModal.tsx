@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Edit, Download, CheckCircle2, CheckCircle, XCircle, Clock, Building, UserX, ToggleLeft, ToggleRight, PenTool } from 'lucide-react';
+import { X, Edit, Download, CheckCircle2, CheckCircle, XCircle, Clock, Building, UserX, ToggleLeft, ToggleRight, PenTool, Timer } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -35,6 +35,7 @@ interface Student {
     present: boolean;
     absence_reason?: string;
     absence_reason_type?: string;
+    delay_minutes?: number;
     created_at: string;
     updated_at: string;
     users?: {
@@ -447,11 +448,12 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
             
             {/* En-tête du tableau */}
             <div 
-              className={`grid gap-4 p-3 text-white font-medium text-sm rounded-t-lg ${attendanceSheet.status !== 'Validé' ? 'grid-cols-5' : 'grid-cols-4'}`}
+              className={`grid gap-4 p-3 text-white font-medium text-sm rounded-t-lg ${attendanceSheet.status !== 'Validé' ? 'grid-cols-6' : 'grid-cols-5'}`}
               style={{ backgroundColor: formationColor }}
             >
               <div className="col-span-2">Nom et Prénom</div>
               <div className="text-center">Statut</div>
+              <div className="text-center">Retard</div>
               <div className="text-center">Signature</div>
               {attendanceSheet.status !== 'Validé' && (
                 <div className="text-center">Actions</div>
@@ -462,10 +464,11 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
             <div className="border border-gray-200 rounded-b-lg">
               {students.map((student, index) => {
                 const statusInfo = getStatusInfo(student);
+                const currentDelay = student.signature?.delay_minutes || 0;
                 return (
                   <div 
                     key={student.id}
-                    className={`grid gap-4 p-3 border-b border-gray-200 last:border-b-0 ${attendanceSheet.status !== 'Validé' ? 'grid-cols-5' : 'grid-cols-4'} ${
+                    className={`grid gap-4 p-3 border-b border-gray-200 last:border-b-0 ${attendanceSheet.status !== 'Validé' ? 'grid-cols-6' : 'grid-cols-5'} ${
                       index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
                     }`}
                   >
@@ -488,6 +491,52 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
                           {statusInfo.status}
                         </span>
                       </div>
+                    </div>
+                    {/* Colonne Retard */}
+                    <div className="flex items-center justify-center">
+                      {student.signature?.present ? (
+                        attendanceSheet.status !== 'Validé' ? (
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              min="0"
+                              max="999"
+                              value={currentDelay}
+                              onChange={async (e) => {
+                                const minutes = Math.max(0, parseInt(e.target.value) || 0);
+                                if (!student.signature?.id) return;
+                                try {
+                                  await supabase
+                                    .from('attendance_signatures')
+                                    .update({ delay_minutes: minutes })
+                                    .eq('id', student.signature.id);
+                                  // Update local state
+                                  setStudents(prev => prev.map(s => 
+                                    s.id === student.id && s.signature
+                                      ? { ...s, signature: { ...s.signature, delay_minutes: minutes } }
+                                      : s
+                                  ));
+                                } catch (err) {
+                                  console.error('Error updating delay:', err);
+                                }
+                              }}
+                              className="w-16 h-8 text-center text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            />
+                            <span className="text-xs text-gray-500">min</span>
+                          </div>
+                        ) : (
+                          currentDelay > 0 ? (
+                            <div className="flex items-center gap-1 text-amber-600">
+                              <Timer className="h-3 w-3" />
+                              <span className="text-xs font-medium">{currentDelay} min</span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">—</span>
+                          )
+                        )
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
                     </div>
                     <div className="flex items-center justify-center">
                       {student.signature && student.signature.present ? (

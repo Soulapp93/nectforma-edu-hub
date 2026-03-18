@@ -485,6 +485,7 @@ export type Database = {
           absence_reason_type: string | null
           attendance_sheet_id: string
           created_at: string
+          delay_minutes: number | null
           id: string
           present: boolean
           signature_data: string | null
@@ -498,6 +499,7 @@ export type Database = {
           absence_reason_type?: string | null
           attendance_sheet_id: string
           created_at?: string
+          delay_minutes?: number | null
           id?: string
           present?: boolean
           signature_data?: string | null
@@ -511,6 +513,7 @@ export type Database = {
           absence_reason_type?: string | null
           attendance_sheet_id?: string
           created_at?: string
+          delay_minutes?: number | null
           id?: string
           present?: boolean
           signature_data?: string | null

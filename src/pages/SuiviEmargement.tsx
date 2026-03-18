@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, User, CheckCircle, XCircle, AlertCircle, Filter, Search, ClipboardCheck, CalendarIcon } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, CheckCircle, XCircle, AlertCircle, Filter, Search, ClipboardCheck, CalendarIcon, Timer } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,7 @@ interface AttendanceRecord {
   signed_at?: string;
   absence_reason?: string;
   instructor_name?: string;
+  delay_minutes?: number;
 }
 
 const SuiviEmargement = () => {
@@ -208,7 +209,8 @@ const SuiviEmargement = () => {
                 user_type,
                 signed_at,
                 present,
-                absence_reason
+                absence_reason,
+                delay_minutes
               )
             `)
             .in('formation_id', formationIds)
@@ -234,7 +236,8 @@ const SuiviEmargement = () => {
                 status: userSignature?.present ? 'Présent' : (userSignature ? 'Absent' : 'Non signé') as any,
                 signed_at: userSignature?.signed_at,
                 absence_reason: userSignature?.absence_reason || undefined,
-                instructor_name: instructor ? `${instructor.first_name} ${instructor.last_name}` : 'N/A'
+                instructor_name: instructor ? `${instructor.first_name} ${instructor.last_name}` : 'N/A',
+                delay_minutes: (userSignature as any)?.delay_minutes || 0
               };
             });
           }
@@ -289,8 +292,19 @@ const SuiviEmargement = () => {
     const present = filteredRecords.filter(r => r.status === 'Présent').length;
     const absent = filteredRecords.filter(r => r.status === 'Absent').length;
     const unsigned = filteredRecords.filter(r => r.status === 'Non signé').length;
+    const totalDelayMinutes = filteredRecords.reduce((sum, r) => sum + (r.delay_minutes || 0), 0);
+    const delayCount = filteredRecords.filter(r => (r.delay_minutes || 0) > 0).length;
     
     const attendanceRate = total > 0 ? (present / total * 100).toFixed(1) : '0';
+
+    const formatDelay = (minutes: number) => {
+      if (minutes >= 60) {
+        const h = Math.floor(minutes / 60);
+        const m = minutes % 60;
+        return m > 0 ? `${h}h${m}min` : `${h}h`;
+      }
+      return `${minutes} min`;
+    };
 
     return [
       {
@@ -313,6 +327,13 @@ const SuiviEmargement = () => {
         description: 'Cours manqués',
         icon: XCircle,
         color: 'text-red-600'
+      },
+      {
+        title: 'Retards',
+        value: delayCount > 0 ? `${delayCount} (${formatDelay(totalDelayMinutes)})` : '0',
+        description: `Total cumulé de retard`,
+        icon: Timer,
+        color: 'text-amber-600'
       }
     ];
   };
@@ -402,7 +423,7 @@ const SuiviEmargement = () => {
       </div>
 
       {/* Statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {getStatsCards().map((stat, index) => {
           const Icon = stat.icon;
           return (
@@ -562,6 +583,7 @@ const SuiviEmargement = () => {
                   <TableHead>Salle</TableHead>
                   <TableHead>Formateur</TableHead>
                   <TableHead>Statut</TableHead>
+                  <TableHead>Retard</TableHead>
                   <TableHead>Observations</TableHead>
                 </TableRow>
               </TableHeader>
@@ -602,6 +624,16 @@ const SuiviEmargement = () => {
                     </TableCell>
                     <TableCell>
                       {getStatusBadge(record.status)}
+                    </TableCell>
+                    <TableCell>
+                      {(record.delay_minutes || 0) > 0 ? (
+                        <div className="flex items-center gap-1 text-amber-600">
+                          <Timer className="h-3 w-3" />
+                          <span className="text-sm font-medium">{record.delay_minutes} min</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       {record.absence_reason && (
