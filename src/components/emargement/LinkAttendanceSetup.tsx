@@ -233,8 +233,8 @@ const LinkAttendanceSetup: React.FC<LinkAttendanceSetupProps> = ({
                 <CardContent className="p-3 flex items-center gap-3">
                   <Checkbox
                     checked={isAbsent}
-                    onCheckedChange={() => toggleAbsent(student.id)}
-                    onClick={(e) => e.stopPropagation()}
+                    onCheckedChange={() => {}}
+                    className="pointer-events-none"
                   />
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary shrink-0">
                     {student.first_name[0]}
