@@ -35,6 +35,7 @@ interface Student {
     present: boolean;
     absence_reason?: string;
     absence_reason_type?: string;
+    delay_minutes?: number;
     created_at: string;
     updated_at: string;
     users?: {
