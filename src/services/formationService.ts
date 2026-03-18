@@ -232,7 +232,7 @@ export const formationService = {
       const { scheduleService } = await import('./scheduleService');
       await scheduleService.createSchedule({
         formation_id: newFormation.id,
-        title: `EDT - ${newFormation.title} ${newAcademicYear}`,
+        title: `Emploi du temps - ${newFormation.title} ${newAcademicYear}`,
       });
     } catch (e) {
       console.warn('Auto-création emploi du temps échouée:', e);
