@@ -1454,7 +1454,39 @@ const ScheduleManagement = () => {
     );
   }
 
-  // List view (default) - Interface identique à l'emploi du temps principal
+  // Hierarchical selector view
+  if (hierarchicalView === 'selector') {
+    return (
+      <>
+        <FormationPromotionSelector
+          formations={allFormations}
+          loading={formationsLoading || loading}
+          icon={Calendar}
+          title="Gestion des emplois du temps"
+          onPromotionSelect={handlePromotionSelect}
+          emptyMessage="Créez des formations pour gérer les emplois du temps."
+          headerActions={
+            <Button 
+              onClick={handleCreateSchedule}
+              className="bg-primary hover:bg-primary/90 shadow-md text-xs sm:text-sm"
+              size="sm"
+            >
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Créer un emploi du temps</span>
+              <span className="sm:hidden">Créer</span>
+            </Button>
+          }
+        />
+        <CreateScheduleModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSuccess={handleCreateSuccess}
+        />
+      </>
+    );
+  }
+
+  // Schedule detail/list view (after promotion selected)
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
       {/* Header moderne identique */}
