@@ -85,7 +85,7 @@ const ScheduleManagement = () => {
   const [slots, setSlots] = useState<ScheduleSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [scheduleListViewMode, setScheduleListViewMode] = useState<'grid' | 'list'>('grid');
+  
   const [isWeekNavigationOpen, setIsWeekNavigationOpen] = useState(true);
   
   // États pour les modales
