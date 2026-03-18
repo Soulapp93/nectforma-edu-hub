@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, User, Mail, Building, Users, UserCheck, Phone, MapPin, FileText } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { X, User, Mail, Building, Users, UserCheck, Phone, MapPin, FileText, ArrowLeft, Calendar, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,10 +8,129 @@ import { User as UserType, CreateUserData } from '@/services/userService';
 import { Formation, formationService } from '@/services/formationService';
 import { tutorService, CreateTutorData } from '@/services/tutorService';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
 import { supabase } from '@/integrations/supabase/client';
+
+// Sub-component: Formation → Promotion enrollment with hierarchical navigation
+const FormationPromotionEnrollment: React.FC<{
+  formations: Formation[];
+  loadingFormations: boolean;
+  selectedFormations: string[];
+  onFormationToggle: (formationId: string, checked: boolean) => void;
+}> = ({ formations, loadingFormations, selectedFormations, onFormationToggle }) => {
+  const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
+
+  const formationGroups = useMemo(() => {
+    const groups: Record<string, Formation[]> = {};
+    formations.forEach(f => {
+      const name = f.title;
+      if (!groups[name]) groups[name] = [];
+      groups[name].push(f);
+    });
+    Object.values(groups).forEach(group => {
+      group.sort((a, b) => ((b as any).academic_year || '').localeCompare((a as any).academic_year || ''));
+    });
+    return groups;
+  }, [formations]);
+
+  const programNames = useMemo(() => Object.keys(formationGroups).sort(), [formationGroups]);
+
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
+        <Users className="h-5 w-5 text-primary" />
+        Inscription aux formations
+      </h3>
+
+      {loadingFormations ? (
+        <div className="text-center py-4">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
+          <p className="text-sm text-muted-foreground mt-2">Chargement des formations...</p>
+        </div>
+      ) : formations.length > 0 ? (
+        <div className="border border-border rounded-lg overflow-hidden">
+          {selectedProgram ? (
+            // Promotions view
+            <div>
+              <div className="flex items-center gap-2 p-3 bg-muted/50 border-b border-border">
+                <button onClick={() => setSelectedProgram(null)} className="p-1 hover:bg-muted rounded-lg transition-colors">
+                  <ArrowLeft className="h-4 w-4 text-foreground" />
+                </button>
+                <span className="text-sm font-medium text-foreground">{selectedProgram}</span>
+                <Badge variant="outline" className="text-[10px] ml-auto">
+                  {formationGroups[selectedProgram]?.length || 0} promotion(s)
+                </Badge>
+              </div>
+              <div className="max-h-60 overflow-y-auto p-3 space-y-2">
+                {(formationGroups[selectedProgram] || []).map((formation) => (
+                  <div key={formation.id} className="flex items-center space-x-2 p-2 rounded-lg hover:bg-muted/50">
+                    <Checkbox
+                      id={`formation-${formation.id}`}
+                      checked={selectedFormations.includes(formation.id)}
+                      onCheckedChange={(checked) => onFormationToggle(formation.id, checked as boolean)}
+                    />
+                    <Label htmlFor={`formation-${formation.id}`} className="text-sm font-normal cursor-pointer flex-1">
+                      <div>
+                        <div className="font-medium flex items-center gap-2">
+                          {(formation as any).academic_year && (
+                            <Badge className="bg-primary/10 text-primary text-[10px] px-1.5 py-0">
+                              {(formation as any).academic_year}
+                            </Badge>
+                          )}
+                          {formation.level}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Du {new Date(formation.start_date).toLocaleDateString('fr-FR')} au {new Date(formation.end_date).toLocaleDateString('fr-FR')}
+                        </div>
+                      </div>
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            // Programs view
+            <div className="max-h-60 overflow-y-auto p-3 space-y-2">
+              {programNames.map((name) => {
+                const group = formationGroups[name];
+                const selectedCount = group.filter(f => selectedFormations.includes(f.id)).length;
+                return (
+                  <div
+                    key={name}
+                    onClick={() => setSelectedProgram(name)}
+                    className="flex items-center justify-between p-2.5 rounded-lg hover:bg-muted/50 cursor-pointer group transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm text-foreground truncate">{name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {group.length} promotion{group.length > 1 ? 's' : ''}
+                        {selectedCount > 0 && (
+                          <span className="text-primary ml-2">• {selectedCount} sélectionnée{selectedCount > 1 ? 's' : ''}</span>
+                        )}
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">Aucune formation disponible</p>
+      )}
+
+      {selectedFormations.length > 0 && (
+        <p className="text-sm text-green-600">
+          {selectedFormations.length} promotion{selectedFormations.length > 1 ? 's' : ''} sélectionnée{selectedFormations.length > 1 ? 's' : ''}
+        </p>
+      )}
+    </div>
+  );
+};
 
 interface SimplifiedUserModalProps {
   isOpen: boolean;
