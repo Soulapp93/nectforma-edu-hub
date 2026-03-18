@@ -1491,6 +1491,22 @@ const ScheduleManagement = () => {
   }
 
   // Schedule detail/list view (after promotion selected)
+  // If no schedule yet (auto-creation in progress), show loading
+  if (!selectedSchedule) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <p className="text-muted-foreground">Création de l'emploi du temps...</p>
+          <Button variant="ghost" onClick={() => { setHierarchicalView('selector'); setSelectedPromotionFormation(null); }}>
+            <ChevronLeft className="h-4 w-4 mr-2" />
+            Retour
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10">
       {/* Header moderne identique */}
@@ -1508,25 +1524,62 @@ const ScheduleManagement = () => {
                 <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-3xl font-bold text-foreground truncate">
-                  {selectedPromotionFormation?.title || 'Emploi du temps'}
+                <h1 className="text-lg sm:text-2xl font-bold text-foreground truncate">
+                  Emploi du temps - {selectedPromotionFormation?.title} {selectedPromotionFormation?.academic_year || ''}
                 </h1>
                 <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                  {selectedPromotionFormation?.academic_year || 'Gérez les créneaux'}
+                  Promotion {selectedPromotionFormation?.academic_year || ''}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Button 
-                onClick={handleCreateSchedule}
-                className="bg-primary hover:bg-primary/90 shadow-md hover:shadow-lg transition-all hover:scale-105 text-xs sm:text-sm"
-                size="sm"
-              >
-                <Plus className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Créer un emploi du temps</span>
-                <span className="sm:hidden">Créer</span>
-              </Button>
+            <div className="flex items-center gap-2 flex-wrap justify-end">
+              {isEditMode ? (
+                <>
+                  <Button 
+                    onClick={handleOpenAddSlotModal}
+                    disabled={!selectedSchedule?.id}
+                    variant="premium"
+                    size="sm"
+                    className="shadow-lg hover:shadow-xl transition-all text-xs"
+                  >
+                    <Plus className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Ajouter un créneau</span>
+                  </Button>
+                  
+                  <Button 
+                    onClick={handleOpenExcelImportModal}
+                    disabled={!selectedSchedule?.id}
+                    variant="elegant"
+                    size="sm"
+                    className="shadow-md hover:shadow-lg transition-all text-xs"
+                  >
+                    <Upload className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Import Excel</span>
+                  </Button>
+
+                  <Button 
+                    onClick={handleSaveModifications}
+                    variant="success"
+                    size="sm"
+                    className="shadow-lg hover:shadow-xl transition-all text-xs"
+                  >
+                    <CheckCircle className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Enregistrer</span>
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  onClick={() => setIsEditMode(true)}
+                  variant="premium"
+                  size="sm"
+                  className="shadow-lg hover:shadow-xl transition-all text-xs"
+                >
+                  <Edit className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Modifier l'emploi du temps</span>
+                  <span className="sm:hidden">Modifier</span>
+                </Button>
+              )}
             </div>
           </div>
 
