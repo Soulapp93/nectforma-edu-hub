@@ -1,0 +1,1 @@
+ALTER TABLE public.attendance_signatures ADD COLUMN delay_minutes integer DEFAULT 0;
