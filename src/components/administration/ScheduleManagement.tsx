@@ -115,6 +115,12 @@ const ScheduleManagement = () => {
     fetchFormations();
   }, []);
 
+  // Filter schedules for selected promotion
+  const promotionSchedules = useMemo(() => {
+    if (!selectedPromotionFormation) return [];
+    return schedules.filter(s => s.formation_id === selectedPromotionFormation.id);
+  }, [schedules, selectedPromotionFormation]);
+
   // Handle promotion selection - find or auto-select schedule
   const handlePromotionSelect = useCallback((formation: any) => {
     setSelectedPromotionFormation(formation);
@@ -125,9 +131,25 @@ const ScheduleManagement = () => {
       setSelectedSchedule(matchingSchedule);
       setViewMode('week');
     } else {
+      // Auto-create schedule if none exists
       setSelectedSchedule(null);
+      const autoCreate = async () => {
+        try {
+          const newSchedule = await scheduleService.createSchedule({
+            formation_id: formation.id,
+            title: `Emploi du temps - ${formation.title} ${formation.academic_year || ''}`.trim(),
+          });
+          refetch();
+          setSelectedSchedule(newSchedule);
+          setViewMode('week');
+          toast.success('Emploi du temps créé automatiquement');
+        } catch (e) {
+          console.error('Auto-création EDT échouée:', e);
+        }
+      };
+      autoCreate();
     }
-  }, [schedules]);
+  }, [schedules, refetch]);
 
   // Handlers pour les boutons principaux - Simplifiés
   const handleOpenAddSlotModal = useCallback(() => {
