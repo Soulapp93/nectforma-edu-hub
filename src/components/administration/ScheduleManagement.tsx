@@ -1475,7 +1475,21 @@ const ScheduleManagement = () => {
         />
       </div>
     );
-  }
+  };
+
+  // Extract renderCurrentView from the closure
+  const renderCurrentView = () => {
+    if (!selectedSchedule) return null;
+    switch (viewMode) {
+      case 'day':
+      case 'week':
+      case 'month':
+      case 'list':
+        return renderScheduleViews();
+      default:
+        return renderScheduleViews();
+    }
+  };
 
   // Hierarchical selector view
   if (hierarchicalView === 'selector') {
