@@ -190,7 +190,7 @@ const FormationPromotionSelector: React.FC<FormationPromotionSelectorProps> = ({
         <>
           {filteredPrograms.length === 0 ? (
             <EmptyState
-              icon={Icon}
+              icon={Icon as any}
               title="Aucune formation"
               description={emptyMessage}
             />
