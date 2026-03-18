@@ -162,17 +162,21 @@ const LinkAttendanceSetup: React.FC<LinkAttendanceSetupProps> = ({
         student_id: student.id,
       }));
 
-      const { data: insertedLinks, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from('attendance_student_links' as any)
-        .insert(linksToInsert)
-        .select('id, token, student_id');
+        .insert(linksToInsert);
 
       if (insertError) throw insertError;
 
-      for (const link of (insertedLinks as any[]) || []) {
-        const student = presentStudents.find((presentStudent) => presentStudent.id === link.student_id);
-        if (!student) continue;
+      const { data: createdLinks, error: createdLinksError } = await supabase
+        .from('attendance_student_links' as any)
+        .select('token, student_id')
+        .eq('attendance_sheet_id', sheetId)
+        .in('student_id', presentStudents.map((student) => student.id));
 
+      if (createdLinksError) throw createdLinksError;
+
+      for (const link of (createdLinks as any[]) || []) {
         await supabase.from('notifications').insert({
           user_id: link.student_id,
           title: 'Lien d\'émargement disponible',
