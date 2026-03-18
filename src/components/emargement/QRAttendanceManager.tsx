@@ -40,6 +40,7 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
   const [showQRModal, setShowQRModal] = useState(false);
   const [showInstructorSignModal, setShowInstructorSignModal] = useState(false);
   const [showAttendanceSheet, setShowAttendanceSheet] = useState(false);
+  const [showLinkSetup, setShowLinkSetup] = useState(false);
   const [sendingToAdmin, setSendingToAdmin] = useState(false);
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
