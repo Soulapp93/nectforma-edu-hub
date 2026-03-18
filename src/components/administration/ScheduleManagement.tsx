@@ -240,15 +240,6 @@ const ScheduleManagement = () => {
     fetchScheduleSlots();
   }, [fetchScheduleSlots]);
 
-  const handleCreateSchedule = () => {
-    setIsCreateModalOpen(true);
-  };
-
-  const handleCreateSuccess = () => {
-    refetch();
-    setIsCreateModalOpen(false);
-    toast.success('Emploi du temps créé avec succès');
-  };
 
   const handleDeleteSchedule = async (scheduleId: string, title: string) => {
     if (window.confirm(`Êtes-vous sûr de vouloir supprimer l'emploi du temps "${title}" ?`)) {
