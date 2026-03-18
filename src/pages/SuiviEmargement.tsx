@@ -628,6 +628,23 @@ const SuiviEmargement = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Link attendance signing modal */}
+      {linkToken && (
+        <LinkAttendanceSigning
+          isOpen={!!linkToken}
+          onClose={() => {
+            setLinkToken(null);
+            searchParams.delete('link_token');
+            setSearchParams(searchParams);
+            loadAttendanceHistory();
+          }}
+          linkToken={linkToken}
+          onSigned={() => {
+            loadAttendanceHistory();
+          }}
+        />
+      )}
     </div>
   );
 };
