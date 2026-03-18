@@ -217,6 +217,27 @@ export const formationService = {
       }
     }
 
+    // Auto-create textbook and schedule for the new promotion
+    try {
+      const { textBookService } = await import('./textBookService');
+      await textBookService.createTextBook({
+        formation_id: newFormation.id,
+        title: `Cahier de texte - ${newFormation.title} ${newAcademicYear}`,
+      });
+    } catch (e) {
+      console.warn('Auto-création cahier de texte échouée:', e);
+    }
+
+    try {
+      const { scheduleService } = await import('./scheduleService');
+      await scheduleService.createSchedule({
+        formation_id: newFormation.id,
+        title: `EDT - ${newFormation.title} ${newAcademicYear}`,
+      });
+    } catch (e) {
+      console.warn('Auto-création emploi du temps échouée:', e);
+    }
+
     return newFormation;
   },
 

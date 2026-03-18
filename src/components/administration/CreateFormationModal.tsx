@@ -164,6 +164,27 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         }
       }
 
+      // Auto-create textbook and schedule for the new formation
+      try {
+        const { textBookService } = await import('@/services/textBookService');
+        await textBookService.createTextBook({
+          formation_id: formation.id,
+          title: `Cahier de texte - ${formData.title} ${formData.academic_year}`,
+        });
+      } catch (e) {
+        console.warn('Auto-création cahier de texte échouée:', e);
+      }
+
+      try {
+        const { scheduleService } = await import('@/services/scheduleService');
+        await scheduleService.createSchedule({
+          formation_id: formation.id,
+          title: `EDT - ${formData.title} ${formData.academic_year}`,
+        });
+      } catch (e) {
+        console.warn('Auto-création emploi du temps échouée:', e);
+      }
+
       onSuccess();
       onClose();
       
