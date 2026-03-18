@@ -235,8 +235,8 @@ const LinkAttendanceSigning: React.FC<LinkAttendanceSigningProps> = ({
               </p>
               <SignaturePad
                 onSave={handleSign}
-                initialData={savedSignature || undefined}
-                disabled={signing}
+                onCancel={onClose}
+                initialSignature={savedSignature || undefined}
               />
             </div>
           </div>
