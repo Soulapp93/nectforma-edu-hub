@@ -579,8 +579,9 @@ const ScheduleManagement = () => {
     };
   });
 
-  // Schedule detail view with same interface as main schedule
-  if (selectedSchedule && (viewMode === 'day' || viewMode === 'week' || viewMode === 'month' || viewMode === 'list')) {
+  // Render functions for schedule views
+  const renderScheduleViews = () => {
+    if (!selectedSchedule) return null;
     const events = convertSlotsToEvents(slots);
     
     // Render current view function
