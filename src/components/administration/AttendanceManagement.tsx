@@ -558,9 +558,9 @@ const AttendanceManagement = () => {
                 </Table>
               )}
             </div>
-          )}
         </CardContent>
       </Card>
+      )}
 
       {/* Modals */}
       {selectedSheet && showSheetModal && (
