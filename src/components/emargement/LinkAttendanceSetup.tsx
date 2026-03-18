@@ -50,7 +50,18 @@ const LinkAttendanceSetup: React.FC<LinkAttendanceSetupProps> = ({
         formation_id_param: formationId,
       });
       if (error) throw error;
-      setStudents(data || []);
+
+      const normalizedStudents: Student[] = (data || [])
+        .map((student: any) => ({
+          id: student.user_id,
+          first_name: student.first_name,
+          last_name: student.last_name,
+          email: student.email,
+          profile_photo_url: student.profile_photo_url,
+        }))
+        .filter((student: Student) => Boolean(student.id));
+
+      setStudents(normalizedStudents);
     } catch (error) {
       console.error('Error loading students:', error);
       toast.error('Erreur lors du chargement des étudiants');
@@ -72,7 +83,8 @@ const LinkAttendanceSetup: React.FC<LinkAttendanceSetupProps> = ({
   };
 
   const handleSendLinks = async () => {
-    const presentStudents = students.filter((s) => !absentStudentIds.has(s.id));
+    const presentStudents = students.filter((student) => !absentStudentIds.has(student.id));
+    const absentStudents = students.filter((student) => absentStudentIds.has(student.id));
 
     if (presentStudents.length === 0) {
       toast.error('Aucun étudiant présent pour envoyer les liens');
@@ -83,15 +95,32 @@ const LinkAttendanceSetup: React.FC<LinkAttendanceSetupProps> = ({
     try {
       const sheetId = attendanceSheet.id;
 
-      // 1. Mark instructor absent if needed
       if (instructorAbsent && isAdmin) {
         await supabase
           .from('attendance_sheets')
           .update({ instructor_absent: true })
           .eq('id', sheetId);
+
+        if (attendanceSheet.instructor_id) {
+          const { data: existingInstructorSignature } = await supabase
+            .from('attendance_signatures')
+            .select('id')
+            .eq('attendance_sheet_id', sheetId)
+            .eq('user_id', attendanceSheet.instructor_id)
+            .eq('user_type', 'instructor')
+            .maybeSingle();
+
+          if (!existingInstructorSignature) {
+            await supabase.from('attendance_signatures').insert({
+              attendance_sheet_id: sheetId,
+              user_id: attendanceSheet.instructor_id,
+              user_type: 'instructor',
+              present: false,
+            });
+          }
+        }
       }
 
-      // 2. Open the attendance sheet for signing
       await supabase
         .from('attendance_sheets')
         .update({
@@ -101,29 +130,36 @@ const LinkAttendanceSetup: React.FC<LinkAttendanceSetupProps> = ({
         })
         .eq('id', sheetId);
 
-      // 3. Mark absent students in attendance_signatures
-      for (const studentId of Array.from(absentStudentIds)) {
+      if (absentStudents.length > 0) {
+        await supabase
+          .from('attendance_student_links' as any)
+          .delete()
+          .eq('attendance_sheet_id', sheetId)
+          .in('student_id', absentStudents.map((student) => student.id));
+      }
+
+      for (const student of absentStudents) {
         const { data: existing } = await supabase
           .from('attendance_signatures')
           .select('id')
           .eq('attendance_sheet_id', sheetId)
-          .eq('user_id', studentId)
+          .eq('user_id', student.id)
+          .eq('user_type', 'student')
           .maybeSingle();
 
         if (!existing) {
           await supabase.from('attendance_signatures').insert({
             attendance_sheet_id: sheetId,
-            user_id: studentId,
+            user_id: student.id,
             user_type: 'student',
             present: false,
           });
         }
       }
 
-      // 4. Generate unique tokens for present students
-      const linksToInsert = presentStudents.map((s) => ({
+      const linksToInsert = presentStudents.map((student) => ({
         attendance_sheet_id: sheetId,
-        student_id: s.id,
+        student_id: student.id,
       }));
 
       const { data: insertedLinks, error: insertError } = await supabase
@@ -133,10 +169,8 @@ const LinkAttendanceSetup: React.FC<LinkAttendanceSetupProps> = ({
 
       if (insertError) throw insertError;
 
-      // 5. Create in-app notifications for each present student
-      const baseUrl = window.location.origin;
       for (const link of (insertedLinks as any[]) || []) {
-        const student = presentStudents.find((s) => s.id === link.student_id);
+        const student = presentStudents.find((presentStudent) => presentStudent.id === link.student_id);
         if (!student) continue;
 
         await supabase.from('notifications').insert({
@@ -148,9 +182,7 @@ const LinkAttendanceSetup: React.FC<LinkAttendanceSetupProps> = ({
         });
       }
 
-      toast.success(
-        `${presentStudents.length} lien(s) d'émargement envoyé(s) avec succès !`
-      );
+      toast.success(`${presentStudents.length} lien(s) d'émargement envoyé(s) avec succès !`);
       onLinksGenerated();
     } catch (error: any) {
       console.error('Error sending links:', error);
