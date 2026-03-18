@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, Users, FileText, CheckCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, FileText, CheckCircle, QrCode, Link2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { scheduleService, ScheduleSlot } from '@/services/scheduleService';
 import { toast } from 'sonner';
 import QRAttendanceManager from './QRAttendanceManager';
+import LinkAttendanceSetup from './LinkAttendanceSetup';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
@@ -19,6 +19,8 @@ interface CreateAttendanceSessionModalProps {
   formationTitle: string;
   formationColor: string;
 }
+
+type SessionMode = 'qr' | 'link' | null;
 
 const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> = ({
   isOpen,
@@ -32,18 +34,17 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
   const [generatingSheet, setGeneratingSheet] = useState(false);
   const [showQRManager, setShowQRManager] = useState(false);
+  const [showLinkSetup, setShowLinkSetup] = useState(false);
   const [attendanceSessionData, setAttendanceSessionData] = useState<any>(null);
-  const { userId, loading: userLoading } = useCurrentUser();
+  const [sessionMode, setSessionMode] = useState<SessionMode>(null);
+  const { userId, loading: userLoading, userRole } = useCurrentUser();
 
-  // Charger les emplois du temps du jour pour la formation  
   useEffect(() => {
     const fetchTodaySchedules = async () => {
       if (isOpen && formationId) {
         setLoading(true);
         try {
           const today = new Date().toISOString().split('T')[0];
-          
-          // Récupérer tous les créneaux de cette formation pour aujourd'hui
           const { data: scheduleSlots, error } = await supabase
             .from('schedule_slots')
             .select(`
@@ -72,122 +73,108 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
       }
     };
 
-    fetchTodaySchedules();
+    if (isOpen) {
+      fetchTodaySchedules();
+      // Reset state when opening
+      setSelectedSlot(null);
+      setSessionMode(null);
+      setShowQRManager(false);
+      setShowLinkSetup(false);
+      setAttendanceSessionData(null);
+    }
   }, [isOpen, formationId]);
 
-  const generateAttendanceSheet = async (slot: any) => {
-    // Vérifier que l'utilisateur est chargé et que userId est disponible
+  const getOrCreateAttendanceSheet = async (slot: any): Promise<any> => {
     if (!userId || userLoading) {
       toast.error('Utilisateur non identifié. Veuillez vous reconnecter.');
-      return;
+      return null;
     }
 
-    setGeneratingSheet(true);
-    try {
-      const scheduleSlotId = slot.id;
+    const scheduleSlotId = slot.id;
 
-      // Vérifier si une session existe déjà pour ce créneau
-      const { data: existingSheet, error: checkError } = await supabase
-        .from('attendance_sheets')
-        .select('id, status')
-        .eq('schedule_slot_id', scheduleSlotId)
-        .maybeSingle();
+    // Check if sheet already exists
+    const { data: existingSheet, error: checkError } = await supabase
+      .from('attendance_sheets')
+      .select('*, formations(title, color)')
+      .eq('schedule_slot_id', scheduleSlotId)
+      .maybeSingle();
 
-      if (checkError) throw checkError;
+    if (checkError) throw checkError;
 
-      if (existingSheet) {
-        // Une session existe déjà : on l'ouvre directement
-        setAttendanceSessionData({
-          ...existingSheet,
-          formation_id: formationId,
-          formations: { title: formationTitle, color: formationColor },
-          title: slot.formation_modules?.title || formationTitle,
-          date: slot.date,
-          start_time: slot.start_time,
-          end_time: slot.end_time,
-          room: slot.room,
-          instructor_id: userId
-        });
-        
-        // Recharger les données complètes
-        const { data: fullSheet } = await supabase
+    if (existingSheet) {
+      return existingSheet;
+    }
+
+    // Create new sheet
+    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
+    const moduleTitle = slot.formation_modules?.title || 'Module non défini';
+    const formationTitleFromSlot = slot.schedules?.formations?.title || formationTitle;
+
+    const attendanceData: any = {
+      schedule_slot_id: scheduleSlotId,
+      formation_id: formationId,
+      title: `${formationTitleFromSlot} - ${moduleTitle}`,
+      date: slot.date || new Date().toISOString().split('T')[0],
+      start_time: slot.start_time,
+      end_time: slot.end_time,
+      room: slot.room,
+      status: 'En cours',
+      is_open_for_signing: true,
+      opened_at: new Date().toISOString(),
+    };
+
+    if (isValidUUID) {
+      attendanceData.instructor_id = userId;
+    }
+
+    const { data, error } = await supabase
+      .from('attendance_sheets')
+      .insert(attendanceData)
+      .select('*, formations(title, color)')
+      .single();
+
+    if (error) {
+      if (error.code === '23505') {
+        // Duplicate — re-fetch
+        const { data: refetched } = await supabase
           .from('attendance_sheets')
           .select('*, formations(title, color)')
-          .eq('id', existingSheet.id)
+          .eq('schedule_slot_id', scheduleSlotId)
           .single();
-        
-        if (fullSheet) {
-          setAttendanceSessionData(fullSheet);
-        }
-        
+        return refetched;
+      }
+      throw error;
+    }
+
+    return data;
+  };
+
+  const handleModeSelect = async (mode: SessionMode) => {
+    if (!selectedSlot) return;
+    setSessionMode(mode);
+    setGeneratingSheet(true);
+
+    try {
+      const sheet = await getOrCreateAttendanceSheet(selectedSlot);
+      if (!sheet) return;
+
+      setAttendanceSessionData(sheet);
+
+      if (mode === 'qr') {
         setShowQRManager(true);
-        toast.info('Une session d\'émargement existe déjà pour ce cours. Ouverture...');
-        return;
-      }
-
-      // Vérifier si userId est un UUID valide
-      const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
-      
-      // Extraire les données du slot
-      const moduleTitle = slot.formation_modules?.title || 'Module non défini';
-      const formationTitleFromSlot = slot.schedules?.formations?.title || formationTitle;
-      
-      // Préparer les données pour la feuille d'émargement
-      const attendanceData: any = {
-        schedule_slot_id: scheduleSlotId,
-        formation_id: formationId,
-        title: `${formationTitleFromSlot} - ${moduleTitle}`,
-        date: slot.date || new Date().toISOString().split('T')[0],
-        start_time: slot.start_time,
-        end_time: slot.end_time,
-        room: slot.room,
-        status: 'En cours',
-        is_open_for_signing: true,
-        opened_at: new Date().toISOString()
-      };
-
-      // N'ajouter instructor_id que si c'est un UUID valide
-      if (isValidUUID) {
-        attendanceData.instructor_id = userId;
-      }
-
-      // Créer la feuille d'émargement
-      const { data, error } = await supabase
-        .from('attendance_sheets')
-        .insert(attendanceData)
-        .select(`
-          *,
-          formations(title, color)
-        `)
-        .single();
-
-      if (error) {
-        // Gérer l'erreur de contrainte unique (doublon)
-        if (error.code === '23505') {
-          toast.error('Une session d\'émargement existe déjà pour ce cours.');
-          return;
-        }
-        throw error;
-      }
-
-      if (data) {
-        setAttendanceSessionData(data);
-        setShowQRManager(true);
-        
-        toast.success('Session d\'émargement créée avec succès ! Vous pouvez maintenant afficher le QR code aux étudiants.');
+      } else if (mode === 'link') {
+        setShowLinkSetup(true);
       }
     } catch (error: any) {
-      console.error('Erreur lors de la génération:', error);
-      toast.error(`Erreur lors de la génération: ${error.message}`);
+      console.error('Erreur lors de la création:', error);
+      toast.error(`Erreur: ${error.message}`);
+      setSessionMode(null);
     } finally {
       setGeneratingSheet(false);
     }
   };
 
-  const formatTime = (time: string) => {
-    return time.slice(0, 5); // Afficher seulement HH:MM
-  };
-
+  // Show QR Manager view
   if (showQRManager && attendanceSessionData) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -198,29 +185,44 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
               Gestion de l'émargement - {formationTitle}
             </DialogTitle>
           </DialogHeader>
-          
-          {attendanceSessionData && (
-            <QRAttendanceManager
-              attendanceSheet={attendanceSessionData}
-              instructorId={attendanceSessionData.instructor_id || userId || ''}
-              onUpdate={() => {
-                // Recharger les données si nécessaire
-                console.log('Session updated');
-              }}
-            />
-          )}
-          
-          {!userId && (
-            <div className="text-center p-8">
-              <p className="text-gray-500">Chargement des informations utilisateur...</p>
-            </div>
-          )}
-          
+          <QRAttendanceManager
+            attendanceSheet={attendanceSessionData}
+            instructorId={attendanceSessionData.instructor_id || userId || ''}
+            onUpdate={() => console.log('Session updated')}
+          />
           <div className="flex justify-end pt-4 border-t">
-            <Button onClick={onClose}>
-              Fermer
-            </Button>
+            <Button onClick={onClose}>Fermer</Button>
           </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Show Link Setup view
+  if (showLinkSetup && attendanceSessionData) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl max-h-[95vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Link2 className="w-5 h-5" />
+              Envoi des liens d'émargement - {formationTitle}
+            </DialogTitle>
+          </DialogHeader>
+          <LinkAttendanceSetup
+            attendanceSheet={attendanceSessionData}
+            formationId={formationId}
+            isAdmin={userRole === 'Admin' || userRole === 'AdminPrincipal'}
+            onBack={() => {
+              setShowLinkSetup(false);
+              setSessionMode(null);
+            }}
+            onLinksGenerated={() => {
+              // Switch to QR manager for live tracking
+              setShowLinkSetup(false);
+              setShowQRManager(true);
+            }}
+          />
         </DialogContent>
       </Dialog>
     );
@@ -243,53 +245,56 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
             </div>
           ) : todaysSchedules.length === 0 ? (
             <div className="text-center py-8">
-              <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">
                 Aucun cours programmé aujourd'hui
               </h3>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Il n'y a pas de cours programmé pour cette formation aujourd'hui.
               </p>
             </div>
           ) : (
             <>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-muted-foreground">
                 Sélectionnez le cours pour lequel vous souhaitez créer une session d'émargement :
               </div>
-              
+
               <div className="space-y-3">
                 {todaysSchedules.map((slot) => {
                   const moduleTitle = slot.formation_modules?.title || 'Module non défini';
-                  const instructorName = slot.users 
+                  const instructorName = slot.users
                     ? `${slot.users.first_name} ${slot.users.last_name}`
                     : 'Formateur non assigné';
-                  const formationTitle = slot.schedules?.formations?.title || 'Formation non définie';
-                  
+
                   return (
-                    <Card 
-                      key={slot.id} 
+                    <Card
+                      key={slot.id}
                       className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
                         selectedSlot?.id === slot.id ? 'ring-2 ring-primary' : ''
                       }`}
-                      onClick={() => setSelectedSlot(slot)}
+                      onClick={() => {
+                        setSelectedSlot(slot);
+                        setSessionMode(null);
+                      }}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-4">
-                            <div 
+                            <div
                               className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-semibold"
                               style={{ backgroundColor: formationColor }}
                             >
                               <Clock className="w-6 h-6" />
                             </div>
                             <div>
-                              <h4 className="font-semibold text-gray-900">
-                                {moduleTitle}
-                              </h4>
-                              <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                              <h4 className="font-semibold text-foreground">{moduleTitle}</h4>
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
                                 <div className="flex items-center gap-1">
                                   <Clock className="w-4 h-4" />
-                                  <span>{slot.start_time.substring(0, 5)} - {slot.end_time.substring(0, 5)}</span>
+                                  <span>
+                                    {slot.start_time.substring(0, 5)} -{' '}
+                                    {slot.end_time.substring(0, 5)}
+                                  </span>
                                 </div>
                                 {slot.room && (
                                   <div className="flex items-center gap-1">
@@ -319,43 +324,82 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
                 })}
               </div>
 
+              {/* Mode selection after slot is selected */}
               {selectedSlot && (
-                <div className="border-t pt-4">
-                  <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium mb-2">Aperçu de la session d'émargement</h4>
-                    <div className="text-sm text-gray-600 space-y-1">
-                      <div><strong>Formation:</strong> {selectedSlot.schedules?.formations?.title || 'Formation non définie'}</div>
-                      <div><strong>Module:</strong> {selectedSlot.formation_modules?.title || 'Module non défini'}</div>
-                      <div><strong>Date:</strong> {format(new Date(), 'PPP', { locale: fr })}</div>
-                      <div><strong>Horaire:</strong> {selectedSlot.start_time.substring(0, 5)} - {selectedSlot.end_time.substring(0, 5)}</div>
+                <div className="border-t pt-4 space-y-4">
+                  <div className="bg-muted/50 rounded-lg p-4 mb-4">
+                    <h4 className="font-medium mb-2 text-foreground">Aperçu de la session</h4>
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      <div>
+                        <strong>Module:</strong>{' '}
+                        {selectedSlot.formation_modules?.title || 'Module non défini'}
+                      </div>
+                      <div>
+                        <strong>Horaire:</strong>{' '}
+                        {selectedSlot.start_time.substring(0, 5)} -{' '}
+                        {selectedSlot.end_time.substring(0, 5)}
+                      </div>
                       {selectedSlot.room && (
-                        <div><strong>Salle:</strong> {selectedSlot.room}</div>
+                        <div>
+                          <strong>Salle:</strong> {selectedSlot.room}
+                        </div>
                       )}
-                      <div><strong>Formateur:</strong> {selectedSlot.users ? `${selectedSlot.users.first_name} ${selectedSlot.users.last_name}` : 'Formateur non assigné'}</div>
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={() => generateAttendanceSheet(selectedSlot)}
-                      disabled={generatingSheet || userLoading || !userId}
-                      className="flex-1"
+                  <p className="text-sm font-medium text-foreground">
+                    Choisissez le mode d'émargement :
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* QR Code mode */}
+                    <Card
+                      className={`cursor-pointer transition-all hover:shadow-md ${
+                        sessionMode === 'qr' ? 'ring-2 ring-primary' : ''
+                      }`}
+                      onClick={() => !generatingSheet && handleModeSelect('qr')}
                     >
-                      {generatingSheet ? (
-                        'Création de la session...'
-                      ) : userLoading ? (
-                        'Chargement utilisateur...'
-                      ) : (
-                        <>
-                          <FileText className="w-4 h-4 mr-2" />
-                          Créer la session d'émargement
-                        </>
-                      )}
-                    </Button>
-                    <Button variant="outline" onClick={onClose}>
-                      Annuler
-                    </Button>
+                      <CardContent className="p-4 text-center space-y-2">
+                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+                          <QrCode className="w-6 h-6 text-primary" />
+                        </div>
+                        <h4 className="font-semibold text-sm text-foreground">QR Code</h4>
+                        <p className="text-xs text-muted-foreground">
+                          Les étudiants scannent un QR code en classe
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    {/* Link mode */}
+                    <Card
+                      className={`cursor-pointer transition-all hover:shadow-md ${
+                        sessionMode === 'link' ? 'ring-2 ring-primary' : ''
+                      }`}
+                      onClick={() => !generatingSheet && handleModeSelect('link')}
+                    >
+                      <CardContent className="p-4 text-center space-y-2">
+                        <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto">
+                          <Link2 className="w-6 h-6 text-accent-foreground" />
+                        </div>
+                        <h4 className="font-semibold text-sm text-foreground">
+                          Lien d'émargement
+                        </h4>
+                        <p className="text-xs text-muted-foreground">
+                          Envoyez un lien unique à chaque étudiant
+                        </p>
+                      </CardContent>
+                    </Card>
                   </div>
+
+                  {generatingSheet && (
+                    <div className="text-center py-2 text-sm text-muted-foreground">
+                      Création de la session...
+                    </div>
+                  )}
+
+                  <Button variant="outline" onClick={onClose} className="w-full">
+                    Annuler
+                  </Button>
                 </div>
               )}
             </>

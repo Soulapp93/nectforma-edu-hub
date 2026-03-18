@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { QrCode, Users, Send, CheckCircle, ArrowRight, PenTool, Calendar, Clock, MapPin, BookOpen, Wifi, Shield, FileText, UserX } from 'lucide-react';
+import { QrCode, Users, Send, CheckCircle, ArrowRight, PenTool, Calendar, Clock, MapPin, BookOpen, Wifi, Shield, FileText, UserX, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -12,6 +12,7 @@ import QRCodeDisplayModal from './QRCodeDisplayModal';
 import InstructorSigningModal from './InstructorSigningModal';
 import GeneratedAttendanceSheet from './GeneratedAttendanceSheet';
 import RealtimeAttendanceIndicator from './RealtimeAttendanceIndicator';
+import LinkAttendanceSetup from './LinkAttendanceSetup';
 
 interface QRAttendanceManagerProps {
   attendanceSheet: AttendanceSheet;
@@ -39,6 +40,7 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
   const [showQRModal, setShowQRModal] = useState(false);
   const [showInstructorSignModal, setShowInstructorSignModal] = useState(false);
   const [showAttendanceSheet, setShowAttendanceSheet] = useState(false);
+  const [showLinkSetup, setShowLinkSetup] = useState(false);
   const [sendingToAdmin, setSendingToAdmin] = useState(false);
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
@@ -434,6 +436,18 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
           </Button>
         )}
 
+        {/* Envoyer liens d'émargement */}
+        {(attendanceSheet.status === 'En cours' || attendanceSheet.status === 'En attente') && (
+          <Button 
+            onClick={() => setShowLinkSetup(true)} 
+            variant="outline" 
+            className="w-full rounded-xl h-11"
+          >
+            <Link2 className="w-4 h-4 mr-2" />
+            Envoyer les liens d'émargement
+          </Button>
+        )}
+
         {/* Consulter feuille */}
         <Button onClick={() => setShowAttendanceSheet(true)} variant="outline" className="w-full rounded-xl h-11">
           <FileText className="w-4 h-4 mr-2" />
@@ -485,6 +499,24 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
       />
       {showAttendanceSheet && (
         <GeneratedAttendanceSheet attendanceSheetId={attendanceSheet.id} onClose={() => setShowAttendanceSheet(false)} />
+      )}
+      {showLinkSetup && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card rounded-2xl border border-border shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
+            <LinkAttendanceSetup
+              attendanceSheet={attendanceSheet}
+              formationId={attendanceSheet.formation_id}
+              isAdmin={true}
+              onBack={() => setShowLinkSetup(false)}
+              onLinksGenerated={() => {
+                setShowLinkSetup(false);
+                loadStats();
+                onUpdate();
+                toast.success('Liens envoyés avec succès !');
+              }}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

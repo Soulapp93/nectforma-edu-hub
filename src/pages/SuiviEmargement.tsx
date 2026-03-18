@@ -12,6 +12,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { attendanceService } from '@/services/attendanceService';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useSearchParams } from 'react-router-dom';
+import LinkAttendanceSigning from '@/components/emargement/LinkAttendanceSigning';
 
 interface AttendanceRecord {
   id: string;
@@ -30,6 +32,7 @@ interface AttendanceRecord {
 const SuiviEmargement = () => {
   const { userRole, userId } = useCurrentUser();
   const { relationInfo } = useUserWithRelations();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,6 +40,15 @@ const SuiviEmargement = () => {
   const [dateFilter, setDateFilter] = useState('');
   const [studentInfo, setStudentInfo] = useState<{ name: string; email: string } | null>(null);
   const [noStudentAssigned, setNoStudentAssigned] = useState(false);
+  const [linkToken, setLinkToken] = useState<string | null>(null);
+
+  // Detect link_token from URL
+  useEffect(() => {
+    const token = searchParams.get('link_token');
+    if (token) {
+      setLinkToken(token);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (userId && userRole) {
@@ -616,6 +628,23 @@ const SuiviEmargement = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Link attendance signing modal */}
+      {linkToken && (
+        <LinkAttendanceSigning
+          isOpen={!!linkToken}
+          onClose={() => {
+            setLinkToken(null);
+            searchParams.delete('link_token');
+            setSearchParams(searchParams);
+            loadAttendanceHistory();
+          }}
+          linkToken={linkToken}
+          onSigned={() => {
+            loadAttendanceHistory();
+          }}
+        />
+      )}
     </div>
   );
 };
