@@ -500,6 +500,24 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
       {showAttendanceSheet && (
         <GeneratedAttendanceSheet attendanceSheetId={attendanceSheet.id} onClose={() => setShowAttendanceSheet(false)} />
       )}
+      {showLinkSetup && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card rounded-2xl border border-border shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
+            <LinkAttendanceSetup
+              attendanceSheet={attendanceSheet}
+              formationId={attendanceSheet.formation_id}
+              isAdmin={true}
+              onBack={() => setShowLinkSetup(false)}
+              onLinksGenerated={() => {
+                setShowLinkSetup(false);
+                loadStats();
+                onUpdate();
+                toast.success('Liens envoyés avec succès !');
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
