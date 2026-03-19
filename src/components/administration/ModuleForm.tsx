@@ -28,7 +28,7 @@ interface ModuleFormProps {
   semestersCount?: number;
 }
 
-const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex, initialData }) => {
+const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex, initialData, semestersCount = 2 }) => {
   const { instructors } = useInstructors();
   const [formData, setFormData] = useState<ModuleFormData>(
     initialData || {
