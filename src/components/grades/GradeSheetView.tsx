@@ -166,10 +166,12 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   // Filter evaluations by period + module
   const moduleEvaluations = useMemo(() => {
     let evals = allEvaluations;
-    if (selectedPeriod) evals = evals.filter(e => e.period_id === selectedPeriod);
+    if (activePeriodIds.length > 0) {
+      evals = evals.filter(e => activePeriodIds.includes(e.period_id || ''));
+    }
     if (selectedModule) evals = evals.filter(e => e.module_id === selectedModule);
     return evals;
-  }, [allEvaluations, selectedPeriod, selectedModule]);
+  }, [allEvaluations, activePeriodIds, selectedModule]);
 
   // CC evaluations for current module
   const ccEvaluations = useMemo(() =>
