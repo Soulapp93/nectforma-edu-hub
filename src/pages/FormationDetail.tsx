@@ -182,44 +182,50 @@ const FormationDetail = () => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <h2 className="text-lg sm:text-xl font-bold text-foreground">Modules de la formation</h2>
               {hasSemesters && (
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant={semesterFilter === 'all' ? 'default' : 'outline'}
+                <div className="flex flex-wrap items-center gap-1.5 bg-muted/50 rounded-xl p-1.5">
+                  <button
                     onClick={() => setSemesterFilter('all')}
-                    className="text-xs h-8"
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      semesterFilter === 'all' 
+                        ? 'bg-primary text-primary-foreground shadow-sm' 
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    }`}
                   >
                     Tous
-                  </Button>
+                  </button>
                   {Array.from({ length: durationYears }, (_, y) => {
                     const s1 = y * 2 + 1;
                     const s2 = y * 2 + 2;
                     const yearNum = y + 1;
                     return (
-                      <div key={yearNum} className="flex items-center gap-1">
+                      <React.Fragment key={yearNum}>
                         {durationYears > 1 && (
-                          <span className="text-xs font-medium text-muted-foreground mr-1">A{yearNum}:</span>
+                          <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider ml-1">A{yearNum}</span>
                         )}
-                        <Button
-                          size="sm"
-                          variant={semesterFilter === `s${s1}` ? 'default' : 'outline'}
+                        <button
                           onClick={() => setSemesterFilter(`s${s1}`)}
-                          className="text-xs h-8"
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                            semesterFilter === `s${s1}` 
+                              ? 'bg-primary text-primary-foreground shadow-sm' 
+                              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                          }`}
                         >
                           S{s1}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant={semesterFilter === `s${s2}` ? 'default' : 'outline'}
+                        </button>
+                        <button
                           onClick={() => setSemesterFilter(`s${s2}`)}
-                          className="text-xs h-8"
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                            semesterFilter === `s${s2}` 
+                              ? 'bg-primary text-primary-foreground shadow-sm' 
+                              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                          }`}
                         >
                           S{s2}
-                        </Button>
+                        </button>
                         {yearNum < durationYears && (
-                          <span className="text-border mx-1">|</span>
+                          <div className="w-px h-5 bg-border mx-0.5" />
                         )}
-                      </div>
+                      </React.Fragment>
                     );
                   })}
                 </div>
