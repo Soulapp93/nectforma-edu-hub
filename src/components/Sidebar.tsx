@@ -56,6 +56,12 @@ const Sidebar = () => {
   const location = useLocation();
   const [adminExpanded, setAdminExpanded] = useState(location.pathname === '/administration');
 
+  const establishmentName = establishment?.name || myEstablishment?.name || '';
+  const establishmentLogoRaw = establishment?.logo_url || null;
+  const establishmentLogoUrl = establishmentLogoRaw ? (
+    establishmentLogoRaw.startsWith('http') ? establishmentLogoRaw : supabase.storage.from('avatars').getPublicUrl(establishmentLogoRaw).data?.publicUrl || null
+  ) : null;
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.href = '/auth';
