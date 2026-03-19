@@ -233,30 +233,30 @@ const Sidebar = () => {
 
       <SidebarContent className="relative z-10 px-2">
         {/* User Profile Card */}
-        <div className={`mb-4 p-2.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/5 ${collapsed ? 'flex justify-center' : ''}`}>
+        <div className={`mb-4 p-2.5 rounded-lg bg-white/8 border border-white/8 ${collapsed ? 'flex justify-center' : ''}`}>
           <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
             <Avatar className="w-9 h-9 flex-shrink-0 ring-2 ring-white/20" title={collapsed ? userDisplayInfo.name : undefined}>
               <AvatarImage src={userDisplayInfo.profilePhotoUrl || ''} alt={userDisplayInfo.name} />
-              <AvatarFallback className="bg-white/20 text-white text-xs font-semibold">
+              <AvatarFallback className="bg-white/15 text-white text-xs font-semibold">
                 {userDisplayInfo.initials}
               </AvatarFallback>
             </Avatar>
             {!collapsed && (
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-white truncate leading-tight">{userDisplayInfo.name}</p>
-                <p className="text-[11px] text-white/60 font-medium">{userDisplayInfo.role}</p>
+                <p className="text-[11px] text-white/50 font-medium">{userDisplayInfo.role}</p>
                 {userDisplayInfo.relationInfo && (
-                  <div className="mt-1.5 p-2 rounded-lg bg-white/5 border border-white/10">
+                  <div className="mt-1.5 p-2 rounded-md bg-white/5 border border-white/8">
                     {userDisplayInfo.relationInfo.type === 'tutor' ? (
                       <div className="space-y-0.5">
-                        <p className="text-[10px] text-white/70 font-medium flex items-center gap-1">
+                        <p className="text-[10px] text-white/60 font-medium flex items-center gap-1">
                           <span>👨‍🏫</span> Mon tuteur
                         </p>
                         <p className="text-[11px] text-white font-medium truncate pl-4">
                           {userDisplayInfo.relationInfo.name}
                         </p>
                         {userDisplayInfo.relationInfo.company && (
-                          <p className="text-[10px] text-white/50 truncate pl-4 flex items-center gap-1">
+                          <p className="text-[10px] text-white/40 truncate pl-4 flex items-center gap-1">
                             <Building2 className="w-2.5 h-2.5" />
                             {userDisplayInfo.relationInfo.company}
                           </p>
@@ -264,7 +264,7 @@ const Sidebar = () => {
                       </div>
                     ) : (
                       <div className="space-y-0.5">
-                        <p className="text-[10px] text-white/70 font-medium flex items-center gap-1">
+                        <p className="text-[10px] text-white/60 font-medium flex items-center gap-1">
                           <span>👨‍🎓</span> Mon apprenti
                         </p>
                         <p className="text-[11px] text-white font-medium truncate pl-4">
