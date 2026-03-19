@@ -29,8 +29,8 @@ const TopHeaderBar = () => {
     <header className="hidden md:flex h-14 items-center justify-between nect-gradient sticky top-0 z-20 px-6 border-b border-white/10">
       {/* Left: Greeting */}
       <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Bonjour,</span>
-        <span className="text-sm font-semibold text-foreground">{firstName}</span>
+        <span className="text-sm text-white/60">Bonjour,</span>
+        <span className="text-sm font-semibold text-white">{firstName}</span>
       </div>
 
       {/* Right: Actions */}
