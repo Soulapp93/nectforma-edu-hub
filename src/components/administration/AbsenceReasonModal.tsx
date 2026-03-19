@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,14 +12,30 @@ interface AbsenceReasonModalProps {
   currentReason?: string;
   currentReasonType?: string;
   studentName: string;
+  mode?: 'absence' | 'retard';
 }
 
 const ABSENCE_REASONS = [
-  { value: 'congé', label: 'Congé' },
-  { value: 'arret_travail', label: 'Arrêt de travail' },
+  { value: 'arret_maladie', label: 'Arrêt maladie' },
+  { value: 'probleme_transport', label: 'Problème / retard de transport' },
+  { value: 'raison_familiale', label: 'Raison familiale' },
+  { value: 'en_entreprise', label: 'En entreprise' },
   { value: 'mission_professionnelle', label: 'Mission professionnelle' },
-  { value: 'entreprise', label: 'En entreprise' },
-  { value: 'injustifié', label: 'Injustifié' },
+  { value: 'stage', label: 'Stage' },
+  { value: 'rendez_vous_medical', label: 'Rendez-vous médical' },
+  { value: 'convocation_officielle', label: 'Convocation officielle' },
+  { value: 'conge', label: 'Congé' },
+  { value: 'injustifie', label: 'Injustifié' },
+  { value: 'autre', label: 'Autre' }
+];
+
+const DELAY_REASONS = [
+  { value: 'probleme_transport', label: 'Problème / retard de transport' },
+  { value: 'raison_familiale', label: 'Raison familiale' },
+  { value: 'rendez_vous_medical', label: 'Rendez-vous médical' },
+  { value: 'sortie_entreprise', label: 'Sortie entreprise tardive' },
+  { value: 'probleme_technique', label: 'Problème technique' },
+  { value: 'intemperies', label: 'Intempéries' },
   { value: 'autre', label: 'Autre' }
 ];
 
@@ -29,22 +45,36 @@ const AbsenceReasonModal: React.FC<AbsenceReasonModalProps> = ({
   onSave,
   currentReason = '',
   currentReasonType = '',
-  studentName
+  studentName,
+  mode = 'absence'
 }) => {
   const [reasonType, setReasonType] = useState(currentReasonType);
   const [reason, setReason] = useState(currentReason);
   const [saving, setSaving] = useState(false);
 
+  const reasons = mode === 'retard' ? DELAY_REASONS : ABSENCE_REASONS;
+  const title = mode === 'retard' ? 'Motif du retard' : "Motif d'absence";
+
+  useEffect(() => {
+    setReasonType(currentReasonType);
+    setReason(currentReason);
+  }, [currentReasonType, currentReason, isOpen]);
+
   const handleSave = async () => {
     if (!reasonType) {
-      toast.error('Veuillez sélectionner un type de motif');
+      toast.error('Veuillez sélectionner un motif');
+      return;
+    }
+
+    if (reasonType === 'autre' && !reason.trim()) {
+      toast.error('Veuillez préciser le motif');
       return;
     }
 
     try {
       setSaving(true);
       await onSave(reasonType, reason);
-      toast.success('Motif d\'absence mis à jour');
+      toast.success('Motif mis à jour');
       onClose();
     } catch (error) {
       toast.error('Erreur lors de la mise à jour du motif');
@@ -57,7 +87,7 @@ const AbsenceReasonModal: React.FC<AbsenceReasonModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Motif d'absence</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
           <p className="text-sm text-muted-foreground">
             Étudiant : <span className="font-medium">{studentName}</span>
           </p>
@@ -66,33 +96,35 @@ const AbsenceReasonModal: React.FC<AbsenceReasonModalProps> = ({
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium mb-2 block">
-              Type de motif *
+              Motif *
             </label>
             <Select value={reasonType} onValueChange={setReasonType}>
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un motif" />
               </SelectTrigger>
               <SelectContent>
-                {ABSENCE_REASONS.map((reason) => (
-                  <SelectItem key={reason.value} value={reason.value}>
-                    {reason.label}
+                {reasons.map((r) => (
+                  <SelectItem key={r.value} value={r.value}>
+                    {r.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          <div>
-            <label className="text-sm font-medium mb-2 block">
-              Commentaire additionnel
-            </label>
-            <Textarea
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Détails supplémentaires (optionnel)"
-              rows={3}
-            />
-          </div>
+          {(reasonType === 'autre' || reason) && (
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                {reasonType === 'autre' ? 'Précisez le motif *' : 'Commentaire additionnel'}
+              </label>
+              <Textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder={reasonType === 'autre' ? 'Saisissez le motif...' : 'Détails supplémentaires (optionnel)'}
+                rows={3}
+              />
+            </div>
+          )}
 
           <div className="flex justify-end space-x-2 pt-4">
             <Button variant="outline" onClick={onClose}>
