@@ -105,17 +105,18 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     enabled: !!selectedFormation,
   });
 
+  // Semester computed values
+  const selectedFormationObj = availableFormations.find((f: any) => f.id === selectedFormation);
+  const durationYears = (selectedFormationObj as any)?.duration_years || 1;
+  const semestersCount = (selectedFormationObj as any)?.semesters_count || durationYears * 2;
+
   // Auto-init semesterView based on formation data
   useEffect(() => {
     if (selectedFormationObj && !semesterView) setSemesterView('s1');
   }, [selectedFormationObj]);
 
-  // Semester computed values
-  const selectedFormationObj = availableFormations.find((f: any) => f.id === selectedFormation);
-  const durationYears = (selectedFormationObj as any)?.duration_years || 1;
-
   const activePeriodIds = useMemo(() => {
-    if (!semesterView || periods.length === 0) return periods.map(p => p.id);
+    if (!semesterView || periods.length === 0) return [];
     if (semesterView.startsWith('final-')) {
       const yearNum = parseInt(semesterView.split('-')[1]);
       const startIdx = (yearNum - 1) * 2;
