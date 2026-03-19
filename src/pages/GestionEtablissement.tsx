@@ -223,7 +223,6 @@ const GestionEtablissement = () => {
           onSave={handleSaveEstablishment}
         />
 
-        <ThemeCustomization />
       </div>
     </div>
   );

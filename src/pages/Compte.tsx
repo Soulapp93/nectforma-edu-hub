@@ -258,6 +258,10 @@ const Compte = () => {
               />
             </TabsContent>
 
+            <TabsContent value="theme">
+              <ThemeCustomization />
+            </TabsContent>
+
             <TabsContent value="rgpd">
               <RGPDSettings />
             </TabsContent>
