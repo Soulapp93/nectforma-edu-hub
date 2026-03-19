@@ -38,7 +38,7 @@ const TopHeaderBar = () => {
         {/* Chat / Messagerie */}
         <NavLink
           to="/messagerie"
-          className="relative p-2 rounded-full hover:bg-muted transition-colors"
+          className="relative p-2 rounded-full hover:bg-white/10 transition-colors"
           title="Messagerie"
         >
           <MessageSquare className="h-5 w-5 text-white/70" />
