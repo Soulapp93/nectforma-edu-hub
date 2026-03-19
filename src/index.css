@@ -16,30 +16,30 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 20% 15%;
 
-    /* Deep Navy Primary */
-    --primary: 235 55% 18%;
+    /* Deep Navy-Indigo Primary - PCA PREAD exact */
+    --primary: 240 60% 20%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 230 20% 95%;
-    --secondary-foreground: 235 55% 18%;
+    --secondary-foreground: 240 60% 20%;
 
     --muted: 230 15% 93%;
     --muted-foreground: 230 10% 45%;
 
     /* Sky Blue Accent */
-    --accent: 210 90% 60%;
+    --accent: 250 60% 25%;
     --accent-foreground: 0 0% 100%;
 
-    /* Golden Yellow for active states */
+    /* Golden Yellow for active states - PCA PREAD exact */
     --golden: 45 100% 50%;
-    --golden-foreground: 235 55% 18%;
+    --golden-foreground: 240 60% 15%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 230 15% 88%;
     --input: 230 15% 92%;
-    --ring: 235 55% 18%;
+    --ring: 240 60% 20%;
 
     --radius: 0.75rem;
 
@@ -56,20 +56,21 @@
     --info-foreground: 0 0% 100%;
     --info-muted: 217 91% 95%;
 
-    /* Theme colors */
-    --nect-primary-from: 235 55% 18%;
-    --nect-primary-to: 250 60% 22%;
+    /* Theme colors - PCA PREAD */
+    --nect-primary-from: 240 60% 20%;
+    --nect-primary-to: 250 60% 25%;
     --nect-primary-light: 230 30% 95%;
-    --nect-primary-dark: 235 55% 12%;
+    --nect-primary-dark: 240 60% 14%;
     
     --nect-sidebar-bg: 240 60% 12%;
+    --nect-sidebar-dark: 245 55% 8%;
     --nect-card-bg: 0 0% 100%;
     --nect-card-border: 230 15% 88%;
     
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(235 55% 18%), hsl(250 60% 25%));
+    --gradient-primary: linear-gradient(135deg, hsl(240 60% 20%), hsl(250 60% 25%));
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(230 15% 98%));
-    --gradient-hero: linear-gradient(135deg, hsl(235 55% 18%), hsl(250 60% 25%));
+    --gradient-hero: linear-gradient(135deg, hsl(240 60% 20%), hsl(250 60% 25%));
     --gradient-soft: linear-gradient(135deg, hsl(230 25% 97%), hsl(230 20% 95%));
     
     /* Professional shadows */
@@ -81,11 +82,11 @@
     --sidebar-background: 240 60% 12%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 45 100% 50%;
-    --sidebar-primary-foreground: 235 55% 18%;
+    --sidebar-primary-foreground: 240 60% 15%;
     --sidebar-accent: 45 100% 50%;
-    --sidebar-accent-foreground: 235 55% 18%;
+    --sidebar-accent-foreground: 240 60% 15%;
     --sidebar-border: 240 50% 18%;
-    --sidebar-ring: 235 55% 18%;
+    --sidebar-ring: 240 60% 20%;
   }
 
   .dark {
@@ -98,27 +99,27 @@
     --popover: 240 18% 10%;
     --popover-foreground: 230 10% 92%;
 
-    --primary: 230 70% 60%;
+    --primary: 240 60% 55%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 240 15% 14%;
-    --secondary-foreground: 230 70% 82%;
+    --secondary-foreground: 240 50% 82%;
 
     --muted: 240 12% 15%;
     --muted-foreground: 230 10% 58%;
 
-    --accent: 210 80% 55%;
+    --accent: 250 60% 50%;
     --accent-foreground: 0 0% 100%;
 
     --golden: 45 90% 55%;
-    --golden-foreground: 235 55% 12%;
+    --golden-foreground: 240 60% 12%;
 
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 240 12% 18%;
     --input: 240 12% 16%;
-    --ring: 230 70% 60%;
+    --ring: 240 60% 55%;
 
     --success: 142 60% 48%;
     --success-foreground: 0 0% 100%;
@@ -132,18 +133,19 @@
     --info-foreground: 0 0% 100%;
     --info-muted: 217 40% 14%;
 
-    --nect-primary-from: 230 70% 60%;
-    --nect-primary-to: 250 60% 55%;
+    --nect-primary-from: 240 60% 55%;
+    --nect-primary-to: 250 60% 50%;
     --nect-primary-light: 230 50% 16%;
-    --nect-primary-dark: 230 70% 70%;
+    --nect-primary-dark: 240 60% 65%;
 
     --nect-sidebar-bg: 240 60% 10%;
+    --nect-sidebar-dark: 245 55% 6%;
     --nect-card-bg: 240 18% 10%;
     --nect-card-border: 240 12% 18%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(230 70% 60%), hsl(250 60% 55%));
+    --gradient-primary: linear-gradient(135deg, hsl(240 60% 55%), hsl(250 60% 50%));
     --gradient-card: linear-gradient(145deg, hsl(240 18% 10%), hsl(240 15% 12%));
-    --gradient-hero: linear-gradient(135deg, hsl(230 70% 60%), hsl(250 60% 55%));
+    --gradient-hero: linear-gradient(135deg, hsl(240 60% 55%), hsl(250 60% 50%));
     --gradient-soft: linear-gradient(135deg, hsl(240 20% 10%), hsl(240 15% 8%));
 
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -154,11 +156,11 @@
     --sidebar-background: 240 60% 10%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 45 90% 55%;
-    --sidebar-primary-foreground: 235 55% 12%;
+    --sidebar-primary-foreground: 240 60% 12%;
     --sidebar-accent: 45 90% 55%;
-    --sidebar-accent-foreground: 235 55% 12%;
+    --sidebar-accent-foreground: 240 60% 12%;
     --sidebar-border: 0 0% 100%;
-    --sidebar-ring: 230 70% 60%;
+    --sidebar-ring: 240 60% 55%;
   }
 }
 
@@ -318,15 +320,15 @@ body:has(.fullscreen-container) {
   /* Sidebar Premium Gradient - Deep Navy with purple undertones */
   .nect-gradient {
     background: linear-gradient(180deg, 
-      hsl(var(--sidebar-background, 240 60% 14%)) 0%, 
-      hsl(var(--sidebar-background, 240 60% 12%)) 30%,
-      hsl(var(--nect-sidebar-dark, 245 55% 10%)) 60%,
-      hsl(250 50% 15%) 80%,
-      hsl(var(--sidebar-background, 240 60% 11%)) 100%
+      hsl(245 58% 16%) 0%, 
+      hsl(242 60% 13%) 25%,
+      hsl(240 62% 11%) 50%,
+      hsl(248 55% 14%) 75%,
+      hsl(245 58% 12%) 100%
     );
   }
   
-  /* Sidebar glow overlay - subtle purple/blue glow */
+  /* Sidebar glow overlay - vivid purple/violet glow matching PCA PREAD */
   .sidebar-glow {
     position: relative;
   }
@@ -337,21 +339,21 @@ body:has(.fullscreen-container) {
     top: 0;
     left: 0;
     right: 0;
-    height: 300px;
-    background: radial-gradient(ellipse at 50% 0%, rgba(100, 80, 200, 0.15) 0%, transparent 70%);
+    height: 350px;
+    background: radial-gradient(ellipse at 50% -10%, rgba(120, 60, 230, 0.35) 0%, rgba(90, 50, 200, 0.15) 40%, transparent 75%);
     pointer-events: none;
     z-index: 0;
   }
 
-  /* Bottom glow effect */
+  /* Bottom glow effect - vivid purple */
   .sidebar-glow::after {
     content: '';
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    height: 200px;
-    background: radial-gradient(ellipse at 50% 100%, rgba(100, 60, 220, 0.12) 0%, transparent 70%);
+    height: 250px;
+    background: radial-gradient(ellipse at 50% 110%, rgba(110, 50, 230, 0.30) 0%, rgba(80, 40, 200, 0.12) 40%, transparent 75%);
     pointer-events: none;
     z-index: 0;
   }

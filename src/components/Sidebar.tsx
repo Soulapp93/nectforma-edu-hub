@@ -248,7 +248,7 @@ const Sidebar = () => {
                             rounded-xl 
                             transition-all duration-200 
                             ${isAdminRoute
-                              ? 'bg-[hsl(45,100%,50%)] text-[hsl(235,55%,18%)] font-semibold shadow-lg shadow-yellow-500/30'
+                              ? 'bg-[hsl(45,100%,50%)] text-[hsl(240,60%,15%)] font-semibold shadow-lg shadow-yellow-500/30'
                               : 'text-white/75 hover:bg-white/8 hover:text-white'
                             }
                           `}
@@ -325,7 +325,7 @@ const Sidebar = () => {
                             transition-all duration-200 
                             relative
                             ${isActive
-                              ? 'bg-[hsl(45,100%,50%)] text-[hsl(235,55%,18%)] font-semibold shadow-lg shadow-yellow-500/30'
+                              ? 'bg-[hsl(45,100%,50%)] text-[hsl(240,60%,15%)] font-semibold shadow-lg shadow-yellow-500/30'
                               : 'text-white/75 hover:bg-white/8 hover:text-white'
                             }
                           `
@@ -379,7 +379,7 @@ const Sidebar = () => {
               </div>
             </div>
             <div className="flex gap-2 mt-3">
-              <button className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[hsl(45,100%,50%)] text-[hsl(235,55%,18%)] text-xs font-bold hover:bg-[hsl(45,100%,55%)] transition-colors">
+              <button className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[hsl(45,100%,50%)] text-[hsl(240,60%,15%)] text-xs font-bold hover:bg-[hsl(45,100%,55%)] transition-colors">
                 <HelpCircle className="w-3.5 h-3.5" />
                 Aide
               </button>
