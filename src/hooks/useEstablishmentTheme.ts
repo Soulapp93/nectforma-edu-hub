@@ -86,6 +86,7 @@ function applyThemeToDOM(theme: EstablishmentTheme) {
   root.style.setProperty('--sidebar-background', sidebar);
   if (s) {
     root.style.setProperty('--sidebar-border', hslString(s.h, s.s, Math.min(s.l + 10, 40)));
+    root.style.setProperty('--nect-sidebar-dark', hslString(s.h, Math.max(s.s - 5, 0), Math.max(s.l - 4, 5)));
   }
   
   // Background
