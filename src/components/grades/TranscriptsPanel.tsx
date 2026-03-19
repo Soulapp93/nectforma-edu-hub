@@ -197,13 +197,22 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   });
 
   const { data: evaluations = [] } = useQuery({
-    queryKey: ['evaluations-transcripts', selectedFormation, activePeriodIds.join(',')],
+    queryKey: ['evaluations-transcripts', selectedFormation, semesterView, activePeriodIds.join(',')],
     queryFn: async () => {
       const allEvals = await getEvaluations(selectedFormation);
-      if (activePeriodIds.length > 0 && activePeriodIds.length < periods.length) {
-        return allEvals.filter(e => activePeriodIds.includes(e.period_id || ''));
-      }
-      return allEvals;
+      if (!activeSemesterNums || activeSemesterNums.length === 0) return allEvals;
+      
+      // Filter by semester: use period_id if available, otherwise use module's semester
+      return allEvals.filter(e => {
+        if (e.period_id && activePeriodIds.length > 0) {
+          return activePeriodIds.includes(e.period_id);
+        }
+        const mod = allModules.find(m => m.id === e.module_id);
+        if (mod?.semester) {
+          return activeSemesterNums.includes(mod.semester as number);
+        }
+        return true;
+      });
     },
     enabled: !!selectedFormation,
   });
