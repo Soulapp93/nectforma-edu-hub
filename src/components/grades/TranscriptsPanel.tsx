@@ -181,7 +181,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   // Filter modules by semester
   const modules = useMemo(() => {
     if (!activeSemesterNums) return allModules;
-    return allModules.filter((m: any) => !m.semester || activeSemesterNums.includes(m.semester));
+    return allModules.filter((m: any) => semesterMatchesFilter(m.semester, activeSemesterNums));
   }, [allModules, activeSemesterNums]);
 
   const { data: teachingUnits = [] } = useQuery({
