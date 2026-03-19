@@ -20,6 +20,8 @@ import {
   PanelLeft,
   FolderKanban,
   Award,
+  Headphones,
+  HelpCircle,
 } from 'lucide-react';
 import {
   Sidebar as SidebarWrapper,
@@ -161,7 +163,6 @@ const Sidebar = () => {
     >
       {/* Subtle inner glow effect */}
       <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/20 pointer-events-none z-0" />
-      {/* Purple/blue glow at bottom */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[hsl(260,80%,40%)]/20 to-transparent pointer-events-none z-0" />
       
       {/* Header */}
@@ -173,7 +174,6 @@ const Sidebar = () => {
               <NectformaLogo variant="light" size={collapsed ? 'sm' : 'md'} showIcon={true} />
             </div>
             
-            {/* Modern Collapse Toggle Button */}
             {!collapsed && (
               <button
                 onClick={toggleSidebar}
@@ -185,7 +185,6 @@ const Sidebar = () => {
             )}
           </div>
           
-          {/* Collapse button when collapsed - centered */}
           {collapsed && (
             <button
               onClick={toggleSidebar}
@@ -233,60 +232,45 @@ const Sidebar = () => {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="relative z-10 px-2">
-        {/* User Profile Card */}
-        <div className={`mb-4 p-2.5 rounded-xl bg-white/8 border border-white/8 ${collapsed ? 'flex justify-center' : ''}`}>
-          <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
+      <SidebarContent className="relative z-10 px-3">
+        {/* User Profile Card - PCA PREAD style */}
+        <div className={`mb-5 ${collapsed ? 'flex justify-center' : ''}`}>
+          <NavLink
+            to="/compte"
+            className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'} px-3 py-3 rounded-2xl bg-white/8 border border-white/10 hover:bg-white/12 transition-all duration-200`}
+          >
             <div className="relative flex-shrink-0">
-              <Avatar className="w-9 h-9 ring-2 ring-white/20" title={collapsed ? userDisplayInfo.name : undefined}>
+              <Avatar className="w-10 h-10 ring-2 ring-white/25" title={collapsed ? userDisplayInfo.name : undefined}>
                 <AvatarImage src={userDisplayInfo.profilePhotoUrl || ''} alt={userDisplayInfo.name} />
                 <AvatarFallback className="bg-white/15 text-white text-xs font-semibold">
                   {userDisplayInfo.initials}
                 </AvatarFallback>
               </Avatar>
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-success rounded-full border-2 border-[hsl(235,55%,18%)]" />
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[hsl(235,55%,18%)]" />
             </div>
             {!collapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white truncate leading-tight">{userDisplayInfo.name}</p>
-                <p className="text-[11px] text-white/50 font-medium">{userDisplayInfo.role}</p>
-                {userDisplayInfo.relationInfo && (
-                  <div className="mt-1.5 p-2 rounded-md bg-white/5 border border-white/8">
-                    {userDisplayInfo.relationInfo.type === 'tutor' ? (
-                      <div className="space-y-0.5">
-                        <p className="text-[10px] text-white/60 font-medium flex items-center gap-1">
-                          <span>👨‍🏫</span> Mon tuteur
-                        </p>
-                        <p className="text-[11px] text-white font-medium truncate pl-4">
-                          {userDisplayInfo.relationInfo.name}
-                        </p>
-                        {userDisplayInfo.relationInfo.company && (
-                          <p className="text-[10px] text-white/40 truncate pl-4 flex items-center gap-1">
-                            <Building2 className="w-2.5 h-2.5" />
-                            {userDisplayInfo.relationInfo.company}
-                          </p>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="space-y-0.5">
-                        <p className="text-[10px] text-white/60 font-medium flex items-center gap-1">
-                          <span>👨‍🎓</span> Mon apprenti
-                        </p>
-                        <p className="text-[11px] text-white font-medium truncate pl-4">
-                          {userDisplayInfo.relationInfo.name}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
+              <div className="flex-1 min-w-0 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-white truncate leading-tight">{userDisplayInfo.name}</p>
+                  <p className="text-[11px] text-emerald-400 font-medium flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                    En ligne
+                  </p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-white/40 flex-shrink-0" />
               </div>
             )}
-          </div>
+          </NavLink>
         </div>
+
+        {/* Navigation section label */}
+        {!collapsed && (
+          <p className="text-[10px] font-semibold text-white/40 uppercase tracking-[0.15em] px-3 mb-2">Menu principal</p>
+        )}
 
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
+            <SidebarMenu className="space-y-0.5">
               {navigation.map((item) => {
                 const Icon = item.icon;
                 const hasSubItems = item.subItems && item.subItems.length > 0;
@@ -301,12 +285,12 @@ const Sidebar = () => {
                           className={`
                             flex items-center ${collapsed ? 'justify-center' : 'justify-between'} 
                             w-full px-3 py-2.5 
-                            text-[13px] font-semibold 
-                            rounded-xl 
+                            text-[13px] font-medium 
+                            rounded-full 
                             transition-all duration-200 
                             ${isAdminRoute
-                              ? 'bg-accent text-accent-foreground shadow-md'
-                              : 'text-white/75 hover:bg-white/8 hover:text-white'
+                              ? 'bg-white/10 border border-white/20 text-white'
+                              : 'text-white/65 hover:bg-white/6 hover:text-white/90'
                             }
                           `}
                           title={collapsed ? item.name : undefined}
@@ -317,13 +301,13 @@ const Sidebar = () => {
                           </div>
                           {!collapsed && (
                             <div className={`transition-transform duration-200 ${adminExpanded ? 'rotate-180' : ''}`}>
-                              <ChevronDown className="h-4 w-4 text-white/60" />
+                              <ChevronDown className="h-4 w-4 text-white/50" />
                             </div>
                           )}
                         </button>
                         
                         {!collapsed && adminExpanded && (
-                          <div className="ml-4 mt-1.5 space-y-0.5 border-l-2 border-white/15 pl-3">
+                          <div className="ml-5 mt-1.5 space-y-0.5 border-l border-white/10 pl-3">
                             {item.subItems.map((subItem) => {
                               const SubIcon = subItem.icon;
                               const searchParams = new URLSearchParams(subItem.href.split('?')[1]);
@@ -336,20 +320,24 @@ const Sidebar = () => {
                                   key={subItem.name}
                                   to={subItem.href}
                                   className={`
-                                    flex items-center gap-2 
+                                    flex items-center justify-between
+                                    gap-2 
                                     px-3 py-1.5 
                                     text-[11px] 
-                                    rounded-md 
+                                    rounded-lg 
                                     transition-all duration-200 
                                     whitespace-nowrap
                                     ${isSubActive
-                                      ? 'bg-accent/20 text-accent font-semibold'
-                                      : 'text-white/60 hover:bg-white/8 hover:text-white'
+                                      ? 'bg-white/10 text-white font-medium'
+                                      : 'text-white/50 hover:bg-white/5 hover:text-white/80'
                                     }
                                   `}
                                 >
-                                  <SubIcon className="h-3.5 w-3.5 flex-shrink-0" />
-                                  <span>{subItem.name}</span>
+                                  <div className="flex items-center gap-2">
+                                    <SubIcon className="h-3.5 w-3.5 flex-shrink-0" />
+                                    <span>{subItem.name}</span>
+                                  </div>
+                                  <ChevronRight className="h-3 w-3 text-white/30" />
                                 </NavLink>
                               );
                             })}
@@ -377,13 +365,13 @@ const Sidebar = () => {
                           `
                             flex items-center ${collapsed ? 'justify-center' : 'justify-between'} 
                             px-3 py-2.5 
-                            text-[13px] font-semibold 
-                            rounded-xl 
+                            text-[13px] font-medium 
+                            rounded-full 
                             transition-all duration-200 
                             relative
                             ${isActive
-                              ? 'bg-accent text-accent-foreground shadow-md'
-                              : 'text-white/75 hover:bg-white/8 hover:text-white'
+                              ? 'bg-white/10 border border-white/20 text-white font-semibold'
+                              : 'text-white/65 hover:bg-white/6 hover:text-white/90 border border-transparent'
                             }
                           `
                         }
@@ -393,15 +381,20 @@ const Sidebar = () => {
                           <Icon className="h-[18px] w-[18px] flex-shrink-0" />
                           {!collapsed && <span>{item.name}</span>}
                         </div>
-                        {badgeCount > 0 && !collapsed && (
-                          <Badge 
-                            className="bg-success text-success-foreground hover:bg-success/90 text-[10px] min-w-[20px] h-5 flex items-center justify-center rounded-full font-semibold shadow-sm"
-                          >
-                            {badgeCount > 99 ? '99+' : badgeCount}
-                          </Badge>
+                        {!collapsed && (
+                          <div className="flex items-center gap-2">
+                            {badgeCount > 0 && (
+                              <Badge 
+                                className="bg-accent text-accent-foreground hover:bg-accent/90 text-[10px] min-w-[20px] h-5 flex items-center justify-center rounded-full font-semibold shadow-sm"
+                              >
+                                {badgeCount > 99 ? '99+' : badgeCount}
+                              </Badge>
+                            )}
+                            <ChevronRight className="h-3.5 w-3.5 text-white/30" />
+                          </div>
                         )}
                         {badgeCount > 0 && collapsed && (
-                          <span className="absolute -top-1 -right-1 bg-success text-success-foreground text-[9px] min-w-[16px] h-4 rounded-full flex items-center justify-center font-semibold shadow-sm">
+                          <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground text-[9px] min-w-[16px] h-4 rounded-full flex items-center justify-center font-semibold shadow-sm">
                             {badgeCount > 99 ? '99+' : badgeCount}
                           </span>
                         )}
@@ -415,17 +408,49 @@ const Sidebar = () => {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="relative z-10 p-3 border-t border-white/8">
+      <SidebarFooter className="relative z-10 px-3 pb-4 pt-2 space-y-3">
+        {/* Support Card - PCA PREAD style */}
+        {!collapsed && (
+          <div className="p-4 rounded-2xl bg-white/8 border border-white/10">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
+                <Headphones className="w-4 h-4 text-accent" />
+              </div>
+              <div>
+                <p className="text-[12px] font-semibold text-white">Besoin d'aide ?</p>
+                <p className="text-[10px] text-white/50">Contactez le support</p>
+              </div>
+            </div>
+            <button className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-white/10 border border-white/15 text-[11px] font-medium text-white/80 hover:bg-white/15 hover:text-white transition-all duration-200">
+              <HelpCircle className="w-3.5 h-3.5" />
+              Assistance
+            </button>
+          </div>
+        )}
+
+        {collapsed && (
+          <div className="flex justify-center">
+            <button 
+              className="p-2 rounded-xl bg-white/8 border border-white/10 hover:bg-white/15 transition-all duration-200"
+              title="Assistance"
+            >
+              <Headphones className="w-4 h-4 text-white/60" />
+            </button>
+          </div>
+        )}
+        
+        {/* Logout */}
         <button 
           onClick={handleLogout}
           className={`
             flex items-center ${collapsed ? 'justify-center' : 'gap-3'} 
             w-full px-3 py-2.5 
             text-[13px] font-medium 
-            text-white/70 
-            rounded-lg 
-            hover:bg-white/8 hover:text-white 
+            text-white/50 
+            rounded-full 
+            hover:bg-white/8 hover:text-white/80 
             transition-all duration-200
+            border border-transparent
           `}
           title={collapsed ? "Déconnexion" : undefined}
         >
