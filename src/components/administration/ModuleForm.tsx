@@ -36,7 +36,8 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex, i
       description: '',
       instructorIds: [],
       duration_hours: 0,
-      subModules: []
+      subModules: [],
+      semester: undefined
     }
   );
   const [showSubModules, setShowSubModules] = useState(false);
