@@ -306,15 +306,15 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   // Duplicate period
   const duplicateMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedPeriod || !selectedFormation) throw new Error('Sélectionnez une période');
-      const currentPeriod = periods.find(p => p.id === selectedPeriod);
+      const periodId = activePeriodIds[0];
+      if (!periodId || !selectedFormation) throw new Error('Sélectionnez une période');
+      const currentPeriod = periods.find(p => p.id === periodId);
       const newName = `${currentPeriod?.name || 'Semestre'} (copie)`;
-      return duplicatePeriodWithEvaluations(selectedPeriod, newName, selectedFormation);
+      return duplicatePeriodWithEvaluations(periodId, newName, selectedFormation);
     },
-    onSuccess: (newPeriod) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['periods-sheet'] });
       queryClient.invalidateQueries({ queryKey: ['evaluations-sheet-all'] });
-      setSelectedPeriod(newPeriod.id);
       toast.success('Semestre dupliqué avec succès');
     },
     onError: (e: any) => toast.error(e.message || 'Erreur lors de la duplication'),
