@@ -484,44 +484,50 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
           )}
           {/* Semester buttons */}
           {semestersCount > 0 && selectedFormationObj && (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5 bg-muted/50 rounded-xl p-1.5">
               {Array.from({ length: durationYears }, (_, y) => {
                 const s1 = y * 2 + 1;
                 const s2 = y * 2 + 2;
                 const yearNum = y + 1;
                 return (
-                  <div key={yearNum} className="flex items-center gap-1">
+                  <React.Fragment key={yearNum}>
                     {durationYears > 1 && (
-                      <span className="text-xs font-medium text-muted-foreground mr-1">A{yearNum}:</span>
+                      <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider ml-1">A{yearNum}</span>
                     )}
-                    <Button
-                      size="sm"
-                      variant={semesterView === `s${s1}` ? 'default' : 'outline'}
+                    <button
                       onClick={() => { setSemesterView(`s${s1}`); setCurrentStudentIndex(0); }}
-                      className="text-xs h-8"
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                        semesterView === `s${s1}` 
+                          ? 'bg-primary text-primary-foreground shadow-sm' 
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      }`}
                     >
                       S{s1}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={semesterView === `s${s2}` ? 'default' : 'outline'}
+                    </button>
+                    <button
                       onClick={() => { setSemesterView(`s${s2}`); setCurrentStudentIndex(0); }}
-                      className="text-xs h-8"
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                        semesterView === `s${s2}` 
+                          ? 'bg-primary text-primary-foreground shadow-sm' 
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      }`}
                     >
                       S{s2}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={semesterView === `final-${yearNum}` ? 'default' : 'outline'}
+                    </button>
+                    <button
                       onClick={() => { setSemesterView(`final-${yearNum}`); setCurrentStudentIndex(0); }}
-                      className="text-xs h-8 font-semibold"
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                        semesterView === `final-${yearNum}` 
+                          ? 'bg-primary text-primary-foreground shadow-sm' 
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      }`}
                     >
-                      {durationYears === 1 ? 'Final (S1+S2)' : `Final A${yearNum}`}
-                    </Button>
+                      {durationYears === 1 ? 'Final' : `Final A${yearNum}`}
+                    </button>
                     {yearNum < durationYears && (
-                      <span className="text-border mx-1">|</span>
+                      <div className="w-px h-5 bg-border mx-0.5" />
                     )}
-                  </div>
+                  </React.Fragment>
                 );
               })}
             </div>
