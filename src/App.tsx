@@ -17,6 +17,7 @@ import AdminRoute from './components/AdminRoute';
 import AdminPrincipalRoute from './components/AdminPrincipalRoute';
 import TutorRestrictedRoute from './components/TutorRestrictedRoute';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useEstablishmentTheme } from '@/hooks/useEstablishmentTheme';
 import { monitoring } from '@/utils/monitoring';
 import Dashboard from './pages/Dashboard';
 import Administration from './pages/Administration';
@@ -77,6 +78,9 @@ const queryClient = new QueryClient({
 const AppContent = () => {
   const location = useLocation();
   const { userId, userRole, loading: authLoading, error: authError } = useCurrentUser();
+  
+  // Apply establishment theme colors
+  useEstablishmentTheme();
   
   // Initialize monitoring with user ID
   useEffect(() => {

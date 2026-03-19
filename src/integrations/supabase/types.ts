@@ -1221,6 +1221,10 @@ export type Database = {
           number_of_students: string | null
           phone: string | null
           siret: string | null
+          theme_background: string | null
+          theme_primary: string | null
+          theme_secondary: string | null
+          theme_sidebar: string | null
           type: string
           updated_at: string
           website: string | null
@@ -1237,6 +1241,10 @@ export type Database = {
           number_of_students?: string | null
           phone?: string | null
           siret?: string | null
+          theme_background?: string | null
+          theme_primary?: string | null
+          theme_secondary?: string | null
+          theme_sidebar?: string | null
           type: string
           updated_at?: string
           website?: string | null
@@ -1253,6 +1261,10 @@ export type Database = {
           number_of_students?: string | null
           phone?: string | null
           siret?: string | null
+          theme_background?: string | null
+          theme_primary?: string | null
+          theme_secondary?: string | null
+          theme_sidebar?: string | null
           type?: string
           updated_at?: string
           website?: string | null
