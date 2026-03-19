@@ -523,7 +523,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
                       )}
                       <div className="leading-tight">
                         <h2 className="text-sm font-bold text-foreground">{establishment?.name}</h2>
-                        {currentPeriod && <p className="text-[10px] text-muted-foreground">{currentPeriod.name}</p>}
+                        {currentPeriodLabel && <p className="text-[10px] text-muted-foreground">{currentPeriodLabel}</p>}
                       </div>
                     </div>
 

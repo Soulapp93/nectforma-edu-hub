@@ -659,7 +659,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                           SESSION {format(new Date(selectedFormationData.start_date), 'yyyy')} - {format(new Date(selectedFormationData.end_date), 'yyyy')}
                         </p>
                       )}
-                      {selectedPeriodData && <p className="text-xs text-muted-foreground mt-1">... {selectedPeriodData.name}</p>}
+                      {currentPeriodLabel && <p className="text-xs text-muted-foreground mt-1">{currentPeriodLabel}</p>}
                     </div>
                   </div>
                 </div>
