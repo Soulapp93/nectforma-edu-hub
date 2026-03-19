@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { UserCircle, Shield } from 'lucide-react';
+import { UserCircle, Shield, Palette } from 'lucide-react';
 import ProfileSettings from '../components/compte/ProfileSettings';
 import RGPDSettings from '../components/compte/RGPDSettings';
+import ThemeCustomization from '../components/compte/ThemeCustomization';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { supabase } from '@/integrations/supabase/client';
 import { fileUploadService } from '@/services/fileUploadService';
@@ -230,10 +231,14 @@ const Compte = () => {
       <div className="p-4 sm:p-6 lg:p-8">
         <div className="max-w-4xl">
           <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2 max-w-md">
+            <TabsList className="grid w-full grid-cols-3 max-w-lg">
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <UserCircle className="h-4 w-4" />
                 Profil
+              </TabsTrigger>
+              <TabsTrigger value="theme" className="flex items-center gap-2">
+                <Palette className="h-4 w-4" />
+                Design
               </TabsTrigger>
               <TabsTrigger value="rgpd" className="flex items-center gap-2">
                 <Shield className="h-4 w-4" />
@@ -251,6 +256,10 @@ const Compte = () => {
                 isUploadingPhoto={isUploadingPhoto}
                 isDeletingPhoto={isDeletingPhoto}
               />
+            </TabsContent>
+
+            <TabsContent value="theme">
+              <ThemeCustomization />
             </TabsContent>
 
             <TabsContent value="rgpd">
