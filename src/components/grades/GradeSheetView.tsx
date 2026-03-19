@@ -185,10 +185,9 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
         if (e.period_id && activePeriodIds.length > 0) {
           return activePeriodIds.includes(e.period_id);
         }
-        // Otherwise, check the module's semester
         const mod = modules.find(m => m.id === e.module_id);
         if (mod?.semester) {
-          return activeSemesterNums.includes(mod.semester);
+          return semesterMatchesFilter(mod.semester, activeSemesterNums);
         }
         // No semester info: include in all views
         return true;
