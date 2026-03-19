@@ -41,7 +41,7 @@ const TopHeaderBar = () => {
           className="relative p-2 rounded-full hover:bg-muted transition-colors"
           title="Messagerie"
         >
-          <MessageSquare className="h-5 w-5 text-muted-foreground" />
+          <MessageSquare className="h-5 w-5 text-white/70" />
         </NavLink>
 
         {/* Notifications */}
