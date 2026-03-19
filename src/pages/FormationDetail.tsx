@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Clock, Users, Eye, Edit, FileText, GraduationCap, BookText } from 'lucide-react';
 import { formationService, Formation } from '@/services/formationService';
@@ -30,6 +30,7 @@ const FormationDetail = () => {
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const [instructors, setInstructors] = useState<FormationInstructor[]>([]);
+  const [semesterFilter, setSemesterFilter] = useState<string>('all');
   const { userRole } = useCurrentUser();
 
   // Get navigation context
