@@ -20,6 +20,8 @@ import {
   PanelLeft,
   FolderKanban,
   Award,
+  Headphones,
+  HelpCircle,
 } from 'lucide-react';
 import {
   Sidebar as SidebarWrapper,
@@ -77,6 +79,8 @@ const Sidebar = () => {
     if (myUser) {
       return {
         name: `${myUser.first_name} ${myUser.last_name}`,
+        lastName: myUser.last_name?.toUpperCase() || '',
+        firstName: myUser.first_name || '',
         role: contextRole || userRole || 'Utilisateur',
         initials: `${myUser.first_name?.[0] || ''}${myUser.last_name?.[0] || ''}`.toUpperCase() || 'U',
         profilePhotoUrl: getResolvedPhotoUrl(myUser.profile_photo_url),
@@ -85,6 +89,8 @@ const Sidebar = () => {
     }
     return {
       name: 'Utilisateur',
+      lastName: '',
+      firstName: 'Utilisateur',
       role: contextRole || userRole || 'Utilisateur',
       initials: 'U',
       profilePhotoUrl: null,
@@ -156,12 +162,9 @@ const Sidebar = () => {
 
   return (
     <SidebarWrapper 
-      className="nect-gradient text-white shadow-2xl border-r-0 overflow-hidden"
+      className="nect-gradient sidebar-glow text-white shadow-2xl border-r-0 overflow-hidden"
       collapsible="icon"
     >
-      {/* Subtle inner glow effect */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white/3 via-transparent to-black/15 pointer-events-none z-0" />
-      
       {/* Header */}
       <SidebarHeader className="relative z-10 px-3 pt-5 pb-4">
         <div className="flex flex-col gap-3">
@@ -171,7 +174,6 @@ const Sidebar = () => {
               <NectformaLogo variant="light" size={collapsed ? 'sm' : 'md'} showIcon={true} />
             </div>
             
-            {/* Modern Collapse Toggle Button */}
             {!collapsed && (
               <button
                 onClick={toggleSidebar}
@@ -183,7 +185,6 @@ const Sidebar = () => {
             )}
           </div>
           
-          {/* Collapse button when collapsed - centered */}
           {collapsed && (
             <button
               onClick={toggleSidebar}
@@ -193,87 +194,34 @@ const Sidebar = () => {
               <PanelLeft className="w-4 h-4 text-white/70 group-hover:text-white transition-colors" />
             </button>
           )}
-          
-          {/* Establishment info */}
-          {!collapsed && establishment && (
-            <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white/10 border border-white/10">
-              {establishment.logo_url ? (
-                <img 
-                  src={establishment.logo_url} 
-                  alt={establishment.name}
-                  className="w-6 h-6 rounded-md object-cover ring-1 ring-white/20"
-                />
-              ) : (
-                <div className="w-6 h-6 bg-white/15 rounded-md flex items-center justify-center">
-                  <Building2 className="w-3 h-3 text-white/80" />
-                </div>
-              )}
-              <p className="text-[11px] font-semibold text-white/90 truncate flex-1 uppercase tracking-wider">{establishment.name}</p>
-            </div>
-          )}
-          
-          {collapsed && establishment && (
-            <div className="flex justify-center">
-              {establishment.logo_url ? (
-                <img 
-                  src={establishment.logo_url} 
-                  alt={establishment.name}
-                  className="w-8 h-8 rounded-lg object-cover ring-1 ring-white/20"
-                  title={establishment.name}
-                />
-              ) : (
-                <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center ring-1 ring-white/20" title={establishment.name}>
-                  <Building2 className="w-4 h-4 text-white/70" />
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </SidebarHeader>
 
       <SidebarContent className="relative z-10 px-2">
-        {/* User Profile Card */}
-        <div className={`mb-4 p-2.5 rounded-lg bg-white/8 border border-white/8 ${collapsed ? 'flex justify-center' : ''}`}>
+        {/* User Profile Card - PCA PREAD style */}
+        <div className={`mb-4 p-3 rounded-xl bg-white/8 border border-white/10 ${collapsed ? 'flex justify-center' : ''}`}>
           <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
-            <Avatar className="w-9 h-9 flex-shrink-0 ring-2 ring-white/20" title={collapsed ? userDisplayInfo.name : undefined}>
-              <AvatarImage src={userDisplayInfo.profilePhotoUrl || ''} alt={userDisplayInfo.name} />
-              <AvatarFallback className="bg-white/15 text-white text-xs font-semibold">
-                {userDisplayInfo.initials}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative flex-shrink-0">
+              <Avatar className="w-10 h-10 ring-2 ring-white/25" title={collapsed ? userDisplayInfo.name : undefined}>
+                <AvatarImage src={userDisplayInfo.profilePhotoUrl || ''} alt={userDisplayInfo.name} />
+                <AvatarFallback className="bg-white/15 text-white text-xs font-semibold">
+                  {userDisplayInfo.initials}
+                </AvatarFallback>
+              </Avatar>
+              {/* Online indicator - green dot */}
+              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[hsl(240,60%,12%)]" />
+            </div>
             {!collapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white truncate leading-tight">{userDisplayInfo.name}</p>
-                <p className="text-[11px] text-white/50 font-medium">{userDisplayInfo.role}</p>
-                {userDisplayInfo.relationInfo && (
-                  <div className="mt-1.5 p-2 rounded-md bg-white/5 border border-white/8">
-                    {userDisplayInfo.relationInfo.type === 'tutor' ? (
-                      <div className="space-y-0.5">
-                        <p className="text-[10px] text-white/60 font-medium flex items-center gap-1">
-                          <span>👨‍🏫</span> Mon tuteur
-                        </p>
-                        <p className="text-[11px] text-white font-medium truncate pl-4">
-                          {userDisplayInfo.relationInfo.name}
-                        </p>
-                        {userDisplayInfo.relationInfo.company && (
-                          <p className="text-[10px] text-white/40 truncate pl-4 flex items-center gap-1">
-                            <Building2 className="w-2.5 h-2.5" />
-                            {userDisplayInfo.relationInfo.company}
-                          </p>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="space-y-0.5">
-                        <p className="text-[10px] text-white/60 font-medium flex items-center gap-1">
-                          <span>👨‍🎓</span> Mon apprenti
-                        </p>
-                        <p className="text-[11px] text-white font-medium truncate pl-4">
-                          {userDisplayInfo.relationInfo.name}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
+              <div className="flex-1 min-w-0 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-white truncate leading-tight">{userDisplayInfo.firstName}</p>
+                  <p className="text-sm font-extrabold text-white truncate leading-tight uppercase">{userDisplayInfo.lastName}</p>
+                  <p className="text-[11px] text-emerald-400 font-medium flex items-center gap-1 mt-0.5">
+                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                    En ligne
+                  </p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-white/50 flex-shrink-0" />
               </div>
             )}
           </div>
@@ -297,10 +245,10 @@ const Sidebar = () => {
                             flex items-center ${collapsed ? 'justify-center' : 'justify-between'} 
                             w-full px-3 py-2.5 
                             text-[13px] font-medium 
-                            rounded-lg 
+                            rounded-xl 
                             transition-all duration-200 
                             ${isAdminRoute
-                              ? 'bg-white/15 text-white shadow-md'
+                              ? 'bg-[hsl(45,100%,50%)] text-[hsl(235,55%,18%)] font-semibold shadow-lg shadow-yellow-500/30'
                               : 'text-white/75 hover:bg-white/8 hover:text-white'
                             }
                           `}
@@ -312,7 +260,7 @@ const Sidebar = () => {
                           </div>
                           {!collapsed && (
                             <div className={`transition-transform duration-200 ${adminExpanded ? 'rotate-180' : ''}`}>
-                              <ChevronDown className="h-4 w-4 text-white/60" />
+                              <ChevronDown className="h-4 w-4" />
                             </div>
                           )}
                         </button>
@@ -334,7 +282,7 @@ const Sidebar = () => {
                                     flex items-center gap-2 
                                     px-3 py-1.5 
                                     text-[11px] 
-                                    rounded-md 
+                                    rounded-lg 
                                     transition-all duration-200 
                                     whitespace-nowrap
                                     ${isSubActive
@@ -373,11 +321,11 @@ const Sidebar = () => {
                             flex items-center ${collapsed ? 'justify-center' : 'justify-between'} 
                             px-3 py-2.5 
                             text-[13px] font-medium 
-                            rounded-lg 
+                            rounded-xl 
                             transition-all duration-200 
                             relative
                             ${isActive
-                              ? 'bg-white/15 text-white shadow-md'
+                              ? 'bg-[hsl(45,100%,50%)] text-[hsl(235,55%,18%)] font-semibold shadow-lg shadow-yellow-500/30'
                               : 'text-white/75 hover:bg-white/8 hover:text-white'
                             }
                           `
@@ -388,6 +336,15 @@ const Sidebar = () => {
                           <Icon className="h-[18px] w-[18px] flex-shrink-0" />
                           {!collapsed && <span>{item.name}</span>}
                         </div>
+                        {!collapsed && (
+                          <NavLink
+                            to={item.href}
+                            end={item.href === '/' || item.href === '/dashboard'}
+                            className={({ isActive }) => isActive ? '' : 'hidden'}
+                          >
+                            {({ isActive }) => isActive ? <ChevronRight className="h-4 w-4 flex-shrink-0" /> : null}
+                          </NavLink>
+                        )}
                         {badgeCount > 0 && !collapsed && (
                           <Badge 
                             className="bg-success text-success-foreground hover:bg-success/90 text-[10px] min-w-[20px] h-5 flex items-center justify-center rounded-full font-semibold shadow-sm"
@@ -408,6 +365,30 @@ const Sidebar = () => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Help Card - PCA PREAD style */}
+        {!collapsed && (
+          <div className="mt-4 mx-1 p-4 rounded-xl bg-white/8 border border-white/10 backdrop-blur-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-full bg-[hsl(45,100%,50%)]/20 flex items-center justify-center">
+                <HelpCircle className="w-4 h-4 text-[hsl(45,100%,50%)]" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">Besoin d'aide ?</p>
+                <p className="text-[10px] text-white/50">Contactez le support</p>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-3">
+              <button className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[hsl(45,100%,50%)] text-[hsl(235,55%,18%)] text-xs font-bold hover:bg-[hsl(45,100%,55%)] transition-colors">
+                <HelpCircle className="w-3.5 h-3.5" />
+                Aide
+              </button>
+              <button className="p-2 rounded-lg bg-white/10 text-white/70 hover:bg-white/20 transition-colors">
+                <Headphones className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="relative z-10 p-3 border-t border-white/8">
@@ -418,14 +399,14 @@ const Sidebar = () => {
             w-full px-3 py-2.5 
             text-[13px] font-medium 
             text-white/70 
-            rounded-lg 
+            rounded-xl 
             hover:bg-white/8 hover:text-white 
             transition-all duration-200
           `}
           title={collapsed ? "Déconnexion" : undefined}
         >
           <LogOut className="h-[18px] w-[18px] flex-shrink-0" />
-          {!collapsed && <span>Déconnexion</span>}
+          {!collapsed && <span>Se déconnecter</span>}
         </button>
       </SidebarFooter>
     </SidebarWrapper>
