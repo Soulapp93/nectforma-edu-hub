@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { X, Plus, User, ChevronDown, ChevronRight } from 'lucide-react';
 import { useInstructors } from '@/hooks/useInstructors';
+import { getSemesterOptions } from '@/utils/semesterUtils';
 
 export interface SubModuleFormData {
   title: string;
