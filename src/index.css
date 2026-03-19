@@ -865,23 +865,23 @@ body:has(.fullscreen-container) {
   .landing-gradient-bg {
     background: linear-gradient(
       180deg,
-      hsl(270 60% 98%) 0%,
-      hsl(280 50% 96%) 15%,
-      hsl(270 40% 97%) 30%,
-      hsl(300 40% 96%) 50%,
-      hsl(270 50% 97%) 70%,
-      hsl(280 45% 96%) 85%,
-      hsl(270 60% 98%) 100%
+      hsl(230 25% 97%) 0%,
+      hsl(230 30% 95%) 15%,
+      hsl(230 25% 97%) 30%,
+      hsl(230 20% 96%) 50%,
+      hsl(230 25% 97%) 70%,
+      hsl(230 30% 96%) 85%,
+      hsl(230 25% 97%) 100%
     );
   }
 
   .dark .landing-gradient-bg {
     background: linear-gradient(
       180deg,
-      hsl(260 20% 8%) 0%,
-      hsl(270 20% 10%) 30%,
-      hsl(280 15% 9%) 60%,
-      hsl(260 20% 8%) 100%
+      hsl(240 20% 6%) 0%,
+      hsl(240 20% 8%) 30%,
+      hsl(240 15% 7%) 60%,
+      hsl(240 20% 6%) 100%
     );
   }
 
