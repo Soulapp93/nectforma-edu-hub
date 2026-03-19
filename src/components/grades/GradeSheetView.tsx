@@ -426,7 +426,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
       {/* Top bar: Semester navigation + Actions */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
         {/* Semester buttons grouped by year with Final */}
-        {periods.length > 0 && (
+        {semestersCount > 0 && currentFormationData && (
           <div className="flex flex-wrap items-center gap-2">
             {Array.from({ length: durationYears }, (_, y) => {
               const s1 = y * 2 + 1;
