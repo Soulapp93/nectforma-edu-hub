@@ -10,6 +10,7 @@ export interface FormationModule {
   description?: string;
   duration_hours: number;
   order_index: number;
+  semester?: number | null;
   instructors?: Instructor[];
 }
 
@@ -45,38 +46,38 @@ export const moduleService = {
       .select('*')
       .eq('formation_id', formationId)
       .order('order_index');
-    
+
     if (modulesError) throw modulesError;
-    
+
     const modulesWithInstructors = await Promise.all(
       (modules || []).map(async (mod) => {
         const { data: instructorAssignments, error: assignError } = await db
           .from('module_instructors')
           .select('instructor_id')
           .eq('module_id', mod.id);
-        
+
         if (assignError) {
           console.warn('Erreur récupération formateurs module:', assignError);
           return { ...mod, instructors: [], module_instructors: [] };
         }
-        
+
         if (instructorAssignments && instructorAssignments.length > 0) {
           const instructorIds = instructorAssignments.map((a: any) => a.instructor_id);
           const { data: instructors } = await supabase
             .from('users')
             .select('id, first_name, last_name, email')
             .in('id', instructorIds);
-          
-          return { 
-            ...mod, 
+
+          return {
+            ...mod,
             instructors: instructors || [],
-            module_instructors: instructorAssignments.map((a: any) => ({ instructor_id: a.instructor_id }))
+            module_instructors: instructorAssignments.map((a: any) => ({ instructor_id: a.instructor_id })),
           };
         }
         return { ...mod, instructors: [], module_instructors: [] };
       })
     );
-    
+
     return modulesWithInstructors;
   },
 
@@ -88,7 +89,8 @@ export const moduleService = {
         title: moduleData.title,
         description: moduleData.description,
         duration_hours: moduleData.duration_hours,
-        order_index: moduleData.order_index
+        order_index: moduleData.order_index,
+        semester: moduleData.semester ?? null,
       })
       .select()
       .single();
@@ -98,7 +100,7 @@ export const moduleService = {
     if (instructorIds.length > 0) {
       const assignments = instructorIds.map(instructorId => ({
         module_id: module.id,
-        instructor_id: instructorId
+        instructor_id: instructorId,
       }));
 
       const { error: assignmentError } = await db
@@ -114,14 +116,19 @@ export const moduleService = {
     return module;
   },
 
-  async updateModule(moduleId: string, moduleData: { title: string; description?: string; order_index: number; duration_hours?: number }, instructorIds: string[]) {
+  async updateModule(
+    moduleId: string,
+    moduleData: { title: string; description?: string; order_index: number; duration_hours?: number; semester?: number | null },
+    instructorIds: string[]
+  ) {
     const { error: moduleError } = await supabase
       .from('formation_modules')
       .update({
         title: moduleData.title,
         description: moduleData.description,
         order_index: moduleData.order_index,
-        duration_hours: moduleData.duration_hours
+        duration_hours: moduleData.duration_hours,
+        semester: moduleData.semester ?? null,
       })
       .eq('id', moduleId);
 
@@ -140,7 +147,7 @@ export const moduleService = {
     if (instructorIds.length > 0) {
       const assignments = instructorIds.map(instructorId => ({
         module_id: moduleId,
-        instructor_id: instructorId
+        instructor_id: instructorId,
       }));
 
       const { error: insertError } = await db
