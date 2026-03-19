@@ -317,8 +317,7 @@ const Sidebar = () => {
                           )}
                         </button>
                         
-                        {!collapsed && adminExpanded && (
-                          <div className="ml-4 mt-2 space-y-1 border-l-2 border-white/20 pl-3">
+                          <div className="ml-4 mt-1.5 space-y-0.5 border-l-2 border-white/15 pl-3">
                             {item.subItems.map((subItem) => {
                               const SubIcon = subItem.icon;
                               const searchParams = new URLSearchParams(subItem.href.split('?')[1]);
