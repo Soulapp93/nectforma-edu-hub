@@ -33,7 +33,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   const queryClient = useQueryClient();
   const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
   const selectedFormation = formationId;
-  const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [semesterView, setSemesterView] = useState<string>('');
   const [selectedModule, setSelectedModule] = useState('');
   const [examType, setExamType] = useState<'examen_blanc' | 'examen_final'>('examen_blanc');
   const [showExamSection, setShowExamSection] = useState(false);
@@ -79,10 +79,60 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     enabled: !!selectedFormation,
   });
 
-  // Auto-select first period
+  // Auto-init semesterView
   useEffect(() => {
-    if (periods.length > 0 && !selectedPeriod) setSelectedPeriod(periods[0].id);
+    if (periods.length > 0 && !semesterView) setSemesterView('s1');
   }, [periods]);
+
+  const durationYears = (currentFormationData as any)?.duration_years || 1;
+
+  const activePeriodIds = useMemo(() => {
+    if (!semesterView || periods.length === 0) return periods.map(p => p.id);
+    if (semesterView.startsWith('final-')) {
+      const yearNum = parseInt(semesterView.split('-')[1]);
+      const startIdx = (yearNum - 1) * 2;
+      return periods.filter((_, idx) => idx >= startIdx && idx < startIdx + 2).map(p => p.id);
+    }
+    const semNum = parseInt(semesterView.replace('s', ''));
+    const idx = semNum - 1;
+    return periods[idx] ? [periods[idx].id] : [];
+  }, [semesterView, periods]);
+
+  const isFinalView = semesterView.startsWith('final-');
+
+  const activeSemesterNums = useMemo((): number[] | null => {
+    if (!semesterView) return null;
+    if (semesterView.startsWith('final-')) {
+      const yearNum = parseInt(semesterView.split('-')[1]);
+      return [(yearNum - 1) * 2 + 1, (yearNum - 1) * 2 + 2];
+    }
+    const num = parseInt(semesterView.replace('s', ''));
+    return isNaN(num) ? null : [num];
+  }, [semesterView]);
+
+  // Reset selectedModule when semester changes
+  useEffect(() => {
+    if (activeSemesterNums && modules.length > 0) {
+      const filteredMods = modules.filter((m: any) =>
+        !m.semester || activeSemesterNums.includes(m.semester)
+      );
+      if (filteredMods.length > 0 && !filteredMods.some((m: any) => m.id === selectedModule)) {
+        setSelectedModule(filteredMods[0].id);
+      }
+    }
+  }, [semesterView, modules]);
+
+  const currentPeriodLabel = useMemo(() => {
+    if (isFinalView) {
+      const yearNum = parseInt(semesterView.split('-')[1]);
+      return durationYears === 1 ? 'Final (S1 + S2)' : `Final Année ${yearNum}`;
+    }
+    if (semesterView) {
+      const semNum = parseInt(semesterView.replace('s', ''));
+      return `Semestre ${semNum}`;
+    }
+    return '';
+  }, [semesterView, isFinalView, durationYears]);
 
   // Étudiants
   const { data: students = [] } = useQuery({
@@ -116,10 +166,12 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   // Filter evaluations by period + module
   const moduleEvaluations = useMemo(() => {
     let evals = allEvaluations;
-    if (selectedPeriod) evals = evals.filter(e => e.period_id === selectedPeriod);
+    if (activePeriodIds.length > 0) {
+      evals = evals.filter(e => activePeriodIds.includes(e.period_id || ''));
+    }
     if (selectedModule) evals = evals.filter(e => e.module_id === selectedModule);
     return evals;
-  }, [allEvaluations, selectedPeriod, selectedModule]);
+  }, [allEvaluations, activePeriodIds, selectedModule]);
 
   // CC evaluations for current module
   const ccEvaluations = useMemo(() =>
@@ -254,15 +306,15 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   // Duplicate period
   const duplicateMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedPeriod || !selectedFormation) throw new Error('Sélectionnez une période');
-      const currentPeriod = periods.find(p => p.id === selectedPeriod);
+      const periodId = activePeriodIds[0];
+      if (!periodId || !selectedFormation) throw new Error('Sélectionnez une période');
+      const currentPeriod = periods.find(p => p.id === periodId);
       const newName = `${currentPeriod?.name || 'Semestre'} (copie)`;
-      return duplicatePeriodWithEvaluations(selectedPeriod, newName, selectedFormation);
+      return duplicatePeriodWithEvaluations(periodId, newName, selectedFormation);
     },
-    onSuccess: (newPeriod) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['periods-sheet'] });
       queryClient.invalidateQueries({ queryKey: ['evaluations-sheet-all'] });
-      setSelectedPeriod(newPeriod.id);
       toast.success('Semestre dupliqué avec succès');
     },
     onError: (e: any) => toast.error(e.message || 'Erreur lors de la duplication'),
@@ -299,7 +351,6 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   };
 
   const currentFormation = currentFormationData;
-  const currentPeriod = periods.find(p => p.id === selectedPeriod);
   const currentModule = modules.find((m: any) => m.id === selectedModule);
 
   const avgColor = (val: number | null) => {
@@ -347,61 +398,51 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
 
   return (
     <div className="space-y-4">
-      {/* Top bar: Period + Actions */}
+      {/* Top bar: Semester navigation + Actions */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
-
-        {/* Semester buttons grouped by year */}
+        {/* Semester buttons grouped by year with Final */}
         {periods.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
-            {(() => {
-              const durationYears = (currentFormationData as any)?.duration_years || 1;
-              const yearGroups: { year: number; semesters: typeof periods }[] = [];
-              for (let y = 0; y < durationYears; y++) {
-                const yearSemesters = periods.filter((_, idx) => Math.floor(idx / 2) === y);
-                if (yearSemesters.length > 0) {
-                  yearGroups.push({ year: y + 1, semesters: yearSemesters });
-                }
-              }
-              // If no grouping possible, show all
-              if (yearGroups.length === 0) {
-                yearGroups.push({ year: 1, semesters: periods });
-              }
-              return yearGroups.map((group) => (
-                <div key={group.year} className="flex items-center gap-1">
+            {Array.from({ length: durationYears }, (_, y) => {
+              const s1 = y * 2 + 1;
+              const s2 = y * 2 + 2;
+              const yearNum = y + 1;
+              return (
+                <div key={yearNum} className="flex items-center gap-1">
                   {durationYears > 1 && (
-                    <span className="text-xs font-medium text-muted-foreground mr-1">A{group.year}:</span>
+                    <span className="text-xs font-medium text-muted-foreground mr-1">A{yearNum}:</span>
                   )}
-                  {group.semesters.map((p) => (
-                    <Button
-                      key={p.id}
-                      size="sm"
-                      variant={selectedPeriod === p.id ? 'default' : 'outline'}
-                      onClick={() => setSelectedPeriod(p.id)}
-                      className="text-xs h-8"
-                    >
-                      {p.name}
-                    </Button>
-                  ))}
-                  {group.year < durationYears && (
+                  <Button
+                    size="sm"
+                    variant={semesterView === `s${s1}` ? 'default' : 'outline'}
+                    onClick={() => setSemesterView(`s${s1}`)}
+                    className="text-xs h-8"
+                  >
+                    S{s1}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={semesterView === `s${s2}` ? 'default' : 'outline'}
+                    onClick={() => setSemesterView(`s${s2}`)}
+                    className="text-xs h-8"
+                  >
+                    S{s2}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={semesterView === `final-${yearNum}` ? 'default' : 'outline'}
+                    onClick={() => setSemesterView(`final-${yearNum}`)}
+                    className="text-xs h-8 font-semibold"
+                  >
+                    {durationYears === 1 ? 'Final (S1+S2)' : `Final A${yearNum}`}
+                  </Button>
+                  {yearNum < durationYears && (
                     <span className="text-border mx-1">|</span>
                   )}
                 </div>
-              ));
-            })()}
+              );
+            })}
           </div>
-        )}
-
-        {selectedPeriod && (
-          <Button
-            size="sm"
-            variant="outline"
-            className="gap-2"
-            onClick={() => duplicateMutation.mutate()}
-            disabled={duplicateMutation.isPending}
-          >
-            <Copy className="h-4 w-4" />
-            {duplicateMutation.isPending ? 'Duplication...' : 'Dupliquer ce semestre'}
-          </Button>
         )}
 
         <div className="flex items-center gap-2 ml-auto">
@@ -454,16 +495,10 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
         </Card>
       ) : (
         <>
-          {/* Module tabs navigation - filtered by semester if applicable */}
+          {/* Module tabs navigation - filtered by semester */}
           {(() => {
-            // Get semester number from selected period name
-            const currentPeriodObj = periods.find(p => p.id === selectedPeriod);
-            const semesterMatch = currentPeriodObj?.name?.match(/Semestre\s+(\d+)/i);
-            const currentSemesterNum = semesterMatch ? parseInt(semesterMatch[1]) : null;
-            
-            // Filter modules by semester if they have one assigned
-            const filteredModules = currentSemesterNum 
-              ? modules.filter((mod: any) => !mod.semester || mod.semester === currentSemesterNum)
+            const filteredModules = activeSemesterNums
+              ? modules.filter((m: any) => !m.semester || activeSemesterNums.includes(m.semester))
               : modules;
 
             return (
@@ -488,7 +523,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
                       )}
                       <div className="leading-tight">
                         <h2 className="text-sm font-bold text-foreground">{establishment?.name}</h2>
-                        {currentPeriod && <p className="text-[10px] text-muted-foreground">{currentPeriod.name}</p>}
+                        {currentPeriodLabel && <p className="text-[10px] text-muted-foreground">{currentPeriodLabel}</p>}
                       </div>
                     </div>
 

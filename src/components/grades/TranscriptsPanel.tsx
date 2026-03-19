@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -69,7 +69,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
   const [internalFormation, setInternalFormation] = useState('');
   const selectedFormation = propFormationId || internalFormation;
-  const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [semesterView, setSemesterView] = useState<string>('');
   const [currentStudentIndex, setCurrentStudentIndex] = useState(0);
   const [viewMode, setViewMode] = useState<'list' | 'bulletin'>('list');
   const [showTemplateEditor, setShowTemplateEditor] = useState(false);
@@ -79,7 +79,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   const { data: formations = [] } = useQuery({
     queryKey: ['formations-for-transcripts'],
     queryFn: async () => {
-      const { data } = await supabase.from('formations').select('id, title, level, start_date, end_date').order('title');
+      const { data } = await supabase.from('formations').select('id, title, level, start_date, end_date, duration_years, semesters_count').order('title');
       return data || [];
     },
     enabled: mode === 'admin' && !propFormationId,
@@ -90,7 +90,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     queryFn: async () => {
       const { data } = await supabase
         .from('user_formation_assignments')
-        .select('formation_id, formations(id, title, level, start_date, end_date)')
+        .select('formation_id, formations(id, title, level, start_date, end_date, duration_years, semesters_count)')
         .eq('user_id', studentId!);
       return (data || []).map((d: any) => d.formations).filter(Boolean);
     },
@@ -105,6 +105,51 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     enabled: !!selectedFormation,
   });
 
+  // Auto-init semesterView
+  useEffect(() => {
+    if (periods.length > 0 && !semesterView) setSemesterView('s1');
+  }, [periods]);
+
+  // Semester computed values
+  const selectedFormationObj = availableFormations.find((f: any) => f.id === selectedFormation);
+  const durationYears = (selectedFormationObj as any)?.duration_years || 1;
+
+  const activePeriodIds = useMemo(() => {
+    if (!semesterView || periods.length === 0) return periods.map(p => p.id);
+    if (semesterView.startsWith('final-')) {
+      const yearNum = parseInt(semesterView.split('-')[1]);
+      const startIdx = (yearNum - 1) * 2;
+      return periods.filter((_, idx) => idx >= startIdx && idx < startIdx + 2).map(p => p.id);
+    }
+    const semNum = parseInt(semesterView.replace('s', ''));
+    const idx = semNum - 1;
+    return periods[idx] ? [periods[idx].id] : [];
+  }, [semesterView, periods]);
+
+  const isFinalView = semesterView.startsWith('final-');
+
+  const activeSemesterNums = useMemo((): number[] | null => {
+    if (!semesterView) return null;
+    if (semesterView.startsWith('final-')) {
+      const yearNum = parseInt(semesterView.split('-')[1]);
+      return [(yearNum - 1) * 2 + 1, (yearNum - 1) * 2 + 2];
+    }
+    const num = parseInt(semesterView.replace('s', ''));
+    return isNaN(num) ? null : [num];
+  }, [semesterView]);
+
+  const currentPeriodLabel = useMemo(() => {
+    if (isFinalView) {
+      const yearNum = parseInt(semesterView.split('-')[1]);
+      return durationYears === 1 ? 'Final (S1 + S2)' : `Final Année ${yearNum}`;
+    }
+    if (semesterView) {
+      const semNum = parseInt(semesterView.replace('s', ''));
+      return `Semestre ${semNum}`;
+    }
+    return '';
+  }, [semesterView, isFinalView, durationYears]);
+
   const { data: students = [] } = useQuery({
     queryKey: ['formation-students-transcripts', selectedFormation],
     queryFn: async () => {
@@ -118,18 +163,24 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     enabled: !!selectedFormation,
   });
 
-  const { data: modules = [] } = useQuery({
+  const { data: allModules = [] } = useQuery({
     queryKey: ['formation-modules-transcripts', selectedFormation],
     queryFn: async () => {
       const { data } = await supabase
         .from('formation_modules')
-        .select('id, title, coefficient, order_index, teaching_unit_id')
+        .select('id, title, coefficient, order_index, teaching_unit_id, semester')
         .eq('formation_id', selectedFormation)
         .order('order_index');
       return data || [];
     },
     enabled: !!selectedFormation,
   });
+
+  // Filter modules by semester
+  const modules = useMemo(() => {
+    if (!activeSemesterNums) return allModules;
+    return allModules.filter((m: any) => !m.semester || activeSemesterNums.includes(m.semester));
+  }, [allModules, activeSemesterNums]);
 
   const { data: teachingUnits = [] } = useQuery({
     queryKey: ['teaching-units-transcripts', selectedFormation],
@@ -145,10 +196,12 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   });
 
   const { data: evaluations = [] } = useQuery({
-    queryKey: ['evaluations-transcripts', selectedFormation, selectedPeriod],
+    queryKey: ['evaluations-transcripts', selectedFormation, activePeriodIds.join(',')],
     queryFn: async () => {
       const allEvals = await getEvaluations(selectedFormation);
-      if (selectedPeriod && selectedPeriod !== 'all') return allEvals.filter(e => e.period_id === selectedPeriod);
+      if (activePeriodIds.length > 0 && activePeriodIds.length < periods.length) {
+        return allEvals.filter(e => activePeriodIds.includes(e.period_id || ''));
+      }
       return allEvals;
     },
     enabled: !!selectedFormation,
@@ -344,7 +397,6 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
 
   const currentBulletin = bulletins[currentStudentIndex] || null;
   const selectedFormationData = availableFormations.find((f: any) => f.id === selectedFormation);
-  const selectedPeriodData = periods.find(p => p.id === selectedPeriod);
 
   const handlePrint = () => {
     const content = printRef.current;
@@ -406,9 +458,9 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-        <div className="flex gap-3 flex-wrap">
+        <div className="flex gap-3 flex-wrap items-center">
           {!propFormationId && (
-            <Select value={selectedFormation} onValueChange={(v) => { setInternalFormation(v); setSelectedPeriod(''); setCurrentStudentIndex(0); setViewMode('list'); }}>
+            <Select value={selectedFormation} onValueChange={(v) => { setInternalFormation(v); setSemesterView(''); setCurrentStudentIndex(0); setViewMode('list'); }}>
               <SelectTrigger className="w-64">
                 <SelectValue placeholder="Sélectionner une formation" />
               </SelectTrigger>
@@ -419,16 +471,49 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
               </SelectContent>
             </Select>
           )}
+          {/* Semester buttons */}
           {periods.length > 0 && (
-            <Select value={selectedPeriod} onValueChange={(v) => { setSelectedPeriod(v); setCurrentStudentIndex(0); }}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Toutes les périodes" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes</SelectItem>
-                {periods.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <div className="flex flex-wrap items-center gap-2">
+              {Array.from({ length: durationYears }, (_, y) => {
+                const s1 = y * 2 + 1;
+                const s2 = y * 2 + 2;
+                const yearNum = y + 1;
+                return (
+                  <div key={yearNum} className="flex items-center gap-1">
+                    {durationYears > 1 && (
+                      <span className="text-xs font-medium text-muted-foreground mr-1">A{yearNum}:</span>
+                    )}
+                    <Button
+                      size="sm"
+                      variant={semesterView === `s${s1}` ? 'default' : 'outline'}
+                      onClick={() => { setSemesterView(`s${s1}`); setCurrentStudentIndex(0); }}
+                      className="text-xs h-8"
+                    >
+                      S{s1}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={semesterView === `s${s2}` ? 'default' : 'outline'}
+                      onClick={() => { setSemesterView(`s${s2}`); setCurrentStudentIndex(0); }}
+                      className="text-xs h-8"
+                    >
+                      S{s2}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={semesterView === `final-${yearNum}` ? 'default' : 'outline'}
+                      onClick={() => { setSemesterView(`final-${yearNum}`); setCurrentStudentIndex(0); }}
+                      className="text-xs h-8 font-semibold"
+                    >
+                      {durationYears === 1 ? 'Final (S1+S2)' : `Final A${yearNum}`}
+                    </Button>
+                    {yearNum < durationYears && (
+                      <span className="text-border mx-1">|</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
         <div className="flex gap-2">
@@ -574,7 +659,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                           SESSION {format(new Date(selectedFormationData.start_date), 'yyyy')} - {format(new Date(selectedFormationData.end_date), 'yyyy')}
                         </p>
                       )}
-                      {selectedPeriodData && <p className="text-xs text-muted-foreground mt-1">... {selectedPeriodData.name}</p>}
+                      {currentPeriodLabel && <p className="text-xs text-muted-foreground mt-1">{currentPeriodLabel}</p>}
                     </div>
                   </div>
                 </div>
