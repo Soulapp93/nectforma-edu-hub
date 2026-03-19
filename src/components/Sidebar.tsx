@@ -235,14 +235,17 @@ const Sidebar = () => {
 
       <SidebarContent className="relative z-10 px-2">
         {/* User Profile Card */}
-        <div className={`mb-4 p-2.5 rounded-lg bg-white/8 border border-white/8 ${collapsed ? 'flex justify-center' : ''}`}>
+        <div className={`mb-4 p-2.5 rounded-xl bg-white/8 border border-white/8 ${collapsed ? 'flex justify-center' : ''}`}>
           <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
-            <Avatar className="w-9 h-9 flex-shrink-0 ring-2 ring-white/20" title={collapsed ? userDisplayInfo.name : undefined}>
-              <AvatarImage src={userDisplayInfo.profilePhotoUrl || ''} alt={userDisplayInfo.name} />
-              <AvatarFallback className="bg-white/15 text-white text-xs font-semibold">
-                {userDisplayInfo.initials}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative flex-shrink-0">
+              <Avatar className="w-9 h-9 ring-2 ring-white/20" title={collapsed ? userDisplayInfo.name : undefined}>
+                <AvatarImage src={userDisplayInfo.profilePhotoUrl || ''} alt={userDisplayInfo.name} />
+                <AvatarFallback className="bg-white/15 text-white text-xs font-semibold">
+                  {userDisplayInfo.initials}
+                </AvatarFallback>
+              </Avatar>
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-success rounded-full border-2 border-[hsl(235,55%,18%)]" />
+            </div>
             {!collapsed && (
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-white truncate leading-tight">{userDisplayInfo.name}</p>
