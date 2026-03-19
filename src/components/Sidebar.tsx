@@ -317,6 +317,7 @@ const Sidebar = () => {
                           )}
                         </button>
                         
+                        {!collapsed && adminExpanded && (
                           <div className="ml-4 mt-1.5 space-y-0.5 border-l-2 border-white/15 pl-3">
                             {item.subItems.map((subItem) => {
                               const SubIcon = subItem.icon;
