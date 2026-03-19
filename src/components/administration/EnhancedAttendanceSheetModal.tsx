@@ -874,6 +874,43 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
           }}
         />
       )}
+
+      {/* Modal de motif d'absence/retard */}
+      {showReasonModal && reasonModalStudent && (
+        <AbsenceReasonModal
+          isOpen={showReasonModal}
+          onClose={() => {
+            setShowReasonModal(false);
+            setReasonModalStudent(null);
+          }}
+          onSave={async (reasonType: string, reason: string) => {
+            if (!reasonModalStudent.signature?.id) return;
+            try {
+              await supabase
+                .from('attendance_signatures')
+                .update({ 
+                  absence_reason_type: reasonType, 
+                  absence_reason: reason 
+                })
+                .eq('id', reasonModalStudent.signature.id);
+              
+              // Update local state
+              setStudents(prev => prev.map(s => 
+                s.id === reasonModalStudent.id && s.signature
+                  ? { ...s, signature: { ...s.signature, absence_reason_type: reasonType, absence_reason: reason } }
+                  : s
+              ));
+            } catch (err) {
+              console.error('Error saving reason:', err);
+              throw err;
+            }
+          }}
+          currentReasonType={reasonModalStudent.signature?.absence_reason_type || ''}
+          currentReason={reasonModalStudent.signature?.absence_reason || ''}
+          studentName={`${reasonModalStudent.lastName} ${reasonModalStudent.firstName}`}
+          mode={reasonModalMode}
+        />
+      )}
     </Dialog>
   );
 };
