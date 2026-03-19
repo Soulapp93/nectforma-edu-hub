@@ -385,16 +385,12 @@ const AppContent = () => {
       <Sidebar />
 
       {/* Content column (must be a direct sibling of <Sidebar /> for correct inset/gap behavior) */}
-      <div className="flex min-h-svh flex-1 flex-col min-w-0 bg-[hsl(260_20%_97%)]">
+      <div className="flex min-h-svh flex-1 flex-col min-w-0 bg-[hsl(230_25%_97%)]">
         {/* Header mobile */}
         <MobileHeader />
 
-        {/* Header desktop (notification band) */}
-        <header className="hidden md:flex h-12 items-center justify-end border-b border-border/50 bg-white/80 backdrop-blur-xl px-4 sm:px-6 sticky top-0 z-20">
-          <div className="flex items-center space-x-3 sm:space-x-4">
-            <NotificationBell />
-          </div>
-        </header>
+        {/* Header desktop - full width top bar like PCA PREAD */}
+        <TopHeaderBar />
 
         <main className="flex-1 overflow-auto">
           <Routes>
