@@ -11,10 +11,10 @@ export interface EstablishmentTheme {
 
 // Default theme values (matches index.css :root)
 const DEFAULT_THEME: Required<Record<keyof EstablishmentTheme, string>> = {
-  primary: '258 62% 35%',
-  secondary: '270 55% 45%',
-  sidebar: '258 55% 22%',
-  background: '0 0% 100%',
+  primary: '240 60% 20%',
+  secondary: '250 60% 25%',
+  sidebar: '240 60% 12%',
+  background: '230 25% 97%',
 };
 
 // Generate derived HSL values from a base HSL string
