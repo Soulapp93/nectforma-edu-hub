@@ -339,7 +339,11 @@ const FormationDetail = () => {
                   <GraduationCap className="h-12 w-12 text-muted-foreground" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">Aucun module</h3>
-                <p className="text-muted-foreground">Cette formation n'a pas encore de modules.</p>
+                <p className="text-muted-foreground">
+                  {semesterFilter !== 'all' 
+                    ? `Aucun module assigné au semestre ${semesterFilter.replace('s', 'S')}.`
+                    : "Cette formation n'a pas encore de modules."}
+                </p>
               </div>
             )}
           </div>
