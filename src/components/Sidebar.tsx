@@ -156,11 +156,11 @@ const Sidebar = () => {
 
   return (
     <SidebarWrapper 
-      className="nect-gradient text-white shadow-2xl border-r-0 overflow-hidden rounded-r-2xl"
+      className="nect-gradient text-white shadow-2xl border-r-0 overflow-hidden"
       collapsible="icon"
     >
       {/* Subtle inner glow effect */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/10 pointer-events-none rounded-r-2xl z-0" />
+      <div className="absolute inset-0 bg-gradient-to-b from-white/3 via-transparent to-black/15 pointer-events-none z-0" />
       
       {/* Header */}
       <SidebarHeader className="relative z-10 px-3 pt-5 pb-4">
