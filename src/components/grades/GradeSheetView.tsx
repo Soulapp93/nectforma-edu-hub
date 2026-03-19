@@ -79,10 +79,60 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     enabled: !!selectedFormation,
   });
 
-  // Auto-select first period
+  // Auto-init semesterView
   useEffect(() => {
-    if (periods.length > 0 && !selectedPeriod) setSelectedPeriod(periods[0].id);
+    if (periods.length > 0 && !semesterView) setSemesterView('s1');
   }, [periods]);
+
+  const durationYears = (currentFormationData as any)?.duration_years || 1;
+
+  const activePeriodIds = useMemo(() => {
+    if (!semesterView || periods.length === 0) return periods.map(p => p.id);
+    if (semesterView.startsWith('final-')) {
+      const yearNum = parseInt(semesterView.split('-')[1]);
+      const startIdx = (yearNum - 1) * 2;
+      return periods.filter((_, idx) => idx >= startIdx && idx < startIdx + 2).map(p => p.id);
+    }
+    const semNum = parseInt(semesterView.replace('s', ''));
+    const idx = semNum - 1;
+    return periods[idx] ? [periods[idx].id] : [];
+  }, [semesterView, periods]);
+
+  const isFinalView = semesterView.startsWith('final-');
+
+  const activeSemesterNums = useMemo((): number[] | null => {
+    if (!semesterView) return null;
+    if (semesterView.startsWith('final-')) {
+      const yearNum = parseInt(semesterView.split('-')[1]);
+      return [(yearNum - 1) * 2 + 1, (yearNum - 1) * 2 + 2];
+    }
+    const num = parseInt(semesterView.replace('s', ''));
+    return isNaN(num) ? null : [num];
+  }, [semesterView]);
+
+  // Reset selectedModule when semester changes
+  useEffect(() => {
+    if (activeSemesterNums && modules.length > 0) {
+      const filteredMods = modules.filter((m: any) =>
+        !m.semester || activeSemesterNums.includes(m.semester)
+      );
+      if (filteredMods.length > 0 && !filteredMods.some((m: any) => m.id === selectedModule)) {
+        setSelectedModule(filteredMods[0].id);
+      }
+    }
+  }, [semesterView, modules]);
+
+  const currentPeriodLabel = useMemo(() => {
+    if (isFinalView) {
+      const yearNum = parseInt(semesterView.split('-')[1]);
+      return durationYears === 1 ? 'Final (S1 + S2)' : `Final Année ${yearNum}`;
+    }
+    if (semesterView) {
+      const semNum = parseInt(semesterView.replace('s', ''));
+      return `Semestre ${semNum}`;
+    }
+    return '';
+  }, [semesterView, isFinalView, durationYears]);
 
   // Étudiants
   const { data: students = [] } = useQuery({
