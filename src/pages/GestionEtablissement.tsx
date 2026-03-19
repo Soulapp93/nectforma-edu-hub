@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Building2 } from 'lucide-react';
 import EstablishmentSettings from '../components/compte/EstablishmentSettings';
+import ThemeCustomization from '../components/compte/ThemeCustomization';
 import { PageHeader } from '@/components/ui/page-header';
 import { toast } from 'sonner';
 import { establishmentService, Establishment } from '@/services/establishmentService';
