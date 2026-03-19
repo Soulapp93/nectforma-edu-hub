@@ -350,17 +350,45 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
       {/* Top bar: Period + Actions */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
 
+        {/* Semester buttons grouped by year */}
         {periods.length > 0 && (
-          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="w-full sm:w-52">
-              <SelectValue placeholder="Sélectionner un semestre" />
-            </SelectTrigger>
-            <SelectContent>
-              {periods.map(p => (
-                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex flex-wrap items-center gap-2">
+            {(() => {
+              const durationYears = (currentFormationData as any)?.duration_years || 1;
+              const yearGroups: { year: number; semesters: typeof periods }[] = [];
+              for (let y = 0; y < durationYears; y++) {
+                const yearSemesters = periods.filter((_, idx) => Math.floor(idx / 2) === y);
+                if (yearSemesters.length > 0) {
+                  yearGroups.push({ year: y + 1, semesters: yearSemesters });
+                }
+              }
+              // If no grouping possible, show all
+              if (yearGroups.length === 0) {
+                yearGroups.push({ year: 1, semesters: periods });
+              }
+              return yearGroups.map((group) => (
+                <div key={group.year} className="flex items-center gap-1">
+                  {durationYears > 1 && (
+                    <span className="text-xs font-medium text-muted-foreground mr-1">A{group.year}:</span>
+                  )}
+                  {group.semesters.map((p) => (
+                    <Button
+                      key={p.id}
+                      size="sm"
+                      variant={selectedPeriod === p.id ? 'default' : 'outline'}
+                      onClick={() => setSelectedPeriod(p.id)}
+                      className="text-xs h-8"
+                    >
+                      {p.name}
+                    </Button>
+                  ))}
+                  {group.year < durationYears && (
+                    <span className="text-border mx-1">|</span>
+                  )}
+                </div>
+              ));
+            })()}
+          </div>
         )}
 
         {selectedPeriod && (
