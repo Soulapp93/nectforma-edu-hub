@@ -164,7 +164,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
             title: module.title,
             description: module.description,
             duration_hours: module.duration_hours || 0,
-            order_index: i
+            order_index: i,
+            ...(module.semester ? { semester: module.semester } : {})
           }, module.instructorIds);
 
           // Create sub-modules
