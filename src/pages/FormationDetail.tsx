@@ -68,7 +68,9 @@ const FormationDetail = () => {
     if (!formation?.formation_modules) return [];
     if (semesterFilter === 'all') return formation.formation_modules;
     const semNum = parseInt(semesterFilter.replace('s', ''));
-    return formation.formation_modules.filter((m: any) => m.semester === semNum);
+    return formation.formation_modules.filter((m: any) => 
+      semesterMatchesFilter(m.semester, [semNum])
+    );
   }, [formation?.formation_modules, semesterFilter]);
 
   if (loading) {
