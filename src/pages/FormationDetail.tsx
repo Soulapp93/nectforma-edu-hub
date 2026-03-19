@@ -176,15 +176,58 @@ const FormationDetail = () => {
       <div className="px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8">
         <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-lg border border-primary/10">
           <div className="p-4 sm:p-6 border-b border-primary/10">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <h2 className="text-lg sm:text-xl font-bold text-foreground">Modules de la formation</h2>
+              {hasSemesters && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant={semesterFilter === 'all' ? 'default' : 'outline'}
+                    onClick={() => setSemesterFilter('all')}
+                    className="text-xs h-8"
+                  >
+                    Tous
+                  </Button>
+                  {Array.from({ length: durationYears }, (_, y) => {
+                    const s1 = y * 2 + 1;
+                    const s2 = y * 2 + 2;
+                    const yearNum = y + 1;
+                    return (
+                      <div key={yearNum} className="flex items-center gap-1">
+                        {durationYears > 1 && (
+                          <span className="text-xs font-medium text-muted-foreground mr-1">A{yearNum}:</span>
+                        )}
+                        <Button
+                          size="sm"
+                          variant={semesterFilter === `s${s1}` ? 'default' : 'outline'}
+                          onClick={() => setSemesterFilter(`s${s1}`)}
+                          className="text-xs h-8"
+                        >
+                          S{s1}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={semesterFilter === `s${s2}` ? 'default' : 'outline'}
+                          onClick={() => setSemesterFilter(`s${s2}`)}
+                          className="text-xs h-8"
+                        >
+                          S{s2}
+                        </Button>
+                        {yearNum < durationYears && (
+                          <span className="text-border mx-1">|</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
           
           <div className="p-4 sm:p-6">
-            {formation.formation_modules && formation.formation_modules.length > 0 ? (
+            {filteredModules.length > 0 ? (
               <Accordion type="multiple" className="space-y-3">
-                {formation.formation_modules.map((module, index) => (
+                {filteredModules.map((module, index) => (
                   <AccordionItem key={module.id} value={`module-${module.id}`} className="border border-primary/10 rounded-xl bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
                     <AccordionTrigger className="px-4 sm:px-5 py-4 sm:py-5 hover:bg-muted/30 rounded-xl [&[data-state=open]]:rounded-b-none transition-colors">
                       <div className="flex items-start sm:items-center space-x-4 w-full">
