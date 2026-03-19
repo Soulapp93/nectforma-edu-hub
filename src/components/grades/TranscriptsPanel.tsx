@@ -397,7 +397,6 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
 
   const currentBulletin = bulletins[currentStudentIndex] || null;
   const selectedFormationData = availableFormations.find((f: any) => f.id === selectedFormation);
-  const selectedPeriodData = periods.find(p => p.id === selectedPeriod);
 
   const handlePrint = () => {
     const content = printRef.current;
