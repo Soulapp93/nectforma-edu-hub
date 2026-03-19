@@ -216,16 +216,38 @@ const GestionEtablissement = () => {
         icon={Building2}
       />
 
-      <div className="max-w-4xl space-y-8">
-        <EstablishmentSettings
-          adminData={adminData}
-          establishmentData={establishmentData}
-          onAdminDataChange={setAdminData}
-          onEstablishmentDataChange={setEstablishmentData}
-          onLogoUpload={handleLogoUpload}
-          onSave={handleSaveEstablishment}
-        />
+      <div className="max-w-4xl space-y-6">
+        <div className="flex gap-3">
+          <Button
+            variant={!showPedagogicalSettings ? 'default' : 'outline'}
+            onClick={() => setShowPedagogicalSettings(false)}
+            className="gap-2"
+          >
+            <Building2 className="h-4 w-4" />
+            Établissement
+          </Button>
+          <Button
+            variant={showPedagogicalSettings ? 'default' : 'outline'}
+            onClick={() => setShowPedagogicalSettings(true)}
+            className="gap-2"
+          >
+            <BookOpen className="h-4 w-4" />
+            Paramètres pédagogiques
+          </Button>
+        </div>
 
+        {showPedagogicalSettings ? (
+          <PedagogicalSettings />
+        ) : (
+          <EstablishmentSettings
+            adminData={adminData}
+            establishmentData={establishmentData}
+            onAdminDataChange={setAdminData}
+            onEstablishmentDataChange={setEstablishmentData}
+            onLogoUpload={handleLogoUpload}
+            onSave={handleSaveEstablishment}
+          />
+        )}
       </div>
     </div>
   );
