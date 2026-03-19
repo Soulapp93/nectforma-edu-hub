@@ -482,7 +482,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
             </Select>
           )}
           {/* Semester buttons */}
-          {periods.length > 0 && (
+          {semestersCount > 0 && selectedFormationObj && (
             <div className="flex flex-wrap items-center gap-2">
               {Array.from({ length: durationYears }, (_, y) => {
                 const s1 = y * 2 + 1;
