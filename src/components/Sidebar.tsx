@@ -248,7 +248,7 @@ const Sidebar = () => {
                             rounded-xl 
                             transition-all duration-200 
                             ${isAdminRoute
-                              ? 'bg-[hsl(45,100%,50%)] text-[hsl(235,55%,18%)] font-semibold shadow-lg shadow-yellow-500/30'
+                              ? 'bg-[hsl(45,100%,50%)] text-[hsl(240,60%,15%)] font-semibold shadow-lg shadow-yellow-500/30'
                               : 'text-white/75 hover:bg-white/8 hover:text-white'
                             }
                           `}
