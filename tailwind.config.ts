@@ -84,6 +84,10 @@ export default {
 					DEFAULT: 'hsl(var(--info))',
 					foreground: 'hsl(var(--info-foreground))',
 					muted: 'hsl(var(--info-muted))'
+				},
+				golden: {
+					DEFAULT: 'hsl(var(--golden))',
+					foreground: 'hsl(var(--golden-foreground))'
 				}
 			},
 			borderRadius: {
