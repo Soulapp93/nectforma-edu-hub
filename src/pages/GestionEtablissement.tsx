@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Building2 } from 'lucide-react';
+import { Building2, BookOpen } from 'lucide-react';
 import EstablishmentSettings from '../components/compte/EstablishmentSettings';
+import PedagogicalSettings from '../components/administration/PedagogicalSettings';
+import { Button } from '@/components/ui/button';
 
 import { PageHeader } from '@/components/ui/page-header';
 import { toast } from 'sonner';
