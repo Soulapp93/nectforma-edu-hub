@@ -17,6 +17,7 @@ export interface ModuleFormData {
   instructorIds: string[];
   duration_hours: number;
   subModules: SubModuleFormData[];
+  semester?: number;
 }
 
 interface ModuleFormProps {
@@ -24,9 +25,10 @@ interface ModuleFormProps {
   onRemove: () => void;
   moduleIndex: number;
   initialData?: ModuleFormData;
+  semestersCount?: number;
 }
 
-const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex, initialData }) => {
+const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex, initialData, semestersCount = 2 }) => {
   const { instructors } = useInstructors();
   const [formData, setFormData] = useState<ModuleFormData>(
     initialData || {
@@ -34,7 +36,8 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex, i
       description: '',
       instructorIds: [],
       duration_hours: 0,
-      subModules: []
+      subModules: [],
+      semester: undefined
     }
   );
   const [showSubModules, setShowSubModules] = useState(false);
@@ -148,6 +151,27 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex, i
             min="0"
             className="w-full px-3 py-2 border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1">
+            Semestre
+          </label>
+          <select
+            value={formData.semester ?? ''}
+            onChange={(e) => {
+              const val = e.target.value === '' ? undefined : Number(e.target.value);
+              const newData = { ...formData, semester: val };
+              setFormData(newData);
+              onAdd(newData);
+            }}
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+          >
+            <option value="">-- Aucun semestre --</option>
+            {Array.from({ length: semestersCount }, (_, i) => (
+              <option key={i + 1} value={i + 1}>Semestre {i + 1}</option>
+            ))}
+          </select>
         </div>
 
         <div>

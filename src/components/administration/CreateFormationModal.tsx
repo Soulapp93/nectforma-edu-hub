@@ -1,13 +1,15 @@
 
 import React, { useState } from 'react';
-import { X, GraduationCap, Calendar, Plus, BookOpen } from 'lucide-react';
+import { X, GraduationCap, Calendar, Plus, BookOpen, Clock } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import ModuleForm, { ModuleFormData } from './ModuleForm';
 import ColorPalette from './ColorPalette';
 import { formationService } from '@/services/formationService';
 import { moduleService } from '@/services/moduleService';
 import { establishmentService } from '@/services/establishmentService';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CreateFormationModalProps {
   isOpen: boolean;
@@ -25,6 +27,7 @@ interface FormationFormData {
   color: string;
   duration: number;
   academic_year: string;
+  duration_years: number;
 }
 
 // Generate year options for academic year selection
@@ -52,7 +55,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
     status: 'Actif',
     color: '#8B5CF6',
     duration: 0,
-    academic_year: `${currentYear}-${currentYear + 1}`
+    academic_year: `${currentYear}-${currentYear + 1}`,
+    duration_years: 1
   });
 
   const [modules, setModules] = useState<ModuleFormData[]>([]);
@@ -113,6 +117,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
       const defaultStartDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       const defaultEndDate = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
 
+      const semesters_count = formData.duration_years * 2;
       const formationData = {
         ...formData,
         start_date: formData.start_date || defaultStartDate.toISOString().split('T')[0],
@@ -120,10 +125,35 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         duration: formData.duration || 0,
         max_students: 25,
         price: 0,
-        establishment_id: establishment.id
+        establishment_id: establishment.id,
+        duration_years: formData.duration_years,
+        semesters_count
       };
 
       const formation = await formationService.createFormation(formationData as any);
+
+      // Auto-créer les périodes d'évaluation (semestres)
+      const startDate = new Date(formationData.start_date);
+      for (let s = 1; s <= semesters_count; s++) {
+        const yearOffset = Math.floor((s - 1) / 2);
+        const isFirst = s % 2 === 1;
+        const periodStart = new Date(startDate.getFullYear() + yearOffset, isFirst ? 8 : 1, 1); // Sept or Feb
+        const periodEnd = new Date(startDate.getFullYear() + yearOffset, isFirst ? 1 : 6, 30); // Jan or Jun
+        if (!isFirst) {
+          periodEnd.setFullYear(periodEnd.getFullYear());
+        } else {
+          periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+        }
+        
+        await supabase.from('evaluation_periods').insert({
+          formation_id: formation.id,
+          name: `Semestre ${s}`,
+          period_type: 'semester',
+          start_date: periodStart.toISOString().split('T')[0],
+          end_date: periodEnd.toISOString().split('T')[0],
+          order_index: s - 1,
+        });
+      }
 
       // Créer les modules et sous-modules
       for (let i = 0; i < modules.length; i++) {
@@ -134,7 +164,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
             title: module.title,
             description: module.description,
             duration_hours: module.duration_hours || 0,
-            order_index: i
+            order_index: i,
+            ...(module.semester ? { semester: module.semester } : {})
           }, module.instructorIds);
 
           // Create sub-modules
@@ -197,7 +228,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         status: 'Actif',
         color: '#8B5CF6',
         duration: 0,
-        academic_year: `${currentYear}-${currentYear + 1}`
+        academic_year: `${currentYear}-${currentYear + 1}`,
+        duration_years: 1
       });
       setModules([]);
       
@@ -325,6 +357,30 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
               </div>
 
               <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5">
+                  <Clock className="h-4 w-4 text-primary" />
+                  Durée de la formation (années) *
+                </label>
+                <Select value={String(formData.duration_years)} onValueChange={(v) => setFormData((p) => ({ ...p, duration_years: parseInt(v) }))}>
+                  <SelectTrigger className="h-11 rounded-xl border-2 border-primary/30">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 an (S1, S2)</SelectItem>
+                    <SelectItem value="2">2 ans (S1 à S4)</SelectItem>
+                    <SelectItem value="3">3 ans (S1 à S6)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="flex gap-1.5 mt-2 flex-wrap">
+                  {Array.from({ length: formData.duration_years * 2 }, (_, i) => (
+                    <Badge key={i} variant="secondary" className="text-xs">
+                      S{i + 1}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Statut</label>
                 <Select value={formData.status} onValueChange={(v) => setFormData((p) => ({ ...p, status: v }))}>
                   <SelectTrigger className="h-11 rounded-xl border-2 border-primary/30">
@@ -417,6 +473,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                     moduleIndex={index}
                     onAdd={(moduleData) => updateModule(index, moduleData)}
                     onRemove={() => removeModule(index)}
+                    semestersCount={formData.duration_years * 2}
                   />
                 ))}
               </div>

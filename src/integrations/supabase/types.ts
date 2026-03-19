@@ -1496,6 +1496,7 @@ export type Database = {
           formation_id: string
           id: string
           order_index: number
+          semester: number | null
           teaching_unit_id: string | null
           title: string
           updated_at: string
@@ -1510,6 +1511,7 @@ export type Database = {
           formation_id: string
           id?: string
           order_index?: number
+          semester?: number | null
           teaching_unit_id?: string | null
           title: string
           updated_at?: string
@@ -1524,6 +1526,7 @@ export type Database = {
           formation_id?: string
           id?: string
           order_index?: number
+          semester?: number | null
           teaching_unit_id?: string | null
           title?: string
           updated_at?: string
@@ -1552,6 +1555,7 @@ export type Database = {
           created_at: string
           description: string | null
           duration: number
+          duration_years: number
           end_date: string
           establishment_id: string
           id: string
@@ -1570,6 +1574,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           duration: number
+          duration_years?: number
           end_date: string
           establishment_id: string
           id?: string
@@ -1588,6 +1593,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           duration?: number
+          duration_years?: number
           end_date?: string
           establishment_id?: string
           id?: string

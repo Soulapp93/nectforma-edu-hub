@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Building2 } from 'lucide-react';
+import { Building2, BookOpen } from 'lucide-react';
 import EstablishmentSettings from '../components/compte/EstablishmentSettings';
+import PedagogicalSettings from '../components/administration/PedagogicalSettings';
+import { Button } from '@/components/ui/button';
 
 import { PageHeader } from '@/components/ui/page-header';
 import { toast } from 'sonner';
@@ -26,6 +28,7 @@ const GestionEtablissement = () => {
   const { refetch: refetchEstablishment } = useEstablishment();
   const [loading, setLoading] = useState(true);
   const [establishmentId, setEstablishmentId] = useState<string | null>(null);
+  const [showPedagogicalSettings, setShowPedagogicalSettings] = useState(false);
   
   const [adminData, setAdminData] = useState({
     firstName: '',
@@ -213,16 +216,38 @@ const GestionEtablissement = () => {
         icon={Building2}
       />
 
-      <div className="max-w-4xl space-y-8">
-        <EstablishmentSettings
-          adminData={adminData}
-          establishmentData={establishmentData}
-          onAdminDataChange={setAdminData}
-          onEstablishmentDataChange={setEstablishmentData}
-          onLogoUpload={handleLogoUpload}
-          onSave={handleSaveEstablishment}
-        />
+      <div className="max-w-4xl space-y-6">
+        <div className="flex gap-3">
+          <Button
+            variant={!showPedagogicalSettings ? 'default' : 'outline'}
+            onClick={() => setShowPedagogicalSettings(false)}
+            className="gap-2"
+          >
+            <Building2 className="h-4 w-4" />
+            Établissement
+          </Button>
+          <Button
+            variant={showPedagogicalSettings ? 'default' : 'outline'}
+            onClick={() => setShowPedagogicalSettings(true)}
+            className="gap-2"
+          >
+            <BookOpen className="h-4 w-4" />
+            Paramètres pédagogiques
+          </Button>
+        </div>
 
+        {showPedagogicalSettings ? (
+          <PedagogicalSettings />
+        ) : (
+          <EstablishmentSettings
+            adminData={adminData}
+            establishmentData={establishmentData}
+            onAdminDataChange={setAdminData}
+            onEstablishmentDataChange={setEstablishmentData}
+            onLogoUpload={handleLogoUpload}
+            onSave={handleSaveEstablishment}
+          />
+        )}
       </div>
     </div>
   );
