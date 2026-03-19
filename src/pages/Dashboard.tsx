@@ -85,7 +85,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border shadow-sm">
+      <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-border/50">
         <div className="w-full px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
             <div className="flex items-center gap-3">

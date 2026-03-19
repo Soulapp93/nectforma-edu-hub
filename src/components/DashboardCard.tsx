@@ -26,8 +26,8 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
 }) => {
   return (
     <div 
-      className={`glass-card rounded-xl p-4 sm:p-6 transition-all duration-300 ${
-        clickable ? 'cursor-pointer floating-card hover:shadow-lg active:scale-[0.98]' : ''
+      className={`bg-white rounded-xl border border-border/50 p-4 sm:p-6 shadow-sm transition-all duration-300 ${
+        clickable ? 'cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98]' : ''
       }`}
       onClick={onClick}
     >
