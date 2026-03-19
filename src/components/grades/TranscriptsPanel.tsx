@@ -69,7 +69,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
   const [internalFormation, setInternalFormation] = useState('');
   const selectedFormation = propFormationId || internalFormation;
-  const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [semesterView, setSemesterView] = useState<string>('');
   const [currentStudentIndex, setCurrentStudentIndex] = useState(0);
   const [viewMode, setViewMode] = useState<'list' | 'bulletin'>('list');
   const [showTemplateEditor, setShowTemplateEditor] = useState(false);
@@ -79,7 +79,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   const { data: formations = [] } = useQuery({
     queryKey: ['formations-for-transcripts'],
     queryFn: async () => {
-      const { data } = await supabase.from('formations').select('id, title, level, start_date, end_date').order('title');
+      const { data } = await supabase.from('formations').select('id, title, level, start_date, end_date, duration_years, semesters_count').order('title');
       return data || [];
     },
     enabled: mode === 'admin' && !propFormationId,
@@ -90,7 +90,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     queryFn: async () => {
       const { data } = await supabase
         .from('user_formation_assignments')
-        .select('formation_id, formations(id, title, level, start_date, end_date)')
+        .select('formation_id, formations(id, title, level, start_date, end_date, duration_years, semesters_count)')
         .eq('user_id', studentId!);
       return (data || []).map((d: any) => d.formations).filter(Boolean);
     },
@@ -104,6 +104,51 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     queryFn: () => getEvaluationPeriods(selectedFormation),
     enabled: !!selectedFormation,
   });
+
+  // Auto-init semesterView
+  useEffect(() => {
+    if (periods.length > 0 && !semesterView) setSemesterView('s1');
+  }, [periods]);
+
+  // Semester computed values
+  const selectedFormationObj = availableFormations.find((f: any) => f.id === selectedFormation);
+  const durationYears = (selectedFormationObj as any)?.duration_years || 1;
+
+  const activePeriodIds = useMemo(() => {
+    if (!semesterView || periods.length === 0) return periods.map(p => p.id);
+    if (semesterView.startsWith('final-')) {
+      const yearNum = parseInt(semesterView.split('-')[1]);
+      const startIdx = (yearNum - 1) * 2;
+      return periods.filter((_, idx) => idx >= startIdx && idx < startIdx + 2).map(p => p.id);
+    }
+    const semNum = parseInt(semesterView.replace('s', ''));
+    const idx = semNum - 1;
+    return periods[idx] ? [periods[idx].id] : [];
+  }, [semesterView, periods]);
+
+  const isFinalView = semesterView.startsWith('final-');
+
+  const activeSemesterNums = useMemo((): number[] | null => {
+    if (!semesterView) return null;
+    if (semesterView.startsWith('final-')) {
+      const yearNum = parseInt(semesterView.split('-')[1]);
+      return [(yearNum - 1) * 2 + 1, (yearNum - 1) * 2 + 2];
+    }
+    const num = parseInt(semesterView.replace('s', ''));
+    return isNaN(num) ? null : [num];
+  }, [semesterView]);
+
+  const currentPeriodLabel = useMemo(() => {
+    if (isFinalView) {
+      const yearNum = parseInt(semesterView.split('-')[1]);
+      return durationYears === 1 ? 'Final (S1 + S2)' : `Final Année ${yearNum}`;
+    }
+    if (semesterView) {
+      const semNum = parseInt(semesterView.replace('s', ''));
+      return `Semestre ${semNum}`;
+    }
+    return '';
+  }, [semesterView, isFinalView, durationYears]);
 
   const { data: students = [] } = useQuery({
     queryKey: ['formation-students-transcripts', selectedFormation],
