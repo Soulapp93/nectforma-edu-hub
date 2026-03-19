@@ -99,6 +99,18 @@ const FormationDetail = () => {
   }
 
   const formationColor = formation.color || '#8B5CF6';
+  
+  // Semester navigation logic
+  const durationYears = (formation as any)?.duration_years || 1;
+  const semestersCount = (formation as any)?.semesters_count || durationYears * 2;
+  const hasSemesters = semestersCount > 0 && formation.formation_modules?.some((m: any) => m.semester);
+
+  const filteredModules = useMemo(() => {
+    if (!formation?.formation_modules) return [];
+    if (semesterFilter === 'all') return formation.formation_modules;
+    const semNum = parseInt(semesterFilter.replace('s', ''));
+    return formation.formation_modules.filter((m: any) => m.semester === semNum);
+  }, [formation?.formation_modules, semesterFilter]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
