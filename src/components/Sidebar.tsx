@@ -331,14 +331,14 @@ const Sidebar = () => {
                                   to={subItem.href}
                                   className={`
                                     flex items-center gap-2 
-                                    px-3 py-2 
+                                    px-3 py-1.5 
                                     text-[11px] 
-                                    rounded-lg 
+                                    rounded-md 
                                     transition-all duration-200 
                                     whitespace-nowrap
                                     ${isSubActive
-                                      ? 'bg-white/20 text-white font-semibold shadow-sm'
-                                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                                      ? 'bg-white/15 text-white font-semibold'
+                                      : 'text-white/60 hover:bg-white/8 hover:text-white'
                                     }
                                   `}
                                 >
