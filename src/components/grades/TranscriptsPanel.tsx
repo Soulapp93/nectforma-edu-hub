@@ -163,18 +163,24 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     enabled: !!selectedFormation,
   });
 
-  const { data: modules = [] } = useQuery({
+  const { data: allModules = [] } = useQuery({
     queryKey: ['formation-modules-transcripts', selectedFormation],
     queryFn: async () => {
       const { data } = await supabase
         .from('formation_modules')
-        .select('id, title, coefficient, order_index, teaching_unit_id')
+        .select('id, title, coefficient, order_index, teaching_unit_id, semester')
         .eq('formation_id', selectedFormation)
         .order('order_index');
       return data || [];
     },
     enabled: !!selectedFormation,
   });
+
+  // Filter modules by semester
+  const modules = useMemo(() => {
+    if (!activeSemesterNums) return allModules;
+    return allModules.filter((m: any) => !m.semester || activeSemesterNums.includes(m.semester));
+  }, [allModules, activeSemesterNums]);
 
   const { data: teachingUnits = [] } = useQuery({
     queryKey: ['teaching-units-transcripts', selectedFormation],
