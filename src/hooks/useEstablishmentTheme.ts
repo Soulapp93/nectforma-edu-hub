@@ -86,6 +86,7 @@ function applyThemeToDOM(theme: EstablishmentTheme) {
   root.style.setProperty('--sidebar-background', sidebar);
   if (s) {
     root.style.setProperty('--sidebar-border', hslString(s.h, s.s, Math.min(s.l + 10, 40)));
+    root.style.setProperty('--nect-sidebar-dark', hslString(s.h, Math.max(s.s - 5, 0), Math.max(s.l - 4, 5)));
   }
   
   // Background
@@ -105,7 +106,7 @@ function clearThemeFromDOM() {
     '--nect-primary-light', '--nect-primary-dark', '--secondary', '--secondary-foreground',
     '--muted', '--muted-foreground', '--border', '--input', '--gradient-primary',
     '--gradient-hero', '--gradient-soft', '--shadow-sm', '--shadow-md', '--shadow-lg',
-    '--nect-sidebar-bg', '--sidebar-background', '--sidebar-border', '--background', '--card'
+    '--nect-sidebar-bg', '--sidebar-background', '--sidebar-border', '--nect-sidebar-dark', '--background', '--card'
   ];
   props.forEach(p => root.style.removeProperty(p));
   document.body.style.removeProperty('background-color');

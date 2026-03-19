@@ -307,13 +307,13 @@ body:has(.fullscreen-container) {
 }
 
 @layer components {
-  /* Sidebar Premium Gradient - Deep Purple */
+  /* Sidebar Premium Gradient - Uses dynamic theme variable */
   .nect-gradient {
     background: linear-gradient(180deg, 
-      hsl(258 55% 26%) 0%, 
-      hsl(258 55% 22%) 30%,
-      hsl(260 50% 18%) 60%,
-      hsl(258 55% 20%) 100%
+      hsl(var(--sidebar-background, 258 55% 26%)) 0%, 
+      hsl(var(--sidebar-background, 258 55% 22%)) 30%,
+      hsl(var(--nect-sidebar-dark, 260 50% 18%)) 60%,
+      hsl(var(--sidebar-background, 258 55% 20%)) 100%
     );
   }
   
