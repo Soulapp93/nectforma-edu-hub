@@ -125,7 +125,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   useEffect(() => {
     if (activeSemesterNums && modules.length > 0) {
       const filteredMods = modules.filter((m: any) =>
-        !m.semester || activeSemesterNums.includes(m.semester)
+        semesterMatchesFilter(m.semester, activeSemesterNums)
       );
       if (filteredMods.length > 0 && !filteredMods.some((m: any) => m.id === selectedModule)) {
         setSelectedModule(filteredMods[0].id);
