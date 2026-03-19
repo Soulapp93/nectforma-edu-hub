@@ -1,13 +1,15 @@
 
 import React, { useState } from 'react';
-import { X, GraduationCap, Calendar, Plus, BookOpen } from 'lucide-react';
+import { X, GraduationCap, Calendar, Plus, BookOpen, Clock } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import ModuleForm, { ModuleFormData } from './ModuleForm';
 import ColorPalette from './ColorPalette';
 import { formationService } from '@/services/formationService';
 import { moduleService } from '@/services/moduleService';
 import { establishmentService } from '@/services/establishmentService';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CreateFormationModalProps {
   isOpen: boolean;
