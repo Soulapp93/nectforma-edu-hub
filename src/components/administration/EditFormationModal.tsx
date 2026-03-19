@@ -29,6 +29,7 @@ interface EditFormationData {
   color: string;
   duration: number;
   academic_year: string;
+  duration_years: number;
 }
 
 const EditFormationModal: React.FC<EditFormationModalProps> = ({ 
@@ -47,7 +48,8 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
     status: 'Actif',
     color: '#8B5CF6',
     duration: 0,
-    academic_year: `${currentYear}-${currentYear + 1}`
+    academic_year: `${currentYear}-${currentYear + 1}`,
+    duration_years: 1,
   });
 
   const [modules, setModules] = useState<ModuleFormData[]>([]);
@@ -64,12 +66,12 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
 
   const loadFormation = async () => {
     if (!formationId) return;
-    
+
     try {
       setInitialLoading(true);
       setError(null);
       const formation = await formationService.getFormationById(formationId);
-      
+
       setFormData({
         title: formation.title,
         description: formation.description || '',
@@ -79,20 +81,20 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
         status: formation.status,
         color: formation.color || '#8B5CF6',
         duration: formation.duration,
-        academic_year: (formation as any).academic_year || `${currentYear}-${currentYear + 1}`
+        academic_year: (formation as any).academic_year || `${currentYear}-${currentYear + 1}`,
+        duration_years: (formation as any).duration_years || 1,
       });
 
-      // Charger les modules existants
       const formationModules = await moduleService.getFormationModules(formationId);
       setExistingModules(formationModules || []);
-      
-      // Convertir en format ModuleFormData pour l'édition
+
       const modulesData = formationModules.map((mod: any) => ({
         title: mod.title,
         description: mod.description || '',
         instructorIds: mod.module_instructors?.map((mi: any) => mi.instructor_id) || [],
         duration_hours: mod.duration_hours || 0,
-        subModules: []
+        subModules: [],
+        semester: mod.semester ?? undefined,
       }));
       setModules(modulesData);
     } catch (error) {
@@ -107,7 +109,7 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'duration' ? Number(value) : value
+      [name]: name === 'duration' || name === 'duration_years' ? Number(value) : value
     }));
     if (error) setError(null);
   };
@@ -126,7 +128,8 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
       description: '',
       instructorIds: [],
       duration_hours: 0,
-      subModules: []
+      subModules: [],
+      semester: undefined,
     }]);
   };
 
@@ -141,7 +144,7 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formationId) return;
-    
+
     setError(null);
 
     try {
@@ -152,9 +155,11 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
         return;
       }
 
-      await formationService.updateFormation(formationId, formData);
+      await formationService.updateFormation(formationId, {
+        ...formData,
+        semesters_count: formData.duration_years * 2,
+      } as any);
 
-      // Supprimer les modules existants qui ne sont plus dans la liste
       for (const existingModule of existingModules) {
         const stillExists = modules.some((_, idx) => existingModules[idx]?.id === existingModule.id);
         if (!stillExists) {
@@ -162,28 +167,27 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
         }
       }
 
-      // Créer ou mettre à jour les modules
       for (let i = 0; i < modules.length; i++) {
         const module = modules[i];
         if (module.title.trim()) {
           const existingModule = existingModules[i];
-          
+
           if (existingModule) {
-            // Mettre à jour le module existant
             await moduleService.updateModule(existingModule.id, {
               title: module.title,
               description: module.description,
               order_index: i,
-              duration_hours: module.duration_hours || 0
+              duration_hours: module.duration_hours || 0,
+              semester: module.semester ?? null,
             }, module.instructorIds);
           } else {
-            // Créer un nouveau module
             await moduleService.createModule({
               formation_id: formationId,
               title: module.title,
               description: module.description,
               duration_hours: module.duration_hours || 0,
-              order_index: i
+              order_index: i,
+              semester: module.semester ?? null,
             }, module.instructorIds);
           }
         }
@@ -192,7 +196,7 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
       toast.success('Formation et modules mis à jour avec succès');
       onSuccess();
       onClose();
-      
+
     } catch (error) {
       console.error('Erreur lors de la modification de la formation:', error);
       setError(error instanceof Error ? error.message : 'Erreur lors de la modification de la formation');
@@ -359,7 +363,6 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
               </div>
             </div>
 
-            {/* Modules */}
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-medium text-gray-900">
@@ -390,6 +393,7 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
                       initialData={module}
                       onAdd={(moduleData) => updateModule(index, moduleData)}
                       onRemove={() => removeModule(index)}
+                      semestersCount={formData.duration_years * 2}
                     />
                   ))}
                 </div>
