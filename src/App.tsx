@@ -79,6 +79,9 @@ const AppContent = () => {
   const location = useLocation();
   const { userId, userRole, loading: authLoading, error: authError } = useCurrentUser();
   
+  // Apply establishment theme colors
+  useEstablishmentTheme();
+  
   // Initialize monitoring with user ID
   useEffect(() => {
     monitoring.setUserId(userId || null);
