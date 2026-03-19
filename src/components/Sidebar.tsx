@@ -297,11 +297,11 @@ const Sidebar = () => {
                             flex items-center ${collapsed ? 'justify-center' : 'justify-between'} 
                             w-full px-3 py-2.5 
                             text-[13px] font-medium 
-                            rounded-xl 
+                            rounded-lg 
                             transition-all duration-200 
                             ${isAdminRoute
-                              ? 'bg-white/20 text-white shadow-lg backdrop-blur-sm ring-1 ring-white/20'
-                              : 'text-white/85 hover:bg-white/10 hover:text-white'
+                              ? 'bg-white/15 text-white shadow-md'
+                              : 'text-white/75 hover:bg-white/8 hover:text-white'
                             }
                           `}
                           title={collapsed ? item.name : undefined}
