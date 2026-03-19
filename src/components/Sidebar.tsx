@@ -160,7 +160,9 @@ const Sidebar = () => {
       collapsible="icon"
     >
       {/* Subtle inner glow effect */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white/3 via-transparent to-black/15 pointer-events-none z-0" />
+      <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/20 pointer-events-none z-0" />
+      {/* Purple/blue glow at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[hsl(260,80%,40%)]/20 to-transparent pointer-events-none z-0" />
       
       {/* Header */}
       <SidebarHeader className="relative z-10 px-3 pt-5 pb-4">
