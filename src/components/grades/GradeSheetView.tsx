@@ -33,7 +33,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   const queryClient = useQueryClient();
   const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
   const selectedFormation = formationId;
-  const [selectedPeriod, setSelectedPeriod] = useState('');
+  const [semesterView, setSemesterView] = useState<string>('');
   const [selectedModule, setSelectedModule] = useState('');
   const [examType, setExamType] = useState<'examen_blanc' | 'examen_final'>('examen_blanc');
   const [showExamSection, setShowExamSection] = useState(false);
