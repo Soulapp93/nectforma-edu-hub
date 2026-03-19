@@ -79,15 +79,25 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     enabled: !!selectedFormation,
   });
 
-  // Auto-init semesterView
+  const durationYears = (currentFormationData as any)?.duration_years || 1;
+  const semestersCount = (currentFormationData as any)?.semesters_count || durationYears * 2;
+
+  // Auto-init semesterView based on formation data (not periods)
   useEffect(() => {
-    if (periods.length > 0 && !semesterView) setSemesterView('s1');
+    if (currentFormationData && !semesterView) setSemesterView('s1');
+  }, [currentFormationData]);
+
+  // Build a map: semester number -> period id (if periods exist)
+  const semesterPeriodMap = useMemo(() => {
+    const map = new Map<number, string>();
+    periods.forEach((p, idx) => {
+      map.set(idx + 1, p.id);
+    });
+    return map;
   }, [periods]);
 
-  const durationYears = (currentFormationData as any)?.duration_years || 1;
-
   const activePeriodIds = useMemo(() => {
-    if (!semesterView || periods.length === 0) return periods.map(p => p.id);
+    if (!semesterView || periods.length === 0) return [];
     if (semesterView.startsWith('final-')) {
       const yearNum = parseInt(semesterView.split('-')[1]);
       const startIdx = (yearNum - 1) * 2;
@@ -163,15 +173,30 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     if (hasExams) setShowExamSection(true);
   }, [allEvaluations]);
 
-  // Filter evaluations by period + module
+  // Filter evaluations by semester: use period_id if available, otherwise use module's semester
   const moduleEvaluations = useMemo(() => {
     let evals = allEvaluations;
-    if (activePeriodIds.length > 0) {
-      evals = evals.filter(e => activePeriodIds.includes(e.period_id || ''));
+    
+    // Filter by semester: check period_id OR module's semester
+    if (activeSemesterNums && activeSemesterNums.length > 0) {
+      evals = evals.filter(e => {
+        // If evaluation has period_id and periods exist, check period match
+        if (e.period_id && activePeriodIds.length > 0) {
+          return activePeriodIds.includes(e.period_id);
+        }
+        // Otherwise, check the module's semester
+        const mod = modules.find(m => m.id === e.module_id);
+        if (mod?.semester) {
+          return activeSemesterNums.includes(mod.semester);
+        }
+        // No semester info: include in all views
+        return true;
+      });
     }
+    
     if (selectedModule) evals = evals.filter(e => e.module_id === selectedModule);
     return evals;
-  }, [allEvaluations, activePeriodIds, selectedModule]);
+  }, [allEvaluations, activePeriodIds, activeSemesterNums, selectedModule, modules]);
 
   // CC evaluations for current module
   const ccEvaluations = useMemo(() =>
@@ -401,7 +426,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
       {/* Top bar: Semester navigation + Actions */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
         {/* Semester buttons grouped by year with Final */}
-        {periods.length > 0 && (
+        {semestersCount > 0 && currentFormationData && (
           <div className="flex flex-wrap items-center gap-2">
             {Array.from({ length: durationYears }, (_, y) => {
               const s1 = y * 2 + 1;
