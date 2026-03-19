@@ -26,7 +26,7 @@ const TopHeaderBar = () => {
   const profilePhotoUrl = getResolvedPhotoUrl(myUser?.profile_photo_url);
 
   return (
-    <header className="hidden md:flex h-14 items-center justify-between border-b border-border/30 bg-white sticky top-0 z-20 px-6">
+    <header className="hidden md:flex h-14 items-center justify-between nect-gradient sticky top-0 z-20 px-6 border-b border-white/10">
       {/* Left: Greeting */}
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-foreground">Bonjour,</span>
