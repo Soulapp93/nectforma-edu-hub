@@ -49,9 +49,9 @@ const TopHeaderBar = () => {
 
         {/* Profile Avatar */}
         <NavLink to="/compte" className="flex items-center gap-2 ml-1">
-          <Avatar className="w-9 h-9 ring-2 ring-primary/20">
+          <Avatar className="w-9 h-9 ring-2 ring-white/20">
             <AvatarImage src={profilePhotoUrl || ''} alt={firstName} />
-            <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+            <AvatarFallback className="bg-white/10 text-white text-xs font-semibold">
               {initials}
             </AvatarFallback>
           </Avatar>
