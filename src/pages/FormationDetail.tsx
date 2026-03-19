@@ -58,6 +58,18 @@ const FormationDetail = () => {
     fetchFormation();
   }, [formationId]);
 
+  // Semester navigation logic (must be before early returns)
+  const durationYears = (formation as any)?.duration_years || 1;
+  const semestersCount = (formation as any)?.semesters_count || durationYears * 2;
+  const hasSemesters = semestersCount > 0 && formation?.formation_modules?.some((m: any) => m.semester);
+
+  const filteredModules = useMemo(() => {
+    if (!formation?.formation_modules) return [];
+    if (semesterFilter === 'all') return formation.formation_modules;
+    const semNum = parseInt(semesterFilter.replace('s', ''));
+    return formation.formation_modules.filter((m: any) => m.semester === semNum);
+  }, [formation?.formation_modules, semesterFilter]);
+
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center">
@@ -68,21 +80,11 @@ const FormationDetail = () => {
 
   // Get appropriate back navigation based on user role
   const getBackNavigation = () => {
-    // Only admins can go back to administration
     const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
-    
     if (from === 'administration' && isAdmin) {
-      return {
-        path: '/administration?tab=formations',
-        label: 'Retour à l\'administration'
-      };
+      return { path: '/administration?tab=formations', label: 'Retour à l\'administration' };
     }
-    
-    // For all other roles (student, instructor, tutor), always go to formations
-    return {
-      path: '/formations',
-      label: 'Retour aux formations'
-    };
+    return { path: '/formations', label: 'Retour aux formations' };
   };
 
   const backNav = getBackNavigation();
@@ -90,7 +92,7 @@ const FormationDetail = () => {
   if (error || !formation) {
     return (
       <div className="p-8">
-        <div className="text-red-600">Erreur: {error || 'Formation non trouvée'}</div>
+        <div className="text-destructive">Erreur: {error || 'Formation non trouvée'}</div>
         <Button onClick={() => navigate(backNav.path)} className="mt-4">
           {backNav.label}
         </Button>
@@ -99,18 +101,6 @@ const FormationDetail = () => {
   }
 
   const formationColor = formation.color || '#8B5CF6';
-  
-  // Semester navigation logic
-  const durationYears = (formation as any)?.duration_years || 1;
-  const semestersCount = (formation as any)?.semesters_count || durationYears * 2;
-  const hasSemesters = semestersCount > 0 && formation.formation_modules?.some((m: any) => m.semester);
-
-  const filteredModules = useMemo(() => {
-    if (!formation?.formation_modules) return [];
-    if (semesterFilter === 'all') return formation.formation_modules;
-    const semNum = parseInt(semesterFilter.replace('s', ''));
-    return formation.formation_modules.filter((m: any) => m.semester === semNum);
-  }, [formation?.formation_modules, semesterFilter]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
