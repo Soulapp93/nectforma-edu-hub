@@ -1,53 +1,51 @@
 
+Objectif: corriger définitivement le décalage des cartes en vue jour (tuteur + autres interfaces) pour que chaque carte respecte exactement l’heure de début et de fin.
 
-## Plan: Reproduire exactement le design PCA PREAD pour Nectforma
+1) Diagnostic précis (pourquoi c’est encore faux)
+- La grille horaire est en `rem` via `h-20` (5rem).
+- Les cartes sont positionnées en **pixels fixes** avec `HOUR_HEIGHT = 80`.
+- Or votre app force `html { font-size: 12px }` sur desktop (`src/index.css`), donc:
+  - 1 heure de grille = 5rem = 60px
+  - 1 heure de carte = 80px
+  - => cartes ~33% trop hautes (exactement ce qu’on voit sur votre capture).
+- Le patch précédent (minHeight 60 -> 20) ne corrige pas cette cause racine.
+- Le même problème existe aussi dans `src/components/administration/ScheduleDayView.tsx` (même logique en 80px), donc incohérence selon écrans/rôles.
 
-### Analyse du screenshot de reference
+2) Plan de correction (hotfix production, faible risque)
+- Corriger `src/components/schedule/DayView.tsx`:
+  - Supprimer le calcul vertical en px fixes.
+  - Utiliser une échelle unique basée sur la même unité que la grille (`rem`) ou en `%` du conteneur.
+  - Aligner les hauteurs de lignes et le calcul `top/height` sur la même constante.
+  - Supprimer la distorsion artificielle (`minHeight` trop agressif) qui casse la précision des petits créneaux.
+- Corriger `src/components/administration/ScheduleDayView.tsx` de la même manière pour éviter un bug “corrigé ici mais pas ailleurs”.
+- Garder les textes compactés pour créneaux courts (si besoin), mais sans changer la hauteur réelle du créneau.
 
-Le design PCA PREAD montre :
-- **Sidebar** : Gradient navy profond vers indigo/violet fonce, avec une lueur subtile en haut
-- **Menu actif** : Style **outline/bordure** arrondie (pilule) avec un fond semi-transparent et un chevron ">" a droite - PAS un fond solide jaune
-- **Menu inactif** : Texte blanc/gris avec icones, espacement genereux
-- **Profil utilisateur** : Avatar rond avec nom en gras, statut "En ligne" avec pastille verte, chevron ">" a droite
-- **Section support** : Carte "Besoin d'aide ?" avec boutons "Aide" et casque en bas de sidebar
-- **Deconnexion** : Tout en bas avec icone
-- **Couleur secondaire** : Le screenshot utilise du bleu clair/cyan pour les outlines actifs
+3) Détails techniques (implémentation)
+- Remplacer:
+  - `HOUR_HEIGHT = 80` (px)
+  - `h-20` implicite non synchronisé
+- Par une source unique (exemple):
+  - `const HOUR_HEIGHT_REM = 5;`
+  - `topRem = ((start - base) / 60) * HOUR_HEIGHT_REM`
+  - `heightRem = ((end - start) / 60) * HOUR_HEIGHT_REM`
+  - styles: `top: ${topRem}rem`, `height: ${heightRem}rem`
+- Ou alternative robuste:
+  - calculer `top`/`height` en `%` de la plage horaire visible.
+- Ajouter garde-fou:
+  - si `end <= start`, ne pas casser l’affichage (normalisation + log debug).
 
-### Remplacement de la couleur jaune
+4) Vérification ciblée (avant mise en prod)
+- Cas réel de votre capture:
+  - `08:00 → 14:00` doit commencer exactement sur la ligne 08:00 et finir exactement sur 14:00.
+- Cas 30 min:
+  - ex. `10:00 → 10:30` doit occuper exactement une demi-case.
+- Vérifier sur compte tuteur ET interface administration (même rendu temporel).
 
-Le jaune/or sera remplace par un **bleu ciel/cyan** (`210 90% 60%`) qui s'harmonise avec le navy et correspond au style du screenshot.
+5) Fichiers concernés
+- `src/components/schedule/DayView.tsx`
+- `src/components/administration/ScheduleDayView.tsx`
 
-### Modifications prevues
-
-#### 1. `src/index.css` - Variables CSS
-- Remplacer `--accent: 45 95% 55%` (jaune) par `--accent: 210 90% 60%` (bleu ciel/cyan)
-- Ajuster `--accent-foreground` pour le contraste
-- Mettre a jour `--sidebar-accent` de la meme maniere
-
-#### 2. `src/components/Sidebar.tsx` - Reproduire le design exact
-- **Menu actif** : Passer d'un fond solide jaune a un style **outline** avec bordure blanche/cyan semi-transparente, fond `white/10`, et chevron ">" a droite (exactement comme le screenshot)
-- **Profil utilisateur** : Ajouter un chevron ">" a droite du nom, style plus epure
-- **Section "Besoin d'aide ?"** : Ajouter une carte en bas de la sidebar avec texte "Besoin d'aide ? Contactez le support" et boutons "Aide" + casque (exactement comme le screenshot)
-- **Sous-menus** : Items avec chevron ">" pour les expandables (comme "Mes derniers sejours", "Mon compte" dans le screenshot)
-- **Espacement** : Augmenter le padding vertical des items pour correspondre au screenshot
-
-#### 3. Style des elements de menu
-```text
-┌──────────────────────────┐
-│ [icon] Accueil        >  │  ← Menu actif: bordure arrondie, fond semi-transparent
-└──────────────────────────┘
-  [icon] Mes documents       ← Menu inactif: texte blanc/70, pas de fond
-  [icon] Mes derniers     >  ← Expandable: chevron droite
-         sejours
-```
-
-### Fichiers modifies
-- `src/index.css` (couleur accent)
-- `src/components/Sidebar.tsx` (design complet de la sidebar)
-
-### Ce qui ne change PAS
-- Logo Nectforma (conserve)
-- Navigation et routes (conservees)
-- Logique metier (conservee)
-- Police Plus Jakarta Sans (conservee)
-
+Résultat attendu:
+- Plus de carte “étirée” artificiellement.
+- Synchronisation parfaite entre horaires affichés et position visuelle des créneaux.
+- Comportement cohérent sur toutes les interfaces/rôles.
