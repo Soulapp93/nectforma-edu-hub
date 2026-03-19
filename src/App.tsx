@@ -385,15 +385,15 @@ const AppContent = () => {
       {/* Sidebar - desktop only (mobile uses the drawer menu from MobileHeader) */}
       <Sidebar />
 
-      {/* Content column (must be a direct sibling of <Sidebar /> for correct inset/gap behavior) */}
-      <div className="flex min-h-svh flex-1 flex-col min-w-0 bg-[hsl(230_25%_97%)]">
+      {/* Content column */}
+      <div className="flex min-h-svh flex-1 flex-col min-w-0 nect-gradient">
         {/* Header mobile */}
         <MobileHeader />
 
-        {/* Header desktop - full width top bar like PCA PREAD */}
+        {/* Header desktop - full width top bar */}
         <TopHeaderBar />
 
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto bg-[hsl(230_25%_97%)] rounded-tl-2xl">
           <Routes>
             {/* Route de signature déplacée dans le bloc public */}
             <Route path="/dashboard" element={<ProtectedRoute><AdminRoute><Dashboard /></AdminRoute></ProtectedRoute>} />
