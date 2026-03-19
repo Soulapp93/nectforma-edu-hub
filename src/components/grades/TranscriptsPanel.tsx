@@ -196,10 +196,12 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   });
 
   const { data: evaluations = [] } = useQuery({
-    queryKey: ['evaluations-transcripts', selectedFormation, selectedPeriod],
+    queryKey: ['evaluations-transcripts', selectedFormation, activePeriodIds.join(',')],
     queryFn: async () => {
       const allEvals = await getEvaluations(selectedFormation);
-      if (selectedPeriod && selectedPeriod !== 'all') return allEvals.filter(e => e.period_id === selectedPeriod);
+      if (activePeriodIds.length > 0 && activePeriodIds.length < periods.length) {
+        return allEvals.filter(e => activePeriodIds.includes(e.period_id || ''));
+      }
       return allEvals;
     },
     enabled: !!selectedFormation,
