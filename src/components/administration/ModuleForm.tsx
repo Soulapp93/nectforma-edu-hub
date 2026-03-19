@@ -17,6 +17,7 @@ export interface ModuleFormData {
   instructorIds: string[];
   duration_hours: number;
   subModules: SubModuleFormData[];
+  semester?: number;
 }
 
 interface ModuleFormProps {
@@ -24,6 +25,7 @@ interface ModuleFormProps {
   onRemove: () => void;
   moduleIndex: number;
   initialData?: ModuleFormData;
+  semestersCount?: number;
 }
 
 const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex, initialData }) => {
