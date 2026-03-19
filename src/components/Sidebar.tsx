@@ -196,19 +196,19 @@ const Sidebar = () => {
           
           {/* Establishment info */}
           {!collapsed && establishment && (
-            <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
+            <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white/10 border border-white/10">
               {establishment.logo_url ? (
                 <img 
                   src={establishment.logo_url} 
                   alt={establishment.name}
-                  className="w-7 h-7 rounded-lg object-cover ring-1 ring-white/20"
+                  className="w-6 h-6 rounded-md object-cover ring-1 ring-white/20"
                 />
               ) : (
-                <div className="w-7 h-7 bg-white/10 rounded-lg flex items-center justify-center">
-                  <Building2 className="w-3.5 h-3.5 text-white/70" />
+                <div className="w-6 h-6 bg-white/15 rounded-md flex items-center justify-center">
+                  <Building2 className="w-3 h-3 text-white/80" />
                 </div>
               )}
-              <p className="text-xs font-medium text-white/90 truncate flex-1">{establishment.name}</p>
+              <p className="text-[11px] font-semibold text-white/90 truncate flex-1 uppercase tracking-wider">{establishment.name}</p>
             </div>
           )}
           
