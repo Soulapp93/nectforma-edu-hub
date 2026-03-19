@@ -475,12 +475,13 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
             
             {/* En-tête du tableau */}
             <div 
-              className={`grid gap-4 p-3 text-white font-medium text-sm rounded-t-lg ${attendanceSheet.status !== 'Validé' ? 'grid-cols-6' : 'grid-cols-5'}`}
+              className={`grid gap-4 p-3 text-white font-medium text-sm rounded-t-lg ${attendanceSheet.status !== 'Validé' ? 'grid-cols-7' : 'grid-cols-6'}`}
               style={{ backgroundColor: formationColor }}
             >
               <div className="col-span-2">Nom et Prénom</div>
               <div className="text-center">Statut</div>
               <div className="text-center">Retard</div>
+              <div className="text-center">Motif</div>
               <div className="text-center">Signature</div>
               {attendanceSheet.status !== 'Validé' && (
                 <div className="text-center">Actions</div>
