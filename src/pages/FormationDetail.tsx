@@ -243,7 +243,12 @@ const FormationDetail = () => {
                         <div className="text-left flex-1 min-w-0">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-2">
                             <div className="min-w-0">
-                              <h3 className="font-bold text-foreground text-sm sm:text-base break-words">{module.title}</h3>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h3 className="font-bold text-foreground text-sm sm:text-base break-words">{module.title}</h3>
+                                {(module as any).semester && (
+                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">S{(module as any).semester}</Badge>
+                                )}
+                              </div>
                               <div className="flex flex-wrap items-center text-xs sm:text-sm text-muted-foreground mt-1.5 gap-2 sm:gap-3">
                                 {instructors.length > 0 && (
                                   <span className="flex items-center text-primary font-medium">
