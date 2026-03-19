@@ -51,36 +51,36 @@
     --info-foreground: 0 0% 100%;
     --info-muted: 217 91% 95%;
 
-    /* Digiforma-inspired theme colors */
-    --nect-primary-from: 262 83% 58%;
-    --nect-primary-to: 280 75% 60%;
-    --nect-primary-light: 262 83% 95%;
-    --nect-primary-dark: 262 83% 40%;
+    /* Theme colors */
+    --nect-primary-from: 258 62% 35%;
+    --nect-primary-to: 270 55% 45%;
+    --nect-primary-light: 260 40% 95%;
+    --nect-primary-dark: 258 62% 25%;
     
-    --nect-sidebar-bg: 262 83% 58%;
+    --nect-sidebar-bg: 258 55% 22%;
     --nect-card-bg: 0 0% 100%;
-    --nect-card-border: 260 15% 90%;
+    --nect-card-border: 260 15% 88%;
     
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(262 83% 58%), hsl(280 75% 60%));
+    --gradient-primary: linear-gradient(135deg, hsl(258 62% 35%), hsl(270 55% 45%));
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(260 15% 98%));
-    --gradient-hero: linear-gradient(135deg, hsl(262 83% 58%), hsl(280 75% 60%));
-    --gradient-soft: linear-gradient(135deg, hsl(262 83% 97%), hsl(280 75% 95%));
+    --gradient-hero: linear-gradient(135deg, hsl(258 62% 35%), hsl(270 55% 45%));
+    --gradient-soft: linear-gradient(135deg, hsl(260 40% 97%), hsl(270 35% 95%));
     
     /* Professional shadows */
-    --shadow-sm: 0 1px 3px rgba(139, 92, 246, 0.08);
-    --shadow-md: 0 4px 16px rgba(139, 92, 246, 0.12);
-    --shadow-lg: 0 12px 32px rgba(139, 92, 246, 0.16);
-    --shadow-xl: 0 24px 48px rgba(139, 92, 246, 0.20);
+    --shadow-sm: 0 1px 3px rgba(60, 30, 120, 0.06);
+    --shadow-md: 0 4px 16px rgba(60, 30, 120, 0.10);
+    --shadow-lg: 0 12px 32px rgba(60, 30, 120, 0.14);
+    --shadow-xl: 0 24px 48px rgba(60, 30, 120, 0.18);
 
-    --sidebar-background: 262 83% 58%;
+    --sidebar-background: 258 55% 22%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 262 83% 58%;
+    --sidebar-primary-foreground: 258 62% 35%;
     --sidebar-accent: 0 0% 100%;
-    --sidebar-accent-foreground: 262 83% 58%;
-    --sidebar-border: 0 0% 100%;
-    --sidebar-ring: 262 83% 58%;
+    --sidebar-accent-foreground: 258 62% 35%;
+    --sidebar-border: 258 40% 30%;
+    --sidebar-ring: 258 62% 35%;
   }
 
   .dark {
