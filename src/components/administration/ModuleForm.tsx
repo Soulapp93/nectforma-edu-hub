@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { X, Plus, User, ChevronDown, ChevronRight } from 'lucide-react';
 import { useInstructors } from '@/hooks/useInstructors';
+import { getSemesterOptions } from '@/utils/semesterUtils';
 
 export interface SubModuleFormData {
   title: string;
@@ -168,8 +169,8 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex, i
             className="w-full px-3 py-2 border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           >
             <option value="">-- Aucun semestre --</option>
-            {Array.from({ length: semestersCount }, (_, i) => (
-              <option key={i + 1} value={i + 1}>Semestre {i + 1}</option>
+            {getSemesterOptions(semestersCount).map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>
         </div>

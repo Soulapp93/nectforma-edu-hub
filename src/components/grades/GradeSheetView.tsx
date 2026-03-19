@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Save, Plus, AlertCircle, BookOpen, GraduationCap, Printer, Copy } from 'lucide-react';
+import { semesterMatchesFilter } from '@/utils/semesterUtils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -124,7 +125,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   useEffect(() => {
     if (activeSemesterNums && modules.length > 0) {
       const filteredMods = modules.filter((m: any) =>
-        !m.semester || activeSemesterNums.includes(m.semester)
+        semesterMatchesFilter(m.semester, activeSemesterNums)
       );
       if (filteredMods.length > 0 && !filteredMods.some((m: any) => m.id === selectedModule)) {
         setSelectedModule(filteredMods[0].id);
@@ -184,10 +185,9 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
         if (e.period_id && activePeriodIds.length > 0) {
           return activePeriodIds.includes(e.period_id);
         }
-        // Otherwise, check the module's semester
         const mod = modules.find(m => m.id === e.module_id);
         if (mod?.semester) {
-          return activeSemesterNums.includes(mod.semester);
+          return semesterMatchesFilter(mod.semester, activeSemesterNums);
         }
         // No semester info: include in all views
         return true;
@@ -427,44 +427,50 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
         {/* Semester buttons grouped by year with Final */}
         {semestersCount > 0 && currentFormationData && (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 bg-muted/50 rounded-xl p-1.5">
             {Array.from({ length: durationYears }, (_, y) => {
               const s1 = y * 2 + 1;
               const s2 = y * 2 + 2;
               const yearNum = y + 1;
               return (
-                <div key={yearNum} className="flex items-center gap-1">
+                <React.Fragment key={yearNum}>
                   {durationYears > 1 && (
-                    <span className="text-xs font-medium text-muted-foreground mr-1">A{yearNum}:</span>
+                    <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider ml-1">A{yearNum}</span>
                   )}
-                  <Button
-                    size="sm"
-                    variant={semesterView === `s${s1}` ? 'default' : 'outline'}
+                  <button
                     onClick={() => setSemesterView(`s${s1}`)}
-                    className="text-xs h-8"
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      semesterView === `s${s1}` 
+                        ? 'bg-primary text-primary-foreground shadow-sm' 
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    }`}
                   >
                     S{s1}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={semesterView === `s${s2}` ? 'default' : 'outline'}
+                  </button>
+                  <button
                     onClick={() => setSemesterView(`s${s2}`)}
-                    className="text-xs h-8"
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      semesterView === `s${s2}` 
+                        ? 'bg-primary text-primary-foreground shadow-sm' 
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    }`}
                   >
                     S{s2}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={semesterView === `final-${yearNum}` ? 'default' : 'outline'}
+                  </button>
+                  <button
                     onClick={() => setSemesterView(`final-${yearNum}`)}
-                    className="text-xs h-8 font-semibold"
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                      semesterView === `final-${yearNum}` 
+                        ? 'bg-primary text-primary-foreground shadow-sm' 
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    }`}
                   >
-                    {durationYears === 1 ? 'Final (S1+S2)' : `Final A${yearNum}`}
-                  </Button>
+                    {durationYears === 1 ? 'Final' : `Final A${yearNum}`}
+                  </button>
                   {yearNum < durationYears && (
-                    <span className="text-border mx-1">|</span>
+                    <div className="w-px h-5 bg-border mx-0.5" />
                   )}
-                </div>
+                </React.Fragment>
               );
             })}
           </div>
