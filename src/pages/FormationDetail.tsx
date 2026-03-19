@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, BookOpen, Clock, Users, Eye, Edit, FileText, GraduationCap, BookText } from 'lucide-react';
 import { formationService, Formation } from '@/services/formationService';
@@ -30,6 +30,7 @@ const FormationDetail = () => {
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
   const [instructors, setInstructors] = useState<FormationInstructor[]>([]);
+  const [semesterFilter, setSemesterFilter] = useState<string>('all');
   const { userRole } = useCurrentUser();
 
   // Get navigation context
@@ -57,6 +58,18 @@ const FormationDetail = () => {
     fetchFormation();
   }, [formationId]);
 
+  // Semester navigation logic (must be before early returns)
+  const durationYears = (formation as any)?.duration_years || 1;
+  const semestersCount = (formation as any)?.semesters_count || durationYears * 2;
+  const hasSemesters = semestersCount > 0 && formation?.formation_modules?.some((m: any) => m.semester);
+
+  const filteredModules = useMemo(() => {
+    if (!formation?.formation_modules) return [];
+    if (semesterFilter === 'all') return formation.formation_modules;
+    const semNum = parseInt(semesterFilter.replace('s', ''));
+    return formation.formation_modules.filter((m: any) => m.semester === semNum);
+  }, [formation?.formation_modules, semesterFilter]);
+
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center">
@@ -67,21 +80,11 @@ const FormationDetail = () => {
 
   // Get appropriate back navigation based on user role
   const getBackNavigation = () => {
-    // Only admins can go back to administration
     const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
-    
     if (from === 'administration' && isAdmin) {
-      return {
-        path: '/administration?tab=formations',
-        label: 'Retour à l\'administration'
-      };
+      return { path: '/administration?tab=formations', label: 'Retour à l\'administration' };
     }
-    
-    // For all other roles (student, instructor, tutor), always go to formations
-    return {
-      path: '/formations',
-      label: 'Retour aux formations'
-    };
+    return { path: '/formations', label: 'Retour aux formations' };
   };
 
   const backNav = getBackNavigation();
@@ -89,7 +92,7 @@ const FormationDetail = () => {
   if (error || !formation) {
     return (
       <div className="p-8">
-        <div className="text-red-600">Erreur: {error || 'Formation non trouvée'}</div>
+        <div className="text-destructive">Erreur: {error || 'Formation non trouvée'}</div>
         <Button onClick={() => navigate(backNav.path)} className="mt-4">
           {backNav.label}
         </Button>
@@ -173,15 +176,58 @@ const FormationDetail = () => {
       <div className="px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8">
         <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-lg border border-primary/10">
           <div className="p-4 sm:p-6 border-b border-primary/10">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <h2 className="text-lg sm:text-xl font-bold text-foreground">Modules de la formation</h2>
+              {hasSemesters && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant={semesterFilter === 'all' ? 'default' : 'outline'}
+                    onClick={() => setSemesterFilter('all')}
+                    className="text-xs h-8"
+                  >
+                    Tous
+                  </Button>
+                  {Array.from({ length: durationYears }, (_, y) => {
+                    const s1 = y * 2 + 1;
+                    const s2 = y * 2 + 2;
+                    const yearNum = y + 1;
+                    return (
+                      <div key={yearNum} className="flex items-center gap-1">
+                        {durationYears > 1 && (
+                          <span className="text-xs font-medium text-muted-foreground mr-1">A{yearNum}:</span>
+                        )}
+                        <Button
+                          size="sm"
+                          variant={semesterFilter === `s${s1}` ? 'default' : 'outline'}
+                          onClick={() => setSemesterFilter(`s${s1}`)}
+                          className="text-xs h-8"
+                        >
+                          S{s1}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={semesterFilter === `s${s2}` ? 'default' : 'outline'}
+                          onClick={() => setSemesterFilter(`s${s2}`)}
+                          className="text-xs h-8"
+                        >
+                          S{s2}
+                        </Button>
+                        {yearNum < durationYears && (
+                          <span className="text-border mx-1">|</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
           
           <div className="p-4 sm:p-6">
-            {formation.formation_modules && formation.formation_modules.length > 0 ? (
+            {filteredModules.length > 0 ? (
               <Accordion type="multiple" className="space-y-3">
-                {formation.formation_modules.map((module, index) => (
+                {filteredModules.map((module, index) => (
                   <AccordionItem key={module.id} value={`module-${module.id}`} className="border border-primary/10 rounded-xl bg-card/50 backdrop-blur-sm shadow-sm overflow-hidden">
                     <AccordionTrigger className="px-4 sm:px-5 py-4 sm:py-5 hover:bg-muted/30 rounded-xl [&[data-state=open]]:rounded-b-none transition-colors">
                       <div className="flex items-start sm:items-center space-x-4 w-full">
@@ -197,7 +243,12 @@ const FormationDetail = () => {
                         <div className="text-left flex-1 min-w-0">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-2">
                             <div className="min-w-0">
-                              <h3 className="font-bold text-foreground text-sm sm:text-base break-words">{module.title}</h3>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h3 className="font-bold text-foreground text-sm sm:text-base break-words">{module.title}</h3>
+                                {(module as any).semester && (
+                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">S{(module as any).semester}</Badge>
+                                )}
+                              </div>
                               <div className="flex flex-wrap items-center text-xs sm:text-sm text-muted-foreground mt-1.5 gap-2 sm:gap-3">
                                 {instructors.length > 0 && (
                                   <span className="flex items-center text-primary font-medium">
@@ -293,7 +344,11 @@ const FormationDetail = () => {
                   <GraduationCap className="h-12 w-12 text-muted-foreground" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">Aucun module</h3>
-                <p className="text-muted-foreground">Cette formation n'a pas encore de modules.</p>
+                <p className="text-muted-foreground">
+                  {semesterFilter !== 'all' 
+                    ? `Aucun module assigné au semestre ${semesterFilter.replace('s', 'S')}.`
+                    : "Cette formation n'a pas encore de modules."}
+                </p>
               </div>
             )}
           </div>

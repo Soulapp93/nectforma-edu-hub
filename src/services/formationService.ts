@@ -96,7 +96,8 @@ export const formationService = {
             title,
             description,
             duration_hours,
-            order_index
+            order_index,
+            semester
           )
         `)
         .eq('id', id)
