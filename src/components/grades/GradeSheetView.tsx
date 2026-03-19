@@ -495,16 +495,10 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
         </Card>
       ) : (
         <>
-          {/* Module tabs navigation - filtered by semester if applicable */}
+          {/* Module tabs navigation - filtered by semester */}
           {(() => {
-            // Get semester number from selected period name
-            const currentPeriodObj = periods.find(p => p.id === selectedPeriod);
-            const semesterMatch = currentPeriodObj?.name?.match(/Semestre\s+(\d+)/i);
-            const currentSemesterNum = semesterMatch ? parseInt(semesterMatch[1]) : null;
-            
-            // Filter modules by semester if they have one assigned
-            const filteredModules = currentSemesterNum 
-              ? modules.filter((mod: any) => !mod.semester || mod.semester === currentSemesterNum)
+            const filteredModules = activeSemesterNums
+              ? modules.filter((m: any) => !m.semester || activeSemesterNums.includes(m.semester))
               : modules;
 
             return (
