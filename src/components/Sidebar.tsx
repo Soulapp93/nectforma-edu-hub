@@ -56,6 +56,12 @@ const Sidebar = () => {
   const location = useLocation();
   const [adminExpanded, setAdminExpanded] = useState(location.pathname === '/administration');
 
+  const establishmentName = establishment?.name || myEstablishment?.name || '';
+  const establishmentLogoRaw = establishment?.logo_url || null;
+  const establishmentLogoUrl = establishmentLogoRaw ? (
+    establishmentLogoRaw.startsWith('http') ? establishmentLogoRaw : supabase.storage.from('avatars').getPublicUrl(establishmentLogoRaw).data?.publicUrl || null
+  ) : null;
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.href = '/auth';
@@ -190,32 +196,34 @@ const Sidebar = () => {
       </SidebarHeader>
 
       <SidebarContent className="relative z-10 px-3">
-        {/* User Profile Card */}
+        {/* Establishment Logo Card (replaces user profile) */}
         <div className={`mb-5 p-3 rounded-2xl bg-white/[0.08] border border-white/10 ${collapsed ? 'flex justify-center' : ''}`}>
-          <NavLink to="/compte" className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
+          <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
             <div className="relative flex-shrink-0">
-              <Avatar className="w-11 h-11 ring-2 ring-white/20" title={collapsed ? userDisplayInfo.name : undefined}>
-                <AvatarImage src={userDisplayInfo.profilePhotoUrl || ''} alt={userDisplayInfo.name} />
-                <AvatarFallback className="bg-white/15 text-white text-xs font-semibold">
-                  {userDisplayInfo.initials}
-                </AvatarFallback>
-              </Avatar>
-              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[hsl(240,60%,12%)]" />
+              {establishmentLogoUrl ? (
+                <Avatar className="w-11 h-11 ring-2 ring-white/20">
+                  <AvatarImage src={establishmentLogoUrl} alt={establishmentName} />
+                  <AvatarFallback className="bg-white/15 text-white text-xs font-semibold">
+                    {establishmentName?.[0]?.toUpperCase() || 'E'}
+                  </AvatarFallback>
+                </Avatar>
+              ) : (
+                <div className="w-11 h-11 rounded-full bg-white/15 flex items-center justify-center ring-2 ring-white/20">
+                  <Building2 className="w-6 h-6 text-white/80" />
+                </div>
+              )}
             </div>
             {!collapsed && (
-              <div className="flex-1 min-w-0 flex items-center justify-between">
-                <div>
-                  <p className="text-[14px] font-bold text-white truncate leading-tight">{userDisplayInfo.firstName}</p>
-                  <p className="text-[14px] font-extrabold text-white truncate leading-tight uppercase tracking-wide">{userDisplayInfo.lastName}</p>
-                  <p className="text-[11px] text-emerald-400 font-medium flex items-center gap-1 mt-0.5">
-                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
-                    En ligne
-                  </p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-white/40 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-bold text-white truncate leading-tight uppercase tracking-wider">
+                  {establishmentName || 'Établissement'}
+                </p>
+                <p className="text-[11px] text-white/50 font-medium mt-0.5">
+                  {establishment?.type || 'Plateforme éducative'}
+                </p>
               </div>
             )}
-          </NavLink>
+          </div>
         </div>
 
         {/* Navigation Menu */}
