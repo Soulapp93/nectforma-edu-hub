@@ -496,7 +496,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
                 return (
                   <div 
                     key={student.id}
-                    className={`grid gap-4 p-3 border-b border-gray-200 last:border-b-0 ${attendanceSheet.status !== 'Validé' ? 'grid-cols-6' : 'grid-cols-5'} ${
+                    className={`grid gap-4 p-3 border-b border-gray-200 last:border-b-0 ${attendanceSheet.status !== 'Validé' ? 'grid-cols-7' : 'grid-cols-6'} ${
                       index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
                     }`}
                   >
