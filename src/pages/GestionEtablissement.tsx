@@ -213,7 +213,7 @@ const GestionEtablissement = () => {
         icon={Building2}
       />
 
-      <div className="max-w-4xl">
+      <div className="max-w-4xl space-y-8">
         <EstablishmentSettings
           adminData={adminData}
           establishmentData={establishmentData}
@@ -222,6 +222,8 @@ const GestionEtablissement = () => {
           onLogoUpload={handleLogoUpload}
           onSave={handleSaveEstablishment}
         />
+
+        <ThemeCustomization />
       </div>
     </div>
   );
