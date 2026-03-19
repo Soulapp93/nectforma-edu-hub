@@ -13,6 +13,7 @@ import ModuleDocumentsTab from '@/components/module/ModuleDocumentsTab';
 import CreateAttendanceSessionModal from '@/components/emargement/CreateAttendanceSessionModal';
 import FormationParticipantsModal from '@/components/administration/FormationParticipantsModal';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { semesterMatchesFilter, getSemesterBadgeLabel } from '@/utils/semesterUtils';
 
 interface FormationInstructor {
   id: string;
