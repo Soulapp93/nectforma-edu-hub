@@ -410,16 +410,16 @@ const Sidebar = () => {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="relative z-10 p-3 border-t border-white/10">
+      <SidebarFooter className="relative z-10 p-3 border-t border-white/8">
         <button 
           onClick={handleLogout}
           className={`
             flex items-center ${collapsed ? 'justify-center' : 'gap-3'} 
             w-full px-3 py-2.5 
             text-[13px] font-medium 
-            text-white/80 
-            rounded-xl 
-            hover:bg-white/10 hover:text-white 
+            text-white/70 
+            rounded-lg 
+            hover:bg-white/8 hover:text-white 
             transition-all duration-200
           `}
           title={collapsed ? "Déconnexion" : undefined}
