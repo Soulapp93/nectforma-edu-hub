@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Edit, Download, CheckCircle2, CheckCircle, XCircle, Clock, Building, UserX, ToggleLeft, ToggleRight, PenTool, Timer } from 'lucide-react';
+import { X, Edit, Download, CheckCircle2, CheckCircle, XCircle, Clock, Building, UserX, ToggleLeft, ToggleRight, PenTool, Timer, FileText } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { AttendanceSheet, attendanceService } from '@/services/attendanceService';
 import { pdfExportService } from '@/services/pdfExportService';
 import AdminValidationModal from './AdminValidationModal';
+import AbsenceReasonModal from './AbsenceReasonModal';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,12 +48,35 @@ interface Student {
 }
 
 const ABSENCE_MOTIFS = [
-  'Congé',
-  'Maladie', 
+  'Arrêt maladie',
+  'Problème / retard de transport',
+  'Raison familiale',
+  'En entreprise',
   'Mission professionnelle',
-  'Familiale',
+  'Stage',
+  'Rendez-vous médical',
+  'Convocation officielle',
+  'Congé',
+  'Injustifié',
   'Autre'
 ];
+
+const MOTIF_LABELS: Record<string, string> = {
+  'arret_maladie': 'Arrêt maladie',
+  'probleme_transport': 'Pb. transport',
+  'raison_familiale': 'Familiale',
+  'en_entreprise': 'Entreprise',
+  'mission_professionnelle': 'Mission pro.',
+  'stage': 'Stage',
+  'rendez_vous_medical': 'RDV médical',
+  'convocation_officielle': 'Convocation',
+  'conge': 'Congé',
+  'injustifie': 'Injustifié',
+  'sortie_entreprise': 'Sortie entreprise',
+  'probleme_technique': 'Pb. technique',
+  'intemperies': 'Intempéries',
+  'autre': 'Autre',
+};
 
 const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> = ({
   isOpen,
@@ -73,6 +97,9 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
   const [establishmentInfo, setEstablishmentInfo] = useState<{ logo_url: string | null; name: string } | null>(null);
   const [isInstructorAbsentLocal, setIsInstructorAbsentLocal] = useState(false);
   const [togglingInstructorAbsent, setTogglingInstructorAbsent] = useState(false);
+  const [showReasonModal, setShowReasonModal] = useState(false);
+  const [reasonModalStudent, setReasonModalStudent] = useState<Student | null>(null);
+  const [reasonModalMode, setReasonModalMode] = useState<'absence' | 'retard'>('absence');
 
   // Charger les données de la feuille d'émargement
   const loadAttendanceData = async () => {
@@ -448,12 +475,13 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
             
             {/* En-tête du tableau */}
             <div 
-              className={`grid gap-4 p-3 text-white font-medium text-sm rounded-t-lg ${attendanceSheet.status !== 'Validé' ? 'grid-cols-6' : 'grid-cols-5'}`}
+              className={`grid gap-4 p-3 text-white font-medium text-sm rounded-t-lg ${attendanceSheet.status !== 'Validé' ? 'grid-cols-7' : 'grid-cols-6'}`}
               style={{ backgroundColor: formationColor }}
             >
               <div className="col-span-2">Nom et Prénom</div>
               <div className="text-center">Statut</div>
               <div className="text-center">Retard</div>
+              <div className="text-center">Motif</div>
               <div className="text-center">Signature</div>
               {attendanceSheet.status !== 'Validé' && (
                 <div className="text-center">Actions</div>
@@ -468,7 +496,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
                 return (
                   <div 
                     key={student.id}
-                    className={`grid gap-4 p-3 border-b border-gray-200 last:border-b-0 ${attendanceSheet.status !== 'Validé' ? 'grid-cols-6' : 'grid-cols-5'} ${
+                    className={`grid gap-4 p-3 border-b border-gray-200 last:border-b-0 ${attendanceSheet.status !== 'Validé' ? 'grid-cols-7' : 'grid-cols-6'} ${
                       index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
                     }`}
                   >
@@ -537,6 +565,54 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
                       ) : (
                         <span className="text-xs text-gray-400">—</span>
                       )}
+                    </div>
+                    {/* Colonne Motif */}
+                    <div className="flex items-center justify-center">
+                      {(() => {
+                        const isAbsent = !student.signature?.present;
+                        const hasDelay = student.signature?.present && (student.signature?.delay_minutes || 0) > 0;
+                        const reasonType = student.signature?.absence_reason_type;
+                        const reasonText = student.signature?.absence_reason;
+                        const motifLabel = reasonType ? (MOTIF_LABELS[reasonType] || reasonType) : null;
+                        
+                        if (isAbsent || hasDelay) {
+                          if (attendanceSheet.status !== 'Validé') {
+                            return (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs h-7 px-2"
+                                onClick={() => {
+                                  setReasonModalStudent(student);
+                                  setReasonModalMode(isAbsent ? 'absence' : 'retard');
+                                  setShowReasonModal(true);
+                                }}
+                              >
+                                {motifLabel ? (
+                                  <span className="truncate max-w-[80px]" title={reasonType === 'autre' ? reasonText || '' : motifLabel}>
+                                    {motifLabel}
+                                  </span>
+                                ) : (
+                                  <>
+                                    <FileText className="h-3 w-3 mr-1" />
+                                    Motif
+                                  </>
+                                )}
+                              </Button>
+                            );
+                          } else {
+                            return motifLabel ? (
+                              <span className="text-xs text-muted-foreground truncate max-w-[90px]" title={reasonType === 'autre' ? reasonText || '' : motifLabel}>
+                                {motifLabel}
+                                {reasonType === 'autre' && reasonText ? `: ${reasonText}` : ''}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-gray-400">—</span>
+                            );
+                          }
+                        }
+                        return <span className="text-xs text-gray-400">—</span>;
+                      })()}
                     </div>
                     <div className="flex items-center justify-center">
                       {student.signature && student.signature.present ? (
@@ -796,6 +872,43 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
               console.error('Error validating from AdminValidationModal in modal:', error);
             }
           }}
+        />
+      )}
+
+      {/* Modal de motif d'absence/retard */}
+      {showReasonModal && reasonModalStudent && (
+        <AbsenceReasonModal
+          isOpen={showReasonModal}
+          onClose={() => {
+            setShowReasonModal(false);
+            setReasonModalStudent(null);
+          }}
+          onSave={async (reasonType: string, reason: string) => {
+            if (!reasonModalStudent.signature?.id) return;
+            try {
+              await supabase
+                .from('attendance_signatures')
+                .update({ 
+                  absence_reason_type: reasonType, 
+                  absence_reason: reason 
+                })
+                .eq('id', reasonModalStudent.signature.id);
+              
+              // Update local state
+              setStudents(prev => prev.map(s => 
+                s.id === reasonModalStudent.id && s.signature
+                  ? { ...s, signature: { ...s.signature, absence_reason_type: reasonType, absence_reason: reason } }
+                  : s
+              ));
+            } catch (err) {
+              console.error('Error saving reason:', err);
+              throw err;
+            }
+          }}
+          currentReasonType={reasonModalStudent.signature?.absence_reason_type || ''}
+          currentReason={reasonModalStudent.signature?.absence_reason || ''}
+          studentName={`${reasonModalStudent.lastName} ${reasonModalStudent.firstName}`}
+          mode={reasonModalMode}
         />
       )}
     </Dialog>
