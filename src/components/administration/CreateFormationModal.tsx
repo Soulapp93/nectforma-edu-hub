@@ -132,6 +132,29 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
 
       const formation = await formationService.createFormation(formationData as any);
 
+      // Auto-créer les périodes d'évaluation (semestres)
+      const startDate = new Date(formationData.start_date);
+      for (let s = 1; s <= semesters_count; s++) {
+        const yearOffset = Math.floor((s - 1) / 2);
+        const isFirst = s % 2 === 1;
+        const periodStart = new Date(startDate.getFullYear() + yearOffset, isFirst ? 8 : 1, 1); // Sept or Feb
+        const periodEnd = new Date(startDate.getFullYear() + yearOffset, isFirst ? 1 : 6, 30); // Jan or Jun
+        if (!isFirst) {
+          periodEnd.setFullYear(periodEnd.getFullYear());
+        } else {
+          periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+        }
+        
+        await supabase.from('evaluation_periods').insert({
+          formation_id: formation.id,
+          name: `Semestre ${s}`,
+          period_type: 'semester',
+          start_date: periodStart.toISOString().split('T')[0],
+          end_date: periodEnd.toISOString().split('T')[0],
+          order_index: s - 1,
+        });
+      }
+
       // Créer les modules et sous-modules
       for (let i = 0; i < modules.length; i++) {
         const module = modules[i];
