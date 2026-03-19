@@ -106,7 +106,7 @@ function clearThemeFromDOM() {
     '--nect-primary-light', '--nect-primary-dark', '--secondary', '--secondary-foreground',
     '--muted', '--muted-foreground', '--border', '--input', '--gradient-primary',
     '--gradient-hero', '--gradient-soft', '--shadow-sm', '--shadow-md', '--shadow-lg',
-    '--nect-sidebar-bg', '--sidebar-background', '--sidebar-border', '--background', '--card'
+    '--nect-sidebar-bg', '--sidebar-background', '--sidebar-border', '--nect-sidebar-dark', '--background', '--card'
   ];
   props.forEach(p => root.style.removeProperty(p));
   document.body.style.removeProperty('background-color');
