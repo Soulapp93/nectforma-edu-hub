@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { UserCircle, Shield } from 'lucide-react';
+import { UserCircle, Shield, Palette } from 'lucide-react';
 import ProfileSettings from '../components/compte/ProfileSettings';
 import RGPDSettings from '../components/compte/RGPDSettings';
+import ThemeCustomization from '../components/compte/ThemeCustomization';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { supabase } from '@/integrations/supabase/client';
 import { fileUploadService } from '@/services/fileUploadService';
