@@ -454,12 +454,24 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
         </Card>
       ) : (
         <>
-          {/* Module tabs navigation */}
+          {/* Module tabs navigation - filtered by semester if applicable */}
+          {(() => {
+            // Get semester number from selected period name
+            const currentPeriodObj = periods.find(p => p.id === selectedPeriod);
+            const semesterMatch = currentPeriodObj?.name?.match(/Semestre\s+(\d+)/i);
+            const currentSemesterNum = semesterMatch ? parseInt(semesterMatch[1]) : null;
+            
+            // Filter modules by semester if they have one assigned
+            const filteredModules = currentSemesterNum 
+              ? modules.filter((mod: any) => !mod.semester || mod.semester === currentSemesterNum)
+              : modules;
+
+            return (
           <Tabs value={selectedModule} onValueChange={setSelectedModule}>
             <TabsList className="w-full flex flex-wrap h-auto gap-1 bg-muted/30 p-1">
-              {modules.map((mod: any) => (
+              {filteredModules.map((mod: any) => (
                 <TabsTrigger key={mod.id} value={mod.id} className="text-xs px-3 py-1.5">
-                  {mod.title}
+                  {mod.title} {mod.semester ? `(S${mod.semester})` : ''}
                 </TabsTrigger>
               ))}
             </TabsList>
