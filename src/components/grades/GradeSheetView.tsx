@@ -351,7 +351,6 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   };
 
   const currentFormation = currentFormationData;
-  const currentPeriod = periods.find(p => p.id === selectedPeriod);
   const currentModule = modules.find((m: any) => m.id === selectedModule);
 
   const avgColor = (val: number | null) => {
