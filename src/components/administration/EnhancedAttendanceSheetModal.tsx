@@ -97,6 +97,9 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
   const [establishmentInfo, setEstablishmentInfo] = useState<{ logo_url: string | null; name: string } | null>(null);
   const [isInstructorAbsentLocal, setIsInstructorAbsentLocal] = useState(false);
   const [togglingInstructorAbsent, setTogglingInstructorAbsent] = useState(false);
+  const [showReasonModal, setShowReasonModal] = useState(false);
+  const [reasonModalStudent, setReasonModalStudent] = useState<Student | null>(null);
+  const [reasonModalMode, setReasonModalMode] = useState<'absence' | 'retard'>('absence');
 
   // Charger les données de la feuille d'émargement
   const loadAttendanceData = async () => {
