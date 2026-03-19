@@ -249,7 +249,7 @@ const FormationDetail = () => {
                               <div className="flex items-center gap-2 flex-wrap">
                                 <h3 className="font-bold text-foreground text-sm sm:text-base break-words">{module.title}</h3>
                                 {(module as any).semester && (
-                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">S{(module as any).semester}</Badge>
+                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{getSemesterBadgeLabel((module as any).semester)}</Badge>
                                 )}
                               </div>
                               <div className="flex flex-wrap items-center text-xs sm:text-sm text-muted-foreground mt-1.5 gap-2 sm:gap-3">
