@@ -381,18 +381,18 @@ const AppContent = () => {
       <Sidebar />
 
       {/* Content column (must be a direct sibling of <Sidebar /> for correct inset/gap behavior) */}
-      <div className="flex min-h-svh flex-1 flex-col min-w-0 bg-muted/20">
+      <div className="flex min-h-svh flex-1 flex-col min-w-0 bg-[hsl(260_20%_97%)]">
         {/* Header mobile */}
         <MobileHeader />
 
         {/* Header desktop (notification band) */}
-        <header className="hidden md:flex h-14 sm:h-16 items-center justify-end border-b border-border/60 bg-gradient-to-r from-secondary/60 via-background/70 to-secondary/60 backdrop-blur-xl px-4 sm:px-6 sticky top-0 z-20">
+        <header className="hidden md:flex h-12 items-center justify-end border-b border-border/50 bg-white/80 backdrop-blur-xl px-4 sm:px-6 sticky top-0 z-20">
           <div className="flex items-center space-x-3 sm:space-x-4">
             <NotificationBell />
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto bg-muted/20">
+        <main className="flex-1 overflow-auto">
           <Routes>
             {/* Route de signature déplacée dans le bloc public */}
             <Route path="/dashboard" element={<ProtectedRoute><AdminRoute><Dashboard /></AdminRoute></ProtectedRoute>} />

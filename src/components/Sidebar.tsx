@@ -156,11 +156,11 @@ const Sidebar = () => {
 
   return (
     <SidebarWrapper 
-      className="nect-gradient text-white shadow-2xl border-r-0 overflow-hidden rounded-r-2xl"
+      className="nect-gradient text-white shadow-2xl border-r-0 overflow-hidden"
       collapsible="icon"
     >
       {/* Subtle inner glow effect */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/10 pointer-events-none rounded-r-2xl z-0" />
+      <div className="absolute inset-0 bg-gradient-to-b from-white/3 via-transparent to-black/15 pointer-events-none z-0" />
       
       {/* Header */}
       <SidebarHeader className="relative z-10 px-3 pt-5 pb-4">
@@ -196,19 +196,19 @@ const Sidebar = () => {
           
           {/* Establishment info */}
           {!collapsed && establishment && (
-            <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
+            <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white/10 border border-white/10">
               {establishment.logo_url ? (
                 <img 
                   src={establishment.logo_url} 
                   alt={establishment.name}
-                  className="w-7 h-7 rounded-lg object-cover ring-1 ring-white/20"
+                  className="w-6 h-6 rounded-md object-cover ring-1 ring-white/20"
                 />
               ) : (
-                <div className="w-7 h-7 bg-white/10 rounded-lg flex items-center justify-center">
-                  <Building2 className="w-3.5 h-3.5 text-white/70" />
+                <div className="w-6 h-6 bg-white/15 rounded-md flex items-center justify-center">
+                  <Building2 className="w-3 h-3 text-white/80" />
                 </div>
               )}
-              <p className="text-xs font-medium text-white/90 truncate flex-1">{establishment.name}</p>
+              <p className="text-[11px] font-semibold text-white/90 truncate flex-1 uppercase tracking-wider">{establishment.name}</p>
             </div>
           )}
           
@@ -233,30 +233,30 @@ const Sidebar = () => {
 
       <SidebarContent className="relative z-10 px-2">
         {/* User Profile Card */}
-        <div className={`mb-4 p-2.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/5 ${collapsed ? 'flex justify-center' : ''}`}>
+        <div className={`mb-4 p-2.5 rounded-lg bg-white/8 border border-white/8 ${collapsed ? 'flex justify-center' : ''}`}>
           <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
             <Avatar className="w-9 h-9 flex-shrink-0 ring-2 ring-white/20" title={collapsed ? userDisplayInfo.name : undefined}>
               <AvatarImage src={userDisplayInfo.profilePhotoUrl || ''} alt={userDisplayInfo.name} />
-              <AvatarFallback className="bg-white/20 text-white text-xs font-semibold">
+              <AvatarFallback className="bg-white/15 text-white text-xs font-semibold">
                 {userDisplayInfo.initials}
               </AvatarFallback>
             </Avatar>
             {!collapsed && (
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-white truncate leading-tight">{userDisplayInfo.name}</p>
-                <p className="text-[11px] text-white/60 font-medium">{userDisplayInfo.role}</p>
+                <p className="text-[11px] text-white/50 font-medium">{userDisplayInfo.role}</p>
                 {userDisplayInfo.relationInfo && (
-                  <div className="mt-1.5 p-2 rounded-lg bg-white/5 border border-white/10">
+                  <div className="mt-1.5 p-2 rounded-md bg-white/5 border border-white/8">
                     {userDisplayInfo.relationInfo.type === 'tutor' ? (
                       <div className="space-y-0.5">
-                        <p className="text-[10px] text-white/70 font-medium flex items-center gap-1">
+                        <p className="text-[10px] text-white/60 font-medium flex items-center gap-1">
                           <span>👨‍🏫</span> Mon tuteur
                         </p>
                         <p className="text-[11px] text-white font-medium truncate pl-4">
                           {userDisplayInfo.relationInfo.name}
                         </p>
                         {userDisplayInfo.relationInfo.company && (
-                          <p className="text-[10px] text-white/50 truncate pl-4 flex items-center gap-1">
+                          <p className="text-[10px] text-white/40 truncate pl-4 flex items-center gap-1">
                             <Building2 className="w-2.5 h-2.5" />
                             {userDisplayInfo.relationInfo.company}
                           </p>
@@ -264,7 +264,7 @@ const Sidebar = () => {
                       </div>
                     ) : (
                       <div className="space-y-0.5">
-                        <p className="text-[10px] text-white/70 font-medium flex items-center gap-1">
+                        <p className="text-[10px] text-white/60 font-medium flex items-center gap-1">
                           <span>👨‍🎓</span> Mon apprenti
                         </p>
                         <p className="text-[11px] text-white font-medium truncate pl-4">
@@ -297,11 +297,11 @@ const Sidebar = () => {
                             flex items-center ${collapsed ? 'justify-center' : 'justify-between'} 
                             w-full px-3 py-2.5 
                             text-[13px] font-medium 
-                            rounded-xl 
+                            rounded-lg 
                             transition-all duration-200 
                             ${isAdminRoute
-                              ? 'bg-white/20 text-white shadow-lg backdrop-blur-sm ring-1 ring-white/20'
-                              : 'text-white/85 hover:bg-white/10 hover:text-white'
+                              ? 'bg-white/15 text-white shadow-md'
+                              : 'text-white/75 hover:bg-white/8 hover:text-white'
                             }
                           `}
                           title={collapsed ? item.name : undefined}
@@ -318,7 +318,7 @@ const Sidebar = () => {
                         </button>
                         
                         {!collapsed && adminExpanded && (
-                          <div className="ml-4 mt-2 space-y-1 border-l-2 border-white/20 pl-3">
+                          <div className="ml-4 mt-1.5 space-y-0.5 border-l-2 border-white/15 pl-3">
                             {item.subItems.map((subItem) => {
                               const SubIcon = subItem.icon;
                               const searchParams = new URLSearchParams(subItem.href.split('?')[1]);
@@ -332,14 +332,14 @@ const Sidebar = () => {
                                   to={subItem.href}
                                   className={`
                                     flex items-center gap-2 
-                                    px-3 py-2 
+                                    px-3 py-1.5 
                                     text-[11px] 
-                                    rounded-lg 
+                                    rounded-md 
                                     transition-all duration-200 
                                     whitespace-nowrap
                                     ${isSubActive
-                                      ? 'bg-white/20 text-white font-semibold shadow-sm'
-                                      : 'text-white/70 hover:bg-white/10 hover:text-white'
+                                      ? 'bg-white/15 text-white font-semibold'
+                                      : 'text-white/60 hover:bg-white/8 hover:text-white'
                                     }
                                   `}
                                 >
@@ -373,12 +373,12 @@ const Sidebar = () => {
                             flex items-center ${collapsed ? 'justify-center' : 'justify-between'} 
                             px-3 py-2.5 
                             text-[13px] font-medium 
-                            rounded-xl 
+                            rounded-lg 
                             transition-all duration-200 
                             relative
                             ${isActive
-                              ? 'bg-white/20 text-white shadow-lg backdrop-blur-sm ring-1 ring-white/20'
-                              : 'text-white/85 hover:bg-white/10 hover:text-white'
+                              ? 'bg-white/15 text-white shadow-md'
+                              : 'text-white/75 hover:bg-white/8 hover:text-white'
                             }
                           `
                         }
@@ -410,16 +410,16 @@ const Sidebar = () => {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="relative z-10 p-3 border-t border-white/10">
+      <SidebarFooter className="relative z-10 p-3 border-t border-white/8">
         <button 
           onClick={handleLogout}
           className={`
             flex items-center ${collapsed ? 'justify-center' : 'gap-3'} 
             w-full px-3 py-2.5 
             text-[13px] font-medium 
-            text-white/80 
-            rounded-xl 
-            hover:bg-white/10 hover:text-white 
+            text-white/70 
+            rounded-lg 
+            hover:bg-white/8 hover:text-white 
             transition-all duration-200
           `}
           title={collapsed ? "Déconnexion" : undefined}
