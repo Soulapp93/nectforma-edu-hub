@@ -472,6 +472,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                     moduleIndex={index}
                     onAdd={(moduleData) => updateModule(index, moduleData)}
                     onRemove={() => removeModule(index)}
+                    semestersCount={formData.duration_years * 2}
                   />
                 ))}
               </div>
