@@ -48,12 +48,35 @@ interface Student {
 }
 
 const ABSENCE_MOTIFS = [
-  'Congé',
-  'Maladie', 
+  'Arrêt maladie',
+  'Problème / retard de transport',
+  'Raison familiale',
+  'En entreprise',
   'Mission professionnelle',
-  'Familiale',
+  'Stage',
+  'Rendez-vous médical',
+  'Convocation officielle',
+  'Congé',
+  'Injustifié',
   'Autre'
 ];
+
+const MOTIF_LABELS: Record<string, string> = {
+  'arret_maladie': 'Arrêt maladie',
+  'probleme_transport': 'Pb. transport',
+  'raison_familiale': 'Familiale',
+  'en_entreprise': 'Entreprise',
+  'mission_professionnelle': 'Mission pro.',
+  'stage': 'Stage',
+  'rendez_vous_medical': 'RDV médical',
+  'convocation_officielle': 'Convocation',
+  'conge': 'Congé',
+  'injustifie': 'Injustifié',
+  'sortie_entreprise': 'Sortie entreprise',
+  'probleme_technique': 'Pb. technique',
+  'intemperies': 'Intempéries',
+  'autre': 'Autre',
+};
 
 const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> = ({
   isOpen,
