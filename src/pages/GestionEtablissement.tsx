@@ -28,6 +28,7 @@ const GestionEtablissement = () => {
   const { refetch: refetchEstablishment } = useEstablishment();
   const [loading, setLoading] = useState(true);
   const [establishmentId, setEstablishmentId] = useState<string | null>(null);
+  const [showPedagogicalSettings, setShowPedagogicalSettings] = useState(false);
   
   const [adminData, setAdminData] = useState({
     firstName: '',
