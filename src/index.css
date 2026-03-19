@@ -307,13 +307,13 @@ body:has(.fullscreen-container) {
 }
 
 @layer components {
-  /* Sidebar Premium Gradient - Inspired by reference design */
+  /* Sidebar Premium Gradient - Deep Purple */
   .nect-gradient {
     background: linear-gradient(180deg, 
-      hsl(268 70% 55%) 0%, 
-      hsl(262 75% 50%) 30%,
-      hsl(258 80% 48%) 60%,
-      hsl(265 75% 52%) 100%
+      hsl(258 55% 26%) 0%, 
+      hsl(258 55% 22%) 30%,
+      hsl(260 50% 18%) 60%,
+      hsl(258 55% 20%) 100%
     );
   }
   
