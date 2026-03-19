@@ -398,61 +398,51 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
 
   return (
     <div className="space-y-4">
-      {/* Top bar: Period + Actions */}
+      {/* Top bar: Semester navigation + Actions */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
-
-        {/* Semester buttons grouped by year */}
+        {/* Semester buttons grouped by year with Final */}
         {periods.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
-            {(() => {
-              const durationYears = (currentFormationData as any)?.duration_years || 1;
-              const yearGroups: { year: number; semesters: typeof periods }[] = [];
-              for (let y = 0; y < durationYears; y++) {
-                const yearSemesters = periods.filter((_, idx) => Math.floor(idx / 2) === y);
-                if (yearSemesters.length > 0) {
-                  yearGroups.push({ year: y + 1, semesters: yearSemesters });
-                }
-              }
-              // If no grouping possible, show all
-              if (yearGroups.length === 0) {
-                yearGroups.push({ year: 1, semesters: periods });
-              }
-              return yearGroups.map((group) => (
-                <div key={group.year} className="flex items-center gap-1">
+            {Array.from({ length: durationYears }, (_, y) => {
+              const s1 = y * 2 + 1;
+              const s2 = y * 2 + 2;
+              const yearNum = y + 1;
+              return (
+                <div key={yearNum} className="flex items-center gap-1">
                   {durationYears > 1 && (
-                    <span className="text-xs font-medium text-muted-foreground mr-1">A{group.year}:</span>
+                    <span className="text-xs font-medium text-muted-foreground mr-1">A{yearNum}:</span>
                   )}
-                  {group.semesters.map((p) => (
-                    <Button
-                      key={p.id}
-                      size="sm"
-                      variant={selectedPeriod === p.id ? 'default' : 'outline'}
-                      onClick={() => setSelectedPeriod(p.id)}
-                      className="text-xs h-8"
-                    >
-                      {p.name}
-                    </Button>
-                  ))}
-                  {group.year < durationYears && (
+                  <Button
+                    size="sm"
+                    variant={semesterView === `s${s1}` ? 'default' : 'outline'}
+                    onClick={() => setSemesterView(`s${s1}`)}
+                    className="text-xs h-8"
+                  >
+                    S{s1}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={semesterView === `s${s2}` ? 'default' : 'outline'}
+                    onClick={() => setSemesterView(`s${s2}`)}
+                    className="text-xs h-8"
+                  >
+                    S{s2}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={semesterView === `final-${yearNum}` ? 'default' : 'outline'}
+                    onClick={() => setSemesterView(`final-${yearNum}`)}
+                    className="text-xs h-8 font-semibold"
+                  >
+                    {durationYears === 1 ? 'Final (S1+S2)' : `Final A${yearNum}`}
+                  </Button>
+                  {yearNum < durationYears && (
                     <span className="text-border mx-1">|</span>
                   )}
                 </div>
-              ));
-            })()}
+              );
+            })}
           </div>
-        )}
-
-        {selectedPeriod && (
-          <Button
-            size="sm"
-            variant="outline"
-            className="gap-2"
-            onClick={() => duplicateMutation.mutate()}
-            disabled={duplicateMutation.isPending}
-          >
-            <Copy className="h-4 w-4" />
-            {duplicateMutation.isPending ? 'Duplication...' : 'Dupliquer ce semestre'}
-          </Button>
         )}
 
         <div className="flex items-center gap-2 ml-auto">
