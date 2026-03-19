@@ -458,9 +458,9 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-        <div className="flex gap-3 flex-wrap">
+        <div className="flex gap-3 flex-wrap items-center">
           {!propFormationId && (
-            <Select value={selectedFormation} onValueChange={(v) => { setInternalFormation(v); setSelectedPeriod(''); setCurrentStudentIndex(0); setViewMode('list'); }}>
+            <Select value={selectedFormation} onValueChange={(v) => { setInternalFormation(v); setSemesterView(''); setCurrentStudentIndex(0); setViewMode('list'); }}>
               <SelectTrigger className="w-64">
                 <SelectValue placeholder="Sélectionner une formation" />
               </SelectTrigger>
@@ -471,16 +471,49 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
               </SelectContent>
             </Select>
           )}
+          {/* Semester buttons */}
           {periods.length > 0 && (
-            <Select value={selectedPeriod} onValueChange={(v) => { setSelectedPeriod(v); setCurrentStudentIndex(0); }}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Toutes les périodes" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes</SelectItem>
-                {periods.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <div className="flex flex-wrap items-center gap-2">
+              {Array.from({ length: durationYears }, (_, y) => {
+                const s1 = y * 2 + 1;
+                const s2 = y * 2 + 2;
+                const yearNum = y + 1;
+                return (
+                  <div key={yearNum} className="flex items-center gap-1">
+                    {durationYears > 1 && (
+                      <span className="text-xs font-medium text-muted-foreground mr-1">A{yearNum}:</span>
+                    )}
+                    <Button
+                      size="sm"
+                      variant={semesterView === `s${s1}` ? 'default' : 'outline'}
+                      onClick={() => { setSemesterView(`s${s1}`); setCurrentStudentIndex(0); }}
+                      className="text-xs h-8"
+                    >
+                      S{s1}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={semesterView === `s${s2}` ? 'default' : 'outline'}
+                      onClick={() => { setSemesterView(`s${s2}`); setCurrentStudentIndex(0); }}
+                      className="text-xs h-8"
+                    >
+                      S{s2}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={semesterView === `final-${yearNum}` ? 'default' : 'outline'}
+                      onClick={() => { setSemesterView(`final-${yearNum}`); setCurrentStudentIndex(0); }}
+                      className="text-xs h-8 font-semibold"
+                    >
+                      {durationYears === 1 ? 'Final (S1+S2)' : `Final A${yearNum}`}
+                    </Button>
+                    {yearNum < durationYears && (
+                      <span className="text-border mx-1">|</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
         <div className="flex gap-2">
