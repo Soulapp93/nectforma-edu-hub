@@ -79,15 +79,25 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     enabled: !!selectedFormation,
   });
 
-  // Auto-init semesterView
+  const durationYears = (currentFormationData as any)?.duration_years || 1;
+  const semestersCount = (currentFormationData as any)?.semesters_count || durationYears * 2;
+
+  // Auto-init semesterView based on formation data (not periods)
   useEffect(() => {
-    if (periods.length > 0 && !semesterView) setSemesterView('s1');
+    if (currentFormationData && !semesterView) setSemesterView('s1');
+  }, [currentFormationData]);
+
+  // Build a map: semester number -> period id (if periods exist)
+  const semesterPeriodMap = useMemo(() => {
+    const map = new Map<number, string>();
+    periods.forEach((p, idx) => {
+      map.set(idx + 1, p.id);
+    });
+    return map;
   }, [periods]);
 
-  const durationYears = (currentFormationData as any)?.duration_years || 1;
-
   const activePeriodIds = useMemo(() => {
-    if (!semesterView || periods.length === 0) return periods.map(p => p.id);
+    if (!semesterView || periods.length === 0) return [];
     if (semesterView.startsWith('final-')) {
       const yearNum = parseInt(semesterView.split('-')[1]);
       const startIdx = (yearNum - 1) * 2;
