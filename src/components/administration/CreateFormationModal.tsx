@@ -356,6 +356,30 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
               </div>
 
               <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5">
+                  <Clock className="h-4 w-4 text-primary" />
+                  Durée de la formation (années) *
+                </label>
+                <Select value={String(formData.duration_years)} onValueChange={(v) => setFormData((p) => ({ ...p, duration_years: parseInt(v) }))}>
+                  <SelectTrigger className="h-11 rounded-xl border-2 border-primary/30">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 an (S1, S2)</SelectItem>
+                    <SelectItem value="2">2 ans (S1 à S4)</SelectItem>
+                    <SelectItem value="3">3 ans (S1 à S6)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="flex gap-1.5 mt-2 flex-wrap">
+                  {Array.from({ length: formData.duration_years * 2 }, (_, i) => (
+                    <Badge key={i} variant="secondary" className="text-xs">
+                      S{i + 1}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Statut</label>
                 <Select value={formData.status} onValueChange={(v) => setFormData((p) => ({ ...p, status: v }))}>
                   <SelectTrigger className="h-11 rounded-xl border-2 border-primary/30">
