@@ -343,7 +343,7 @@ const Sidebar = () => {
                                     transition-all duration-200 
                                     whitespace-nowrap
                                     ${isSubActive
-                                      ? 'bg-white/15 text-white font-semibold'
+                                      ? 'bg-accent/20 text-accent font-semibold'
                                       : 'text-white/60 hover:bg-white/8 hover:text-white'
                                     }
                                   `}
