@@ -10,6 +10,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { Button } from '@/components/ui/button';
 import Sidebar from './components/Sidebar';
 import NotificationBell from './components/NotificationBell';
+import TopHeaderBar from './components/TopHeaderBar';
 
 import MobileHeader from './components/MobileHeader';
 import ProtectedRoute from './components/ProtectedRoute';
