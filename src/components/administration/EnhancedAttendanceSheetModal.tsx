@@ -566,6 +566,54 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
                         <span className="text-xs text-gray-400">—</span>
                       )}
                     </div>
+                    {/* Colonne Motif */}
+                    <div className="flex items-center justify-center">
+                      {(() => {
+                        const isAbsent = !student.signature?.present;
+                        const hasDelay = student.signature?.present && (student.signature?.delay_minutes || 0) > 0;
+                        const reasonType = student.signature?.absence_reason_type;
+                        const reasonText = student.signature?.absence_reason;
+                        const motifLabel = reasonType ? (MOTIF_LABELS[reasonType] || reasonType) : null;
+                        
+                        if (isAbsent || hasDelay) {
+                          if (attendanceSheet.status !== 'Validé') {
+                            return (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs h-7 px-2"
+                                onClick={() => {
+                                  setReasonModalStudent(student);
+                                  setReasonModalMode(isAbsent ? 'absence' : 'retard');
+                                  setShowReasonModal(true);
+                                }}
+                              >
+                                {motifLabel ? (
+                                  <span className="truncate max-w-[80px]" title={reasonType === 'autre' ? reasonText || '' : motifLabel}>
+                                    {motifLabel}
+                                  </span>
+                                ) : (
+                                  <>
+                                    <FileText className="h-3 w-3 mr-1" />
+                                    Motif
+                                  </>
+                                )}
+                              </Button>
+                            );
+                          } else {
+                            return motifLabel ? (
+                              <span className="text-xs text-muted-foreground truncate max-w-[90px]" title={reasonType === 'autre' ? reasonText || '' : motifLabel}>
+                                {motifLabel}
+                                {reasonType === 'autre' && reasonText ? `: ${reasonText}` : ''}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-gray-400">—</span>
+                            );
+                          }
+                        }
+                        return <span className="text-xs text-gray-400">—</span>;
+                      })()}
+                    </div>
                     <div className="flex items-center justify-center">
                       {student.signature && student.signature.present ? (
                         <div className="text-center">
