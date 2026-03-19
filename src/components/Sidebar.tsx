@@ -26,11 +26,6 @@ import {
 import {
   Sidebar as SidebarWrapper,
   SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
   useSidebar,
