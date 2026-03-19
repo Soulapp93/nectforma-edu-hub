@@ -105,10 +105,10 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     enabled: !!selectedFormation,
   });
 
-  // Auto-init semesterView
+  // Auto-init semesterView based on formation data
   useEffect(() => {
-    if (periods.length > 0 && !semesterView) setSemesterView('s1');
-  }, [periods]);
+    if (selectedFormationObj && !semesterView) setSemesterView('s1');
+  }, [selectedFormationObj]);
 
   // Semester computed values
   const selectedFormationObj = availableFormations.find((f: any) => f.id === selectedFormation);
