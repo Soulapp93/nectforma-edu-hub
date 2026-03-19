@@ -311,10 +311,10 @@ body:has(.fullscreen-container) {
   /* Sidebar Premium Gradient - Uses dynamic theme variable */
   .nect-gradient {
     background: linear-gradient(180deg, 
-      hsl(var(--sidebar-background, 258 55% 26%)) 0%, 
-      hsl(var(--sidebar-background, 258 55% 22%)) 30%,
-      hsl(var(--nect-sidebar-dark, 260 50% 18%)) 60%,
-      hsl(var(--sidebar-background, 258 55% 20%)) 100%
+      hsl(var(--sidebar-background, 235 55% 22%)) 0%, 
+      hsl(var(--sidebar-background, 235 55% 18%)) 30%,
+      hsl(var(--nect-sidebar-dark, 235 50% 14%)) 60%,
+      hsl(235 45% 12%) 100%
     );
   }
   

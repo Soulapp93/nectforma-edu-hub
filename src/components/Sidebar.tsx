@@ -374,12 +374,12 @@ const Sidebar = () => {
                           `
                             flex items-center ${collapsed ? 'justify-center' : 'justify-between'} 
                             px-3 py-2.5 
-                            text-[13px] font-medium 
-                            rounded-lg 
+                            text-[13px] font-semibold 
+                            rounded-xl 
                             transition-all duration-200 
                             relative
                             ${isActive
-                              ? 'bg-white/15 text-white shadow-md'
+                              ? 'bg-accent text-accent-foreground shadow-md'
                               : 'text-white/75 hover:bg-white/8 hover:text-white'
                             }
                           `
