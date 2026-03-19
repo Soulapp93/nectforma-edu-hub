@@ -26,11 +26,11 @@ const TopHeaderBar = () => {
   const profilePhotoUrl = getResolvedPhotoUrl(myUser?.profile_photo_url);
 
   return (
-    <header className="hidden md:flex h-14 items-center justify-between border-b border-border/30 bg-white sticky top-0 z-20 px-6">
+    <header className="hidden md:flex h-14 items-center justify-between nect-gradient sticky top-0 z-20 px-6 border-b border-white/10">
       {/* Left: Greeting */}
       <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Bonjour,</span>
-        <span className="text-sm font-semibold text-foreground">{firstName}</span>
+        <span className="text-sm text-white/60">Bonjour,</span>
+        <span className="text-sm font-semibold text-white">{firstName}</span>
       </div>
 
       {/* Right: Actions */}
@@ -38,10 +38,10 @@ const TopHeaderBar = () => {
         {/* Chat / Messagerie */}
         <NavLink
           to="/messagerie"
-          className="relative p-2 rounded-full hover:bg-muted transition-colors"
+          className="relative p-2 rounded-full hover:bg-white/10 transition-colors"
           title="Messagerie"
         >
-          <MessageSquare className="h-5 w-5 text-muted-foreground" />
+          <MessageSquare className="h-5 w-5 text-white/70" />
         </NavLink>
 
         {/* Notifications */}
@@ -49,9 +49,9 @@ const TopHeaderBar = () => {
 
         {/* Profile Avatar */}
         <NavLink to="/compte" className="flex items-center gap-2 ml-1">
-          <Avatar className="w-9 h-9 ring-2 ring-primary/20">
+          <Avatar className="w-9 h-9 ring-2 ring-white/20">
             <AvatarImage src={profilePhotoUrl || ''} alt={firstName} />
-            <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+            <AvatarFallback className="bg-white/10 text-white text-xs font-semibold">
               {initials}
             </AvatarFallback>
           </Avatar>
