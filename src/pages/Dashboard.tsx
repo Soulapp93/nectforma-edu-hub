@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Users, BookOpen, Calendar, TrendingUp, Clock, FileText, AlertCircle, UserCheck, UsersIcon, Trophy, User2, LayoutDashboard } from 'lucide-react';
+import { Users, BookOpen, Calendar, TrendingUp, Clock, FileText, AlertCircle, UserCheck, UsersIcon, Trophy, User2, LayoutDashboard, Search, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardCard from '../components/DashboardCard';
 import EnhancedDashboardCard from '../components/EnhancedDashboardCard';
 import DashboardFilters from '../components/DashboardFilters';
 import MissingTextBookEntriesModal from '../components/dashboard/MissingTextBookEntriesModal';
 import { useDashboardStats } from '../hooks/useDashboardStats';
-import { PageHeader } from '@/components/ui/page-header';
+import { useMyContext } from '@/hooks/useMyContext';
+import { Button } from '@/components/ui/button';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -14,43 +15,52 @@ const Dashboard = () => {
   const [selectedTimePeriod, setSelectedTimePeriod] = useState('month');
   const [showTextBookModal, setShowTextBookModal] = useState(false);
   const { stats, loading, error } = useDashboardStats(selectedFormationId, selectedTimePeriod);
+  const { user: myUser } = useMyContext();
+
+  const firstName = myUser?.first_name || 'Utilisateur';
 
   const dashboardCards = [
     {
       title: 'Étudiants',
       value: loading ? '...' : stats.studentsCount.toString(),
       icon: Users,
-      description: selectedFormationId ? 'Étudiants dans cette formation' : 'Total des étudiants',
+      description: selectedFormationId ? 'Dans cette formation' : 'Total des étudiants',
+      color: 'blue',
     },
     {
       title: 'Formateurs',
       value: loading ? '...' : stats.instructorsCount.toString(),
       icon: UserCheck,
       description: 'Formateurs actifs',
+      color: 'green',
     },
     {
       title: 'Tuteurs',
       value: loading ? '...' : stats.tutorsCount.toString(),
       icon: User2,
       description: 'Tuteurs enregistrés',
+      color: 'purple',
     },
     {
       title: 'Formations',
       value: loading ? '...' : stats.formationsCount.toString(),
       icon: BookOpen,
       description: selectedFormationId ? 'Formation sélectionnée' : 'Formations disponibles',
+      color: 'navy',
     },
     {
       title: 'Cours cette semaine',
       value: loading ? '...' : stats.weeklyScheduledCourses.toString(),
       icon: Calendar,
       description: 'Sessions programmées',
+      color: 'yellow',
     },
     {
       title: 'Taux de présence',
       value: loading ? '...' : `${stats.attendanceRate}%`,
       icon: TrendingUp,
       description: 'Moyenne mensuelle',
+      color: 'green',
       trend: stats.attendanceRate >= 80 ? { value: stats.attendanceRate - 70, isPositive: true } : undefined
     },
     {
@@ -60,6 +70,7 @@ const Dashboard = () => {
       description: 'Entrées non effectuées',
       clickable: true,
       onClick: () => setShowTextBookModal(true),
+      color: 'red',
     },
     {
       title: 'Émargements à traiter',
@@ -68,6 +79,7 @@ const Dashboard = () => {
       description: 'Feuilles à valider',
       clickable: true,
       onClick: () => navigate('/administration?tab=attendance'),
+      color: 'navy',
     }
   ];
 
@@ -83,82 +95,90 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl border-b border-border/50">
-        <div className="w-full px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25 flex-shrink-0">
-                <LayoutDashboard className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">
-                  Tableau de bord
-                </h1>
-                <p className="text-xs sm:text-sm text-muted-foreground truncate mt-0.5">
-                  Bienvenue sur votre espace de gestion NECTFORMA
-                </p>
-              </div>
+    <div className="min-h-screen bg-background">
+      {/* Header - PCA PREAD style */}
+      <div className="sticky top-0 z-50 bg-card/95 backdrop-blur-xl border-b border-border/50 shadow-sm">
+        <div className="w-full px-4 sm:px-6 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-foreground">
+                Tableau de bord
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                Vue d'ensemble de votre établissement
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <Download className="w-4 h-4" />
+                <span className="hidden sm:inline">Exporter</span>
+              </Button>
             </div>
           </div>
         </div>
       </div>
       
-      <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 lg:space-y-10">
+      <div className="p-4 sm:p-6 space-y-6">
+        {/* Welcome message */}
+        <div className="bg-card rounded-2xl border border-border/50 p-5 sm:p-6 shadow-sm">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-foreground">
+            Bonjour {firstName} 👋
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Bienvenue sur votre espace de gestion
+          </p>
+        </div>
 
-      {/* Filters */}
-      <DashboardFilters 
-        selectedFormationId={selectedFormationId}
-        onFormationChange={setSelectedFormationId}
-        selectedTimePeriod={selectedTimePeriod}
-        onTimePeriodChange={setSelectedTimePeriod}
-      />
+        {/* Filters */}
+        <DashboardFilters 
+          selectedFormationId={selectedFormationId}
+          onFormationChange={setSelectedFormationId}
+          selectedTimePeriod={selectedTimePeriod}
+          onTimePeriodChange={setSelectedTimePeriod}
+        />
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
-        {dashboardCards.map((card, index) => (
-          <DashboardCard key={index} {...card} />
-        ))}
-      </div>
-      
-      {/* Carte heures de cours en pleine largeur */}
-      <div className="mt-6">
-        <EnhancedDashboardCard
-          type="hours"
-          title="Heures de cours"
-          icon={Clock}
-          weeklyHours={loading ? 0 : stats.weeklyHours}
-          monthlyHours={loading ? 0 : stats.monthlyHours}
-          yearlyHours={loading ? 0 : stats.yearlyHours}
-        />
-      </div>
-      
-      {/* Cartes étudiants en pleine largeur */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 lg:gap-6 mt-6 sm:mt-8 lg:mt-10">
-        {/* Carte étudiants assidus */}
-        <EnhancedDashboardCard
-          type="excellent-students"
-          title="Top Étudiants Assidus (≥90%)"
-          icon={Trophy}
-          students={loading ? [] : stats.excellentStudents}
-        />
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {dashboardCards.map((card, index) => (
+            <DashboardCard key={index} {...card} index={index} />
+          ))}
+        </div>
         
-        {/* Carte étudiants à risque */}
-        <EnhancedDashboardCard
-          type="risk-students"
-          title="Étudiants à Risque (<75% Présence)"
-          icon={AlertCircle}
-          students={loading ? [] : stats.riskStudents}
-        />
-      </div>
+        {/* Heures de cours */}
+        <div>
+          <EnhancedDashboardCard
+            type="hours"
+            title="Heures de cours"
+            icon={Clock}
+            weeklyHours={loading ? 0 : stats.weeklyHours}
+            monthlyHours={loading ? 0 : stats.monthlyHours}
+            yearlyHours={loading ? 0 : stats.yearlyHours}
+          />
+        </div>
+        
+        {/* Top & Risk Students */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <EnhancedDashboardCard
+            type="excellent-students"
+            title="Top étudiants assidus (≥90%)"
+            icon={Trophy}
+            students={loading ? [] : stats.excellentStudents}
+          />
+          
+          <EnhancedDashboardCard
+            type="risk-students"
+            title="Étudiants à risque (<75% présence)"
+            icon={AlertCircle}
+            students={loading ? [] : stats.riskStudents}
+          />
+        </div>
 
-      {/* Modales */}
-      <MissingTextBookEntriesModal
-        isOpen={showTextBookModal}
-        onOpenChange={setShowTextBookModal}
-        selectedFormationId={selectedFormationId}
-      />
+        {/* Modales */}
+        <MissingTextBookEntriesModal
+          isOpen={showTextBookModal}
+          onOpenChange={setShowTextBookModal}
+          selectedFormationId={selectedFormationId}
+        />
       </div>
     </div>
   );
