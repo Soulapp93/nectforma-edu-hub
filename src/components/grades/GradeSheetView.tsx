@@ -698,6 +698,8 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
               </TabsContent>
             ))}
           </Tabs>
+            );
+          })()}
         </>
       )}
 
