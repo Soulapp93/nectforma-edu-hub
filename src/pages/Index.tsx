@@ -489,7 +489,7 @@ const Index = () => {
                 <div 
                   className="absolute w-[220px] h-[220px] md:w-[380px] md:h-[380px] rounded-full border opacity-30"
                   style={{ 
-                    borderColor: 'hsl(280 75% 60%)',
+                    borderColor: 'hsl(245 55% 35%)',
                     transform: 'rotateX(75deg) rotateZ(60deg)',
                     animation: 'orbit-spin 15s linear infinite reverse'
                   }}
