@@ -438,7 +438,7 @@ const Index = () => {
 
           {/* Logo Presentation Section - Light Violet Theme */}
           <AnimatedSection animation="scale" delay={500} className="mt-12 md:mt-16 mb-8 md:mb-12 px-2">
-             <div className="relative max-w-4xl mx-auto rounded-3xl overflow-hidden aspect-video flex items-center justify-center border border-primary/20 logo-presentation-bg">
+             <div className="relative max-w-4xl mx-auto rounded-3xl overflow-hidden aspect-video flex items-center justify-center border border-white/10 logo-presentation-bg">
               
               {/* Étoiles subtiles */}
               <div className="absolute inset-0 overflow-hidden">
