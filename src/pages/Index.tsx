@@ -1221,7 +1221,7 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div className="md:col-span-2">
               <div className="flex items-center space-x-3 mb-4">
-                <NectformaLogo variant="gradient" size="lg" />
+                <NectformaLogo variant="light" size="lg" />
               </div>
               <p className="text-white/60 mb-4 max-w-md">
                 La plateforme complète pour digitaliser et automatiser la gestion des établissements d'enseignement supérieur, organismes de formation, CFA et universités.
