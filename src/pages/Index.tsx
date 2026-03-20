@@ -857,7 +857,7 @@ const Index = () => {
                       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
                         <div style={{
                           position: 'absolute', top: 0, left: '-100%', width: '50%', height: '100%',
-                          background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.08), transparent)',
+                         background: 'linear-gradient(90deg, transparent, rgba(80,90,200,0.08), transparent)',
                           animation: 'shimmer-line 6s ease-in-out infinite'
                         }} />
                       </div>
