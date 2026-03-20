@@ -1000,7 +1000,52 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Newsletter Section */}
+      {/* Screenshots Gallery */}
+      <section className="py-16 md:py-20 relative overflow-hidden">
+        <div className="absolute inset-0 section-soft-bg" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <AnimatedSection className="text-center mb-12">
+            <div className="inline-flex items-center px-4 py-2 bg-primary/10 rounded-full mb-6">
+              <Monitor className="h-4 w-4 text-primary mr-2" />
+              <span className="text-primary font-medium text-sm">Aperçu de la plateforme</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Découvrez l'interface en <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">images</span>
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Une interface intuitive et moderne pour tous vos besoins de gestion
+            </p>
+          </AnimatedSection>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+            {[
+              { img: tableauDeBordImg, label: 'Tableau de bord', span: 'md:col-span-2 md:row-span-2' },
+              { img: emargement1Img, label: 'Émargement', span: '' },
+              { img: messagerie1Img, label: 'Messagerie', span: '' },
+              { img: emploisTempsImg, label: 'Emplois du temps', span: 'md:col-span-2' },
+              { img: gestionFormations1Img, label: 'Formations', span: '' },
+              { img: groupesImg, label: 'Groupes', span: '' },
+              { img: espaceTravailImg, label: 'Espace de travail', span: '' },
+              { img: cahiersTextesImg, label: 'Cahiers de texte', span: '' },
+            ].map((item, i) => (
+              <AnimatedSection key={i} animation="fade-up" delay={i * 80} className={`${item.span}`}>
+                <div className="group relative rounded-xl overflow-hidden shadow-lg border border-primary/10 hover:shadow-2xl hover:border-primary/20 transition-all duration-300 cursor-pointer">
+                  <img 
+                    src={item.img} 
+                    alt={item.label} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-y-2 group-hover:translate-y-0">
+                    <span className="text-white text-sm font-medium">{item.label}</span>
+                  </div>
+                </div>
+              </AnimatedSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
        <section className="py-16 md:py-20 relative overflow-hidden">
         <div className="absolute inset-0 section-newsletter-bg" />
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
