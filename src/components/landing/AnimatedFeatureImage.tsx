@@ -40,7 +40,7 @@ const AnimatedFeatureImage: React.FC<AnimatedFeatureImageProps> = ({
       const windowHeight = window.innerHeight;
       const center = rect.top + rect.height / 2;
       const offset = (center - windowHeight / 2) / windowHeight;
-      setParallaxY(offset * 30); // 30px max shift
+      setParallaxY(offset * 30);
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
@@ -65,16 +65,16 @@ const AnimatedFeatureImage: React.FC<AnimatedFeatureImageProps> = ({
   return (
     <div ref={containerRef} className="relative group">
       <div ref={visibilityRef}>
-        {/* Animated halo */}
+        {/* Animated halo - navy theme */}
         <div
           className="absolute -inset-6 rounded-3xl opacity-40 group-hover:opacity-60 transition-opacity duration-700 blur-2xl"
           style={{
-            background: `radial-gradient(ellipse at center, hsl(262 83% 55% / 0.3) 0%, hsl(280 65% 45% / 0.15) 50%, transparent 80%)`,
+            background: `radial-gradient(ellipse at center, hsl(240 60% 35% / 0.3) 0%, hsl(245 55% 25% / 0.15) 50%, transparent 80%)`,
             animation: isVisible ? 'feature-halo-pulse 4s ease-in-out infinite' : 'none',
           }}
         />
 
-        {/* Floating particles */}
+        {/* Floating particles - navy/gold */}
         {isVisible &&
           particles.map((p, i) => (
             <div
@@ -85,14 +85,18 @@ const AnimatedFeatureImage: React.FC<AnimatedFeatureImageProps> = ({
                 height: p.size,
                 left: `${p.x}%`,
                 top: `${p.y}%`,
-                background: `radial-gradient(circle, hsl(262 83% 70% / 0.8) 0%, hsl(280 65% 60% / 0.4) 100%)`,
+                background: i % 2 === 0
+                  ? `radial-gradient(circle, hsl(240 60% 55% / 0.8) 0%, hsl(245 55% 45% / 0.4) 100%)`
+                  : `radial-gradient(circle, hsl(45 100% 55% / 0.7) 0%, hsl(45 90% 45% / 0.3) 100%)`,
                 animation: `feature-particle-float ${p.duration}s ease-in-out ${p.delay}s infinite`,
-                boxShadow: '0 0 6px hsl(262 83% 65% / 0.5)',
+                boxShadow: i % 2 === 0
+                  ? '0 0 6px hsl(240 60% 50% / 0.5)'
+                  : '0 0 6px hsl(45 100% 50% / 0.4)',
               }}
             />
           ))}
 
-        {/* Animated circuit lines */}
+        {/* Animated circuit lines - navy */}
         {isVisible &&
           circuitLines.map((line, i) => (
             <div
@@ -112,11 +116,11 @@ const AnimatedFeatureImage: React.FC<AnimatedFeatureImageProps> = ({
                 style={{
                   width: '100%',
                   height: '100%',
-                  background: 'linear-gradient(90deg, transparent, hsl(262 83% 65% / 0.6), transparent)',
+                  background: 'linear-gradient(90deg, transparent, hsl(240 60% 50% / 0.6), transparent)',
                   animation: `feature-circuit-draw 3s ease-in-out ${line.delay}s infinite`,
                 }}
               />
-              {/* Node dot at end of line */}
+              {/* Node dot */}
               <div
                 className="absolute rounded-full"
                 style={{
@@ -124,8 +128,8 @@ const AnimatedFeatureImage: React.FC<AnimatedFeatureImageProps> = ({
                   height: 4,
                   right: 0,
                   top: -1,
-                  background: 'hsl(262 83% 70%)',
-                  boxShadow: '0 0 8px hsl(262 83% 65% / 0.8)',
+                  background: 'hsl(45 100% 55%)',
+                  boxShadow: '0 0 8px hsl(45 100% 50% / 0.8)',
                   animation: `feature-node-pulse 3s ease-in-out ${line.delay}s infinite`,
                 }}
               />
@@ -137,7 +141,7 @@ const AnimatedFeatureImage: React.FC<AnimatedFeatureImageProps> = ({
             className="relative overflow-hidden rounded-2xl shadow-2xl"
             style={{
               background:
-                'linear-gradient(135deg, hsl(262 83% 30%) 0%, hsl(270 75% 25%) 40%, hsl(280 65% 20%) 100%)',
+                'linear-gradient(135deg, hsl(240 60% 18%) 0%, hsl(242 58% 15%) 40%, hsl(245 55% 12%) 100%)',
               transform: `translateY(${parallaxY}px)`,
               transition: 'transform 0.1s linear',
             }}
@@ -159,13 +163,17 @@ const AnimatedFeatureImage: React.FC<AnimatedFeatureImageProps> = ({
               <div className="absolute bottom-[25%] left-[5%] w-[35%] h-[2px] bg-white/15 rounded-full" />
               <div className="absolute top-[60%] left-[45%] w-[6%] h-[10%] bg-white/10 rounded-lg rotate-12" />
               <div className="absolute top-[20%] left-[30%] w-[4%] h-[7%] bg-white/[0.06] rounded-md -rotate-6" />
-              {/* Glowing circuit-like lines */}
+              {/* Glowing bottom gradient - navy */}
               <div
                 className="absolute bottom-0 left-0 right-0 h-[40%] opacity-10"
                 style={{
-                  background: 'linear-gradient(180deg, transparent 0%, hsl(262 83% 60% / 0.3) 100%)',
+                  background: 'linear-gradient(180deg, transparent 0%, hsl(240 60% 40% / 0.3) 100%)',
                 }}
               />
+              {/* Gold accent line */}
+              <div className="absolute top-0 left-0 right-0 h-[2px]" style={{
+                background: 'linear-gradient(90deg, transparent, hsl(45 100% 50% / 0.3), transparent)'
+              }} />
             </div>
 
             {/* Image with Ken Burns + Pulse */}
@@ -175,7 +183,7 @@ const AnimatedFeatureImage: React.FC<AnimatedFeatureImageProps> = ({
                   key={imgIndex}
                   src={img}
                   alt={`${title} - Illustration`}
-                  className="w-full h-auto object-contain"
+                  className="w-full h-auto object-contain rounded-lg"
                   style={{
                     filter: 'drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3))',
                     animation: isVisible
@@ -190,8 +198,8 @@ const AnimatedFeatureImage: React.FC<AnimatedFeatureImageProps> = ({
               ))}
             </div>
 
-            {/* Gradient overlay bottom */}
-            <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[hsl(262_83%_20%_/_0.8)] via-[hsl(270_75%_25%_/_0.4)] to-transparent pointer-events-none z-20" />
+            {/* Gradient overlay bottom - navy */}
+            <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[hsl(240_60%_14%_/_0.8)] via-[hsl(242_58%_18%_/_0.4)] to-transparent pointer-events-none z-20" />
 
             {/* Bottom bar with title + logo */}
             <div className="absolute bottom-0 inset-x-0 z-30 flex items-end justify-between p-4 md:p-5">
@@ -201,8 +209,11 @@ const AnimatedFeatureImage: React.FC<AnimatedFeatureImageProps> = ({
                 </div>
                 <span className="text-white/90 text-sm font-medium">{title}</span>
               </div>
-              <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm rounded-lg px-2.5 py-1.5">
-                <span className="text-xs font-semibold text-white">NF</span>
+              <div className="flex items-center gap-1.5 backdrop-blur-sm rounded-lg px-2.5 py-1.5" style={{
+                background: 'hsl(45 100% 50% / 0.15)',
+                border: '1px solid hsl(45 100% 50% / 0.2)'
+              }}>
+                <span className="text-xs font-semibold" style={{ color: 'hsl(45 100% 60%)' }}>NF</span>
                 <span className="text-xs text-white/80">Nectforma</span>
               </div>
             </div>
