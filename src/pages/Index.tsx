@@ -641,7 +641,7 @@ const Index = () => {
               <div 
                 className="absolute inset-0 pointer-events-none"
                 style={{
-                  background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 45%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.15) 55%, transparent 60%)',
+                  background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.1) 45%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.1) 55%, transparent 60%)',
                   animation: 'shine-sweep 6s ease-in-out infinite'
                 }}
               />
