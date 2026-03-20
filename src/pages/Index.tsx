@@ -781,9 +781,9 @@ const Index = () => {
             <div className="hidden md:block absolute top-24 left-[16.5%] right-[16.5%] h-0.5 bg-gradient-to-r from-primary/30 via-accent/40 to-primary/30" />
             
             {[
-              { step: '01', title: 'Créez votre établissement', description: 'Inscrivez-vous gratuitement et configurez votre établissement en quelques clics. Logo, informations, c\'est parti !', icon: Building2 },
-              { step: '02', title: 'Configurez vos formations', description: 'Ajoutez vos formations, modules, emplois du temps et invitez vos formateurs et apprenants par email.', icon: GraduationCap },
-              { step: '03', title: 'Gérez tout au quotidien', description: 'Émargements, cahiers de texte, messagerie, groupes... Tout est automatisé et centralisé pour vous.', icon: Sparkles },
+              { step: '01', title: 'Créez votre établissement', description: 'Inscrivez-vous gratuitement et configurez votre établissement en quelques clics. Logo, informations, c\'est parti !', icon: Building2, img: gestionEtablissementImg },
+              { step: '02', title: 'Configurez vos formations', description: 'Ajoutez vos formations, modules, emplois du temps et invitez vos formateurs et apprenants par email.', icon: GraduationCap, img: gestionFormations1Img },
+              { step: '03', title: 'Gérez tout au quotidien', description: 'Émargements, cahiers de texte, messagerie, groupes... Tout est automatisé et centralisé pour vous.', icon: Sparkles, img: administrationImg },
             ].map((item, i) => (
               <AnimatedSection key={i} animation="fade-up" delay={i * 150}>
                 <div className="relative text-center group">
@@ -796,6 +796,10 @@ const Index = () => {
                     <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-background border-2 border-primary flex items-center justify-center text-xs font-bold text-primary shadow-md">
                       {item.step}
                     </div>
+                  </div>
+                  {/* Illustration thumbnail */}
+                  <div className="mb-4 mx-auto max-w-[240px] rounded-xl overflow-hidden shadow-lg border border-primary/10 group-hover:shadow-xl group-hover:scale-[1.03] transition-all duration-300">
+                    <img src={item.img} alt={item.title} className="w-full h-auto" />
                   </div>
                   <h3 className="text-xl font-bold text-foreground mb-3">{item.title}</h3>
                   <p className="text-muted-foreground leading-relaxed">{item.description}</p>
