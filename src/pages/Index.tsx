@@ -594,14 +594,14 @@ const Index = () => {
                   <h2 
                     className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-wider"
                     style={{
-                      background: 'linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(280 75% 55%) 30%, hsl(330 70% 55%) 60%, hsl(262 83% 50%) 100%)',
+                      background: 'linear-gradient(135deg, hsl(240 60% 20%) 0%, hsl(245 55% 25%) 30%, hsl(45 100% 50%) 60%, hsl(240 60% 20%) 100%)',
                       backgroundSize: '300% 300%',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text',
                       animation: 'gradient-shift 4s ease infinite',
                       textShadow: 'none',
-                      filter: 'drop-shadow(0 2px 10px rgba(139, 92, 246, 0.3))'
+                      filter: 'drop-shadow(0 2px 10px rgba(30, 30, 90, 0.3))'
                     }}
                   >
                     NECTFORMA
