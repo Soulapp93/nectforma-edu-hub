@@ -929,7 +929,7 @@ const Index = () => {
           top: '-10%', right: '10%', filter: 'blur(50px)'
         }} />
         <div className="absolute w-[200px] h-[200px] opacity-15 rounded-full" style={{
-          background: 'radial-gradient(circle, rgba(236,72,153,0.4) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(255,200,0,0.3) 0%, transparent 70%)',
           bottom: '-5%', left: '15%', filter: 'blur(40px)'
         }} />
         
