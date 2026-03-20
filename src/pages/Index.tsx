@@ -1216,7 +1216,7 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-card text-foreground py-12 md:py-16 border-t border-border">
+      <footer className="text-white py-12 md:py-16 border-t border-white/10" style={{ background: 'linear-gradient(180deg, hsl(240 60% 14%) 0%, hsl(242 58% 10%) 100%)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div className="md:col-span-2">
