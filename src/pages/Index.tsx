@@ -1246,7 +1246,7 @@ const Index = () => {
             </div>
           </div>
           
-          <div className="pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center text-muted-foreground text-sm">
+          <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center text-white/50 text-sm">
             <p>© 2025 NECTFORMA. Tous droits réservés.</p>
             <p className="mt-2 md:mt-0">Made with ❤️ for formation professionals</p>
           </div>
