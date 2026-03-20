@@ -886,7 +886,7 @@ const Index = () => {
                       <div className="relative group">
                         <Hover3DCard intensity={6}>
                           <div className="relative overflow-hidden rounded-2xl shadow-2xl" style={{
-                            background: 'linear-gradient(135deg, hsl(262 83% 30%) 0%, hsl(270 75% 25%) 40%, hsl(280 65% 20%) 100%)'
+                            background: 'linear-gradient(135deg, hsl(240 60% 18%) 0%, hsl(242 55% 14%) 40%, hsl(245 50% 12%) 100%)'
                           }}>
                             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                               <div className="absolute -top-[20%] -left-[10%] w-[55%] h-[80%] rounded-full bg-white/[0.06] blur-sm" />
