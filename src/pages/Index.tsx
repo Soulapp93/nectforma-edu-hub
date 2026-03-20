@@ -1238,10 +1238,10 @@ const Index = () => {
             </div>
             
             <div>
-              <h4 className="font-semibold mb-4">Légal</h4>
-              <ul className="space-y-2 text-muted-foreground">
-                <li><Link to="/cgu" className="hover:text-primary transition-colors">CGU</Link></li>
-                <li><Link to="/politique-confidentialite" className="hover:text-primary transition-colors">Confidentialité</Link></li>
+              <h4 className="font-semibold mb-4 text-white">Légal</h4>
+              <ul className="space-y-2 text-white/60">
+                <li><Link to="/cgu" className="hover:text-golden transition-colors">CGU</Link></li>
+                <li><Link to="/politique-confidentialite" className="hover:text-golden transition-colors">Confidentialité</Link></li>
               </ul>
             </div>
           </div>
