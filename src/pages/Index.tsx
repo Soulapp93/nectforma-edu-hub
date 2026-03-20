@@ -322,25 +322,25 @@ const Index = () => {
       {/* Global decorative blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div className="absolute w-[600px] h-[600px] opacity-[0.07]" style={{
-          background: 'radial-gradient(circle, hsl(280 80% 70%) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, hsl(240 60% 30%) 0%, transparent 70%)',
           top: '-5%', left: '-10%',
           filter: 'blur(80px)',
           animation: 'blob-float 25s ease-in-out infinite'
         }} />
         <div className="absolute w-[500px] h-[500px] opacity-[0.06]" style={{
-          background: 'radial-gradient(circle, hsl(330 70% 70%) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, hsl(245 55% 25%) 0%, transparent 70%)',
           top: '30%', right: '-8%',
           filter: 'blur(80px)',
           animation: 'blob-float 30s ease-in-out infinite 5s'
         }} />
         <div className="absolute w-[400px] h-[400px] opacity-[0.05]" style={{
-          background: 'radial-gradient(circle, hsl(262 83% 65%) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, hsl(240 60% 20%) 0%, transparent 70%)',
           bottom: '10%', left: '20%',
           filter: 'blur(70px)',
           animation: 'blob-float 20s ease-in-out infinite 10s'
         }} />
         <div className="absolute w-[350px] h-[350px] opacity-[0.04]" style={{
-          background: 'radial-gradient(circle, hsl(200 80% 70%) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, hsl(250 60% 25%) 0%, transparent 70%)',
           top: '60%', left: '-5%',
           filter: 'blur(60px)',
           animation: 'blob-float 22s ease-in-out infinite 8s'
