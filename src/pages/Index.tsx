@@ -779,7 +779,7 @@ const Index = () => {
             animation: 'blob-float 18s ease-in-out infinite'
           }} />
           <div className="absolute w-[250px] h-[250px] opacity-[0.06]" style={{
-            background: 'radial-gradient(circle, hsl(330 60% 65%) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, hsl(245 55% 25%) 0%, transparent 70%)',
             top: '40%', left: '0%', filter: 'blur(50px)',
             animation: 'blob-float 22s ease-in-out infinite 4s'
           }} />
