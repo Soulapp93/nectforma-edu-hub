@@ -322,25 +322,25 @@ const Index = () => {
       {/* Global decorative blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div className="absolute w-[600px] h-[600px] opacity-[0.07]" style={{
-          background: 'radial-gradient(circle, hsl(280 80% 70%) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, hsl(240 60% 30%) 0%, transparent 70%)',
           top: '-5%', left: '-10%',
           filter: 'blur(80px)',
           animation: 'blob-float 25s ease-in-out infinite'
         }} />
         <div className="absolute w-[500px] h-[500px] opacity-[0.06]" style={{
-          background: 'radial-gradient(circle, hsl(330 70% 70%) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, hsl(245 55% 25%) 0%, transparent 70%)',
           top: '30%', right: '-8%',
           filter: 'blur(80px)',
           animation: 'blob-float 30s ease-in-out infinite 5s'
         }} />
         <div className="absolute w-[400px] h-[400px] opacity-[0.05]" style={{
-          background: 'radial-gradient(circle, hsl(262 83% 65%) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, hsl(240 60% 20%) 0%, transparent 70%)',
           bottom: '10%', left: '20%',
           filter: 'blur(70px)',
           animation: 'blob-float 20s ease-in-out infinite 10s'
         }} />
         <div className="absolute w-[350px] h-[350px] opacity-[0.04]" style={{
-          background: 'radial-gradient(circle, hsl(200 80% 70%) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, hsl(250 60% 25%) 0%, transparent 70%)',
           top: '60%', left: '-5%',
           filter: 'blur(60px)',
           animation: 'blob-float 22s ease-in-out infinite 8s'
@@ -438,7 +438,7 @@ const Index = () => {
 
           {/* Logo Presentation Section - Light Violet Theme */}
           <AnimatedSection animation="scale" delay={500} className="mt-12 md:mt-16 mb-8 md:mb-12 px-2">
-             <div className="relative max-w-4xl mx-auto rounded-3xl overflow-hidden aspect-video flex items-center justify-center border border-primary/20 logo-presentation-bg">
+             <div className="relative max-w-4xl mx-auto rounded-3xl overflow-hidden aspect-video flex items-center justify-center border border-white/10 logo-presentation-bg">
               
               {/* Étoiles subtiles */}
               <div className="absolute inset-0 overflow-hidden">
@@ -451,7 +451,7 @@ const Index = () => {
                       height: Math.random() * 3 + 1 + 'px',
                       left: Math.random() * 100 + '%',
                       top: Math.random() * 100 + '%',
-                      backgroundColor: i % 3 === 0 ? 'rgba(236, 72, 153, 0.5)' : 'rgba(139, 92, 246, 0.5)',
+                      backgroundColor: i % 3 === 0 ? 'rgba(255, 200, 0, 0.4)' : 'rgba(100, 120, 255, 0.4)',
                       opacity: Math.random() * 0.6 + 0.2,
                       animation: `twinkle ${Math.random() * 3 + 2}s ease-in-out infinite ${Math.random() * 2}s`
                     }}
@@ -468,7 +468,7 @@ const Index = () => {
                     style={{
                       width: '2px',
                       height: '200px',
-                      background: `linear-gradient(to top, transparent, rgba(139, 92, 246, ${0.08 + (i % 3) * 0.04}), transparent)`,
+                      background: `linear-gradient(to top, transparent, rgba(100, 120, 255, ${0.08 + (i % 3) * 0.04}), transparent)`,
                       transform: `rotate(${i * 45}deg)`,
                       animation: `pulse-glow ${3 + i * 0.5}s ease-in-out infinite ${i * 0.3}s`
                     }}
@@ -481,7 +481,7 @@ const Index = () => {
                 <div 
                   className="absolute w-[280px] h-[280px] md:w-[480px] md:h-[480px] rounded-full border-2 opacity-20"
                   style={{ 
-                    borderColor: 'hsl(262 83% 58%)',
+                    borderColor: 'hsl(240 60% 40%)',
                     transform: 'rotateX(75deg)',
                     animation: 'orbit-spin 20s linear infinite'
                   }}
@@ -489,7 +489,7 @@ const Index = () => {
                 <div 
                   className="absolute w-[220px] h-[220px] md:w-[380px] md:h-[380px] rounded-full border opacity-30"
                   style={{ 
-                    borderColor: 'hsl(280 75% 60%)',
+                    borderColor: 'hsl(245 55% 35%)',
                     transform: 'rotateX(75deg) rotateZ(60deg)',
                     animation: 'orbit-spin 15s linear infinite reverse'
                   }}
@@ -497,7 +497,7 @@ const Index = () => {
                 <div 
                   className="absolute w-[160px] h-[160px] md:w-[280px] md:h-[280px] rounded-full border opacity-25"
                   style={{ 
-                    borderColor: 'hsl(262 83% 50%)',
+                    borderColor: 'hsl(240 60% 30%)',
                     transform: 'rotateX(75deg) rotateZ(-30deg)',
                     animation: 'orbit-spin 25s linear infinite'
                   }}
@@ -506,7 +506,7 @@ const Index = () => {
                 <div 
                   className="absolute w-[320px] h-[320px] md:w-[560px] md:h-[560px] rounded-full opacity-10"
                   style={{ 
-                    border: '1px dashed hsl(280 75% 60%)',
+                    border: '1px dashed hsl(245 55% 35%)',
                     transform: 'rotateX(75deg) rotateZ(15deg)',
                     animation: 'orbit-spin 30s linear infinite'
                   }}
@@ -517,21 +517,21 @@ const Index = () => {
               <div className="absolute inset-0 pointer-events-none overflow-hidden">
                 <div className="absolute w-16 h-16 md:w-24 md:h-24 rounded-full"
                      style={{
-                       background: 'radial-gradient(circle, rgba(236, 72, 153, 0.25) 0%, transparent 70%)',
+                       background: 'radial-gradient(circle, rgba(255, 200, 0, 0.2) 0%, transparent 70%)',
                        top: '15%', left: '10%',
                        filter: 'blur(15px)',
                        animation: 'float-particle 12s ease-in-out infinite'
                      }} />
                 <div className="absolute w-12 h-12 md:w-20 md:h-20 rounded-full"
                      style={{
-                       background: 'radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%)',
+                       background: 'radial-gradient(circle, rgba(80, 90, 200, 0.3) 0%, transparent 70%)',
                        bottom: '20%', right: '12%',
                        filter: 'blur(12px)',
                        animation: 'float-particle 15s ease-in-out infinite 3s'
                      }} />
                 <div className="absolute w-10 h-10 md:w-16 md:h-16 rounded-full"
                      style={{
-                       background: 'radial-gradient(circle, rgba(168, 85, 247, 0.3) 0%, transparent 70%)',
+                       background: 'radial-gradient(circle, rgba(60, 70, 180, 0.3) 0%, transparent 70%)',
                        top: '60%', left: '75%',
                        filter: 'blur(10px)',
                        animation: 'float-particle 18s ease-in-out infinite 5s'
@@ -542,7 +542,7 @@ const Index = () => {
               <div 
                 className="absolute w-40 h-40 md:w-64 md:h-64 rounded-full"
                 style={{
-                  background: 'radial-gradient(circle, rgba(139, 92, 246, 0.35) 0%, rgba(168, 85, 247, 0.2) 40%, transparent 70%)',
+                  background: 'radial-gradient(circle, rgba(80, 90, 200, 0.35) 0%, rgba(60, 70, 180, 0.2) 40%, transparent 70%)',
                   filter: 'blur(30px)',
                   animation: 'pulse-glow 3s ease-in-out infinite'
                 }}
@@ -550,7 +550,7 @@ const Index = () => {
               <div 
                 className="absolute w-24 h-24 md:w-40 md:h-40 rounded-full"
                 style={{
-                  background: 'radial-gradient(circle, rgba(236, 72, 153, 0.2) 0%, transparent 70%)',
+                  background: 'radial-gradient(circle, rgba(255, 200, 0, 0.15) 0%, transparent 70%)',
                   filter: 'blur(20px)',
                   animation: 'pulse-glow 4s ease-in-out infinite 1.5s'
                 }}
@@ -569,13 +569,13 @@ const Index = () => {
                   {/* Cercle lumineux pulsant derrière le logo card */}
                   <div className="absolute -inset-4 md:-inset-6 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"
                        style={{
-                         background: 'conic-gradient(from 0deg, rgba(139,92,246,0.3), rgba(236,72,153,0.2), rgba(99,102,241,0.3), rgba(139,92,246,0.3))',
+                         background: 'conic-gradient(from 0deg, rgba(80,90,200,0.3), rgba(255,200,0,0.2), rgba(60,70,180,0.3), rgba(80,90,200,0.3))',
                          filter: 'blur(20px)',
                          animation: 'orbit-spin 8s linear infinite'
                        }} />
                    <div className="relative logo-card-bg backdrop-blur-sm rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-2xl transition-transform duration-500 hover:scale-105"
                        style={{
-                         boxShadow: '0 20px 60px rgba(139, 92, 246, 0.3), 0 10px 30px rgba(139, 92, 246, 0.2), inset 0 1px 0 rgba(255,255,255,0.8)'
+                         boxShadow: '0 20px 60px rgba(30, 30, 90, 0.3), 0 10px 30px rgba(40, 40, 120, 0.2), inset 0 1px 0 rgba(255,255,255,0.8)'
                        }}>
                     <NectformaLogo variant="gradient" size="xl" showIcon={true} />
                     {/* Reflet brillant sur le logo */}
@@ -594,14 +594,14 @@ const Index = () => {
                   <h2 
                     className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-wider"
                     style={{
-                      background: 'linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(280 75% 55%) 30%, hsl(330 70% 55%) 60%, hsl(262 83% 50%) 100%)',
+                      background: 'linear-gradient(135deg, hsl(240 60% 20%) 0%, hsl(245 55% 25%) 30%, hsl(45 100% 50%) 60%, hsl(240 60% 20%) 100%)',
                       backgroundSize: '300% 300%',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
                       backgroundClip: 'text',
                       animation: 'gradient-shift 4s ease infinite',
                       textShadow: 'none',
-                      filter: 'drop-shadow(0 2px 10px rgba(139, 92, 246, 0.3))'
+                      filter: 'drop-shadow(0 2px 10px rgba(30, 30, 90, 0.3))'
                     }}
                   >
                     NECTFORMA
@@ -629,8 +629,8 @@ const Index = () => {
                       left: Math.random() * 100 + '%',
                       top: Math.random() * 100 + '%',
                       background: i % 2 === 0 
-                        ? `radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, transparent 70%)`
-                        : `radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, transparent 70%)`,
+                        ? `radial-gradient(circle, rgba(80, 90, 200, 0.5) 0%, transparent 70%)`
+                        : `radial-gradient(circle, rgba(255, 200, 0, 0.3) 0%, transparent 70%)`,
                       animation: `float-particle ${Math.random() * 10 + 10}s ease-in-out infinite ${Math.random() * 5}s`
                     }}
                   />
@@ -641,7 +641,7 @@ const Index = () => {
               <div 
                 className="absolute inset-0 pointer-events-none"
                 style={{
-                  background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.15) 45%, rgba(255,255,255,0.25) 50%, rgba(255,255,255,0.15) 55%, transparent 60%)',
+                  background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.1) 45%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.1) 55%, transparent 60%)',
                   animation: 'shine-sweep 6s ease-in-out infinite'
                 }}
               />
@@ -675,7 +675,7 @@ const Index = () => {
 
       {/* Features Count Section */}
         <section className="py-12 md:py-16 relative overflow-hidden" style={{
-          background: 'linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(280 75% 55%) 40%, hsl(300 65% 50%) 70%, hsl(262 83% 50%) 100%)'
+          background: 'linear-gradient(135deg, hsl(240 60% 18%) 0%, hsl(242 58% 15%) 40%, hsl(245 55% 12%) 70%, hsl(240 60% 16%) 100%)'
         }}>
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.06%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%27%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-30"></div>
         {/* Shimmer overlay */}
@@ -774,12 +774,12 @@ const Index = () => {
         <div className="absolute inset-0 section-soft-bg-alt" />
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute w-[300px] h-[300px] opacity-[0.08]" style={{
-            background: 'radial-gradient(circle, hsl(262 83% 65%) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, hsl(240 60% 30%) 0%, transparent 70%)',
             top: '10%', right: '5%', filter: 'blur(60px)',
             animation: 'blob-float 18s ease-in-out infinite'
           }} />
           <div className="absolute w-[250px] h-[250px] opacity-[0.06]" style={{
-            background: 'radial-gradient(circle, hsl(330 60% 65%) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, hsl(245 55% 25%) 0%, transparent 70%)',
             top: '40%', left: '0%', filter: 'blur(50px)',
             animation: 'blob-float 22s ease-in-out infinite 4s'
           }} />
@@ -857,7 +857,7 @@ const Index = () => {
                       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
                         <div style={{
                           position: 'absolute', top: 0, left: '-100%', width: '50%', height: '100%',
-                          background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.08), transparent)',
+                         background: 'linear-gradient(90deg, transparent, rgba(80,90,200,0.08), transparent)',
                           animation: 'shimmer-line 6s ease-in-out infinite'
                         }} />
                       </div>
@@ -886,7 +886,7 @@ const Index = () => {
                       <div className="relative group">
                         <Hover3DCard intensity={6}>
                           <div className="relative overflow-hidden rounded-2xl shadow-2xl" style={{
-                            background: 'linear-gradient(135deg, hsl(262 83% 30%) 0%, hsl(270 75% 25%) 40%, hsl(280 65% 20%) 100%)'
+                            background: 'linear-gradient(135deg, hsl(240 60% 18%) 0%, hsl(242 55% 14%) 40%, hsl(245 50% 12%) 100%)'
                           }}>
                             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                               <div className="absolute -top-[20%] -left-[10%] w-[55%] h-[80%] rounded-full bg-white/[0.06] blur-sm" />
@@ -918,7 +918,7 @@ const Index = () => {
 
       {/* CTA Section */}
       <section className="py-16 md:py-24 relative overflow-hidden" style={{
-          background: 'linear-gradient(135deg, hsl(262 83% 55%) 0%, hsl(270 75% 50%) 30%, hsl(300 65% 48%) 60%, hsl(280 75% 52%) 100%)'
+          background: 'linear-gradient(135deg, hsl(240 60% 18%) 0%, hsl(242 58% 15%) 30%, hsl(245 55% 13%) 60%, hsl(248 55% 16%) 100%)'
         }}>
         <div className="absolute inset-0 opacity-25" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
@@ -929,7 +929,7 @@ const Index = () => {
           top: '-10%', right: '10%', filter: 'blur(50px)'
         }} />
         <div className="absolute w-[200px] h-[200px] opacity-15 rounded-full" style={{
-          background: 'radial-gradient(circle, rgba(236,72,153,0.4) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(255,200,0,0.3) 0%, transparent 70%)',
           bottom: '-5%', left: '15%', filter: 'blur(40px)'
         }} />
         
@@ -1216,37 +1216,37 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-card text-foreground py-12 md:py-16 border-t border-border">
+      <footer className="text-white py-12 md:py-16 border-t border-white/10" style={{ background: 'linear-gradient(180deg, hsl(240 60% 14%) 0%, hsl(242 58% 10%) 100%)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div className="md:col-span-2">
               <div className="flex items-center space-x-3 mb-4">
-                <NectformaLogo variant="gradient" size="lg" />
+                <NectformaLogo variant="light" size="lg" />
               </div>
-              <p className="text-muted-foreground mb-4 max-w-md">
+              <p className="text-white/60 mb-4 max-w-md">
                 La plateforme complète pour digitaliser et automatiser la gestion des établissements d'enseignement supérieur, organismes de formation, CFA et universités.
               </p>
             </div>
             
             <div>
-              <h4 className="font-semibold mb-4">Navigation</h4>
-              <ul className="space-y-2 text-muted-foreground">
-                <li><a href="#fonctionnalites" className="hover:text-primary transition-colors">Solutions</a></li>
-                <li><Link to="/fonctionnalites" className="hover:text-primary transition-colors">Fonctionnalités</Link></li>
-                <li><Link to="/pourquoi-nous" className="hover:text-primary transition-colors">Pourquoi nous ?</Link></li>
+              <h4 className="font-semibold mb-4 text-white">Navigation</h4>
+              <ul className="space-y-2 text-white/60">
+                <li><a href="#fonctionnalites" className="hover:text-golden transition-colors">Solutions</a></li>
+                <li><Link to="/fonctionnalites" className="hover:text-golden transition-colors">Fonctionnalités</Link></li>
+                <li><Link to="/pourquoi-nous" className="hover:text-golden transition-colors">Pourquoi nous ?</Link></li>
               </ul>
             </div>
             
             <div>
-              <h4 className="font-semibold mb-4">Légal</h4>
-              <ul className="space-y-2 text-muted-foreground">
-                <li><Link to="/cgu" className="hover:text-primary transition-colors">CGU</Link></li>
-                <li><Link to="/politique-confidentialite" className="hover:text-primary transition-colors">Confidentialité</Link></li>
+              <h4 className="font-semibold mb-4 text-white">Légal</h4>
+              <ul className="space-y-2 text-white/60">
+                <li><Link to="/cgu" className="hover:text-golden transition-colors">CGU</Link></li>
+                <li><Link to="/politique-confidentialite" className="hover:text-golden transition-colors">Confidentialité</Link></li>
               </ul>
             </div>
           </div>
           
-          <div className="pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center text-muted-foreground text-sm">
+          <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center text-white/50 text-sm">
             <p>© 2025 NECTFORMA. Tous droits réservés.</p>
             <p className="mt-2 md:mt-0">Made with ❤️ for formation professionals</p>
           </div>

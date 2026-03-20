@@ -655,10 +655,10 @@ body:has(.fullscreen-container) {
 
   @keyframes glow-pulse {
     0%, 100% {
-      filter: drop-shadow(0 0 30px rgba(168, 85, 247, 0.8)) drop-shadow(0 0 60px rgba(139, 92, 246, 0.5));
+      filter: drop-shadow(0 0 30px rgba(30, 30, 90, 0.8)) drop-shadow(0 0 60px rgba(40, 40, 120, 0.5));
     }
     50% {
-      filter: drop-shadow(0 0 50px rgba(168, 85, 247, 1)) drop-shadow(0 0 80px rgba(139, 92, 246, 0.7));
+      filter: drop-shadow(0 0 50px rgba(30, 30, 90, 1)) drop-shadow(0 0 80px rgba(40, 40, 120, 0.7));
     }
   }
 
@@ -751,7 +751,7 @@ body:has(.fullscreen-container) {
       filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3)) brightness(1);
     }
     50% {
-      filter: drop-shadow(0 15px 40px rgba(139, 92, 246, 0.2)) brightness(1.03);
+      filter: drop-shadow(0 15px 40px rgba(30, 30, 90, 0.25)) brightness(1.03);
     }
   }
 
@@ -863,17 +863,17 @@ body:has(.fullscreen-container) {
     to { transform: rotate(360deg); }
   }
 
-  /* Landing page premium backgrounds */
+  /* Landing page premium backgrounds - Navy theme matching sidebar */
   .landing-gradient-bg {
     background: linear-gradient(
       180deg,
-      hsl(230 25% 97%) 0%,
-      hsl(230 30% 95%) 15%,
-      hsl(230 25% 97%) 30%,
-      hsl(230 20% 96%) 50%,
-      hsl(230 25% 97%) 70%,
-      hsl(230 30% 96%) 85%,
-      hsl(230 25% 97%) 100%
+      hsl(240 30% 96%) 0%,
+      hsl(240 25% 94%) 15%,
+      hsl(240 30% 96%) 30%,
+      hsl(240 20% 95%) 50%,
+      hsl(240 30% 96%) 70%,
+      hsl(240 25% 95%) 85%,
+      hsl(240 30% 96%) 100%
     );
   }
 
@@ -887,77 +887,77 @@ body:has(.fullscreen-container) {
     );
   }
 
-  /* Reusable section backgrounds with dark mode support */
+  /* Reusable section backgrounds - Navy tinted */
   .section-soft-bg {
-    background: linear-gradient(180deg, hsl(270 50% 98% / 0.5) 0%, hsl(262 60% 96% / 0.6) 50%, hsl(280 40% 97% / 0.5) 100%);
+    background: linear-gradient(180deg, hsl(240 30% 97% / 0.5) 0%, hsl(240 25% 95% / 0.6) 50%, hsl(240 20% 96% / 0.5) 100%);
   }
   .dark .section-soft-bg {
-    background: linear-gradient(180deg, hsl(260 20% 10% / 0.5) 0%, hsl(262 30% 12% / 0.6) 50%, hsl(270 20% 10% / 0.5) 100%);
+    background: linear-gradient(180deg, hsl(240 20% 10% / 0.5) 0%, hsl(240 25% 12% / 0.6) 50%, hsl(240 20% 10% / 0.5) 100%);
   }
 
   .section-soft-bg-alt {
-    background: linear-gradient(180deg, hsl(270 50% 97% / 0.6) 0%, hsl(280 40% 95% / 0.8) 30%, hsl(300 35% 96% / 0.6) 60%, hsl(270 50% 97% / 0.5) 100%);
+    background: linear-gradient(180deg, hsl(240 30% 96% / 0.6) 0%, hsl(240 25% 94% / 0.8) 30%, hsl(245 20% 95% / 0.6) 60%, hsl(240 30% 96% / 0.5) 100%);
   }
   .dark .section-soft-bg-alt {
-    background: linear-gradient(180deg, hsl(260 20% 9% / 0.6) 0%, hsl(270 18% 11% / 0.8) 30%, hsl(280 15% 10% / 0.6) 60%, hsl(260 20% 9% / 0.5) 100%);
+    background: linear-gradient(180deg, hsl(240 20% 9% / 0.6) 0%, hsl(240 18% 11% / 0.8) 30%, hsl(245 15% 10% / 0.6) 60%, hsl(240 20% 9% / 0.5) 100%);
   }
 
   .section-newsletter-bg {
-    background: linear-gradient(135deg, hsl(270 60% 97% / 0.8) 0%, hsl(300 40% 95% / 0.6) 50%, hsl(262 50% 96% / 0.7) 100%);
+    background: linear-gradient(135deg, hsl(240 30% 96% / 0.8) 0%, hsl(245 25% 94% / 0.6) 50%, hsl(240 30% 95% / 0.7) 100%);
   }
   .dark .section-newsletter-bg {
-    background: linear-gradient(135deg, hsl(260 20% 10% / 0.8) 0%, hsl(270 15% 11% / 0.6) 50%, hsl(262 20% 10% / 0.7) 100%);
+    background: linear-gradient(135deg, hsl(240 20% 10% / 0.8) 0%, hsl(240 15% 11% / 0.6) 50%, hsl(240 20% 10% / 0.7) 100%);
   }
 
   .section-contact-bg {
-    background: linear-gradient(180deg, hsl(270 50% 98% / 0.5) 0%, hsl(280 40% 96% / 0.4) 100%);
+    background: linear-gradient(180deg, hsl(240 30% 97% / 0.5) 0%, hsl(240 25% 95% / 0.4) 100%);
   }
   .dark .section-contact-bg {
-    background: linear-gradient(180deg, hsl(260 20% 10% / 0.5) 0%, hsl(270 15% 11% / 0.4) 100%);
+    background: linear-gradient(180deg, hsl(240 20% 10% / 0.5) 0%, hsl(240 15% 11% / 0.4) 100%);
   }
 
   /* Card backgrounds that adapt */
   .card-soft-bg {
-    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(270 60% 98% / 0.8) 100%);
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(240 25% 97% / 0.8) 100%);
     backdrop-filter: blur(10px);
   }
   .dark .card-soft-bg {
-    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(260 20% 14% / 0.8) 100%);
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(240 20% 14% / 0.8) 100%);
   }
 
   /* Detail box in features */
   .detail-box-bg {
-    background: linear-gradient(135deg, hsl(270 60% 98% / 0.8) 0%, hsl(280 50% 96% / 0.6) 100%);
+    background: linear-gradient(135deg, hsl(240 30% 97% / 0.8) 0%, hsl(240 25% 95% / 0.6) 100%);
     backdrop-filter: blur(10px);
   }
   .dark .detail-box-bg {
-    background: linear-gradient(135deg, hsl(260 20% 14% / 0.8) 0%, hsl(270 15% 12% / 0.6) 100%);
+    background: linear-gradient(135deg, hsl(240 20% 14% / 0.8) 0%, hsl(240 15% 12% / 0.6) 100%);
   }
 
-  /* Logo presentation card light bg for dark mode */
+  /* Logo presentation card light bg */
   .logo-card-bg {
     background: rgba(255, 255, 255, 0.95);
   }
   .dark .logo-card-bg {
-    background: hsl(260 18% 16% / 0.95);
+    background: hsl(240 18% 16% / 0.95);
   }
 
-  /* Logo presentation area */
+  /* Logo presentation area - Navy theme */
   .logo-presentation-bg {
-    background: radial-gradient(ellipse at center, hsl(262 83% 95%) 0%, hsl(262 60% 88%) 40%, hsl(270 50% 82%) 100%);
-    box-shadow: 0 0 60px rgba(139, 92, 246, 0.2), 0 0 100px rgba(168, 85, 247, 0.15), inset 0 0 40px rgba(255, 255, 255, 0.5);
+    background: radial-gradient(ellipse at center, hsl(240 40% 22%) 0%, hsl(242 50% 16%) 40%, hsl(245 55% 12%) 100%);
+    box-shadow: 0 0 60px rgba(30, 30, 90, 0.3), 0 0 100px rgba(40, 40, 120, 0.2), inset 0 0 40px rgba(255, 255, 255, 0.05);
   }
   .dark .logo-presentation-bg {
-    background: radial-gradient(ellipse at center, hsl(262 40% 18%) 0%, hsl(262 30% 14%) 40%, hsl(270 25% 10%) 100%);
-    box-shadow: 0 0 60px rgba(139, 92, 246, 0.15), 0 0 100px rgba(168, 85, 247, 0.1), inset 0 0 40px rgba(0, 0, 0, 0.3);
+    background: radial-gradient(ellipse at center, hsl(240 40% 18%) 0%, hsl(242 30% 14%) 40%, hsl(245 25% 10%) 100%);
+    box-shadow: 0 0 60px rgba(30, 30, 90, 0.15), 0 0 100px rgba(40, 40, 120, 0.1), inset 0 0 40px rgba(0, 0, 0, 0.3);
   }
 
   /* NECTFORMA subtitle color */
   .nectforma-subtitle {
-    color: hsl(262 60% 40%);
+    color: hsl(45 100% 65%);
   }
   .dark .nectforma-subtitle {
-    color: hsl(262 60% 75%);
+    color: hsl(45 90% 70%);
   }
 
   @keyframes blob-float {
