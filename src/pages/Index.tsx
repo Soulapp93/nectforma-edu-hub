@@ -774,7 +774,7 @@ const Index = () => {
         <div className="absolute inset-0 section-soft-bg-alt" />
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute w-[300px] h-[300px] opacity-[0.08]" style={{
-            background: 'radial-gradient(circle, hsl(262 83% 65%) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, hsl(240 60% 30%) 0%, transparent 70%)',
             top: '10%', right: '5%', filter: 'blur(60px)',
             animation: 'blob-float 18s ease-in-out infinite'
           }} />
