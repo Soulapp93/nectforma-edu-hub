@@ -751,7 +751,7 @@ body:has(.fullscreen-container) {
       filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3)) brightness(1);
     }
     50% {
-      filter: drop-shadow(0 15px 40px rgba(139, 92, 246, 0.2)) brightness(1.03);
+      filter: drop-shadow(0 15px 40px rgba(30, 30, 90, 0.25)) brightness(1.03);
     }
   }
 
