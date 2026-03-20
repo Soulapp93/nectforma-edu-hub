@@ -629,8 +629,8 @@ const Index = () => {
                       left: Math.random() * 100 + '%',
                       top: Math.random() * 100 + '%',
                       background: i % 2 === 0 
-                        ? `radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, transparent 70%)`
-                        : `radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, transparent 70%)`,
+                        ? `radial-gradient(circle, rgba(80, 90, 200, 0.5) 0%, transparent 70%)`
+                        : `radial-gradient(circle, rgba(255, 200, 0, 0.3) 0%, transparent 70%)`,
                       animation: `float-particle ${Math.random() * 10 + 10}s ease-in-out infinite ${Math.random() * 5}s`
                     }}
                   />
