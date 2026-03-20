@@ -436,7 +436,7 @@ const Index = () => {
             </AnimatedButton>
           </AnimatedSection>
 
-          {/* Logo Presentation Section - Light Violet Theme */}
+          {/* Logo Presentation Section - Navy & Gold Theme */}
           <AnimatedSection animation="scale" delay={500} className="mt-12 md:mt-16 mb-8 md:mb-12 px-2">
              <div className="relative max-w-4xl mx-auto rounded-3xl overflow-hidden aspect-video flex items-center justify-center border border-white/10 logo-presentation-bg">
               
@@ -1081,7 +1081,7 @@ const Index = () => {
                       body: JSON.stringify({
                         to: email,
                         subject: 'Bienvenue dans la newsletter Nectforma !',
-                        htmlContent: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;"><div style="text-align:center;margin-bottom:30px;"><div style="display:inline-block;background:linear-gradient(135deg,#8B5CF6,#A855F7);padding:12px 20px;border-radius:12px;"><span style="color:white;font-weight:800;font-size:20px;">NF</span></div></div><h1 style="text-align:center;color:#1f2937;font-size:24px;">Bienvenue dans la newsletter Nectforma !</h1><p style="color:#6b7280;text-align:center;font-size:16px;line-height:1.6;">Merci de votre inscription. Vous recevrez désormais nos derniers articles, conseils et actualités sur la formation professionnelle.</p><div style="text-align:center;margin-top:30px;"><a href="https://nectforme.lovable.app/blog" style="display:inline-block;background:linear-gradient(135deg,#8B5CF6,#A855F7);color:white;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;">Découvrir nos articles</a></div></div>`,
+                        htmlContent: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:40px 20px;"><div style="text-align:center;margin-bottom:30px;"><div style="display:inline-block;background:linear-gradient(135deg,#1e1e5a,#2a2a70);padding:12px 20px;border-radius:12px;"><span style="color:#d4a017;font-weight:800;font-size:20px;">NF</span></div></div><h1 style="text-align:center;color:#1f2937;font-size:24px;">Bienvenue dans la newsletter Nectforma !</h1><p style="color:#6b7280;text-align:center;font-size:16px;line-height:1.6;">Merci de votre inscription. Vous recevrez désormais nos derniers articles, conseils et actualités sur la formation professionnelle.</p><div style="text-align:center;margin-top:30px;"><a href="https://nectforme.lovable.app/blog" style="display:inline-block;background:linear-gradient(135deg,#1e1e5a,#2a2a70);color:#d4a017;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;">Découvrir nos articles</a></div></div>`,
                       }),
                     }
                   );
