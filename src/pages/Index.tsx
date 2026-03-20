@@ -542,7 +542,7 @@ const Index = () => {
               <div 
                 className="absolute w-40 h-40 md:w-64 md:h-64 rounded-full"
                 style={{
-                  background: 'radial-gradient(circle, rgba(139, 92, 246, 0.35) 0%, rgba(168, 85, 247, 0.2) 40%, transparent 70%)',
+                  background: 'radial-gradient(circle, rgba(80, 90, 200, 0.35) 0%, rgba(60, 70, 180, 0.2) 40%, transparent 70%)',
                   filter: 'blur(30px)',
                   animation: 'pulse-glow 3s ease-in-out infinite'
                 }}
