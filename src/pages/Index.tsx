@@ -575,7 +575,7 @@ const Index = () => {
                        }} />
                    <div className="relative logo-card-bg backdrop-blur-sm rounded-2xl md:rounded-3xl p-5 md:p-8 shadow-2xl transition-transform duration-500 hover:scale-105"
                        style={{
-                         boxShadow: '0 20px 60px rgba(139, 92, 246, 0.3), 0 10px 30px rgba(139, 92, 246, 0.2), inset 0 1px 0 rgba(255,255,255,0.8)'
+                         boxShadow: '0 20px 60px rgba(30, 30, 90, 0.3), 0 10px 30px rgba(40, 40, 120, 0.2), inset 0 1px 0 rgba(255,255,255,0.8)'
                        }}>
                     <NectformaLogo variant="gradient" size="xl" showIcon={true} />
                     {/* Reflet brillant sur le logo */}
