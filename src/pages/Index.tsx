@@ -1223,7 +1223,7 @@ const Index = () => {
               <div className="flex items-center space-x-3 mb-4">
                 <NectformaLogo variant="gradient" size="lg" />
               </div>
-              <p className="text-muted-foreground mb-4 max-w-md">
+              <p className="text-white/60 mb-4 max-w-md">
                 La plateforme complète pour digitaliser et automatiser la gestion des établissements d'enseignement supérieur, organismes de formation, CFA et universités.
               </p>
             </div>
