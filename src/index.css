@@ -655,10 +655,10 @@ body:has(.fullscreen-container) {
 
   @keyframes glow-pulse {
     0%, 100% {
-      filter: drop-shadow(0 0 30px rgba(168, 85, 247, 0.8)) drop-shadow(0 0 60px rgba(139, 92, 246, 0.5));
+      filter: drop-shadow(0 0 30px rgba(30, 30, 90, 0.8)) drop-shadow(0 0 60px rgba(40, 40, 120, 0.5));
     }
     50% {
-      filter: drop-shadow(0 0 50px rgba(168, 85, 247, 1)) drop-shadow(0 0 80px rgba(139, 92, 246, 0.7));
+      filter: drop-shadow(0 0 50px rgba(30, 30, 90, 1)) drop-shadow(0 0 80px rgba(40, 40, 120, 0.7));
     }
   }
 
