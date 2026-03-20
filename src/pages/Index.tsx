@@ -451,7 +451,7 @@ const Index = () => {
                       height: Math.random() * 3 + 1 + 'px',
                       left: Math.random() * 100 + '%',
                       top: Math.random() * 100 + '%',
-                      backgroundColor: i % 3 === 0 ? 'rgba(236, 72, 153, 0.5)' : 'rgba(139, 92, 246, 0.5)',
+                      backgroundColor: i % 3 === 0 ? 'rgba(255, 200, 0, 0.4)' : 'rgba(100, 120, 255, 0.4)',
                       opacity: Math.random() * 0.6 + 0.2,
                       animation: `twinkle ${Math.random() * 3 + 2}s ease-in-out infinite ${Math.random() * 2}s`
                     }}
