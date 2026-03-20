@@ -1229,8 +1229,8 @@ const Index = () => {
             </div>
             
             <div>
-              <h4 className="font-semibold mb-4">Navigation</h4>
-              <ul className="space-y-2 text-muted-foreground">
+              <h4 className="font-semibold mb-4 text-white">Navigation</h4>
+              <ul className="space-y-2 text-white/60">
                 <li><a href="#fonctionnalites" className="hover:text-primary transition-colors">Solutions</a></li>
                 <li><Link to="/fonctionnalites" className="hover:text-primary transition-colors">Fonctionnalités</Link></li>
                 <li><Link to="/pourquoi-nous" className="hover:text-primary transition-colors">Pourquoi nous ?</Link></li>
