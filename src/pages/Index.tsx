@@ -468,7 +468,7 @@ const Index = () => {
                     style={{
                       width: '2px',
                       height: '200px',
-                      background: `linear-gradient(to top, transparent, rgba(139, 92, 246, ${0.08 + (i % 3) * 0.04}), transparent)`,
+                      background: `linear-gradient(to top, transparent, rgba(100, 120, 255, ${0.08 + (i % 3) * 0.04}), transparent)`,
                       transform: `rotate(${i * 45}deg)`,
                       animation: `pulse-glow ${3 + i * 0.5}s ease-in-out infinite ${i * 0.3}s`
                     }}
