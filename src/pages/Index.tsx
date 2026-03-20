@@ -569,7 +569,7 @@ const Index = () => {
                   {/* Cercle lumineux pulsant derrière le logo card */}
                   <div className="absolute -inset-4 md:-inset-6 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"
                        style={{
-                         background: 'conic-gradient(from 0deg, rgba(139,92,246,0.3), rgba(236,72,153,0.2), rgba(99,102,241,0.3), rgba(139,92,246,0.3))',
+                         background: 'conic-gradient(from 0deg, rgba(80,90,200,0.3), rgba(255,200,0,0.2), rgba(60,70,180,0.3), rgba(80,90,200,0.3))',
                          filter: 'blur(20px)',
                          animation: 'orbit-spin 8s linear infinite'
                        }} />
