@@ -430,7 +430,7 @@ function generateTutorActivationEmail(
     <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px;">
       <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
         <!-- Header -->
-        <div style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 50%, #9333EA 100%); padding: 32px 30px; text-align: center;">
+        <div style="background: linear-gradient(135deg, #1e1e5a 0%, #2a2a70 50%, #1e1e5a 100%); padding: 32px 30px; text-align: center;">
           <span style="color:#ffffff;font-size:28px;font-weight:800;letter-spacing:3px;text-transform:uppercase;font-family:'Segoe UI',Arial,sans-serif;">NECTFORMA</span>
         </div>
         
@@ -445,7 +445,7 @@ function generateTutorActivationEmail(
           </p>
           
           <p style="color: #4a4a4a; line-height: 1.7; font-size: 16px; margin-bottom: 20px;">
-            L'établissement <strong style="color: #8B5CF6;">${establishmentName}</strong> vous a désigné comme <strong>Tuteur Entreprise</strong> sur la plateforme Nectforma.
+            L'établissement <strong style="color: #d4a017;">${establishmentName}</strong> vous a désigné comme <strong>Tuteur Entreprise</strong> sur la plateforme Nectforma.
           </p>
           
           ${studentSection}
@@ -467,7 +467,7 @@ function generateTutorActivationEmail(
           
           <div style="text-align: center; margin: 32px 0;">
             <a href="${activationLink}" 
-               style="display: inline-block; background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%); color: #ffffff; text-decoration: none; padding: 18px 48px; border-radius: 12px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);">
+               style="display: inline-block; background: linear-gradient(135deg, #1e1e5a 0%, #2a2a70 100%); color: #ffffff; text-decoration: none; padding: 18px 48px; border-radius: 12px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 16px rgba(30, 30, 90, 0.4);">
               🔐 Activer mon compte Tuteur
             </a>
           </div>
@@ -484,14 +484,14 @@ function generateTutorActivationEmail(
         </div>
         
         <!-- Security Section -->
-        <div style="background-color: #f8f7ff; padding: 24px 30px; border-top: 1px solid #e5e7eb;">
+        <div style="background-color: #f0f4ff; padding: 24px 30px; border-top: 1px solid #e5e7eb;">
           <p style="color: #4a4a4a; font-size: 14px; margin: 0 0 12px; font-weight: 600;">
             🔒 Sécurité & confidentialité
           </p>
           <p style="color: #6b7280; font-size: 13px; line-height: 1.6; margin: 0;">
             En activant votre compte, vous acceptez nos :<br>
-            📄 <a href="https://nectforma.com/cgu" target="_blank" style="color: #8B5CF6; text-decoration: none;">Conditions Générales d'Utilisation</a><br>
-            🔐 <a href="https://nectforma.com/politique-confidentialite" target="_blank" style="color: #8B5CF6; text-decoration: none;">Politique de Confidentialité</a>
+            📄 <a href="https://nectforma.com/cgu" target="_blank" style="color: #d4a017; text-decoration: none;">Conditions Générales d'Utilisation</a><br>
+            🔐 <a href="https://nectforma.com/politique-confidentialite" target="_blank" style="color: #d4a017; text-decoration: none;">Politique de Confidentialité</a>
           </p>
         </div>
         
@@ -506,8 +506,8 @@ function generateTutorActivationEmail(
           </p>
           <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; margin-top: 16px;">
             <p style="color: rgba(255,255,255,0.6); font-size: 12px; margin: 0;">
-              🌐 <a href="https://nectforma.com" style="color: #a78bfa; text-decoration: none;">https://nectforma.com</a><br>
-              📩 <a href="mailto:contact@nectforma.com" style="color: #a78bfa; text-decoration: none;">contact@nectforma.com</a>
+              🌐 <a href="https://nectforma.com" style="color: #d4a017; text-decoration: none;">https://nectforma.com</a><br>
+              📩 <a href="mailto:contact@nectforma.com" style="color: #d4a017; text-decoration: none;">contact@nectforma.com</a>
             </p>
           </div>
           <p style="color: rgba(255,255,255,0.4); font-size: 11px; margin-top: 16px;">
@@ -520,7 +520,7 @@ function generateTutorActivationEmail(
       <div style="max-width: 600px; margin: 16px auto 0; text-align: center;">
         <p style="color: #9ca3af; font-size: 11px;">
           Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br>
-          <a href="${activationLink}" style="color: #8B5CF6; word-break: break-all; font-size: 10px;">${activationLink}</a>
+          <a href="${activationLink}" style="color: #d4a017; word-break: break-all; font-size: 10px;">${activationLink}</a>
         </p>
       </div>
     </body>

@@ -80,7 +80,7 @@ serve(async (req: Request): Promise<Response> => {
 </head>
 <body>
   <div class="container">
-    <div class="header" style="background:linear-gradient(135deg,#8B5CF6 0%,#7C3AED 50%,#9333EA 100%);padding:32px 30px;text-align:center;border-radius:10px 10px 0 0;">
+    <div class="header" style="background:linear-gradient(135deg,#1e1e5a 0%,#2a2a70 50%,#1e1e5a 100%);padding:32px 30px;text-align:center;border-radius:10px 10px 0 0;">
       <span style="color:#ffffff;font-size:28px;font-weight:800;letter-spacing:3px;text-transform:uppercase;font-family:Arial,sans-serif;">NECTFORMA</span>
     </div>
     <div style="padding: 15px 30px; background: #f9fafb;">
@@ -165,7 +165,7 @@ serve(async (req: Request): Promise<Response> => {
 </head>
 <body>
   <div class="container">
-    <div class="header" style="background:linear-gradient(135deg,#8B5CF6 0%,#7C3AED 50%,#9333EA 100%);padding:32px 30px;text-align:center;border-radius:10px 10px 0 0;">
+    <div class="header" style="background:linear-gradient(135deg,#1e1e5a 0%,#2a2a70 50%,#1e1e5a 100%);padding:32px 30px;text-align:center;border-radius:10px 10px 0 0;">
       <span style="color:#ffffff;font-size:28px;font-weight:800;letter-spacing:3px;text-transform:uppercase;font-family:Arial,sans-serif;">NECTFORMA</span>
     </div>
     <div class="content">

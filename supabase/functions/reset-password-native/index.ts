@@ -59,20 +59,20 @@ const sendEmailWithBrevo = async (to: string, subject: string, htmlContent: stri
 
 // Build the branded email header
 const emailHeader = `
-  <div style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 50%, #9333EA 100%); padding: 32px 30px; text-align: center;">
+  <div style="background: linear-gradient(135deg, #1e1e5a 0%, #2a2a70 50%, #1e1e5a 100%); padding: 32px 30px; text-align: center;">
     <span style="color:#ffffff;font-size:28px;font-weight:800;letter-spacing:3px;text-transform:uppercase;font-family:'Segoe UI',Arial,sans-serif;">NECTFORMA</span>
   </div>
 `;
 
 // Build the branded email footer
 const emailFooter = (year: number) => `
-  <div style="background-color: #f8f7ff; padding: 24px 30px; border-top: 1px solid #e5e7eb;">
+  <div style="background-color: #f0f4ff; padding: 24px 30px; border-top: 1px solid #e5e7eb;">
     <p style="color: #4a4a4a; font-size: 14px; margin: 0 0 12px; font-weight: 600;">
       🔒 Sécurité & confidentialité
     </p>
     <p style="color: #6b7280; font-size: 13px; line-height: 1.6; margin: 0;">
-      📄 <a href="https://nectforma.com/cgu" target="_blank" style="color: #8B5CF6; text-decoration: none;">Conditions Générales d'Utilisation</a><br>
-      🔐 <a href="https://nectforma.com/politique-confidentialite" target="_blank" style="color: #8B5CF6; text-decoration: none;">Politique de Confidentialité</a>
+      📄 <a href="https://nectforma.com/cgu" target="_blank" style="color: #d4a017; text-decoration: none;">Conditions Générales d'Utilisation</a><br>
+      🔐 <a href="https://nectforma.com/politique-confidentialite" target="_blank" style="color: #d4a017; text-decoration: none;">Politique de Confidentialité</a>
     </p>
   </div>
   <div style="background-color: #1a1a2e; padding: 32px 30px; text-align: center;">
@@ -85,8 +85,8 @@ const emailFooter = (year: number) => `
     </p>
     <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; margin-top: 16px;">
       <p style="color: rgba(255,255,255,0.6); font-size: 12px; margin: 0;">
-        🌐 <a href="https://nectforma.com" style="color: #a78bfa; text-decoration: none;">https://nectforma.com</a><br>
-        📩 <a href="mailto:contact@nectforma.com" style="color: #a78bfa; text-decoration: none;">contact@nectforma.com</a>
+        🌐 <a href="https://nectforma.com" style="color: #d4a017; text-decoration: none;">https://nectforma.com</a><br>
+        📩 <a href="mailto:contact@nectforma.com" style="color: #d4a017; text-decoration: none;">contact@nectforma.com</a>
       </p>
     </div>
     <p style="color: rgba(255,255,255,0.4); font-size: 11px; margin-top: 16px;">
@@ -115,14 +115,14 @@ const buildResetEmail = (firstName: string, lastName: string, establishmentName:
             Bonjour <strong>${firstName} ${lastName}</strong>,
           </p>
           <p style="color: #4a4a4a; line-height: 1.7; font-size: 16px; margin-bottom: 20px;">
-            Vous avez demandé la réinitialisation de votre mot de passe sur <strong style="color: #8B5CF6;">${establishmentName}</strong>.
+            Vous avez demandé la réinitialisation de votre mot de passe sur <strong style="color: #d4a017;">${establishmentName}</strong>.
           </p>
           <p style="color: #4a4a4a; line-height: 1.7; font-size: 16px; margin-bottom: 8px;">
             👉 Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe :
           </p>
           <div style="text-align: center; margin: 32px 0;">
             <a href="${resetLink}" 
-               style="display: inline-block; background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%); color: #ffffff; text-decoration: none; padding: 18px 48px; border-radius: 12px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);">
+               style="display: inline-block; background: linear-gradient(135deg, #1e1e5a 0%, #2a2a70 100%); color: #ffffff; text-decoration: none; padding: 18px 48px; border-radius: 12px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 16px rgba(30, 30, 90, 0.4);">
               🔑 Réinitialiser mon mot de passe
             </a>
           </div>
@@ -141,7 +141,7 @@ const buildResetEmail = (firstName: string, lastName: string, establishmentName:
       <div style="max-width: 600px; margin: 16px auto 0; text-align: center;">
         <p style="color: #9ca3af; font-size: 11px;">
           Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br>
-          <a href="${resetLink}" style="color: #8B5CF6; word-break: break-all; font-size: 10px;">${resetLink}</a>
+          <a href="${resetLink}" style="color: #d4a017; word-break: break-all; font-size: 10px;">${resetLink}</a>
         </p>
       </div>
     </body>
@@ -169,7 +169,7 @@ const buildActivationEmail = (firstName: string, lastName: string, role: string,
             Bonjour <strong>${firstName} ${lastName}</strong>,
           </p>
           <p style="color: #4a4a4a; line-height: 1.7; font-size: 16px; margin-bottom: 20px;">
-            Bienvenue sur <strong style="color: #8B5CF6;">${establishmentName}</strong> — Nectforma 🎓
+            Bienvenue sur <strong style="color: #d4a017;">${establishmentName}</strong> — Nectforma 🎓
           </p>
           <p style="color: #4a4a4a; line-height: 1.7; font-size: 16px; margin-bottom: 20px;">
             Votre compte <strong>${getRoleLabel(role)}</strong> n'est pas encore activé.<br>
@@ -180,7 +180,7 @@ const buildActivationEmail = (firstName: string, lastName: string, role: string,
           </p>
           <div style="text-align: center; margin: 32px 0;">
             <a href="${activationLink}" 
-               style="display: inline-block; background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%); color: #ffffff; text-decoration: none; padding: 18px 48px; border-radius: 12px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);">
+               style="display: inline-block; background: linear-gradient(135deg, #1e1e5a 0%, #2a2a70 100%); color: #ffffff; text-decoration: none; padding: 18px 48px; border-radius: 12px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 16px rgba(30, 30, 90, 0.4);">
               🔐 Activer mon compte
             </a>
           </div>
@@ -198,7 +198,7 @@ const buildActivationEmail = (firstName: string, lastName: string, role: string,
       <div style="max-width: 600px; margin: 16px auto 0; text-align: center;">
         <p style="color: #9ca3af; font-size: 11px;">
           Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br>
-          <a href="${activationLink}" style="color: #8B5CF6; word-break: break-all; font-size: 10px;">${activationLink}</a>
+          <a href="${activationLink}" style="color: #d4a017; word-break: break-all; font-size: 10px;">${activationLink}</a>
         </p>
       </div>
     </body>
