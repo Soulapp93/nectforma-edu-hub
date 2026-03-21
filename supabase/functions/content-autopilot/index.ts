@@ -235,7 +235,7 @@ Réponds en JSON avec cette structure EXACTE:
           "title": "Titre visuel accrocheur",
           "content": "Texte court et impactant",
           "type": "cover",
-          "color_accent": "#8B5CF6"
+          "color_accent": "#1e1e5a"
         },
         {
           "slide_number": 2,
@@ -1040,22 +1040,22 @@ serve(async (req) => {
 <body style="margin:0;padding:0;background-color:#f3f4f6;font-family:Arial,Helvetica,sans-serif;">
   <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;margin-top:20px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
     <!-- Header -->
-    <div style="background:linear-gradient(135deg,#8B5CF6 0%,#7C3AED 50%,#9333EA 100%);padding:32px 28px;text-align:center;">
+    <div style="background:linear-gradient(135deg,#1e1e5a 0%,#2a2a70 50%,#1e1e5a 100%);padding:32px 28px;text-align:center;">
       <span style="color:#ffffff;font-size:28px;font-weight:800;letter-spacing:3px;text-transform:uppercase;font-family:Arial,Helvetica,sans-serif;">NECTFORMA</span>
     </div>
     <!-- Content -->
     <div style="padding:32px 28px;">
       <h1 style="color:#1f2937;font-size:21px;line-height:1.4;margin:0 0 16px;text-align:center;">${article.title}</h1>
-      <div style="width:40px;height:3px;background:linear-gradient(135deg,#8B5CF6,#A855F7);margin:0 auto 20px;border-radius:2px;"></div>
+      <div style="width:40px;height:3px;background:linear-gradient(135deg,#1e1e5a,#2a2a70);margin:0 auto 20px;border-radius:2px;"></div>
       <p style="color:#6b7280;font-size:15px;line-height:1.7;text-align:center;margin:0 0 28px;">${article.excerpt || ''}</p>
       <div style="text-align:center;">
-        <a href="${articleUrl}" style="display:inline-block;background:linear-gradient(135deg,#8B5CF6,#A855F7);color:white;padding:14px 36px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">Lire l'article</a>
+        <a href="${articleUrl}" style="display:inline-block;background:linear-gradient(135deg,#1e1e5a,#2a2a70);color:white;padding:14px 36px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">Lire l'article</a>
       </div>
     </div>
     <!-- Footer -->
     <div style="background:#f9fafb;padding:20px 28px;border-top:1px solid #e5e7eb;text-align:center;">
       <p style="color:#9ca3af;font-size:12px;margin:0 0 8px;line-height:1.5;">Vous recevez cet email car vous êtes inscrit à la newsletter Nectforma.</p>
-      <a href="${unsubscribeUrl}" style="color:#8B5CF6;font-size:12px;text-decoration:underline;">Se désinscrire de la newsletter</a>
+      <a href="${unsubscribeUrl}" style="color:#d4a017;font-size:12px;text-decoration:underline;">Se désinscrire de la newsletter</a>
       <p style="color:#d1d5db;font-size:11px;margin:12px 0 0;">© ${new Date().getFullYear()} Nectforma — Tous droits réservés</p>
     </div>
   </div>

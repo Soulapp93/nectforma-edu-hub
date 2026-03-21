@@ -158,7 +158,7 @@ serve(async (req: Request): Promise<Response> => {
         </head>
         <body style="margin:0;padding:0;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background-color:#f4f4f5;">
           <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;margin-top:40px;margin-bottom:40px;box-shadow:0 4px 6px rgba(0,0,0,0.1);">
-            <div style="background:linear-gradient(135deg,#8B5CF6 0%,#7C3AED 50%,#9333EA 100%);padding:32px 30px;text-align:center;">
+            <div style="background:linear-gradient(135deg,#1e1e5a 0%,#2a2a70 50%,#1e1e5a 100%);padding:32px 30px;text-align:center;">
               <span style="color:#ffffff;font-size:28px;font-weight:800;letter-spacing:3px;text-transform:uppercase;font-family:'Segoe UI',Arial,sans-serif;">NECTFORMA</span>
             </div>
             <div style="padding:40px 30px;">
@@ -172,7 +172,7 @@ serve(async (req: Request): Promise<Response> => {
                 Ce rôle vous donne un accès complet à l'administration de la plateforme, y compris la gestion du blog, du SEO et des analytics.
               </p>
               <div style="text-align:center;margin:30px 0;">
-                <a href="${activationLink}" style="display:inline-block;background:linear-gradient(135deg,#8B5CF6 0%,#6D28D9 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:8px;font-weight:600;font-size:16px;box-shadow:0 4px 14px rgba(139,92,246,0.4);">
+                <a href="${activationLink}" style="display:inline-block;background:linear-gradient(135deg, #1e1e5a 0%, #2a2a70 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:8px;font-weight:600;font-size:16px;box-shadow:0 4px 14px rgba(30,30,90,0.4);">
                   Activer mon compte
                 </a>
               </div>
@@ -185,8 +185,8 @@ serve(async (req: Request): Promise<Response> => {
                 © ${new Date().getFullYear()} Nectforma. Tous droits réservés.
               </p>
               <p style="font-size:12px;color:#9ca3af;margin:10px 0 0 0;">
-                <a href="https://nectforma.com/cgu" style="color:#8B5CF6;text-decoration:none;">CGU</a> · 
-                <a href="https://nectforma.com/politique-confidentialite" style="color:#8B5CF6;text-decoration:none;">Politique de confidentialité</a>
+                <a href="https://nectforma.com/cgu" style="color:#d4a017;text-decoration:none;">CGU</a> · 
+                <a href="https://nectforma.com/politique-confidentialite" style="color:#d4a017;text-decoration:none;">Politique de confidentialité</a>
               </p>
             </div>
           </div>

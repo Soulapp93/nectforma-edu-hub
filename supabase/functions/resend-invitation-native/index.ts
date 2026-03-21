@@ -194,7 +194,7 @@ serve(async (req) => {
       </head>
       <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-          <div style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 50%, #9333EA 100%); padding: 32px 30px; text-align: center;">
+          <div style="background: linear-gradient(135deg, #1e1e5a 0%, #2a2a70 50%, #1e1e5a 100%); padding: 32px 30px; text-align: center;">
             <span style="color:#ffffff;font-size:28px;font-weight:800;letter-spacing:3px;text-transform:uppercase;font-family:'Segoe UI',Arial,sans-serif;">NECTFORMA</span>
           </div>
           
@@ -208,7 +208,7 @@ serve(async (req) => {
             </p>
             
             <p style="color: #4a4a4a; line-height: 1.6; font-size: 16px; margin-bottom: 20px;">
-              Votre compte sur <strong style="color: #8B5CF6;">${establishmentName}</strong> 
+              Votre compte sur <strong style="color: #d4a017;">${establishmentName}</strong> 
               en tant que <strong>${getRoleLabel(userData.role)}</strong> n'a pas encore été activé.
             </p>
             
@@ -218,12 +218,12 @@ serve(async (req) => {
             
             <div style="text-align: center; margin: 30px 0;">
               <a href="${activationLink}" 
-                 style="display: inline-block; background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 12px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);">
+                 style="display: inline-block; background: linear-gradient(135deg, #1e1e5a 0%, #2a2a70 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 12px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(30, 30, 90, 0.4);">
                 Activer mon compte
               </a>
             </div>
             
-            <div style="background-color: #f8f7ff; border-radius: 12px; padding: 20px; margin-top: 30px;">
+            <div style="background-color: #f0f4ff; border-radius: 12px; padding: 20px; margin-top: 30px;">
               <p style="color: #6b7280; font-size: 14px; margin: 0;">
                 <strong>⏳ Ce lien expire dans 7 jours.</strong><br>
                 Si vous n'avez pas demandé la création de ce compte, vous pouvez ignorer cet email.
@@ -232,7 +232,7 @@ serve(async (req) => {
             
             <p style="color: #9ca3af; font-size: 12px; margin-top: 30px; text-align: center;">
               Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br>
-              <a href="${activationLink}" style="color: #8B5CF6; word-break: break-all;">${activationLink}</a>
+              <a href="${activationLink}" style="color: #d4a017; word-break: break-all;">${activationLink}</a>
             </p>
           </div>
           

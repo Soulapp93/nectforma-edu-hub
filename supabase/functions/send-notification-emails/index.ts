@@ -52,7 +52,7 @@ function generateEmailHtml(
       <td align="center">
         <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
           <tr>
-            <td style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 50%, #9333EA 100%); padding: 32px 40px; text-align: center; border-radius: 12px 12px 0 0;">
+            <td style="background: linear-gradient(135deg, #1e1e5a 0%, #2a2a70 50%, #1e1e5a 100%); padding: 32px 40px; text-align: center; border-radius: 12px 12px 0 0;">
               <span style="color:#ffffff;font-size:28px;font-weight:800;letter-spacing:3px;text-transform:uppercase;font-family:'Segoe UI',Arial,sans-serif;">NECTFORMA</span>
             </td>
           </tr>
@@ -61,7 +61,7 @@ function generateEmailHtml(
               <p style="color: #374151; font-size: 16px; margin: 0 0 20px 0;">
                 Bonjour <strong>${recipientName}</strong>,
               </p>
-              <div style="background-color: #F3F4F6; border-left: 4px solid #8B5CF6; padding: 20px; border-radius: 0 8px 8px 0; margin-bottom: 24px;">
+              <div style="background-color: #F3F4F6; border-left: 4px solid #1e1e5a; padding: 20px; border-radius: 0 8px 8px 0; margin-bottom: 24px;">
                 <h2 style="color: #1F2937; font-size: 18px; margin: 0 0 12px 0;">${title}</h2>
                 <p style="color: #4B5563; font-size: 15px; margin: 0; line-height: 1.6;">${message}</p>
               </div>
@@ -83,7 +83,7 @@ function generateEmailHtml(
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
                   <td align="center" style="padding: 20px 0;">
-                    <a href="${fullCtaUrl}" style="display: inline-block; background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 6px rgba(139, 92, 246, 0.3);">${ctaText}</a>
+                    <a href="${fullCtaUrl}" style="display: inline-block; background: linear-gradient(135deg, #1e1e5a 0%, #2a2a70 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 6px rgba(30, 30, 90, 0.3);">${ctaText}</a>
                   </td>
                 </tr>
               </table>
