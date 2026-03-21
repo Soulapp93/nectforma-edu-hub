@@ -83,7 +83,7 @@ function generateEmailHtml(
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
                   <td align="center" style="padding: 20px 0;">
-                    <a href="${fullCtaUrl}" style="display: inline-block; background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 6px rgba(139, 92, 246, 0.3);">${ctaText}</a>
+                    <a href="${fullCtaUrl}" style="display: inline-block; background: linear-gradient(135deg, #1e1e5a 0%, #2a2a70 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 6px rgba(30, 30, 90, 0.3);">${ctaText}</a>
                   </td>
                 </tr>
               </table>
