@@ -140,9 +140,12 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   }, [semesterView, modules]);
 
   const currentPeriodLabel = useMemo(() => {
+    if (semesterView === 'bulletin-global') {
+      return 'Bulletin de Formation';
+    }
     if (isFinalView) {
       const yearNum = parseInt(semesterView.split('-')[1]);
-      return durationYears === 1 ? 'Final (S1 + S2)' : `Final Année ${yearNum}`;
+      return durationYears === 1 ? 'Bulletin de Formation' : `Bulletin Année ${yearNum}`;
     }
     if (semesterView) {
       const semNum = parseInt(semesterView.replace('s', ''));
