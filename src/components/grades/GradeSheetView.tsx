@@ -99,7 +99,10 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
 
   const activePeriodIds = useMemo(() => {
     if (!semesterView || periods.length === 0) return [];
-    if (semesterView.startsWith('final-')) {
+    if (semesterView === 'bulletin-global') {
+      return periods.map(p => p.id);
+    }
+    if (semesterView.startsWith('bulletin-')) {
       const yearNum = parseInt(semesterView.split('-')[1]);
       const startIdx = (yearNum - 1) * 2;
       return periods.filter((_, idx) => idx >= startIdx && idx < startIdx + 2).map(p => p.id);
@@ -109,17 +112,20 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     return periods[idx] ? [periods[idx].id] : [];
   }, [semesterView, periods]);
 
-  const isFinalView = semesterView.startsWith('final-');
+  const isFinalView = semesterView.startsWith('bulletin-');
 
   const activeSemesterNums = useMemo((): number[] | null => {
     if (!semesterView) return null;
-    if (semesterView.startsWith('final-')) {
+    if (semesterView === 'bulletin-global') {
+      return Array.from({ length: semestersCount }, (_, i) => i + 1);
+    }
+    if (semesterView.startsWith('bulletin-')) {
       const yearNum = parseInt(semesterView.split('-')[1]);
       return [(yearNum - 1) * 2 + 1, (yearNum - 1) * 2 + 2];
     }
     const num = parseInt(semesterView.replace('s', ''));
     return isNaN(num) ? null : [num];
-  }, [semesterView]);
+  }, [semesterView, semestersCount]);
 
   // Reset selectedModule when semester changes
   useEffect(() => {
@@ -134,9 +140,12 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   }, [semesterView, modules]);
 
   const currentPeriodLabel = useMemo(() => {
+    if (semesterView === 'bulletin-global') {
+      return 'Bulletin de Formation';
+    }
     if (isFinalView) {
       const yearNum = parseInt(semesterView.split('-')[1]);
-      return durationYears === 1 ? 'Final (S1 + S2)' : `Final Année ${yearNum}`;
+      return durationYears === 1 ? 'Bulletin de Formation' : `Bulletin Année ${yearNum}`;
     }
     if (semesterView) {
       const semNum = parseInt(semesterView.replace('s', ''));
@@ -425,9 +434,9 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     <div className="space-y-4">
       {/* Top bar: Semester navigation + Actions */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
-        {/* Semester buttons grouped by year with Final */}
+        {/* Semester buttons grouped by year with Bulletin */}
         {semestersCount > 0 && currentFormationData && (
-          <div className="flex flex-wrap items-center gap-1.5 bg-muted/50 rounded-xl p-1.5">
+          <div className="flex flex-wrap items-center gap-1 bg-muted/50 rounded-xl p-1.5">
             {Array.from({ length: durationYears }, (_, y) => {
               const s1 = y * 2 + 1;
               const s2 = y * 2 + 2;
@@ -435,44 +444,56 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
               return (
                 <React.Fragment key={yearNum}>
                   {durationYears > 1 && (
-                    <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider ml-1">A{yearNum}</span>
+                    <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider ml-1.5 mr-0.5">Année {yearNum}</span>
                   )}
-                  <button
-                    onClick={() => setSemesterView(`s${s1}`)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                      semesterView === `s${s1}` 
-                        ? 'bg-primary text-primary-foreground shadow-sm' 
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                    }`}
-                  >
-                    S{s1}
-                  </button>
-                  <button
-                    onClick={() => setSemesterView(`s${s2}`)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                      semesterView === `s${s2}` 
-                        ? 'bg-primary text-primary-foreground shadow-sm' 
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                    }`}
-                  >
-                    S{s2}
-                  </button>
-                  <button
-                    onClick={() => setSemesterView(`final-${yearNum}`)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                      semesterView === `final-${yearNum}` 
-                        ? 'bg-primary text-primary-foreground shadow-sm' 
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                    }`}
-                  >
-                    {durationYears === 1 ? 'Final' : `Final A${yearNum}`}
-                  </button>
+                  {/* Individual semester buttons */}
+                  {Array.from({ length: Math.min(2, semestersCount - y * 2) }, (_, si) => {
+                    const semNum = s1 + si;
+                    return (
+                      <button
+                        key={`s${semNum}`}
+                        onClick={() => setSemesterView(`s${semNum}`)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          semesterView === `s${semNum}` 
+                            ? 'bg-primary text-primary-foreground shadow-sm' 
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                        }`}
+                      >
+                        S{semNum}
+                      </button>
+                    );
+                  })}
+                  {/* Bulletin per year (only for multi-year or as unique bulletin for 1-year) */}
+                  {durationYears > 1 && (
+                    <button
+                      onClick={() => setSemesterView(`bulletin-${yearNum}`)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                        semesterView === `bulletin-${yearNum}` 
+                          ? 'bg-amber-500 text-white shadow-sm' 
+                          : 'text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30'
+                      }`}
+                    >
+                      Bulletin A{yearNum}
+                    </button>
+                  )}
                   {yearNum < durationYears && (
                     <div className="w-px h-5 bg-border mx-0.5" />
                   )}
                 </React.Fragment>
               );
             })}
+            {/* Global Bulletin de Formation */}
+            <div className="w-px h-5 bg-border mx-0.5" />
+            <button
+              onClick={() => setSemesterView(durationYears === 1 ? 'bulletin-1' : 'bulletin-global')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                (semesterView === 'bulletin-global' || (durationYears === 1 && semesterView === 'bulletin-1'))
+                  ? 'bg-primary text-primary-foreground shadow-sm' 
+                  : 'text-primary hover:bg-primary/10'
+              }`}
+            >
+              📋 Bulletin de Formation
+            </button>
           </div>
         )}
 
