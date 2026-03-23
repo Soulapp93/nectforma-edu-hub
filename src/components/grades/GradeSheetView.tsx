@@ -99,7 +99,10 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
 
   const activePeriodIds = useMemo(() => {
     if (!semesterView || periods.length === 0) return [];
-    if (semesterView.startsWith('final-')) {
+    if (semesterView === 'bulletin-global') {
+      return periods.map(p => p.id);
+    }
+    if (semesterView.startsWith('bulletin-')) {
       const yearNum = parseInt(semesterView.split('-')[1]);
       const startIdx = (yearNum - 1) * 2;
       return periods.filter((_, idx) => idx >= startIdx && idx < startIdx + 2).map(p => p.id);
@@ -109,17 +112,20 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     return periods[idx] ? [periods[idx].id] : [];
   }, [semesterView, periods]);
 
-  const isFinalView = semesterView.startsWith('final-');
+  const isFinalView = semesterView.startsWith('bulletin-');
 
   const activeSemesterNums = useMemo((): number[] | null => {
     if (!semesterView) return null;
-    if (semesterView.startsWith('final-')) {
+    if (semesterView === 'bulletin-global') {
+      return Array.from({ length: semestersCount }, (_, i) => i + 1);
+    }
+    if (semesterView.startsWith('bulletin-')) {
       const yearNum = parseInt(semesterView.split('-')[1]);
       return [(yearNum - 1) * 2 + 1, (yearNum - 1) * 2 + 2];
     }
     const num = parseInt(semesterView.replace('s', ''));
     return isNaN(num) ? null : [num];
-  }, [semesterView]);
+  }, [semesterView, semestersCount]);
 
   // Reset selectedModule when semester changes
   useEffect(() => {
