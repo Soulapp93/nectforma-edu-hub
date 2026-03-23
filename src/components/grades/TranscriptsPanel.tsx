@@ -491,9 +491,9 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
               </SelectContent>
             </Select>
           )}
-          {/* Semester buttons */}
+          {/* Semester buttons grouped by year with Bulletin */}
           {semestersCount > 0 && selectedFormationObj && (
-            <div className="flex flex-wrap items-center gap-1.5 bg-muted/50 rounded-xl p-1.5">
+            <div className="flex flex-wrap items-center gap-1 bg-muted/50 rounded-xl p-1.5">
               {Array.from({ length: durationYears }, (_, y) => {
                 const s1 = y * 2 + 1;
                 const s2 = y * 2 + 2;
@@ -501,44 +501,53 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                 return (
                   <React.Fragment key={yearNum}>
                     {durationYears > 1 && (
-                      <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider ml-1">A{yearNum}</span>
+                      <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider ml-1.5 mr-0.5">Année {yearNum}</span>
                     )}
-                    <button
-                      onClick={() => { setSemesterView(`s${s1}`); setCurrentStudentIndex(0); }}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                        semesterView === `s${s1}` 
-                          ? 'bg-primary text-primary-foreground shadow-sm' 
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                      }`}
-                    >
-                      S{s1}
-                    </button>
-                    <button
-                      onClick={() => { setSemesterView(`s${s2}`); setCurrentStudentIndex(0); }}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                        semesterView === `s${s2}` 
-                          ? 'bg-primary text-primary-foreground shadow-sm' 
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                      }`}
-                    >
-                      S{s2}
-                    </button>
-                    <button
-                      onClick={() => { setSemesterView(`final-${yearNum}`); setCurrentStudentIndex(0); }}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                        semesterView === `final-${yearNum}` 
-                          ? 'bg-primary text-primary-foreground shadow-sm' 
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                      }`}
-                    >
-                      {durationYears === 1 ? 'Final' : `Final A${yearNum}`}
-                    </button>
+                    {Array.from({ length: Math.min(2, semestersCount - y * 2) }, (_, si) => {
+                      const semNum = s1 + si;
+                      return (
+                        <button
+                          key={`s${semNum}`}
+                          onClick={() => { setSemesterView(`s${semNum}`); setCurrentStudentIndex(0); }}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                            semesterView === `s${semNum}` 
+                              ? 'bg-primary text-primary-foreground shadow-sm' 
+                              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                          }`}
+                        >
+                          S{semNum}
+                        </button>
+                      );
+                    })}
+                    {durationYears > 1 && (
+                      <button
+                        onClick={() => { setSemesterView(`bulletin-${yearNum}`); setCurrentStudentIndex(0); }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                          semesterView === `bulletin-${yearNum}` 
+                            ? 'bg-amber-500 text-white shadow-sm' 
+                            : 'text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30'
+                        }`}
+                      >
+                        Bulletin A{yearNum}
+                      </button>
+                    )}
                     {yearNum < durationYears && (
                       <div className="w-px h-5 bg-border mx-0.5" />
                     )}
                   </React.Fragment>
                 );
               })}
+              <div className="w-px h-5 bg-border mx-0.5" />
+              <button
+                onClick={() => { setSemesterView(durationYears === 1 ? 'bulletin-1' : 'bulletin-global'); setCurrentStudentIndex(0); }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  (semesterView === 'bulletin-global' || (durationYears === 1 && semesterView === 'bulletin-1'))
+                    ? 'bg-primary text-primary-foreground shadow-sm' 
+                    : 'text-primary hover:bg-primary/10'
+                }`}
+              >
+                📋 Bulletin de Formation
+              </button>
             </div>
           )}
         </div>
