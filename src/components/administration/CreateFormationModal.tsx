@@ -28,6 +28,7 @@ interface FormationFormData {
   duration: number;
   academic_year: string;
   duration_years: number;
+  semesters_count: number;
 }
 
 // Generate year options for academic year selection
@@ -56,7 +57,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
     color: '#8B5CF6',
     duration: 0,
     academic_year: `${currentYear}-${currentYear + 1}`,
-    duration_years: 1
+    duration_years: 1,
+    semesters_count: 2
   });
 
   const [modules, setModules] = useState<ModuleFormData[]>([]);
@@ -117,7 +119,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
       const defaultStartDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       const defaultEndDate = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
 
-      const semesters_count = formData.duration_years * 2;
+      const semesters_count = formData.semesters_count;
       const formationData = {
         ...formData,
         start_date: formData.start_date || defaultStartDate.toISOString().split('T')[0],
@@ -229,7 +231,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         color: '#8B5CF6',
         duration: 0,
         academic_year: `${currentYear}-${currentYear + 1}`,
-        duration_years: 1
+        duration_years: 1,
+        semesters_count: 2
       });
       setModules([]);
       
@@ -361,18 +364,38 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                   <Clock className="h-4 w-4 text-primary" />
                   Durée de la formation (années) *
                 </label>
-                <Select value={String(formData.duration_years)} onValueChange={(v) => setFormData((p) => ({ ...p, duration_years: parseInt(v) }))}>
+                <Select value={String(formData.duration_years)} onValueChange={(v) => {
+                  const years = parseInt(v);
+                  setFormData((p) => ({ ...p, duration_years: years, semesters_count: Math.min(p.semesters_count, years * 2) }));
+                }}>
                   <SelectTrigger className="h-11 rounded-xl border-2 border-primary/30">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">1 an (S1, S2)</SelectItem>
-                    <SelectItem value="2">2 ans (S1 à S4)</SelectItem>
-                    <SelectItem value="3">3 ans (S1 à S6)</SelectItem>
+                    <SelectItem value="1">1 an</SelectItem>
+                    <SelectItem value="2">2 ans</SelectItem>
+                    <SelectItem value="3">3 ans</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5 flex items-center gap-1.5">
+                  <BookOpen className="h-4 w-4 text-primary" />
+                  Nombre de semestres *
+                </label>
+                <Select value={String(formData.semesters_count)} onValueChange={(v) => setFormData((p) => ({ ...p, semesters_count: parseInt(v) }))}>
+                  <SelectTrigger className="h-11 rounded-xl border-2 border-primary/30">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 6 }, (_, i) => (
+                      <SelectItem key={i + 1} value={String(i + 1)}>Semestre {i + 1}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <div className="flex gap-1.5 mt-2 flex-wrap">
-                  {Array.from({ length: formData.duration_years * 2 }, (_, i) => (
+                  {Array.from({ length: formData.semesters_count }, (_, i) => (
                     <Badge key={i} variant="secondary" className="text-xs">
                       S{i + 1}
                     </Badge>
