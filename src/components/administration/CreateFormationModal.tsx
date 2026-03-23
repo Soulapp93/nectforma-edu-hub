@@ -28,6 +28,7 @@ interface FormationFormData {
   duration: number;
   academic_year: string;
   duration_years: number;
+  semesters_count: number;
 }
 
 // Generate year options for academic year selection
