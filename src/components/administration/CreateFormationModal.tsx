@@ -119,7 +119,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
       const defaultStartDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       const defaultEndDate = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
 
-      const semesters_count = formData.duration_years * 2;
+      const semesters_count = formData.semesters_count;
       const formationData = {
         ...formData,
         start_date: formData.start_date || defaultStartDate.toISOString().split('T')[0],
