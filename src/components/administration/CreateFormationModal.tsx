@@ -231,7 +231,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         color: '#8B5CF6',
         duration: 0,
         academic_year: `${currentYear}-${currentYear + 1}`,
-        duration_years: 1
+        duration_years: 1,
+        semesters_count: 2
       });
       setModules([]);
       
