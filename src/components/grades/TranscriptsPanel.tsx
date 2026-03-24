@@ -82,6 +82,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   const [currentStudentIndex, setCurrentStudentIndex] = useState(0);
   const [viewMode, setViewMode] = useState<'list' | 'bulletin'>('list');
   const [showTemplateEditor, setShowTemplateEditor] = useState(false);
+  const [groupingMode, setGroupingMode] = useState<'section' | 'bloc' | 'semester'>('section');
   const printRef = useRef<HTMLDivElement>(null);
 
   // Formations (only needed when no formationId prop)
