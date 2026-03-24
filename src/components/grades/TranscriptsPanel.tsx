@@ -790,7 +790,9 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
           </div>
         </div>
       )}
-        /* ============ VUE BULLETIN ============ */
+
+      {/* ============ VUE BULLETIN (when student selected) ============ */}
+      {selectedFormation && currentBulletin && currentStudentIndex >= 0 && (
         <div className="space-y-4">
           {/* Navigation */}
           <div className="flex items-center justify-between bg-muted/30 rounded-lg p-3 border border-border/50">
