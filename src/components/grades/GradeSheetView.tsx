@@ -107,6 +107,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   }, [semesterView, semestersCount, isExamBlancView]);
 
   const currentPeriodLabel = useMemo(() => {
+    if (isExamBlancView) return 'Examen Blanc';
     if (semesterView === 'bulletin-global') return 'Bulletin de Formation';
     if (isFinalView) {
       const yearNum = parseInt(semesterView.split('-')[1]);
@@ -117,7 +118,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
       return `Semestre ${semNum}`;
     }
     return '';
-  }, [semesterView, isFinalView, durationYears]);
+  }, [semesterView, isFinalView, durationYears, isExamBlancView]);
 
   // Students
   const { data: students = [] } = useQuery({
