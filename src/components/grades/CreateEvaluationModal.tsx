@@ -26,14 +26,14 @@ interface Props {
   preselectedModuleId?: string;
 }
 
-const CreateEvaluationModal: React.FC<Props> = ({ isOpen, onClose, evaluation, formationId, mode }) => {
+const CreateEvaluationModal: React.FC<Props> = ({ isOpen, onClose, evaluation, formationId, mode, preselectedModuleId }) => {
   const { userId } = useCurrentUser();
   const queryClient = useQueryClient();
   const isEditing = !!evaluation;
 
   const [title, setTitle] = useState(evaluation?.title || '');
   const [description, setDescription] = useState(evaluation?.description || '');
-  const [moduleId, setModuleId] = useState(evaluation?.module_id || '');
+  const [moduleId, setModuleId] = useState(evaluation?.module_id || preselectedModuleId || '');
   const [periodId, setPeriodId] = useState(evaluation?.period_id || '');
   const [instructorId, setInstructorId] = useState(evaluation?.instructor_id || userId || '');
   const [evaluationType, setEvaluationType] = useState(evaluation?.evaluation_type || 'controle_continu');
