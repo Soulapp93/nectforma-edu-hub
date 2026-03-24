@@ -188,7 +188,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     queryFn: async () => {
       const { data } = await supabase
         .from('formation_modules')
-        .select('id, title, coefficient, order_index, teaching_unit_id, semester')
+        .select('id, title, coefficient, order_index, teaching_unit_id, semester, competency_block_id')
         .eq('formation_id', selectedFormation)
         .order('order_index');
       return data || [];
