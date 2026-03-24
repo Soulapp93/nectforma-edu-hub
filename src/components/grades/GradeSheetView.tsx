@@ -3,9 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Save, Plus, AlertCircle, BookOpen, GraduationCap, Printer, Copy } from 'lucide-react';
+import { Save, Plus, AlertCircle, BookOpen, GraduationCap, Printer } from 'lucide-react';
 import { semesterMatchesFilter } from '@/utils/semesterUtils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,7 +15,6 @@ import {
   getGradesByEvaluation,
   upsertGrades,
   getEvaluationPeriods,
-  duplicatePeriodWithEvaluations,
   type Evaluation,
   type Grade,
 } from '@/services/gradesService';
@@ -35,10 +32,8 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
   const selectedFormation = formationId;
   const [semesterView, setSemesterView] = useState<string>('');
-  const [selectedModule, setSelectedModule] = useState('');
-  const [examType, setExamType] = useState<'examen_blanc' | 'examen_final'>('examen_blanc');
-  const [showExamSection, setShowExamSection] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [preselectedModuleId, setPreselectedModuleId] = useState<string>('');
   const [localGrades, setLocalGrades] = useState<Map<string, Map<string, number | null>>>(new Map());
   const [isDirty, setIsDirty] = useState(false);
   const inputRefs = useRef<Map<string, HTMLInputElement>>(new Map());
@@ -54,7 +49,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     enabled: !!selectedFormation,
   });
 
-  // Modules de la formation
+  // Modules
   const { data: modules = [] } = useQuery({
     queryKey: ['formation-modules-sheet', selectedFormation],
     queryFn: async () => {
@@ -68,12 +63,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     enabled: !!selectedFormation,
   });
 
-  // Auto-select first module
-  useEffect(() => {
-    if (modules.length > 0 && !selectedModule) setSelectedModule(modules[0].id);
-  }, [modules]);
-
-  // Périodes
+  // Periods
   const { data: periods = [] } = useQuery({
     queryKey: ['periods-sheet', selectedFormation],
     queryFn: () => getEvaluationPeriods(selectedFormation),
@@ -83,25 +73,13 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   const durationYears = (currentFormationData as any)?.duration_years || 1;
   const semestersCount = (currentFormationData as any)?.semesters_count || durationYears * 2;
 
-  // Auto-init semesterView based on formation data (not periods)
   useEffect(() => {
     if (currentFormationData && !semesterView) setSemesterView('s1');
   }, [currentFormationData]);
 
-  // Build a map: semester number -> period id (if periods exist)
-  const semesterPeriodMap = useMemo(() => {
-    const map = new Map<number, string>();
-    periods.forEach((p, idx) => {
-      map.set(idx + 1, p.id);
-    });
-    return map;
-  }, [periods]);
-
   const activePeriodIds = useMemo(() => {
     if (!semesterView || periods.length === 0) return [];
-    if (semesterView === 'bulletin-global') {
-      return periods.map(p => p.id);
-    }
+    if (semesterView === 'bulletin-global') return periods.map(p => p.id);
     if (semesterView.startsWith('bulletin-')) {
       const yearNum = parseInt(semesterView.split('-')[1]);
       const startIdx = (yearNum - 1) * 2;
@@ -116,9 +94,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
 
   const activeSemesterNums = useMemo((): number[] | null => {
     if (!semesterView) return null;
-    if (semesterView === 'bulletin-global') {
-      return Array.from({ length: semestersCount }, (_, i) => i + 1);
-    }
+    if (semesterView === 'bulletin-global') return Array.from({ length: semestersCount }, (_, i) => i + 1);
     if (semesterView.startsWith('bulletin-')) {
       const yearNum = parseInt(semesterView.split('-')[1]);
       return [(yearNum - 1) * 2 + 1, (yearNum - 1) * 2 + 2];
@@ -127,22 +103,8 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     return isNaN(num) ? null : [num];
   }, [semesterView, semestersCount]);
 
-  // Reset selectedModule when semester changes
-  useEffect(() => {
-    if (activeSemesterNums && modules.length > 0) {
-      const filteredMods = modules.filter((m: any) =>
-        semesterMatchesFilter(m.semester, activeSemesterNums)
-      );
-      if (filteredMods.length > 0 && !filteredMods.some((m: any) => m.id === selectedModule)) {
-        setSelectedModule(filteredMods[0].id);
-      }
-    }
-  }, [semesterView, modules]);
-
   const currentPeriodLabel = useMemo(() => {
-    if (semesterView === 'bulletin-global') {
-      return 'Bulletin de Formation';
-    }
+    if (semesterView === 'bulletin-global') return 'Bulletin de Formation';
     if (isFinalView) {
       const yearNum = parseInt(semesterView.split('-')[1]);
       return durationYears === 1 ? 'Bulletin de Formation' : `Bulletin Année ${yearNum}`;
@@ -154,89 +116,78 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     return '';
   }, [semesterView, isFinalView, durationYears]);
 
-  // Étudiants
+  // Students
   const { data: students = [] } = useQuery({
     queryKey: ['students-grade-sheet', selectedFormation],
     queryFn: async () => {
-      const { data } = await supabase.rpc('get_formation_students', {
-        formation_id_param: selectedFormation,
-      });
+      const { data } = await supabase.rpc('get_formation_students', { formation_id_param: selectedFormation });
       return (data || []).sort((a: any, b: any) => {
-        const lastNameCmp = (a.last_name || '').localeCompare(b.last_name || '');
-        if (lastNameCmp !== 0) return lastNameCmp;
-        return (a.first_name || '').localeCompare(b.first_name || '');
+        const cmp = (a.last_name || '').localeCompare(b.last_name || '');
+        return cmp !== 0 ? cmp : (a.first_name || '').localeCompare(b.first_name || '');
       });
     },
     enabled: !!selectedFormation,
   });
 
-  // All evaluations for the formation
+  // All evaluations
   const { data: allEvaluations = [] } = useQuery({
     queryKey: ['evaluations-sheet-all', selectedFormation],
     queryFn: async () => getEvaluations(selectedFormation),
     enabled: !!selectedFormation,
   });
 
-  // Auto-detect if exam evaluations exist for this formation
-  useEffect(() => {
-    const hasExams = allEvaluations.some(e => e.evaluation_type === 'examen_blanc' || e.evaluation_type === 'examen_final');
-    if (hasExams) setShowExamSection(true);
-  }, [allEvaluations]);
+  // Filtered modules by semester
+  const filteredModules = useMemo(() => {
+    if (!activeSemesterNums) return modules;
+    return modules.filter((m: any) => !m.semester || semesterMatchesFilter(m.semester, activeSemesterNums));
+  }, [modules, activeSemesterNums]);
 
-  // Filter evaluations by semester: use period_id if available, otherwise use module's semester
-  const moduleEvaluations = useMemo(() => {
-    let evals = allEvaluations;
+  // Build per-module evaluation groups
+  const moduleEvalGroups = useMemo(() => {
+    const groups = new Map<string, { cc: Evaluation[]; exam: Evaluation[] }>();
     
-    // Filter by semester: check period_id OR module's semester
-    if (activeSemesterNums && activeSemesterNums.length > 0) {
-      evals = evals.filter(e => {
-        // If evaluation has period_id and periods exist, check period match
-        if (e.period_id && activePeriodIds.length > 0) {
-          return activePeriodIds.includes(e.period_id);
-        }
-        const mod = modules.find(m => m.id === e.module_id);
-        if (mod?.semester) {
-          return semesterMatchesFilter(mod.semester, activeSemesterNums);
-        }
-        // No semester info: include in all views
-        return true;
-      });
-    }
+    filteredModules.forEach((mod: any) => {
+      let evals = allEvaluations.filter(e => e.module_id === mod.id);
+      
+      // Filter by semester
+      if (activeSemesterNums && activeSemesterNums.length > 0) {
+        evals = evals.filter(e => {
+          if (e.period_id && activePeriodIds.length > 0) return activePeriodIds.includes(e.period_id);
+          const m = modules.find(m => m.id === e.module_id);
+          if (m?.semester) return semesterMatchesFilter(m.semester, activeSemesterNums);
+          return true;
+        });
+      }
+      
+      const cc = evals.filter(e => e.evaluation_type === 'controle_continu' || e.evaluation_type === 'projet' || e.evaluation_type === 'tp');
+      const exam = evals.filter(e => e.evaluation_type === 'examen_blanc' || e.evaluation_type === 'examen_final');
+      groups.set(mod.id, { cc, exam });
+    });
     
-    if (selectedModule) evals = evals.filter(e => e.module_id === selectedModule);
+    return groups;
+  }, [filteredModules, allEvaluations, activeSemesterNums, activePeriodIds, modules]);
+
+  // All displayed evaluations (for grade fetching)
+  const allDisplayedEvals = useMemo(() => {
+    const evals: Evaluation[] = [];
+    moduleEvalGroups.forEach(group => {
+      evals.push(...group.cc, ...group.exam);
+    });
     return evals;
-  }, [allEvaluations, activePeriodIds, activeSemesterNums, selectedModule, modules]);
+  }, [moduleEvalGroups]);
 
-  // CC evaluations for current module
-  const ccEvaluations = useMemo(() =>
-    moduleEvaluations.filter(e => e.evaluation_type === 'controle_continu' || e.evaluation_type === 'projet' || e.evaluation_type === 'tp'),
-    [moduleEvaluations]
-  );
-
-  // Exam evaluations for current module filtered by examType
-  const examEvaluations = useMemo(() =>
-    moduleEvaluations.filter(e => e.evaluation_type === examType),
-    [moduleEvaluations, examType]
-  );
-
-  // All evaluations displayed (for grade fetching)
-  const displayedEvaluations = useMemo(() => [...ccEvaluations, ...(showExamSection ? examEvaluations : [])], [ccEvaluations, examEvaluations, showExamSection]);
-
-  // Max CC columns (at least 2)
-  const maxCCControls = useMemo(() => Math.max(ccEvaluations.length, 2), [ccEvaluations]);
-
-  // Fetch all grades for displayed evaluations
+  // Fetch all grades
   const { data: allGradesData = [] } = useQuery({
-    queryKey: ['all-grades-sheet', displayedEvaluations.map(e => e.id).join(',')],
+    queryKey: ['all-grades-sheet', allDisplayedEvals.map(e => e.id).join(',')],
     queryFn: async () => {
       const results: { evalId: string; grades: Grade[] }[] = [];
-      for (const ev of displayedEvaluations) {
+      for (const ev of allDisplayedEvals) {
         const grades = await getGradesByEvaluation(ev.id);
         results.push({ evalId: ev.id, grades });
       }
       return results;
     },
-    enabled: displayedEvaluations.length > 0,
+    enabled: allDisplayedEvals.length > 0,
   });
 
   // Init local grades
@@ -244,7 +195,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     const gradeMap = new Map<string, Map<string, number | null>>();
     students.forEach((s: any) => {
       const studentGrades = new Map<string, number | null>();
-      displayedEvaluations.forEach(ev => {
+      allDisplayedEvals.forEach(ev => {
         const gradeData = allGradesData.find(g => g.evalId === ev.id);
         const grade = gradeData?.grades.find(g => g.student_id === s.user_id);
         studentGrades.set(ev.id, grade?.value ?? null);
@@ -253,7 +204,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     });
     setLocalGrades(gradeMap);
     setIsDirty(false);
-  }, [students, displayedEvaluations, allGradesData]);
+  }, [students, allDisplayedEvals, allGradesData]);
 
   const updateGrade = useCallback((studentId: string, evaluationId: string, value: number | null) => {
     setLocalGrades(prev => {
@@ -266,49 +217,64 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     setIsDirty(true);
   }, []);
 
-  // CC average for a student
-  const getCCAverage = useCallback((studentId: string): number | null => {
+  // Get average for a set of evaluations for a student
+  const getAverage = useCallback((studentId: string, evals: Evaluation[]): number | null => {
     const studentGrades = localGrades.get(studentId);
-    if (!studentGrades || ccEvaluations.length === 0) return null;
+    if (!studentGrades || evals.length === 0) return null;
     const values: number[] = [];
-    ccEvaluations.forEach(ev => {
+    evals.forEach(ev => {
       const v = studentGrades.get(ev.id);
       if (v !== null && v !== undefined) values.push(v);
     });
     if (values.length === 0) return null;
     return Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 100) / 100;
-  }, [ccEvaluations, localGrades]);
+  }, [localGrades]);
 
-  // Exam score for a student
-  const getExamScore = useCallback((studentId: string): number | null => {
-    const studentGrades = localGrades.get(studentId);
-    if (!studentGrades || examEvaluations.length === 0) return null;
-    const values: number[] = [];
-    examEvaluations.forEach(ev => {
-      const v = studentGrades.get(ev.id);
-      if (v !== null && v !== undefined) values.push(v);
+  // Module average (CC + Exam weighted if both exist)
+  const getModuleAverage = useCallback((studentId: string, moduleId: string): number | null => {
+    const group = moduleEvalGroups.get(moduleId);
+    if (!group) return null;
+    const ccAvg = getAverage(studentId, group.cc);
+    const examAvg = getAverage(studentId, group.exam);
+    if (ccAvg === null && examAvg === null) return null;
+    if (examAvg === null) return ccAvg;
+    if (ccAvg === null) return examAvg;
+    // 50/50 CC/Exam when both present
+    return Math.round((ccAvg * 0.5 + examAvg * 0.5) * 100) / 100;
+  }, [moduleEvalGroups, getAverage]);
+
+  // General weighted average
+  const getGeneralAverage = useCallback((studentId: string): number | null => {
+    let totalPoints = 0;
+    let totalCoef = 0;
+    filteredModules.forEach((mod: any) => {
+      const avg = getModuleAverage(studentId, mod.id);
+      if (avg !== null) {
+        totalPoints += avg * (mod.coefficient || 1);
+        totalCoef += (mod.coefficient || 1);
+      }
     });
-    if (values.length === 0) return null;
-    return Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 100) / 100;
-  }, [examEvaluations, localGrades]);
+    if (totalCoef === 0) return null;
+    return Math.round((totalPoints / totalCoef) * 100) / 100;
+  }, [filteredModules, getModuleAverage]);
 
-  // Class averages
-  const classCCAvg = useMemo(() => {
-    const avgs = students.map((s: any) => getCCAverage(s.user_id)).filter((v): v is number => v !== null);
+  // Class averages per module
+  const getClassModuleAvg = useCallback((moduleId: string): number | null => {
+    const avgs = students.map((s: any) => getModuleAverage(s.user_id, moduleId)).filter((v): v is number => v !== null);
     if (avgs.length === 0) return null;
     return Math.round((avgs.reduce((a, b) => a + b, 0) / avgs.length) * 100) / 100;
-  }, [students, getCCAverage]);
+  }, [students, getModuleAverage]);
 
-  const classExamAvg = useMemo(() => {
-    const avgs = students.map((s: any) => getExamScore(s.user_id)).filter((v): v is number => v !== null);
+  const getClassGeneralAvg = useMemo(() => {
+    const avgs = students.map((s: any) => getGeneralAverage(s.user_id)).filter((v): v is number => v !== null);
     if (avgs.length === 0) return null;
     return Math.round((avgs.reduce((a, b) => a + b, 0) / avgs.length) * 100) / 100;
-  }, [students, getExamScore]);
+  }, [students, getGeneralAverage]);
 
   // Save
   const saveMutation = useMutation({
     mutationFn: async () => {
-      for (const ev of displayedEvaluations) {
+      for (const ev of allDisplayedEvals) {
         const gradesToSave: Partial<Grade>[] = [];
         students.forEach((s: any) => {
           const studentGrades = localGrades.get(s.user_id);
@@ -337,23 +303,6 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     onError: (e: any) => toast.error(e.message || 'Erreur lors de l\'enregistrement'),
   });
 
-  // Duplicate period
-  const duplicateMutation = useMutation({
-    mutationFn: async () => {
-      const periodId = activePeriodIds[0];
-      if (!periodId || !selectedFormation) throw new Error('Sélectionnez une période');
-      const currentPeriod = periods.find(p => p.id === periodId);
-      const newName = `${currentPeriod?.name || 'Semestre'} (copie)`;
-      return duplicatePeriodWithEvaluations(periodId, newName, selectedFormation);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['periods-sheet'] });
-      queryClient.invalidateQueries({ queryKey: ['evaluations-sheet-all'] });
-      toast.success('Semestre dupliqué avec succès');
-    },
-    onError: (e: any) => toast.error(e.message || 'Erreur lors de la duplication'),
-  });
-
   const handlePrint = () => {
     const content = printRef.current;
     if (!content) return;
@@ -362,20 +311,18 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     win.document.write(`
       <html><head><title>Feuille de notes</title>
       <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; color: #1a1a1a; font-size: 11px; }
-        .header { text-align: center; margin-bottom: 15px; }
-        .header h2 { color: #1e40af; margin: 5px 0; font-size: 16px; }
-        .header h3 { font-size: 13px; margin: 3px 0; }
-        .header p { font-size: 11px; color: #666; }
-        table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 10px; }
-        th, td { border: 1px solid #94a3b8; padding: 4px 6px; }
-        .section-cc { background: #1e40af; color: white; font-weight: 700; text-align: center; font-size: 11px; }
-        .section-exam { background: #059669; color: white; font-weight: 700; text-align: center; font-size: 11px; }
-        .col-header { background: #e2e8f0; font-weight: 600; text-align: center; font-size: 9px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 10px; color: #1a1a1a; font-size: 9px; }
+        .header { text-align: center; margin-bottom: 10px; }
+        .header h2 { color: #1e40af; margin: 3px 0; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; font-size: 8px; }
+        th, td { border: 1px solid #94a3b8; padding: 2px 4px; }
+        .module-header { background: #1e40af; color: white; font-weight: 700; text-align: center; }
+        .sub-header { background: #e2e8f0; font-weight: 600; text-align: center; font-size: 7px; }
         .avg-green { color: #16a34a; font-weight: bold; }
         .avg-red { color: #dc2626; font-weight: bold; }
         .class-avg-row { background: #dbeafe; font-weight: bold; }
-        @media print { body { padding: 10px; } }
+        .general-col { background: #fef3c7; }
+        @media print { body { padding: 5px; } @page { size: landscape; } }
       </style></head><body>
       ${content.innerHTML}
       </body></html>
@@ -383,9 +330,6 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     win.document.close();
     setTimeout(() => win.print(), 300);
   };
-
-  const currentFormation = currentFormationData;
-  const currentModule = modules.find((m: any) => m.id === selectedModule);
 
   const avgColor = (val: number | null) => {
     if (val === null) return '';
@@ -402,7 +346,6 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     return 'Très insuffisant';
   };
 
-  // Render a grade input cell
   const renderGradeCell = (studentId: string, ev: Evaluation, canEdit: boolean) => {
     const studentGrades = localGrades.get(studentId);
     const value = studentGrades?.get(ev.id);
@@ -411,42 +354,52 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     if (canEdit && isOpen) {
       return (
         <Input
-          ref={(el) => { if (el) inputRefs.current.set(`${studentId}-${ev.id}`, el); }}
           type="number"
           min={0}
           max={ev.scale || 20}
           step={0.25}
           value={value ?? ''}
           onChange={(e) => updateGrade(studentId, ev.id, e.target.value === '' ? null : parseFloat(e.target.value))}
-          className="w-14 h-6 text-center text-[11px] mx-auto border-border/50 focus:border-primary p-0"
+          className="w-12 h-5 text-center text-[10px] mx-auto border-border/50 focus:border-primary p-0"
           placeholder="—"
         />
       );
     }
     return (
-      <span className={`text-xs ${value != null ? 'font-medium' : 'text-muted-foreground'}`}>
+      <span className={`text-[10px] ${value != null ? 'font-medium' : 'text-muted-foreground'}`}>
         {value != null ? value : '—'}
       </span>
     );
   };
 
+  const handleAddEvaluation = (moduleId: string) => {
+    setPreselectedModuleId(moduleId);
+    setShowCreateModal(true);
+  };
+
+  // Calculate total colSpan for each module
+  const getModuleColSpan = (modId: string) => {
+    const group = moduleEvalGroups.get(modId);
+    if (!group) return 1;
+    const ccCols = Math.max(group.cc.length, 1); // at least 1 CC col
+    const examCols = group.exam.length > 0 ? group.exam.length : 0;
+    return ccCols + 1 + examCols; // +1 for module avg column
+  };
+
   return (
     <div className="space-y-4">
-      {/* Top bar: Semester navigation + Actions */}
+      {/* Top bar */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
-        {/* Semester buttons grouped by year with Bulletin */}
         {semestersCount > 0 && currentFormationData && (
           <div className="flex flex-wrap items-center gap-1 bg-muted/50 rounded-xl p-1.5">
             {Array.from({ length: durationYears }, (_, y) => {
               const s1 = y * 2 + 1;
-              const s2 = y * 2 + 2;
               const yearNum = y + 1;
               return (
                 <React.Fragment key={yearNum}>
                   {durationYears > 1 && (
-                    <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider ml-1.5 mr-0.5">Année {yearNum}</span>
+                    <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider ml-1.5 mr-0.5">A{yearNum}</span>
                   )}
-                  {/* Individual semester buttons */}
                   {Array.from({ length: Math.min(2, semestersCount - y * 2) }, (_, si) => {
                     const semNum = s1 + si;
                     return (
@@ -463,7 +416,6 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
                       </button>
                     );
                   })}
-                  {/* Bulletin per year (only for multi-year or as unique bulletin for 1-year) */}
                   {durationYears > 1 && (
                     <button
                       onClick={() => setSemesterView(`bulletin-${yearNum}`)}
@@ -476,13 +428,10 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
                       Bulletin A{yearNum}
                     </button>
                   )}
-                  {yearNum < durationYears && (
-                    <div className="w-px h-5 bg-border mx-0.5" />
-                  )}
+                  {yearNum < durationYears && <div className="w-px h-5 bg-border mx-0.5" />}
                 </React.Fragment>
               );
             })}
-            {/* Global Bulletin de Formation */}
             <div className="w-px h-5 bg-border mx-0.5" />
             <button
               onClick={() => setSemesterView(durationYears === 1 ? 'bulletin-1' : 'bulletin-global')}
@@ -492,7 +441,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
                   : 'text-primary hover:bg-primary/10'
               }`}
             >
-              📋 Bulletin de Formation
+              📋 Bulletin
             </button>
           </div>
         )}
@@ -504,16 +453,6 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
               Non enregistré
             </Badge>
           )}
-          {!showExamSection && (
-            <Button size="sm" variant="outline" className="gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950" onClick={() => setShowExamSection(true)}>
-              <Plus className="h-4 w-4" />
-              Ajouter un examen
-            </Button>
-          )}
-          <Button size="sm" variant="outline" className="gap-2" onClick={() => setShowCreateModal(true)}>
-            <Plus className="h-4 w-4" />
-            Évaluation
-          </Button>
           <Button size="sm" variant="outline" onClick={handlePrint} className="gap-2">
             <Printer className="h-4 w-4" />
           </Button>
@@ -534,269 +473,221 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <GraduationCap className="h-14 w-14 text-muted-foreground/40 mb-4" />
             <h3 className="text-lg font-medium text-foreground">Sélectionnez une formation</h3>
-            <p className="text-sm text-muted-foreground mt-1">Choisissez une formation pour afficher les feuilles de notes</p>
           </CardContent>
         </Card>
-      ) : modules.length === 0 ? (
+      ) : filteredModules.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <BookOpen className="h-14 w-14 text-muted-foreground/40 mb-4" />
-            <h3 className="text-lg font-medium text-foreground">Aucun module</h3>
-            <p className="text-sm text-muted-foreground mt-1">Cette formation n'a pas encore de modules configurés</p>
+            <h3 className="text-lg font-medium text-foreground">Aucun module pour ce semestre</h3>
+            <p className="text-sm text-muted-foreground mt-1">Configurez les modules dans les paramètres de la formation</p>
           </CardContent>
         </Card>
       ) : (
-        <>
-          {/* Module tabs navigation - filtered by semester */}
-          {(() => {
-            const filteredModules = activeSemesterNums
-              ? modules.filter((m: any) => !m.semester || activeSemesterNums.includes(m.semester))
-              : modules;
+        <div ref={printRef}>
+          {/* Header */}
+          <div className="flex items-center justify-between gap-4 mb-3 px-2">
+            <div className="flex items-center gap-2">
+              {establishment?.logo_url && (
+                <img src={establishment.logo_url} alt="" className="h-8 w-8 rounded-md object-contain" />
+              )}
+              <div className="leading-tight">
+                <h2 className="text-sm font-bold text-foreground">{establishment?.name}</h2>
+                {currentPeriodLabel && <p className="text-[10px] text-muted-foreground">{currentPeriodLabel}</p>}
+              </div>
+            </div>
+            <div className="text-right">
+              <h3 className="text-sm font-semibold text-foreground">{currentFormationData?.title}</h3>
+              {currentFormationData?.level && <p className="text-[10px] text-muted-foreground">{currentFormationData.level}</p>}
+            </div>
+          </div>
 
-            return (
-          <Tabs value={selectedModule} onValueChange={setSelectedModule}>
-            <TabsList className="w-full flex flex-wrap h-auto gap-1 bg-muted/30 p-1">
-              {filteredModules.map((mod: any) => (
-                <TabsTrigger key={mod.id} value={mod.id} className="text-xs px-3 py-1.5">
-                  {mod.title} {mod.semester ? `(S${mod.semester})` : ''}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-
-            {modules.map((mod: any) => (
-              <TabsContent key={mod.id} value={mod.id}>
-                <div ref={printRef}>
-                  {/* Header info */}
-                  <div className="flex items-center justify-between gap-4 mb-4 print:mb-2 px-2">
-                    {/* Left: Logo + Establishment name */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {establishment?.logo_url && (
-                        <img src={establishment.logo_url} alt="" className="h-8 w-8 rounded-md object-contain" />
-                      )}
-                      <div className="leading-tight">
-                        <h2 className="text-sm font-bold text-foreground">{establishment?.name}</h2>
-                        {currentPeriodLabel && <p className="text-[10px] text-muted-foreground">{currentPeriodLabel}</p>}
-                      </div>
-                    </div>
-
-                    {/* Center: Module */}
-                    <div className="text-center flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-primary truncate">
-                        Module : {mod.title} (Coef. {mod.coefficient})
-                      </p>
-                    </div>
-
-                    {/* Right: Formation */}
-                    <div className="text-right flex-shrink-0">
-                      <h3 className="text-sm font-semibold text-foreground">
-                        {currentFormation?.title}
-                      </h3>
-                      {currentFormation?.level && (
-                        <p className="text-[10px] text-muted-foreground">{currentFormation.level}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Unified table: CC left + Exam right */}
-                  <div className="rounded-lg border border-border shadow-sm bg-card overflow-hidden">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-xs border-collapse">
-                        <thead>
-                          {/* Section headers row */}
-                          <tr>
-                            <th rowSpan={2} className="text-left p-2 border border-border font-semibold min-w-[180px] bg-muted/50 sticky left-0 z-10">
-                              Apprenant
-                            </th>
-                            {/* CC section header */}
-                            <th
-                              colSpan={maxCCControls + 3}
-                              className="bg-blue-600 text-white text-center p-2 text-sm font-bold uppercase tracking-wider border border-blue-700"
+          {/* Multi-module table */}
+          <div className="rounded-lg border border-border shadow-sm bg-card overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-[10px] border-collapse">
+                <thead>
+                  {/* Module group headers */}
+                  <tr>
+                    <th rowSpan={2} className="text-left p-2 border border-border font-semibold min-w-[150px] bg-muted/50 sticky left-0 z-10 text-xs">
+                      Apprenant
+                    </th>
+                    {filteredModules.map((mod: any) => {
+                      const group = moduleEvalGroups.get(mod.id);
+                      const colSpan = getModuleColSpan(mod.id);
+                      return (
+                        <th
+                          key={mod.id}
+                          colSpan={colSpan}
+                          className="bg-primary text-primary-foreground text-center p-1.5 font-bold border border-primary/80 text-[11px]"
+                        >
+                          <div className="flex items-center justify-center gap-1">
+                            <span>{mod.title}</span>
+                            <span className="opacity-70 font-normal">(coef {mod.coefficient})</span>
+                            <button
+                              onClick={() => handleAddEvaluation(mod.id)}
+                              className="ml-1 w-4 h-4 rounded-full bg-primary-foreground/20 hover:bg-primary-foreground/40 flex items-center justify-center text-primary-foreground transition-colors print:hidden"
+                              title="Ajouter un contrôle"
                             >
-                              Contrôle Continu
-                            </th>
-                            {/* Exam section header with selector */}
-                            {showExamSection && (
-                              <th
-                                colSpan={4}
-                                className="bg-emerald-600 text-white text-center p-2 text-sm font-bold uppercase tracking-wider border border-emerald-700"
-                              >
-                                <div className="flex items-center justify-center gap-2">
-                                  <select
-                                    value={examType}
-                                    onChange={(e) => setExamType(e.target.value as 'examen_blanc' | 'examen_final')}
-                                    className="bg-emerald-700 text-white border-none rounded px-2 py-0.5 text-xs font-bold cursor-pointer focus:outline-none"
-                                  >
-                                    <option value="examen_blanc">Examen Blanc</option>
-                                    <option value="examen_final">Examen Final</option>
-                                  </select>
-                                  <button
-                                    onClick={() => setShowExamSection(false)}
-                                    className="ml-1 text-white/70 hover:text-white text-xs"
-                                    title="Masquer la section examen"
-                                  >
-                                    ✕
-                                  </button>
-                                </div>
-                              </th>
-                            )}
-                          </tr>
-                          {/* Column sub-headers */}
-                          <tr className="bg-muted/40">
-                            {/* CC columns */}
-                            {Array.from({ length: maxCCControls }, (_, i) => (
-                              <th key={`cc-${i}`} className="text-center p-2 border border-border font-semibold w-16 text-[10px]">
-                                {ccEvaluations[i]?.title || `Ctrl ${i + 1}`}
-                              </th>
-                            ))}
-                            <th className="text-center p-2 border border-border font-semibold w-16 bg-blue-100 dark:bg-blue-900/30 text-[10px]">
-                              Moyenne
-                            </th>
-                            <th className="text-center p-2 border border-border font-semibold w-14 text-[10px]">
-                              Coef.
-                            </th>
-                            <th className="text-center p-2 border border-border font-semibold min-w-[100px] text-[10px]">
-                              Appréciation
-                            </th>
-                            {/* Exam columns */}
-                            {showExamSection && (
-                              <>
-                                <th className="text-center p-2 border border-border font-semibold w-16 bg-emerald-100 dark:bg-emerald-900/30 text-[10px]">
-                                  Notes
-                                </th>
-                                <th className="text-center p-2 border border-border font-semibold w-14 text-[10px]">
-                                  Coef.
-                                </th>
-                                <th className="text-center p-2 border border-border font-semibold w-16 text-[10px]">
-                                  Points
-                                </th>
-                                <th className="text-center p-2 border border-border font-semibold min-w-[100px] text-[10px]">
-                                  Appréciation
-                                </th>
-                              </>
-                            )}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {students.map((student: any, idx: number) => {
-                            const canEditCC = mode === 'admin' || ccEvaluations.some(ev => ev.instructor_id === userId);
-                            const canEditExam = mode === 'admin' || examEvaluations.some(ev => ev.instructor_id === userId);
-                            const ccAvg = getCCAverage(student.user_id);
-                            const examScore = getExamScore(student.user_id);
-                            const examPoints = examScore !== null ? Math.round(examScore * (mod.coefficient || 1) * 100) / 100 : null;
+                              <Plus className="h-3 w-3" />
+                            </button>
+                          </div>
+                          {mod.semester && <div className="text-[8px] opacity-70 font-normal">S{mod.semester}</div>}
+                        </th>
+                      );
+                    })}
+                    <th rowSpan={2} className="bg-amber-500 text-white text-center p-2 border border-amber-600 font-bold min-w-[70px] text-xs">
+                      Moy. Gén.
+                    </th>
+                  </tr>
+                  {/* Sub-headers per module */}
+                  <tr className="bg-muted/40">
+                    {filteredModules.map((mod: any) => {
+                      const group = moduleEvalGroups.get(mod.id);
+                      if (!group) return null;
+                      const ccCols = Math.max(group.cc.length, 1);
+                      const cells = [];
+                      
+                      // CC evaluation columns
+                      for (let i = 0; i < ccCols; i++) {
+                        const ev = group.cc[i];
+                        cells.push(
+                          <th key={`${mod.id}-cc-${i}`} className="text-center p-1 border border-border font-medium w-12 text-[8px] truncate max-w-[60px]">
+                            {ev ? (ev.title.length > 8 ? `CC${i + 1}` : ev.title) : `CC${i + 1}`}
+                          </th>
+                        );
+                      }
+                      
+                      // Exam columns
+                      group.exam.forEach((ev, i) => {
+                        cells.push(
+                          <th key={`${mod.id}-exam-${i}`} className="text-center p-1 border border-border font-medium w-12 bg-emerald-100/50 dark:bg-emerald-900/20 text-[8px]">
+                            {ev.evaluation_type === 'examen_blanc' ? 'Ex.B' : 'Ex.F'}
+                          </th>
+                        );
+                      });
+                      
+                      // Module average column
+                      cells.push(
+                        <th key={`${mod.id}-avg`} className="text-center p-1 border border-border font-bold w-12 bg-blue-100/50 dark:bg-blue-900/20 text-[8px]">
+                          Moy.
+                        </th>
+                      );
+                      
+                      return <React.Fragment key={`sub-${mod.id}`}>{cells}</React.Fragment>;
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {students.map((student: any, idx: number) => {
+                    const generalAvg = getGeneralAverage(student.user_id);
+                    return (
+                      <tr key={student.user_id} className={`hover:bg-muted/20 ${idx % 2 === 0 ? 'bg-card' : 'bg-muted/10'}`}>
+                        <td className="p-1.5 border border-border/50 font-medium text-foreground sticky left-0 bg-card z-10 text-[11px]">
+                          {student.last_name} {student.first_name}
+                        </td>
+                        {filteredModules.map((mod: any) => {
+                          const group = moduleEvalGroups.get(mod.id);
+                          if (!group) return null;
+                          const ccCols = Math.max(group.cc.length, 1);
+                          const canEdit = mode === 'admin' || [...group.cc, ...group.exam].some(ev => ev.instructor_id === userId);
+                          const modAvg = getModuleAverage(student.user_id, mod.id);
+                          const cells = [];
 
-                            return (
-                              <tr key={student.user_id} className={`hover:bg-muted/20 ${idx % 2 === 0 ? 'bg-card' : 'bg-muted/10'}`}>
-                                {/* Student name */}
-                                <td className="p-2 border border-border/50 font-medium text-foreground sticky left-0 bg-card z-10">
-                                  {student.last_name} {student.first_name}
-                                </td>
-                                {/* CC grade cells */}
-                                {Array.from({ length: maxCCControls }, (_, i) => {
-                                  const ev = ccEvaluations[i];
-                                  return (
-                                    <td key={`cc-${i}`} className="p-1 border border-border/50 text-center">
-                                      {ev ? renderGradeCell(student.user_id, ev, canEditCC) : (
-                                        <span className="text-muted-foreground/30">—</span>
-                                      )}
-                                    </td>
-                                  );
-                                })}
-                                {/* CC Average */}
-                                <td className={`p-1.5 border border-border/50 text-center font-bold bg-blue-50/50 dark:bg-blue-900/10 ${avgColor(ccAvg)}`}>
-                                  {ccAvg !== null ? ccAvg.toFixed(2) : '—'}
-                                </td>
-                                {/* CC Coefficient */}
-                                <td className="p-1.5 border border-border/50 text-center text-muted-foreground">
-                                  {mod.coefficient}
-                                </td>
-                                {/* CC Appreciation */}
-                                <td className="p-1.5 border border-border/50 text-center text-[10px] text-muted-foreground">
-                                  {getAppreciation(ccAvg)}
-                                </td>
-                                {/* Exam columns (conditional) */}
-                                {showExamSection && (
-                                  <>
-                                    {/* Exam Notes */}
-                                    <td className="p-1 border border-border/50 text-center bg-emerald-50/30 dark:bg-emerald-900/5">
-                                      {examEvaluations.length > 0 ? (
-                                        examEvaluations.map(ev => (
-                                          <div key={ev.id}>{renderGradeCell(student.user_id, ev, canEditExam)}</div>
-                                        ))
-                                      ) : (
-                                        <span className="text-muted-foreground/30">—</span>
-                                      )}
-                                    </td>
-                                    {/* Exam Coefficient */}
-                                    <td className="p-1.5 border border-border/50 text-center text-muted-foreground">
-                                      {mod.coefficient}
-                                    </td>
-                                    {/* Exam Points */}
-                                    <td className={`p-1.5 border border-border/50 text-center font-bold ${avgColor(examScore)}`}>
-                                      {examPoints !== null ? examPoints.toFixed(2) : '—'}
-                                    </td>
-                                    {/* Exam Appreciation */}
-                                    <td className="p-1.5 border border-border/50 text-center text-[10px] text-muted-foreground">
-                                      {getAppreciation(examScore)}
-                                    </td>
-                                  </>
+                          // CC cells
+                          for (let i = 0; i < ccCols; i++) {
+                            const ev = group.cc[i];
+                            cells.push(
+                              <td key={`${mod.id}-cc-${i}`} className="p-0.5 border border-border/50 text-center">
+                                {ev ? renderGradeCell(student.user_id, ev, canEdit) : (
+                                  <span className="text-muted-foreground/30">—</span>
                                 )}
-                              </tr>
+                              </td>
                             );
-                          })}
-                          {/* Class average row */}
-                          {students.length > 0 && (
-                            <tr className="bg-blue-100 dark:bg-blue-900/30 font-bold border-t-2 border-blue-400">
-                              <td className="p-2 border border-border text-right uppercase text-[10px] tracking-wider sticky left-0 bg-blue-100 dark:bg-blue-900/30 z-10">
-                                Moyenne de classe
-                              </td>
-                              {Array.from({ length: maxCCControls }, (_, i) => (
-                                <td key={i} className="p-1.5 border border-border text-center text-muted-foreground">—</td>
-                              ))}
-                              <td className={`p-1.5 border border-border text-center bg-blue-200/50 dark:bg-blue-800/30 ${avgColor(classCCAvg)}`}>
-                                {classCCAvg !== null ? classCCAvg.toFixed(2) : '—'}
-                              </td>
-                              <td className="p-1.5 border border-border"></td>
-                              <td className="p-1.5 border border-border"></td>
-                              {showExamSection && (
-                                <>
-                                  <td className={`p-1.5 border border-border text-center bg-emerald-100/50 dark:bg-emerald-800/30 ${avgColor(classExamAvg)}`}>
-                                    {classExamAvg !== null ? classExamAvg.toFixed(2) : '—'}
-                                  </td>
-                                  <td className="p-1.5 border border-border"></td>
-                                  <td className="p-1.5 border border-border"></td>
-                                  <td className="p-1.5 border border-border"></td>
-                                </>
-                              )}
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+                          }
 
-                  {/* Footer */}
-                  <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>
-                      {students.length} étudiant{students.length > 1 ? 's' : ''} •{' '}
-                      {ccEvaluations.length} CC{showExamSection ? ` • ${examEvaluations.length} examen${examEvaluations.length > 1 ? 's' : ''}` : ''}
-                    </span>
-                  </div>
-                </div>
-              </TabsContent>
-            ))}
-          </Tabs>
-            );
-          })()}
-        </>
+                          // Exam cells
+                          group.exam.forEach((ev, i) => {
+                            cells.push(
+                              <td key={`${mod.id}-exam-${i}`} className="p-0.5 border border-border/50 text-center bg-emerald-50/20 dark:bg-emerald-900/5">
+                                {renderGradeCell(student.user_id, ev, canEdit)}
+                              </td>
+                            );
+                          });
+
+                          // Module avg
+                          cells.push(
+                            <td key={`${mod.id}-avg`} className={`p-1 border border-border/50 text-center font-bold bg-blue-50/30 dark:bg-blue-900/10 ${avgColor(modAvg)}`}>
+                              {modAvg !== null ? modAvg.toFixed(2) : '—'}
+                            </td>
+                          );
+
+                          return <React.Fragment key={`row-${mod.id}`}>{cells}</React.Fragment>;
+                        })}
+                        {/* General average */}
+                        <td className={`p-1.5 border border-border/50 text-center font-bold text-xs bg-amber-50/30 dark:bg-amber-900/10 ${avgColor(generalAvg)}`}>
+                          {generalAvg !== null ? generalAvg.toFixed(2) : '—'}
+                          {generalAvg !== null && (
+                            <div className="text-[7px] font-normal text-muted-foreground">{getAppreciation(generalAvg)}</div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {/* Class average row */}
+                  {students.length > 0 && (
+                    <tr className="bg-primary/5 font-bold border-t-2 border-primary/30">
+                      <td className="p-1.5 border border-border text-right uppercase text-[9px] tracking-wider sticky left-0 bg-primary/5 z-10">
+                        Moy. classe
+                      </td>
+                      {filteredModules.map((mod: any) => {
+                        const group = moduleEvalGroups.get(mod.id);
+                        if (!group) return null;
+                        const ccCols = Math.max(group.cc.length, 1);
+                        const classModAvg = getClassModuleAvg(mod.id);
+                        const cells = [];
+
+                        for (let i = 0; i < ccCols; i++) {
+                          cells.push(<td key={`avg-cc-${i}`} className="p-1 border border-border text-center text-muted-foreground">—</td>);
+                        }
+                        group.exam.forEach((_, i) => {
+                          cells.push(<td key={`avg-exam-${i}`} className="p-1 border border-border text-center text-muted-foreground">—</td>);
+                        });
+                        cells.push(
+                          <td key={`avg-mod`} className={`p-1 border border-border text-center font-bold bg-blue-100/50 dark:bg-blue-800/20 ${avgColor(classModAvg)}`}>
+                            {classModAvg !== null ? classModAvg.toFixed(2) : '—'}
+                          </td>
+                        );
+
+                        return <React.Fragment key={`class-${mod.id}`}>{cells}</React.Fragment>;
+                      })}
+                      <td className={`p-1.5 border border-border text-center font-bold bg-amber-100/50 dark:bg-amber-800/20 ${avgColor(getClassGeneralAvg)}`}>
+                        {getClassGeneralAvg !== null ? getClassGeneralAvg.toFixed(2) : '—'}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+            <span>
+              {students.length} étudiant{students.length > 1 ? 's' : ''} • {filteredModules.length} module{filteredModules.length > 1 ? 's' : ''}
+            </span>
+          </div>
+        </div>
       )}
 
       {showCreateModal && (
         <CreateEvaluationModal
           isOpen={true}
-          onClose={() => setShowCreateModal(false)}
+          onClose={() => { setShowCreateModal(false); setPreselectedModuleId(''); }}
           evaluation={null}
           formationId={selectedFormation}
           mode={mode}
+          preselectedModuleId={preselectedModuleId}
         />
       )}
     </div>

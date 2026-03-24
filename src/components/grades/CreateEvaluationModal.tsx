@@ -23,6 +23,7 @@ interface Props {
   evaluation: Evaluation | null;
   formationId: string;
   mode: 'admin' | 'instructor';
+  preselectedModuleId?: string;
 }
 
 const CreateEvaluationModal: React.FC<Props> = ({ isOpen, onClose, evaluation, formationId, mode }) => {
