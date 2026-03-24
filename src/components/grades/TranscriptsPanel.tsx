@@ -1220,7 +1220,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
             </CardContent>
           </Card>
         </div>
-      ) : null}
+      )}
     </div>
   );
 };
