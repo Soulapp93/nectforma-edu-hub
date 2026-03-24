@@ -635,6 +635,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
               {Array.from({ length: durationYears }, (_, y) => {
                 const s1 = y * 2 + 1;
                 const yearNum = y + 1;
+                const publishedNums = publishedSemesters.map((ps: any) => ps.semester_number);
                 return (
                   <React.Fragment key={yearNum}>
                     {durationYears > 1 && (
@@ -642,6 +643,9 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                     )}
                     {Array.from({ length: Math.min(2, semestersCount - y * 2) }, (_, si) => {
                       const semNum = s1 + si;
+                      // Students only see published semesters
+                      if (mode === 'student' && !publishedNums.includes(semNum)) return null;
+                      const isPublished = publishedNums.includes(semNum);
                       return (
                         <button
                           key={`s${semNum}`}
@@ -653,6 +657,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                           }`}
                         >
                           S{semNum}
+                          {isPublished && mode === 'admin' && <Check className="h-3 w-3 ml-1 inline text-green-500" />}
                         </button>
                       );
                     })}
