@@ -48,8 +48,13 @@ interface ModuleBulletinData {
   examScore: number | null;
   examClassAverage: number | null;
   examPoints: number | null;
+  examBlancScore: number | null;
+  examBlancClassAverage: number | null;
+  examBlancPoints: number | null;
   appreciation: string;
   teachingUnitId: string | null;
+  // For BTS: whether this module has oral exam blanc
+  examBlancType: 'ecrit' | 'oral' | null;
 }
 
 interface StudentBulletin {
@@ -61,6 +66,8 @@ interface StudentBulletin {
   ccClassGeneralAverage: number | null;
   examTotalPoints: number;
   examTotalCoeff: number;
+  examBlancTotalPoints: number;
+  examBlancTotalCoeff: number;
   decision: string;
   mention: string | null;
 }
