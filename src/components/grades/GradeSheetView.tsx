@@ -153,6 +153,13 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     filteredModules.forEach((mod: any) => {
       let evals = allEvaluations.filter(e => e.module_id === mod.id);
       
+      // For exam blanc view, only show exam_blanc evaluations
+      if (isExamBlancView) {
+        const examBlancEvals = evals.filter(e => e.evaluation_type === 'examen_blanc');
+        groups.set(mod.id, { cc: [], exam: examBlancEvals });
+        return;
+      }
+      
       // Filter by semester
       if (activeSemesterNums && activeSemesterNums.length > 0) {
         evals = evals.filter(e => {
@@ -164,13 +171,14 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
       }
       
       const ccTypes = EVALUATION_TYPES.filter(t => t.category === 'cc').map(t => t.value);
+      // In normal semester view, exclude exam_blanc from display
       const cc = evals.filter(e => ccTypes.includes(e.evaluation_type));
-      const exam = evals.filter(e => !ccTypes.includes(e.evaluation_type));
+      const exam = evals.filter(e => !ccTypes.includes(e.evaluation_type) && e.evaluation_type !== 'examen_blanc');
       groups.set(mod.id, { cc, exam });
     });
     
     return groups;
-  }, [filteredModules, allEvaluations, activeSemesterNums, activePeriodIds, modules]);
+  }, [filteredModules, allEvaluations, activeSemesterNums, activePeriodIds, modules, isExamBlancView]);
 
   // All displayed evaluations (for grade fetching)
   const allDisplayedEvals = useMemo(() => {
