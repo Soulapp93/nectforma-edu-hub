@@ -140,16 +140,12 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     enabled: !!selectedFormation,
   });
 
-  // Filtered modules by semester (exam blanc view: show all modules that have exam blanc evals)
+  // Filtered modules by semester (exam blanc view: show all modules)
   const filteredModules = useMemo(() => {
-    if (isExamBlancView) {
-      // Show only modules that have at least one exam_blanc evaluation
-      const examBlancModuleIds = new Set(allEvaluations.filter(e => e.evaluation_type === 'examen_blanc').map(e => e.module_id));
-      return modules.filter((m: any) => examBlancModuleIds.has(m.id));
-    }
+    if (isExamBlancView) return modules;
     if (!activeSemesterNums) return modules;
     return modules.filter((m: any) => !m.semester || semesterMatchesFilter(m.semester, activeSemesterNums));
-  }, [modules, activeSemesterNums, isExamBlancView, allEvaluations]);
+  }, [modules, activeSemesterNums, isExamBlancView]);
 
   // Build per-module evaluation groups
   const moduleEvalGroups = useMemo(() => {
