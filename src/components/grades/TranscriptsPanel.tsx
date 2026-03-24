@@ -271,6 +271,47 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     enabled: !!selectedFormation,
   });
 
+  // Published semesters
+  const { data: publishedSemesters = [], refetch: refetchPublished } = useQuery({
+    queryKey: ['published-transcripts', selectedFormation],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('published_transcripts')
+        .select('*')
+        .eq('formation_id', selectedFormation)
+        .order('semester_number');
+      return data || [];
+    },
+    enabled: !!selectedFormation,
+  });
+
+  const handlePublish = async () => {
+    if (!publishSemester || !selectedFormation || !userId) return;
+    setIsPublishing(true);
+    try {
+      const { error } = await supabase
+        .from('published_transcripts')
+        .upsert({
+          formation_id: selectedFormation,
+          semester_number: parseInt(publishSemester),
+          published_by: userId,
+          published_at: new Date().toISOString(),
+          academic_year: selectedFormationData?.academic_year || null,
+        }, { onConflict: 'formation_id,semester_number' });
+      if (error) throw error;
+      await refetchPublished();
+      setShowPublishDialog(false);
+      setPublishSemester('');
+      const { toast } = await import('sonner');
+      toast.success(`Relevés du Semestre ${publishSemester} publiés avec succès`);
+    } catch (e: any) {
+      const { toast } = await import('sonner');
+      toast.error(e.message || 'Erreur lors de la publication');
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
   // Load transcript template
   const { data: template } = useQuery({
     queryKey: ['transcript-template', selectedFormation],
