@@ -369,16 +369,31 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
       return calculateModuleAverage(grades, 20);
     };
 
+    const getStudentModuleExamBlancScore = (sId: string, modId: string): number | null => {
+      const modExamBlancEvals = examBlancEvaluations.filter(e => e.module_id === modId);
+      const grades = modExamBlancEvals.map(e => allGrades.get(e.id)?.find((g: any) => g.student_id === sId)).filter(Boolean);
+      return calculateModuleAverage(grades, 20);
+    };
+
     return students.map(student => {
       const studentModules: ModuleBulletinData[] = modules.map(mod => {
         const ccAvg = getStudentModuleCCAvg(student.user_id, mod.id);
         const examScore = getStudentModuleExamScore(student.user_id, mod.id);
+        const examBlancScore = getStudentModuleExamBlancScore(student.user_id, mod.id);
 
         const classCCAvgs = students.map(s => getStudentModuleCCAvg(s.user_id, mod.id)).filter(v => v !== null) as number[];
         const classExamAvgs = students.map(s => getStudentModuleExamScore(s.user_id, mod.id)).filter(v => v !== null) as number[];
+        const classExamBlancAvgs = students.map(s => getStudentModuleExamBlancScore(s.user_id, mod.id)).filter(v => v !== null) as number[];
 
         const ccClassAvg = classCCAvgs.length > 0 ? Math.round((classCCAvgs.reduce((a, b) => a + b, 0) / classCCAvgs.length) * 100) / 100 : null;
         const examClassAvg = classExamAvgs.length > 0 ? Math.round((classExamAvgs.reduce((a, b) => a + b, 0) / classExamAvgs.length) * 100) / 100 : null;
+        const examBlancClassAvg = classExamBlancAvgs.length > 0 ? Math.round((classExamBlancAvgs.reduce((a, b) => a + b, 0) / classExamBlancAvgs.length) * 100) / 100 : null;
+
+        // Determine exam blanc type (oral if module title contains "oral")
+        const isOral = mod.title.toLowerCase().includes('oral');
+        const examBlancType: 'ecrit' | 'oral' | null = examBlancScore !== null || examBlancEvaluations.some(e => e.module_id === mod.id) 
+          ? (isOral ? 'oral' : 'ecrit') 
+          : null;
 
         return {
           moduleId: mod.id,
@@ -389,6 +404,10 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
           examScore,
           examClassAverage: examClassAvg,
           examPoints: examScore !== null ? Math.round(examScore * ((mod as any).coefficient || 1) * 100) / 100 : null,
+          examBlancScore,
+          examBlancClassAverage: examBlancClassAvg,
+          examBlancPoints: examBlancScore !== null ? Math.round(examBlancScore * ((mod as any).coefficient || 1) * 100) / 100 : null,
+          examBlancType,
           appreciation: '',
           teachingUnitId: mod.teaching_unit_id,
         };
@@ -413,6 +432,10 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
       const examTotalPoints = studentModules.reduce((sum, m) => sum + (m.examPoints || 0), 0);
       const examTotalCoeff = modules.reduce((sum, m) => sum + ((m as any).coefficient || 1), 0);
 
+      const examBlancTotalPoints = studentModules.reduce((sum, m) => sum + (m.examBlancPoints || 0), 0);
+      const examBlancModules = studentModules.filter(m => m.examBlancType !== null);
+      const examBlancTotalCoeff = examBlancModules.reduce((sum, m) => sum + m.coefficient, 0);
+
       const generalAvg = ccGeneralAvg;
       const decision = generalAvg !== null ? getDecision(generalAvg, rules as any) : 'en_cours';
       const mention = generalAvg !== null ? getMention(generalAvg, rules as any) : null;
@@ -426,11 +449,13 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
         ccClassGeneralAverage: ccClassGeneralAvg,
         examTotalPoints: Math.round(examTotalPoints * 100) / 100,
         examTotalCoeff,
+        examBlancTotalPoints: Math.round(examBlancTotalPoints * 100) / 100,
+        examBlancTotalCoeff,
         decision,
         mention,
       };
     });
-  }, [students, modules, evaluations, allGrades, gradingRules, ccEvaluations, examEvaluations]);
+  }, [students, modules, evaluations, allGrades, gradingRules, ccEvaluations, examEvaluations, examBlancEvaluations]);
 
   const currentBulletin = bulletins[currentStudentIndex] || null;
   const selectedFormationData = availableFormations.find((f: any) => f.id === selectedFormation);
