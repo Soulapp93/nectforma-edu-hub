@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileText, Eye, Printer, ChevronLeft, ChevronRight, Users, Settings2 } from 'lucide-react';
+import { FileText, Eye, Printer, ChevronLeft, ChevronRight, Users, Settings2, LayoutGrid } from 'lucide-react';
 import { semesterMatchesFilter } from '@/utils/semesterUtils';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
