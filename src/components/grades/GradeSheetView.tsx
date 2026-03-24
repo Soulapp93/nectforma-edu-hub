@@ -44,7 +44,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   const { data: currentFormationData } = useQuery({
     queryKey: ['formation-data-sheet', selectedFormation],
     queryFn: async () => {
-      const { data } = await supabase.from('formations').select('id, title, status, color, level, start_date, end_date, duration_years, semesters_count').eq('id', selectedFormation).single();
+      const { data } = await supabase.from('formations').select('id, title, status, color, level, start_date, end_date, duration_years, semesters_count, formation_type').eq('id', selectedFormation).single();
       return data;
     },
     enabled: !!selectedFormation,
