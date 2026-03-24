@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Save, Plus, AlertCircle, BookOpen, GraduationCap, Printer } from 'lucide-react';
+import { EVALUATION_TYPES } from '@/services/gradesService';
 import { semesterMatchesFilter } from '@/utils/semesterUtils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
