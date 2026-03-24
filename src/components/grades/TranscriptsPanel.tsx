@@ -501,7 +501,11 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   const decisionLabel = (d: string) => DECISIONS.find(x => x.value === d)?.label || 'En cours';
 
   const hasExamData = examEvaluations.length > 0;
+  const hasExamBlancData = examBlancEvaluations.length > 0;
   const showExam = tplColumns.showExamSection && hasExamData;
+  const showExamBlanc = hasExamBlancData;
+  const formationType = (selectedFormationData as any)?.formation_type || 'ecole_sup';
+  const isBTS = formationType === 'bts';
 
   // CC columns visibility
   const showCCMoyenne = tplColumns.ccColumns.includes('moyenne_stagiaire');
