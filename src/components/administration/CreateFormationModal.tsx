@@ -59,7 +59,8 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
     duration: 0,
     academic_year: `${currentYear}-${currentYear + 1}`,
     duration_years: 1,
-    semesters_count: 2
+    semesters_count: 2,
+    formation_type: 'ecole_sup'
   });
 
   const [modules, setModules] = useState<ModuleFormData[]>([]);
