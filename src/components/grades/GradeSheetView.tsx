@@ -44,7 +44,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   const { data: currentFormationData } = useQuery({
     queryKey: ['formation-data-sheet', selectedFormation],
     queryFn: async () => {
-      const { data } = await supabase.from('formations').select('id, title, status, color, level, start_date, end_date, duration_years, semesters_count').eq('id', selectedFormation).single();
+      const { data } = await supabase.from('formations').select('id, title, status, color, level, start_date, end_date, duration_years, semesters_count, formation_type').eq('id', selectedFormation).single();
       return data;
     },
     enabled: !!selectedFormation,
@@ -73,13 +73,15 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
 
   const durationYears = (currentFormationData as any)?.duration_years || 1;
   const semestersCount = (currentFormationData as any)?.semesters_count || durationYears * 2;
+  const isBTS = (currentFormationData as any)?.formation_type === 'bts';
+  const isExamBlancView = semesterView === 'exam_blanc';
 
   useEffect(() => {
     if (currentFormationData && !semesterView) setSemesterView('s1');
   }, [currentFormationData]);
 
   const activePeriodIds = useMemo(() => {
-    if (!semesterView || periods.length === 0) return [];
+    if (!semesterView || periods.length === 0 || isExamBlancView) return [];
     if (semesterView === 'bulletin-global') return periods.map(p => p.id);
     if (semesterView.startsWith('bulletin-')) {
       const yearNum = parseInt(semesterView.split('-')[1]);
@@ -89,12 +91,12 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     const semNum = parseInt(semesterView.replace('s', ''));
     const idx = semNum - 1;
     return periods[idx] ? [periods[idx].id] : [];
-  }, [semesterView, periods]);
+  }, [semesterView, periods, isExamBlancView]);
 
   const isFinalView = semesterView.startsWith('bulletin-');
 
   const activeSemesterNums = useMemo((): number[] | null => {
-    if (!semesterView) return null;
+    if (!semesterView || isExamBlancView) return null; // exam blanc shows all modules
     if (semesterView === 'bulletin-global') return Array.from({ length: semestersCount }, (_, i) => i + 1);
     if (semesterView.startsWith('bulletin-')) {
       const yearNum = parseInt(semesterView.split('-')[1]);
@@ -102,9 +104,10 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     }
     const num = parseInt(semesterView.replace('s', ''));
     return isNaN(num) ? null : [num];
-  }, [semesterView, semestersCount]);
+  }, [semesterView, semestersCount, isExamBlancView]);
 
   const currentPeriodLabel = useMemo(() => {
+    if (isExamBlancView) return 'Examen Blanc';
     if (semesterView === 'bulletin-global') return 'Bulletin de Formation';
     if (isFinalView) {
       const yearNum = parseInt(semesterView.split('-')[1]);
@@ -115,7 +118,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
       return `Semestre ${semNum}`;
     }
     return '';
-  }, [semesterView, isFinalView, durationYears]);
+  }, [semesterView, isFinalView, durationYears, isExamBlancView]);
 
   // Students
   const { data: students = [] } = useQuery({
@@ -137,11 +140,12 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     enabled: !!selectedFormation,
   });
 
-  // Filtered modules by semester
+  // Filtered modules by semester (exam blanc view: show all modules)
   const filteredModules = useMemo(() => {
+    if (isExamBlancView) return modules;
     if (!activeSemesterNums) return modules;
     return modules.filter((m: any) => !m.semester || semesterMatchesFilter(m.semester, activeSemesterNums));
-  }, [modules, activeSemesterNums]);
+  }, [modules, activeSemesterNums, isExamBlancView]);
 
   // Build per-module evaluation groups
   const moduleEvalGroups = useMemo(() => {
@@ -149,6 +153,13 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     
     filteredModules.forEach((mod: any) => {
       let evals = allEvaluations.filter(e => e.module_id === mod.id);
+      
+      // For exam blanc view, only show exam_blanc evaluations
+      if (isExamBlancView) {
+        const examBlancEvals = evals.filter(e => e.evaluation_type === 'examen_blanc');
+        groups.set(mod.id, { cc: [], exam: examBlancEvals });
+        return;
+      }
       
       // Filter by semester
       if (activeSemesterNums && activeSemesterNums.length > 0) {
@@ -161,13 +172,14 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
       }
       
       const ccTypes = EVALUATION_TYPES.filter(t => t.category === 'cc').map(t => t.value);
+      // In normal semester view, exclude exam_blanc from display
       const cc = evals.filter(e => ccTypes.includes(e.evaluation_type));
-      const exam = evals.filter(e => !ccTypes.includes(e.evaluation_type));
+      const exam = evals.filter(e => !ccTypes.includes(e.evaluation_type) && e.evaluation_type !== 'examen_blanc');
       groups.set(mod.id, { cc, exam });
     });
     
     return groups;
-  }, [filteredModules, allEvaluations, activeSemesterNums, activePeriodIds, modules]);
+  }, [filteredModules, allEvaluations, activeSemesterNums, activePeriodIds, modules, isExamBlancView]);
 
   // All displayed evaluations (for grade fetching)
   const allDisplayedEvals = useMemo(() => {
@@ -422,6 +434,22 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
                 </React.Fragment>
               );
             })}
+            {/* Examen Blanc tab for BTS */}
+            {isBTS && (
+              <>
+                <div className="w-px h-5 bg-border mx-0.5" />
+                <button
+                  onClick={() => setSemesterView('exam_blanc')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    semesterView === 'exam_blanc'
+                      ? 'bg-amber-500 text-white shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  }`}
+                >
+                  Examen Blanc
+                </button>
+              </>
+            )}
           </div>
         )}
 
