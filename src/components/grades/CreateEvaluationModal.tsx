@@ -98,6 +98,7 @@ const CreateEvaluationModal: React.FC<Props> = ({ isOpen, onClose, evaluation, f
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['evaluations'] });
+      queryClient.invalidateQueries({ queryKey: ['evaluations-sheet-all'] });
       toast.success(isEditing ? 'Évaluation modifiée' : 'Évaluation créée');
       onClose();
     },
