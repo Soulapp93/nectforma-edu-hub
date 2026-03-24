@@ -519,20 +519,25 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
                         <th
                           key={mod.id}
                           colSpan={colSpan}
-                          className="bg-primary text-primary-foreground text-center p-1.5 font-bold border border-primary/80 text-[11px]"
+                          className="bg-primary text-primary-foreground text-center p-0 font-bold border border-primary/80 text-[11px]"
                         >
-                          <div className="flex items-center justify-center gap-1">
-                            <span>{mod.title}</span>
-                            <span className="opacity-70 font-normal">(coef {mod.coefficient})</span>
-                            <button
-                              onClick={() => handleAddEvaluation(mod.id)}
-                              className="ml-1 w-4 h-4 rounded-full bg-primary-foreground/20 hover:bg-primary-foreground/40 flex items-center justify-center text-primary-foreground transition-colors print:hidden"
-                              title="Ajouter un contrôle"
-                            >
-                              <Plus className="h-3 w-3" />
-                            </button>
+                          <div className="p-1.5">
+                            <div className="flex items-center justify-center gap-1">
+                              <span>{mod.title}</span>
+                              <span className="opacity-70 font-normal">(coef {mod.coefficient})</span>
+                              <button
+                                onClick={() => handleAddEvaluation(mod.id)}
+                                className="ml-1 w-4 h-4 rounded-full bg-primary-foreground/20 hover:bg-primary-foreground/40 flex items-center justify-center text-primary-foreground transition-colors print:hidden"
+                                title="Ajouter un contrôle"
+                              >
+                                <Plus className="h-3 w-3" />
+                              </button>
+                            </div>
+                            {mod.semester && <div className="text-[8px] opacity-70 font-normal">S{mod.semester}</div>}
                           </div>
-                          {mod.semester && <div className="text-[8px] opacity-70 font-normal">S{mod.semester}</div>}
+                          <div className="border-t border-primary-foreground/30 bg-primary-foreground/10 px-1.5 py-1">
+                            <span className="text-[9px] font-semibold opacity-90">Moyenne du module</span>
+                          </div>
                         </th>
                       );
                     })}
