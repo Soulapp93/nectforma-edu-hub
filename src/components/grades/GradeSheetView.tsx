@@ -160,8 +160,9 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
         });
       }
       
-      const cc = evals.filter(e => e.evaluation_type === 'controle_continu' || e.evaluation_type === 'projet' || e.evaluation_type === 'tp');
-      const exam = evals.filter(e => e.evaluation_type === 'examen_blanc' || e.evaluation_type === 'examen_final');
+      const ccTypes = EVALUATION_TYPES.filter(t => t.category === 'cc').map(t => t.value);
+      const cc = evals.filter(e => ccTypes.includes(e.evaluation_type));
+      const exam = evals.filter(e => !ccTypes.includes(e.evaluation_type));
       groups.set(mod.id, { cc, exam });
     });
     
