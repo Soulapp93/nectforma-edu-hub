@@ -659,8 +659,10 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                   <th className="text-left p-3 border-b border-border font-semibold">#</th>
                   <th className="text-left p-3 border-b border-border font-semibold">Étudiant</th>
                   <th className="text-center p-3 border-b border-border font-semibold bg-blue-100/50 dark:bg-blue-900/20">Moy. CC</th>
-                  {hasExamData && (
-                    <th className="text-center p-3 border-b border-border font-semibold bg-amber-100/50 dark:bg-amber-900/20">Points Examen</th>
+                  {(hasExamData || hasExamBlancData) && (
+                    <th className="text-center p-3 border-b border-border font-semibold bg-amber-100/50 dark:bg-amber-900/20">
+                      {hasExamBlancData ? 'Pts Ex. Blanc' : 'Points Examen'}
+                    </th>
                   )}
                   <th className="text-center p-3 border-b border-border font-semibold">Décision</th>
                   <th className="text-center p-3 border-b border-border font-semibold">Action</th>
@@ -674,9 +676,9 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                     <td className={`p-3 text-center font-bold ${avgColor(b.ccGeneralAverage)}`}>
                       {b.ccGeneralAverage !== null ? `${b.ccGeneralAverage.toFixed(2)}/20` : '—'}
                     </td>
-                    {hasExamData && (
-                      <td className={`p-3 text-center font-bold ${avgColor(b.examTotalPoints / Math.max(b.examTotalCoeff, 1))}`}>
-                        {b.examTotalPoints.toFixed(2)}
+                    {(hasExamData || hasExamBlancData) && (
+                      <td className={`p-3 text-center font-bold ${avgColor((hasExamBlancData ? b.examBlancTotalPoints : b.examTotalPoints) / Math.max(hasExamBlancData ? b.examBlancTotalCoeff : b.examTotalCoeff, 1))}`}>
+                        {(hasExamBlancData ? b.examBlancTotalPoints : b.examTotalPoints).toFixed(2)}
                       </td>
                     )}
                     <td className="p-3 text-center">
