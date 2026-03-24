@@ -418,33 +418,10 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
                       </button>
                     );
                   })}
-                  {durationYears > 1 && (
-                    <button
-                      onClick={() => setSemesterView(`bulletin-${yearNum}`)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                        semesterView === `bulletin-${yearNum}` 
-                          ? 'bg-amber-500 text-white shadow-sm' 
-                          : 'text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30'
-                      }`}
-                    >
-                      Bulletin A{yearNum}
-                    </button>
-                  )}
                   {yearNum < durationYears && <div className="w-px h-5 bg-border mx-0.5" />}
                 </React.Fragment>
               );
             })}
-            <div className="w-px h-5 bg-border mx-0.5" />
-            <button
-              onClick={() => setSemesterView(durationYears === 1 ? 'bulletin-1' : 'bulletin-global')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                (semesterView === 'bulletin-global' || (durationYears === 1 && semesterView === 'bulletin-1'))
-                  ? 'bg-primary text-primary-foreground shadow-sm' 
-                  : 'text-primary hover:bg-primary/10'
-              }`}
-            >
-              📋 Bulletin
-            </button>
           </div>
         )}
 

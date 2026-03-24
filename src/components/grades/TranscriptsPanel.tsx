@@ -3,7 +3,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileText, Eye, Printer, ChevronLeft, ChevronRight, Users, Settings2, LayoutGrid } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { FileText, Eye, Printer, ChevronLeft, ChevronRight, Users, Settings2, LayoutGrid, Send, Check } from 'lucide-react';
 import { semesterMatchesFilter } from '@/utils/semesterUtils';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -80,9 +81,11 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   const selectedFormation = propFormationId || internalFormation;
   const [semesterView, setSemesterView] = useState<string>('');
   const [currentStudentIndex, setCurrentStudentIndex] = useState(0);
-  const [viewMode, setViewMode] = useState<'list' | 'bulletin'>('list');
   const [showTemplateEditor, setShowTemplateEditor] = useState(false);
   const [groupingMode, setGroupingMode] = useState<'section' | 'bloc' | 'semester'>('section');
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
+  const [publishSemester, setPublishSemester] = useState<string>('');
+  const [isPublishing, setIsPublishing] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
   // Formations (only needed when no formationId prop)
@@ -267,6 +270,47 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     queryFn: () => getGradingRules(selectedFormation),
     enabled: !!selectedFormation,
   });
+
+  // Published semesters
+  const { data: publishedSemesters = [], refetch: refetchPublished } = useQuery({
+    queryKey: ['published-transcripts', selectedFormation],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('published_transcripts')
+        .select('*')
+        .eq('formation_id', selectedFormation)
+        .order('semester_number');
+      return data || [];
+    },
+    enabled: !!selectedFormation,
+  });
+
+  const handlePublish = async () => {
+    if (!publishSemester || !selectedFormation || !userId) return;
+    setIsPublishing(true);
+    try {
+      const { error } = await supabase
+        .from('published_transcripts')
+        .upsert({
+          formation_id: selectedFormation,
+          semester_number: parseInt(publishSemester),
+          published_by: userId,
+          published_at: new Date().toISOString(),
+          academic_year: selectedFormationData?.academic_year || null,
+        }, { onConflict: 'formation_id,semester_number' });
+      if (error) throw error;
+      await refetchPublished();
+      setShowPublishDialog(false);
+      setPublishSemester('');
+      const { toast } = await import('sonner');
+      toast.success(`Relevés du Semestre ${publishSemester} publiés avec succès`);
+    } catch (e: any) {
+      const { toast } = await import('sonner');
+      toast.error(e.message || 'Erreur lors de la publication');
+    } finally {
+      setIsPublishing(false);
+    }
+  };
 
   // Load transcript template
   const { data: template } = useQuery({
@@ -574,7 +618,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div className="flex gap-3 flex-wrap items-center">
           {!propFormationId && (
-            <Select value={selectedFormation} onValueChange={(v) => { setInternalFormation(v); setSemesterView(''); setCurrentStudentIndex(0); setViewMode('list'); }}>
+            <Select value={selectedFormation} onValueChange={(v) => { setInternalFormation(v); setSemesterView(''); setCurrentStudentIndex(0); }}>
               <SelectTrigger className="w-64">
                 <SelectValue placeholder="Sélectionner une formation" />
               </SelectTrigger>
@@ -585,20 +629,23 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
               </SelectContent>
             </Select>
           )}
-          {/* Semester buttons grouped by year with Bulletin */}
+          {/* Semester buttons - no bulletin buttons */}
           {semestersCount > 0 && selectedFormationObj && (
             <div className="flex flex-wrap items-center gap-1 bg-muted/50 rounded-xl p-1.5">
               {Array.from({ length: durationYears }, (_, y) => {
                 const s1 = y * 2 + 1;
-                const s2 = y * 2 + 2;
                 const yearNum = y + 1;
+                const publishedNums = publishedSemesters.map((ps: any) => ps.semester_number);
                 return (
                   <React.Fragment key={yearNum}>
                     {durationYears > 1 && (
-                      <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider ml-1.5 mr-0.5">Année {yearNum}</span>
+                      <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider ml-1.5 mr-0.5">A{yearNum}</span>
                     )}
                     {Array.from({ length: Math.min(2, semestersCount - y * 2) }, (_, si) => {
                       const semNum = s1 + si;
+                      // Students only see published semesters
+                      if (mode === 'student' && !publishedNums.includes(semNum)) return null;
+                      const isPublished = publishedNums.includes(semNum);
                       return (
                         <button
                           key={`s${semNum}`}
@@ -610,44 +657,22 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                           }`}
                         >
                           S{semNum}
+                          {isPublished && mode === 'admin' && <Check className="h-3 w-3 ml-1 inline text-green-500" />}
                         </button>
                       );
                     })}
-                    {durationYears > 1 && (
-                      <button
-                        onClick={() => { setSemesterView(`bulletin-${yearNum}`); setCurrentStudentIndex(0); }}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                          semesterView === `bulletin-${yearNum}` 
-                            ? 'bg-amber-500 text-white shadow-sm' 
-                            : 'text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30'
-                        }`}
-                      >
-                        Bulletin A{yearNum}
-                      </button>
-                    )}
                     {yearNum < durationYears && (
                       <div className="w-px h-5 bg-border mx-0.5" />
                     )}
                   </React.Fragment>
                 );
               })}
-              <div className="w-px h-5 bg-border mx-0.5" />
-              <button
-                onClick={() => { setSemesterView(durationYears === 1 ? 'bulletin-1' : 'bulletin-global'); setCurrentStudentIndex(0); }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  (semesterView === 'bulletin-global' || (durationYears === 1 && semesterView === 'bulletin-1'))
-                    ? 'bg-primary text-primary-foreground shadow-sm' 
-                    : 'text-primary hover:bg-primary/10'
-                }`}
-              >
-                📋 Bulletin de Formation
-              </button>
             </div>
           )}
         </div>
         <div className="flex gap-2 flex-wrap items-center">
           {/* Grouping mode selector */}
-          {selectedFormation && isFinalView && (
+          {selectedFormation && (
             <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
               <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground ml-2" />
               {[
@@ -669,24 +694,63 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
               ))}
             </div>
           )}
-          {isAdmin && selectedFormation && establishment?.id && (
-            <Button variant="outline" size="sm" onClick={() => setShowTemplateEditor(true)} className="gap-2">
-              <Settings2 className="h-4 w-4" />
-              Configurer le modèle
-            </Button>
-          )}
-          {selectedFormation && bulletins.length > 0 && (
-            <Button
-              variant={viewMode === 'bulletin' ? 'default' : 'outline'}
-              onClick={() => setViewMode(viewMode === 'bulletin' ? 'list' : 'bulletin')}
-              className="gap-2"
-            >
-              <FileText className="h-4 w-4" />
-              {viewMode === 'bulletin' ? 'Vue liste' : 'Vue bulletin'}
+          {isAdmin && selectedFormation && (
+            <Button variant="default" size="sm" onClick={() => setShowPublishDialog(true)} className="gap-2">
+              <Send className="h-4 w-4" />
+              Publier les relevés
             </Button>
           )}
         </div>
       </div>
+
+      {/* Publish Dialog */}
+      <Dialog open={showPublishDialog} onOpenChange={setShowPublishDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Publier les relevés de notes</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              Sélectionnez le semestre pour lequel vous souhaitez publier les relevés de notes. Les étudiants pourront consulter leur relevé dans leur espace.
+            </p>
+            <Select value={publishSemester} onValueChange={setPublishSemester}>
+              <SelectTrigger>
+                <SelectValue placeholder="Choisir un semestre" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: semestersCount }, (_, i) => (
+                  <SelectItem key={i + 1} value={String(i + 1)}>Semestre {i + 1}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {/* Show published semesters */}
+            {publishedSemesters.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">Semestres déjà publiés :</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {publishedSemesters.map((ps: any) => (
+                    <Badge key={ps.id} variant="secondary" className="gap-1 text-xs">
+                      <Check className="h-3 w-3 text-green-500" />
+                      S{ps.semester_number}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPublishDialog(false)}>Annuler</Button>
+            <Button 
+              onClick={handlePublish} 
+              disabled={!publishSemester || isPublishing}
+              className="gap-2"
+            >
+              <Send className="h-4 w-4" />
+              {isPublishing ? 'Publication...' : 'Publier'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Template Editor Dialog */}
       {isAdmin && selectedFormation && establishment?.id && (
@@ -717,11 +781,11 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
             <h3 className="text-lg font-medium">Aucun étudiant</h3>
           </CardContent>
         </Card>
-      ) : viewMode === 'list' ? (
-        /* ============ VUE LISTE ============ */
+      ) : (
+        /* ============ VUE LISTE avec bouton voir bulletin ============ */
         <div className="space-y-2">
           <div className="text-sm text-muted-foreground mb-3">
-            {bulletins.length} étudiant(s) • {selectedFormationData?.title}
+            {bulletins.length} étudiant(s) • {selectedFormationData?.title} • {currentPeriodLabel}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm border-collapse border border-border rounded-lg overflow-hidden">
@@ -729,12 +793,12 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                 <tr className="bg-primary/10">
                   <th className="text-left p-3 border-b border-border font-semibold">#</th>
                   <th className="text-left p-3 border-b border-border font-semibold">Étudiant</th>
-                  <th className="text-center p-3 border-b border-border font-semibold bg-blue-100/50 dark:bg-blue-900/20">Moy. CC</th>
-                  {(hasExamData || hasExamBlancData) && (
-                    <th className="text-center p-3 border-b border-border font-semibold bg-amber-100/50 dark:bg-amber-900/20">
-                      {hasExamBlancData ? 'Pts Ex. Blanc' : 'Points Examen'}
+                  {modules.map(mod => (
+                    <th key={mod.id} className="text-center p-3 border-b border-border font-semibold text-xs">
+                      {mod.title}
                     </th>
-                  )}
+                  ))}
+                  <th className="text-center p-3 border-b border-border font-semibold bg-primary/5">Moy. Gén.</th>
                   <th className="text-center p-3 border-b border-border font-semibold">Décision</th>
                   <th className="text-center p-3 border-b border-border font-semibold">Action</th>
                 </tr>
@@ -744,21 +808,24 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                   <tr key={b.studentId} className="hover:bg-muted/30 border-b border-border/50">
                     <td className="p-3 text-muted-foreground">{idx + 1}</td>
                     <td className="p-3 font-medium whitespace-nowrap">{b.studentName}</td>
+                    {modules.map(mod => {
+                      const modData = b.modules.find(m => m.moduleId === mod.id);
+                      return (
+                        <td key={mod.id} className={`p-3 text-center font-bold text-xs ${avgColor(modData?.ccAverage ?? null)}`}>
+                          {modData?.ccAverage !== null && modData?.ccAverage !== undefined ? modData.ccAverage.toFixed(2) : '—'}
+                        </td>
+                      );
+                    })}
                     <td className={`p-3 text-center font-bold ${avgColor(b.ccGeneralAverage)}`}>
                       {b.ccGeneralAverage !== null ? `${b.ccGeneralAverage.toFixed(2)}/20` : '—'}
                     </td>
-                    {(hasExamData || hasExamBlancData) && (
-                      <td className={`p-3 text-center font-bold ${avgColor((hasExamBlancData ? b.examBlancTotalPoints : b.examTotalPoints) / Math.max(hasExamBlancData ? b.examBlancTotalCoeff : b.examTotalCoeff, 1))}`}>
-                        {(hasExamBlancData ? b.examBlancTotalPoints : b.examTotalPoints).toFixed(2)}
-                      </td>
-                    )}
                     <td className="p-3 text-center">
                       <Badge variant="outline" className={`text-[10px] ${DECISIONS.find(d => d.value === b.decision)?.color || ''}`}>
                         {decisionLabel(b.decision)}
                       </Badge>
                     </td>
                     <td className="p-3 text-center">
-                      <Button size="sm" variant="ghost" onClick={() => { setCurrentStudentIndex(idx); setViewMode('bulletin'); }} className="h-7 px-2">
+                      <Button size="sm" variant="ghost" onClick={() => { setCurrentStudentIndex(idx); }} className="h-7 px-2">
                         <Eye className="h-3.5 w-3.5" />
                       </Button>
                     </td>
@@ -768,8 +835,10 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
             </table>
           </div>
         </div>
-      ) : currentBulletin ? (
-        /* ============ VUE BULLETIN ============ */
+      )}
+
+      {/* ============ VUE BULLETIN (when student selected) ============ */}
+      {selectedFormation && currentBulletin && currentStudentIndex >= 0 && (
         <div className="space-y-4">
           {/* Navigation */}
           <div className="flex items-center justify-between bg-muted/30 rounded-lg p-3 border border-border/50">
@@ -1197,7 +1266,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
             </CardContent>
           </Card>
         </div>
-      ) : null}
+      )}
     </div>
   );
 };

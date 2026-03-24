@@ -2871,6 +2871,44 @@ export type Database = {
           },
         ]
       }
+      published_transcripts: {
+        Row: {
+          academic_year: string | null
+          created_at: string
+          formation_id: string
+          id: string
+          published_at: string
+          published_by: string
+          semester_number: number
+        }
+        Insert: {
+          academic_year?: string | null
+          created_at?: string
+          formation_id: string
+          id?: string
+          published_at?: string
+          published_by: string
+          semester_number: number
+        }
+        Update: {
+          academic_year?: string | null
+          created_at?: string
+          formation_id?: string
+          id?: string
+          published_at?: string
+          published_by?: string
+          semester_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "published_transcripts_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       questionnaire_answers: {
         Row: {
           answer_file_url: string | null
