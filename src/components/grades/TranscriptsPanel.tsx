@@ -215,6 +215,19 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     enabled: !!selectedFormation,
   });
 
+  const { data: competencyBlocks = [] } = useQuery({
+    queryKey: ['competency-blocks-transcripts', selectedFormation],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('competency_blocks')
+        .select('id, title, code, order_index, coefficient')
+        .eq('formation_id', selectedFormation)
+        .order('order_index');
+      return data || [];
+    },
+    enabled: !!selectedFormation,
+  });
+
   const { data: evaluations = [] } = useQuery({
     queryKey: ['evaluations-transcripts', selectedFormation, semesterView, activePeriodIds.join(',')],
     queryFn: async () => {
