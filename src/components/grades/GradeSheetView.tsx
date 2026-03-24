@@ -81,7 +81,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   }, [currentFormationData]);
 
   const activePeriodIds = useMemo(() => {
-    if (!semesterView || periods.length === 0) return [];
+    if (!semesterView || periods.length === 0 || isExamBlancView) return [];
     if (semesterView === 'bulletin-global') return periods.map(p => p.id);
     if (semesterView.startsWith('bulletin-')) {
       const yearNum = parseInt(semesterView.split('-')[1]);
@@ -91,7 +91,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     const semNum = parseInt(semesterView.replace('s', ''));
     const idx = semNum - 1;
     return periods[idx] ? [periods[idx].id] : [];
-  }, [semesterView, periods]);
+  }, [semesterView, periods, isExamBlancView]);
 
   const isFinalView = semesterView.startsWith('bulletin-');
 
