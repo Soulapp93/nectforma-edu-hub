@@ -438,6 +438,22 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
                 </React.Fragment>
               );
             })}
+            {/* Examen Blanc tab for BTS */}
+            {isBTS && (
+              <>
+                <div className="w-px h-5 bg-border mx-0.5" />
+                <button
+                  onClick={() => setSemesterView('exam_blanc')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    semesterView === 'exam_blanc'
+                      ? 'bg-amber-500 text-white shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  }`}
+                >
+                  Examen Blanc
+                </button>
+              </>
+            )}
           </div>
         )}
 
