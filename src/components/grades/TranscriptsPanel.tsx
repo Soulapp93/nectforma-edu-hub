@@ -88,7 +88,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   const { data: formations = [] } = useQuery({
     queryKey: ['formations-for-transcripts'],
     queryFn: async () => {
-      const { data } = await supabase.from('formations').select('id, title, level, start_date, end_date, duration_years, semesters_count').order('title');
+      const { data } = await supabase.from('formations').select('id, title, level, start_date, end_date, duration_years, semesters_count, formation_type').order('title');
       return data || [];
     },
     enabled: mode === 'admin' && !propFormationId,
