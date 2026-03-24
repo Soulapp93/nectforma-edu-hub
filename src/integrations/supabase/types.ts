@@ -1491,6 +1491,7 @@ export type Database = {
       formation_modules: {
         Row: {
           coefficient: number
+          competency_block_id: string | null
           created_at: string
           credits: number | null
           description: string | null
@@ -1506,6 +1507,7 @@ export type Database = {
         }
         Insert: {
           coefficient?: number
+          competency_block_id?: string | null
           created_at?: string
           credits?: number | null
           description?: string | null
@@ -1521,6 +1523,7 @@ export type Database = {
         }
         Update: {
           coefficient?: number
+          competency_block_id?: string | null
           created_at?: string
           credits?: number | null
           description?: string | null
@@ -1535,6 +1538,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "formation_modules_competency_block_id_fkey"
+            columns: ["competency_block_id"]
+            isOneToOne: false
+            referencedRelation: "competency_blocks"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "formation_modules_formation_id_fkey"
             columns: ["formation_id"]
