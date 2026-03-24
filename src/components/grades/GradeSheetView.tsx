@@ -96,7 +96,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   const isFinalView = semesterView.startsWith('bulletin-');
 
   const activeSemesterNums = useMemo((): number[] | null => {
-    if (!semesterView) return null;
+    if (!semesterView || isExamBlancView) return null; // exam blanc shows all modules
     if (semesterView === 'bulletin-global') return Array.from({ length: semestersCount }, (_, i) => i + 1);
     if (semesterView.startsWith('bulletin-')) {
       const yearNum = parseInt(semesterView.split('-')[1]);
@@ -104,7 +104,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
     }
     const num = parseInt(semesterView.replace('s', ''));
     return isNaN(num) ? null : [num];
-  }, [semesterView, semestersCount]);
+  }, [semesterView, semestersCount, isExamBlancView]);
 
   const currentPeriodLabel = useMemo(() => {
     if (semesterView === 'bulletin-global') return 'Bulletin de Formation';
