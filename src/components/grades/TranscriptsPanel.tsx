@@ -21,6 +21,7 @@ import {
   getTranscriptTemplate,
   DECISIONS,
   MENTIONS,
+  EVALUATION_TYPES,
   type Evaluation,
   type Grade,
   type TranscriptTemplateConfig,
