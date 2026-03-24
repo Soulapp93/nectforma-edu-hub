@@ -833,7 +833,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                         </th>
                         {showCCMoyenne && (
                           <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '15%' }}>
-                            Moyenne du Stagiaire
+                            Moy. CC
                           </th>
                         )}
                         {showCCClasseMoyenne && (
