@@ -671,13 +671,22 @@ export const linkTemplateToFormation = async (formationId: string, templateId: s
 // =====================================================
 
 export const EVALUATION_TYPES = [
-  { value: 'controle_continu', label: 'Contrôle continu' },
-  { value: 'examen_blanc', label: 'Examen blanc' },
-  { value: 'examen_final', label: 'Examen final' },
-  { value: 'rattrapage', label: 'Rattrapage' },
-  { value: 'projet', label: 'Projet' },
-  { value: 'oral', label: 'Oral' },
-  { value: 'tp', label: 'Travaux pratiques' },
+  { value: 'controle_continu', label: 'Contrôle continu (CC)', category: 'cc' },
+  { value: 'devoir_surveille', label: 'Devoir surveillé (DS)', category: 'cc' },
+  { value: 'projet', label: 'Projet', category: 'cc' },
+  { value: 'oral', label: 'Oral', category: 'cc' },
+  { value: 'tp', label: 'Travaux pratiques (TP)', category: 'cc' },
+  { value: 'partiel', label: 'Partiel', category: 'exam' },
+  { value: 'examen_blanc', label: 'Examen blanc (BTS)', category: 'exam_blanc' },
+  { value: 'examen_final', label: 'Examen final', category: 'exam' },
+  { value: 'rattrapage', label: 'Rattrapage', category: 'exam' },
+  { value: 'stage', label: 'Stage / Rapport', category: 'cc' },
+];
+
+export const FORMATION_TYPES = [
+  { value: 'ecole_sup', label: 'École supérieure' },
+  { value: 'universite', label: 'Université' },
+  { value: 'bts', label: 'BTS' },
 ];
 
 export const EVALUATION_STATUSES = [
