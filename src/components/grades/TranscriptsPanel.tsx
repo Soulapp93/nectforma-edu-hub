@@ -283,14 +283,23 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     fontFamily: 'Segoe UI',
   };
 
-  // Split evaluations by type
+  // Split evaluations by type using categories from EVALUATION_TYPES
+  const ccTypes = EVALUATION_TYPES.filter(t => t.category === 'cc').map(t => t.value);
+  
   const ccEvaluations = useMemo(() =>
-    evaluations.filter(e => e.evaluation_type !== 'examen_blanc' && e.evaluation_type !== 'examen_final'),
+    evaluations.filter(e => ccTypes.includes(e.evaluation_type)),
     [evaluations]
   );
 
+  // Examen blanc (BTS specific - separate section)
+  const examBlancEvaluations = useMemo(() =>
+    evaluations.filter(e => e.evaluation_type === 'examen_blanc'),
+    [evaluations]
+  );
+
+  // Other exams (partiel, examen_final, rattrapage)
   const examEvaluations = useMemo(() =>
-    evaluations.filter(e => e.evaluation_type === 'examen_blanc' || e.evaluation_type === 'examen_final'),
+    evaluations.filter(e => !ccTypes.includes(e.evaluation_type) && e.evaluation_type !== 'examen_blanc'),
     [evaluations]
   );
 
