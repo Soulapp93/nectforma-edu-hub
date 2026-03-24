@@ -319,6 +319,40 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
 
   // Module grouping: use template sections if available, otherwise fallback to teaching units
   const moduleGroups = useMemo(() => {
+    // Grouping by semester
+    if (groupingMode === 'semester') {
+      const grouped: { id: string; title: string; mods: typeof modules }[] = [];
+      const semNums = [...new Set(modules.map((m: any) => m.semester).filter(Boolean))].sort((a, b) => (a as number) - (b as number));
+      for (const sem of semNums) {
+        const semMods = modules.filter((m: any) => m.semester === sem);
+        if (semMods.length > 0) {
+          grouped.push({ id: `sem-${sem}`, title: `Semestre ${sem}`, mods: semMods });
+        }
+      }
+      const noSem = modules.filter((m: any) => !m.semester);
+      if (noSem.length > 0) grouped.push({ id: 'no-sem', title: 'Non assigné', mods: noSem });
+      if (grouped.length === 0 && modules.length > 0) grouped.push({ id: 'all', title: 'Matières', mods: modules });
+      return grouped;
+    }
+
+    // Grouping by competency block
+    if (groupingMode === 'bloc' && competencyBlocks.length > 0) {
+      const grouped: { id: string; title: string; mods: typeof modules }[] = [];
+      const assignedIds = new Set<string>();
+      for (const block of competencyBlocks) {
+        const blockMods = modules.filter((m: any) => m.competency_block_id === block.id);
+        if (blockMods.length > 0) {
+          grouped.push({ id: block.id, title: `${block.code ? block.code + ' - ' : ''}${block.title}`, mods: blockMods });
+          blockMods.forEach(m => assignedIds.add(m.id));
+        }
+      }
+      const unassigned = modules.filter(m => !assignedIds.has(m.id));
+      if (unassigned.length > 0) grouped.push({ id: 'other', title: 'Autres matières', mods: unassigned });
+      if (grouped.length === 0 && modules.length > 0) grouped.push({ id: 'all', title: 'Matières', mods: modules });
+      return grouped;
+    }
+
+    // Grouping by section (template sections > teaching units > flat)
     // If template has sections defined, use them
     if (tplColumns.sections.length > 0) {
       const groups: { id: string; title: string; mods: typeof modules }[] = [];
@@ -359,7 +393,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     if (grouped.length === 0 && modules.length > 0) grouped.push({ id: 'all', title: 'Matières', mods: modules });
 
     return grouped;
-  }, [modules, teachingUnits, tplColumns.sections]);
+  }, [modules, teachingUnits, tplColumns.sections, groupingMode, competencyBlocks]);
 
   // Build bulletins
   const bulletins: StudentBulletin[] = useMemo(() => {
