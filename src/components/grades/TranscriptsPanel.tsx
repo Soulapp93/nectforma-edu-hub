@@ -835,8 +835,8 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                   </table>
                 </div>
 
-                {/* ===== SECTION EXAMEN BLANC ===== */}
-                {showExam && (
+                {/* ===== SECTION EXAMEN BLANC (BTS) ===== */}
+                {showExamBlanc && currentBulletin && (
                   <div className="px-4 pt-4">
                     <table className="w-full text-xs border-collapse">
                       <thead>
@@ -848,13 +848,167 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                             <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '10%' }}>Notes</th>
                           )}
                           {showExamCoeff && (
-                            <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '8%' }}>C</th>
+                            <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '8%' }}>C.</th>
                           )}
                           {showExamPoints && (
                             <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '12%' }}>Points</th>
                           )}
                           {showExamAppreciation && (
                             <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '30%' }}>Appréciation générale</th>
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {/* ÉCRITS group */}
+                        {(() => {
+                          const ecritsModules = currentBulletin.modules.filter(m => m.examBlancType === 'ecrit');
+                          const orauxModules = currentBulletin.modules.filter(m => m.examBlancType === 'oral');
+                          const hasGroups = ecritsModules.length > 0 && orauxModules.length > 0;
+
+                          return (
+                            <>
+                              {hasGroups && ecritsModules.length > 0 && (
+                                <tr>
+                                  <td colSpan={examColCount} className="p-1.5 pl-3 text-[10px] font-bold uppercase tracking-wider border border-border/50 text-center" style={{ backgroundColor: `${tplStyle.primaryColor}15`, color: tplStyle.primaryColor }}>
+                                    É C R I T S
+                                  </td>
+                                </tr>
+                              )}
+                              {ecritsModules.map(modData => (
+                                <tr key={modData.moduleId} className="border-b border-border/30">
+                                  <td className="p-2 border border-border/50 font-medium">{modData.moduleTitle}</td>
+                                  {showExamNotes && (
+                                    <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData.examBlancScore)}`}>
+                                      {modData.examBlancScore !== null ? modData.examBlancScore.toFixed(2) : ''}
+                                    </td>
+                                  )}
+                                  {showExamCoeff && (
+                                    <td className="p-2 border border-border/50 text-center text-muted-foreground">{modData.coefficient}</td>
+                                  )}
+                                  {showExamPoints && (
+                                    <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData.examBlancPoints)}`}>
+                                      {modData.examBlancPoints !== null ? modData.examBlancPoints.toFixed(2) : '0,00'}
+                                    </td>
+                                  )}
+                                  {showExamAppreciation && ecritsModules.indexOf(modData) === 0 && (
+                                    <td rowSpan={ecritsModules.length + orauxModules.length + (hasGroups ? 2 : 0)} className="p-2 border border-border/50 align-top text-[10px]">
+                                      <div className="space-y-1">
+                                        <p className="font-semibold text-xs">ASSIDUITÉ :</p>
+                                        <p>- Retards ce semestre : ...</p>
+                                        <p>- Retards au total : ...</p>
+                                        <p>- Absences ce semestre : ...</p>
+                                        <p>- Absences au total : ...</p>
+                                        <p>- Absences restantes à rattraper : ...</p>
+                                      </div>
+                                    </td>
+                                  )}
+                                  {showExamAppreciation && ecritsModules.indexOf(modData) !== 0 && null}
+                                </tr>
+                              ))}
+                              {hasGroups && orauxModules.length > 0 && (
+                                <tr>
+                                  <td colSpan={examColCount - (showExamAppreciation ? 1 : 0)} className="p-1.5 pl-3 text-[10px] font-bold uppercase tracking-wider border border-border/50 text-center" style={{ backgroundColor: `${tplStyle.primaryColor}15`, color: tplStyle.primaryColor }}>
+                                    O R A U X
+                                  </td>
+                                </tr>
+                              )}
+                              {orauxModules.map(modData => (
+                                <tr key={modData.moduleId} className="border-b border-border/30">
+                                  <td className="p-2 border border-border/50 font-medium">{modData.moduleTitle}</td>
+                                  {showExamNotes && (
+                                    <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData.examBlancScore)}`}>
+                                      {modData.examBlancScore !== null ? modData.examBlancScore.toFixed(2) : ''}
+                                    </td>
+                                  )}
+                                  {showExamCoeff && (
+                                    <td className="p-2 border border-border/50 text-center text-muted-foreground">{modData.coefficient}</td>
+                                  )}
+                                  {showExamPoints && (
+                                    <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData.examBlancPoints)}`}>
+                                      {modData.examBlancPoints !== null ? modData.examBlancPoints.toFixed(2) : '0,00'}
+                                    </td>
+                                  )}
+                                </tr>
+                              ))}
+                              {/* Non-grouped exam blanc modules (no oral/ecrit distinction) */}
+                              {!hasGroups && currentBulletin.modules.filter(m => m.examBlancType !== null).map(modData => (
+                                <tr key={modData.moduleId} className="border-b border-border/30">
+                                  <td className="p-2 border border-border/50 font-medium">{modData.moduleTitle}</td>
+                                  {showExamNotes && (
+                                    <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData.examBlancScore)}`}>
+                                      {modData.examBlancScore !== null ? modData.examBlancScore.toFixed(2) : ''}
+                                    </td>
+                                  )}
+                                  {showExamCoeff && (
+                                    <td className="p-2 border border-border/50 text-center text-muted-foreground">{modData.coefficient}</td>
+                                  )}
+                                  {showExamPoints && (
+                                    <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData.examBlancPoints)}`}>
+                                      {modData.examBlancPoints !== null ? modData.examBlancPoints.toFixed(2) : '0,00'}
+                                    </td>
+                                  )}
+                                  {showExamAppreciation && currentBulletin.modules.filter(m => m.examBlancType !== null).indexOf(modData) === 0 && (
+                                    <td rowSpan={currentBulletin.modules.filter(m => m.examBlancType !== null).length} className="p-2 border border-border/50 align-top text-[10px]">
+                                      <div className="space-y-1">
+                                        <p className="font-semibold text-xs">ASSIDUITÉ :</p>
+                                        <p>- Retards ce semestre : ...</p>
+                                        <p>- Absences ce semestre : ...</p>
+                                        <p>- Absences au total : ...</p>
+                                      </div>
+                                    </td>
+                                  )}
+                                </tr>
+                              ))}
+                            </>
+                          );
+                        })()}
+                        {/* TOTAL row */}
+                        <tr className="font-bold" style={{ backgroundColor: `${tplStyle.primaryColor}33` }}>
+                          <td className="p-2.5 border text-sm uppercase" style={{ borderColor: `${tplStyle.primaryColor}66` }}>
+                            TOTAL (Admis si &gt; ou = {currentBulletin.examBlancTotalCoeff * 10})
+                          </td>
+                          {showExamNotes && <td className="p-2.5 border" style={{ borderColor: `${tplStyle.primaryColor}66` }}></td>}
+                          {showExamCoeff && <td className="p-2.5 border" style={{ borderColor: `${tplStyle.primaryColor}66` }}></td>}
+                          {showExamPoints && (
+                            <td className={`p-2.5 border text-center text-base ${avgColor(currentBulletin.examBlancTotalPoints / Math.max(currentBulletin.examBlancTotalCoeff, 1))}`} style={{ borderColor: `${tplStyle.primaryColor}66` }}>
+                              {currentBulletin.examBlancTotalPoints.toFixed(2)}
+                            </td>
+                          )}
+                          {showExamAppreciation && (
+                            <td className="p-2.5 border text-center font-bold" style={{ borderColor: `${tplStyle.primaryColor}66` }}>
+                              {currentBulletin.examBlancTotalPoints >= currentBulletin.examBlancTotalCoeff * 10 ? (
+                                <span className="text-green-600">ADMIS</span>
+                              ) : (
+                                <span className="text-red-600">NON ADMIS</span>
+                              )}
+                            </td>
+                          )}
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* ===== SECTION EXAMENS (non-blanc) ===== */}
+                {showExam && currentBulletin && (
+                  <div className="px-4 pt-4">
+                    <table className="w-full text-xs border-collapse">
+                      <thead>
+                        <tr>
+                          <th className="text-white text-left p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '40%' }}>
+                            Examens
+                          </th>
+                          {showExamNotes && (
+                            <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '10%' }}>Notes</th>
+                          )}
+                          {showExamCoeff && (
+                            <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '8%' }}>C.</th>
+                          )}
+                          {showExamPoints && (
+                            <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '12%' }}>Points</th>
+                          )}
+                          {showExamAppreciation && (
+                            <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '30%' }}>Appréciation</th>
                           )}
                         </tr>
                       </thead>
@@ -879,9 +1033,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                                     </td>
                                   )}
                                   {showExamCoeff && (
-                                    <td className="p-2 border border-border/50 text-center text-muted-foreground">
-                                      {modData?.coefficient}
-                                    </td>
+                                    <td className="p-2 border border-border/50 text-center text-muted-foreground">{modData?.coefficient}</td>
                                   )}
                                   {showExamPoints && (
                                     <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData?.examPoints ?? null)}`}>
