@@ -99,7 +99,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     queryFn: async () => {
       const { data } = await supabase
         .from('user_formation_assignments')
-        .select('formation_id, formations(id, title, level, start_date, end_date, duration_years, semesters_count)')
+        .select('formation_id, formations(id, title, level, start_date, end_date, duration_years, semesters_count, formation_type)')
         .eq('user_id', studentId!);
       return (data || []).map((d: any) => d.formations).filter(Boolean);
     },
