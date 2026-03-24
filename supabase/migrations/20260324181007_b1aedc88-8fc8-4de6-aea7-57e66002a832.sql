@@ -1,0 +1,1 @@
+ALTER TABLE formation_modules ADD COLUMN competency_block_id uuid REFERENCES competency_blocks(id) ON DELETE SET NULL;
