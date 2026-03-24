@@ -73,6 +73,8 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
 
   const durationYears = (currentFormationData as any)?.duration_years || 1;
   const semestersCount = (currentFormationData as any)?.semesters_count || durationYears * 2;
+  const isBTS = (currentFormationData as any)?.formation_type === 'bts';
+  const isExamBlancView = semesterView === 'exam_blanc';
 
   useEffect(() => {
     if (currentFormationData && !semesterView) setSemesterView('s1');
