@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Save, Plus, AlertCircle, BookOpen, GraduationCap, Printer } from 'lucide-react';
+import { EVALUATION_TYPES } from '@/services/gradesService';
 import { semesterMatchesFilter } from '@/utils/semesterUtils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -159,8 +160,9 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
         });
       }
       
-      const cc = evals.filter(e => e.evaluation_type === 'controle_continu' || e.evaluation_type === 'projet' || e.evaluation_type === 'tp');
-      const exam = evals.filter(e => e.evaluation_type === 'examen_blanc' || e.evaluation_type === 'examen_final');
+      const ccTypes = EVALUATION_TYPES.filter(t => t.category === 'cc').map(t => t.value);
+      const cc = evals.filter(e => ccTypes.includes(e.evaluation_type));
+      const exam = evals.filter(e => !ccTypes.includes(e.evaluation_type));
       groups.set(mod.id, { cc, exam });
     });
     
@@ -556,18 +558,25 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
                       // CC evaluation columns
                       for (let i = 0; i < ccCols; i++) {
                         const ev = group.cc[i];
+                        const typeInfo = ev ? EVALUATION_TYPES.find(t => t.value === ev.evaluation_type) : null;
+                        const shortLabel = ev ? (typeInfo?.label?.match(/\(([^)]+)\)/)?.[1] || `CC${i + 1}`) : `CC${i + 1}`;
                         cells.push(
-                          <th key={`${mod.id}-cc-${i}`} className="text-center p-1 border border-border font-medium w-12 text-[8px] truncate max-w-[60px]">
-                            {ev ? (ev.title.length > 8 ? `CC${i + 1}` : ev.title) : `CC${i + 1}`}
+                          <th key={`${mod.id}-cc-${i}`} className="text-center p-1 border border-border font-medium w-12 text-[8px] truncate max-w-[60px]" title={ev?.title}>
+                            {ev ? (ev.title.length > 8 ? shortLabel : ev.title) : `CC${i + 1}`}
                           </th>
                         );
                       }
                       
                       // Exam columns
                       group.exam.forEach((ev, i) => {
+                        const typeInfo = EVALUATION_TYPES.find(t => t.value === ev.evaluation_type);
+                        const shortLabel = ev.evaluation_type === 'examen_blanc' ? 'Ex.B' : 
+                                          ev.evaluation_type === 'examen_final' ? 'Ex.F' :
+                                          ev.evaluation_type === 'partiel' ? 'Part.' : 
+                                          typeInfo?.label?.match(/\(([^)]+)\)/)?.[1] || 'Ex';
                         cells.push(
-                          <th key={`${mod.id}-exam-${i}`} className="text-center p-1 border border-border font-medium w-12 bg-emerald-100/50 dark:bg-emerald-900/20 text-[8px]">
-                            {ev.evaluation_type === 'examen_blanc' ? 'Ex.B' : 'Ex.F'}
+                          <th key={`${mod.id}-exam-${i}`} className="text-center p-1 border border-border font-medium w-12 bg-emerald-100/50 dark:bg-emerald-900/20 text-[8px]" title={ev.title}>
+                            {shortLabel}
                           </th>
                         );
                       });

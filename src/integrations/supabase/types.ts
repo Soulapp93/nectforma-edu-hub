@@ -1348,6 +1348,7 @@ export type Database = {
           period_id: string | null
           scale: number
           scale_type: string | null
+          show_on_transcript: boolean | null
           status: string
           title: string
           updated_at: string
@@ -1365,6 +1366,7 @@ export type Database = {
           period_id?: string | null
           scale?: number
           scale_type?: string | null
+          show_on_transcript?: boolean | null
           status?: string
           title: string
           updated_at?: string
@@ -1382,6 +1384,7 @@ export type Database = {
           period_id?: string | null
           scale?: number
           scale_type?: string | null
+          show_on_transcript?: boolean | null
           status?: string
           title?: string
           updated_at?: string
@@ -1558,6 +1561,7 @@ export type Database = {
           duration_years: number
           end_date: string
           establishment_id: string
+          formation_type: string | null
           id: string
           level: string
           max_students: number
@@ -1577,6 +1581,7 @@ export type Database = {
           duration_years?: number
           end_date: string
           establishment_id: string
+          formation_type?: string | null
           id?: string
           level: string
           max_students?: number
@@ -1596,6 +1601,7 @@ export type Database = {
           duration_years?: number
           end_date?: string
           establishment_id?: string
+          formation_type?: string | null
           id?: string
           level?: string
           max_students?: number
