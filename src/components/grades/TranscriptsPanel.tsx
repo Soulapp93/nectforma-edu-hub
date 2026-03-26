@@ -81,7 +81,8 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   const [internalFormation, setInternalFormation] = useState('');
   const selectedFormation = propFormationId || internalFormation;
   const [semesterView, setSemesterView] = useState<string>('');
-  const [currentStudentIndex, setCurrentStudentIndex] = useState(0);
+  const [currentStudentIndex, setCurrentStudentIndex] = useState<number | null>(null);
+  const [showBulletinDialog, setShowBulletinDialog] = useState(false);
   const [showTemplateEditor, setShowTemplateEditor] = useState(false);
   const [groupingMode, setGroupingMode] = useState<'section' | 'bloc' | 'semester'>('section');
   const [showPublishDialog, setShowPublishDialog] = useState(false);
@@ -548,7 +549,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     });
   }, [students, modules, evaluations, allGrades, gradingRules, ccEvaluations, examEvaluations, examBlancEvaluations]);
 
-  const currentBulletin = bulletins[currentStudentIndex] || null;
+  const currentBulletin = currentStudentIndex !== null ? (bulletins[currentStudentIndex] || null) : null;
   const selectedFormationData = availableFormations.find((f: any) => f.id === selectedFormation);
 
   const handlePrint = () => {
@@ -781,7 +782,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
           </CardContent>
         </Card>
       ) : (
-        /* ============ VUE LISTE avec bouton voir bulletin ============ */
+        /* ============ LISTE DES ÉTUDIANTS ============ */
         <div className="space-y-2">
           <div className="text-sm text-muted-foreground mb-3">
             {bulletins.length} étudiant(s) • {selectedFormationData?.title} • {currentPeriodLabel}
@@ -792,12 +793,8 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                 <tr className="bg-primary/10">
                   <th className="text-left p-3 border-b border-border font-semibold">#</th>
                   <th className="text-left p-3 border-b border-border font-semibold">Étudiant</th>
-                  {modules.map(mod => (
-                    <th key={mod.id} className="text-center p-3 border-b border-border font-semibold text-xs">
-                      {mod.title}
-                    </th>
-                  ))}
-                  <th className="text-center p-3 border-b border-border font-semibold bg-primary/5">Moy. Gén.</th>
+                  <th className="text-center p-3 border-b border-border font-semibold">Moyenne Générale</th>
+                  <th className="text-center p-3 border-b border-border font-semibold">Mention</th>
                   <th className="text-center p-3 border-b border-border font-semibold">Décision</th>
                   <th className="text-center p-3 border-b border-border font-semibold">Action</th>
                 </tr>
@@ -807,16 +804,15 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                   <tr key={b.studentId} className="hover:bg-muted/30 border-b border-border/50">
                     <td className="p-3 text-muted-foreground">{idx + 1}</td>
                     <td className="p-3 font-medium whitespace-nowrap">{b.studentName}</td>
-                    {modules.map(mod => {
-                      const modData = b.modules.find(m => m.moduleId === mod.id);
-                      return (
-                        <td key={mod.id} className={`p-3 text-center font-bold text-xs ${avgColor(modData?.ccAverage ?? null)}`}>
-                          {modData?.ccAverage !== null && modData?.ccAverage !== undefined ? modData.ccAverage.toFixed(2) : '—'}
-                        </td>
-                      );
-                    })}
                     <td className={`p-3 text-center font-bold ${avgColor(b.ccGeneralAverage)}`}>
                       {b.ccGeneralAverage !== null ? `${b.ccGeneralAverage.toFixed(2)}/20` : '—'}
+                    </td>
+                    <td className="p-3 text-center">
+                      {b.mention ? (
+                        <Badge variant="outline" className="text-[10px]">
+                          {MENTIONS.find(m => m.value === b.mention)?.label || ''}
+                        </Badge>
+                      ) : '—'}
                     </td>
                     <td className="p-3 text-center">
                       <Badge variant="outline" className={`text-[10px] ${DECISIONS.find(d => d.value === b.decision)?.color || ''}`}>
@@ -824,8 +820,9 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                       </Badge>
                     </td>
                     <td className="p-3 text-center">
-                      <Button size="sm" variant="ghost" onClick={() => { setCurrentStudentIndex(idx); }} className="h-7 px-2">
+                      <Button size="sm" variant="outline" onClick={() => { setCurrentStudentIndex(idx); setShowBulletinDialog(true); }} className="h-7 px-3 gap-1.5">
                         <Eye className="h-3.5 w-3.5" />
+                        Voir
                       </Button>
                     </td>
                   </tr>
@@ -836,30 +833,30 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
         </div>
       )}
 
-      {/* ============ VUE BULLETIN (when student selected) ============ */}
-      {selectedFormation && currentBulletin && currentStudentIndex >= 0 && (
-        <div className="space-y-4">
-          {/* Navigation */}
-          <div className="flex items-center justify-between bg-muted/30 rounded-lg p-3 border border-border/50">
-            <Button variant="ghost" size="sm" disabled={currentStudentIndex <= 0} onClick={() => setCurrentStudentIndex(p => p - 1)} className="gap-1">
-              <ChevronLeft className="h-4 w-4" /> Précédent
-            </Button>
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium">{currentBulletin.studentName}</span>
-              <Badge variant="secondary" className="text-xs">{currentStudentIndex + 1} / {bulletins.length}</Badge>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1">
-                <Printer className="h-3.5 w-3.5" /> Imprimer
-              </Button>
-              <Button variant="ghost" size="sm" disabled={currentStudentIndex >= bulletins.length - 1} onClick={() => setCurrentStudentIndex(p => p + 1)} className="gap-1">
-                Suivant <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+      {/* ============ DIALOG BULLETIN ÉTUDIANT ============ */}
+      <Dialog open={showBulletinDialog} onOpenChange={(open) => { setShowBulletinDialog(open); if (!open) setCurrentStudentIndex(null); }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+          {currentBulletin && (
+            <>
+              {/* Navigation header */}
+              <div className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3 flex items-center justify-between">
+                <Button variant="ghost" size="sm" disabled={currentStudentIndex === null || currentStudentIndex <= 0} onClick={() => setCurrentStudentIndex(p => (p ?? 1) - 1)} className="gap-1">
+                  <ChevronLeft className="h-4 w-4" /> Précédent
+                </Button>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-semibold">{currentBulletin.studentName}</span>
+                  <Badge variant="secondary" className="text-xs">{(currentStudentIndex ?? 0) + 1} / {bulletins.length}</Badge>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1">
+                    <Printer className="h-3.5 w-3.5" /> Imprimer
+                  </Button>
+                  <Button variant="ghost" size="sm" disabled={currentStudentIndex === null || currentStudentIndex >= bulletins.length - 1} onClick={() => setCurrentStudentIndex(p => (p ?? 0) + 1)} className="gap-1">
+                    Suivant <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
 
-          <Card className="overflow-hidden">
-            <CardContent className="p-0">
               <div ref={printRef} className="bulletin">
                 {/* ===== EN-TÊTE ===== */}
                 <div className="p-6 border-b-2" style={{ borderColor: tplStyle.primaryColor }}>
@@ -977,7 +974,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                 </div>
 
                 {/* ===== SECTION EXAMEN BLANC (BTS) ===== */}
-                {showExamBlanc && currentBulletin && (
+                {showExamBlanc && (
                   <div className="px-4 pt-4">
                     <table className="w-full text-xs border-collapse">
                       <thead>
@@ -1000,7 +997,6 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                         </tr>
                       </thead>
                       <tbody>
-                        {/* ÉCRITS group */}
                         {(() => {
                           const ecritsModules = currentBulletin.modules.filter(m => m.examBlancType === 'ecrit');
                           const orauxModules = currentBulletin.modules.filter(m => m.examBlancType === 'oral');
@@ -1043,7 +1039,6 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                                       </div>
                                     </td>
                                   )}
-                                  {showExamAppreciation && ecritsModules.indexOf(modData) !== 0 && null}
                                 </tr>
                               ))}
                               {hasGroups && orauxModules.length > 0 && (
@@ -1071,7 +1066,6 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                                   )}
                                 </tr>
                               ))}
-                              {/* Non-grouped exam blanc modules (no oral/ecrit distinction) */}
                               {!hasGroups && currentBulletin.modules.filter(m => m.examBlancType !== null).map(modData => (
                                 <tr key={modData.moduleId} className="border-b border-border/30">
                                   <td className="p-2 border border-border/50 font-medium">{modData.moduleTitle}</td>
@@ -1103,7 +1097,6 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                             </>
                           );
                         })()}
-                        {/* TOTAL row */}
                         <tr className="font-bold" style={{ backgroundColor: `${tplStyle.primaryColor}33` }}>
                           <td className="p-2.5 border text-sm uppercase" style={{ borderColor: `${tplStyle.primaryColor}66` }}>
                             TOTAL (Admis si &gt; ou = {currentBulletin.examBlancTotalCoeff * 10})
@@ -1131,7 +1124,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                 )}
 
                 {/* ===== SECTION EXAMENS (non-blanc) ===== */}
-                {showExam && currentBulletin && (
+                {showExam && (
                   <div className="px-4 pt-4">
                     <table className="w-full text-xs border-collapse">
                       <thead>
@@ -1189,7 +1182,6 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                             })}
                           </React.Fragment>
                         ))}
-                        {/* TOTAL row */}
                         <tr className="font-bold" style={{ backgroundColor: `${tplStyle.primaryColor}33` }}>
                           <td className="p-2.5 border text-right text-xs uppercase" style={{ borderColor: `${tplStyle.primaryColor}66` }}>
                             TOTAL (Admis si &gt; ou = {currentBulletin.examTotalCoeff * 10})
@@ -1262,10 +1254,10 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
