@@ -302,10 +302,8 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
       await refetchPublished();
       setShowPublishDialog(false);
       setPublishSemester('');
-      const { toast } = await import('sonner');
       toast.success(`Relevés du Semestre ${publishSemester} publiés avec succès`);
     } catch (e: any) {
-      const { toast } = await import('sonner');
       toast.error(e.message || 'Erreur lors de la publication');
     } finally {
       setIsPublishing(false);
