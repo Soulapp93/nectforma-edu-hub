@@ -549,7 +549,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     });
   }, [students, modules, evaluations, allGrades, gradingRules, ccEvaluations, examEvaluations, examBlancEvaluations]);
 
-  const currentBulletin = bulletins[currentStudentIndex] || null;
+  const currentBulletin = currentStudentIndex !== null ? (bulletins[currentStudentIndex] || null) : null;
   const selectedFormationData = availableFormations.find((f: any) => f.id === selectedFormation);
 
   const handlePrint = () => {
