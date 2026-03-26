@@ -195,45 +195,45 @@ const Notes = () => {
             <GradingSettingsPanel />
           </div>
         ) : (
-          <div className="flex gap-4">
-            {/* Sidebar navigation */}
-            <div className="hidden md:block w-64 shrink-0">
-              <div className="bg-card rounded-xl border-2 border-primary/20 shadow-sm overflow-hidden sticky top-4">
-                {SIDEBAR_TABS.map((tab) => {
-                  const Icon = tab.icon;
-                  const isActive = activeTab === tab.value;
-                  return (
-                    <button
-                      key={tab.value}
-                      onClick={() => setActiveTab(tab.value)}
-                      className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition-all border-l-4 ${
-                        isActive 
-                          ? 'bg-primary/10 border-l-primary text-primary font-semibold' 
-                          : 'border-l-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                      }`}
-                    >
-                      <Icon className={`h-5 w-5 shrink-0 ${isActive ? 'text-primary' : ''}`} />
-                      <span className="text-sm">{tab.label}</span>
-                    </button>
-                  );
-                })}
+          <div className="space-y-4">
+            {/* Horizontal tab navigation */}
+            <div className="bg-card rounded-xl border border-border shadow-sm p-1.5 flex flex-wrap gap-1">
+              {SIDEBAR_TABS.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.value;
+                return (
+                  <button
+                    key={tab.value}
+                    onClick={() => setActiveTab(tab.value)}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      isActive 
+                        ? 'bg-primary text-primary-foreground shadow-sm' 
+                        : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                    }`}
+                  >
+                    <Icon className={`h-4 w-4 shrink-0`} />
+                    <span className="hidden sm:inline">{tab.label}</span>
+                    <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
+                  </button>
+                );
+              })}
 
-                {/* Periods info */}
-                {periods.length > 0 && (
-                  <div className="border-t border-border p-3 space-y-1.5">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Périodes</p>
-                    {periods.map((p: any) => (
-                      <div key={p.id} className="text-xs text-muted-foreground flex items-center gap-1.5">
-                        <div className={`w-1.5 h-1.5 rounded-full ${p.is_locked ? 'bg-red-400' : 'bg-green-400'}`} />
-                        {p.name}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {/* Periods info inline */}
+              {periods.length > 0 && (
+                <div className="hidden lg:flex items-center gap-2 ml-auto px-3">
+                  <div className="w-px h-6 bg-border" />
+                  {periods.slice(0, 4).map((p: any) => (
+                    <div key={p.id} className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <div className={`w-1.5 h-1.5 rounded-full ${p.is_locked ? 'bg-red-400' : 'bg-green-400'}`} />
+                      {p.name}
+                    </div>
+                  ))}
+                  {periods.length > 4 && <span className="text-[10px] text-muted-foreground">+{periods.length - 4}</span>}
+                </div>
+              )}
             </div>
 
-            {/* Mobile tab bar */}
+            {/* Mobile bottom tab bar */}
             <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-card border-t border-border px-2 py-1.5 flex gap-1">
               {SIDEBAR_TABS.map(tab => {
                 const Icon = tab.icon;
@@ -254,13 +254,7 @@ const Notes = () => {
             </div>
 
             {/* Main content */}
-            <div className="flex-1 min-w-0">
-              {/* Tab header */}
-              <div className="mb-4">
-                <h2 className="text-xl font-bold text-foreground">{currentTab.label}</h2>
-                <p className="text-sm text-muted-foreground">{currentTab.description}</p>
-              </div>
-
+            <div>
               {activeTab === 'saisie' && (
                 <GradeSheetView mode={isAdmin ? 'admin' : 'instructor'} formationId={selectedFormationId} />
               )}
