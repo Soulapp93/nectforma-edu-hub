@@ -156,7 +156,7 @@ const Notes = () => {
 
   // ============ Formation detail view with sidebar ============
   if (selectedFormationId && selectedFormation) {
-    const currentTab = SIDEBAR_TABS.find(t => t.value === activeTab) || SIDEBAR_TABS[0];
+    
     
     return (
       <div className="p-4 md:p-6 pb-20 md:pb-6">
