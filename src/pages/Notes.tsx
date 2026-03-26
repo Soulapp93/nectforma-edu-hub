@@ -1,19 +1,27 @@
 import React, { useState, useMemo } from 'react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useEstablishment } from '@/hooks/useEstablishment';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileSpreadsheet, FileText, Settings2, GraduationCap, ClipboardList, ArrowLeft, Calendar, Users, ChevronRight, Clock, BookOpen, Search } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  FileSpreadsheet, FileText, Settings2, GraduationCap, ClipboardList, 
+  ArrowLeft, Calendar, Users, ChevronRight, Clock, BookOpen, Search,
+  Calculator, Scale, ScrollText, Plus
+} from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import GradeSheetView from '@/components/grades/GradeSheetView';
 import StudentGradesView from '@/components/grades/StudentGradesView';
 import TranscriptsPanel from '@/components/grades/TranscriptsPanel';
 import GradingSettingsPanel from '@/components/grades/GradingSettingsPanel';
 import TutorGradesView from '@/components/grades/TutorGradesView';
+import CalculValidation from '@/components/grades/CalculValidation';
+import JuryDeliberation from '@/components/grades/JuryDeliberation';
+import CreatePeriodModal from '@/components/grades/CreatePeriodModal';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getEvaluationPeriods } from '@/services/gradesService';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -30,6 +38,13 @@ const getLevelColor = (level?: string) => {
   return colors[level || ''] || 'bg-muted text-muted-foreground';
 };
 
+const SIDEBAR_TABS = [
+  { value: 'saisie', label: 'Saisie des notes', icon: FileSpreadsheet, description: 'CC · DS · Examen Final · Oral / Soutenance' },
+  { value: 'calcul', label: 'Calcul & Validation', icon: Calculator, description: 'Moyennes, rangs et récapitulatif par filière' },
+  { value: 'jury', label: 'Jury & Délibération', icon: Scale, description: 'Décisions officielles et procès-verbal' },
+  { value: 'bulletin', label: 'Bulletin de notes', icon: ScrollText, description: 'Bulletins individuels par étudiant' },
+];
+
 const Notes = () => {
   const { userRole, userId } = useCurrentUser();
   const { establishment } = useEstablishment();
@@ -38,34 +53,32 @@ const Notes = () => {
   const isStudent = userRole === 'Étudiant';
   const isTutor = userRole === 'Tuteur';
 
-  // Hierarchical navigation state
   const [selectedProgramName, setSelectedProgramName] = useState<string | null>(null);
   const [selectedFormationId, setSelectedFormationId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('saisie');
+  const [showCreatePeriod, setShowCreatePeriod] = useState(false);
 
-  // Fetch formations for admin/formateur
   const { data: formations = [], isLoading } = useQuery({
     queryKey: ['formations-notes-page', userId, isAdmin],
     queryFn: async () => {
       if (isAdmin) {
         const { data } = await supabase
           .from('formations')
-          .select('id, title, status, color, level, start_date, end_date, max_students, academic_year, duration, formation_modules(id)')
+          .select('id, title, status, color, level, start_date, end_date, max_students, academic_year, duration, duration_years, semesters_count, formation_type, formation_modules(id)')
           .eq('establishment_id', establishment?.id || '')
           .order('title');
         return data || [];
       }
-      // Formateur: only assigned formations
       const { data } = await supabase
         .from('user_formation_assignments')
-        .select('formation_id, formations(id, title, status, color, level, start_date, end_date, max_students, academic_year, duration, formation_modules(id))')
+        .select('formation_id, formations(id, title, status, color, level, start_date, end_date, max_students, academic_year, duration, duration_years, semesters_count, formation_type, formation_modules(id))')
         .eq('user_id', userId!);
       return (data || []).map((d: any) => d.formations).filter(Boolean);
     },
     enabled: (isAdmin || isFormateur) && !!userId && !!establishment?.id,
   });
 
-  // Count students per formation
   const { data: studentCounts = {} } = useQuery({
     queryKey: ['formation-student-counts', formations.map((f: any) => f.id).join(',')],
     queryFn: async () => {
@@ -82,7 +95,14 @@ const Notes = () => {
     enabled: formations.length > 0,
   });
 
-  // Group formations by title (program)
+  const selectedFormation = formations.find((f: any) => f.id === selectedFormationId);
+
+  const { data: periods = [] } = useQuery({
+    queryKey: ['evaluation-periods', selectedFormationId],
+    queryFn: () => getEvaluationPeriods(selectedFormationId!),
+    enabled: !!selectedFormationId,
+  });
+
   const formationGroups = useMemo(() => {
     const groups: Record<string, any[]> = {};
     formations.forEach((f: any) => {
@@ -99,9 +119,7 @@ const Notes = () => {
   const programNames = useMemo(() => Object.keys(formationGroups).sort(), [formationGroups]);
 
   const filteredPrograms = useMemo(() => {
-    return programNames.filter(name =>
-      name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    return programNames.filter(name => name.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [programNames, searchTerm]);
 
   const selectedGroupFormations = useMemo(() => {
@@ -109,122 +127,184 @@ const Notes = () => {
     return formationGroups[selectedProgramName] || [];
   }, [selectedProgramName, formationGroups]);
 
-  // Étudiant: vue simplifiée
+  // Étudiant
   if (isStudent) {
     return (
       <div className="p-4 md:p-6 space-y-6 pb-20 md:pb-6">
-        <PageHeader
-          title="Mes notes"
-          description="Consultez vos résultats et téléchargez vos relevés de notes"
-          icon={GraduationCap}
-        />
+        <PageHeader title="Mes notes" description="Consultez vos résultats et téléchargez vos relevés de notes" icon={GraduationCap} />
         <Tabs defaultValue="notes" className="space-y-4">
           <TabsList className="grid grid-cols-2 w-full max-w-md">
-            <TabsTrigger value="notes" className="flex items-center gap-2">
-              <ClipboardList className="h-4 w-4" />
-              Mes notes
-            </TabsTrigger>
-            <TabsTrigger value="releves" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Mes relevés
-            </TabsTrigger>
+            <TabsTrigger value="notes" className="flex items-center gap-2"><ClipboardList className="h-4 w-4" />Mes notes</TabsTrigger>
+            <TabsTrigger value="releves" className="flex items-center gap-2"><FileText className="h-4 w-4" />Mes relevés</TabsTrigger>
           </TabsList>
-          <TabsContent value="notes">
-            <StudentGradesView studentId={userId!} />
-          </TabsContent>
-          <TabsContent value="releves">
-            <TranscriptsPanel mode="student" studentId={userId!} />
-          </TabsContent>
+          <TabsContent value="notes"><StudentGradesView studentId={userId!} /></TabsContent>
+          <TabsContent value="releves"><TranscriptsPanel mode="student" studentId={userId!} /></TabsContent>
         </Tabs>
       </div>
     );
   }
 
-  // Tuteur: vue apprenti
+  // Tuteur
   if (isTutor) {
     return (
       <div className="p-4 md:p-6 space-y-6 pb-20 md:pb-6">
-        <PageHeader
-          title="Notes de l'apprenti"
-          description="Consultez les résultats et relevés de notes de votre apprenti"
-          icon={GraduationCap}
-        />
+        <PageHeader title="Notes de l'apprenti" description="Consultez les résultats et relevés de notes de votre apprenti" icon={GraduationCap} />
         <TutorGradesView />
       </div>
     );
   }
 
-  // Admin/Formateur: Formation detail view (after selecting a promotion)
-  if (selectedFormationId) {
-    const selectedFormation = formations.find((f: any) => f.id === selectedFormationId);
+  // ============ Formation detail view with sidebar ============
+  if (selectedFormationId && selectedFormation) {
+    const currentTab = SIDEBAR_TABS.find(t => t.value === activeTab) || SIDEBAR_TABS[0];
+    
     return (
-      <div className="p-4 md:p-6 space-y-6 pb-20 md:pb-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => setSelectedFormationId(null)} className="gap-2">
+      <div className="p-4 md:p-6 pb-20 md:pb-6">
+        {/* Top bar */}
+        <div className="flex items-center gap-3 mb-4">
+          <Button variant="ghost" size="sm" onClick={() => { setSelectedFormationId(null); setActiveTab('saisie'); }} className="gap-2">
             <ArrowLeft className="h-4 w-4" />
-            Retour aux promotions
+            Retour
           </Button>
-        </div>
-        <PageHeader
-          title={selectedFormation?.title || 'Formation'}
-          description={`${selectedFormation?.level || ''} ${selectedFormation?.academic_year ? `— ${selectedFormation.academic_year}` : ''} — Feuilles de notes et relevés`}
-          icon={GraduationCap}
-        />
-        <Tabs defaultValue="feuilles" className="space-y-4">
-          <TabsList className="flex flex-wrap gap-1 w-full max-w-lg">
-            <TabsTrigger value="feuilles" className="flex items-center gap-2">
-              <FileSpreadsheet className="h-4 w-4" />
-              Feuilles de notes
-            </TabsTrigger>
-            <TabsTrigger value="releves" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Relevés de notes
-            </TabsTrigger>
+          <div className="flex items-center gap-2">
+            <Badge className="bg-primary text-primary-foreground">{selectedFormation.title}</Badge>
+            {selectedFormation.level && <Badge variant="outline" className="text-xs">{selectedFormation.level}</Badge>}
+            {selectedFormation.academic_year && <Badge variant="outline" className="text-xs">{selectedFormation.academic_year}</Badge>}
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowCreatePeriod(true)} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Créer une période
+            </Button>
             {isAdmin && (
-              <TabsTrigger value="settings" className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setActiveTab('settings')} className={activeTab === 'settings' ? 'bg-muted' : ''}>
                 <Settings2 className="h-4 w-4" />
-                Paramètres
-              </TabsTrigger>
+              </Button>
             )}
-          </TabsList>
-          <TabsContent value="feuilles">
-            <GradeSheetView mode={isAdmin ? 'admin' : 'instructor'} formationId={selectedFormationId} />
-          </TabsContent>
-          <TabsContent value="releves">
-            <TranscriptsPanel mode="admin" formationId={selectedFormationId} />
-          </TabsContent>
-          {isAdmin && (
-            <TabsContent value="settings">
-              <GradingSettingsPanel />
-            </TabsContent>
-          )}
-        </Tabs>
+          </div>
+        </div>
+
+        {activeTab === 'settings' ? (
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <Button variant="ghost" size="sm" onClick={() => setActiveTab('saisie')}>
+                <ArrowLeft className="h-4 w-4 mr-1" /> Retour
+              </Button>
+              <h2 className="text-lg font-semibold">Paramètres</h2>
+            </div>
+            <GradingSettingsPanel />
+          </div>
+        ) : (
+          <div className="flex gap-4">
+            {/* Sidebar navigation */}
+            <div className="hidden md:block w-64 shrink-0">
+              <div className="bg-card rounded-xl border-2 border-primary/20 shadow-sm overflow-hidden sticky top-4">
+                {SIDEBAR_TABS.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeTab === tab.value;
+                  return (
+                    <button
+                      key={tab.value}
+                      onClick={() => setActiveTab(tab.value)}
+                      className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition-all border-l-4 ${
+                        isActive 
+                          ? 'bg-primary/10 border-l-primary text-primary font-semibold' 
+                          : 'border-l-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                      }`}
+                    >
+                      <Icon className={`h-5 w-5 shrink-0 ${isActive ? 'text-primary' : ''}`} />
+                      <span className="text-sm">{tab.label}</span>
+                    </button>
+                  );
+                })}
+
+                {/* Periods info */}
+                {periods.length > 0 && (
+                  <div className="border-t border-border p-3 space-y-1.5">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Périodes</p>
+                    {periods.map((p: any) => (
+                      <div key={p.id} className="text-xs text-muted-foreground flex items-center gap-1.5">
+                        <div className={`w-1.5 h-1.5 rounded-full ${p.is_locked ? 'bg-red-400' : 'bg-green-400'}`} />
+                        {p.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Mobile tab bar */}
+            <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-card border-t border-border px-2 py-1.5 flex gap-1">
+              {SIDEBAR_TABS.map(tab => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.value;
+                return (
+                  <button
+                    key={tab.value}
+                    onClick={() => setActiveTab(tab.value)}
+                    className={`flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-lg text-[9px] ${
+                      isActive ? 'text-primary bg-primary/10 font-semibold' : 'text-muted-foreground'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {tab.label.split(' ')[0]}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Main content */}
+            <div className="flex-1 min-w-0">
+              {/* Tab header */}
+              <div className="mb-4">
+                <h2 className="text-xl font-bold text-foreground">{currentTab.label}</h2>
+                <p className="text-sm text-muted-foreground">{currentTab.description}</p>
+              </div>
+
+              {activeTab === 'saisie' && (
+                <GradeSheetView mode={isAdmin ? 'admin' : 'instructor'} formationId={selectedFormationId} />
+              )}
+              {activeTab === 'calcul' && (
+                <CalculValidation formationId={selectedFormationId} />
+              )}
+              {activeTab === 'jury' && (
+                <JuryDeliberation formationId={selectedFormationId} />
+              )}
+              {activeTab === 'bulletin' && (
+                <TranscriptsPanel mode="admin" formationId={selectedFormationId} />
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Create period modal */}
+        <CreatePeriodModal
+          isOpen={showCreatePeriod}
+          onClose={() => setShowCreatePeriod(false)}
+          formationId={selectedFormationId}
+          semestersCount={selectedFormation.semesters_count || (selectedFormation.duration_years || 1) * 2}
+          existingPeriodsCount={periods.length}
+        />
       </div>
     );
   }
 
-  // Admin/Formateur: Promotions view (after selecting a program)
+  // ============ Promotions view ============
   if (selectedProgramName) {
     return (
       <div className="p-4 md:p-6 space-y-6 pb-20 md:pb-6">
         <div className="bg-card rounded-2xl shadow-lg border-2 border-primary/20 p-5 sm:p-6">
           <div className="flex items-center gap-3 mb-4">
-            <button
-              onClick={() => setSelectedProgramName(null)}
-              className="p-2 hover:bg-muted rounded-xl transition-colors"
-            >
+            <button onClick={() => setSelectedProgramName(null)} className="p-2 hover:bg-muted rounded-xl transition-colors">
               <ArrowLeft className="h-5 w-5 text-foreground" />
             </button>
-            <div className="p-2.5 bg-primary/10 rounded-xl">
-              <GraduationCap className="h-5 w-5 text-primary" />
-            </div>
+            <div className="p-2.5 bg-primary/10 rounded-xl"><GraduationCap className="h-5 w-5 text-primary" /></div>
             <div>
               <h2 className="text-lg font-semibold text-foreground">{selectedProgramName}</h2>
               <p className="text-sm text-muted-foreground">{selectedGroupFormations.length} promotion(s)</p>
             </div>
           </div>
         </div>
-
         {selectedGroupFormations.length === 0 ? (
           <EmptyState icon={Calendar} title="Aucune promotion" description="Aucune promotion pour ce programme." />
         ) : (
@@ -240,14 +320,11 @@ const Notes = () => {
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     {formation.academic_year && (
                       <Badge className="bg-primary text-primary-foreground text-xs px-2.5 py-0.5">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        {formation.academic_year}
+                        <Calendar className="h-3 w-3 mr-1" />{formation.academic_year}
                       </Badge>
                     )}
                     {formation.level && (
-                      <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${getLevelColor(formation.level)}`}>
-                        {formation.level}
-                      </span>
+                      <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${getLevelColor(formation.level)}`}>{formation.level}</span>
                     )}
                   </div>
                   <h3 className="text-base font-semibold text-foreground mb-1">{formation.title}</h3>
@@ -257,8 +334,7 @@ const Notes = () => {
                       {format(new Date(formation.start_date), 'MMM yyyy', { locale: fr })} — {format(new Date(formation.end_date), 'MMM yyyy', { locale: fr })}
                     </div>
                     <div className="flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      {studentCounts[formation.id] || 0} étudiant{(studentCounts[formation.id] || 0) > 1 ? 's' : ''}
+                      <Users className="h-3 w-3" />{studentCounts[formation.id] || 0} étudiant{(studentCounts[formation.id] || 0) > 1 ? 's' : ''}
                     </div>
                   </div>
                   <div className="mt-3 pt-3 border-t border-border flex items-center justify-end text-xs text-primary font-medium group-hover:translate-x-1 transition-transform">
@@ -273,20 +349,17 @@ const Notes = () => {
     );
   }
 
-  // Admin/Formateur: Programs list view
+  // ============ Programs list ============
   return (
     <div className="p-4 md:p-6 space-y-6 pb-20 md:pb-6">
       <div className="bg-card rounded-2xl shadow-lg border-2 border-primary/20 p-5 sm:p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2.5 bg-primary/10 rounded-xl">
-            <GraduationCap className="h-5 w-5 text-primary" />
-          </div>
+          <div className="p-2.5 bg-primary/10 rounded-xl"><GraduationCap className="h-5 w-5 text-primary" /></div>
           <div>
             <h2 className="text-lg font-semibold text-foreground">Notes & Évaluations</h2>
             <p className="text-sm text-muted-foreground">Sélectionnez une formation pour gérer les notes</p>
           </div>
         </div>
-
         {programNames.length > 3 && (
           <div className="relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -300,15 +373,10 @@ const Notes = () => {
           </div>
         )}
       </div>
-
       {isLoading ? (
         <LoadingState message="Chargement des formations..." />
       ) : filteredPrograms.length === 0 ? (
-        <EmptyState
-          icon={GraduationCap}
-          title="Aucune formation"
-          description="Aucune formation n'est disponible pour la gestion des notes"
-        />
+        <EmptyState icon={GraduationCap} title="Aucune formation" description="Aucune formation n'est disponible pour la gestion des notes" />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredPrograms.map((name) => {
@@ -324,9 +392,7 @@ const Notes = () => {
                 <div className="p-4">
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     {latest?.level && (
-                      <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${getLevelColor(latest.level)}`}>
-                        {latest.level}
-                      </span>
+                      <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${getLevelColor(latest.level)}`}>{latest.level}</span>
                     )}
                     <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">
                       {group.length} promotion{group.length > 1 ? 's' : ''}
