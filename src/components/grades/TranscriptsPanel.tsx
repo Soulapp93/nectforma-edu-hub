@@ -836,314 +836,146 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
       {/* ============ DIALOG BULLETIN ÉTUDIANT ============ */}
       <Dialog open={showBulletinDialog} onOpenChange={(open) => { setShowBulletinDialog(open); if (!open) setCurrentStudentIndex(null); }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
-          {currentBulletin && (
-            <>
-              {/* Navigation header */}
-              <div className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3 flex items-center justify-between">
-                <Button variant="ghost" size="sm" disabled={currentStudentIndex === null || currentStudentIndex <= 0} onClick={() => setCurrentStudentIndex(p => (p ?? 1) - 1)} className="gap-1">
-                  <ChevronLeft className="h-4 w-4" /> Précédent
-                </Button>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-semibold">{currentBulletin.studentName}</span>
-                  <Badge variant="secondary" className="text-xs">{(currentStudentIndex ?? 0) + 1} / {bulletins.length}</Badge>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1">
-                    <Printer className="h-3.5 w-3.5" /> Imprimer
-                  </Button>
-                  <Button variant="ghost" size="sm" disabled={currentStudentIndex === null || currentStudentIndex >= bulletins.length - 1} onClick={() => setCurrentStudentIndex(p => (p ?? 0) + 1)} className="gap-1">
-                    Suivant <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+          {currentBulletin && (() => {
+            // Compute rank
+            const sortedBulletins = [...bulletins].sort((a, b) => (b.ccGeneralAverage ?? 0) - (a.ccGeneralAverage ?? 0));
+            const rank = sortedBulletins.findIndex(b => b.studentId === currentBulletin.studentId) + 1;
+            const totalStudents = bulletins.length;
 
-              <div ref={printRef} className="bulletin">
-                {/* ===== EN-TÊTE ===== */}
-                <div className="p-6 border-b-2" style={{ borderColor: tplStyle.primaryColor }}>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      {tplHeader.showLogo && establishment?.logo_url && <img src={establishment.logo_url} alt="" className="h-14 mb-2" />}
-                      <p className="text-xs font-semibold">{establishment?.name}</p>
-                      {establishment?.address && <p className="text-[10px] text-muted-foreground">{establishment.address}</p>}
-                    </div>
-                    <div className="text-right">
-                      <h1 className="text-lg font-bold" style={{ color: tplStyle.primaryColor }}>
-                        {tplHeader.title} N°...
-                      </h1>
-                      {tplHeader.subtitle && <p className="text-xs text-muted-foreground">{tplHeader.subtitle}</p>}
-                      <h2 className="text-sm font-bold mt-1">{selectedFormationData?.title}</h2>
-                      {selectedFormationData?.level && <p className="text-xs text-muted-foreground">{selectedFormationData.level}</p>}
-                      {tplHeader.showSession && selectedFormationData?.start_date && selectedFormationData?.end_date && (
-                        <p className="text-xs text-muted-foreground">
-                          SESSION {format(new Date(selectedFormationData.start_date), 'yyyy')} - {format(new Date(selectedFormationData.end_date), 'yyyy')}
+            // DS evaluations (devoir_surveille type)
+            const getStudentModuleDSAvg = (sId: string, modId: string): number | null => {
+              const dsEvals = evaluations.filter(e => e.module_id === modId && e.evaluation_type === 'devoir_surveille');
+              if (dsEvals.length === 0) return null;
+              const grades = dsEvals.map(e => allGrades.get(e.id)?.find((g: any) => g.student_id === sId)).filter(Boolean);
+              return calculateModuleAverage(grades, 20);
+            };
+
+            // Exam final
+            const getStudentModuleExamFinal = (sId: string, modId: string): number | null => {
+              const examFinalEvals = evaluations.filter(e => e.module_id === modId && (e.evaluation_type === 'examen_final' || e.evaluation_type === 'partiel'));
+              if (examFinalEvals.length === 0) return null;
+              const grades = examFinalEvals.map(e => allGrades.get(e.id)?.find((g: any) => g.student_id === sId)).filter(Boolean);
+              return calculateModuleAverage(grades, 20);
+            };
+
+            // Oral/Soutenance
+            const getStudentModuleOral = (sId: string, modId: string): number | null => {
+              const oralEvals = evaluations.filter(e => e.module_id === modId && (e.evaluation_type === 'oral' || e.evaluation_type === 'soutenance'));
+              if (oralEvals.length === 0) return null;
+              const grades = oralEvals.map(e => allGrades.get(e.id)?.find((g: any) => g.student_id === sId)).filter(Boolean);
+              return calculateModuleAverage(grades, 20);
+            };
+
+            const getAppreciation = (avg: number | null): string => {
+              if (avg === null) return '';
+              if (avg >= 16) return 'Excellent. Très bon travail.';
+              if (avg >= 14) return 'Résultats satisfaisants. Peut mieux faire.';
+              if (avg >= 12) return 'Résultats satisfaisants. Peut mieux faire.';
+              if (avg >= 10) return 'Niveau acceptable. Des efforts sont nécessaires.';
+              if (avg >= 8) return 'Résultats insuffisants. Doit progresser.';
+              return 'Résultats très insuffisants.';
+            };
+
+            const getStatut = (avg: number | null): { label: string; color: string } => {
+              if (avg === null) return { label: '—', color: '' };
+              if (avg >= 10) return { label: 'Validé', color: 'text-green-700 bg-green-100' };
+              return { label: 'Non validé', color: 'text-red-700 bg-red-100' };
+            };
+
+            // Student first/last name split
+            const nameParts = currentBulletin.studentName.split(' ');
+            const academicYear = selectedFormationData?.start_date && selectedFormationData?.end_date
+              ? `${format(new Date(selectedFormationData.start_date), 'yyyy')}-${format(new Date(selectedFormationData.end_date), 'yyyy')}`
+              : '';
+            const refNumber = `${String((currentStudentIndex ?? 0) + 1).padStart(4, '0')}/S${semesterView.replace('s', '') || '1'}/${format(new Date(), 'yyyy')}`;
+
+            return (
+              <>
+                {/* Navigation header */}
+                <div className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3 flex items-center justify-between">
+                  <Button variant="ghost" size="sm" disabled={currentStudentIndex === null || currentStudentIndex <= 0} onClick={() => setCurrentStudentIndex(p => (p ?? 1) - 1)} className="gap-1">
+                    <ChevronLeft className="h-4 w-4" /> Précédent
+                  </Button>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-semibold">{currentBulletin.studentName}</span>
+                    <Badge variant="secondary" className="text-xs">{(currentStudentIndex ?? 0) + 1} / {bulletins.length}</Badge>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1">
+                      <Printer className="h-3.5 w-3.5" /> Imprimer
+                    </Button>
+                    <Button variant="ghost" size="sm" disabled={currentStudentIndex === null || currentStudentIndex >= bulletins.length - 1} onClick={() => setCurrentStudentIndex(p => (p ?? 0) + 1)} className="gap-1">
+                      Suivant <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div ref={printRef} className="bulletin bg-white text-[#1a1a2e]">
+                  {/* ===== EN-TÊTE STYLE EDUPRO ===== */}
+                  <div className="px-6 pt-6 pb-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        {establishment?.logo_url ? (
+                          <img src={establishment.logo_url} alt="" className="h-14 w-14 rounded-lg object-contain" />
+                        ) : (
+                          <div className="h-14 w-14 rounded-lg flex items-center justify-center text-white font-bold text-xl" style={{ backgroundColor: '#1a1a2e' }}>
+                            {establishment?.name?.charAt(0) || 'E'}
+                          </div>
+                        )}
+                        <div>
+                          <h2 className="text-lg font-bold" style={{ color: '#1a1a2e' }}>{establishment?.name}</h2>
+                          <p className="text-[10px]" style={{ color: '#c8a94e' }}>
+                            {establishment?.type === 'universite' ? 'Université' : 'École Supérieure Privée'}
+                            {establishment?.address ? ` • ${establishment.address}` : ''}
+                          </p>
+                          {establishment?.phone && <p className="text-[10px]" style={{ color: '#64748b' }}>Tél : {establishment.phone} {establishment?.website ? `• ${establishment.website}` : ''}</p>}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="inline-block px-4 py-2 rounded-md text-sm font-bold text-white" style={{ backgroundColor: '#c8a94e' }}>
+                          BULLETIN DE NOTES
+                        </div>
+                        <p className="text-[10px] mt-1.5" style={{ color: '#64748b' }}>
+                          Année : {academicYear} - {currentPeriodLabel}
                         </p>
-                      )}
-                      {currentPeriodLabel && <p className="text-xs text-muted-foreground mt-1">{currentPeriodLabel}</p>}
+                        <p className="text-[10px]" style={{ color: '#64748b' }}>Réf : {refNumber}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* ===== NOM ÉTUDIANT ===== */}
-                <div className="py-2 px-6 text-center" style={{ backgroundColor: `${tplStyle.primaryColor}33` }}>
-                  <p className="font-bold text-sm">{currentBulletin.studentName}</p>
-                </div>
-
-                {/* ===== SECTION CONTRÔLE CONTINU ===== */}
-                <div className="px-4 pt-4">
-                  <table className="w-full text-xs border-collapse">
-                    <thead>
-                      <tr>
-                        <th className="text-white text-left p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '40%' }}>
-                          Contrôle continu
-                        </th>
-                        {showCCMoyenne && (
-                          <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '15%' }}>
-                            Moy. CC
-                          </th>
-                        )}
-                        {showCCClasseMoyenne && (
-                          <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '15%' }}>
-                            Moyenne de Classe
-                          </th>
-                        )}
-                        {showCCAppreciation && (
-                          <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '30%' }}>
-                            Appréciations<br /><span className="font-normal text-[10px]">(travail et comportement)</span>
-                          </th>
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {moduleGroups.map(group => (
-                        <React.Fragment key={group.id}>
-                          {moduleGroups.length > 1 && (
-                            <tr>
-                              <td colSpan={ccColCount} className="p-1.5 pl-3 text-[10px] font-bold uppercase tracking-wider border border-border/50" style={{ backgroundColor: `${tplStyle.primaryColor}11`, color: tplStyle.primaryColor }}>
-                                {group.title}
-                              </td>
-                            </tr>
-                          )}
-                          {group.mods.map(mod => {
-                            const modData = currentBulletin.modules.find(m => m.moduleId === mod.id);
-                            return (
-                              <tr key={mod.id} className="border-b border-border/30">
-                                <td className="p-2 border border-border/50">
-                                  <div className="font-medium">{mod.title}</div>
-                                </td>
-                                {showCCMoyenne && (
-                                  <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData?.ccAverage ?? null)}`}>
-                                    {modData?.ccAverage !== null && modData?.ccAverage !== undefined ? modData.ccAverage.toFixed(2) : '—'}
-                                  </td>
-                                )}
-                                {showCCClasseMoyenne && (
-                                  <td className={`p-2 border border-border/50 text-center font-semibold ${avgColor(modData?.ccClassAverage ?? null)}`}>
-                                    {modData?.ccClassAverage !== null && modData?.ccClassAverage !== undefined ? modData.ccClassAverage.toFixed(2) : '—'}
-                                  </td>
-                                )}
-                                {showCCAppreciation && (
-                                  <td className="p-2 border border-border/50 text-center text-muted-foreground text-[10px]">
-                                    {modData?.appreciation || ''}
-                                  </td>
-                                )}
-                              </tr>
-                            );
-                          })}
-                        </React.Fragment>
-                      ))}
-                      {/* Moyenne Générale CC */}
-                      <tr className="font-bold" style={{ backgroundColor: `${tplStyle.primaryColor}33` }}>
-                        <td className="p-2.5 border text-sm uppercase tracking-wider" style={{ borderColor: `${tplStyle.primaryColor}66` }}>
-                          Moyenne Générale
-                        </td>
-                        {showCCMoyenne && (
-                          <td className={`p-2.5 border text-center text-base ${avgColor(currentBulletin.ccGeneralAverage)}`} style={{ borderColor: `${tplStyle.primaryColor}66` }}>
-                            {currentBulletin.ccGeneralAverage !== null ? currentBulletin.ccGeneralAverage.toFixed(2) : '—'}
-                          </td>
-                        )}
-                        {showCCClasseMoyenne && (
-                          <td className={`p-2.5 border text-center ${avgColor(currentBulletin.ccClassGeneralAverage)}`} style={{ borderColor: `${tplStyle.primaryColor}66` }}>
-                            {currentBulletin.ccClassGeneralAverage !== null ? currentBulletin.ccClassGeneralAverage.toFixed(2) : '—'}
-                          </td>
-                        )}
-                        {showCCAppreciation && (
-                          <td className="p-2.5 border" style={{ borderColor: `${tplStyle.primaryColor}66` }}></td>
-                        )}
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* ===== SECTION EXAMEN BLANC (BTS) ===== */}
-                {showExamBlanc && (
-                  <div className="px-4 pt-4">
-                    <table className="w-full text-xs border-collapse">
-                      <thead>
-                        <tr>
-                          <th className="text-white text-left p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '40%' }}>
-                            Examen Blanc
-                          </th>
-                          {showExamNotes && (
-                            <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '10%' }}>Notes</th>
-                          )}
-                          {showExamCoeff && (
-                            <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '8%' }}>C.</th>
-                          )}
-                          {showExamPoints && (
-                            <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '12%' }}>Points</th>
-                          )}
-                          {showExamAppreciation && (
-                            <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '30%' }}>Appréciation générale</th>
-                          )}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(() => {
-                          const ecritsModules = currentBulletin.modules.filter(m => m.examBlancType === 'ecrit');
-                          const orauxModules = currentBulletin.modules.filter(m => m.examBlancType === 'oral');
-                          const hasGroups = ecritsModules.length > 0 && orauxModules.length > 0;
-
-                          return (
-                            <>
-                              {hasGroups && ecritsModules.length > 0 && (
-                                <tr>
-                                  <td colSpan={examColCount} className="p-1.5 pl-3 text-[10px] font-bold uppercase tracking-wider border border-border/50 text-center" style={{ backgroundColor: `${tplStyle.primaryColor}15`, color: tplStyle.primaryColor }}>
-                                    É C R I T S
-                                  </td>
-                                </tr>
-                              )}
-                              {ecritsModules.map(modData => (
-                                <tr key={modData.moduleId} className="border-b border-border/30">
-                                  <td className="p-2 border border-border/50 font-medium">{modData.moduleTitle}</td>
-                                  {showExamNotes && (
-                                    <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData.examBlancScore)}`}>
-                                      {modData.examBlancScore !== null ? modData.examBlancScore.toFixed(2) : ''}
-                                    </td>
-                                  )}
-                                  {showExamCoeff && (
-                                    <td className="p-2 border border-border/50 text-center text-muted-foreground">{modData.coefficient}</td>
-                                  )}
-                                  {showExamPoints && (
-                                    <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData.examBlancPoints)}`}>
-                                      {modData.examBlancPoints !== null ? modData.examBlancPoints.toFixed(2) : '0,00'}
-                                    </td>
-                                  )}
-                                  {showExamAppreciation && ecritsModules.indexOf(modData) === 0 && (
-                                    <td rowSpan={ecritsModules.length + orauxModules.length + (hasGroups ? 2 : 0)} className="p-2 border border-border/50 align-top text-[10px]">
-                                      <div className="space-y-1">
-                                        <p className="font-semibold text-xs">ASSIDUITÉ :</p>
-                                        <p>- Retards ce semestre : ...</p>
-                                        <p>- Retards au total : ...</p>
-                                        <p>- Absences ce semestre : ...</p>
-                                        <p>- Absences au total : ...</p>
-                                        <p>- Absences restantes à rattraper : ...</p>
-                                      </div>
-                                    </td>
-                                  )}
-                                </tr>
-                              ))}
-                              {hasGroups && orauxModules.length > 0 && (
-                                <tr>
-                                  <td colSpan={examColCount - (showExamAppreciation ? 1 : 0)} className="p-1.5 pl-3 text-[10px] font-bold uppercase tracking-wider border border-border/50 text-center" style={{ backgroundColor: `${tplStyle.primaryColor}15`, color: tplStyle.primaryColor }}>
-                                    O R A U X
-                                  </td>
-                                </tr>
-                              )}
-                              {orauxModules.map(modData => (
-                                <tr key={modData.moduleId} className="border-b border-border/30">
-                                  <td className="p-2 border border-border/50 font-medium">{modData.moduleTitle}</td>
-                                  {showExamNotes && (
-                                    <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData.examBlancScore)}`}>
-                                      {modData.examBlancScore !== null ? modData.examBlancScore.toFixed(2) : ''}
-                                    </td>
-                                  )}
-                                  {showExamCoeff && (
-                                    <td className="p-2 border border-border/50 text-center text-muted-foreground">{modData.coefficient}</td>
-                                  )}
-                                  {showExamPoints && (
-                                    <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData.examBlancPoints)}`}>
-                                      {modData.examBlancPoints !== null ? modData.examBlancPoints.toFixed(2) : '0,00'}
-                                    </td>
-                                  )}
-                                </tr>
-                              ))}
-                              {!hasGroups && currentBulletin.modules.filter(m => m.examBlancType !== null).map(modData => (
-                                <tr key={modData.moduleId} className="border-b border-border/30">
-                                  <td className="p-2 border border-border/50 font-medium">{modData.moduleTitle}</td>
-                                  {showExamNotes && (
-                                    <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData.examBlancScore)}`}>
-                                      {modData.examBlancScore !== null ? modData.examBlancScore.toFixed(2) : ''}
-                                    </td>
-                                  )}
-                                  {showExamCoeff && (
-                                    <td className="p-2 border border-border/50 text-center text-muted-foreground">{modData.coefficient}</td>
-                                  )}
-                                  {showExamPoints && (
-                                    <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData.examBlancPoints)}`}>
-                                      {modData.examBlancPoints !== null ? modData.examBlancPoints.toFixed(2) : '0,00'}
-                                    </td>
-                                  )}
-                                  {showExamAppreciation && currentBulletin.modules.filter(m => m.examBlancType !== null).indexOf(modData) === 0 && (
-                                    <td rowSpan={currentBulletin.modules.filter(m => m.examBlancType !== null).length} className="p-2 border border-border/50 align-top text-[10px]">
-                                      <div className="space-y-1">
-                                        <p className="font-semibold text-xs">ASSIDUITÉ :</p>
-                                        <p>- Retards ce semestre : ...</p>
-                                        <p>- Absences ce semestre : ...</p>
-                                        <p>- Absences au total : ...</p>
-                                      </div>
-                                    </td>
-                                  )}
-                                </tr>
-                              ))}
-                            </>
-                          );
-                        })()}
-                        <tr className="font-bold" style={{ backgroundColor: `${tplStyle.primaryColor}33` }}>
-                          <td className="p-2.5 border text-sm uppercase" style={{ borderColor: `${tplStyle.primaryColor}66` }}>
-                            TOTAL (Admis si &gt; ou = {currentBulletin.examBlancTotalCoeff * 10})
-                          </td>
-                          {showExamNotes && <td className="p-2.5 border" style={{ borderColor: `${tplStyle.primaryColor}66` }}></td>}
-                          {showExamCoeff && <td className="p-2.5 border" style={{ borderColor: `${tplStyle.primaryColor}66` }}></td>}
-                          {showExamPoints && (
-                            <td className={`p-2.5 border text-center text-base ${avgColor(currentBulletin.examBlancTotalPoints / Math.max(currentBulletin.examBlancTotalCoeff, 1))}`} style={{ borderColor: `${tplStyle.primaryColor}66` }}>
-                              {currentBulletin.examBlancTotalPoints.toFixed(2)}
-                            </td>
-                          )}
-                          {showExamAppreciation && (
-                            <td className="p-2.5 border text-center font-bold" style={{ borderColor: `${tplStyle.primaryColor}66` }}>
-                              {currentBulletin.examBlancTotalPoints >= currentBulletin.examBlancTotalCoeff * 10 ? (
-                                <span className="text-green-600">ADMIS</span>
-                              ) : (
-                                <span className="text-red-600">NON ADMIS</span>
-                              )}
-                            </td>
-                          )}
-                        </tr>
-                      </tbody>
-                    </table>
+                  {/* ===== INFOS ÉTUDIANT ===== */}
+                  <div className="mx-6 mb-4 grid grid-cols-5 gap-0 border rounded-md overflow-hidden" style={{ borderColor: '#e2e8f0' }}>
+                    {[
+                      { label: 'Nom & prénoms', value: currentBulletin.studentName },
+                      { label: 'Matricule', value: refNumber.split('/')[0] },
+                      { label: 'Filière', value: selectedFormationData?.title || '' },
+                      { label: 'Niveau', value: selectedFormationData?.level || '' },
+                      { label: 'Année', value: academicYear },
+                    ].map((item, i) => (
+                      <div key={i} className="px-3 py-2" style={{ borderRight: i < 4 ? '1px solid #e2e8f0' : 'none' }}>
+                        <p className="text-[9px] uppercase tracking-wider font-semibold" style={{ color: '#64748b' }}>{item.label}</p>
+                        <p className="text-xs font-bold" style={{ color: '#1a1a2e' }}>{item.value}</p>
+                      </div>
+                    ))}
                   </div>
-                )}
 
-                {/* ===== SECTION EXAMENS (non-blanc) ===== */}
-                {showExam && (
-                  <div className="px-4 pt-4">
-                    <table className="w-full text-xs border-collapse">
+                  {/* ===== TABLEAU DES NOTES ===== */}
+                  <div className="mx-6 mb-4">
+                    <table className="w-full text-[11px] border-collapse" style={{ borderColor: '#cbd5e1' }}>
                       <thead>
                         <tr>
-                          <th className="text-white text-left p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '40%' }}>
-                            Examens
+                          <th className="text-left p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '28%' }}>Matière</th>
+                          <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '7%' }}>CC</th>
+                          <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '7%' }}>DS</th>
+                          <th className="text-center p-2 font-semibold border" style={{ backgroundColor: '#c8a94e', color: '#1a1a2e', borderColor: '#334155', width: '10%' }}>
+                            <span className="text-[9px]">Examen<br/>Final</span>
                           </th>
-                          {showExamNotes && (
-                            <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '10%' }}>Notes</th>
-                          )}
-                          {showExamCoeff && (
-                            <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '8%' }}>C.</th>
-                          )}
-                          {showExamPoints && (
-                            <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '12%' }}>Points</th>
-                          )}
-                          {showExamAppreciation && (
-                            <th className="text-white text-center p-2 border font-semibold" style={{ backgroundColor: tplStyle.primaryColor, borderColor: tplStyle.primaryColor, width: '30%' }}>Appréciation</th>
-                          )}
+                          <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '10%' }}>
+                            <span className="text-[9px]">Oral/Subt.</span>
+                          </th>
+                          <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '10%' }}>Moyenne</th>
+                          <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '10%' }}>Statut</th>
+                          <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '18%' }}>Appréciation</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1151,111 +983,119 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                           <React.Fragment key={group.id}>
                             {moduleGroups.length > 1 && (
                               <tr>
-                                <td colSpan={examColCount} className="p-1.5 pl-3 text-[10px] font-bold uppercase tracking-wider border border-border/50" style={{ backgroundColor: `${tplStyle.primaryColor}11`, color: tplStyle.primaryColor }}>
+                                <td colSpan={8} className="p-1.5 pl-3 text-[10px] font-bold uppercase tracking-wider border" style={{ backgroundColor: '#f1f5f9', color: '#1a1a2e', borderColor: '#cbd5e1' }}>
                                   {group.title}
                                 </td>
                               </tr>
                             )}
-                            {group.mods.map(mod => {
+                            {group.mods.map((mod, modIdx) => {
                               const modData = currentBulletin.modules.find(m => m.moduleId === mod.id);
+                              const ccAvg = modData?.ccAverage ?? null;
+                              const dsAvg = getStudentModuleDSAvg(currentBulletin.studentId, mod.id);
+                              const examFinal = getStudentModuleExamFinal(currentBulletin.studentId, mod.id);
+                              const oralScore = getStudentModuleOral(currentBulletin.studentId, mod.id);
+                              
+                              // Calculate weighted module average
+                              const scores = [ccAvg, dsAvg, examFinal, oralScore].filter(s => s !== null) as number[];
+                              const moduleAvg = scores.length > 0 ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 100) / 100 : null;
+                              const statut = getStatut(moduleAvg);
+                              const appreciation = getAppreciation(moduleAvg);
+
                               return (
-                                <tr key={mod.id} className="border-b border-border/30">
-                                  <td className="p-2 border border-border/50 font-medium">{mod.title}</td>
-                                  {showExamNotes && (
-                                    <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData?.examScore ?? null)}`}>
-                                      {modData?.examScore !== null && modData?.examScore !== undefined ? modData.examScore.toFixed(2) : ''}
-                                    </td>
-                                  )}
-                                  {showExamCoeff && (
-                                    <td className="p-2 border border-border/50 text-center text-muted-foreground">{modData?.coefficient}</td>
-                                  )}
-                                  {showExamPoints && (
-                                    <td className={`p-2 border border-border/50 text-center font-bold ${avgColor(modData?.examPoints ?? null)}`}>
-                                      {modData?.examPoints !== null && modData?.examPoints !== undefined ? modData.examPoints.toFixed(2) : '0,00'}
-                                    </td>
-                                  )}
-                                  {showExamAppreciation && (
-                                    <td className="p-2 border border-border/50"></td>
-                                  )}
+                                <tr key={mod.id} style={{ backgroundColor: modIdx % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
+                                  <td className="p-2 border font-medium" style={{ borderColor: '#cbd5e1' }}>{mod.title}</td>
+                                  <td className="p-2 border text-center font-semibold" style={{ borderColor: '#cbd5e1' }}>
+                                    {ccAvg !== null ? ccAvg.toFixed(0) : '-'}
+                                  </td>
+                                  <td className="p-2 border text-center font-semibold" style={{ borderColor: '#cbd5e1' }}>
+                                    {dsAvg !== null ? dsAvg.toFixed(0) : '-'}
+                                  </td>
+                                  <td className="p-2 border text-center font-semibold" style={{ borderColor: '#cbd5e1' }}>
+                                    {examFinal !== null ? examFinal.toFixed(0) : '-'}
+                                  </td>
+                                  <td className="p-2 border text-center font-semibold" style={{ borderColor: '#cbd5e1' }}>
+                                    {oralScore !== null ? oralScore.toFixed(0) : '-'}
+                                  </td>
+                                  <td className="p-2 border text-center font-bold" style={{ borderColor: '#cbd5e1', color: moduleAvg !== null && moduleAvg >= 10 ? '#c8a94e' : '#dc2626' }}>
+                                    {moduleAvg !== null ? moduleAvg.toFixed(2) : '-'}
+                                  </td>
+                                  <td className="p-2 border text-center" style={{ borderColor: '#cbd5e1' }}>
+                                    {moduleAvg !== null && (
+                                      <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-semibold ${statut.color}`}>
+                                        {statut.label}
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td className="p-2 border text-[9px] italic" style={{ borderColor: '#cbd5e1', color: '#64748b' }}>
+                                    {appreciation}
+                                  </td>
                                 </tr>
                               );
                             })}
                           </React.Fragment>
                         ))}
-                        <tr className="font-bold" style={{ backgroundColor: `${tplStyle.primaryColor}33` }}>
-                          <td className="p-2.5 border text-right text-xs uppercase" style={{ borderColor: `${tplStyle.primaryColor}66` }}>
-                            TOTAL (Admis si &gt; ou = {currentBulletin.examTotalCoeff * 10})
-                          </td>
-                          {showExamNotes && <td className="p-2.5 border" style={{ borderColor: `${tplStyle.primaryColor}66` }}></td>}
-                          {showExamCoeff && (
-                            <td className="p-2.5 border text-center" style={{ borderColor: `${tplStyle.primaryColor}66` }}>
-                              {currentBulletin.examTotalCoeff}
-                            </td>
-                          )}
-                          {showExamPoints && (
-                            <td className={`p-2.5 border text-center text-base ${avgColor(currentBulletin.examTotalPoints / Math.max(currentBulletin.examTotalCoeff, 1))}`} style={{ borderColor: `${tplStyle.primaryColor}66` }}>
-                              {currentBulletin.examTotalPoints.toFixed(2)}
-                            </td>
-                          )}
-                          {showExamAppreciation && (
-                            <td className="p-2.5 border text-center font-bold" style={{ borderColor: `${tplStyle.primaryColor}66` }}>
-                              {currentBulletin.examTotalPoints >= currentBulletin.examTotalCoeff * 10 ? (
-                                <span className="text-green-600">ADMIS</span>
-                              ) : (
-                                <span className="text-red-600">NON ADMIS</span>
-                              )}
-                            </td>
-                          )}
-                        </tr>
                       </tbody>
                     </table>
                   </div>
-                )}
 
-                {/* ===== DÉCISION FINALE ===== */}
-                <div className="px-6 py-4">
-                  <div className={`p-4 rounded-lg border-2 text-center ${
-                    currentBulletin.decision === 'admis' ? 'border-green-400 bg-green-50 dark:bg-green-900/20' :
-                    currentBulletin.decision === 'ajourne' ? 'border-red-400 bg-red-50 dark:bg-red-900/20' :
-                    'border-amber-400 bg-amber-50 dark:bg-amber-900/20'
-                  }`}>
-                    <p className="text-xs uppercase tracking-wider font-medium mb-1 text-muted-foreground">Décision du conseil</p>
-                    <p className={`text-xl font-bold ${
-                      currentBulletin.decision === 'admis' ? 'text-green-600' :
-                      currentBulletin.decision === 'ajourne' ? 'text-red-600' : 'text-amber-600'
-                    }`}>
-                      {decisionLabel(currentBulletin.decision)}
-                    </p>
-                    {currentBulletin.mention && (
-                      <p className="text-sm mt-1">Mention : {MENTIONS.find(m => m.value === currentBulletin.mention)?.label || ''}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="px-6 pb-4 space-y-2">
-                  {tplFooter.showAssiduity && (
-                    <p className="text-[10px] text-muted-foreground italic">Assiduité : .............................</p>
-                  )}
-                  {tplFooter.customText && (
-                    <p className="text-[10px] text-muted-foreground">{tplFooter.customText}</p>
-                  )}
-                  {tplFooter.showSignature && (
-                    <div className="flex justify-end mt-4">
-                      <div className="text-center">
-                        <p className="text-[10px] text-muted-foreground">Signature du directeur</p>
-                        <div className="w-32 h-12 border-b border-border mt-1"></div>
-                      </div>
+                  {/* ===== RÉSUMÉ EN BAS ===== */}
+                  <div className="mx-6 mb-4 grid grid-cols-4 gap-0 border rounded-md overflow-hidden" style={{ borderColor: '#cbd5e1' }}>
+                    <div className="p-3 text-center border-r" style={{ borderColor: '#cbd5e1', backgroundColor: '#f8fafc' }}>
+                      <p className="text-[9px] uppercase tracking-wider font-semibold mb-1" style={{ color: '#64748b' }}>Moyenne générale</p>
+                      <p className="text-xl font-bold" style={{ color: '#c8a94e' }}>
+                        {currentBulletin.ccGeneralAverage !== null ? currentBulletin.ccGeneralAverage.toFixed(2) : '—'}
+                        <span className="text-xs font-normal" style={{ color: '#64748b' }}>/20</span>
+                      </p>
                     </div>
-                  )}
-                  <div className="flex justify-between text-[10px] text-muted-foreground border-t border-border/50 pt-3 mt-3">
-                    <span>Document généré le {format(new Date(), 'dd/MM/yyyy', { locale: fr })}</span>
-                    <span>{establishment?.name} {establishment?.phone ? `• Tél : ${establishment.phone}` : ''}</span>
+                    <div className="p-3 text-center border-r" style={{ borderColor: '#cbd5e1', backgroundColor: '#f8fafc' }}>
+                      <p className="text-[9px] uppercase tracking-wider font-semibold mb-1" style={{ color: '#64748b' }}>Mention</p>
+                      <p className="text-sm font-bold" style={{ color: '#c8a94e' }}>
+                        {currentBulletin.mention ? (MENTIONS.find(m => m.value === currentBulletin.mention)?.label || '') : '—'}
+                      </p>
+                    </div>
+                    <div className="p-3 text-center border-r" style={{ borderColor: '#cbd5e1', backgroundColor: '#f8fafc' }}>
+                      <p className="text-[9px] uppercase tracking-wider font-semibold mb-1" style={{ color: '#64748b' }}>Rang dans la promo</p>
+                      <p className="text-sm font-bold" style={{ color: '#1a1a2e' }}>
+                        {rank}<sup>ème</sup><span className="text-xs font-normal" style={{ color: '#64748b' }}>/{totalStudents}</span>
+                      </p>
+                    </div>
+                    <div className="p-3 text-center" style={{ backgroundColor: '#f8fafc' }}>
+                      <p className="text-[9px] uppercase tracking-wider font-semibold mb-1" style={{ color: '#64748b' }}>Décision</p>
+                      <p className={`text-sm font-bold ${currentBulletin.decision === 'admis' ? 'text-green-600' : currentBulletin.decision === 'ajourne' ? 'text-red-600' : ''}`} style={{ color: currentBulletin.decision === 'admis' ? '#16a34a' : currentBulletin.decision === 'ajourne' ? '#dc2626' : '#c8a94e' }}>
+                        {decisionLabel(currentBulletin.decision).toUpperCase()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* ===== APPRÉCIATION GÉNÉRALE ===== */}
+                  <div className="mx-6 mb-4 p-3 rounded-md" style={{ backgroundColor: '#fef9e7', border: '1px dashed #c8a94e' }}>
+                    <p className="text-[10px] uppercase tracking-wider font-bold mb-1" style={{ color: '#c8a94e' }}>Appréciation générale</p>
+                    <p className="text-xs italic" style={{ color: '#1a1a2e' }}>
+                      {getAppreciation(currentBulletin.ccGeneralAverage)}
+                    </p>
+                  </div>
+
+                  {/* ===== SIGNATURES ===== */}
+                  <div className="mx-6 mb-2 grid grid-cols-3 gap-6">
+                    {['Responsable pédagogique', 'Président(e) du jury', "Cachet de l'établissement"].map((label, i) => (
+                      <div key={i} className="text-center">
+                        <p className="text-[10px] font-semibold mb-1" style={{ color: '#1a1a2e' }}>{label}</p>
+                        <div className="border-b pt-8" style={{ borderColor: '#cbd5e1' }}></div>
+                        <p className="text-[9px] mt-1 italic" style={{ color: '#94a3b8' }}>Signature / Cachet</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* ===== PIED DE PAGE ===== */}
+                  <div className="mx-6 pb-4 pt-3 mt-2 text-center" style={{ borderTop: '1px solid #e2e8f0' }}>
+                    <p className="text-[9px]" style={{ color: '#94a3b8' }}>
+                      Document officiel — {establishment?.name} - Réf : {refNumber} - Ce bulletin est certifié authentique.
+                    </p>
                   </div>
                 </div>
-              </div>
-            </>
-          )}
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
