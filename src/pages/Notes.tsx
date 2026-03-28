@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   FileSpreadsheet, FileText, Settings2, GraduationCap, ClipboardList, 
   ArrowLeft, Calendar, Users, ChevronRight, Clock, BookOpen, Search,
-  Calculator, Scale, ScrollText, Plus
+  Calculator, Scale, ScrollText, Plus, SlidersHorizontal
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import GradeSheetView from '@/components/grades/GradeSheetView';
@@ -58,6 +58,7 @@ const Notes = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('saisie');
   const [showCreatePeriod, setShowCreatePeriod] = useState(false);
+  const [showConfig, setShowConfig] = useState(false);
 
   const { data: formations = [], isLoading } = useQuery({
     queryKey: ['formations-notes-page', userId, isAdmin],
@@ -177,22 +178,23 @@ const Notes = () => {
               Créer une période
             </Button>
             {isAdmin && (
-              <Button variant="ghost" size="sm" onClick={() => setActiveTab('settings')} className={activeTab === 'settings' ? 'bg-muted' : ''}>
-                <Settings2 className="h-4 w-4" />
+              <Button variant="outline" size="sm" onClick={() => setShowConfig(!showConfig)} className={`gap-2 ${showConfig ? 'bg-primary text-primary-foreground' : ''}`}>
+                <SlidersHorizontal className="h-4 w-4" />
+                <span className="hidden sm:inline">Configuration</span>
               </Button>
             )}
           </div>
         </div>
 
-        {activeTab === 'settings' ? (
+        {showConfig ? (
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <Button variant="ghost" size="sm" onClick={() => setActiveTab('saisie')}>
+              <Button variant="ghost" size="sm" onClick={() => setShowConfig(false)}>
                 <ArrowLeft className="h-4 w-4 mr-1" /> Retour
               </Button>
-              <h2 className="text-lg font-semibold">Paramètres</h2>
+              <h2 className="text-lg font-semibold">Configuration</h2>
             </div>
-            <GradingSettingsPanel />
+            <GradingSettingsPanel formationId={selectedFormationId} />
           </div>
         ) : (
           <div className="space-y-4">
