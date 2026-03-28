@@ -178,22 +178,23 @@ const Notes = () => {
               Créer une période
             </Button>
             {isAdmin && (
-              <Button variant="ghost" size="sm" onClick={() => setActiveTab('settings')} className={activeTab === 'settings' ? 'bg-muted' : ''}>
-                <Settings2 className="h-4 w-4" />
+              <Button variant="outline" size="sm" onClick={() => setShowConfig(!showConfig)} className={`gap-2 ${showConfig ? 'bg-primary text-primary-foreground' : ''}`}>
+                <SlidersHorizontal className="h-4 w-4" />
+                <span className="hidden sm:inline">Configuration</span>
               </Button>
             )}
           </div>
         </div>
 
-        {activeTab === 'settings' ? (
+        {showConfig ? (
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <Button variant="ghost" size="sm" onClick={() => setActiveTab('saisie')}>
+              <Button variant="ghost" size="sm" onClick={() => setShowConfig(false)}>
                 <ArrowLeft className="h-4 w-4 mr-1" /> Retour
               </Button>
-              <h2 className="text-lg font-semibold">Paramètres</h2>
+              <h2 className="text-lg font-semibold">Configuration</h2>
             </div>
-            <GradingSettingsPanel />
+            <GradingSettingsPanel formationId={selectedFormationId} />
           </div>
         ) : (
           <div className="space-y-4">
