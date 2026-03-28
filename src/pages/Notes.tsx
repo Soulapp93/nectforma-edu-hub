@@ -58,6 +58,7 @@ const Notes = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('saisie');
   const [showCreatePeriod, setShowCreatePeriod] = useState(false);
+  const [showConfig, setShowConfig] = useState(false);
 
   const { data: formations = [], isLoading } = useQuery({
     queryKey: ['formations-notes-page', userId, isAdmin],
