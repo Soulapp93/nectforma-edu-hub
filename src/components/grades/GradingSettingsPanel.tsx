@@ -359,18 +359,18 @@ const GradingSettingsPanel: React.FC<GradingSettingsPanelProps> = ({ formationId
                 )}
                 <div className="flex items-center gap-3">
                   <Switch
-                    checked={localRules.has_eliminatory_threshold ?? false}
-                    onCheckedChange={(v) => setLocalRules({ ...localRules, has_eliminatory_threshold: v })}
+                    checked={(localRules as any).has_eliminatory_threshold ?? false}
+                    onCheckedChange={(v) => setLocalRules({ ...localRules, has_eliminatory_threshold: v } as any)}
                   />
                   <Label>Note éliminatoire</Label>
                 </div>
-                {localRules.has_eliminatory_threshold && (
+                {(localRules as any).has_eliminatory_threshold && (
                   <div className="w-48">
                     <Label>Seuil éliminatoire</Label>
                     <Input
                       type="number"
-                      value={localRules.eliminatory_threshold ?? 6}
-                      onChange={(e) => setLocalRules({ ...localRules, eliminatory_threshold: parseFloat(e.target.value) })}
+                      value={(localRules as any).eliminatory_threshold ?? 6}
+                      onChange={(e) => setLocalRules({ ...localRules, eliminatory_threshold: parseFloat(e.target.value) } as any)}
                     />
                   </div>
                 )}
