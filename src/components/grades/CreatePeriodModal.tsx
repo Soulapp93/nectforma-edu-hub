@@ -102,7 +102,7 @@ const CreatePeriodModal: React.FC<Props> = ({ isOpen, onClose, formationId, seme
                   <SelectValue placeholder="Choisir..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.from({ length: semestersCount }, (_, i) => (
+                  {Array.from({ length: 6 }, (_, i) => (
                     <SelectItem key={i + 1} value={String(i + 1)}>Semestre {i + 1}</SelectItem>
                   ))}
                 </SelectContent>
