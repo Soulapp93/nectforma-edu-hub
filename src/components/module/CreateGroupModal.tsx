@@ -78,8 +78,8 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
             <ScrollArea className="h-60 border rounded-md mt-1">
               <div className="p-2 space-y-1">
                 {students.map(s => (
-                  <label key={s.id} className="flex items-center gap-2 p-2 rounded hover:bg-muted cursor-pointer">
-                    <Checkbox checked={selectedIds.includes(s.id)} onCheckedChange={() => toggleStudent(s.id)} />
+                  <label key={s.user_id} className="flex items-center gap-2 p-2 rounded hover:bg-muted cursor-pointer">
+                    <Checkbox checked={selectedIds.includes(s.user_id)} onCheckedChange={() => toggleStudent(s.user_id)} />
                     <Avatar className="h-6 w-6">
                       <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
                         {s.first_name?.[0]}{s.last_name?.[0]}
