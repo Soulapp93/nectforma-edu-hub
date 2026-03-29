@@ -16,8 +16,10 @@ interface ModuleDetailProps {
     title: string;
     description?: string;
     duration_hours: number;
+    formation_id?: string;
   };
   formationColor: string;
+  formationId?: string;
   onBack: () => void;
 }
 
