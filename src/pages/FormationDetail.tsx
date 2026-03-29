@@ -293,7 +293,7 @@ const FormationDetail = () => {
                     <AccordionContent className="px-0 pb-0">
                       <div className="border-t border-primary/10 bg-gradient-to-b from-muted/20 to-transparent">
                         <Tabs defaultValue="content" className="w-full">
-                          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-3 !bg-transparent !p-4 !h-auto !rounded-none !border-0 !shadow-none">
+                          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 gap-3 !bg-transparent !p-4 !h-auto !rounded-none !border-0 !shadow-none">
                             <TabsTrigger
                               value="content"
                               className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-4 py-3 text-xs sm:text-sm font-medium transition-all"
@@ -315,13 +315,19 @@ const FormationDetail = () => {
                               <Users className="h-4 w-4 mr-2" />
                               Corrections
                             </TabsTrigger>
-                            
                             <TabsTrigger
                               value="documents"
                               className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-4 py-3 text-xs sm:text-sm font-medium transition-all"
                             >
                               <BookOpen className="h-4 w-4 mr-2" />
                               Documents
+                            </TabsTrigger>
+                            <TabsTrigger
+                              value="groups"
+                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-4 py-3 text-xs sm:text-sm font-medium transition-all"
+                            >
+                              <UsersRound className="h-4 w-4 mr-2" />
+                              Groupes
                             </TabsTrigger>
                           </TabsList>
                           
