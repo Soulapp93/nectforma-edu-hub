@@ -2579,6 +2579,80 @@ export type Database = {
           },
         ]
       }
+      module_group_members: {
+        Row: {
+          assigned_at: string
+          group_id: string
+          id: string
+          student_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          group_id: string
+          id?: string
+          student_id: string
+        }
+        Update: {
+          assigned_at?: string
+          group_id?: string
+          id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "module_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      module_groups: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          formation_id: string
+          id: string
+          module_id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          formation_id: string
+          id?: string
+          module_id: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          formation_id?: string
+          id?: string
+          module_id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_groups_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_groups_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "formation_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       module_instructors: {
         Row: {
           created_at: string
