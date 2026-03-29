@@ -347,6 +347,10 @@ const FormationDetail = () => {
                             <TabsContent value="documents" className="mt-0">
                               <ModuleDocumentsTab moduleId={module.id} />
                             </TabsContent>
+                            
+                            <TabsContent value="groups" className="mt-0">
+                              <ModuleGroupsTab moduleId={module.id} formationId={formation?.id || ''} />
+                            </TabsContent>
                           </div>
                         </Tabs>
                       </div>
