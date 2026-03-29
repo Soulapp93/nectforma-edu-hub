@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Clock, Users, Eye, Edit, FileText, GraduationCap, BookText } from 'lucide-react';
+import { ArrowLeft, BookOpen, Clock, Users, Eye, Edit, FileText, GraduationCap, BookText, UsersRound } from 'lucide-react';
 import { formationService, Formation } from '@/services/formationService';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
