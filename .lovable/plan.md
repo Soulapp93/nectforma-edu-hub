@@ -1,106 +1,78 @@
 
 
-## Plan : Gestion des Dossiers Étudiants & Archives
+## Plan : Gestion des Groupes d'Étudiants par Module
 
-### Vue d'ensemble
+### Contexte
 
-Deux nouvelles fonctionnalités majeures :
-1. **Dossiers Étudiants** — Un espace centralisé par étudiant regroupant tous ses documents (certificats, diplômes, bulletins, contrats, conventions de stage, etc.)
-2. **Archives** — Un module d'archivage des promotions terminées, organisé par catégorie (formations, promotions, dossiers, cahiers de texte, émargement, emplois du temps)
+Ajouter un nouvel onglet **"Groupes"** dans chaque module (à côté de Documents) permettant aux formateurs de créer et gérer des groupes d'étudiants, avec création manuelle et aléatoire.
 
 ---
 
-### 1. Dossiers Étudiants
+### 1. Base de données — 2 nouvelles tables
 
-**Base de données** — 2 nouvelles tables :
+**`module_groups`** : les groupes créés par module
+- `id` (uuid, PK), `module_id` (ref modules), `formation_id`, `name` (text, ex: "Groupe 1"), `created_by` (ref users), `created_at`, `updated_at`
 
-- `student_documents` : stocke les métadonnées des documents étudiants
-  - `id`, `student_id` (ref users), `establishment_id`, `promotion_id` (nullable), `document_type` (enum : certificat_scolarite, certificat_inscription, diplome, bulletin_notes, contrat, convention_stage, attestation, autre), `title`, `description`, `file_url`, `file_name`, `academic_year`, `status` (draft, validated, archived), `validated_by`, `validated_at`, `created_at`, `updated_at`
+**`module_group_members`** : les étudiants affectés
+- `id` (uuid, PK), `group_id` (ref module_groups ON DELETE CASCADE), `student_id` (ref users), `assigned_at`
+- Contrainte UNIQUE sur `(group_id, student_id)`
 
-- `student_document_types` : table de configuration pour types personnalisés par établissement (optionnel, extensibilité)
-
-**Interface** — Nouvel onglet dans Administration :
-- Ajout de l'onglet **"Dossiers étudiants"** dans la sidebar Administration (`?tab=student-files`)
-- Page `StudentFilesManagement.tsx` avec :
-  - Sélecteur Formation → Promotion (via `FormationPromotionSelector`)
-  - Liste des étudiants avec bouton "Voir dossier"
-  - Modal/Page de dossier individuel avec onglets par type de document
-  - Upload de documents (certificats, contrats, conventions…)
-  - Génération automatique de certificats de scolarité (PDF)
-  - Statut de validation (brouillon → validé)
-
-**Accès étudiant** :
-- L'étudiant voit son propre dossier dans son espace (onglet "Mon dossier" dans `/compte` ou page dédiée)
-- Lecture seule des documents validés par l'administration
-
-**Stockage** : Bucket existant `module-files` ou nouveau bucket `student-documents` avec RLS par establishment_id + student_id
+RLS : Admin/Formateur = CRUD complet sur les groupes de leur établissement ; Étudiant = lecture seule de ses groupes.
 
 ---
 
-### 2. Module Archives
+### 2. Service — `moduleGroupService.ts`
 
-**Base de données** — 2 nouvelles tables :
-
-- `promotion_archives` : enregistre l'archivage d'une promotion
-  - `id`, `promotion_id`, `formation_id`, `establishment_id`, `archived_by`, `archived_at`, `academic_year`, `status` (active, archived), `archive_metadata` (JSONB : stats, nombre étudiants, etc.)
-
-- `archive_snapshots` : snapshots des données archivées par module
-  - `id`, `archive_id` (ref promotion_archives), `module_type` (formation, promotion, dossier_etudiant, cahier_texte, emargement, emploi_temps, notes), `snapshot_data` (JSONB), `created_at`
-
-**Interface** — Nouvelle page et entrée navigation :
-
-- Nouvel onglet **"Archives"** dans la sidebar admin (`/administration?tab=archives`)
-- Page `ArchivesManagement.tsx` avec :
-  - Vue par année académique → Liste des promotions terminées
-  - Bouton "Archiver la promotion" qui snapshote toutes les données
-  - Navigation par catégorie : Formations, Dossiers étudiants, Cahiers de texte, Émargement, Emplois du temps, Notes
-  - Consultation en lecture seule des données archivées
-  - Recherche et filtres (année, formation, étudiant)
-  - Export PDF/Excel des archives
-
-**Processus d'archivage** :
-- Quand une promotion est terminée → bouton "Archiver"
-- Le système copie les données pertinentes en JSONB dans `archive_snapshots`
-- Les données originales restent intactes mais la promotion est marquée "archived"
-- Les archives sont consultables à tout moment mais non modifiables
+- `getModuleGroups(moduleId)` — liste les groupes avec leurs membres
+- `createGroup(moduleId, formationId, name)` — crée un groupe
+- `deleteGroup(groupId)` — supprime un groupe
+- `updateGroupName(groupId, name)` — renomme
+- `addMembers(groupId, studentIds)` — ajoute des étudiants
+- `removeMember(groupId, studentId)` — retire un étudiant
+- `createRandomGroups(moduleId, formationId, numberOfGroups, studentsPerGroup)` — répartition aléatoire avec gestion de l'arrondi (les étudiants restants sont distribués un par un dans les premiers groupes)
 
 ---
 
-### 3. Modifications de la navigation
+### 3. Interface — `ModuleGroupsTab.tsx`
 
-- **Sidebar.tsx** et **MobileDrawerMenu.tsx** : Ajout dans les sous-items Administration :
-  - `{ name: 'Dossiers étudiants', href: '/administration?tab=student-files', icon: FolderOpen }`
-  - `{ name: 'Archives', href: '/administration?tab=archives', icon: Archive }`
-- **Administration.tsx** : Ajout des tabs `student-files` et `archives`
+**Vue principale :**
+- Liste des groupes existants sous forme de cartes avec nom du groupe et avatars/noms des membres
+- Bouton **"Créer un groupe"** → Modal avec champ nom + sélection d'étudiants dans la liste de la formation (multi-select avec checkboxes)
+- Bouton **"Groupes aléatoires"** → Modal demandant : nombre de groupes + nombre d'étudiants par groupe, avec prévisualisation de la répartition avant validation
+
+**Création aléatoire — Logique :**
+- Mélange aléatoire (Fisher-Yates) de la liste des étudiants
+- Distribution en N groupes de T étudiants
+- Les étudiants restants (modulo) sont ajoutés aux premiers groupes (ex: 13 étudiants, 4 groupes de 3 → 1 groupe de 4 + 3 groupes de 3)
+- Prévisualisation avant confirmation
+- Possibilité d'ajuster manuellement après création (ajouter/retirer des membres)
+
+**Gestion :**
+- Chaque carte de groupe : bouton éditer (renommer), supprimer, ajouter/retirer des membres
+- Drag & drop optionnel pour déplacer un étudiant entre groupes (phase 2)
 
 ---
 
-### 4. Fichiers à créer/modifier
-
-**Nouveaux fichiers :**
-- `src/components/administration/StudentFilesManagement.tsx`
-- `src/components/administration/StudentFileModal.tsx`
-- `src/components/administration/StudentDossierView.tsx`
-- `src/components/administration/ArchivesManagement.tsx`
-- `src/components/administration/ArchiveDetailView.tsx`
-- `src/services/studentDocumentService.ts`
-- `src/services/archiveService.ts`
+### 4. Intégration dans les onglets Module
 
 **Fichiers modifiés :**
-- `src/pages/Administration.tsx` — ajout des 2 nouveaux onglets
-- `src/components/Sidebar.tsx` — ajout navigation
-- `src/components/MobileDrawerMenu.tsx` — ajout navigation
+- `src/pages/FormationDetail.tsx` — Ajout d'un 5e onglet "Groupes" (icône `Users`) dans la grille des tabs, avec `ModuleGroupsTab`
+- `src/components/module/ModuleDetail.tsx` — Même ajout pour la vue module standalone
 
-**Migrations SQL :**
-- Création tables `student_documents`, `promotion_archives`, `archive_snapshots`
-- Bucket storage `student-documents`
-- Politiques RLS appropriées (admin establishment + étudiant propre dossier)
+**Nouveaux fichiers :**
+- `src/services/moduleGroupService.ts`
+- `src/components/module/ModuleGroupsTab.tsx`
+- `src/components/module/CreateGroupModal.tsx` (création manuelle)
+- `src/components/module/RandomGroupsModal.tsx` (création aléatoire)
+
+**Migration SQL :**
+- Création des tables `module_groups` et `module_group_members` avec RLS
 
 ---
 
-### 5. Sécurité & RLS
+### 5. Accès par rôle
 
-- `student_documents` : Admin de l'établissement = CRUD complet ; Étudiant = SELECT sur ses propres documents
-- `promotion_archives` / `archive_snapshots` : Admin uniquement, filtré par establishment_id via `get_current_user_establishment()`
-- Fonctions SECURITY DEFINER pour éviter la récursion RLS
+- **Admin / Formateur** : Création, modification, suppression de groupes
+- **Étudiant** : Consultation seule (voit les groupes auxquels il appartient)
+- **Tuteur** : Consultation seule
 
