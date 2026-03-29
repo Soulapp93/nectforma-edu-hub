@@ -54,6 +54,18 @@ const Administration = () => {
           description: 'Validez et gérez les feuilles d\'émargement.',
           icon: ClipboardCheck
         };
+      case 'student-files':
+        return {
+          title: 'Dossiers étudiants',
+          description: 'Gérez les documents et dossiers de chaque étudiant.',
+          icon: FolderOpen
+        };
+      case 'archives':
+        return {
+          title: 'Archives',
+          description: 'Consultez les données archivées des promotions terminées.',
+          icon: Archive
+        };
       default: 
         return {
           title: 'Administration',
