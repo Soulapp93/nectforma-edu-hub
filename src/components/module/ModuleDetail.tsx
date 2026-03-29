@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ArrowLeft, BookOpen, FileText, Edit, FolderOpen, Clock } from 'lucide-react';
+import { ArrowLeft, BookOpen, FileText, Edit, FolderOpen, Clock, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import ModuleContentTab from './ModuleContentTab';
 import ModuleAssignmentsTab from './ModuleAssignmentsTab';
 import ModuleCorrectionsTab from './ModuleCorrectionsTab';
 import ModuleDocumentsTab from './ModuleDocumentsTab';
+import ModuleGroupsTab from './ModuleGroupsTab';
 
 interface ModuleDetailProps {
   module: {
