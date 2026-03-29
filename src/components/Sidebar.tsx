@@ -24,6 +24,7 @@ import {
   HelpCircle,
   FolderOpen,
   Archive,
+  Video,
 } from 'lucide-react';
 import {
   Sidebar as SidebarWrapper,
@@ -110,6 +111,7 @@ const Sidebar = () => {
     { name: 'Emplois du temps', href: '/administration?tab=schedules', icon: CalendarDays },
     { name: 'Feuilles d\'émargement', href: '/administration?tab=attendance', icon: ClipboardCheck },
     { name: 'Dossiers étudiants', href: '/administration?tab=student-files', icon: FolderOpen },
+    { name: 'Classes virtuelles', href: '/administration?tab=virtual-classes', icon: Video },
     { name: 'Archives', href: '/administration?tab=archives', icon: Archive },
   ];
   
