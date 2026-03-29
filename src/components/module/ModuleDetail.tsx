@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ArrowLeft, BookOpen, FileText, Edit, FolderOpen, Clock } from 'lucide-react';
+import { ArrowLeft, BookOpen, FileText, Edit, FolderOpen, Clock, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,6 +8,7 @@ import ModuleContentTab from './ModuleContentTab';
 import ModuleAssignmentsTab from './ModuleAssignmentsTab';
 import ModuleCorrectionsTab from './ModuleCorrectionsTab';
 import ModuleDocumentsTab from './ModuleDocumentsTab';
+import ModuleGroupsTab from './ModuleGroupsTab';
 
 interface ModuleDetailProps {
   module: {
@@ -15,12 +16,15 @@ interface ModuleDetailProps {
     title: string;
     description?: string;
     duration_hours: number;
+    formation_id?: string;
   };
   formationColor: string;
+  formationId?: string;
   onBack: () => void;
 }
 
-const ModuleDetail: React.FC<ModuleDetailProps> = ({ module, formationColor, onBack }) => {
+const ModuleDetail: React.FC<ModuleDetailProps> = ({ module, formationColor, formationId, onBack }) => {
+  const resolvedFormationId = formationId || (module as any).formation_id || '';
   return (
     <div className="min-h-screen bg-background">
       {/* Header compact */}
@@ -57,7 +61,7 @@ const ModuleDetail: React.FC<ModuleDetailProps> = ({ module, formationColor, onB
       <div className="px-4 py-4">
         <Tabs defaultValue="content" className="space-y-4">
           {/* Tab buttons with rounded outline design - grid layout like reference */}
-          <TabsList className="grid grid-cols-2 gap-3 bg-transparent h-auto p-0 w-full max-w-md mx-auto">
+          <TabsList className="grid grid-cols-3 sm:grid-cols-5 gap-3 bg-transparent h-auto p-0 w-full max-w-xl mx-auto">
             <TabsTrigger 
               value="content"
               className="rounded-full border-2 border-[#8B5CF6] text-[#8B5CF6] bg-white hover:bg-purple-50 data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:border-[#8B5CF6] px-4 py-3 text-sm font-medium transition-all"
@@ -86,6 +90,13 @@ const ModuleDetail: React.FC<ModuleDetailProps> = ({ module, formationColor, onB
               <FolderOpen className="h-4 w-4 mr-2" />
               Docs
             </TabsTrigger>
+            <TabsTrigger 
+              value="groups"
+              className="rounded-full border-2 border-[#8B5CF6] text-[#8B5CF6] bg-white hover:bg-purple-50 data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:border-[#8B5CF6] px-4 py-3 text-sm font-medium transition-all"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Groupes
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="content" className="mt-4">
@@ -102,6 +113,10 @@ const ModuleDetail: React.FC<ModuleDetailProps> = ({ module, formationColor, onB
 
           <TabsContent value="documents" className="mt-4">
             <ModuleDocumentsTab moduleId={module.id} />
+          </TabsContent>
+
+          <TabsContent value="groups" className="mt-4">
+            <ModuleGroupsTab moduleId={module.id} formationId={resolvedFormationId} />
           </TabsContent>
         </Tabs>
       </div>
