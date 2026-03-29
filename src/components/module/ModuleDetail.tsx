@@ -61,7 +61,7 @@ const ModuleDetail: React.FC<ModuleDetailProps> = ({ module, formationColor, for
       <div className="px-4 py-4">
         <Tabs defaultValue="content" className="space-y-4">
           {/* Tab buttons with rounded outline design - grid layout like reference */}
-          <TabsList className="grid grid-cols-2 gap-3 bg-transparent h-auto p-0 w-full max-w-md mx-auto">
+          <TabsList className="grid grid-cols-3 sm:grid-cols-5 gap-3 bg-transparent h-auto p-0 w-full max-w-xl mx-auto">
             <TabsTrigger 
               value="content"
               className="rounded-full border-2 border-[#8B5CF6] text-[#8B5CF6] bg-white hover:bg-purple-50 data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:border-[#8B5CF6] px-4 py-3 text-sm font-medium transition-all"
