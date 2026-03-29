@@ -22,6 +22,8 @@ import {
   Award,
   Headphones,
   HelpCircle,
+  FolderOpen,
+  Archive,
 } from 'lucide-react';
 import {
   Sidebar as SidebarWrapper,
