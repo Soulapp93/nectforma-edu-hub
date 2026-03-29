@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Users, GraduationCap, BookText, CalendarDays, ClipboardCheck, ShieldCheck } from 'lucide-react';
+import { Users, GraduationCap, BookText, CalendarDays, ClipboardCheck, ShieldCheck, FolderOpen, Archive } from 'lucide-react';
 import EnhancedUsersList from '../components/administration/EnhancedUsersList';
 import FormationsList from '../components/administration/FormationsList';
 import TextBooksList from '../components/administration/TextBooksList';
 import ScheduleManagement from '../components/administration/ScheduleManagement';
 import AttendanceManagement from '../components/administration/AttendanceManagement';
+import StudentFilesManagement from '../components/administration/StudentFilesManagement';
+import ArchivesManagement from '../components/administration/ArchivesManagement';
 import { PageHeader } from '@/components/ui/page-header';
 import { LucideIcon } from 'lucide-react';
 
@@ -15,7 +17,7 @@ const Administration = () => {
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['users', 'formations', 'textbooks', 'schedules', 'attendance'].includes(tabParam)) {
+    if (tabParam && ['users', 'formations', 'textbooks', 'schedules', 'attendance', 'student-files', 'archives'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -51,6 +53,18 @@ const Administration = () => {
           title: 'Feuilles d\'émargement',
           description: 'Validez et gérez les feuilles d\'émargement.',
           icon: ClipboardCheck
+        };
+      case 'student-files':
+        return {
+          title: 'Dossiers étudiants',
+          description: 'Gérez les documents et dossiers de chaque étudiant.',
+          icon: FolderOpen
+        };
+      case 'archives':
+        return {
+          title: 'Archives',
+          description: 'Consultez les données archivées des promotions terminées.',
+          icon: Archive
         };
       default: 
         return {
@@ -98,7 +112,11 @@ const Administration = () => {
 
       {activeTab === 'attendance' && <AttendanceManagement />}
 
-      {activeTab !== 'users' && activeTab !== 'formations' && activeTab !== 'textbooks' && activeTab !== 'schedules' && activeTab !== 'attendance' && (
+      {activeTab === 'student-files' && <StudentFilesManagement />}
+
+      {activeTab === 'archives' && <ArchivesManagement />}
+
+      {!['users', 'formations', 'textbooks', 'schedules', 'attendance', 'student-files', 'archives'].includes(activeTab) && (
         <div className="glass-card rounded-xl p-8 text-center">
           <div className="max-w-md mx-auto">
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
