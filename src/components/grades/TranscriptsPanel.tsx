@@ -959,23 +959,21 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                     ))}
                   </div>
 
-                  {/* ===== TABLEAU DES NOTES ===== */}
+                  {/* ===== SECTION CONTRÔLE CONTINU ===== */}
                   <div className="mx-6 mb-4">
                     <table className="w-full text-[11px] border-collapse" style={{ borderColor: '#cbd5e1' }}>
                       <thead>
                         <tr>
-                          <th className="text-left p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '28%' }}>Matière</th>
-                          <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '7%' }}>CC</th>
-                          <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '7%' }}>DS</th>
-                          <th className="text-center p-2 font-semibold border" style={{ backgroundColor: '#c8a94e', color: '#1a1a2e', borderColor: '#334155', width: '10%' }}>
-                            <span className="text-[9px]">Examen<br/>Final</span>
+                          <th className="text-left p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '28%' }}>Contrôle continu</th>
+                          <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '12%' }}>
+                            <span className="text-[9px]">Moyenne du<br/>Stagiaire</span>
                           </th>
-                          <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '10%' }}>
-                            <span className="text-[9px]">Oral/Subt.</span>
+                          <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '12%' }}>
+                            <span className="text-[9px]">Moyenne de<br/>Classe</span>
                           </th>
-                          <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '10%' }}>Moyenne</th>
-                          <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '10%' }}>Statut</th>
-                          <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '18%' }}>Appréciation</th>
+                          <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '48%' }}>
+                            <span className="text-[9px]">Appréciations<br/>(travail et comportement)</span>
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -983,7 +981,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                           <React.Fragment key={group.id}>
                             {moduleGroups.length > 1 && (
                               <tr>
-                                <td colSpan={8} className="p-1.5 pl-3 text-[10px] font-bold uppercase tracking-wider border" style={{ backgroundColor: '#f1f5f9', color: '#1a1a2e', borderColor: '#cbd5e1' }}>
+                                <td colSpan={4} className="p-1.5 pl-3 text-[10px] font-bold uppercase tracking-wider border" style={{ backgroundColor: '#dbeafe', color: '#1a1a2e', borderColor: '#cbd5e1' }}>
                                   {group.title}
                                 </td>
                               </tr>
@@ -991,42 +989,21 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                             {group.mods.map((mod, modIdx) => {
                               const modData = currentBulletin.modules.find(m => m.moduleId === mod.id);
                               const ccAvg = modData?.ccAverage ?? null;
-                              const dsAvg = getStudentModuleDSAvg(currentBulletin.studentId, mod.id);
-                              const examFinal = getStudentModuleExamFinal(currentBulletin.studentId, mod.id);
-                              const oralScore = getStudentModuleOral(currentBulletin.studentId, mod.id);
-                              
-                              // Calculate weighted module average
-                              const scores = [ccAvg, dsAvg, examFinal, oralScore].filter(s => s !== null) as number[];
-                              const moduleAvg = scores.length > 0 ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 100) / 100 : null;
-                              const statut = getStatut(moduleAvg);
-                              const appreciation = getAppreciation(moduleAvg);
+                              const ccClassAvg = modData?.ccClassAverage ?? null;
+                              const appreciation = getAppreciation(ccAvg);
 
                               return (
-                                <tr key={mod.id} style={{ backgroundColor: modIdx % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
-                                  <td className="p-2 border font-medium" style={{ borderColor: '#cbd5e1' }}>{mod.title}</td>
-                                  <td className="p-2 border text-center font-semibold" style={{ borderColor: '#cbd5e1' }}>
-                                    {ccAvg !== null ? ccAvg.toFixed(0) : '-'}
+                                <tr key={mod.id} style={{ backgroundColor: modIdx % 2 === 0 ? '#ffffff' : '#f0f9ff' }}>
+                                  <td className="p-2 border" style={{ borderColor: '#cbd5e1' }}>
+                                    <span className="font-medium">{mod.title}</span>
                                   </td>
                                   <td className="p-2 border text-center font-semibold" style={{ borderColor: '#cbd5e1' }}>
-                                    {dsAvg !== null ? dsAvg.toFixed(0) : '-'}
-                                  </td>
-                                  <td className="p-2 border text-center font-semibold" style={{ borderColor: '#cbd5e1' }}>
-                                    {examFinal !== null ? examFinal.toFixed(0) : '-'}
-                                  </td>
-                                  <td className="p-2 border text-center font-semibold" style={{ borderColor: '#cbd5e1' }}>
-                                    {oralScore !== null ? oralScore.toFixed(0) : '-'}
-                                  </td>
-                                  <td className="p-2 border text-center font-bold" style={{ borderColor: '#cbd5e1', color: moduleAvg !== null && moduleAvg >= 10 ? '#c8a94e' : '#dc2626' }}>
-                                    {moduleAvg !== null ? moduleAvg.toFixed(2) : '-'}
+                                    {ccAvg !== null ? ccAvg.toFixed(2) : ''}
                                   </td>
                                   <td className="p-2 border text-center" style={{ borderColor: '#cbd5e1' }}>
-                                    {moduleAvg !== null && (
-                                      <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-semibold ${statut.color}`}>
-                                        {statut.label}
-                                      </span>
-                                    )}
+                                    {ccClassAvg !== null ? ccClassAvg.toFixed(2) : ''}
                                   </td>
-                                  <td className="p-2 border text-[9px] italic" style={{ borderColor: '#cbd5e1', color: '#64748b' }}>
+                                  <td className="p-2 border text-[10px] italic" style={{ borderColor: '#cbd5e1', color: '#64748b' }}>
                                     {appreciation}
                                   </td>
                                 </tr>
@@ -1034,9 +1011,218 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                             })}
                           </React.Fragment>
                         ))}
+                        {/* Moyenne Générale CC */}
+                        <tr style={{ backgroundColor: '#dbeafe' }}>
+                          <td className="p-2 border font-bold" style={{ borderColor: '#cbd5e1', color: '#1a1a2e' }}>
+                            Moyenne Générale
+                          </td>
+                          <td className="p-2 border text-center font-bold" style={{ borderColor: '#cbd5e1', color: currentBulletin.ccGeneralAverage !== null && currentBulletin.ccGeneralAverage >= 10 ? '#16a34a' : '#dc2626' }}>
+                            {currentBulletin.ccGeneralAverage !== null ? currentBulletin.ccGeneralAverage.toFixed(2) : '—'}
+                          </td>
+                          <td className="p-2 border text-center font-bold" style={{ borderColor: '#cbd5e1' }}>
+                            {currentBulletin.ccClassGeneralAverage !== null ? currentBulletin.ccClassGeneralAverage.toFixed(2) : '—'}
+                          </td>
+                          <td className="p-2 border" style={{ borderColor: '#cbd5e1' }}></td>
+                        </tr>
                       </tbody>
                     </table>
                   </div>
+
+                  {/* ===== SECTION EXAMEN BLANC (BTS) ===== */}
+                  {isBTS && showExamBlanc && (() => {
+                    // Group exam blanc modules by type (écrit / oral)
+                    const examBlancModules = currentBulletin.modules.filter(m => m.examBlancType !== null);
+                    const ecritModules = examBlancModules.filter(m => m.examBlancType === 'ecrit');
+                    const oralModules = examBlancModules.filter(m => m.examBlancType === 'oral');
+                    
+                    // Calculate admission threshold: sum of all exam blanc coefficients * 10
+                    const totalExamBlancCoeff = examBlancModules.reduce((sum, m) => sum + m.coefficient, 0);
+                    const admissionThreshold = totalExamBlancCoeff * 10;
+                    const totalPoints = currentBulletin.examBlancTotalPoints;
+                    const isAdmis = totalPoints >= admissionThreshold;
+
+                    return (
+                      <div className="mx-6 mb-4 flex gap-4">
+                        {/* Exam Blanc Table */}
+                        <div className="flex-1">
+                          <table className="w-full text-[11px] border-collapse" style={{ borderColor: '#cbd5e1' }}>
+                            <thead>
+                              <tr>
+                                <th className="text-center p-2 text-white font-bold border" colSpan={2} style={{ backgroundColor: '#1a1a2e', borderColor: '#334155' }}>
+                                  Examen Blanc
+                                </th>
+                                <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '12%' }}>Notes</th>
+                                <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '8%' }}>C.</th>
+                                <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '12%' }}>Points</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {/* ÉCRITS */}
+                              {ecritModules.length > 0 && (
+                                <>
+                                  <tr>
+                                    <td rowSpan={ecritModules.length + 1} className="border text-center font-bold text-[10px] align-middle" style={{ backgroundColor: '#dbeafe', borderColor: '#cbd5e1', width: '8%', writingMode: 'vertical-rl', transform: 'rotate(180deg)', letterSpacing: '2px' }}>
+                                      É C R I T S
+                                    </td>
+                                  </tr>
+                                  {ecritModules.map((mod, idx) => (
+                                    <tr key={mod.moduleId} style={{ backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f0f9ff' }}>
+                                      <td className="p-2 border font-medium" style={{ borderColor: '#cbd5e1' }}>{mod.moduleTitle}</td>
+                                      <td className="p-2 border text-center font-semibold" style={{ borderColor: '#cbd5e1' }}>
+                                        {mod.examBlancScore !== null ? mod.examBlancScore.toFixed(2) : '0,00'}
+                                      </td>
+                                      <td className="p-2 border text-center font-bold" style={{ borderColor: '#cbd5e1' }}>
+                                        {mod.coefficient}
+                                      </td>
+                                      <td className="p-2 border text-center font-bold" style={{ borderColor: '#cbd5e1' }}>
+                                        {mod.examBlancPoints !== null ? mod.examBlancPoints.toFixed(2) : '0,00'}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </>
+                              )}
+                              {/* ORAUX */}
+                              {oralModules.length > 0 && (
+                                <>
+                                  <tr>
+                                    <td rowSpan={oralModules.length + 1} className="border text-center font-bold text-[10px] align-middle" style={{ backgroundColor: '#dbeafe', borderColor: '#cbd5e1', width: '8%', writingMode: 'vertical-rl', transform: 'rotate(180deg)', letterSpacing: '2px' }}>
+                                      O R A U X
+                                    </td>
+                                  </tr>
+                                  {oralModules.map((mod, idx) => (
+                                    <tr key={mod.moduleId} style={{ backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f0f9ff' }}>
+                                      <td className="p-2 border font-medium" style={{ borderColor: '#cbd5e1' }}>{mod.moduleTitle}</td>
+                                      <td className="p-2 border text-center font-semibold" style={{ borderColor: '#cbd5e1' }}>
+                                        {mod.examBlancScore !== null ? mod.examBlancScore.toFixed(2) : '0,00'}
+                                      </td>
+                                      <td className="p-2 border text-center font-bold" style={{ borderColor: '#cbd5e1' }}>
+                                        {mod.coefficient}
+                                      </td>
+                                      <td className="p-2 border text-center font-bold" style={{ borderColor: '#cbd5e1' }}>
+                                        {mod.examBlancPoints !== null ? mod.examBlancPoints.toFixed(2) : '0,00'}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </>
+                              )}
+                              {/* TOTAL */}
+                              <tr style={{ backgroundColor: '#dbeafe' }}>
+                                <td colSpan={2} className="p-2 border font-bold text-center" style={{ borderColor: '#cbd5e1', color: '#1a1a2e' }}>
+                                  TOTAL (Admis si {'>'} ou = {admissionThreshold})
+                                </td>
+                                <td className="p-2 border" style={{ borderColor: '#cbd5e1' }}></td>
+                                <td className="p-2 border" style={{ borderColor: '#cbd5e1' }}></td>
+                                <td className="p-2 border text-center font-bold text-sm" style={{ borderColor: '#cbd5e1', color: isAdmis ? '#16a34a' : '#dc2626' }}>
+                                  {totalPoints.toFixed(2)}
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Appréciation générale + Assiduité (côté droit) */}
+                        <div className="w-56 space-y-3">
+                          <div className="border rounded-md p-3" style={{ borderColor: '#cbd5e1' }}>
+                            <p className="text-[10px] uppercase font-bold mb-2" style={{ color: '#1a1a2e' }}>Appréciation générale</p>
+                            <p className="text-[10px] italic" style={{ color: '#64748b' }}>
+                              {getAppreciation(currentBulletin.ccGeneralAverage)}
+                            </p>
+                          </div>
+                          <div className="border rounded-md p-3" style={{ borderColor: '#cbd5e1' }}>
+                            <p className="text-[10px] uppercase font-bold mb-2" style={{ color: '#1a1a2e' }}>ASSIDUITÉ :</p>
+                            <div className="space-y-1 text-[9px]" style={{ color: '#64748b' }}>
+                              <p>- Retards ce semestre : ...</p>
+                              <p>- Retards au total : ...</p>
+                              <p>- Absences ce semestre : ...</p>
+                              <p>- Absences au total : ...</p>
+                              <p>- Absences restantes à rattraper : ...</p>
+                            </div>
+                          </div>
+                          {/* Decision BTS */}
+                          <div className="border-2 rounded-md p-3 text-center font-bold" style={{ 
+                            borderColor: isAdmis ? '#16a34a' : '#dc2626',
+                            backgroundColor: isAdmis ? '#f0fdf4' : '#fef2f2',
+                            color: isAdmis ? '#16a34a' : '#dc2626'
+                          }}>
+                            {isAdmis ? 'ADMIS' : 'NON ADMIS'}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* ===== SECTION EXAMEN pour non-BTS ===== */}
+                  {!isBTS && showExam && (
+                    <div className="mx-6 mb-4">
+                      <table className="w-full text-[11px] border-collapse" style={{ borderColor: '#cbd5e1' }}>
+                        <thead>
+                          <tr>
+                            <th className="text-left p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '28%' }}>Matière</th>
+                            <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '7%' }}>DS</th>
+                            <th className="text-center p-2 font-semibold border" style={{ backgroundColor: '#c8a94e', color: '#1a1a2e', borderColor: '#334155', width: '10%' }}>
+                              <span className="text-[9px]">Examen<br/>Final</span>
+                            </th>
+                            <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '10%' }}>
+                              <span className="text-[9px]">Oral/Subt.</span>
+                            </th>
+                            <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '10%' }}>Moyenne</th>
+                            <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '10%' }}>Statut</th>
+                            <th className="text-center p-2 text-white font-semibold border" style={{ backgroundColor: '#1a1a2e', borderColor: '#334155', width: '25%' }}>Appréciation</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {moduleGroups.map(group => (
+                            <React.Fragment key={group.id}>
+                              {moduleGroups.length > 1 && (
+                                <tr>
+                                  <td colSpan={7} className="p-1.5 pl-3 text-[10px] font-bold uppercase tracking-wider border" style={{ backgroundColor: '#f1f5f9', color: '#1a1a2e', borderColor: '#cbd5e1' }}>
+                                    {group.title}
+                                  </td>
+                                </tr>
+                              )}
+                              {group.mods.map((mod, modIdx) => {
+                                const dsAvg = getStudentModuleDSAvg(currentBulletin.studentId, mod.id);
+                                const examFinal = getStudentModuleExamFinal(currentBulletin.studentId, mod.id);
+                                const oralScore = getStudentModuleOral(currentBulletin.studentId, mod.id);
+                                const scores = [dsAvg, examFinal, oralScore].filter(s => s !== null) as number[];
+                                const moduleAvg = scores.length > 0 ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 100) / 100 : null;
+                                const statut = getStatut(moduleAvg);
+                                const appreciation = getAppreciation(moduleAvg);
+
+                                return (
+                                  <tr key={mod.id} style={{ backgroundColor: modIdx % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
+                                    <td className="p-2 border font-medium" style={{ borderColor: '#cbd5e1' }}>{mod.title}</td>
+                                    <td className="p-2 border text-center font-semibold" style={{ borderColor: '#cbd5e1' }}>
+                                      {dsAvg !== null ? dsAvg.toFixed(0) : '-'}
+                                    </td>
+                                    <td className="p-2 border text-center font-semibold" style={{ borderColor: '#cbd5e1' }}>
+                                      {examFinal !== null ? examFinal.toFixed(0) : '-'}
+                                    </td>
+                                    <td className="p-2 border text-center font-semibold" style={{ borderColor: '#cbd5e1' }}>
+                                      {oralScore !== null ? oralScore.toFixed(0) : '-'}
+                                    </td>
+                                    <td className="p-2 border text-center font-bold" style={{ borderColor: '#cbd5e1', color: moduleAvg !== null && moduleAvg >= 10 ? '#c8a94e' : '#dc2626' }}>
+                                      {moduleAvg !== null ? moduleAvg.toFixed(2) : '-'}
+                                    </td>
+                                    <td className="p-2 border text-center" style={{ borderColor: '#cbd5e1' }}>
+                                      {moduleAvg !== null && (
+                                        <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-semibold ${statut.color}`}>
+                                          {statut.label}
+                                        </span>
+                                      )}
+                                    </td>
+                                    <td className="p-2 border text-[9px] italic" style={{ borderColor: '#cbd5e1', color: '#64748b' }}>
+                                      {appreciation}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </React.Fragment>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
 
                   {/* ===== RÉSUMÉ EN BAS ===== */}
                   <div className="mx-6 mb-4 grid grid-cols-4 gap-0 border rounded-md overflow-hidden" style={{ borderColor: '#cbd5e1' }}>
