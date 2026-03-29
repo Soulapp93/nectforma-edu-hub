@@ -20,6 +20,9 @@ interface Student {
 }
 
 const StudentFilesManagement: React.FC = () => {
+  const { establishment } = useEstablishment();
+  const [formations, setFormations] = useState<any[]>([]);
+  const [promotionsForFormation, setPromotionsForFormation] = useState<any[]>([]);
   const [selectedFormation, setSelectedFormation] = useState('');
   const [selectedPromotion, setSelectedPromotion] = useState('');
   const [students, setStudents] = useState<Student[]>([]);
