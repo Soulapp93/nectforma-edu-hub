@@ -23,7 +23,8 @@ interface ModuleDetailProps {
   onBack: () => void;
 }
 
-const ModuleDetail: React.FC<ModuleDetailProps> = ({ module, formationColor, onBack }) => {
+const ModuleDetail: React.FC<ModuleDetailProps> = ({ module, formationColor, formationId, onBack }) => {
+  const resolvedFormationId = formationId || (module as any).formation_id || '';
   return (
     <div className="min-h-screen bg-background">
       {/* Header compact */}
