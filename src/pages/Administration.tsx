@@ -112,7 +112,11 @@ const Administration = () => {
 
       {activeTab === 'attendance' && <AttendanceManagement />}
 
-      {activeTab !== 'users' && activeTab !== 'formations' && activeTab !== 'textbooks' && activeTab !== 'schedules' && activeTab !== 'attendance' && (
+      {activeTab === 'student-files' && <StudentFilesManagement />}
+
+      {activeTab === 'archives' && <ArchivesManagement />}
+
+      {!['users', 'formations', 'textbooks', 'schedules', 'attendance', 'student-files', 'archives'].includes(activeTab) && (
         <div className="glass-card rounded-xl p-8 text-center">
           <div className="max-w-md mx-auto">
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
