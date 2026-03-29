@@ -8,9 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import FormationPromotionSelector from './FormationPromotionSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { studentDocumentService, documentTypeLabels, documentStatusLabels, StudentDocument, StudentDocumentType } from '@/services/studentDocumentService';
+import { useEstablishment } from '@/hooks/useEstablishment';
 
 interface Student {
   user_id: string;
