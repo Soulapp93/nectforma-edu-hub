@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Users, GraduationCap, BookText, CalendarDays, ClipboardCheck, ShieldCheck } from 'lucide-react';
+import { Users, GraduationCap, BookText, CalendarDays, ClipboardCheck, ShieldCheck, FolderOpen, Archive } from 'lucide-react';
 import EnhancedUsersList from '../components/administration/EnhancedUsersList';
 import FormationsList from '../components/administration/FormationsList';
 import TextBooksList from '../components/administration/TextBooksList';
 import ScheduleManagement from '../components/administration/ScheduleManagement';
 import AttendanceManagement from '../components/administration/AttendanceManagement';
+import StudentFilesManagement from '../components/administration/StudentFilesManagement';
+import ArchivesManagement from '../components/administration/ArchivesManagement';
 import { PageHeader } from '@/components/ui/page-header';
 import { LucideIcon } from 'lucide-react';
 
@@ -15,7 +17,7 @@ const Administration = () => {
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['users', 'formations', 'textbooks', 'schedules', 'attendance'].includes(tabParam)) {
+    if (tabParam && ['users', 'formations', 'textbooks', 'schedules', 'attendance', 'student-files', 'archives'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
