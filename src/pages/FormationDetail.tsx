@@ -10,6 +10,7 @@ import ModuleContentTab from '@/components/module/ModuleContentTab';
 import ModuleAssignmentsTab from '@/components/module/ModuleAssignmentsTab';
 import ModuleCorrectionsTab from '@/components/module/ModuleCorrectionsTab';
 import ModuleDocumentsTab from '@/components/module/ModuleDocumentsTab';
+import ModuleGroupsTab from '@/components/module/ModuleGroupsTab';
 import CreateAttendanceSessionModal from '@/components/emargement/CreateAttendanceSessionModal';
 import FormationParticipantsModal from '@/components/administration/FormationParticipantsModal';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
