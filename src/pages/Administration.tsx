@@ -67,6 +67,12 @@ const Administration = () => {
           description: 'Consultez les données archivées des promotions terminées.',
           icon: Archive
         };
+      case 'virtual-classes':
+        return {
+          title: 'Classes virtuelles',
+          description: 'Gérez les classes virtuelles et intégrations visioconférence.',
+          icon: Video
+        };
       default: 
         return {
           title: 'Administration',
