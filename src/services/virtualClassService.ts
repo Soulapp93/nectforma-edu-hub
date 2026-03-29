@@ -121,7 +121,7 @@ export const virtualClassService = {
   // ========== VIRTUAL CLASSES ==========
   async getVirtualClasses(establishmentId: string, filters?: {
     formation_id?: string;
-    status?: string;
+    status?: 'pending' | 'synced' | 'error' | 'cancelled';
   }): Promise<VirtualClass[]> {
     let query = supabase
       .from('virtual_classes')
