@@ -179,7 +179,7 @@ export const virtualClassService = {
         formation_id: params.formation_id || null,
         schedule_slot_id: params.schedule_slot_id || null,
         instructor_id: params.instructor_id || null,
-        status: 'pending' as const,
+        status: 'pending',
         created_by: session?.user?.id || null,
       })
       .select()
