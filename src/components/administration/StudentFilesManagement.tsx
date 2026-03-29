@@ -41,6 +41,18 @@ const StudentFilesManagement: React.FC = () => {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
+    if (establishment?.id) {
+      supabase.from('formations').select('id, title').eq('establishment_id', establishment.id).then(({ data }) => setFormations(data || []));
+    }
+  }, [establishment?.id]);
+
+  useEffect(() => {
+    if (selectedFormation) {
+      supabase.from('promotions').select('id, name, academic_year_start, academic_year_end').eq('formation_id', selectedFormation).then(({ data }) => setPromotionsForFormation(data || []));
+    }
+  }, [selectedFormation]);
+
+  useEffect(() => {
     if (selectedPromotion) {
       loadStudents();
     }
