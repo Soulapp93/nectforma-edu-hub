@@ -101,22 +101,22 @@ export const archiveService = {
     const { data: students } = await supabase.rpc('get_promotion_students', { promotion_id_param: params.promotionId });
     
     // Collect textbooks
-    const { data: textbooks } = await supabase.from('text_books').select('*').eq('promotion_id', params.promotionId);
+    const { data: textbooks } = await (supabase as any).from('text_books').select('*').eq('promotion_id', params.promotionId);
     
     // Collect attendance
     const { data: attendance } = await supabase.from('attendance_sheets').select('*').eq('formation_id', params.formationId);
     
-    // Collect schedules
-    const { data: schedules } = await supabase.from('schedule_slots').select('*').eq('formation_id', params.formationId);
+    // Collect schedules  
+    const { data: schedules } = await (supabase as any).from('schedule_slots').select('*').eq('formation_id', params.formationId);
     
     // Collect grades
     const moduleIds = (modules || []).map(m => m.id);
     const { data: evaluations } = moduleIds.length > 0
       ? await supabase.from('evaluations').select('*').in('module_id', moduleIds)
-      : { data: [] };
+      : { data: [] as any[] };
 
     // Collect student documents
-    const { data: studentDocs } = await supabase.from('student_documents').select('*').eq('promotion_id', params.promotionId);
+    const { data: studentDocs } = await (supabase as any).from('student_documents').select('*').eq('promotion_id', params.promotionId);
 
     const studentCount = (students || []).length;
     const archive = await this.archivePromotion({
