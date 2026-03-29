@@ -90,6 +90,13 @@ const ModuleDetail: React.FC<ModuleDetailProps> = ({ module, formationColor, for
               <FolderOpen className="h-4 w-4 mr-2" />
               Docs
             </TabsTrigger>
+            <TabsTrigger 
+              value="groups"
+              className="rounded-full border-2 border-[#8B5CF6] text-[#8B5CF6] bg-white hover:bg-purple-50 data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:border-[#8B5CF6] px-4 py-3 text-sm font-medium transition-all"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Groupes
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="content" className="mt-4">
