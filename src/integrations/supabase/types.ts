@@ -204,6 +204,38 @@ export type Database = {
           },
         ]
       }
+      archive_snapshots: {
+        Row: {
+          archive_id: string
+          created_at: string
+          id: string
+          module_type: Database["public"]["Enums"]["archive_module_type"]
+          snapshot_data: Json
+        }
+        Insert: {
+          archive_id: string
+          created_at?: string
+          id?: string
+          module_type: Database["public"]["Enums"]["archive_module_type"]
+          snapshot_data?: Json
+        }
+        Update: {
+          archive_id?: string
+          created_at?: string
+          id?: string
+          module_type?: Database["public"]["Enums"]["archive_module_type"]
+          snapshot_data?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "archive_snapshots_archive_id_fkey"
+            columns: ["archive_id"]
+            isOneToOne: false
+            referencedRelation: "promotion_archives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assignment_corrections: {
         Row: {
           corrector_id: string
@@ -2814,6 +2846,74 @@ export type Database = {
         }
         Relationships: []
       }
+      promotion_archives: {
+        Row: {
+          academic_year: string | null
+          archive_metadata: Json | null
+          archived_at: string
+          archived_by: string | null
+          created_at: string
+          establishment_id: string
+          formation_id: string
+          id: string
+          promotion_id: string
+          status: string
+        }
+        Insert: {
+          academic_year?: string | null
+          archive_metadata?: Json | null
+          archived_at?: string
+          archived_by?: string | null
+          created_at?: string
+          establishment_id: string
+          formation_id: string
+          id?: string
+          promotion_id: string
+          status?: string
+        }
+        Update: {
+          academic_year?: string | null
+          archive_metadata?: Json | null
+          archived_at?: string
+          archived_by?: string | null
+          created_at?: string
+          establishment_id?: string
+          formation_id?: string
+          id?: string
+          promotion_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotion_archives_archived_by_fkey"
+            columns: ["archived_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotion_archives_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotion_archives_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotion_archives_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       promotions: {
         Row: {
           academic_year: string
@@ -4319,6 +4419,89 @@ export type Database = {
         }
         Relationships: []
       }
+      student_documents: {
+        Row: {
+          academic_year: string | null
+          created_at: string
+          description: string | null
+          document_type: Database["public"]["Enums"]["student_document_type"]
+          establishment_id: string
+          file_name: string | null
+          file_url: string | null
+          id: string
+          promotion_id: string | null
+          status: Database["public"]["Enums"]["document_status"]
+          student_id: string
+          title: string
+          updated_at: string
+          validated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          academic_year?: string | null
+          created_at?: string
+          description?: string | null
+          document_type?: Database["public"]["Enums"]["student_document_type"]
+          establishment_id: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          promotion_id?: string | null
+          status?: Database["public"]["Enums"]["document_status"]
+          student_id: string
+          title: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          academic_year?: string | null
+          created_at?: string
+          description?: string | null
+          document_type?: Database["public"]["Enums"]["student_document_type"]
+          establishment_id?: string
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          promotion_id?: string | null
+          status?: Database["public"]["Enums"]["document_status"]
+          student_id?: string
+          title?: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_documents_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_documents_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_documents_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_documents_validated_by_fkey"
+            columns: ["validated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_fees: {
         Row: {
           amount: number
@@ -5431,6 +5614,14 @@ export type Database = {
       }
     }
     Enums: {
+      archive_module_type:
+        | "formation"
+        | "promotion"
+        | "dossier_etudiant"
+        | "cahier_texte"
+        | "emargement"
+        | "emploi_temps"
+        | "notes"
       attendance_link_delivery_status: "pending" | "sent" | "failed"
       blog_post_status: "draft" | "published" | "scheduled" | "archived"
       contract_type:
@@ -5441,6 +5632,7 @@ export type Database = {
         | "apprenticeship"
         | "internship"
         | "other"
+      document_status: "draft" | "validated" | "archived"
       invitation_status: "pending" | "accepted" | "expired" | "cancelled"
       invoice_status:
         | "draft"
@@ -5488,6 +5680,16 @@ export type Database = {
         | "published"
         | "failed"
         | "cancelled"
+      student_document_type:
+        | "certificat_scolarite"
+        | "certificat_inscription"
+        | "diplome"
+        | "bulletin_notes"
+        | "contrat"
+        | "convention_stage"
+        | "attestation"
+        | "releve_notes"
+        | "autre"
       user_role: "AdminPrincipal" | "Admin" | "Formateur" | "Étudiant"
     }
     CompositeTypes: {
@@ -5616,6 +5818,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      archive_module_type: [
+        "formation",
+        "promotion",
+        "dossier_etudiant",
+        "cahier_texte",
+        "emargement",
+        "emploi_temps",
+        "notes",
+      ],
       attendance_link_delivery_status: ["pending", "sent", "failed"],
       blog_post_status: ["draft", "published", "scheduled", "archived"],
       contract_type: [
@@ -5627,6 +5838,7 @@ export const Constants = {
         "internship",
         "other",
       ],
+      document_status: ["draft", "validated", "archived"],
       invitation_status: ["pending", "accepted", "expired", "cancelled"],
       invoice_status: [
         "draft",
@@ -5679,6 +5891,17 @@ export const Constants = {
         "published",
         "failed",
         "cancelled",
+      ],
+      student_document_type: [
+        "certificat_scolarite",
+        "certificat_inscription",
+        "diplome",
+        "bulletin_notes",
+        "contrat",
+        "convention_stage",
+        "attestation",
+        "releve_notes",
+        "autre",
       ],
       user_role: ["AdminPrincipal", "Admin", "Formateur", "Étudiant"],
     },
