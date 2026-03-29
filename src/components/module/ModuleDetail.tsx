@@ -114,6 +114,10 @@ const ModuleDetail: React.FC<ModuleDetailProps> = ({ module, formationColor, for
           <TabsContent value="documents" className="mt-4">
             <ModuleDocumentsTab moduleId={module.id} />
           </TabsContent>
+
+          <TabsContent value="groups" className="mt-4">
+            <ModuleGroupsTab moduleId={module.id} formationId={resolvedFormationId} />
+          </TabsContent>
         </Tabs>
       </div>
     </div>
