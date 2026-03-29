@@ -181,12 +181,26 @@ const StudentFilesManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Sélecteur Formation / Promotion */}
-      <FormationPromotionSelector
-        selectedFormation={selectedFormation}
-        selectedPromotion={selectedPromotion}
-        onFormationChange={(f) => { setSelectedFormation(f); setSelectedPromotion(''); setSelectedStudent(null); setDocuments([]); }}
-        onPromotionChange={(p) => { setSelectedPromotion(p); setSelectedStudent(null); setDocuments([]); }}
-      />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <Label>Formation</Label>
+          <Select value={selectedFormation} onValueChange={v => { setSelectedFormation(v); setSelectedPromotion(''); setSelectedStudent(null); setDocuments([]); }}>
+            <SelectTrigger><SelectValue placeholder="Sélectionner une formation" /></SelectTrigger>
+            <SelectContent>
+              {formations.map(f => <SelectItem key={f.id} value={f.id}>{f.title}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>Promotion</Label>
+          <Select value={selectedPromotion} onValueChange={v => { setSelectedPromotion(v); setSelectedStudent(null); setDocuments([]); }} disabled={!selectedFormation}>
+            <SelectTrigger><SelectValue placeholder="Sélectionner une promotion" /></SelectTrigger>
+            <SelectContent>
+              {promotionsForFormation.map(p => <SelectItem key={p.id} value={p.id}>{p.name} ({p.academic_year_start}-{p.academic_year_end})</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {selectedPromotion && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
