@@ -104,13 +104,16 @@ export const archiveService = {
     const { data: textbooks } = await supabase.from('text_books').select('*').eq('promotion_id', params.promotionId);
     
     // Collect attendance
-    const { data: attendance } = await supabase.from('attendance_sheets').select('*, attendance_signatures(*)').eq('formation_id', params.formationId);
+    const { data: attendance } = await supabase.from('attendance_sheets').select('*').eq('formation_id', params.formationId);
     
     // Collect schedules
     const { data: schedules } = await supabase.from('schedule_slots').select('*').eq('formation_id', params.formationId);
     
     // Collect grades
-    const { data: evaluations } = await supabase.from('evaluations').select('*, grades(*)').in('module_id', (modules || []).map(m => m.id));
+    const moduleIds = (modules || []).map(m => m.id);
+    const { data: evaluations } = moduleIds.length > 0
+      ? await supabase.from('evaluations').select('*').in('module_id', moduleIds)
+      : { data: [] };
 
     // Collect student documents
     const { data: studentDocs } = await supabase.from('student_documents').select('*').eq('promotion_id', params.promotionId);
