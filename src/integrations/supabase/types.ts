@@ -2056,6 +2056,63 @@ export type Database = {
           },
         ]
       }
+      integration_logs: {
+        Row: {
+          action: string
+          created_at: string
+          error_message: string | null
+          establishment_id: string
+          id: string
+          performed_by: string | null
+          provider: Database["public"]["Enums"]["video_provider"]
+          request_data: Json | null
+          response_data: Json | null
+          status: string
+          virtual_class_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          error_message?: string | null
+          establishment_id: string
+          id?: string
+          performed_by?: string | null
+          provider: Database["public"]["Enums"]["video_provider"]
+          request_data?: Json | null
+          response_data?: Json | null
+          status?: string
+          virtual_class_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          error_message?: string | null
+          establishment_id?: string
+          id?: string
+          performed_by?: string | null
+          provider?: Database["public"]["Enums"]["video_provider"]
+          request_data?: Json | null
+          response_data?: Json | null
+          status?: string
+          virtual_class_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_logs_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "integration_logs_virtual_class_id_fkey"
+            columns: ["virtual_class_id"]
+            isOneToOne: false
+            referencedRelation: "virtual_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitations: {
         Row: {
           accepted_at: string | null
@@ -5389,6 +5446,100 @@ export type Database = {
           },
         ]
       }
+      virtual_classes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          duration: number
+          error_message: string | null
+          establishment_id: string
+          formation_id: string | null
+          host_user_id: string | null
+          id: string
+          instructor_id: string | null
+          join_url: string | null
+          last_sync_at: string | null
+          password: string | null
+          provider: Database["public"]["Enums"]["video_provider"]
+          provider_meeting_id: string | null
+          schedule_slot_id: string | null
+          scheduled_at: string
+          start_url: string | null
+          status: Database["public"]["Enums"]["virtual_class_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration?: number
+          error_message?: string | null
+          establishment_id: string
+          formation_id?: string | null
+          host_user_id?: string | null
+          id?: string
+          instructor_id?: string | null
+          join_url?: string | null
+          last_sync_at?: string | null
+          password?: string | null
+          provider?: Database["public"]["Enums"]["video_provider"]
+          provider_meeting_id?: string | null
+          schedule_slot_id?: string | null
+          scheduled_at: string
+          start_url?: string | null
+          status?: Database["public"]["Enums"]["virtual_class_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration?: number
+          error_message?: string | null
+          establishment_id?: string
+          formation_id?: string | null
+          host_user_id?: string | null
+          id?: string
+          instructor_id?: string | null
+          join_url?: string | null
+          last_sync_at?: string | null
+          password?: string | null
+          provider?: Database["public"]["Enums"]["video_provider"]
+          provider_meeting_id?: string | null
+          schedule_slot_id?: string | null
+          scheduled_at?: string
+          start_url?: string | null
+          status?: Database["public"]["Enums"]["virtual_class_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "virtual_classes_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "virtual_classes_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "virtual_classes_schedule_slot_id_fkey"
+            columns: ["schedule_slot_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_document_shares: {
         Row: {
           created_at: string
@@ -5528,6 +5679,59 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "workspace_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zoom_connections: {
+        Row: {
+          access_token_cache: string | null
+          account_id: string
+          client_id: string
+          client_secret_encrypted: string
+          connected_at: string
+          connected_by: string | null
+          created_at: string
+          establishment_id: string
+          id: string
+          status: Database["public"]["Enums"]["zoom_connection_status"]
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token_cache?: string | null
+          account_id: string
+          client_id: string
+          client_secret_encrypted: string
+          connected_at?: string
+          connected_by?: string | null
+          created_at?: string
+          establishment_id: string
+          id?: string
+          status?: Database["public"]["Enums"]["zoom_connection_status"]
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token_cache?: string | null
+          account_id?: string
+          client_id?: string
+          client_secret_encrypted?: string
+          connected_at?: string
+          connected_by?: string | null
+          created_at?: string
+          establishment_id?: string
+          id?: string
+          status?: Database["public"]["Enums"]["zoom_connection_status"]
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zoom_connections_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: true
+            referencedRelation: "establishments"
             referencedColumns: ["id"]
           },
         ]
@@ -5765,6 +5969,9 @@ export type Database = {
         | "releve_notes"
         | "autre"
       user_role: "AdminPrincipal" | "Admin" | "Formateur" | "Étudiant"
+      video_provider: "zoom" | "teams" | "google_meet"
+      virtual_class_status: "pending" | "synced" | "error" | "cancelled"
+      zoom_connection_status: "active" | "inactive" | "error"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5978,6 +6185,9 @@ export const Constants = {
         "autre",
       ],
       user_role: ["AdminPrincipal", "Admin", "Formateur", "Étudiant"],
+      video_provider: ["zoom", "teams", "google_meet"],
+      virtual_class_status: ["pending", "synced", "error", "cancelled"],
+      zoom_connection_status: ["active", "inactive", "error"],
     },
   },
 } as const
