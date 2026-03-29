@@ -99,6 +99,8 @@ const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({ isOpen, onClose }) 
     { name: 'Cahiers de texte', href: '/administration?tab=textbooks', icon: BookText },
     { name: 'Emplois du temps', href: '/administration?tab=schedules', icon: CalendarDays },
     { name: 'Feuilles d\'émargement', href: '/administration?tab=attendance', icon: ClipboardCheck },
+    { name: 'Dossiers étudiants', href: '/administration?tab=student-files', icon: FolderOpen },
+    { name: 'Archives', href: '/administration?tab=archives', icon: Archive },
   ];
   
   const principalAdminNavigation: NavigationItem[] = [
