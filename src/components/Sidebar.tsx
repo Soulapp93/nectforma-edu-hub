@@ -24,6 +24,7 @@ import {
   HelpCircle,
   FolderOpen,
   Archive,
+  Video,
 } from 'lucide-react';
 import {
   Sidebar as SidebarWrapper,
