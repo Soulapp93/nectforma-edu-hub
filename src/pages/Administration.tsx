@@ -74,6 +74,12 @@ const Administration = () => {
           description: 'Gérez les classes virtuelles et intégrations visioconférence.',
           icon: Video
         };
+      case 'absences':
+        return {
+          title: 'Gestion des absences',
+          description: 'Gérez les justificatifs d\'absence des étudiants et formateurs.',
+          icon: AlertTriangle
+        };
       default: 
         return {
           title: 'Administration',
