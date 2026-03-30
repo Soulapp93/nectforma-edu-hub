@@ -9,6 +9,7 @@ import AttendanceManagement from '../components/administration/AttendanceManagem
 import StudentFilesManagement from '../components/administration/StudentFilesManagement';
 import ArchivesManagement from '../components/administration/ArchivesManagement';
 import VirtualClassesManagement from '../components/administration/VirtualClassesManagement';
+import AbsenceManagement from '../components/administration/AbsenceManagement';
 import { PageHeader } from '@/components/ui/page-header';
 import { LucideIcon } from 'lucide-react';
 
