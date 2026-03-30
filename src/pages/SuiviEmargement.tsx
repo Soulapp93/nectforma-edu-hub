@@ -31,6 +31,8 @@ interface AttendanceRecord {
   absence_reason?: string;
   instructor_name?: string;
   delay_minutes?: number;
+  signature_id?: string;
+  justification_status?: string | null;
 }
 
 const SuiviEmargement = () => {
