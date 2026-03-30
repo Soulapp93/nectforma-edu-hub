@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      absence_justifications: {
+        Row: {
+          comment: string | null
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_url: string
+          id: string
+          review_comment: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          signature_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_url: string
+          id?: string
+          review_comment?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          signature_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          review_comment?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          signature_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "absence_justifications_signature_id_fkey"
+            columns: ["signature_id"]
+            isOneToOne: true
+            referencedRelation: "attendance_signatures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounting_accounts: {
         Row: {
           account_number: string

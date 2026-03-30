@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, User, CheckCircle, XCircle, AlertCircle, Filter, Search, ClipboardCheck, CalendarIcon, Timer } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, CheckCircle, XCircle, AlertCircle, Filter, Search, ClipboardCheck, CalendarIcon, Timer, FileText, Upload } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,9 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useSearchParams } from 'react-router-dom';
 import LinkAttendanceSigning from '@/components/emargement/LinkAttendanceSigning';
+import AddJustificationModal from '@/components/emargement/AddJustificationModal';
+import { absenceJustificationService } from '@/services/absenceJustificationService';
+import { Badge as BadgeUI } from '@/components/ui/badge';
 
 interface AttendanceRecord {
   id: string;
@@ -28,6 +31,8 @@ interface AttendanceRecord {
   absence_reason?: string;
   instructor_name?: string;
   delay_minutes?: number;
+  signature_id?: string;
+  justification_status?: string | null;
 }
 
 const SuiviEmargement = () => {
@@ -42,6 +47,12 @@ const SuiviEmargement = () => {
   const [studentInfo, setStudentInfo] = useState<{ name: string; email: string } | null>(null);
   const [noStudentAssigned, setNoStudentAssigned] = useState(false);
   const [linkToken, setLinkToken] = useState<string | null>(null);
+  const [justificationModal, setJustificationModal] = useState<{
+    isOpen: boolean;
+    signatureId: string;
+    absenceDate?: string;
+    absenceTitle?: string;
+  }>({ isOpen: false, signatureId: '' });
 
   // Detect link_token from URL
   useEffect(() => {
@@ -175,7 +186,8 @@ const SuiviEmargement = () => {
               formation_title: (sheet.formations as any)?.title || 'N/A',
               status: instructorSignature?.present ? 'Présent' : (instructorSignature ? 'Absent' : 'Non signé') as any,
               signed_at: instructorSignature?.signed_at,
-              instructor_name: 'Vous'
+              instructor_name: 'Vous',
+              signature_id: instructorSignature?.id
             };
           });
         }
@@ -237,7 +249,8 @@ const SuiviEmargement = () => {
                 signed_at: userSignature?.signed_at,
                 absence_reason: userSignature?.absence_reason || undefined,
                 instructor_name: instructor ? `${instructor.first_name} ${instructor.last_name}` : 'N/A',
-                delay_minutes: (userSignature as any)?.delay_minutes || 0
+                delay_minutes: (userSignature as any)?.delay_minutes || 0,
+                signature_id: userSignature?.id
               };
             });
           }
@@ -585,6 +598,7 @@ const SuiviEmargement = () => {
                   <TableHead>Statut</TableHead>
                   <TableHead>Retard</TableHead>
                   <TableHead>Observations</TableHead>
+                  {userRole !== 'Tuteur' && <TableHead>Justificatif</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -647,6 +661,26 @@ const SuiviEmargement = () => {
                         </span>
                       )}
                     </TableCell>
+                    {userRole !== 'Tuteur' && (
+                      <TableCell>
+                        {record.status === 'Absent' && record.signature_id && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1.5 text-xs"
+                            onClick={() => setJustificationModal({
+                              isOpen: true,
+                              signatureId: record.signature_id!,
+                              absenceDate: record.date,
+                              absenceTitle: record.title
+                            })}
+                          >
+                            <Upload className="h-3 w-3" />
+                            Justifier
+                          </Button>
+                        )}
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -677,6 +711,17 @@ const SuiviEmargement = () => {
           }}
         />
       )}
+
+      {/* Justification modal */}
+      <AddJustificationModal
+        isOpen={justificationModal.isOpen}
+        onClose={() => setJustificationModal({ isOpen: false, signatureId: '' })}
+        signatureId={justificationModal.signatureId}
+        userId={userId || ''}
+        absenceDate={justificationModal.absenceDate}
+        absenceTitle={justificationModal.absenceTitle}
+        onSuccess={() => loadAttendanceHistory()}
+      />
     </div>
   );
 };

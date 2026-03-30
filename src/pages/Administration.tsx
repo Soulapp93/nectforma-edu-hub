@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Users, GraduationCap, BookText, CalendarDays, ClipboardCheck, ShieldCheck, FolderOpen, Archive, Video } from 'lucide-react';
+import { Users, GraduationCap, BookText, CalendarDays, ClipboardCheck, ShieldCheck, FolderOpen, Archive, Video, AlertTriangle } from 'lucide-react';
 import EnhancedUsersList from '../components/administration/EnhancedUsersList';
 import FormationsList from '../components/administration/FormationsList';
 import TextBooksList from '../components/administration/TextBooksList';
@@ -9,6 +9,7 @@ import AttendanceManagement from '../components/administration/AttendanceManagem
 import StudentFilesManagement from '../components/administration/StudentFilesManagement';
 import ArchivesManagement from '../components/administration/ArchivesManagement';
 import VirtualClassesManagement from '../components/administration/VirtualClassesManagement';
+import AbsenceManagement from '../components/administration/AbsenceManagement';
 import { PageHeader } from '@/components/ui/page-header';
 import { LucideIcon } from 'lucide-react';
 
@@ -18,7 +19,7 @@ const Administration = () => {
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['users', 'formations', 'textbooks', 'schedules', 'attendance', 'student-files', 'archives', 'virtual-classes'].includes(tabParam)) {
+    if (tabParam && ['users', 'formations', 'textbooks', 'schedules', 'attendance', 'student-files', 'archives', 'virtual-classes', 'absences'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -73,6 +74,12 @@ const Administration = () => {
           description: 'Gérez les classes virtuelles et intégrations visioconférence.',
           icon: Video
         };
+      case 'absences':
+        return {
+          title: 'Gestion des absences',
+          description: 'Gérez les justificatifs d\'absence des étudiants et formateurs.',
+          icon: AlertTriangle
+        };
       default: 
         return {
           title: 'Administration',
@@ -125,7 +132,9 @@ const Administration = () => {
 
       {activeTab === 'virtual-classes' && <VirtualClassesManagement />}
 
-      {!['users', 'formations', 'textbooks', 'schedules', 'attendance', 'student-files', 'archives', 'virtual-classes'].includes(activeTab) && (
+      {activeTab === 'absences' && <AbsenceManagement />}
+
+      {!['users', 'formations', 'textbooks', 'schedules', 'attendance', 'student-files', 'archives', 'virtual-classes', 'absences'].includes(activeTab) && (
         <div className="glass-card rounded-xl p-8 text-center">
           <div className="max-w-md mx-auto">
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">

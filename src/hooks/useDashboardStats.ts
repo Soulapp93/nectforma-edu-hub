@@ -21,6 +21,7 @@ export interface DashboardStats {
   attendanceRate: number;
   textBookMissingEntries: number;
   pendingAttendanceSheets: number;
+  pendingJustifications: number;
   riskStudents: StudentRisk[];
   excellentStudents: StudentRisk[];
 }
@@ -38,6 +39,7 @@ export const useDashboardStats = (selectedFormationId?: string, timePeriod: stri
     attendanceRate: 0,
     textBookMissingEntries: 0,
     pendingAttendanceSheets: 0,
+    pendingJustifications: 0,
     riskStudents: [],
     excellentStudents: [],
   });
@@ -230,6 +232,12 @@ export const useDashboardStats = (selectedFormationId?: string, timePeriod: stri
 
       const { count: pendingAttendanceSheets } = await pendingQuery;
 
+      // Justificatifs en attente
+      const { count: pendingJustifications } = await supabase
+        .from('absence_justifications' as any)
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending');
+
       // Étudiants à risque et assidus
       const getStudentsAttendance = async () => {
         // Période basée sur timePeriod
@@ -363,6 +371,7 @@ export const useDashboardStats = (selectedFormationId?: string, timePeriod: stri
         attendanceRate,
         textBookMissingEntries,
         pendingAttendanceSheets: pendingAttendanceSheets || 0,
+        pendingJustifications: pendingJustifications || 0,
         riskStudents,
         excellentStudents,
       });
