@@ -371,6 +371,7 @@ export const useDashboardStats = (selectedFormationId?: string, timePeriod: stri
         attendanceRate,
         textBookMissingEntries,
         pendingAttendanceSheets: pendingAttendanceSheets || 0,
+        pendingJustifications: pendingJustifications || 0,
         riskStudents,
         excellentStudents,
       });
