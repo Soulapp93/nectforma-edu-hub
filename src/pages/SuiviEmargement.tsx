@@ -249,7 +249,8 @@ const SuiviEmargement = () => {
                 signed_at: userSignature?.signed_at,
                 absence_reason: userSignature?.absence_reason || undefined,
                 instructor_name: instructor ? `${instructor.first_name} ${instructor.last_name}` : 'N/A',
-                delay_minutes: (userSignature as any)?.delay_minutes || 0
+                delay_minutes: (userSignature as any)?.delay_minutes || 0,
+                signature_id: userSignature?.id
               };
             });
           }
