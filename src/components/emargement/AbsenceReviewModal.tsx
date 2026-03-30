@@ -64,12 +64,12 @@ const AbsenceReviewModal: React.FC<AbsenceReviewModalProps> = ({
       // Send notification to user
       const statusText = decision === 'validated' ? 'validé' : 'rejeté';
       try {
-        await notificationService.createNotification({
-          userId: details.signature.user_id,
-          title: `Justificatif d'absence ${statusText}`,
-          message: `Votre justificatif pour l'absence du ${new Date(details.signature.attendance_sheets.date).toLocaleDateString('fr-FR')} a été ${statusText}.${reviewComment ? ` Commentaire: ${reviewComment}` : ''}`,
-          type: 'attendance'
-        });
+        await notificationService.notifyUser(
+          details.signature.user_id,
+          `Justificatif d'absence ${statusText}`,
+          `Votre justificatif pour l'absence du ${new Date(details.signature.attendance_sheets.date).toLocaleDateString('fr-FR')} a été ${statusText}.${reviewComment ? ` Commentaire: ${reviewComment}` : ''}`,
+          'attendance'
+        );
       } catch (notifError) {
         console.error('Error sending notification:', notifError);
       }
