@@ -22,6 +22,7 @@ import {
   FolderOpen,
   Archive,
   Video,
+  AlertTriangle,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
