@@ -186,7 +186,8 @@ const SuiviEmargement = () => {
               formation_title: (sheet.formations as any)?.title || 'N/A',
               status: instructorSignature?.present ? 'Présent' : (instructorSignature ? 'Absent' : 'Non signé') as any,
               signed_at: instructorSignature?.signed_at,
-              instructor_name: 'Vous'
+              instructor_name: 'Vous',
+              signature_id: instructorSignature?.id
             };
           });
         }
