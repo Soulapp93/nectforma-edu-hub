@@ -661,6 +661,26 @@ const SuiviEmargement = () => {
                         </span>
                       )}
                     </TableCell>
+                    {userRole !== 'Tuteur' && (
+                      <TableCell>
+                        {record.status === 'Absent' && record.signature_id && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1.5 text-xs"
+                            onClick={() => setJustificationModal({
+                              isOpen: true,
+                              signatureId: record.signature_id!,
+                              absenceDate: record.date,
+                              absenceTitle: record.title
+                            })}
+                          >
+                            <Upload className="h-3 w-3" />
+                            Justifier
+                          </Button>
+                        )}
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
