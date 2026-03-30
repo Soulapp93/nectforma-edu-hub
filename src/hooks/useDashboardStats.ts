@@ -39,6 +39,7 @@ export const useDashboardStats = (selectedFormationId?: string, timePeriod: stri
     attendanceRate: 0,
     textBookMissingEntries: 0,
     pendingAttendanceSheets: 0,
+    pendingJustifications: 0,
     riskStudents: [],
     excellentStudents: [],
   });
