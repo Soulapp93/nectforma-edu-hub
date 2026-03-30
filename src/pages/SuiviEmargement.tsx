@@ -598,6 +598,7 @@ const SuiviEmargement = () => {
                   <TableHead>Statut</TableHead>
                   <TableHead>Retard</TableHead>
                   <TableHead>Observations</TableHead>
+                  {userRole !== 'Tuteur' && <TableHead>Justificatif</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
