@@ -711,6 +711,17 @@ const SuiviEmargement = () => {
           }}
         />
       )}
+
+      {/* Justification modal */}
+      <AddJustificationModal
+        isOpen={justificationModal.isOpen}
+        onClose={() => setJustificationModal({ isOpen: false, signatureId: '' })}
+        signatureId={justificationModal.signatureId}
+        userId={userId || ''}
+        absenceDate={justificationModal.absenceDate}
+        absenceTitle={justificationModal.absenceTitle}
+        onSuccess={() => loadAttendanceHistory()}
+      />
     </div>
   );
 };
