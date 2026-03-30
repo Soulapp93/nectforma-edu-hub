@@ -80,6 +80,15 @@ const Dashboard = () => {
       clickable: true,
       onClick: () => navigate('/administration?tab=attendance'),
       color: 'navy',
+    },
+    {
+      title: 'Gestion des absences',
+      value: loading ? '...' : stats.pendingJustifications.toString(),
+      icon: FileWarning,
+      description: 'Justificatifs à traiter',
+      clickable: true,
+      onClick: () => navigate('/administration?tab=absences'),
+      color: 'red',
     }
   ];
 
