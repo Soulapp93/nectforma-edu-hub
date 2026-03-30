@@ -232,6 +232,12 @@ export const useDashboardStats = (selectedFormationId?: string, timePeriod: stri
 
       const { count: pendingAttendanceSheets } = await pendingQuery;
 
+      // Justificatifs en attente
+      const { count: pendingJustifications } = await supabase
+        .from('absence_justifications' as any)
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending');
+
       // Étudiants à risque et assidus
       const getStudentsAttendance = async () => {
         // Période basée sur timePeriod
