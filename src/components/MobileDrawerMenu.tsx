@@ -103,6 +103,7 @@ const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({ isOpen, onClose }) 
     { name: 'Feuilles d\'émargement', href: '/administration?tab=attendance', icon: ClipboardCheck },
     { name: 'Dossiers étudiants', href: '/administration?tab=student-files', icon: FolderOpen },
     { name: 'Classes virtuelles', href: '/administration?tab=virtual-classes', icon: Video },
+    { name: 'Gestion des absences', href: '/administration?tab=absences', icon: AlertTriangle },
     { name: 'Archives', href: '/administration?tab=archives', icon: Archive },
   ];
   
