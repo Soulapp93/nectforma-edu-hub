@@ -25,6 +25,7 @@ import {
   FolderOpen,
   Archive,
   Video,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   Sidebar as SidebarWrapper,
