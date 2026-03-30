@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Users, GraduationCap, BookText, CalendarDays, ClipboardCheck, ShieldCheck, FolderOpen, Archive, Video } from 'lucide-react';
+import { Users, GraduationCap, BookText, CalendarDays, ClipboardCheck, ShieldCheck, FolderOpen, Archive, Video, AlertTriangle } from 'lucide-react';
 import EnhancedUsersList from '../components/administration/EnhancedUsersList';
 import FormationsList from '../components/administration/FormationsList';
 import TextBooksList from '../components/administration/TextBooksList';
