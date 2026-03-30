@@ -47,6 +47,12 @@ const SuiviEmargement = () => {
   const [studentInfo, setStudentInfo] = useState<{ name: string; email: string } | null>(null);
   const [noStudentAssigned, setNoStudentAssigned] = useState(false);
   const [linkToken, setLinkToken] = useState<string | null>(null);
+  const [justificationModal, setJustificationModal] = useState<{
+    isOpen: boolean;
+    signatureId: string;
+    absenceDate?: string;
+    absenceTitle?: string;
+  }>({ isOpen: false, signatureId: '' });
 
   // Detect link_token from URL
   useEffect(() => {
