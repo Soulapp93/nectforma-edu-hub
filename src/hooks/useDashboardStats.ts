@@ -21,6 +21,7 @@ export interface DashboardStats {
   attendanceRate: number;
   textBookMissingEntries: number;
   pendingAttendanceSheets: number;
+  pendingJustifications: number;
   riskStudents: StudentRisk[];
   excellentStudents: StudentRisk[];
 }
