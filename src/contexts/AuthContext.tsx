@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { rpcWithRetry } from '@/lib/supabaseRetry';
 
@@ -41,7 +41,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     error: null,
   });
 
+  // Guards to prevent duplicate/concurrent fetches
+  const fetchingForUidRef = useRef<string | null>(null);
+  const debounceTimerRef = useRef<number | null>(null);
+
   const fetchUserRole = useCallback(async (uid: string, mounted: { current: boolean }) => {
+    // Skip if already fetching for the same user
+    if (fetchingForUidRef.current === uid) return;
+    fetchingForUidRef.current = uid;
+
     try {
       const { data: isSA, error: isSuperAdminError } = await withTimeout(
         rpcWithRetry(() => supabase.rpc('is_super_admin'), { maxRetries: 2, baseDelayMs: 400 }),
@@ -86,6 +94,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (mounted.current) {
         setState(prev => ({ ...prev, userId: uid, userRole: null, isSuperAdmin: false, error: 'Erreur de connexion' }));
       }
+    } finally {
+      // Release the lock only if we were the one holding it for this uid
+      if (fetchingForUidRef.current === uid) {
+        fetchingForUidRef.current = null;
+      }
     }
   }, []);
 
@@ -94,7 +107,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     sessionStorage.removeItem('demo_user');
 
-    // INITIAL load - controls loading state
     const initializeAuth = async () => {
       try {
         const { data: { session }, error: sessionError } = await withTimeout(
@@ -112,7 +124,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         if (session?.user?.id) {
-          // Fetch role BEFORE setting loading to false
           await fetchUserRole(session.user.id, mounted);
         } else {
           setState(prev => ({ ...prev, userId: null, userRole: null, isSuperAdmin: false }));
@@ -129,30 +140,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    // Listener for ONGOING auth changes
-    // CRITICAL: Ne PAS mettre loading=true ni effacer userRole ici.
-    // Cela créait un flash où l'interface montrait le mauvais rôle.
-    // À la place, on met à jour userId immédiatement et on lance le fetch du rôle
-    // en "fire-and-forget". L'app reste sur /auth tant que userRole est null.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (!mounted.current) return;
 
-        // Ignore INITIAL_SESSION - initializeAuth handles it
         if (event === 'INITIAL_SESSION') return;
 
         if (event === 'SIGNED_OUT') {
+          // Clear any pending debounce
+          if (debounceTimerRef.current) {
+            window.clearTimeout(debounceTimerRef.current);
+            debounceTimerRef.current = null;
+          }
+          fetchingForUidRef.current = null;
           setState({ userId: null, userRole: null, isSuperAdmin: false, loading: false, error: null });
           return;
         }
 
         if (session?.user?.id) {
-          // Set userId immediately but do NOT clear userRole or set loading=true
-          // This prevents the flash of incorrect UI
           setState(prev => ({ ...prev, userId: session.user.id }));
           
-          // Fire-and-forget role fetch - no loading state change
-          fetchUserRole(session.user.id, mounted);
+          // Debounce role fetch to prevent token refresh storms
+          if (debounceTimerRef.current) {
+            window.clearTimeout(debounceTimerRef.current);
+          }
+          debounceTimerRef.current = window.setTimeout(() => {
+            debounceTimerRef.current = null;
+            fetchUserRole(session.user.id, mounted);
+          }, 300);
         }
       }
     );
@@ -162,6 +177,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       mounted.current = false;
       subscription.unsubscribe();
+      if (debounceTimerRef.current) {
+        window.clearTimeout(debounceTimerRef.current);
+      }
     };
   }, [fetchUserRole]);
 

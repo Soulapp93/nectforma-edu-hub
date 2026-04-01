@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
@@ -9,9 +9,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { Button } from '@/components/ui/button';
 import Sidebar from './components/Sidebar';
-import NotificationBell from './components/NotificationBell';
 import TopHeaderBar from './components/TopHeaderBar';
-
 import MobileHeader from './components/MobileHeader';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
@@ -20,55 +18,67 @@ import TutorRestrictedRoute from './components/TutorRestrictedRoute';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useEstablishmentTheme } from '@/hooks/useEstablishmentTheme';
 import { monitoring } from '@/utils/monitoring';
-import Dashboard from './pages/Dashboard';
-import Administration from './pages/Administration';
-import Formations from './pages/Formations';
-import FormationDetail from './pages/FormationDetail';
-import TextBookDetail from './pages/TextBookDetail';
-import TextBookByFormation from './pages/TextBookByFormation';
-import SuiviEmargement from './pages/SuiviEmargement';
-import SignaturePublique from './pages/SignaturePublique';
-import EmploiTemps from './pages/EmploiTemps';
-import Messagerie from './pages/Messagerie';
-import Groupes from './pages/Groupes';
-import Emargement from './pages/Emargement';
-import EmargementQR from './pages/EmargementQR';
-import GestionEtablissement from './pages/GestionEtablissement';
-import Compte from './pages/Compte';
-import NotFound from './pages/NotFound';
-import Auth from './pages/Auth';
-import Index from './pages/Index';
-import CreateEstablishment from './pages/CreateEstablishment';
-import AcceptInvitation from './pages/AcceptInvitation';
-import Solutions from './pages/Solutions';
-import Fonctionnalites from './pages/Fonctionnalites';
-import PourquoiNous from './pages/PourquoiNous';
-import CGU from './pages/CGU';
-import PolitiqueConfidentialite from './pages/PolitiqueConfidentialite';
-import ResetPassword from './pages/ResetPassword';
-import Activation from './pages/Activation';
-import Notifications from './pages/Notifications';
-import Documentation from './pages/Documentation';
-import Blog from './pages/Blog';
-import Install from './pages/Install';
-import BlogPost from './pages/BlogPost';
-import BlogAdmin from './pages/BlogAdmin';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import CookieConsent from '@/components/CookieConsent';
-import LinkedInCallback from '@/pages/LinkedInCallback';
-import EspaceTravail from './pages/EspaceTravail';
-import QuestionnairePublic from './pages/QuestionnairePublic';
-import Notes from './pages/Notes';
 
+// Lazy load all pages
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const Administration = React.lazy(() => import('./pages/Administration'));
+const Formations = React.lazy(() => import('./pages/Formations'));
+const FormationDetail = React.lazy(() => import('./pages/FormationDetail'));
+const TextBookDetail = React.lazy(() => import('./pages/TextBookDetail'));
+const TextBookByFormation = React.lazy(() => import('./pages/TextBookByFormation'));
+const SuiviEmargement = React.lazy(() => import('./pages/SuiviEmargement'));
+const SignaturePublique = React.lazy(() => import('./pages/SignaturePublique'));
+const EmploiTemps = React.lazy(() => import('./pages/EmploiTemps'));
+const Messagerie = React.lazy(() => import('./pages/Messagerie'));
+const Groupes = React.lazy(() => import('./pages/Groupes'));
+const Emargement = React.lazy(() => import('./pages/Emargement'));
+const EmargementQR = React.lazy(() => import('./pages/EmargementQR'));
+const GestionEtablissement = React.lazy(() => import('./pages/GestionEtablissement'));
+const Compte = React.lazy(() => import('./pages/Compte'));
+const NotFound = React.lazy(() => import('./pages/NotFound'));
+const Auth = React.lazy(() => import('./pages/Auth'));
+const Index = React.lazy(() => import('./pages/Index'));
+const CreateEstablishment = React.lazy(() => import('./pages/CreateEstablishment'));
+const AcceptInvitation = React.lazy(() => import('./pages/AcceptInvitation'));
+const Solutions = React.lazy(() => import('./pages/Solutions'));
+const Fonctionnalites = React.lazy(() => import('./pages/Fonctionnalites'));
+const PourquoiNous = React.lazy(() => import('./pages/PourquoiNous'));
+const CGU = React.lazy(() => import('./pages/CGU'));
+const PolitiqueConfidentialite = React.lazy(() => import('./pages/PolitiqueConfidentialite'));
+const ResetPassword = React.lazy(() => import('./pages/ResetPassword'));
+const Activation = React.lazy(() => import('./pages/Activation'));
+const Notifications = React.lazy(() => import('./pages/Notifications'));
+const Documentation = React.lazy(() => import('./pages/Documentation'));
+const Blog = React.lazy(() => import('./pages/Blog'));
+const Install = React.lazy(() => import('./pages/Install'));
+const BlogPost = React.lazy(() => import('./pages/BlogPost'));
+const BlogAdmin = React.lazy(() => import('./pages/BlogAdmin'));
+const LinkedInCallback = React.lazy(() => import('./pages/LinkedInCallback'));
+const EspaceTravail = React.lazy(() => import('./pages/EspaceTravail'));
+const QuestionnairePublic = React.lazy(() => import('./pages/QuestionnairePublic'));
+const Notes = React.lazy(() => import('./pages/Notes'));
+const Finance = React.lazy(() => import('./pages/Finance'));
+const Comptabilite = React.lazy(() => import('./pages/Comptabilite'));
+const RessourcesHumaines = React.lazy(() => import('./pages/RessourcesHumaines'));
+const QuizJoin = React.lazy(() => import('./pages/QuizJoin'));
 
-
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="flex flex-col items-center gap-4">
+      <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary" />
+      <p className="text-muted-foreground text-sm">Chargement...</p>
+    </div>
+  </div>
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 5 * 60 * 1000,
     },
     mutations: {
       retry: 1,
@@ -80,56 +90,37 @@ const AppContent = () => {
   const location = useLocation();
   const { userId, userRole, loading: authLoading, error: authError } = useCurrentUser();
   
-  // Apply establishment theme colors
   useEstablishmentTheme();
   
-  // Initialize monitoring with user ID
   useEffect(() => {
     monitoring.setUserId(userId || null);
   }, [userId]);
 
-  // Track page load performance
   useEffect(() => {
     monitoring.trackPageLoad();
   }, []);
   
-  // IMPORTANT: La page de signature doit être vérifiée EN PREMIER pour éviter les 404
-  // après redirection depuis /auth
   const isSignaturePage = location.pathname.startsWith('/emargement/signer/');
   const isLinkedInCallback = location.pathname === '/linkedin-callback';
 
   if (isSignaturePage || isLinkedInCallback) {
     return (
       <div className="min-h-screen w-full">
-        <Routes>
-          <Route path="/emargement/signer/:token" element={<SignaturePublique />} />
-          <Route path="/questionnaire/:token" element={<QuestionnairePublic />} />
-          <Route path="/linkedin-callback" element={<LinkedInCallback />} />
-          
-        </Routes>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
+            <Route path="/emargement/signer/:token" element={<SignaturePublique />} />
+            <Route path="/questionnaire/:token" element={<QuestionnairePublic />} />
+            <Route path="/linkedin-callback" element={<LinkedInCallback />} />
+          </Routes>
+        </Suspense>
         <Toaster />
       </div>
     );
   }
 
-  // ============================================================================
-  // BLOG ADMIN (Super Admin uniquement)
-  // IMPORTANT: NE PAS inclure /blog-admin dans les "pages publiques".
-  // Sinon, un Super Admin sur /blog-admin est redirigé vers /blog-admin (boucle)
-  // => écran blanc (Navigate sans UI).
-  // ============================================================================
   const isBlogAdminPage = location.pathname === '/blog-admin';
   if (isBlogAdminPage) {
-    if (authLoading) {
-      return (
-        <div className="flex items-center justify-center min-h-screen bg-background">
-          <div className="flex flex-col items-center gap-4">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary" />
-            <p className="text-muted-foreground text-sm">Chargement...</p>
-          </div>
-        </div>
-      );
-    }
+    if (authLoading) return <LoadingFallback />;
 
     if (authError) {
       return (
@@ -138,9 +129,7 @@ const AppContent = () => {
             <h1 className="text-lg font-semibold">Impossible de charger la session</h1>
             <p className="text-sm text-muted-foreground">{authError}</p>
             <div className="flex items-center justify-center gap-2">
-              <Button variant="outline" onClick={() => window.location.reload()}>
-                Réessayer
-              </Button>
+              <Button variant="outline" onClick={() => window.location.reload()}>Réessayer</Button>
               <Button onClick={() => (window.location.href = '/auth')}>Se reconnecter</Button>
             </div>
           </div>
@@ -148,18 +137,13 @@ const AppContent = () => {
       );
     }
 
-    if (!userId) {
-      return <Navigate to="/auth" state={{ from: location }} replace />;
-    }
-
-    if (userRole !== 'SuperAdmin') {
-      return <Navigate to="/" replace />;
-    }
+    if (!userId) return <Navigate to="/auth" state={{ from: location }} replace />;
+    if (userRole !== 'SuperAdmin') return <Navigate to="/" replace />;
 
     return (
       <>
         <GoogleAnalytics measurementId={import.meta.env.VITE_GA_MEASUREMENT_ID || ''} />
-        <BlogAdmin />
+        <Suspense fallback={<LoadingFallback />}><BlogAdmin /></Suspense>
         <Toaster />
       </>
     );
@@ -172,29 +156,17 @@ const AppContent = () => {
   const isActivationPage = location.pathname === '/activation';
 
   if (isAuthPage) {
-    // Si l'utilisateur est connecté et que le rôle est chargé, rediriger vers la bonne page
-    if (authLoading) {
-      return (
-        <div className="flex items-center justify-center min-h-screen bg-background">
-          <div className="flex flex-col items-center gap-4">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary" />
-            <p className="text-muted-foreground text-sm">Connexion en cours...</p>
-          </div>
-        </div>
-      );
-    }
+    if (authLoading) return <LoadingFallback />;
     if (userId && userRole) {
-      if (userRole === 'SuperAdmin') {
-        return <Navigate to="/blog-admin" replace />;
-      }
+      if (userRole === 'SuperAdmin') return <Navigate to="/blog-admin" replace />;
       const home = userRole === 'Admin' || userRole === 'AdminPrincipal' ? '/dashboard' : '/formations';
       return <Navigate to={home} replace />;
     }
     return (
       <div className="min-h-screen w-full">
-        <Routes>
-          <Route path="/auth" element={<Auth />} />
-        </Routes>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes><Route path="/auth" element={<Auth />} /></Routes>
+        </Suspense>
       </div>
     );
   }
@@ -202,10 +174,12 @@ const AppContent = () => {
   if (isCreateEstablishmentPage) {
     return (
       <div className="min-h-screen w-full">
-        <Routes>
-          <Route path="/create-establishment" element={<CreateEstablishment />} />
-          <Route path="/creer-etablissement" element={<CreateEstablishment />} />
-        </Routes>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
+            <Route path="/create-establishment" element={<CreateEstablishment />} />
+            <Route path="/creer-etablissement" element={<CreateEstablishment />} />
+          </Routes>
+        </Suspense>
       </div>
     );
   }
@@ -213,9 +187,9 @@ const AppContent = () => {
   if (isAcceptInvitationPage) {
     return (
       <div className="min-h-screen w-full">
-        <Routes>
-          <Route path="/accept-invitation" element={<AcceptInvitation />} />
-        </Routes>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes><Route path="/accept-invitation" element={<AcceptInvitation />} /></Routes>
+        </Suspense>
       </div>
     );
   }
@@ -223,9 +197,9 @@ const AppContent = () => {
   if (isResetPasswordPage) {
     return (
       <div className="min-h-screen w-full">
-        <Routes>
-          <Route path="/reset-password" element={<ResetPassword />} />
-        </Routes>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes><Route path="/reset-password" element={<ResetPassword />} /></Routes>
+        </Suspense>
       </div>
     );
   }
@@ -233,36 +207,21 @@ const AppContent = () => {
   if (isActivationPage) {
     return (
       <div className="min-h-screen w-full">
-        <Routes>
-          <Route path="/activation" element={<Activation />} />
-        </Routes>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes><Route path="/activation" element={<Activation />} /></Routes>
+        </Suspense>
       </div>
     );
   }
 
-  // Pages publiques (sans authentification)
-  // IMPORTANT: /blog-admin est volontairement EXCLU (guard dédié ci-dessus)
   const publicPages = ['/', '/fonctionnalites', '/pourquoi-nous', '/cgu', '/politique-confidentialite', '/documentation', '/blog', '/install'];
-  // Pages légales accessibles même connecté (CGU, Politique de Confidentialité)
   const legalPages = ['/cgu', '/politique-confidentialite'];
-   const isPublicPage = publicPages.includes(location.pathname) || location.pathname.startsWith('/blog/');
-   const isBlogArticlePage = location.pathname.startsWith('/blog/');
+  const isPublicPage = publicPages.includes(location.pathname) || location.pathname.startsWith('/blog/');
+  const isBlogArticlePage = location.pathname.startsWith('/blog/');
   const isLegalPage = legalPages.includes(location.pathname);
   
   if (isPublicPage) {
-    // IMPORTANT: si l'utilisateur est connecté et arrive sur une page publique,
-    // on le redirige vers l'application (sinon il reste "bloqué" sur la landing).
-    // EXCEPTION: les pages légales (CGU, Politique) restent accessibles même connecté.
-    if (authLoading) {
-      return (
-        <div className="flex items-center justify-center min-h-screen bg-background">
-          <div className="flex flex-col items-center gap-4">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary" />
-            <p className="text-muted-foreground text-sm">Chargement...</p>
-          </div>
-        </div>
-      );
-    }
+    if (authLoading) return <LoadingFallback />;
 
     if (authError) {
       return (
@@ -271,9 +230,7 @@ const AppContent = () => {
             <h1 className="text-lg font-semibold">Impossible de charger la session</h1>
             <p className="text-sm text-muted-foreground">{authError}</p>
             <div className="flex items-center justify-center gap-2">
-              <Button variant="outline" onClick={() => window.location.reload()}>
-                Réessayer
-              </Button>
+              <Button variant="outline" onClick={() => window.location.reload()}>Réessayer</Button>
               <Button onClick={() => (window.location.href = '/auth')}>Se reconnecter</Button>
             </div>
           </div>
@@ -281,13 +238,8 @@ const AppContent = () => {
       );
     }
 
-    // Ne pas rediriger si c'est une page légale
-     // Ne pas rediriger si c'est une page légale ou un article de blog
-     if (userId && !isLegalPage && !isBlogArticlePage) {
-      // Super Admin va vers /blog-admin
-      if (userRole === 'SuperAdmin') {
-        return <Navigate to="/blog-admin" replace />;
-      }
+    if (userId && !isLegalPage && !isBlogArticlePage) {
+      if (userRole === 'SuperAdmin') return <Navigate to="/blog-admin" replace />;
       const home = userRole === 'Admin' || userRole === 'AdminPrincipal' ? '/dashboard' : '/formations';
       return <Navigate to={home} replace />;
     }
@@ -295,38 +247,26 @@ const AppContent = () => {
     return (
       <>
         <GoogleAnalytics measurementId={import.meta.env.VITE_GA_MEASUREMENT_ID || ''} />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/solutions" element={<Navigate to="/fonctionnalites" replace />} />
-          <Route path="/fonctionnalites" element={<Fonctionnalites />} />
-          <Route path="/pourquoi-nous" element={<PourquoiNous />} />
-          <Route path="/cgu" element={<CGU />} />
-          <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
-          <Route path="/documentation" element={<Documentation />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/blog/:slug" element={<BlogPost />} />
-          <Route path="/install" element={<Install />} />
-        </Routes>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/solutions" element={<Navigate to="/fonctionnalites" replace />} />
+            <Route path="/fonctionnalites" element={<Fonctionnalites />} />
+            <Route path="/pourquoi-nous" element={<PourquoiNous />} />
+            <Route path="/cgu" element={<CGU />} />
+            <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
+            <Route path="/documentation" element={<Documentation />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/install" element={<Install />} />
+          </Routes>
+        </Suspense>
         <CookieConsent />
       </>
     );
   }
 
-  // ============================================================================
-  // SÉCURITÉ CRITIQUE: Ne JAMAIS afficher l'interface utilisateur avant que
-  // le rôle soit complètement chargé. Cela évite les "flash" d'interfaces
-  // non autorisées qui pourraient exposer des données sensibles.
-  // ============================================================================
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary" />
-          <p className="text-muted-foreground text-sm">Connexion en cours...</p>
-        </div>
-      </div>
-    );
-  }
+  if (authLoading) return <LoadingFallback />;
 
   if (authError) {
     return (
@@ -335,9 +275,7 @@ const AppContent = () => {
           <h1 className="text-lg font-semibold">Session instable</h1>
           <p className="text-sm text-muted-foreground">{authError}</p>
           <div className="flex items-center justify-center gap-2">
-            <Button variant="outline" onClick={() => window.location.reload()}>
-              Réessayer
-            </Button>
+            <Button variant="outline" onClick={() => window.location.reload()}>Réessayer</Button>
             <Button onClick={() => (window.location.href = '/auth')}>Se reconnecter</Button>
           </div>
         </div>
@@ -345,14 +283,8 @@ const AppContent = () => {
     );
   }
 
-  // Si l'utilisateur n'est pas connecté et n'est pas sur une page publique,
-  // rediriger vers l'authentification
-  if (!userId) {
-    return <Navigate to="/auth" state={{ from: location }} replace />;
-  }
+  if (!userId) return <Navigate to="/auth" state={{ from: location }} replace />;
 
-  // CRITICAL: Si userId est défini mais userRole pas encore chargé (pendant le fetch
-  // après login), afficher un spinner pour éviter le flash d'interface incorrecte
   if (!userRole) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
@@ -364,60 +296,49 @@ const AppContent = () => {
     );
   }
 
-  // Super Admin: rediriger vers /blog-admin (il n'a pas accès à l'interface établissement)
-  if (userRole === 'SuperAdmin') {
-    return <Navigate to="/blog-admin" replace />;
-  }
+  if (userRole === 'SuperAdmin') return <Navigate to="/blog-admin" replace />;
 
   return (
     <SidebarProvider
       defaultOpen={true}
-      style={
-        {
-          // IMPORTANT: ces variables DOIVENT être définies sur le wrapper du provider,
-          // sinon le "gap" (spacer) et la sidebar fixe n'ont pas la même largeur en mode rabattue.
-          // C'est précisément ce décalage qui fait passer les en-têtes sous la barre latérale.
-          "--sidebar-width": "16rem",
-          "--sidebar-width-icon": "4.5rem",
-        } as React.CSSProperties
-      }
+      style={{
+        "--sidebar-width": "16rem",
+        "--sidebar-width-icon": "4.5rem",
+      } as React.CSSProperties}
     >
-      {/* Sidebar - desktop only (mobile uses the drawer menu from MobileHeader) */}
       <Sidebar />
-
-      {/* Content column */}
       <div className="flex min-h-svh flex-1 flex-col min-w-0 nect-gradient">
-        {/* Header mobile */}
         <MobileHeader />
-
-        {/* Header desktop - full width top bar */}
         <TopHeaderBar />
-
         <main className="flex-1 overflow-auto bg-[hsl(230_25%_97%)] rounded-tl-2xl">
-          <Routes>
-            {/* Route de signature déplacée dans le bloc public */}
-            <Route path="/dashboard" element={<ProtectedRoute><AdminRoute><Dashboard /></AdminRoute></ProtectedRoute>} />
-            <Route path="/administration" element={<ProtectedRoute><AdminRoute><Administration /></AdminRoute></ProtectedRoute>} />
-            <Route path="/formations" element={<ProtectedRoute><Formations /></ProtectedRoute>} />
-            <Route path="/formations/:formationId" element={<ProtectedRoute><FormationDetail /></ProtectedRoute>} />
-            <Route path="/cahier-texte/:textBookId" element={<ProtectedRoute><TextBookDetail /></ProtectedRoute>} />
-            <Route path="/cahier-texte/formation/:formationId" element={<ProtectedRoute><TextBookByFormation /></ProtectedRoute>} />
-            <Route path="/suivi-emargement" element={<ProtectedRoute><SuiviEmargement /></ProtectedRoute>} />
-
-            <Route path="/emploi-temps" element={<ProtectedRoute><EmploiTemps /></ProtectedRoute>} />
-            <Route path="/emploi-temps/view/:scheduleId" element={<ProtectedRoute><EmploiTemps /></ProtectedRoute>} />
-            <Route path="/emploi-temps/edit/:scheduleId" element={<ProtectedRoute><EmploiTemps /></ProtectedRoute>} />
-            <Route path="/messagerie" element={<ProtectedRoute><TutorRestrictedRoute><Messagerie /></TutorRestrictedRoute></ProtectedRoute>} />
-            <Route path="/groupes" element={<ProtectedRoute><TutorRestrictedRoute><Groupes /></TutorRestrictedRoute></ProtectedRoute>} />
-            <Route path="/emargement" element={<ProtectedRoute><TutorRestrictedRoute><Emargement /></TutorRestrictedRoute></ProtectedRoute>} />
-            <Route path="/emargement-qr" element={<ProtectedRoute><TutorRestrictedRoute><EmargementQR /></TutorRestrictedRoute></ProtectedRoute>} />
-            <Route path="/gestion-etablissement" element={<ProtectedRoute><AdminPrincipalRoute><GestionEtablissement /></AdminPrincipalRoute></ProtectedRoute>} />
-            <Route path="/compte" element={<ProtectedRoute><Compte /></ProtectedRoute>} />
-            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-            <Route path="/espace-travail" element={<ProtectedRoute><TutorRestrictedRoute><EspaceTravail /></TutorRestrictedRoute></ProtectedRoute>} />
-            <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Suspense fallback={<LoadingFallback />}>
+            <Routes>
+              <Route path="/dashboard" element={<ProtectedRoute><AdminRoute><Dashboard /></AdminRoute></ProtectedRoute>} />
+              <Route path="/administration" element={<ProtectedRoute><AdminRoute><Administration /></AdminRoute></ProtectedRoute>} />
+              <Route path="/formations" element={<ProtectedRoute><Formations /></ProtectedRoute>} />
+              <Route path="/formations/:formationId" element={<ProtectedRoute><FormationDetail /></ProtectedRoute>} />
+              <Route path="/cahier-texte/:textBookId" element={<ProtectedRoute><TextBookDetail /></ProtectedRoute>} />
+              <Route path="/cahier-texte/formation/:formationId" element={<ProtectedRoute><TextBookByFormation /></ProtectedRoute>} />
+              <Route path="/suivi-emargement" element={<ProtectedRoute><SuiviEmargement /></ProtectedRoute>} />
+              <Route path="/emploi-temps" element={<ProtectedRoute><EmploiTemps /></ProtectedRoute>} />
+              <Route path="/emploi-temps/view/:scheduleId" element={<ProtectedRoute><EmploiTemps /></ProtectedRoute>} />
+              <Route path="/emploi-temps/edit/:scheduleId" element={<ProtectedRoute><EmploiTemps /></ProtectedRoute>} />
+              <Route path="/messagerie" element={<ProtectedRoute><TutorRestrictedRoute><Messagerie /></TutorRestrictedRoute></ProtectedRoute>} />
+              <Route path="/groupes" element={<ProtectedRoute><TutorRestrictedRoute><Groupes /></TutorRestrictedRoute></ProtectedRoute>} />
+              <Route path="/emargement" element={<ProtectedRoute><TutorRestrictedRoute><Emargement /></TutorRestrictedRoute></ProtectedRoute>} />
+              <Route path="/emargement-qr" element={<ProtectedRoute><TutorRestrictedRoute><EmargementQR /></TutorRestrictedRoute></ProtectedRoute>} />
+              <Route path="/gestion-etablissement" element={<ProtectedRoute><AdminPrincipalRoute><GestionEtablissement /></AdminPrincipalRoute></ProtectedRoute>} />
+              <Route path="/compte" element={<ProtectedRoute><Compte /></ProtectedRoute>} />
+              <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+              <Route path="/espace-travail" element={<ProtectedRoute><TutorRestrictedRoute><EspaceTravail /></TutorRestrictedRoute></ProtectedRoute>} />
+              <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
+              <Route path="/finance" element={<ProtectedRoute><AdminRoute><Finance /></AdminRoute></ProtectedRoute>} />
+              <Route path="/comptabilite" element={<ProtectedRoute><AdminRoute><Comptabilite /></AdminRoute></ProtectedRoute>} />
+              <Route path="/ressources-humaines" element={<ProtectedRoute><AdminRoute><RessourcesHumaines /></AdminRoute></ProtectedRoute>} />
+              <Route path="/quiz/join/:quizId" element={<ProtectedRoute><QuizJoin /></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </main>
       </div>
       <Toaster />
