@@ -1,78 +1,57 @@
 
 
-## Plan : Gestion des Groupes d'Étudiants par Module
+## Plan : Corriger l'erreur de build OOM et la tempête de refresh tokens
 
-### Contexte
+### Problème identifié
 
-Ajouter un nouvel onglet **"Groupes"** dans chaque module (à côté de Documents) permettant aux formateurs de créer et gérer des groupes d'étudiants, avec création manuelle et aléatoire.
+Le projet ne compile plus (erreur **Out of Memory**) car tous les composants sont importés de manière statique dans `App.tsx` — plus de 40 pages chargées directement. Cela dépasse la mémoire disponible lors du build.
 
----
-
-### 1. Base de données — 2 nouvelles tables
-
-**`module_groups`** : les groupes créés par module
-- `id` (uuid, PK), `module_id` (ref modules), `formation_id`, `name` (text, ex: "Groupe 1"), `created_by` (ref users), `created_at`, `updated_at`
-
-**`module_group_members`** : les étudiants affectés
-- `id` (uuid, PK), `group_id` (ref module_groups ON DELETE CASCADE), `student_id` (ref users), `assigned_at`
-- Contrainte UNIQUE sur `(group_id, student_id)`
-
-RLS : Admin/Formateur = CRUD complet sur les groupes de leur établissement ; Étudiant = lecture seule de ses groupes.
+En parallèle, les logs d'authentification montrent une **tempête de refresh tokens** (des dizaines de requêtes `/token` par seconde) qui finit par déclencher un rate limit 429, empêchant la connexion.
 
 ---
 
-### 2. Service — `moduleGroupService.ts`
+### Étape 1 — Lazy loading de toutes les pages (résout l'OOM)
 
-- `getModuleGroups(moduleId)` — liste les groupes avec leurs membres
-- `createGroup(moduleId, formationId, name)` — crée un groupe
-- `deleteGroup(groupId)` — supprime un groupe
-- `updateGroupName(groupId, name)` — renomme
-- `addMembers(groupId, studentIds)` — ajoute des étudiants
-- `removeMember(groupId, studentId)` — retire un étudiant
-- `createRandomGroups(moduleId, formationId, numberOfGroups, studentsPerGroup)` — répartition aléatoire avec gestion de l'arrondi (les étudiants restants sont distribués un par un dans les premiers groupes)
+Remplacer tous les imports statiques des pages dans `App.tsx` par des imports dynamiques avec `React.lazy()` :
 
----
+```typescript
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const Administration = React.lazy(() => import('./pages/Administration'));
+const Formations = React.lazy(() => import('./pages/Formations'));
+// ... toutes les 40+ pages
+```
 
-### 3. Interface — `ModuleGroupsTab.tsx`
+Encapsuler les `<Routes>` dans `<React.Suspense>` avec un fallback de chargement.
 
-**Vue principale :**
-- Liste des groupes existants sous forme de cartes avec nom du groupe et avatars/noms des membres
-- Bouton **"Créer un groupe"** → Modal avec champ nom + sélection d'étudiants dans la liste de la formation (multi-select avec checkboxes)
-- Bouton **"Groupes aléatoires"** → Modal demandant : nombre de groupes + nombre d'étudiants par groupe, avec prévisualisation de la répartition avant validation
+Cela divise le bundle en dizaines de chunks chargés à la demande au lieu d'un seul monolithe.
 
-**Création aléatoire — Logique :**
-- Mélange aléatoire (Fisher-Yates) de la liste des étudiants
-- Distribution en N groupes de T étudiants
-- Les étudiants restants (modulo) sont ajoutés aux premiers groupes (ex: 13 étudiants, 4 groupes de 3 → 1 groupe de 4 + 3 groupes de 3)
-- Prévisualisation avant confirmation
-- Possibilité d'ajuster manuellement après création (ajouter/retirer des membres)
-
-**Gestion :**
-- Chaque carte de groupe : bouton éditer (renommer), supprimer, ajouter/retirer des membres
-- Drag & drop optionnel pour déplacer un étudiant entre groupes (phase 2)
+**Fichier modifié :** `src/App.tsx`
 
 ---
 
-### 4. Intégration dans les onglets Module
+### Étape 2 — Corriger la tempête de refresh tokens
 
-**Fichiers modifiés :**
-- `src/pages/FormationDetail.tsx` — Ajout d'un 5e onglet "Groupes" (icône `Users`) dans la grille des tabs, avec `ModuleGroupsTab`
-- `src/components/module/ModuleDetail.tsx` — Même ajout pour la vue module standalone
+Dans `AuthContext.tsx`, ajouter un **debounce/guard** sur `fetchUserRole` pour éviter les appels multiples simultanés quand `onAuthStateChange` se déclenche en rafale :
 
-**Nouveaux fichiers :**
-- `src/services/moduleGroupService.ts`
-- `src/components/module/ModuleGroupsTab.tsx`
-- `src/components/module/CreateGroupModal.tsx` (création manuelle)
-- `src/components/module/RandomGroupsModal.tsx` (création aléatoire)
+- Ajouter un `useRef` pour tracker si un fetch est déjà en cours
+- Ignorer les appels redondants quand le même `userId` est déjà en cours de traitement
+- Ajouter un délai de 300ms avant de lancer le fetch dans le listener `onAuthStateChange`
 
-**Migration SQL :**
-- Création des tables `module_groups` et `module_group_members` avec RLS
+**Fichier modifié :** `src/contexts/AuthContext.tsx`
 
 ---
 
-### 5. Accès par rôle
+### Étape 3 — Optimiser le chunking Vite
 
-- **Admin / Formateur** : Création, modification, suppression de groupes
-- **Étudiant** : Consultation seule (voit les groupes auxquels il appartient)
-- **Tuteur** : Consultation seule
+Mettre à jour `vite.config.ts` pour augmenter la mémoire Node si nécessaire et améliorer le `manualChunks` pour mieux répartir les modules volumineux.
+
+**Fichier modifié :** `vite.config.ts`
+
+---
+
+### Résultat attendu
+
+- Le build passe sans erreur OOM grâce au code splitting
+- La connexion fonctionne sur desktop sans rate limit 429
+- Aucune fonctionnalité existante n'est modifiée
 
