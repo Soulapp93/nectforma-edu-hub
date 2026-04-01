@@ -73,16 +73,25 @@ export default defineConfig(({ mode }) => ({
   build: {
     minify: mode === 'production' ? 'terser' : false,
     sourcemap: mode === 'development',
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          supabase: ['@supabase/supabase-js'],
-          ui: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
-          pdf: ['react-pdf', 'pdfjs-dist'],
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('react-dom')) return 'vendor-react-dom';
+              if (id.includes('react/') || id.includes('react-router')) return 'vendor-react';
+              if (id.includes('@supabase')) return 'vendor-supabase';
+              if (id.includes('lucide-react')) return 'vendor-icons';
+              if (id.includes('@radix-ui')) return 'vendor-radix';
+              if (id.includes('react-pdf') || id.includes('pdfjs-dist')) return 'vendor-pdf';
+              if (id.includes('recharts') || id.includes('d3-')) return 'vendor-charts';
+              if (id.includes('@tanstack')) return 'vendor-tanstack';
+              if (id.includes('date-fns')) return 'vendor-datefns';
+              if (id.includes('fabric')) return 'vendor-fabric';
+              if (id.includes('xlsx')) return 'vendor-xlsx';
+            }
+          },
         },
       },
-    },
     ...(mode === 'production' && {
       terserOptions: {
         compress: {
