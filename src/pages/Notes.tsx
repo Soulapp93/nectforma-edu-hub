@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, Suspense } from 'react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useEstablishment } from '@/hooks/useEstablishment';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,14 +11,6 @@ import {
   Calculator, Scale, ScrollText, Plus, SlidersHorizontal
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
-import GradeSheetView from '@/components/grades/GradeSheetView';
-import StudentGradesView from '@/components/grades/StudentGradesView';
-import TranscriptsPanel from '@/components/grades/TranscriptsPanel';
-import GradingSettingsPanel from '@/components/grades/GradingSettingsPanel';
-import TutorGradesView from '@/components/grades/TutorGradesView';
-import CalculValidation from '@/components/grades/CalculValidation';
-import JuryDeliberation from '@/components/grades/JuryDeliberation';
-import CreatePeriodModal from '@/components/grades/CreatePeriodModal';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getEvaluationPeriods } from '@/services/gradesService';
@@ -26,6 +18,16 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LoadingState } from '@/components/ui/loading-state';
+
+// Lazy load heavy grade components
+const GradeSheetView = React.lazy(() => import('@/components/grades/GradeSheetView'));
+const StudentGradesView = React.lazy(() => import('@/components/grades/StudentGradesView'));
+const TranscriptsPanel = React.lazy(() => import('@/components/grades/TranscriptsPanel'));
+const GradingSettingsPanel = React.lazy(() => import('@/components/grades/GradingSettingsPanel'));
+const TutorGradesView = React.lazy(() => import('@/components/grades/TutorGradesView'));
+const CalculValidation = React.lazy(() => import('@/components/grades/CalculValidation'));
+const JuryDeliberation = React.lazy(() => import('@/components/grades/JuryDeliberation'));
+const CreatePeriodModal = React.lazy(() => import('@/components/grades/CreatePeriodModal'));
 
 const getLevelColor = (level?: string) => {
   const colors: Record<string, string> = {
