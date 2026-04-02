@@ -123,14 +123,14 @@ serve(async (req) => {
     const { action, payload } = await req.json() as SocialRequest;
     console.log(`Social Media action: ${action}`);
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 
     switch (action) {
       // =============================================
       // GENERATE AI CAPTIONS FOR ALL PLATFORMS
       // =============================================
       case 'generate-captions': {
-        if (!LOVABLE_API_KEY) {
+        if (!OPENAI_API_KEY) {
           return new Response(
             JSON.stringify({ error: 'AI service not configured' }),
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -182,14 +182,14 @@ Réponds en JSON:
 }`;
 
             try {
-              const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+              const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: {
-                  'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+                  'Authorization': `Bearer ${OPENAI_API_KEY}`,
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  model: 'google/gemini-3-flash-preview',
+                  model: 'gpt-4o-mini',
                   messages: [
                     { role: 'system', content: systemPrompt },
                     { role: 'user', content: userMessage }
@@ -378,7 +378,7 @@ Réponds en JSON:
       // SUGGEST BEST POSTING TIME
       // =============================================
       case 'suggest-best-time': {
-        if (!LOVABLE_API_KEY) {
+        if (!OPENAI_API_KEY) {
           return new Response(
             JSON.stringify({ error: 'AI service not configured' }),
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -391,14 +391,14 @@ Réponds en JSON:
           audience?: string;
         };
 
-        const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Authorization': `Bearer ${OPENAI_API_KEY}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-3-flash-preview',
+            model: 'gpt-4o-mini',
             messages: [
               { 
                 role: 'system', 
@@ -487,7 +487,7 @@ Réponds en JSON:
       // GENERATE SOCIAL MEDIA IMAGE
       // =============================================
       case 'generate-image': {
-        if (!LOVABLE_API_KEY) {
+        if (!OPENAI_API_KEY) {
           return new Response(
             JSON.stringify({ error: 'AI service not configured' }),
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -500,38 +500,21 @@ Réponds en JSON:
           style?: string;
         };
 
-        // Generate image using Gemini image model
-        const aspectRatios: Record<SocialPlatform, string> = {
-          linkedin: '1200x627 (1.91:1)',
-          twitter: '1200x675 (16:9)',
-          facebook: '1200x630 (1.91:1)',
-          instagram: '1080x1080 (1:1) ou 1080x1350 (4:5)',
-          tiktok: '1080x1920 (9:16)',
-          youtube: '1280x720 (16:9)',
-          threads: '1080x1080 (1:1)',
-          pinterest: '1000x1500 (2:3)',
-        };
+        const imagePrompt = `Professional social media cover image for ${platform}: "${title}". Style: ${style || 'Modern, professional, tech-friendly'}. Colors: Blue and violet palette, clean design, Nectforma SaaS branding.`;
 
-        const imagePrompt = `Crée une image de couverture professionnelle pour ${platform}:
-- Titre de l'article: "${title}"
-- Format: ${aspectRatios[platform]}
-- Style: ${style || 'Moderne, professionnel, tech-friendly'}
-- Couleurs: Palette bleu/violet professionnelle
-- Inclure: Texte superposé avec le titre, design épuré
-- Marque: Nectforma (plateforme SaaS de formation)`;
-
-        const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        const response = await fetch('https://api.openai.com/v1/images/generations', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Authorization': `Bearer ${OPENAI_API_KEY}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-2.5-flash-image',
-            messages: [
-              { role: 'user', content: imagePrompt }
-            ],
-            modalities: ['image', 'text'],
+            model: 'dall-e-3',
+            prompt: imagePrompt,
+            n: 1,
+            size: '1792x1024',
+            quality: 'standard',
+            response_format: 'url',
           }),
         });
 
@@ -544,17 +527,10 @@ Réponds en JSON:
         }
 
         const aiResponse = await response.json();
-        const imageUrl = aiResponse.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+        const imageUrl = aiResponse.data?.[0]?.url;
 
         return new Response(
-          JSON.stringify({ 
-            success: true, 
-            data: { 
-              image_url: imageUrl,
-              platform,
-              prompt_used: imagePrompt
-            } 
-          }),
+          JSON.stringify({ success: true, data: { image_url: imageUrl, platform, prompt_used: imagePrompt } }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }

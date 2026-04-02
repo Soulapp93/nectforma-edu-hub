@@ -114,19 +114,19 @@ async function scrapeContext(topic: string): Promise<string> {
   }
 }
 
-// ─── STEP 3: Generate ALL content simultaneously via Lovable AI ───
+// ─── STEP 3: Generate ALL content simultaneously via OpenAI ───
 async function generateMultiChannelContent(topic: string, context: string, scrapedContent: string, tone: string): Promise<any> {
-  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-  if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
+  const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+  if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY not configured');
 
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Authorization': `Bearer ${OPENAI_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-3-flash-preview',
+      model: 'gpt-4o',
       messages: [
         {
           role: 'system',
@@ -611,42 +611,42 @@ async function saveMultiChannelContent(
   const coverPrompt = article.cover_image_prompt;
   if (coverPrompt) {
     try {
-      const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-      if (LOVABLE_API_KEY) {
-        console.log('🎨 Generating cover image...');
-        const imgResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+      if (OPENAI_API_KEY) {
+        console.log('🎨 Generating cover image via DALL-E 3...');
+        const imgResponse = await fetch('https://api.openai.com/v1/images/generations', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Authorization': `Bearer ${OPENAI_API_KEY}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'google/gemini-2.5-flash-image',
-            messages: [{ role: 'user', content: `Generate a professional blog cover image: ${coverPrompt}. Ultra high resolution, 16:9 aspect ratio, modern SaaS aesthetic with purple and blue palette.` }],
-            modalities: ['image', 'text'],
+            model: 'dall-e-3',
+            prompt: `${coverPrompt}. Style: professional SaaS blog cover, modern, clean design, violet and blue palette. 16:9 aspect ratio.`,
+            n: 1,
+            size: '1792x1024',
+            quality: 'standard',
+            response_format: 'url',
           }),
         });
 
         if (imgResponse.ok) {
           const imgData = await imgResponse.json();
-          const imageUrl = imgData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-          
-          if (imageUrl?.startsWith('data:')) {
-            const base64Match = imageUrl.match(/^data:image\/(\w+);base64,(.+)$/);
-            if (base64Match) {
-              const ext = base64Match[1] === 'jpeg' ? 'jpg' : base64Match[1];
-              const binaryData = Uint8Array.from(atob(base64Match[2]), (c: string) => c.charCodeAt(0));
-              const fileName = `cover-images/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
-              
-              const { error: uploadError } = await sb.storage
-                .from('blog-assets')
-                .upload(fileName, binaryData, { contentType: `image/${base64Match[1]}`, upsert: false });
+          const imageUrl = imgData.data?.[0]?.url;
 
-              if (!uploadError) {
-                const { data: publicUrlData } = sb.storage.from('blog-assets').getPublicUrl(fileName);
-                coverImageUrl = publicUrlData.publicUrl;
-                console.log('✅ Cover image generated:', coverImageUrl);
-              }
+          if (imageUrl) {
+            const imgFetch = await fetch(imageUrl);
+            const imgBuffer = await imgFetch.arrayBuffer();
+            const fileName = `cover-images/${Date.now()}-${Math.random().toString(36).substring(7)}.png`;
+
+            const { error: uploadError } = await sb.storage
+              .from('blog-assets')
+              .upload(fileName, imgBuffer, { contentType: 'image/png', upsert: false });
+
+            if (!uploadError) {
+              const { data: publicUrlData } = sb.storage.from('blog-assets').getPublicUrl(fileName);
+              coverImageUrl = publicUrlData.publicUrl;
+              console.log('✅ Cover image generated:', coverImageUrl);
             }
           }
         }
