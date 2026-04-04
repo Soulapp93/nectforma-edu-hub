@@ -89,7 +89,8 @@ export default defineConfig(({ mode: _mode }) => ({
             if (id.includes('fabric')) return 'vendor-fabric';
             if (id.includes('xlsx')) return 'vendor-xlsx';
             if (id.includes('@daily-co')) return 'vendor-daily';
-            if (id.includes('jspdf') || id.includes('html2canvas') || id.includes('jszip') || id.includes('mammoth')) return 'vendor-document';
+            if (id.includes('mammoth')) return 'vendor-mammoth';
+            if (id.includes('jspdf') || id.includes('html2canvas') || id.includes('jszip')) return 'vendor-document';
             if (id.includes('zod') || id.includes('react-hook-form') || id.includes('@hookform')) return 'vendor-forms';
             return 'vendor-misc';
           }
