@@ -49,7 +49,7 @@ CREATE POLICY "View group messages" ON public.chat_messages FOR SELECT TO authen
 DROP POLICY IF EXISTS "Admins view all corrections" ON public.assignment_corrections;
 CREATE POLICY "Admins view all corrections" ON public.assignment_corrections FOR SELECT TO authenticated USING (is_current_user_admin());
 DROP POLICY IF EXISTS "Correctors manage own corrections" ON public.assignment_corrections;
-CREATE POLICY "Correctors manage own corrections" ON public.assignment_corrections FOR ALL TO authenticated USING (corrector_id = auth.uid()) WITH CHECK (corrector_id = auth.uid());
+CREATE POLICY "Correctors manage own corrections" ON public.assignment_corrections FOR ALL TO authenticated USING (corrected_by = auth.uid()) WITH CHECK (corrected_by = auth.uid());
 DROP POLICY IF EXISTS "Students view published corrections" ON public.assignment_corrections;
 CREATE POLICY "Students view published corrections" ON public.assignment_corrections FOR SELECT TO authenticated
   USING (published_at IS NOT NULL AND EXISTS (SELECT 1 FROM assignment_submissions s WHERE s.id = assignment_corrections.submission_id AND s.student_id = auth.uid()));

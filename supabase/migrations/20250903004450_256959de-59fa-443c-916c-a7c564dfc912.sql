@@ -14,7 +14,7 @@ INSERT INTO users (
   'Temporaire',
   'temp@test.com',
   'Étudiant',
-  'c67f6f7e-a567-4c8c-aad6-db15a4e27d65', -- ID de l'établissement existant
+  '00000000-0000-0000-0000-000000000000', -- ID de l'établissement par défaut
   'Actif',
   true
 ) ON CONFLICT (id) DO NOTHING;

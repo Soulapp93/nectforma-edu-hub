@@ -1,11 +1,16 @@
 -- Add storage policies for avatars bucket to allow admins to upload establishment logos
 
+DROP POLICY IF EXISTS "Admins can upload establishment logos" ON storage.objects;
+DROP POLICY IF EXISTS "Admins can update establishment logos" ON storage.objects;
+DROP POLICY IF EXISTS "Admins can delete establishment logos" ON storage.objects;
+DROP POLICY IF EXISTS "Public can view avatars" ON storage.objects;
+
 -- Policy for admins to upload establishment logos
 CREATE POLICY "Admins can upload establishment logos"
 ON storage.objects
 FOR INSERT
 WITH CHECK (
-  bucket_id = 'avatars' 
+  bucket_id = 'avatars'
   AND (storage.foldername(name))[1] = 'establishments'
   AND public.is_current_user_admin()
 );
@@ -15,7 +20,7 @@ CREATE POLICY "Admins can update establishment logos"
 ON storage.objects
 FOR UPDATE
 USING (
-  bucket_id = 'avatars' 
+  bucket_id = 'avatars'
   AND (storage.foldername(name))[1] = 'establishments'
   AND public.is_current_user_admin()
 );
@@ -25,7 +30,7 @@ CREATE POLICY "Admins can delete establishment logos"
 ON storage.objects
 FOR DELETE
 USING (
-  bucket_id = 'avatars' 
+  bucket_id = 'avatars'
   AND (storage.foldername(name))[1] = 'establishments'
   AND public.is_current_user_admin()
 );

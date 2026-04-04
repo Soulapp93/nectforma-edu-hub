@@ -51,7 +51,7 @@ USING (created_by = auth.uid());
 CREATE POLICY "Admins can update all events in their establishment" 
 ON public.events 
 FOR UPDATE 
-USING (establishment_id = public.get_current_user_establishment() AND public.get_current_user_role() IN ('Administrateur', 'Super Administrateur'));
+USING (establishment_id = public.get_current_user_establishment() AND public.get_current_user_role() IN ('Admin'));
 
 -- Politiques RLS pour les inscriptions
 CREATE POLICY "Users can view their own registrations" 

@@ -604,7 +604,7 @@ ON events FOR UPDATE
 TO authenticated
 USING (
   establishment_id = get_current_user_establishment()
-  AND get_current_user_role() IN ('Administrateur', 'Super Administrateur')
+  AND get_current_user_role() IN ('Admin')
 );
 
 CREATE POLICY "Senders view messages"

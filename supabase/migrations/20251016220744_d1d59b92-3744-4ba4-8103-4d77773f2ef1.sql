@@ -45,6 +45,7 @@ FOR INSERT
 TO authenticated
 WITH CHECK (user_id = auth.uid() AND establishment_id = get_current_user_establishment());
 
+DROP POLICY IF EXISTS "Users can update their own files" ON public.digital_safe_files;
 CREATE POLICY "Users can update their own files"
 ON public.digital_safe_files
 FOR UPDATE
@@ -52,6 +53,7 @@ TO authenticated
 USING (user_id = auth.uid())
 WITH CHECK (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Users can delete their own files" ON public.digital_safe_files;
 CREATE POLICY "Users can delete their own files"
 ON public.digital_safe_files
 FOR DELETE

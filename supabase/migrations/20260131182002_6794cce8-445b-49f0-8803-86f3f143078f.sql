@@ -1,5 +1,5 @@
 -- Table pour l'association des formateurs aux modules
-CREATE TABLE public.module_instructors (
+CREATE TABLE IF NOT EXISTS public.module_instructors (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   module_id UUID NOT NULL REFERENCES public.formation_modules(id) ON DELETE CASCADE,
   instructor_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
@@ -8,25 +8,28 @@ CREATE TABLE public.module_instructors (
 );
 
 -- Index pour améliorer les performances
-CREATE INDEX idx_module_instructors_module_id ON public.module_instructors(module_id);
-CREATE INDEX idx_module_instructors_instructor_id ON public.module_instructors(instructor_id);
+CREATE INDEX IF NOT EXISTS idx_module_instructors_module_id ON public.module_instructors(module_id);
+CREATE INDEX IF NOT EXISTS idx_module_instructors_instructor_id ON public.module_instructors(instructor_id);
 
 -- Enable RLS
 ALTER TABLE public.module_instructors ENABLE ROW LEVEL SECURITY;
 
 -- Politique: Les admins peuvent tout gérer
+DROP POLICY IF EXISTS "Admins manage module instructors" ON public.module_instructors;
 CREATE POLICY "Admins manage module instructors"
   ON public.module_instructors
   FOR ALL
   USING (public.is_current_user_admin());
 
 -- Politique: Les formateurs peuvent voir leurs propres assignations
+DROP POLICY IF EXISTS "Instructors view own assignments" ON public.module_instructors;
 CREATE POLICY "Instructors view own assignments"
   ON public.module_instructors
   FOR SELECT
   USING (instructor_id = auth.uid());
 
 -- Politique: Les utilisateurs assignés à une formation peuvent voir les formateurs des modules
+DROP POLICY IF EXISTS "Users view formation module instructors" ON public.module_instructors;
 CREATE POLICY "Users view formation module instructors"
   ON public.module_instructors
   FOR SELECT
@@ -41,6 +44,7 @@ CREATE POLICY "Users view formation module instructors"
   );
 
 -- Politique: Les tuteurs peuvent voir les formateurs via leurs étudiants
+DROP POLICY IF EXISTS "Tutors view student module instructors" ON public.module_instructors;
 CREATE POLICY "Tutors view student module instructors"
   ON public.module_instructors
   FOR SELECT
@@ -49,7 +53,7 @@ CREATE POLICY "Tutors view student module instructors"
     AND module_id IN (
       SELECT fm.id FROM public.formation_modules fm
       WHERE fm.formation_id IN (
-        SELECT ufa.formation_id 
+        SELECT ufa.formation_id
         FROM public.user_formation_assignments ufa
         JOIN public.tutor_student_assignments tsa ON tsa.student_id = ufa.user_id
         WHERE tsa.tutor_id = auth.uid() AND tsa.is_active = true

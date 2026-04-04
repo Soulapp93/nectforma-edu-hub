@@ -12,7 +12,7 @@ INSERT INTO public.establishments (
   '00000000-0000-0000-0000-000000000000',
   'Établissement par défaut',
   'contact@etablissement.com',
-  'Centre de formation',
+  'centre de formation',
   'Adresse non spécifiée',
   'Téléphone non spécifié',
   'Site web non spécifié'

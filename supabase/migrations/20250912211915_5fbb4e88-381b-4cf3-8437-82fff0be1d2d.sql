@@ -136,47 +136,4 @@ BEFORE UPDATE ON public.virtual_classes
 FOR EACH ROW
 EXECUTE FUNCTION public.update_virtual_classes_updated_at();
 
--- Insert some sample virtual classes
-INSERT INTO public.virtual_classes (
-  establishment_id, title, description, instructor_id, formation_id, 
-  date, start_time, end_time, max_participants, status, recording_enabled
-) VALUES 
-(
-  'c67f6f7e-a567-4c8c-aad6-db15a4e27d65',
-  'Introduction au Marketing Digital',
-  'Découvrez les bases du marketing digital et les stratégies modernes',
-  'bad1e18d-2b25-4fe5-b433-c20726de9a16',
-  'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
-  '2025-09-15',
-  '14:00:00',
-  '16:00:00',
-  25,
-  'Programmé',
-  true
-),
-(
-  'c67f6f7e-a567-4c8c-aad6-db15a4e27d65',
-  'Développement React Avancé',
-  'Approfondissez vos connaissances en React avec des patterns avancés',
-  'bad1e18d-2b25-4fe5-b433-c20726de9a16',
-  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-  '2025-09-16',
-  '10:00:00',
-  '12:00:00',
-  20,
-  'Programmé',
-  true
-),
-(
-  'c67f6f7e-a567-4c8c-aad6-db15a4e27d65',
-  'Session de Révisions - Paie',
-  'Révision des concepts clés du module paie',
-  'bad1e18d-2b25-4fe5-b433-c20726de9a16',
-  'd1a225ab-95d0-44a3-9304-fc779e49adcf',
-  '2025-09-12',
-  '15:00:00',
-  '17:00:00',
-  15,
-  'En cours',
-  false
-);
+-- Seed data skipped: test virtual classes with old Lovable UUIDs

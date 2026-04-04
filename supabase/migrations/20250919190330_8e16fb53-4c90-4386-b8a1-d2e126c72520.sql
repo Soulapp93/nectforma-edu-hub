@@ -1,37 +1,37 @@
 -- Créer les politiques RLS pour le bucket coffre-fort-files
--- Politique pour permettre aux utilisateurs d'uploader leurs propres fichiers
-CREATE POLICY "Users can upload their own files" 
-ON storage.objects 
-FOR INSERT 
+DROP POLICY IF EXISTS "Users can upload their own files" ON storage.objects;
+CREATE POLICY "Users can upload their own files"
+ON storage.objects
+FOR INSERT
 WITH CHECK (
-  bucket_id = 'coffre-fort-files' 
+  bucket_id = 'coffre-fort-files'
   AND auth.uid()::text = (storage.foldername(name))[1]
 );
 
--- Politique pour permettre aux utilisateurs de voir leurs propres fichiers
-CREATE POLICY "Users can view their own files" 
-ON storage.objects 
-FOR SELECT 
+DROP POLICY IF EXISTS "Users can view their own files" ON storage.objects;
+CREATE POLICY "Users can view their own files"
+ON storage.objects
+FOR SELECT
 USING (
-  bucket_id = 'coffre-fort-files' 
+  bucket_id = 'coffre-fort-files'
   AND auth.uid()::text = (storage.foldername(name))[1]
 );
 
--- Politique pour permettre aux utilisateurs de supprimer leurs propres fichiers
-CREATE POLICY "Users can delete their own files" 
-ON storage.objects 
-FOR DELETE 
+DROP POLICY IF EXISTS "Users can delete their own files" ON storage.objects;
+CREATE POLICY "Users can delete their own files"
+ON storage.objects
+FOR DELETE
 USING (
-  bucket_id = 'coffre-fort-files' 
+  bucket_id = 'coffre-fort-files'
   AND auth.uid()::text = (storage.foldername(name))[1]
 );
 
--- Politique pour permettre aux utilisateurs de mettre à jour leurs propres fichiers
-CREATE POLICY "Users can update their own files" 
-ON storage.objects 
-FOR UPDATE 
+DROP POLICY IF EXISTS "Users can update their own files" ON storage.objects;
+CREATE POLICY "Users can update their own files"
+ON storage.objects
+FOR UPDATE
 USING (
-  bucket_id = 'coffre-fort-files' 
+  bucket_id = 'coffre-fort-files'
   AND auth.uid()::text = (storage.foldername(name))[1]
 );
 

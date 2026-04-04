@@ -50,7 +50,7 @@ USING (
   EXISTS (
     SELECT 1 FROM public.users 
     WHERE id = auth.uid() 
-    AND role IN ('Admin', 'Administrateur', 'Super Administrateur')
+    AND role IN ('Admin'::user_role)
   )
 );
 
@@ -67,7 +67,7 @@ USING (
   EXISTS (
     SELECT 1 FROM public.users 
     WHERE id = auth.uid() 
-    AND role IN ('Admin', 'Administrateur', 'Super Administrateur')
+    AND role IN ('Admin'::user_role)
   )
 );
 

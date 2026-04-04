@@ -1,11 +1,15 @@
 
 -- Fix 1: Newsletter subscribers - restrict SELECT to super admins only
 DROP POLICY IF EXISTS "Check own subscription by email" ON public.newsletter_subscribers;
+DROP POLICY IF EXISTS "Super admins view newsletter subscribers" ON public.newsletter_subscribers;
 
 CREATE POLICY "Super admins view newsletter subscribers"
 ON public.newsletter_subscribers
 FOR SELECT
 USING (is_super_admin());
+
+-- Add is_private column to chat_groups if missing (was in CREATE TABLE IF NOT EXISTS that was skipped)
+ALTER TABLE public.chat_groups ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT false;
 
 -- Fix 2: Chat tables - replace permissive dev policies with proper ones
 
@@ -19,6 +23,7 @@ DROP POLICY IF EXISTS "Allow all for development - chat_message_attachments" ON 
 DROP POLICY IF EXISTS "View establishment chat groups" ON public.chat_groups;
 DROP POLICY IF EXISTS "Admins manage chat groups" ON public.chat_groups;
 DROP POLICY IF EXISTS "Users create chat groups" ON public.chat_groups;
+DROP POLICY IF EXISTS "Members create private groups" ON public.chat_groups;
 
 CREATE POLICY "View establishment chat groups"
 ON public.chat_groups
