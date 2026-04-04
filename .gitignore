@@ -17,6 +17,10 @@ dist-ssr
 .env.*
 !.env.example
 
+# Bun lockfiles (use npm on Vercel)
+bun.lock
+bun.lockb
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -27,3 +31,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.vercel
