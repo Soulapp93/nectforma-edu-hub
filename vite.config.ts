@@ -62,18 +62,41 @@ export default defineConfig(({ mode: _mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+    // Force single React instance — fixes "createContext is not a function" errors
+    dedupe: ['react', 'react-dom', 'react-router-dom'],
   },
   optimizeDeps: {
-    include: ['pdfjs-dist'],
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      'next-themes',
+      '@tanstack/react-query',
+      '@supabase/supabase-js',
+      'pdfjs-dist',
+    ],
   },
   assetsInclude: ['**/*.pdf'],
   build: {
-    // Use esbuild instead of terser — much less memory usage
     minify: 'esbuild',
     sourcemap: false,
-    // Increase chunk size warning to avoid noise
-    chunkSizeWarningLimit: 1500,
-    rollupOptions: {},
+    chunkSizeWarningLimit: 2000,
+    rollupOptions: {
+      output: {
+        // Use object form (more stable than function) — puts React + its CJS deps together
+        manualChunks: {
+          'vendor-react': [
+            'react',
+            'react-dom',
+            'react-router-dom',
+            'next-themes',
+            '@tanstack/react-query',
+          ],
+          'vendor-supabase': ['@supabase/supabase-js'],
+          'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select', '@radix-ui/react-toast', 'lucide-react'],
+        },
+      },
+    },
   },
   define: {
     __DEV__: _mode === 'development',
