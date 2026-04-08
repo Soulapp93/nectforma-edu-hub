@@ -6,7 +6,7 @@ import {
   LayoutDashboard, ShieldCheck, Users, GraduationCap, BookText, CalendarDays, 
   ClipboardCheck, Mail, UsersRound, Building2, UserCircle, Briefcase,
   ArrowRight, CheckCircle2, Sparkles, Smartphone, FileDown, QrCode, 
-  Upload, Bell, Search, Monitor, Layers
+  Upload, Bell, Search, Layers
 } from 'lucide-react';
 
 // Imports des illustrations
@@ -22,7 +22,6 @@ import groupesIllust from '@/assets/illustrations/groupes.png';
 import gestionEtablissementIllust from '@/assets/illustrations/gestion-etablissement.png';
 import profilsIllust from '@/assets/illustrations/profils.png';
 import espaceTuteursIllust from '@/assets/illustrations/espace-tuteurs.png';
-import classesVirtuellesIllust from '@/assets/illustrations/classes-virtuelles.png';
 import espaceTravailIllust from '@/assets/illustrations/espace-travail.png';
 
 const Fonctionnalites = () => {
@@ -232,20 +231,6 @@ const Fonctionnalites = () => {
         'Partage avec permissions granulaires'
       ],
       images: [espaceTravailIllust]
-    },
-    {
-      id: 'classes-virtuelles',
-      icon: Monitor,
-      title: 'Classes virtuelles',
-      description: 'Sessions de formation en ligne avec visioconférence intégrée. Organisez des cours à distance en HD avec partage d\'écran, enregistrement et chat en direct.',
-      features: [
-        'Visioconférence HD',
-        'Partage d\'écran',
-        'Enregistrement sessions',
-        'Chat en direct'
-      ],
-      images: [classesVirtuellesIllust],
-      comingSoon: true
     }
   ];
 

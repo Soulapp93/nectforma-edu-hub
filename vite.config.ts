@@ -6,8 +6,15 @@ import { VitePWA } from "vite-plugin-pwa";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode: _mode }) => ({
   server: {
-    host: "::",
+    host: "0.0.0.0",
     port: 8080,
+    strictPort: false,
+    cors: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+      'Access-Control-Allow-Headers': '*',
+    },
   },
   plugins: [
     react(),
@@ -93,12 +100,52 @@ export default defineConfig(({ mode: _mode }) => ({
             '@tanstack/react-query',
           ],
           'vendor-supabase': ['@supabase/supabase-js'],
-          'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select', '@radix-ui/react-toast', 'lucide-react'],
+          'vendor-ui': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-select',
+            '@radix-ui/react-toast',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-accordion',
+            '@radix-ui/react-checkbox',
+            '@radix-ui/react-scroll-area',
+            '@radix-ui/react-separator',
+            '@radix-ui/react-switch',
+            '@radix-ui/react-tooltip',
+            'lucide-react',
+          ],
+          'vendor-forms': [
+            'react-hook-form',
+            '@hookform/resolvers',
+            'zod',
+          ],
+          'vendor-pdf': [
+            'pdfjs-dist',
+            'react-pdf',
+          ],
+          'vendor-charts': [
+            'recharts',
+          ],
+          'vendor-dates': [
+            'date-fns',
+          ],
         },
       },
     },
   },
   define: {
     __DEV__: _mode === 'development',
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.ts',
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'text-summary'],
+      include: ['src/lib/**', 'src/services/**', 'src/hooks/**', 'src/contexts/**', 'src/components/ProtectedRoute.tsx', 'src/components/AdminRoute.tsx'],
+    },
   },
 }));

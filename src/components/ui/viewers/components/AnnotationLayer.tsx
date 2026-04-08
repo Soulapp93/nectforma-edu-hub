@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Canvas as FabricCanvas, PencilBrush, Circle, Rect, FabricText, FabricObject } from 'fabric';
+// fabric is loaded dynamically (~31MB) to reduce initial bundle size
+import type { Canvas as FabricCanvasType, FabricObject as FabricObjectType } from 'fabric';
 import { 
   Pencil, Highlighter, Square, CircleIcon, Type, Eraser, 
   Undo2, Redo2, Trash2, Save, X, Palette
@@ -32,7 +33,8 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   height
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fabricCanvasRef = useRef<FabricCanvas | null>(null);
+  const fabricCanvasRef = useRef<FabricCanvasType | null>(null);
+  const fabricModuleRef = useRef<typeof import('fabric') | null>(null);
   
   const [activeTool, setActiveTool] = useState<Tool>('pen');
   const [color, setColor] = useState('#ef4444');
@@ -40,11 +42,17 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
-  // Initialize Fabric canvas
+  // Initialize Fabric canvas (dynamically loaded)
   useEffect(() => {
     if (!canvasRef.current || !isActive) return;
 
-    const canvas = new FabricCanvas(canvasRef.current, {
+    let disposed = false;
+    (async () => {
+      const fabricModule = await import('fabric');
+      if (disposed) return;
+      fabricModuleRef.current = fabricModule;
+
+      const canvas = new fabricModule.Canvas(canvasRef.current!, {
       width,
       height,
       backgroundColor: 'transparent',
@@ -62,10 +70,14 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
 
     // Save initial state
     saveToHistory();
+    })();
 
     return () => {
-      canvas.dispose();
-      fabricCanvasRef.current = null;
+      disposed = true;
+      if (fabricCanvasRef.current) {
+        fabricCanvasRef.current.dispose();
+        fabricCanvasRef.current = null;
+      }
     };
   }, [isActive, width, height]);
 
@@ -136,10 +148,13 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
 
-    let shape: FabricObject | null = null;
+    let shape: FabricObjectType | null = null;
+
+    const fabricModule = fabricModuleRef.current;
+    if (!fabricModule) return;
 
     if (tool === 'rectangle') {
-      shape = new Rect({
+      shape = new fabricModule.Rect({
         left: width / 2 - 50,
         top: height / 2 - 50,
         width: 100,
@@ -149,7 +164,7 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
         strokeWidth: brushSize
       });
     } else if (tool === 'circle') {
-      shape = new Circle({
+      shape = new fabricModule.Circle({
         left: width / 2 - 50,
         top: height / 2 - 50,
         radius: 50,
@@ -158,7 +173,7 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
         strokeWidth: brushSize
       });
     } else if (tool === 'text') {
-      shape = new FabricText('Texte', {
+      shape = new fabricModule.FabricText('Texte', {
         left: width / 2 - 30,
         top: height / 2 - 10,
         fontSize: 24,

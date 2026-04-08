@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Upload, Download, FileSpreadsheet, AlertCircle, CheckCircle2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import * as XLSX from 'xlsx';
+// xlsx loaded dynamically to reduce bundle size
 import { getModuleColor } from '@/utils/moduleColors';
 import { scheduleService } from '@/services/scheduleService';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -232,7 +232,7 @@ const ExcelImportModal = ({ isOpen, onClose, onSuccess, scheduleId, formationId 
     });
   };
 
-  const downloadTemplate = () => {
+  const downloadTemplate = async () => {
     const template = [
       {
         'Date': '2025-09-22',
@@ -257,6 +257,7 @@ const ExcelImportModal = ({ isOpen, onClose, onSuccess, scheduleId, formationId 
       }
     ];
 
+    const XLSX = await import('xlsx');
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(template);
     
@@ -284,6 +285,7 @@ const ExcelImportModal = ({ isOpen, onClose, onSuccess, scheduleId, formationId 
 
     try {
       const data = await selectedFile.arrayBuffer();
+      const XLSX = await import('xlsx');
       const workbook = XLSX.read(data, { cellDates: false, raw: false });
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: true });

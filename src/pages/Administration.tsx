@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Users, GraduationCap, BookText, CalendarDays, ClipboardCheck, ShieldCheck, FolderOpen, Archive, Video, AlertTriangle } from 'lucide-react';
+import { Users, GraduationCap, BookText, CalendarDays, ClipboardCheck, ShieldCheck, FolderOpen, Archive, AlertTriangle } from 'lucide-react';
 import { LucideIcon } from 'lucide-react';
 
 // Lazy load all heavy tab components
@@ -11,7 +11,6 @@ const ScheduleManagement = React.lazy(() => import('../components/administration
 const AttendanceManagement = React.lazy(() => import('../components/administration/AttendanceManagement'));
 const StudentFilesManagement = React.lazy(() => import('../components/administration/StudentFilesManagement'));
 const ArchivesManagement = React.lazy(() => import('../components/administration/ArchivesManagement'));
-const VirtualClassesManagement = React.lazy(() => import('../components/administration/VirtualClassesManagement'));
 const AbsenceManagement = React.lazy(() => import('../components/administration/AbsenceManagement'));
 
 const TabFallback = () => (
@@ -26,7 +25,7 @@ const Administration = () => {
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
-    if (tabParam && ['users', 'formations', 'textbooks', 'schedules', 'attendance', 'student-files', 'archives', 'virtual-classes', 'absences'].includes(tabParam)) {
+    if (tabParam && ['users', 'formations', 'textbooks', 'schedules', 'attendance', 'student-files', 'archives', 'absences'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -47,8 +46,6 @@ const Administration = () => {
         return { title: 'Dossiers étudiants', description: 'Gérez les documents et dossiers de chaque étudiant.', icon: FolderOpen };
       case 'archives':
         return { title: 'Archives', description: 'Consultez les données archivées des promotions terminées.', icon: Archive };
-      case 'virtual-classes':
-        return { title: 'Classes virtuelles', description: 'Gérez les classes virtuelles et intégrations visioconférence.', icon: Video };
       case 'absences':
         return { title: 'Gestion des absences', description: 'Gérez les justificatifs d\'absence des étudiants et formateurs.', icon: AlertTriangle };
       default: 
@@ -89,11 +86,10 @@ const Administration = () => {
           {activeTab === 'attendance' && <AttendanceManagement />}
           {activeTab === 'student-files' && <StudentFilesManagement />}
           {activeTab === 'archives' && <ArchivesManagement />}
-          {activeTab === 'virtual-classes' && <VirtualClassesManagement />}
           {activeTab === 'absences' && <AbsenceManagement />}
         </Suspense>
 
-        {!['users', 'formations', 'textbooks', 'schedules', 'attendance', 'student-files', 'archives', 'virtual-classes', 'absences'].includes(activeTab) && (
+        {!['users', 'formations', 'textbooks', 'schedules', 'attendance', 'student-files', 'archives', 'absences'].includes(activeTab) && (
           <div className="glass-card rounded-xl p-8 text-center">
             <div className="max-w-md mx-auto">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">

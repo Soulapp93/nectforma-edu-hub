@@ -1,6 +1,6 @@
 # NECTFORMA - Plateforme de gestion éducative
 
-Plateforme tout-en-un de gestion de centres de formation (formations, émargements, emploi du temps, messagerie, notes, finance, RH).
+Plateforme tout-en-un de gestion de centres de formation (formations, emargements, emploi du temps, messagerie, notes, espace de travail collaboratif).
 
 ## Stack technique
 

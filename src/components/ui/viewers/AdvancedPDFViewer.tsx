@@ -231,6 +231,30 @@ const AdvancedPDFViewer: React.FC<AdvancedPDFViewerProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, isPresentationMode, isFullscreen, pageNumber, numPages, onClose]);
 
+  // Search functionality — must be declared before the early return to respect rules-of-hooks
+  const handleSearch = useCallback(async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    // Simple search - finds pages containing the text
+    // In a real implementation, you'd use pdf.js text content extraction
+    const results: number[] = [];
+    for (let i = 1; i <= numPages; i++) {
+      // This is a placeholder - real implementation would extract text from each page
+      results.push(i);
+    }
+    
+    setSearchResults(results.slice(0, 10));
+    if (results.length > 0) {
+      setPageNumber(results[0]);
+      toast.info(`${results.length} résultat(s) trouvé(s)`);
+    } else {
+      toast.info('Aucun résultat trouvé');
+    }
+  }, [searchQuery, numPages]);
+
   if (!isOpen) return null;
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
@@ -313,30 +337,6 @@ const AdvancedPDFViewer: React.FC<AdvancedPDFViewerProps> = ({
       });
     }
   };
-
-  // Search functionality
-  const handleSearch = useCallback(async () => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
-    // Simple search - finds pages containing the text
-    // In a real implementation, you'd use pdf.js text content extraction
-    const results: number[] = [];
-    for (let i = 1; i <= numPages; i++) {
-      // This is a placeholder - real implementation would extract text from each page
-      results.push(i);
-    }
-    
-    setSearchResults(results.slice(0, 10));
-    if (results.length > 0) {
-      setPageNumber(results[0]);
-      toast.info(`${results.length} résultat(s) trouvé(s)`);
-    } else {
-      toast.info('Aucun résultat trouvé');
-    }
-  }, [searchQuery, numPages]);
 
   const goToNextSearchResult = () => {
     if (searchResults.length > 0) {

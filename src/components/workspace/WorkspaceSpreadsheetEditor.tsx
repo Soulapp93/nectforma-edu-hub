@@ -34,91 +34,13 @@ import {
 } from '@/utils/spreadsheetFormulas';
 import SpreadsheetChart, { ChartType } from './SpreadsheetChart';
 
-interface Props {
-  document: WorkspaceDocument;
-  onSave: (doc: WorkspaceDocument) => Promise<void>;
-  onClose: () => void;
-}
-
-interface SheetTab {
-  id: string;
-  name: string;
-  data: SheetData;
-  numRows: number;
-  numCols: number;
-  frozenRows: number;
-  frozenCols: number;
-  colWidths: Record<number, number>;
-  rowHeights: Record<number, number>;
-  hiddenRows: Set<number>;
-  hiddenCols: Set<number>;
-}
-
-interface ChartConfig {
-  id: string;
-  type: ChartType;
-  title: string;
-  dataRange: string;
-  labelsRange: string;
-  colors: string[];
-}
-
-interface HistoryEntry {
-  sheets: SheetTab[];
-  activeSheet: number;
-}
-
-const DEFAULT_ROWS = 100;
-const DEFAULT_COLS = 26;
-const DEFAULT_COL_WIDTH = 100;
-const DEFAULT_ROW_HEIGHT = 25;
-const MIN_COL_WIDTH = 40;
-const MIN_ROW_HEIGHT = 20;
-const ROW_HEADER_WIDTH = 46;
-
-const CELL_COLORS = [
-  'transparent', '#ffffff', '#f3f4f6', '#fef3c7', '#dcfce7', '#dbeafe', '#fce7f3', '#f3e8ff',
-  '#fee2e2', '#e0e7ff', '#cffafe', '#fef9c3', '#d1fae5', '#fbcfe8', '#c7d2fe', '#fecaca',
-  '#bfdbfe', '#bbf7d0', '#fde68a', '#c4b5fd', '#f9a8d4', '#99f6e4', '#fed7aa', '#a5b4fc'
-];
-
-const TEXT_COLORS = [
-  '#000000', '#374151', '#6b7280', '#dc2626', '#ea580c', '#d97706', '#16a34a', '#059669',
-  '#0891b2', '#2563eb', '#4f46e5', '#7c3aed', '#9333ea', '#db2777', '#e11d48', '#ffffff'
-];
-
-const FONT_FAMILIES = [
-  'Arial', 'Helvetica', 'Times New Roman', 'Courier New', 'Georgia', 'Verdana',
-  'Trebuchet MS', 'Impact', 'Comic Sans MS', 'Lucida Console', 'Tahoma', 'Garamond'
-];
-
-const FONT_SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 48, 72];
-
-const NUMBER_FORMATS = [
-  { label: 'Normal', value: '' },
-  { label: 'Nombre', value: '#,##0' },
-  { label: 'Décimal', value: '#,##0.00' },
-  { label: 'Devise €', value: '€#,##0.00' },
-  { label: 'Devise $', value: '$#,##0.00' },
-  { label: 'Pourcentage', value: '0%' },
-  { label: 'Pourcentage .00', value: '0.00%' },
-  { label: 'Date', value: 'dd/mm/yyyy' },
-  { label: 'Scientifique', value: '0.00E+0' },
-];
-
-const createEmptySheet = (name: string): SheetTab => ({
-  id: crypto.randomUUID(),
-  name,
-  data: {},
-  numRows: DEFAULT_ROWS,
-  numCols: DEFAULT_COLS,
-  frozenRows: 0,
-  frozenCols: 0,
-  colWidths: {},
-  rowHeights: {},
-  hiddenRows: new Set(),
-  hiddenCols: new Set(),
-});
+import {
+  SpreadsheetProps as Props, SheetTab, ChartConfig, HistoryEntry,
+  DEFAULT_ROWS, DEFAULT_COLS, DEFAULT_COL_WIDTH, DEFAULT_ROW_HEIGHT,
+  MIN_COL_WIDTH, MIN_ROW_HEIGHT, ROW_HEADER_WIDTH,
+  CELL_COLORS, TEXT_COLORS, FONT_FAMILIES, FONT_SIZES, NUMBER_FORMATS,
+  createEmptySheet,
+} from './spreadsheet/spreadsheetTypes';
 
 const WorkspaceSpreadsheetEditor: React.FC<Props> = ({ document: doc, onSave, onClose }) => {
   const { userId } = useCurrentUser();

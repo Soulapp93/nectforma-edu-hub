@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { rpcWithRetry } from '@/lib/supabaseRetry';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface UserContext {
   id: string;
@@ -56,6 +57,7 @@ interface ContextResponse {
  * - Écoute les changements en temps réel sur users et tutors
  */
 export const useMyContext = () => {
+  const { userId } = useAuth();
   const [data, setData] = useState<MyContextData>({
     user: null,
     relation: null,
@@ -136,12 +138,23 @@ export const useMyContext = () => {
     }
   }, []);
 
-  // Setup realtime subscription for profile updates
+  // React to auth state changes from AuthContext (single source of truth)
+  // instead of registering a separate onAuthStateChange listener
   useEffect(() => {
-    // Fetch initial
-    fetchContext();
+    if (userId) {
+      fetchContext();
+    } else {
+      setData({ user: null, relation: null, establishment: null, role: null });
+      userIdRef.current = null;
+      setLoading(false);
+      setError(null);
+    }
+  }, [userId, fetchContext]);
 
-    // Subscribe to realtime changes on users and tutors tables for profile updates
+  // Setup realtime subscription for profile updates (only when authenticated)
+  useEffect(() => {
+    if (!userId) return;
+
     const channel = supabase
       .channel('profile-realtime')
       .on(
@@ -152,9 +165,7 @@ export const useMyContext = () => {
           table: 'users'
         },
         (payload) => {
-          // Only refetch if the update is for the current user
           if (userIdRef.current && payload.new && (payload.new as any).id === userIdRef.current) {
-            console.log('User profile realtime update detected');
             fetchContext();
           }
         }
@@ -167,44 +178,22 @@ export const useMyContext = () => {
           table: 'tutors'
         },
         (payload) => {
-          // Only refetch if the update is for the current tutor
           if (userIdRef.current && payload.new && (payload.new as any).id === userIdRef.current) {
-            console.log('Tutor profile realtime update detected');
             fetchContext();
           }
         }
       )
-      .subscribe((status) => {
-        console.log('Profile realtime subscription status:', status);
-      });
+      .subscribe();
 
     channelRef.current = channel;
 
-    // Écouter les changements d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        fetchContext();
-      } else if (event === 'SIGNED_OUT') {
-        setData({
-          user: null,
-          relation: null,
-          establishment: null,
-          role: null
-        });
-        userIdRef.current = null;
-        setLoading(false);
-        setError(null);
-      }
-    });
-
     return () => {
-      subscription.unsubscribe();
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
     };
-  }, [fetchContext]);
+  }, [userId, fetchContext]);
 
   return {
     ...data,

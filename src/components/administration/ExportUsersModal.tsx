@@ -5,8 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import jsPDF from 'jspdf';
-import * as XLSX from 'xlsx';
+// jspdf and xlsx loaded dynamically to reduce bundle size
 
 interface ExportUsersModalProps {
   isOpen: boolean;
@@ -30,7 +29,8 @@ const ExportUsersModal: React.FC<ExportUsersModalProps> = ({
 }) => {
   const [exportFormat, setExportFormat] = useState<'pdf' | 'excel'>('excel');
 
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
+    const { default: jsPDF } = await import('jspdf');
     const doc = new jsPDF('landscape');
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -137,7 +137,7 @@ const ExportUsersModal: React.FC<ExportUsersModalProps> = ({
     onClose();
   };
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     // Prepare data with proper formatting
     const exportData = users.map((user, index) => ({
       'N°': index + 1,
@@ -151,6 +151,7 @@ const ExportUsersModal: React.FC<ExportUsersModalProps> = ({
     }));
 
     // Create workbook and worksheet
+    const XLSX = await import('xlsx');
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(exportData);
     

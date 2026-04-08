@@ -1,6 +1,5 @@
-import mammoth from 'mammoth';
-import * as XLSX from 'xlsx';
-import JSZip from 'jszip';
+// Heavy libs loaded dynamically to reduce initial bundle size
+// mammoth, xlsx, jszip are imported on-demand in each function that needs them
 
 export interface ImportedTextContent {
   html: string;
@@ -169,8 +168,9 @@ export const fileImportService = {
   async importDocx(file: File): Promise<ImportedTextContent> {
     const arrayBuffer = await file.arrayBuffer();
 
-    // mammoth with style map to preserve formatting
-    const result = await mammoth.convertToHtml({
+    // Dynamic import — mammoth is heavy (~3MB)
+    const mammoth = await import('mammoth');
+    const result = await mammoth.default.convertToHtml({
       arrayBuffer,
     }, {
       styleMap: [
@@ -196,6 +196,8 @@ export const fileImportService = {
    */
   async importXlsx(file: File): Promise<ImportedSpreadsheetContent> {
     const arrayBuffer = await file.arrayBuffer();
+    // Dynamic import — xlsx is heavy (~7MB)
+    const XLSX = await import('xlsx');
     const workbook = XLSX.read(arrayBuffer, {
       type: 'array',
       cellStyles: true,
@@ -321,6 +323,9 @@ export const fileImportService = {
    */
   async importPptx(file: File): Promise<ImportedPresentationContent> {
     const arrayBuffer = await file.arrayBuffer();
+    // Dynamic import — jszip is loaded on demand
+    const JSZipModule = await import('jszip');
+    const JSZip = JSZipModule.default;
     const zip = await JSZip.loadAsync(arrayBuffer);
     
     const slides: ImportedSlide[] = [];

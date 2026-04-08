@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Upload, FileText, AlertCircle, CheckCircle, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { User } from '@/services/userService';
-import * as XLSX from 'xlsx';
+// xlsx loaded dynamically to reduce bundle size
 
 interface ExcelImportProps {
   onImport: (users: Omit<User, 'id' | 'created_at' | 'updated_at'>[], formationIds?: string[]) => Promise<void>;
@@ -80,7 +80,7 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
       setImporting(false);
     }
   };
-  const downloadTemplate = () => {
+  const downloadTemplate = async () => {
     // Créer un template Excel selon le rôle
     let template;
     let fileName;
@@ -162,6 +162,7 @@ const ExcelImport: React.FC<ExcelImportProps> = ({ onImport, onClose, preselecte
     }
 
     // Créer la feuille Excel
+    const XLSX = await import('xlsx');
     const ws = XLSX.utils.json_to_sheet(template);
     
     // Définir la largeur des colonnes pour une meilleure lisibilité

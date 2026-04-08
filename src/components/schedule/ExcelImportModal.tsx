@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { FileSpreadsheet, Upload, Download, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import * as XLSX from 'xlsx';
+// xlsx loaded dynamically to reduce bundle size
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ExcelImportModalProps {
@@ -43,7 +43,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const downloadTemplate = () => {
+  const downloadTemplate = async () => {
     const templateData = [
       {
         'Module': 'Introduction au Marketing',
@@ -65,6 +65,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
       }
     ];
 
+    const XLSX = await import('xlsx');
     const worksheet = XLSX.utils.json_to_sheet(templateData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Modèle emploi du temps');
@@ -86,6 +87,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
 
     try {
       const buffer = await file.arrayBuffer();
+      const XLSX = await import('xlsx');
       const workbook = XLSX.read(buffer, { type: 'buffer' });
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);

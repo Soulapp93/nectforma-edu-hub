@@ -28,7 +28,7 @@ interface EmailNotificationData {
 
 // Template HTML professionnel pour les emails
 const generateEmailHtml = (data: EmailNotificationData, recipient: EmailRecipient): string => {
-  const appUrl = 'https://nectforme.lovable.app';
+  const appUrl = 'https://nectforma.com';
   const ctaUrl = data.ctaUrl ? `${appUrl}${data.ctaUrl}` : appUrl;
   
   return `

@@ -20,6 +20,10 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import {
+  DocStatCard as StatCard, TocItem, DocSectionWrapper, ProcessFlow,
+  InfoCard, TipCard, FeatureCard, ScreenshotCard, RoleCard
+} from './documentation/DocComponents';
 
 // Import illustrations
 import tableauDeBordImg from '@/assets/illustrations/tableau-de-bord.png';
@@ -39,7 +43,6 @@ import cahiersTextesImg from '@/assets/illustrations/cahiers-textes.png';
 const cahierTexteDetailImg = cahiersTextesImg;
 import gestionEtablissementImg from '@/assets/illustrations/gestion-etablissement.png';
 import espaceTuteursImg from '@/assets/illustrations/espace-tuteurs.png';
-import classesVirtuellesImg from '@/assets/illustrations/classes-virtuelles.png';
 
 interface DocSection {
   id: string;
@@ -347,7 +350,7 @@ const Documentation = () => {
         >
           <div className="space-y-6">
             <ProcessFlow steps={[
-              { icon: <LogIn />, title: "Accéder à NECTFORMA", description: "Rendez-vous sur nectforma.lovable.app" },
+              { icon: <LogIn />, title: "Accéder à NECTFORMA", description: "Rendez-vous sur nectforma.com" },
               { icon: <Building />, title: "Créer un établissement", description: "Cliquez sur 'Créer mon établissement'" },
               { icon: <FileText />, title: "Renseigner les infos", description: "Nom, adresse, SIRET, type d'établissement" },
               { icon: <User />, title: "Compte administrateur", description: "Créez votre compte Admin Principal" },
@@ -418,7 +421,7 @@ const Documentation = () => {
                   Connexion quotidienne
                 </h4>
                 <ol className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex gap-2"><Badge variant="outline">1</Badge> Accédez à nectforma.lovable.app</li>
+                  <li className="flex gap-2"><Badge variant="outline">1</Badge> Accédez à nectforma.com</li>
                   <li className="flex gap-2"><Badge variant="outline">2</Badge> Cliquez sur "Se connecter"</li>
                   <li className="flex gap-2"><Badge variant="outline">3</Badge> Entrez votre email et mot de passe</li>
                   <li className="flex gap-2"><Badge variant="outline">4</Badge> Vous êtes redirigé vers votre espace</li>
@@ -1016,135 +1019,5 @@ const Documentation = () => {
     </div>
   );
 };
-
-// Composants utilitaires
-
-const StatCard = ({ icon, label }: { icon: React.ReactNode; label: string }) => (
-  <div className="flex items-center gap-2 p-3 rounded-lg bg-background/50 border">
-    <div className="text-primary">{icon}</div>
-    <span className="text-sm font-medium">{label}</span>
-  </div>
-);
-
-const TocItem = ({ number, title, roles }: { number: string; title: string; roles?: string[] }) => (
-  <div className="flex items-center gap-2 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer">
-    <Badge variant="outline" className="flex-shrink-0">{number}</Badge>
-    <span className="text-sm font-medium">{title}</span>
-    {roles && (
-      <div className="ml-auto flex gap-1">
-        {roles.includes('admin') && <Badge variant="destructive" className="text-[10px] px-1">Admin</Badge>}
-        {roles.includes('tuteur') && <Badge variant="secondary" className="text-[10px] px-1">Tuteur</Badge>}
-      </div>
-    )}
-  </div>
-);
-
-interface DocSectionWrapperProps {
-  id: string;
-  number: string;
-  title: string;
-  description: string;
-  roles: string[];
-  activeRole: string;
-  children: React.ReactNode;
-}
-
-const DocSectionWrapper = ({ id, number, title, description, roles, activeRole, children }: DocSectionWrapperProps) => {
-  const isVisible = activeRole === 'all' || roles.includes('all') || roles.includes(activeRole);
-  
-  if (!isVisible) return null;
-
-  return (
-    <section id={id} className="scroll-mt-32 pdf-section">
-      <div className="flex items-start gap-4 mb-6">
-        <Badge variant="outline" className="text-lg px-3 py-1 flex-shrink-0">{number}</Badge>
-        <div>
-          <h2 className="text-xl font-semibold">{title}</h2>
-          <p className="text-muted-foreground">{description}</p>
-        </div>
-      </div>
-      {children}
-    </section>
-  );
-};
-
-const ProcessFlow = ({ steps }: { steps: { icon: React.ReactNode; title: string; description: string }[] }) => (
-  <div className="flex flex-wrap items-center justify-center gap-2 p-4 bg-muted/30 rounded-xl">
-    {steps.map((step, index) => (
-      <React.Fragment key={index}>
-        <div className="flex flex-col items-center text-center p-3 min-w-[100px]">
-          <div className="p-2 rounded-full bg-primary/10 text-primary mb-2">
-            {step.icon}
-          </div>
-          <span className="text-xs font-semibold">{step.title}</span>
-          <span className="text-[10px] text-muted-foreground mt-1">{step.description}</span>
-        </div>
-        {index < steps.length - 1 && (
-          <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0 hidden md:block" />
-        )}
-      </React.Fragment>
-    ))}
-  </div>
-);
-
-const InfoCard = ({ title, items }: { title: string; items: string[] }) => (
-  <Card>
-    <CardHeader className="pb-2">
-      <CardTitle className="text-base">{title}</CardTitle>
-    </CardHeader>
-    <CardContent>
-      <ul className="space-y-1.5">
-        {items.map((item, index) => (
-          <li key={index} className="text-sm text-muted-foreground flex items-start gap-2">
-            <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
-            {item}
-          </li>
-        ))}
-      </ul>
-    </CardContent>
-  </Card>
-);
-
-const TipCard = ({ type, children }: { type: 'info' | 'warning' | 'success'; children: React.ReactNode }) => {
-  const colors = {
-    info: 'border-primary/30 bg-primary/5 text-foreground',
-    warning: 'border-accent/30 bg-accent/5 text-foreground',
-    success: 'border-green-500/30 bg-green-500/5 text-foreground',
-  };
-  
-  return (
-    <div className={`p-4 rounded-lg border ${colors[type]}`}>
-      <p className="text-sm">{children}</p>
-    </div>
-  );
-};
-
-const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) => (
-  <Card className="text-center">
-    <CardContent className="pt-6">
-      <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-3">
-        {icon}
-      </div>
-      <h4 className="font-semibold text-sm">{title}</h4>
-      <p className="text-xs text-muted-foreground mt-1">{description}</p>
-    </CardContent>
-  </Card>
-);
-
-const ScreenshotCard = ({ src, alt, caption }: { src: string; alt: string; caption: string }) => (
-  <div className="space-y-2">
-    <div className="rounded-xl overflow-hidden border shadow-lg">
-      <img src={src} alt={alt} className="w-full h-auto" loading="lazy" />
-    </div>
-    <p className="text-xs text-center text-muted-foreground">{caption}</p>
-  </div>
-);
-
-const RoleCard = ({ role, description, color }: { role: string; description: string; color: 'default' | 'secondary' | 'destructive' | 'outline' }) => (
-  <div className="flex items-center gap-3 p-3 rounded-lg border bg-card">
-    <Badge variant={color}>{role}</Badge>
-    <span className="text-sm text-muted-foreground">{description}</span>
-  </div>
-);
 
 export default Documentation;

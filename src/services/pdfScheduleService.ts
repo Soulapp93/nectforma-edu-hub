@@ -1,4 +1,6 @@
-import jsPDF from 'jspdf';
+// Heavy lib loaded dynamically to reduce initial bundle size
+import type jsPDFType from 'jspdf';
+const loadJsPDF = async (): Promise<typeof jsPDFType> => (await import('jspdf')).default;
 import { ScheduleSlot } from './scheduleService';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addDays, addMonths, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -40,7 +42,7 @@ const isLightColor = (hex: string): boolean => {
 };
 
 // Truncate text to fit in a given width
-const truncateText = (pdf: jsPDF, text: string, maxWidth: number): string => {
+const truncateText = (pdf: jsPDFTypeType, text: string, maxWidth: number): string => {
   if (pdf.getTextWidth(text) <= maxWidth) return text;
   let truncated = text;
   while (pdf.getTextWidth(truncated + '...') > maxWidth && truncated.length > 0) {
@@ -75,6 +77,7 @@ export const exportScheduleToPDFAdvanced = async (
   establishment?: EstablishmentInfo | null
 ) => {
   const isLandscape = options.orientation === 'landscape';
+  const jsPDF = await loadJsPDF();
   const pdf = new jsPDF(isLandscape ? 'l' : 'p', 'mm', 'a4');
   
   const pageWidth = pdf.internal.pageSize.width;
@@ -198,7 +201,7 @@ export const exportScheduleToPDFAdvanced = async (
 };
 
 const renderDayView = (
-  pdf: jsPDF,
+  pdf: jsPDFType,
   schedules: ScheduleSlot[],
   startDate: Date,
   endDate: Date,
@@ -308,7 +311,7 @@ const renderDayView = (
 };
 
 const renderWeekView = (
-  pdf: jsPDF,
+  pdf: jsPDFType,
   schedules: ScheduleSlot[],
   startDate: Date,
   endDate: Date,
@@ -463,7 +466,7 @@ const renderWeekView = (
 };
 
 const renderMonthView = (
-  pdf: jsPDF,
+  pdf: jsPDFType,
   schedules: ScheduleSlot[],
   startDate: Date,
   endDate: Date,
@@ -696,7 +699,7 @@ const renderMonthView = (
   }
 };
 const renderListView = (
-  pdf: jsPDF,
+  pdf: jsPDFType,
   schedules: ScheduleSlot[],
   margin: number,
   contentWidth: number,
@@ -832,7 +835,7 @@ const renderListView = (
   }
 };
 
-const addFooter = (pdf: jsPDF, pageWidth: number, pageHeight: number, margin: number, establishmentName?: string) => {
+const addFooter = (pdf: jsPDFType, pageWidth: number, pageHeight: number, margin: number, establishmentName?: string) => {
   const totalPages = pdf.internal.pages.length - 1;
   
   for (let i = 1; i <= totalPages; i++) {

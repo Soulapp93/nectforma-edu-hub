@@ -19,7 +19,7 @@ import ExcelImport from './ExcelImport';
 import ChangeRoleModal from './ChangeRoleModal';
 import SendMessageModal from './SendMessageModal';
 import ExportUsersModal from './ExportUsersModal';
-import * as XLSX from 'xlsx';
+// xlsx loaded dynamically in exportQuickExcel
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { getAppBaseUrl } from '@/lib/appBaseUrl';
@@ -125,7 +125,7 @@ const EnhancedUsersList: React.FC = () => {
   const handleExcelImport = async (usersData: CreateUserData[]) => {
     await bulkCreateUsers(usersData);
   };
-  const exportUsers = () => {
+  const exportUsers = async () => {
     const exportData = filteredUsers.map(user => {
       const userFormations = getUserFormations(user.id!);
       const formationsText = userFormations
@@ -143,6 +143,7 @@ const EnhancedUsersList: React.FC = () => {
       };
     });
 
+    const XLSX = await import('xlsx');
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Utilisateurs');

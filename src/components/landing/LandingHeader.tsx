@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, LayoutDashboard, ShieldCheck, Users, GraduationCap, BookText, CalendarDays, ClipboardCheck, Mail, UsersRound, Building2, UserCircle, Briefcase, Monitor, Layers } from 'lucide-react';
+import { Menu, LayoutDashboard, ShieldCheck, Users, GraduationCap, BookText, CalendarDays, ClipboardCheck, Mail, UsersRound, Building2, UserCircle, Briefcase, Layers } from 'lucide-react';
 import HeaderDropdown from './HeaderDropdown';
 import MobileDrawerNavigation from './MobileDrawerNavigation';
 import NectformaLogo from '@/components/NectformaLogo';
@@ -41,7 +41,6 @@ const LandingHeader: React.FC = () => {
                   { label: 'Profils utilisateurs', href: '/fonctionnalites#profils', icon: UserCircle },
                   { label: 'Espace tuteurs', href: '/fonctionnalites#tuteurs', icon: Briefcase },
                   { label: 'Espace de travail', href: '/fonctionnalites#espace-travail', icon: Layers },
-                  { label: 'Classes virtuelles', href: '/fonctionnalites#classes-virtuelles', icon: Monitor },
                 ]}
               />
               <Link to="/pourquoi-nous" className="px-4 py-2 text-white/80 hover:text-white font-medium transition-all duration-200 rounded-lg hover:bg-white/10">
