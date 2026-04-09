@@ -30,15 +30,28 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
   - 12 recommandations prioritaires (P0 a P3)
   - Matrice de maturite (score global: 3.0/5)
 
+- [2026-01-30] Infrastructure de tests mise en place
+  - Vitest + Testing Library + jsdom installe et configure
+  - vitest.config.ts avec alias @ et coverage v8
+  - 6 suites de tests : authContext, userService, formationService, attendanceService, gradesService, supabaseRetry
+  - 105 tests unitaires passes avec succes
+  - Mocks Supabase reutilisables dans src/__tests__/mocks/
+
+- [2026-01-30] Headers de securite renforces dans vercel.json
+  - Ajout Strict-Transport-Security (HSTS)
+  - Ajout Referrer-Policy
+  - Ajout Permissions-Policy (camera, microphone, geolocation bloquees)
+  - Ajout Content-Security-Policy (CSP) complete
+
 ## Prioritized Backlog
 
 ### P0 - Critique
-- [ ] Verifier et corriger les politiques RLS en production
-- [ ] Mettre en place des tests automatises (Vitest + Testing Library)
+- [x] Mettre en place des tests automatises (Vitest + Testing Library) - DONE
+- [ ] Verifier et corriger les politiques RLS en production (necessite acces DB Supabase)
 
 ### P1 - Haute priorite
+- [x] Ajouter les headers de securite manquants (CSP, HSTS, etc.) - DONE
 - [ ] Activer TypeScript strict progressivement
-- [ ] Ajouter les headers de securite manquants (CSP, HSTS, etc.)
 - [ ] Decomposer les composants monolithiques (8 fichiers > 50Ko)
 
 ### P2 - Moyenne priorite
@@ -54,5 +67,6 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 - [ ] Documenter l'API et les Edge Functions
 
 ## Next Tasks
-- Implementer les corrections P0 si demande par l'utilisateur
-- Approfondir l'audit sur un module specifique si necessaire
+- Etendre la couverture de tests (scheduleService, messageService, etc.)
+- Activer strictNullChecks et corriger les erreurs resultantes
+- Decomposer WorkspaceSpreadsheetEditor.tsx (2794 lignes)
