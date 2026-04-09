@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:rls": "node src/__tests__/rls/run-rls-tests.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.0",

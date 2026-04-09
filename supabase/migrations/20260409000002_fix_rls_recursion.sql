@@ -69,6 +69,11 @@ DROP POLICY IF EXISTS "Instructors view assignments for their sessions" ON publi
 CREATE POLICY "Instructors view assignments for their sessions" ON public.user_formation_assignments
   FOR SELECT USING (user_is_instructor_for_attendance(auth.uid(), formation_id));
 
+DROP POLICY IF EXISTS "Admins manage assignments" ON public.user_formation_assignments;
+CREATE POLICY "Admins manage assignments" ON public.user_formation_assignments
+  FOR ALL USING (is_current_user_admin() AND formation_id IN (SELECT get_establishment_formation_ids(get_current_user_establishment())))
+  WITH CHECK (is_current_user_admin() AND formation_id IN (SELECT get_establishment_formation_ids(get_current_user_establishment())));
+
 -- attendance_sheets
 DROP POLICY IF EXISTS "View formation sheets" ON public.attendance_sheets;
 CREATE POLICY "View formation sheets" ON public.attendance_sheets

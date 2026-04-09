@@ -16,50 +16,44 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 - Audit architecture: `/app/AUDIT_ARCHITECTURE.md` (score 3.0/5)
 
 ### Session 2 - Tests & Securite
-- 105 tests Vitest, headers securite, console silencer, CI GitHub Actions
+- 105 tests Vitest (6 suites), headers securite, console silencer, CI GitHub Actions
 
 ### Session 3 - Connexion Supabase & DB Fixes
-- Fix triggers en double sur establishments (migration executee en prod)
-- Fix mapping types etablissement frontend
-- Audit RLS: 0 politique "Allow all for development" restante
+- Fix triggers en double, mapping types, audit RLS initial
 
-### Session 4 - Fix RLS Recursion Critique (2026-04-09)
-- **Root cause identifiee** : Recursion infinie dans les politiques RLS
-  - `user_formation_assignments` -> `attendance_sheets` -> `user_formation_assignments` (boucle)
-  - `formations` -> `user_formation_assignments` -> `formations` (boucle)
-  - `schedules`/`schedule_slots` impliques dans des boucles similaires
-- **7 fonctions SECURITY DEFINER creees** pour casser les boucles :
-  - `user_has_formation_assignment()`, `user_is_instructor_for_attendance()`
-  - `get_user_formation_ids()`, `get_tutor_student_formation_ids()`
-  - `get_establishment_formation_ids()`, `get_formation_user_ids()`
-  - `get_instructor_student_ids()`
-- **17 politiques RLS corrigees** sur 6 tables :
-  - `user_formation_assignments`, `attendance_sheets`, `formations`
-  - `schedules`, `schedule_slots`, `users`
-- **Migration sauvegardee** : `20260409000002_fix_rls_recursion.sql`
-- **Test complet** : Creation etablissement + login + dashboard = SUCCES, 0 erreur 500
+### Session 4 - Fix RLS Recursion
+- 7 fonctions SECURITY DEFINER, 17 politiques corrigees, 0 erreur 500
 
-## Prioritized Backlog
+### Session 5 - Tests d'integration RLS (2026-04-09)
+- **Suite complete de tests RLS** : `src/__tests__/rls/run-rls-tests.js`
+- **42/42 tests passes** couvrant :
+  - AdminPrincipal : 11 tests (acces, isolation, requetes)
+  - Formateur : 6 tests (acces module, formations)
+  - Etudiant : 9 tests (acces formations, notes, emargement)
+  - Tuteur : 6 tests (acces etudiants, formations)
+  - Isolation multi-tenant : 6 tests (Etablissement A vs B)
+  - Anti-recursion : 4 tests x 18 tables = 72 verifications
+- **Vulnerabilite corrigee** : Admin pouvait assigner des users aux formations d'autres etablissements (politique `Admins manage assignments` sans verification d'etablissement)
+- Script npm: `npm run test:rls`
+
+## Tous les P0 resolus
 
 ### P0 - Critique - TOUS RESOLUS
-- [x] Tests automatises (105 tests)
+- [x] Tests automatises (105 tests unitaires + 42 tests RLS integration)
 - [x] Fix triggers en double
-- [x] Audit politiques RLS
-- [x] Fix recursion RLS infinie (17 policies, 7 functions)
+- [x] Fix recursion RLS (17 policies, 7 functions)
+- [x] Audit politiques RLS (0 "Allow all for dev")
 - [x] Fix creation etablissement
+- [x] Fix vulnerabilite cross-tenant assignment
+- [x] Tests d'integration RLS automatises
 
 ### P1 - Haute priorite
-- [x] Headers securite (CSP, HSTS, etc.)
+- [x] Headers securite
 - [x] Bug VITE_SUPABASE_ANON_KEY
 - [x] Mapping types etablissement
 - [ ] Activer TypeScript strict
 - [ ] Decomposer composants monolithiques
-- [ ] Fix 22 policies restantes avec ref directes user_formation_assignments (non-recursives mais a securiser)
 
-### P2-P3 - Moyenne/Basse priorite
+### P2-P3
 - [ ] Patterns N+1, pagination, chiffrement secrets
 - [ ] Structure code, monitoring externe, Storybook, doc API
-
-## Credentials
-- Supabase service_role key: stored in edge functions env
-- Supabase Management API: via access token (sbp_...)
