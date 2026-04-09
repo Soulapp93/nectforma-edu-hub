@@ -33,8 +33,12 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
   - Tuteur : 6 tests (acces etudiants, formations)
   - Isolation multi-tenant : 6 tests (Etablissement A vs B)
   - Anti-recursion : 4 tests x 18 tables = 72 verifications
-- **Vulnerabilite corrigee** : Admin pouvait assigner des users aux formations d'autres etablissements (politique `Admins manage assignments` sans verification d'etablissement)
-- Script npm: `npm run test:rls`
+- **Vulnerabilite corrigee** : Admin pouvait assigner des users aux formations d'autres etablissements
+
+### Session 6 - Comptes Demo (2026-04-09)
+- 7 comptes demo crees dans Supabase (AdminPrincipal, Admin, Formateur, 3 Etudiants, Tuteur)
+- Mots de passe reinitialises et documentes dans `/app/memory/test_credentials.md`
+- Login verifie via frontend (screenshot: dashboard AdminPrincipal OK)
 
 ## Tous les P0 resolus
 
@@ -46,11 +50,13 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 - [x] Fix creation etablissement
 - [x] Fix vulnerabilite cross-tenant assignment
 - [x] Tests d'integration RLS automatises
+- [x] Comptes demo crees et documentes
 
 ### P1 - Haute priorite
 - [x] Headers securite
 - [x] Bug VITE_SUPABASE_ANON_KEY
 - [x] Mapping types etablissement
+- [ ] Integrer `npm run test:rls` dans CI GitHub Actions
 - [ ] Activer TypeScript strict
 - [ ] Decomposer composants monolithiques
 
