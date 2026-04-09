@@ -7,48 +7,37 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 - **Name:** Nectforma
 - **Type:** SaaS multi-tenant pour la gestion de centres de formation
 - **Stack:** React 18 + TypeScript + Vite + Tailwind CSS + Supabase (BaaS) + Capacitor (mobile)
-- **Deployment:** Vercel (frontend) + Supabase Cloud (backend)
+- **Deployment:** Vercel (frontend) + Supabase Cloud (backend, region eu-west-3)
 - **Supabase URL:** https://dlitdjbmqpsdmhrbluak.supabase.co
 
 ## What's Been Implemented
 
-### Session 1 - Audit (2026-01-30)
-- Audit complet: `/app/AUDIT_ARCHITECTURE.md` (13 risques, 12 recommandations, score 3.0/5)
+### Session 1 - Audit complet
+- Audit architecture complet: `/app/AUDIT_ARCHITECTURE.md`
 
-### Session 2 - Tests & Securite (2026-01-30)
-- Vitest: 105 tests unitaires sur 6 suites (tous verts)
-- Headers securite: CSP, HSTS, Referrer-Policy, Permissions-Policy
-- Console silencer pour production
+### Session 2 - Tests & Securite
+- 105 tests unitaires Vitest (6 suites)
+- Headers securite (CSP, HSTS, Referrer-Policy, Permissions-Policy)
+- Console silencer production
 - CI Pipeline GitHub Actions
 
-### Session 3 - Connexion Supabase & Bug Fixes (2026-04-09)
-- **Diagnostic connexion Supabase** : Connexion OK, auth settings verifie
-- **Bug fix critique** : Correction `VITE_SUPABASE_ANON_KEY` -> `VITE_SUPABASE_PUBLISHABLE_KEY` (Index.tsx)
-- **Bug fix** : Mapping des types d'etablissement (frontend envoyait des labels, DB attend des valeurs specifiques)
-- **Root cause identifiee** : 3 triggers en double sur `establishments` qui creent des chat_groups en conflit
-  - `on_establishment_created` (migration 20251020)
-  - `create_establishment_group_trigger` (migration 20251021)
-  - `trigger_auto_create_establishment_group` (migration 20260203)
-- **Migration corrective creee** : `20260409000001_fix_duplicate_establishment_triggers.sql`
-  - Supprime les triggers en double
-  - Rend le trigger restant idempotent (ON CONFLICT DO NOTHING)
-  - Etend la contrainte de type pour compatibilite
-
-## ACTION REQUISE PAR L'UTILISATEUR
-
-### Migration a executer dans Supabase Dashboard
-1. Aller sur https://supabase.com/dashboard -> SQL Editor
-2. Copier-coller le contenu de `/app/supabase/migrations/20260409000001_fix_duplicate_establishment_triggers.sql`
-3. Executer la requete
-4. Tester la creation d'etablissement
+### Session 3 - Connexion Supabase & Corrections DB
+- **Migration executee en production** via Supabase Management API :
+  - Suppression des 3 triggers en double sur `establishments`
+  - Remplacement par un seul trigger idempotent (ON CONFLICT DO NOTHING)
+  - Extension de la contrainte `establishments_type_check` (nouveaux types)
+- **Test creation etablissement** : SUCCES (etablissement + chat_group + user AdminPrincipal crees correctement)
+- **Audit RLS en production** :
+  - 0 politique "Allow all for development" restante
+  - RLS ENABLED sur toutes les tables critiques (10/10 verifiees)
+- **Bug fix** : Mapping types etablissement dans CreateEstablishment.tsx
 
 ## Prioritized Backlog
 
 ### P0 - Critique
 - [x] Tests automatises - DONE (105 tests)
-- [x] Bug creation etablissement identifie - ROOT CAUSE FOUND
-- [ ] **MIGRATION A DEPLOYER** : Fix triggers en double (user action required)
-- [ ] Verifier politiques RLS "Allow all" en production
+- [x] Fix triggers en double - DONE (migration executee en prod)
+- [x] Audit politiques RLS - DONE (aucune "Allow all" restante, RLS enabled partout)
 
 ### P1 - Haute priorite
 - [x] Headers securite - DONE
@@ -64,7 +53,13 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 - [ ] Pagination listes
 - [ ] Chiffrement secrets en base
 
+### P3 - Basse priorite
+- [ ] Reorganiser structure du code
+- [ ] Monitoring externe (Sentry)
+- [ ] Storybook
+- [ ] Documentation API
+
 ## Next Tasks
-- User deploie la migration corrective dans Supabase
-- Tester le flux complet de creation d'etablissement
-- Activer strictNullChecks progressivement
+- Activer strictNullChecks dans tsconfig
+- Decomposer WorkspaceSpreadsheetEditor.tsx (2794 lignes)
+- Etendre couverture tests
