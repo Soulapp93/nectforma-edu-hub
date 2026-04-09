@@ -8,72 +8,63 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 - **Type:** SaaS multi-tenant pour la gestion de centres de formation
 - **Stack:** React 18 + TypeScript + Vite + Tailwind CSS + Supabase (BaaS) + Capacitor (mobile)
 - **Deployment:** Vercel (frontend) + Supabase Cloud (backend)
-- **Size:** ~131,759 lines of TS/TSX, 434 files, 301 components, 38 pages, 32 services, 27 Edge Functions, 226 migrations
-
-## User Personas
-- SuperAdmin: Gestion globale multi-tenant, blog admin
-- AdminPrincipal: Gestion complete d'un etablissement
-- Admin: Administration courante, dashboard, finance
-- Formateur: Gestion formations, modules, emargement
-- Etudiant: Consultation formations, notes, emargement (signature)
-- Tuteur: Suivi des apprentis (vue restreinte)
+- **Supabase URL:** https://dlitdjbmqpsdmhrbluak.supabase.co
 
 ## What's Been Implemented
 
 ### Session 1 - Audit (2026-01-30)
-- Audit complet de l'architecture : document Markdown detaille (`/app/AUDIT_ARCHITECTURE.md`)
-  - Stack technique, structure du code, frontend, backend, DB, securite, performance, qualite, scalabilite, DevOps
-  - 13 risques identifies, 12 recommandations P0-P3
-  - Matrice de maturite (score global: 3.0/5)
+- Audit complet: `/app/AUDIT_ARCHITECTURE.md` (13 risques, 12 recommandations, score 3.0/5)
 
-### Session 2 - Implementation corrections (2026-01-30)
-- **Infrastructure de tests Vitest** :
-  - vitest.config.ts, setup.ts, mocks Supabase reutilisables
-  - 6 suites de tests : authContext, userService, formationService, attendanceService, gradesService, supabaseRetry
-  - **105 tests unitaires - tous passes**
-  - Scripts npm: test, test:watch, test:coverage
+### Session 2 - Tests & Securite (2026-01-30)
+- Vitest: 105 tests unitaires sur 6 suites (tous verts)
+- Headers securite: CSP, HSTS, Referrer-Policy, Permissions-Policy
+- Console silencer pour production
+- CI Pipeline GitHub Actions
 
-- **Headers de securite renforces** (vercel.json) :
-  - Content-Security-Policy (CSP) complete
-  - Strict-Transport-Security (HSTS)
-  - Referrer-Policy
-  - Permissions-Policy
+### Session 3 - Connexion Supabase & Bug Fixes (2026-04-09)
+- **Diagnostic connexion Supabase** : Connexion OK, auth settings verifie
+- **Bug fix critique** : Correction `VITE_SUPABASE_ANON_KEY` -> `VITE_SUPABASE_PUBLISHABLE_KEY` (Index.tsx)
+- **Bug fix** : Mapping des types d'etablissement (frontend envoyait des labels, DB attend des valeurs specifiques)
+- **Root cause identifiee** : 3 triggers en double sur `establishments` qui creent des chat_groups en conflit
+  - `on_establishment_created` (migration 20251020)
+  - `create_establishment_group_trigger` (migration 20251021)
+  - `trigger_auto_create_establishment_group` (migration 20260203)
+- **Migration corrective creee** : `20260409000001_fix_duplicate_establishment_triggers.sql`
+  - Supprime les triggers en double
+  - Rend le trigger restant idempotent (ON CONFLICT DO NOTHING)
+  - Etend la contrainte de type pour compatibilite
 
-- **Bug fix** : Correction de VITE_SUPABASE_ANON_KEY -> VITE_SUPABASE_PUBLISHABLE_KEY dans Index.tsx (formulaire de contact)
+## ACTION REQUISE PAR L'UTILISATEUR
 
-- **Console silencer** : consoleSilencer.ts importe dans main.tsx pour supprimer les console.log/debug/info en production
-
-- **CI Pipeline** : .github/workflows/test.yml pour GitHub Actions (tests automatiques sur push/PR)
-
-- **Application en preview** : App mise en service sur le pod avec Vite dev server
+### Migration a executer dans Supabase Dashboard
+1. Aller sur https://supabase.com/dashboard -> SQL Editor
+2. Copier-coller le contenu de `/app/supabase/migrations/20260409000001_fix_duplicate_establishment_triggers.sql`
+3. Executer la requete
+4. Tester la creation d'etablissement
 
 ## Prioritized Backlog
 
 ### P0 - Critique
-- [x] Mettre en place des tests automatises (Vitest + Testing Library) - DONE
-- [ ] Verifier et corriger les politiques RLS en production (necessite acces DB Supabase)
+- [x] Tests automatises - DONE (105 tests)
+- [x] Bug creation etablissement identifie - ROOT CAUSE FOUND
+- [ ] **MIGRATION A DEPLOYER** : Fix triggers en double (user action required)
+- [ ] Verifier politiques RLS "Allow all" en production
 
 ### P1 - Haute priorite
-- [x] Ajouter les headers de securite manquants (CSP, HSTS, etc.) - DONE
-- [x] Corriger le bug VITE_SUPABASE_ANON_KEY - DONE
-- [ ] Activer TypeScript strict progressivement (strictNullChecks d'abord)
-- [ ] Decomposer les composants monolithiques (8 fichiers > 50Ko)
+- [x] Headers securite - DONE
+- [x] Bug VITE_SUPABASE_ANON_KEY - DONE
+- [x] Mapping types etablissement - DONE
+- [ ] Activer TypeScript strict
+- [ ] Decomposer composants monolithiques
 
 ### P2 - Moyenne priorite
-- [x] Nettoyer les console.log en production - DONE (consoleSilencer)
-- [x] Pipeline CI GitHub Actions - DONE
-- [ ] Eliminer les patterns N+1 dans les services
-- [ ] Ajouter la pagination sur toutes les listes
-- [ ] Chiffrer les secrets en base (Zoom, reseaux sociaux)
-
-### P3 - Basse priorite
-- [ ] Reorganiser la structure du code (barrel exports, types/, constants/)
-- [ ] Integrer un service de monitoring externe (Sentry, DataDog)
-- [ ] Ajouter Storybook pour les composants UI
-- [ ] Documenter l'API et les Edge Functions
-- [ ] Renommer le package de "vite_react_shadcn_ts" a "nectforma"
+- [x] Console silencer - DONE
+- [x] CI Pipeline - DONE
+- [ ] Patterns N+1
+- [ ] Pagination listes
+- [ ] Chiffrement secrets en base
 
 ## Next Tasks
-- Activer strictNullChecks et corriger les erreurs resultantes
-- Decomposer WorkspaceSpreadsheetEditor.tsx (2794 lignes)
-- Etendre la couverture de tests (scheduleService, messageService, etc.)
+- User deploie la migration corrective dans Supabase
+- Tester le flux complet de creation d'etablissement
+- Activer strictNullChecks progressivement

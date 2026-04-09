@@ -70,12 +70,12 @@ const CreateEstablishment = () => {
   });
 
   const establishmentTypes = [
-    { value: 'enseignement_superieur_prive', label: 'Enseignement supérieur privé', icon: '🎓' },
-    { value: 'enseignement_superieur_public', label: 'Enseignement supérieur public', icon: '🏫' },
-    { value: 'organisme_formation', label: 'Organisme de formation', icon: '🏢' },
-    { value: 'cfa', label: 'Centre de formation des apprentis (CFA)', icon: '📚' },
-    { value: 'universite', label: 'Université', icon: '🏛️' },
-    { value: 'autre', label: 'Autre', icon: '📋' }
+    { value: 'École supérieure', label: 'Enseignement supérieur privé', icon: '🎓' },
+    { value: 'université', label: 'Université / Enseignement supérieur public', icon: '🏫' },
+    { value: 'Organisme de formation', label: 'Organisme de formation', icon: '🏢' },
+    { value: 'Centre de formation', label: 'Centre de formation des apprentis (CFA)', icon: '📚' },
+    { value: 'Entreprise', label: 'Entreprise', icon: '🏢' },
+    { value: 'Formateur indépendant', label: 'Formateur indépendant / Autre', icon: '📋' }
   ];
 
   const userRanges = ['1-10', '11-25', '26-50', '51-100', '101-500', '500+'];
@@ -162,7 +162,7 @@ const CreateEstablishment = () => {
         body: {
           establishment: {
             name: formData.establishmentName,
-            type: establishmentTypes.find(t => t.value === formData.establishmentType)?.label || formData.establishmentType,
+            type: formData.establishmentType,
             email: formData.establishmentEmail || formData.email,
             address: formData.address,
             phone: formData.establishmentPhone,
