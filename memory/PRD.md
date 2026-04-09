@@ -7,59 +7,59 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 - **Name:** Nectforma
 - **Type:** SaaS multi-tenant pour la gestion de centres de formation
 - **Stack:** React 18 + TypeScript + Vite + Tailwind CSS + Supabase (BaaS) + Capacitor (mobile)
-- **Deployment:** Vercel (frontend) + Supabase Cloud (backend, region eu-west-3)
 - **Supabase URL:** https://dlitdjbmqpsdmhrbluak.supabase.co
+- **Region:** eu-west-3
 
 ## What's Been Implemented
 
 ### Session 1 - Audit complet
-- Audit architecture complet: `/app/AUDIT_ARCHITECTURE.md`
+- Audit architecture: `/app/AUDIT_ARCHITECTURE.md` (score 3.0/5)
 
 ### Session 2 - Tests & Securite
-- 105 tests unitaires Vitest (6 suites)
-- Headers securite (CSP, HSTS, Referrer-Policy, Permissions-Policy)
-- Console silencer production
-- CI Pipeline GitHub Actions
+- 105 tests Vitest, headers securite, console silencer, CI GitHub Actions
 
-### Session 3 - Connexion Supabase & Corrections DB
-- **Migration executee en production** via Supabase Management API :
-  - Suppression des 3 triggers en double sur `establishments`
-  - Remplacement par un seul trigger idempotent (ON CONFLICT DO NOTHING)
-  - Extension de la contrainte `establishments_type_check` (nouveaux types)
-- **Test creation etablissement** : SUCCES (etablissement + chat_group + user AdminPrincipal crees correctement)
-- **Audit RLS en production** :
-  - 0 politique "Allow all for development" restante
-  - RLS ENABLED sur toutes les tables critiques (10/10 verifiees)
-- **Bug fix** : Mapping types etablissement dans CreateEstablishment.tsx
+### Session 3 - Connexion Supabase & DB Fixes
+- Fix triggers en double sur establishments (migration executee en prod)
+- Fix mapping types etablissement frontend
+- Audit RLS: 0 politique "Allow all for development" restante
+
+### Session 4 - Fix RLS Recursion Critique (2026-04-09)
+- **Root cause identifiee** : Recursion infinie dans les politiques RLS
+  - `user_formation_assignments` -> `attendance_sheets` -> `user_formation_assignments` (boucle)
+  - `formations` -> `user_formation_assignments` -> `formations` (boucle)
+  - `schedules`/`schedule_slots` impliques dans des boucles similaires
+- **7 fonctions SECURITY DEFINER creees** pour casser les boucles :
+  - `user_has_formation_assignment()`, `user_is_instructor_for_attendance()`
+  - `get_user_formation_ids()`, `get_tutor_student_formation_ids()`
+  - `get_establishment_formation_ids()`, `get_formation_user_ids()`
+  - `get_instructor_student_ids()`
+- **17 politiques RLS corrigees** sur 6 tables :
+  - `user_formation_assignments`, `attendance_sheets`, `formations`
+  - `schedules`, `schedule_slots`, `users`
+- **Migration sauvegardee** : `20260409000002_fix_rls_recursion.sql`
+- **Test complet** : Creation etablissement + login + dashboard = SUCCES, 0 erreur 500
 
 ## Prioritized Backlog
 
-### P0 - Critique
-- [x] Tests automatises - DONE (105 tests)
-- [x] Fix triggers en double - DONE (migration executee en prod)
-- [x] Audit politiques RLS - DONE (aucune "Allow all" restante, RLS enabled partout)
+### P0 - Critique - TOUS RESOLUS
+- [x] Tests automatises (105 tests)
+- [x] Fix triggers en double
+- [x] Audit politiques RLS
+- [x] Fix recursion RLS infinie (17 policies, 7 functions)
+- [x] Fix creation etablissement
 
 ### P1 - Haute priorite
-- [x] Headers securite - DONE
-- [x] Bug VITE_SUPABASE_ANON_KEY - DONE
-- [x] Mapping types etablissement - DONE
+- [x] Headers securite (CSP, HSTS, etc.)
+- [x] Bug VITE_SUPABASE_ANON_KEY
+- [x] Mapping types etablissement
 - [ ] Activer TypeScript strict
 - [ ] Decomposer composants monolithiques
+- [ ] Fix 22 policies restantes avec ref directes user_formation_assignments (non-recursives mais a securiser)
 
-### P2 - Moyenne priorite
-- [x] Console silencer - DONE
-- [x] CI Pipeline - DONE
-- [ ] Patterns N+1
-- [ ] Pagination listes
-- [ ] Chiffrement secrets en base
+### P2-P3 - Moyenne/Basse priorite
+- [ ] Patterns N+1, pagination, chiffrement secrets
+- [ ] Structure code, monitoring externe, Storybook, doc API
 
-### P3 - Basse priorite
-- [ ] Reorganiser structure du code
-- [ ] Monitoring externe (Sentry)
-- [ ] Storybook
-- [ ] Documentation API
-
-## Next Tasks
-- Activer strictNullChecks dans tsconfig
-- Decomposer WorkspaceSpreadsheetEditor.tsx (2794 lignes)
-- Etendre couverture tests
+## Credentials
+- Supabase service_role key: stored in edge functions env
+- Supabase Management API: via access token (sbp_...)
