@@ -1,15 +1,25 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, Shield, Loader2, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Shield, Loader2, ArrowLeft, Users, GraduationCap, BookOpen, UserCheck, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import NectformaLogo from '@/components/NectformaLogo';
 
+const DEMO_ACCOUNTS = [
+  { email: 'admin.principal@nectforma-demo.com', password: 'NectDemo2026!', role: 'Admin Principal', name: 'Sophie Martin', icon: Shield, color: 'from-violet-500 to-purple-600' },
+  { email: 'admin@nectforma-demo.com', password: 'NectDemo2026!', role: 'Admin', name: 'Pierre Durand', icon: Users, color: 'from-blue-500 to-indigo-600' },
+  { email: 'formateur@nectforma-demo.com', password: 'NectDemo2026!', role: 'Formateur', name: 'Jean Lefebvre', icon: BookOpen, color: 'from-emerald-500 to-teal-600' },
+  { email: 'etudiant1@nectforma-demo.com', password: 'NectDemo2026!', role: 'Etudiant', name: 'Alice Dubois', icon: GraduationCap, color: 'from-amber-500 to-orange-600' },
+  { email: 'tuteur@nectforma-demo.com', password: 'NectDemo2026!', role: 'Tuteur', name: 'Marc Moreau', icon: UserCheck, color: 'from-rose-500 to-pink-600' },
+];
+
 const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingDemo, setLoadingDemo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showDemoAccounts, setShowDemoAccounts] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
@@ -79,6 +89,29 @@ const Auth = () => {
       setError('Erreur lors de l\'envoi. Veuillez réessayer.');
     } finally {
       setResetLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async (account: typeof DEMO_ACCOUNTS[0]) => {
+    setLoadingDemo(account.email);
+    setError(null);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: account.email,
+        password: account.password,
+      });
+      if (error) {
+        setError('Erreur de connexion au compte démo. Veuillez réessayer.');
+        setLoadingDemo(null);
+        return;
+      }
+      if (data.user) {
+        toast.success(`Connecté en tant que ${account.name} (${account.role})`);
+      }
+    } catch {
+      setError('Erreur lors de la connexion démo.');
+    } finally {
+      setLoadingDemo(null);
     }
   };
 
@@ -203,8 +236,56 @@ const Auth = () => {
                 </button>
               </form>
 
+              {/* Demo accounts */}
+              <div className="mt-6 pt-6 border-t border-border">
+                <button
+                  type="button"
+                  data-testid="toggle-demo-accounts"
+                  onClick={() => setShowDemoAccounts(!showDemoAccounts)}
+                  className="w-full flex items-center justify-between text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-3"
+                >
+                  <span className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-primary" />
+                    Comptes démo
+                  </span>
+                  {showDemoAccounts ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </button>
+
+                {showDemoAccounts && (
+                  <div className="space-y-2 animate-fade-in" data-testid="demo-accounts-list">
+                    {DEMO_ACCOUNTS.map((account) => {
+                      const Icon = account.icon;
+                      const isLoading = loadingDemo === account.email;
+                      return (
+                        <button
+                          key={account.email}
+                          type="button"
+                          data-testid={`demo-account-${account.role.toLowerCase().replace(/\s/g, '-')}`}
+                          disabled={!!loadingDemo}
+                          onClick={() => handleDemoLogin(account)}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border hover:border-primary/40 bg-background hover:bg-primary/5 transition-all duration-200 group disabled:opacity-60"
+                        >
+                          <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${account.color} flex items-center justify-center shrink-0`}>
+                            <Icon className="h-4 w-4 text-white" />
+                          </div>
+                          <div className="text-left flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{account.name}</p>
+                            <p className="text-xs text-muted-foreground">{account.role}</p>
+                          </div>
+                          {isLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
+                          ) : (
+                            <ArrowLeft className="h-4 w-4 text-muted-foreground rotate-180 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
               {/* Create establishment link */}
-              <div className="mt-6 pt-6 border-t border-border text-center">
+              <div className="mt-4 pt-4 border-t border-border text-center">
                 <p className="text-muted-foreground text-sm mb-3">
                   Pas encore de compte établissement ?
                 </p>
