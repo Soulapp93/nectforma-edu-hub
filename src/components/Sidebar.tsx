@@ -212,54 +212,40 @@ const Sidebar = () => {
     { type: 'standalone', label: 'Profil', icon: UserCircle, href: '/compte' },
   ];
 
-  // ─── Navigation Tuteur ───
-  const tutorEntries: SidebarEntry[] = [
-    {
-      type: 'category', label: 'Suivi Apprenti', icon: ClipboardCheck,
-      items: [
-        { name: 'Formation', href: '/formations', icon: GraduationCap },
-        { name: 'Notes', href: '/notes', icon: Award },
-        { name: 'Suivi émargement', href: '/suivi-emargement', icon: ClipboardCheck },
-        { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarClock },
-      ],
-    },
-    { type: 'standalone', label: 'Profil', icon: UserCircle, href: '/compte' },
+  // ─── Navigation plate Tuteur (pas de catégories) ───
+  const tutorFlatNav: NavItem[] = [
+    { name: 'Formation apprenti', href: '/formations', icon: GraduationCap },
+    { name: 'Notes apprenti', href: '/notes', icon: Award },
+    { name: 'Suivi émargement apprenti', href: '/suivi-emargement', icon: ClipboardCheck },
+    { name: 'Emploi du temps apprenti', href: '/emploi-temps', icon: CalendarClock },
+    { name: 'Mon profil', href: '/compte', icon: UserCircle },
   ];
 
-  // ─── Navigation Formateur / Étudiant ───
-  const limitedEntries: SidebarEntry[] = [
-    {
-      type: 'category', label: 'Pédagogie', icon: BookOpen,
-      items: [
-        { name: 'Formations', href: '/formations', icon: GraduationCap },
-        { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarClock },
-      ],
-    },
-    {
-      type: 'category', label: 'Suivi', icon: ClipboardCheck,
-      items: [
-        { name: 'Suivi émargement', href: '/suivi-emargement', icon: ClipboardCheck },
-      ],
-    },
-    { type: 'standalone', label: 'Notes', icon: Award, href: '/notes' },
-    {
-      type: 'category', label: 'Communication', icon: Mail,
-      items: [
-        { name: 'Messagerie', href: '/messagerie', icon: Mail },
-        { name: 'Groupes', href: '/groupes', icon: UsersRound },
-      ],
-    },
-    { type: 'standalone', label: 'Espace de travail', icon: FolderKanban, href: '/espace-travail' },
-    { type: 'standalone', label: 'Profil', icon: UserCircle, href: '/compte' },
+  // ─── Navigation plate Formateur / Étudiant (pas de catégories) ───
+  const limitedFlatNav: NavItem[] = [
+    { name: 'Formations', href: '/formations', icon: GraduationCap },
+    { name: 'Notes', href: '/notes', icon: Award },
+    { name: 'Suivi émargement', href: '/suivi-emargement', icon: ClipboardCheck },
+    { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarClock },
+    { name: 'Messagerie', href: '/messagerie', icon: Mail },
+    { name: 'Groupes', href: '/groupes', icon: UsersRound },
+    { name: 'Espace de travail', href: '/espace-travail', icon: FolderKanban },
+    { name: 'Mon profil', href: '/compte', icon: UserCircle },
   ];
+
+  const isAdmin = userRole === 'AdminPrincipal' || userRole === 'Admin';
 
   const entries = userRole === 'AdminPrincipal'
     ? principalAdminEntries
     : userRole === 'Admin'
     ? adminEntries
-    : userRole === 'Tuteur'
-    ? tutorEntries
-    : limitedEntries;
+    : null;
+
+  const flatNav = userRole === 'Tuteur'
+    ? tutorFlatNav
+    : !isAdmin
+    ? limitedFlatNav
+    : null;
 
   // ─── Helpers ───
 
@@ -319,6 +305,53 @@ const Sidebar = () => {
           <Badge className="bg-emerald-500 text-white hover:bg-emerald-500/90 text-[9px] min-w-[18px] h-4 flex items-center justify-center rounded-full font-semibold">
             {badgeCount > 99 ? '99+' : badgeCount}
           </Badge>
+        )}
+      </NavLink>
+    );
+  };
+
+  // ─── Render flat nav item (Formateur, Étudiant, Tuteur) ───
+  const renderFlatNavItem = (item: NavItem) => {
+    const Icon = item.icon;
+    const isActive = isItemActive(item.href);
+    const badgeCount = getBadgeCount(item.href);
+
+    return (
+      <NavLink
+        key={item.name}
+        to={item.href}
+        end={item.href === '/dashboard'}
+        data-testid={`nav-${item.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
+        className={`
+          flex items-center ${collapsed ? 'justify-center' : 'justify-between'} 
+          px-3 py-2.5 
+          text-[14px] font-medium 
+          rounded-xl 
+          transition-all duration-200 
+          relative
+          ${isActive
+            ? 'nect-glass font-semibold'
+            : 'text-white/80 hover:bg-white/[0.08] hover:text-white'
+          }
+        `}
+        title={collapsed ? item.name : undefined}
+      >
+        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
+          <Icon className="h-5 w-5 flex-shrink-0" />
+          {!collapsed && <span>{item.name}</span>}
+        </div>
+        {!collapsed && isActive && !badgeCount && (
+          <ChevronRight className="h-4 w-4 flex-shrink-0" />
+        )}
+        {badgeCount > 0 && !collapsed && (
+          <Badge className="bg-emerald-500 text-white hover:bg-emerald-500/90 text-[10px] min-w-[20px] h-5 flex items-center justify-center rounded-full font-semibold">
+            {badgeCount > 99 ? '99+' : badgeCount}
+          </Badge>
+        )}
+        {badgeCount > 0 && collapsed && (
+          <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[9px] min-w-[16px] h-4 rounded-full flex items-center justify-center font-semibold">
+            {badgeCount > 99 ? '99+' : badgeCount}
+          </span>
         )}
       </NavLink>
     );
@@ -490,7 +523,10 @@ const Sidebar = () => {
 
         {/* Navigation */}
         <nav className="space-y-0.5" data-testid="sidebar-navigation">
-          {entries.map((entry, idx) => renderEntry(entry, idx))}
+          {/* Admin : navigation par catégories */}
+          {entries && entries.map((entry, idx) => renderEntry(entry, idx))}
+          {/* Non-admin : navigation plate */}
+          {flatNav && flatNav.map(renderFlatNavItem)}
         </nav>
 
         {/* Support / Help Card */}
