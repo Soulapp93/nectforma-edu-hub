@@ -17,6 +17,7 @@ import {
   Award,
   FolderOpen,
   BookOpen,
+  Video,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -110,6 +111,7 @@ const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({ isOpen, onClose }) 
   const tutorNav: NavItem[] = [
     { name: 'Formation apprenti', href: '/formations', icon: GraduationCap },
     { name: 'Notes apprenti', href: '/notes', icon: Award },
+    { name: 'Classes virtuelles', href: '/classes-virtuelles', icon: Video },
     { name: 'Suivi émargement', href: '/suivi-emargement', icon: ClipboardCheck },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarClock },
     { name: 'Mon profil', href: '/compte', icon: UserCircle },
@@ -118,6 +120,7 @@ const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({ isOpen, onClose }) 
   const limitedNav: NavItem[] = [
     { name: 'Formations', href: '/formations', icon: GraduationCap },
     { name: 'Notes', href: '/notes', icon: Award },
+    { name: 'Classes virtuelles', href: '/classes-virtuelles', icon: Video },
     { name: 'Suivi émargement', href: '/suivi-emargement', icon: ClipboardCheck },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarClock },
     { name: 'Messagerie', href: '/messagerie', icon: Mail },

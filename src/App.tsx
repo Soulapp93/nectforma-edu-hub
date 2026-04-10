@@ -63,6 +63,7 @@ const SuiviEmargementHub = React.lazy(() => import('./pages/SuiviEmargementHub')
 const NotesHub = React.lazy(() => import('./pages/NotesHub'));
 const CommunicationHub = React.lazy(() => import('./pages/CommunicationHub'));
 const DocumentsArchives = React.lazy(() => import('./pages/DocumentsArchives'));
+const ClassesVirtuelles = React.lazy(() => import('./pages/ClassesVirtuelles'));
 const Notes = React.lazy(() => import('./pages/Notes'));
 const Finance = React.lazy(() => import('./pages/Finance'));
 const Comptabilite = React.lazy(() => import('./pages/Comptabilite'));
@@ -342,6 +343,7 @@ const AppContent = () => {
               <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
               <Route path="/espace-travail" element={<ProtectedRoute><TutorRestrictedRoute><EspaceTravail /></TutorRestrictedRoute></ProtectedRoute>} />
               <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
+              <Route path="/classes-virtuelles" element={<ProtectedRoute><ClassesVirtuelles /></ProtectedRoute>} />
               <Route path="/finance" element={<ProtectedRoute><AdminRoute><Finance /></AdminRoute></ProtectedRoute>} />
               <Route path="/comptabilite" element={<ProtectedRoute><AdminRoute><Comptabilite /></AdminRoute></ProtectedRoute>} />
               <Route path="/ressources-humaines" element={<ProtectedRoute><AdminRoute><RessourcesHumaines /></AdminRoute></ProtectedRoute>} />

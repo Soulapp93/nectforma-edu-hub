@@ -15,7 +15,7 @@ const MobileHeader = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { user: myUser } = useMyContext();
   
-  const mainPages = ['/dashboard', '/formations', '/emploi-temps', '/messagerie', '/groupes', '/administration', '/compte', '/pedagogie', '/suivi-emargement-admin', '/notes-admin', '/communication', '/documents-archives', '/espace-travail', '/gestion-etablissement', '/suivi-emargement', '/notes'];
+  const mainPages = ['/dashboard', '/formations', '/emploi-temps', '/messagerie', '/groupes', '/administration', '/compte', '/pedagogie', '/suivi-emargement-admin', '/notes-admin', '/communication', '/documents-archives', '/espace-travail', '/gestion-etablissement', '/suivi-emargement', '/notes', '/classes-virtuelles'];
   const canGoBack = !mainPages.includes(location.pathname) && location.pathname !== '/';
   
   const getResolvedPhotoUrl = (url: string | null | undefined): string | null => {

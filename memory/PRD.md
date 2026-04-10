@@ -19,35 +19,43 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 - Version mobile responsive
 - Gestion des entreprises partenaires (CRUD tuteurs)
 - Gestion des diplomes (vue jury + publication)
+- Documents etablissement (CRUD dossiers/fichiers + Supabase Storage)
 
-### Session 11 - Documents Etablissement (2026-04-10)
-- Remplacement "Gestion des dossiers etudiants" par "Documents etablissement"
-- Gestionnaire de documents complet :
-  - Creation de dossiers hierarchiques (sous-dossiers)
-  - Upload multiple de fichiers (vers bucket Supabase `establishment-docs`)
-  - Telechargement de fichiers
-  - Renommage (dossiers + fichiers)
-  - Suppression avec confirmation (cascade pour dossiers)
-  - Navigation par breadcrumbs
-  - Recherche par nom
-  - Stats temps reel (dossiers, fichiers, espace utilise)
-  - Icones par type de fichier (PDF, Image, Video, Excel, Archive)
-- Tables utilisees : `digital_safe_folders`, `digital_safe_files`
-- Storage bucket : `establishment-docs` (50 Mo max)
+### Session 12 - Classes Virtuelles (2026-04-10)
+- Table `virtual_classes` creee avec RLS
+- Vue Etudiant/Formateur/Tuteur (`StudentVirtualClasses.tsx`) :
+  - Liste des classes avec statut temps reel (en cours / a venir / terminee)
+  - Banniere verte quand une classe est en cours
+  - Bouton "Participer" actif uniquement pendant la session (15 min avant -> fin)
+  - Bouton "Pas encore commencee" grise pour les classes futures
+  - Badge "dans Xh" / "dans X jours" pour les classes a venir
+  - Filtre (toutes/en cours/a venir/terminees)
+  - Refresh auto toutes les 30s
+  - Informations : date, heure, duree, formateur, formation
+- Page `/classes-virtuelles` + route dans App.tsx
+- Sidebar + MobileDrawerMenu mis a jour pour tous les roles
+- Vue Admin fonctionne deja dans Pedagogie > Classes virtuelles (existant)
+- 3 classes de test creees (1 en cours, 2 a venir)
+
+## Flux complet
+1. Admin cree une classe dans Pedagogie > Classes virtuelles
+2. Si Zoom connecte (OAuth), le meeting est cree automatiquement
+3. Etudiants/Formateurs voient les classes dans leur sidebar
+4. Bouton "Participer" redirige vers Zoom quand la session est active
 
 ## Task Status
 
 ### P0 - TOUS RESOLUS
 - [x] Audit, tests, RLS fixes, comptes demo
 - [x] Sidebar plate + pages hub + mobile responsive
-- [x] Entreprises partenaires, Diplomes, Notes et releves
-- [x] Documents etablissement (CRUD complet)
+- [x] Entreprises partenaires, Diplomes, Notes
+- [x] Documents etablissement
+- [x] Classes virtuelles (creation admin + vue participant + join Zoom)
 
 ### P1 - A faire
 - [ ] Integrer test:rls dans CI GitHub Actions
 - [ ] Activer TypeScript strict
-- [ ] Decomposer composants monolithiques
 
 ### P2-P3
-- [ ] Patterns N+1, pagination, chiffrement secrets
+- [ ] Patterns N+1, pagination
 - [ ] Structure code, monitoring, Storybook, doc API

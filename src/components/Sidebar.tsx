@@ -19,6 +19,7 @@ import {
   HelpCircle,
   FolderOpen,
   BookOpen,
+  Video,
 } from 'lucide-react';
 import {
   Sidebar as SidebarWrapper,
@@ -115,6 +116,7 @@ const Sidebar = () => {
   const tutorNav: NavItem[] = [
     { name: 'Formation apprenti', href: '/formations', icon: GraduationCap },
     { name: 'Notes apprenti', href: '/notes', icon: Award },
+    { name: 'Classes virtuelles', href: '/classes-virtuelles', icon: Video },
     { name: 'Suivi émargement', href: '/suivi-emargement', icon: ClipboardCheck },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarClock },
     { name: 'Mon profil', href: '/compte', icon: UserCircle },
@@ -124,6 +126,7 @@ const Sidebar = () => {
   const limitedNav: NavItem[] = [
     { name: 'Formations', href: '/formations', icon: GraduationCap },
     { name: 'Notes', href: '/notes', icon: Award },
+    { name: 'Classes virtuelles', href: '/classes-virtuelles', icon: Video },
     { name: 'Suivi émargement', href: '/suivi-emargement', icon: ClipboardCheck },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarClock },
     { name: 'Messagerie', href: '/messagerie', icon: Mail },
