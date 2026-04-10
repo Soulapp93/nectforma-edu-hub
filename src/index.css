@@ -311,6 +311,16 @@ html {
   scrollbar-width: none !important;
 }
 
+/* Hide sidebar scrollbar - smooth scroll without visible bar */
+[data-sidebar="sidebar"] ::-webkit-scrollbar {
+  display: none;
+}
+
+[data-sidebar="sidebar"] * {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Ensure body doesn't interfere with fullscreen */
 body:has(.fullscreen-container) {
   overflow: hidden !important;

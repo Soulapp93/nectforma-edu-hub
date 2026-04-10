@@ -19,8 +19,8 @@ interface TabDef {
 }
 
 const tabs: TabDef[] = [
-  { id: 'student-files', label: 'Dossiers étudiants', icon: FolderOpen },
-  { id: 'archives', label: 'Archives', icon: Archive },
+  { id: 'student-files', label: 'Gestion des dossiers étudiants', icon: FolderOpen },
+  { id: 'archives', label: 'Gestion des archives', icon: Archive },
 ];
 
 const DocumentsArchives = () => {

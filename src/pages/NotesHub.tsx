@@ -18,7 +18,7 @@ interface TabDef {
 }
 
 const tabs: TabDef[] = [
-  { id: 'notes', label: 'Notes et relevés', icon: FileText },
+  { id: 'notes', label: 'Gestion des notes et relevés', icon: FileText },
   { id: 'diplomas', label: 'Gestion des diplômes', icon: Medal },
 ];
 

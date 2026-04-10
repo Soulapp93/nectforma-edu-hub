@@ -19,7 +19,7 @@ interface TabDef {
 
 const tabs: TabDef[] = [
   { id: 'users', label: 'Gestion des utilisateurs', icon: Users },
-  { id: 'partners', label: 'Entreprises partenaires', icon: Briefcase },
+  { id: 'partners', label: 'Gestion des entreprises partenaires', icon: Briefcase },
 ];
 
 const Administration = () => {

@@ -20,7 +20,7 @@ interface TabDef {
 
 const tabs: TabDef[] = [
   { id: 'messagerie', label: 'Messagerie', icon: Mail },
-  { id: 'groupes', label: 'Groupe établissements', icon: UsersRound },
+  { id: 'groupes', label: 'Gestion des groupes', icon: UsersRound },
 ];
 
 const CommunicationHub = () => {

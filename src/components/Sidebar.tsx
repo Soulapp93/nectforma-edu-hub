@@ -9,7 +9,6 @@ import {
   LogOut,
   ClipboardCheck,
   Building2,
-  ChevronRight,
   UsersRound,
   ShieldCheck,
   PanelLeftClose,
@@ -95,8 +94,8 @@ const Sidebar = () => {
     { name: 'Communication', href: '/communication', icon: Mail, matchPrefix: '/communication' },
     { name: 'Documents & Archives', href: '/documents-archives', icon: FolderOpen, matchPrefix: '/documents-archives' },
     { name: 'Espace de travail', href: '/espace-travail', icon: FolderKanban },
-    { name: 'Gestion du compte', href: '/gestion-etablissement', icon: Building2 },
-    { name: 'Profil', href: '/compte', icon: UserCircle },
+    { name: 'Gestion compte établissement', href: '/gestion-etablissement', icon: Building2 },
+    { name: 'Mon profil', href: '/compte', icon: UserCircle },
   ];
 
   // ─── Navigation Admin (sans Gestion du compte) ───
@@ -109,7 +108,7 @@ const Sidebar = () => {
     { name: 'Communication', href: '/communication', icon: Mail, matchPrefix: '/communication' },
     { name: 'Documents & Archives', href: '/documents-archives', icon: FolderOpen, matchPrefix: '/documents-archives' },
     { name: 'Espace de travail', href: '/espace-travail', icon: FolderKanban },
-    { name: 'Profil', href: '/compte', icon: UserCircle },
+    { name: 'Mon profil', href: '/compte', icon: UserCircle },
   ];
 
   // ─── Navigation Tuteur ───
@@ -168,7 +167,7 @@ const Sidebar = () => {
         end={item.href === '/dashboard'}
         data-testid={`nav-${item.name.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
         className={`
-          flex items-center ${collapsed ? 'justify-center' : 'justify-between'} 
+          flex items-center ${collapsed ? 'justify-center' : 'gap-3'} 
           px-3 py-2.5 
           text-[13px] font-semibold 
           rounded-xl 
@@ -181,15 +180,10 @@ const Sidebar = () => {
         `}
         title={collapsed ? item.name : undefined}
       >
-        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
-          <Icon className="h-[18px] w-[18px] flex-shrink-0" />
-          {!collapsed && <span>{item.name}</span>}
-        </div>
-        {!collapsed && isActive && badgeCount === 0 && (
-          <ChevronRight className="h-4 w-4 flex-shrink-0 text-white/50" />
-        )}
+        <Icon className="h-[18px] w-[18px] flex-shrink-0" />
+        {!collapsed && <span className="leading-tight">{item.name}</span>}
         {badgeCount > 0 && !collapsed && (
-          <Badge className="bg-emerald-500 text-white hover:bg-emerald-500/90 text-[10px] min-w-[20px] h-5 flex items-center justify-center rounded-full font-semibold">
+          <Badge className="ml-auto bg-emerald-500 text-white hover:bg-emerald-500/90 text-[10px] min-w-[20px] h-5 flex items-center justify-center rounded-full font-semibold">
             {badgeCount > 99 ? '99+' : badgeCount}
           </Badge>
         )}

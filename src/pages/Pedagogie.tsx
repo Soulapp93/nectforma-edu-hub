@@ -21,11 +21,11 @@ interface TabDef {
 }
 
 const tabs: TabDef[] = [
-  { id: 'schedules', label: 'Emplois du temps', icon: CalendarClock },
-  { id: 'textbooks', label: 'Cahiers de textes', icon: BookText },
+  { id: 'schedules', label: 'Gestion des emplois du temps', icon: CalendarClock },
+  { id: 'textbooks', label: 'Gestion des cahiers de textes', icon: BookText },
   { id: 'formations', label: 'Gestion des formations', icon: GraduationCap },
   { id: 'promotions', label: 'Gestion des promotions', icon: UsersRound },
-  { id: 'virtual-classes', label: 'Classe virtuelle', icon: Video },
+  { id: 'virtual-classes', label: 'Gestion des classes virtuelles', icon: Video },
 ];
 
 const Pedagogie = () => {
