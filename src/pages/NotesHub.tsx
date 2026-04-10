@@ -4,6 +4,7 @@ import { FileText, Medal, Award } from 'lucide-react';
 import HubPageHeader, { HubTab } from '../components/HubPageHeader';
 
 const Notes = React.lazy(() => import('./Notes'));
+const DiplomaManagement = React.lazy(() => import('../components/grades/DiplomaManagement'));
 
 const TabFallback = () => (
   <div className="flex items-center justify-center py-20">
@@ -45,17 +46,7 @@ const NotesHub = () => {
       <div className="p-3 sm:p-6 lg:p-8">
         <Suspense fallback={<TabFallback />}>
           {activeTab === 'notes' && <Notes />}
-          {activeTab === 'diplomas' && (
-            <div className="glass-card rounded-xl p-6 sm:p-8 text-center">
-              <div className="max-w-md mx-auto">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Medal className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
-                </div>
-                <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">Gestion des diplômes</h3>
-                <p className="text-sm text-muted-foreground">Cette section sera disponible prochainement.</p>
-              </div>
-            </div>
-          )}
+          {activeTab === 'diplomas' && <DiplomaManagement />}
         </Suspense>
       </div>
     </div>
