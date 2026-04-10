@@ -1,9 +1,10 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Users, Briefcase, ShieldCheck } from 'lucide-react';
+import { Mail, UsersRound } from 'lucide-react';
 import { LucideIcon } from 'lucide-react';
 
-const EnhancedUsersList = React.lazy(() => import('../components/administration/EnhancedUsersList'));
+const Messagerie = React.lazy(() => import('./Messagerie'));
+const Groupes = React.lazy(() => import('./Groupes'));
 
 const TabFallback = () => (
   <div className="flex items-center justify-center py-20">
@@ -18,13 +19,13 @@ interface TabDef {
 }
 
 const tabs: TabDef[] = [
-  { id: 'users', label: 'Gestion des utilisateurs', icon: Users },
-  { id: 'partners', label: 'Entreprises partenaires', icon: Briefcase },
+  { id: 'messagerie', label: 'Messagerie', icon: Mail },
+  { id: 'groupes', label: 'Groupe établissements', icon: UsersRound },
 ];
 
-const Administration = () => {
+const CommunicationHub = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState('users');
+  const [activeTab, setActiveTab] = useState('messagerie');
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
@@ -39,22 +40,20 @@ const Administration = () => {
   };
 
   return (
-    <div className="min-h-screen" data-testid="administration-page">
-      {/* Header */}
+    <div className="min-h-screen" data-testid="communication-hub-page">
       <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border shadow-sm">
         <div className="w-full px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25 flex-shrink-0">
-              <ShieldCheck className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
+              <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
             </div>
             <div className="min-w-0 flex-1">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">Administration</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Gérez les utilisateurs et les entreprises partenaires.</p>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">Communication</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Messagerie et groupes d'établissements.</p>
             </div>
           </div>
         </div>
 
-        {/* Tab bar horizontale */}
         <div className="px-3 sm:px-4 lg:px-6 overflow-x-auto">
           <div className="flex gap-1 min-w-max pb-0">
             {tabs.map((tab) => {
@@ -80,25 +79,14 @@ const Administration = () => {
         </div>
       </div>
 
-      {/* Content */}
       <div className="p-4 sm:p-6 lg:p-8">
         <Suspense fallback={<TabFallback />}>
-          {activeTab === 'users' && <EnhancedUsersList />}
-          {activeTab === 'partners' && (
-            <div className="glass-card rounded-xl p-8 text-center">
-              <div className="max-w-md mx-auto">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Briefcase className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">Entreprises partenaires</h3>
-                <p className="text-muted-foreground">Cette section sera disponible prochainement.</p>
-              </div>
-            </div>
-          )}
+          {activeTab === 'messagerie' && <Messagerie />}
+          {activeTab === 'groupes' && <Groupes />}
         </Suspense>
       </div>
     </div>
   );
 };
 
-export default Administration;
+export default CommunicationHub;

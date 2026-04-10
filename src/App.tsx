@@ -58,6 +58,11 @@ const BlogAdmin = React.lazy(() => import('./pages/BlogAdmin'));
 const LinkedInCallback = React.lazy(() => import('./pages/LinkedInCallback'));
 const EspaceTravail = React.lazy(() => import('./pages/EspaceTravail'));
 const QuestionnairePublic = React.lazy(() => import('./pages/QuestionnairePublic'));
+const Pedagogie = React.lazy(() => import('./pages/Pedagogie'));
+const SuiviEmargementHub = React.lazy(() => import('./pages/SuiviEmargementHub'));
+const NotesHub = React.lazy(() => import('./pages/NotesHub'));
+const CommunicationHub = React.lazy(() => import('./pages/CommunicationHub'));
+const DocumentsArchives = React.lazy(() => import('./pages/DocumentsArchives'));
 const Notes = React.lazy(() => import('./pages/Notes'));
 const Finance = React.lazy(() => import('./pages/Finance'));
 const Comptabilite = React.lazy(() => import('./pages/Comptabilite'));
@@ -315,6 +320,11 @@ const AppContent = () => {
             <Routes>
               <Route path="/dashboard" element={<ProtectedRoute><AdminRoute><Dashboard /></AdminRoute></ProtectedRoute>} />
               <Route path="/administration" element={<ProtectedRoute><AdminRoute><Administration /></AdminRoute></ProtectedRoute>} />
+              <Route path="/pedagogie" element={<ProtectedRoute><AdminRoute><Pedagogie /></AdminRoute></ProtectedRoute>} />
+              <Route path="/suivi-emargement-admin" element={<ProtectedRoute><AdminRoute><SuiviEmargementHub /></AdminRoute></ProtectedRoute>} />
+              <Route path="/notes-admin" element={<ProtectedRoute><AdminRoute><NotesHub /></AdminRoute></ProtectedRoute>} />
+              <Route path="/communication" element={<ProtectedRoute><AdminRoute><CommunicationHub /></AdminRoute></ProtectedRoute>} />
+              <Route path="/documents-archives" element={<ProtectedRoute><AdminRoute><DocumentsArchives /></AdminRoute></ProtectedRoute>} />
               <Route path="/formations" element={<ProtectedRoute><Formations /></ProtectedRoute>} />
               <Route path="/formations/:formationId" element={<ProtectedRoute><FormationDetail /></ProtectedRoute>} />
               <Route path="/cahier-texte/:textBookId" element={<ProtectedRoute><TextBookDetail /></ProtectedRoute>} />
