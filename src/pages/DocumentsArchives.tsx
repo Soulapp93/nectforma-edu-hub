@@ -1,9 +1,9 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { FolderOpen, Archive } from 'lucide-react';
+import { Building2, Archive, FolderOpen } from 'lucide-react';
 import HubPageHeader, { HubTab } from '../components/HubPageHeader';
 
-const StudentFilesManagement = React.lazy(() => import('../components/administration/StudentFilesManagement'));
+const EstablishmentDocuments = React.lazy(() => import('../components/administration/EstablishmentDocuments'));
 const ArchivesManagement = React.lazy(() => import('../components/administration/ArchivesManagement'));
 
 const TabFallback = () => (
@@ -13,13 +13,13 @@ const TabFallback = () => (
 );
 
 const tabs: HubTab[] = [
-  { id: 'student-files', label: 'Gestion des dossiers étudiants', icon: FolderOpen },
+  { id: 'establishment-docs', label: "Documents établissement", icon: Building2 },
   { id: 'archives', label: 'Gestion des archives', icon: Archive },
 ];
 
 const DocumentsArchives = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState('student-files');
+  const [activeTab, setActiveTab] = useState('establishment-docs');
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
@@ -37,7 +37,7 @@ const DocumentsArchives = () => {
     <div className="min-h-screen" data-testid="documents-archives-page">
       <HubPageHeader
         title="Documents & Archives"
-        description="Dossiers étudiants et archives de l'établissement."
+        description="Documents de l'établissement et archives."
         icon={FolderOpen}
         tabs={tabs}
         activeTab={activeTab}
@@ -45,7 +45,7 @@ const DocumentsArchives = () => {
       />
       <div className="p-3 sm:p-6 lg:p-8">
         <Suspense fallback={<TabFallback />}>
-          {activeTab === 'student-files' && <StudentFilesManagement />}
+          {activeTab === 'establishment-docs' && <EstablishmentDocuments />}
           {activeTab === 'archives' && <ArchivesManagement />}
         </Suspense>
       </div>

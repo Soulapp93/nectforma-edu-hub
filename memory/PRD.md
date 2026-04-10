@@ -14,35 +14,34 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 ### Sessions 1-6 (2026-04-09)
 - Audit architecture, 105 tests Vitest, 42 tests RLS, fix RLS recursion, comptes demo
 
-### Sessions 7-9 - Sidebar + Mobile (2026-04-10)
+### Sessions 7-10 - Sidebar + Mobile + Fonctionnalites (2026-04-10)
 - Sidebar aplatie avec pages hub et onglets horizontaux
-- Version mobile responsive avec drawer menu identique au desktop
-- Composant HubPageHeader partage
+- Version mobile responsive
+- Gestion des entreprises partenaires (CRUD tuteurs)
+- Gestion des diplomes (vue jury + publication)
 
-### Session 10 - Fonctionnalites Admin (2026-04-10)
-- **Gestion des entreprises partenaires** (`PartnerCompaniesManagement.tsx`) :
-  - CRUD tuteurs groupes par entreprise
-  - Stats (entreprises, tuteurs, apprentis assignes)
-  - Recherche, modale ajout/edition, suppression avec confirmation
-  - Lie a la table `tutors` et `tutor_student_assignments`
-- **Gestion des diplomes** (`DiplomaManagement.tsx`) :
-  - Vue des resultats de jury par formation
-  - Stats (total, admis, rattrapage, ajournés)
-  - Filtres par formation et decision
-  - Modale detail avec moyenne, decision, mention, date jury
-  - Publication des resultats
-  - Lie aux tables `transcripts` et `formations`
-- **Notes et releves** : Page Notes existante integree dans le hub NotesHub
-  - Les 3 sections sont reliees : Notes genere les transcripts, Diplomes les affiche
+### Session 11 - Documents Etablissement (2026-04-10)
+- Remplacement "Gestion des dossiers etudiants" par "Documents etablissement"
+- Gestionnaire de documents complet :
+  - Creation de dossiers hierarchiques (sous-dossiers)
+  - Upload multiple de fichiers (vers bucket Supabase `establishment-docs`)
+  - Telechargement de fichiers
+  - Renommage (dossiers + fichiers)
+  - Suppression avec confirmation (cascade pour dossiers)
+  - Navigation par breadcrumbs
+  - Recherche par nom
+  - Stats temps reel (dossiers, fichiers, espace utilise)
+  - Icones par type de fichier (PDF, Image, Video, Excel, Archive)
+- Tables utilisees : `digital_safe_folders`, `digital_safe_files`
+- Storage bucket : `establishment-docs` (50 Mo max)
 
 ## Task Status
 
 ### P0 - TOUS RESOLUS
 - [x] Audit, tests, RLS fixes, comptes demo
 - [x] Sidebar plate + pages hub + mobile responsive
-- [x] Entreprises partenaires (CRUD)
-- [x] Gestion des diplomes (vue + publication)
-- [x] Notes et releves (integrés au hub)
+- [x] Entreprises partenaires, Diplomes, Notes et releves
+- [x] Documents etablissement (CRUD complet)
 
 ### P1 - A faire
 - [ ] Integrer test:rls dans CI GitHub Actions
