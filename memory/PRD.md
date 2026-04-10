@@ -25,20 +25,25 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 - 7 fonctions SECURITY DEFINER, 17 politiques corrigees, 0 erreur 500
 
 ### Session 5 - Tests d'integration RLS (2026-04-09)
-- **Suite complete de tests RLS** : `src/__tests__/rls/run-rls-tests.js`
-- **42/42 tests passes** couvrant :
-  - AdminPrincipal : 11 tests (acces, isolation, requetes)
-  - Formateur : 6 tests (acces module, formations)
-  - Etudiant : 9 tests (acces formations, notes, emargement)
-  - Tuteur : 6 tests (acces etudiants, formations)
-  - Isolation multi-tenant : 6 tests (Etablissement A vs B)
-  - Anti-recursion : 4 tests x 18 tables = 72 verifications
-- **Vulnerabilite corrigee** : Admin pouvait assigner des users aux formations d'autres etablissements
+- Suite complete de tests RLS : `src/__tests__/rls/run-rls-tests.js`
+- 42/42 tests passes
+- Vulnerabilite corrigee : cross-tenant assignment
 
 ### Session 6 - Comptes Demo (2026-04-09)
-- 7 comptes demo crees dans Supabase (AdminPrincipal, Admin, Formateur, 3 Etudiants, Tuteur)
+- 7 comptes demo crees dans Supabase
 - Mots de passe reinitialises et documentes dans `/app/memory/test_credentials.md`
-- Login verifie via frontend (screenshot: dashboard AdminPrincipal OK)
+- Login verifie via frontend
+
+### Session 7 - Comptes demo sur page login (2026-04-09)
+- Section "Comptes demo" depliable ajoutee sur /auth
+- Clic = connexion automatique au compte selectionne
+
+### Session 8 - Reorganisation barre laterale par categories (2026-04-10)
+- Sidebar reorganisee selon la structure definie par l'utilisateur (11 sections)
+- Categories depliables : Administration, Pedagogie, Suivi & Emargement, Notes/Releves/Diplomes, Communication
+- Items standalone : Tableau de bord, Documents & Archives, Espace de travail, Gestion du compte, Profil
+- Support en carte en bas
+- Navigation adaptee par role (AdminPrincipal, Admin, Formateur/Etudiant, Tuteur)
 
 ## Tous les P0 resolus
 
@@ -51,6 +56,8 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 - [x] Fix vulnerabilite cross-tenant assignment
 - [x] Tests d'integration RLS automatises
 - [x] Comptes demo crees et documentes
+- [x] Comptes demo sur page login (clic = auto-connexion)
+- [x] Reorganisation sidebar par categories (11 sections)
 
 ### P1 - Haute priorite
 - [x] Headers securite
