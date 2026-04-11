@@ -160,7 +160,15 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
     last_name: '',
     email: '',
     role: 'Étudiant' as 'AdminPrincipal' | 'Admin' | 'Formateur' | 'Étudiant' | 'Tuteur',
-    status: 'Actif' as 'Actif' | 'Inactif' | 'En attente'
+    status: 'Actif' as 'Actif' | 'Inactif' | 'En attente',
+    phone: '',
+    date_of_birth: '',
+    gender: '',
+    address: '',
+    city: '',
+    postal_code: '',
+    country: 'France',
+    nationality: '',
   });
 
   const [tutorData, setTutorData] = useState({
@@ -194,7 +202,15 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
             last_name: user.last_name || '',
             email: user.email || '',
             role: user.role || 'Étudiant',
-            status: user.status || 'Actif'
+            status: user.status || 'Actif',
+            phone: (user as any).phone || '',
+            date_of_birth: (user as any).date_of_birth || '',
+            gender: (user as any).gender || '',
+            address: (user as any).address || '',
+            city: (user as any).city || '',
+            postal_code: (user as any).postal_code || '',
+            country: (user as any).country || 'France',
+            nationality: (user as any).nationality || '',
           });
           
           // Charger les formations de l'utilisateur en mode édition
@@ -261,7 +277,15 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
             last_name: '',
             email: '',
             role: preselectedRole || 'Étudiant',
-            status: 'Actif'
+            status: 'Actif',
+            phone: '',
+            date_of_birth: '',
+            gender: '',
+            address: '',
+            city: '',
+            postal_code: '',
+            country: 'France',
+            nationality: '',
           });
           setSelectedFormations([]);
           resetTutorData();
@@ -368,7 +392,15 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
         email: formData.email,
         role: formData.role,
         status: formData.status,
-      }, selectedFormations, tutorInfo);
+        phone: formData.phone || undefined,
+        date_of_birth: formData.date_of_birth || undefined,
+        gender: formData.gender || undefined,
+        address: formData.address || undefined,
+        city: formData.city || undefined,
+        postal_code: formData.postal_code || undefined,
+        country: formData.country || undefined,
+        nationality: formData.nationality || undefined,
+      } as any, selectedFormations, tutorInfo);
 
       // Vérifier si l'invitation tuteur a échoué (info stockée dans l'utilisateur retourné)
       const tutorError = (newUser as any)?._tutorInviteError;
@@ -492,6 +524,47 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
               {errors.email && (
                 <p className="text-sm text-red-600 mt-1">{errors.email}</p>
               )}
+            </div>
+
+            {/* Champs civils supplementaires */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="phone">Telephone</Label>
+                <Input id="phone" value={formData.phone} onChange={(e) => handleChange('phone', e.target.value)} placeholder="06 12 34 56 78" data-testid="user-phone" />
+              </div>
+              <div>
+                <Label htmlFor="date_of_birth">Date de naissance</Label>
+                <Input id="date_of_birth" type="date" value={formData.date_of_birth} onChange={(e) => handleChange('date_of_birth', e.target.value)} data-testid="user-dob" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="gender">Sexe</Label>
+                <Select value={formData.gender} onValueChange={(v) => handleChange('gender', v)}>
+                  <SelectTrigger data-testid="user-gender"><SelectValue placeholder="Selectionner" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="M">Masculin</SelectItem>
+                    <SelectItem value="F">Feminin</SelectItem>
+                    <SelectItem value="Autre">Autre</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="address">Adresse</Label>
+              <Input id="address" value={formData.address} onChange={(e) => handleChange('address', e.target.value)} placeholder="Numero et rue" data-testid="user-address" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="city">Ville</Label>
+                <Input id="city" value={formData.city} onChange={(e) => handleChange('city', e.target.value)} placeholder="Paris" data-testid="user-city" />
+              </div>
+              <div>
+                <Label htmlFor="postal_code">Code postal</Label>
+                <Input id="postal_code" value={formData.postal_code} onChange={(e) => handleChange('postal_code', e.target.value)} placeholder="75001" data-testid="user-postal" />
+              </div>
+              <div>
+                <Label htmlFor="nationality">Nationalite</Label>
+                <Input id="nationality" value={formData.nationality} onChange={(e) => handleChange('nationality', e.target.value)} placeholder="Francaise" data-testid="user-nationality" />
+              </div>
             </div>
           </div>
 

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Users, Briefcase, ShieldCheck } from 'lucide-react';
+import { Users, FolderOpen, ShieldCheck } from 'lucide-react';
 import HubPageHeader, { HubTab } from '../components/HubPageHeader';
 
 const EnhancedUsersList = React.lazy(() => import('../components/administration/EnhancedUsersList'));
-const PartnerCompaniesManagement = React.lazy(() => import('../components/administration/PartnerCompaniesManagement'));
+const DossiersAdministratifs = React.lazy(() => import('../components/administration/DossiersAdministratifs'));
 
 const TabFallback = () => (
   <div className="flex items-center justify-center py-20">
@@ -14,7 +14,7 @@ const TabFallback = () => (
 
 const tabs: HubTab[] = [
   { id: 'users', label: 'Gestion des utilisateurs', icon: Users },
-  { id: 'partners', label: 'Gestion des entreprises partenaires', icon: Briefcase },
+  { id: 'dossiers', label: 'Dossiers administratifs', icon: FolderOpen },
 ];
 
 const Administration = () => {
@@ -37,7 +37,7 @@ const Administration = () => {
     <div className="min-h-screen" data-testid="administration-page">
       <HubPageHeader
         title="Administration"
-        description="Gérez les utilisateurs et les entreprises partenaires."
+        description="Gerez les utilisateurs et les dossiers administratifs."
         icon={ShieldCheck}
         tabs={tabs}
         activeTab={activeTab}
@@ -46,7 +46,7 @@ const Administration = () => {
       <div className="p-3 sm:p-6 lg:p-8">
         <Suspense fallback={<TabFallback />}>
           {activeTab === 'users' && <EnhancedUsersList />}
-          {activeTab === 'partners' && <PartnerCompaniesManagement />}
+          {activeTab === 'dossiers' && <DossiersAdministratifs />}
         </Suspense>
       </div>
     </div>

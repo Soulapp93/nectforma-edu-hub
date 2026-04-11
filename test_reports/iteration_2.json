@@ -1,0 +1,81 @@
+{
+  "summary": "Frontend testing completed for Dossiers Administratifs module. All 14 UI tests passed. Two non-blocking database query errors found in dossierService.ts that need fixing.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "dossierService.getUserContracts",
+        "issue": "Query uses 'contracts.user_id' but column does not exist - likely should be 'student_id'",
+        "priority": "MEDIUM",
+        "file": "/app/src/services/dossierService.ts",
+        "line": 100
+      },
+      {
+        "endpoint": "dossierService.getFormateurModules",
+        "issue": "Query tries to join 'formations' from 'schedule_slots' but no direct FK relationship exists - hint suggests using 'formation_modules' instead",
+        "priority": "MEDIUM",
+        "file": "/app/src/services/dossierService.ts",
+        "line": 166
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_2.json"
+  ],
+  "action_items": [
+    "Fix dossierService.getUserContracts: Change 'user_id' to correct column name (likely 'student_id') in contracts table query",
+    "Fix dossierService.getFormateurModules: Update query to use proper FK relationship - may need to join through formation_modules instead of directly to formations"
+  ],
+  "critical_code_review_comments": [
+    "Dossiers Administratifs module correctly replaces Entreprises Partenaires tab",
+    "2-column layout (Etudiants/Formateurs) works correctly with proper counts",
+    "4-tab dossier detail view (Infos civiles, Pedagogique, Documents, Historique) fully functional",
+    "Edit mode for civil info works with inline form",
+    "Document upload modal has proper data-testid attributes",
+    "All interactive elements have data-testid for testing"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only testing)",
+    "frontend": "100% (14/14 tests passed)"
+  },
+  "test_credentials": "Demo accounts via /auth page - Sophie Martin (AdminPrincipal), Alice Dubois (Étudiant), Jean Lefebvre (Formateur)",
+  "seed_data_creation": "N/A - using existing demo data",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Dossiers Administratifs module fully functional. Two database query errors in dossierService.ts need fixing: (1) contracts.user_id column doesn't exist, (2) schedule_slots to formations FK relationship missing. These errors appear in console but don't break the UI - they just result in empty data for contracts and formateur modules sections.",
+  "tests_executed": [
+    {"test": "Login admin (Sophie Martin) via demo accounts", "status": "PASSED"},
+    {"test": "Administration > Dossiers administratifs shows 2 columns", "status": "PASSED"},
+    {"test": "Correct user counts (3 students, 1 formateur)", "status": "PASSED"},
+    {"test": "Search student functionality", "status": "PASSED"},
+    {"test": "Dossier header (name, badges, email)", "status": "PASSED"},
+    {"test": "Onglet Infos civiles content", "status": "PASSED", "details": "Fields: Prenom, Nom, Email, Telephone, Date de naissance, Pays, Inscrit le"},
+    {"test": "Bouton Modifier opens edit form", "status": "PASSED"},
+    {"test": "Onglet Pedagogique content", "status": "PASSED"},
+    {"test": "Onglet Documents content", "status": "PASSED"},
+    {"test": "Onglet Historique content", "status": "PASSED"},
+    {"test": "Back button returns to list", "status": "PASSED"},
+    {"test": "Jean Lefebvre dossier with Formateur badge", "status": "PASSED"},
+    {"test": "Formateur Pedagogique shows Formations dispensees", "status": "PASSED"},
+    {"test": "Entreprises partenaires tab removed", "status": "PASSED"}
+  ],
+  "console_errors_found": [
+    {
+      "error": "column contracts.user_id does not exist",
+      "code": "42703",
+      "impact": "Contracts section shows empty for students"
+    },
+    {
+      "error": "Could not find a relationship between 'schedule_slots' and 'formations'",
+      "code": "PGRST200",
+      "hint": "Perhaps you meant 'formation_modules' instead of 'formations'",
+      "impact": "Formateur modules section may show incomplete data"
+    }
+  ]
+}
