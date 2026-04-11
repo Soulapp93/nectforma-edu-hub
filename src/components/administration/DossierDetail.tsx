@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, User, BookOpen, FileText, Clock, Edit2, Save, X, Upload, Trash2, Download, ExternalLink } from 'lucide-react';
+import { ArrowLeft, User, BookOpen, FileText, Clock, Edit2, Save, X, Upload, Trash2, Download, ExternalLink, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { dossierService, UserProfile, UserDocument } from '@/services/dossierService';
+import { exportDossierPDF } from '@/services/dossierPdfExport';
 
 interface Props {
   user: UserProfile;
@@ -162,6 +163,9 @@ export const DossierDetail: React.FC<Props> = ({ user, establishmentId, onBack }
             </div>
           </div>
         </div>
+        <Button variant="outline" size="sm" onClick={() => exportDossierPDF(profile, formations, transcripts, contracts, userDocuments, formateurModules)} data-testid="export-pdf-btn">
+          <FileDown className="w-4 h-4 mr-1" />Exporter PDF
+        </Button>
       </div>
 
       {/* Tabs */}
