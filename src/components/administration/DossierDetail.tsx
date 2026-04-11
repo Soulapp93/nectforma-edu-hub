@@ -51,18 +51,18 @@ export const DossierDetail: React.FC<Props> = ({ user, establishmentId, onBack }
       setUserDocuments(docs);
 
       if (user.role === 'Étudiant') {
-        const [trans, ctrs] = await Promise.all([
-          dossierService.getUserTranscripts(user.id),
-          dossierService.getUserContracts(user.id),
-        ]);
+        const trans = await dossierService.getUserTranscripts(user.id);
         setTranscripts(trans);
-        setContracts(ctrs);
       }
 
       if (user.role === 'Formateur') {
         const mods = await dossierService.getFormateurModules(user.id);
         setFormateurModules(mods);
       }
+
+      // Contracts for both roles
+      const ctrs = await dossierService.getUserContracts(user.id);
+      setContracts(ctrs);
     } catch (err) {
       console.error(err);
     } finally {
@@ -314,8 +314,8 @@ export const DossierDetail: React.FC<Props> = ({ user, establishmentId, onBack }
               </Button>
             </div>
 
-            {/* Contrats (from contracts table - students) */}
-            {profile.role === 'Étudiant' && contracts.length > 0 && (
+            {/* Contrats (from contracts table - both roles) */}
+            {contracts.length > 0 && (
               <Card>
                 <CardHeader><CardTitle className="text-base">Contrats</CardTitle></CardHeader>
                 <CardContent>
@@ -323,10 +323,10 @@ export const DossierDetail: React.FC<Props> = ({ user, establishmentId, onBack }
                     {contracts.map((c: any) => (
                       <div key={c.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
                         <div>
-                          <p className="font-medium text-sm">{c.contract_type || 'Contrat'}</p>
-                          <p className="text-xs text-muted-foreground">{c.company_name} • {formatDate(c.start_date)} - {formatDate(c.end_date)}</p>
+                          <p className="font-medium text-sm">{c.title || c.contract_type || 'Contrat'}</p>
+                          <p className="text-xs text-muted-foreground">{c.contract_type} • {formatDate(c.start_date)} - {formatDate(c.end_date)}</p>
                         </div>
-                        <Badge variant="outline">{c.status || 'Actif'}</Badge>
+                        <Badge variant="outline">{c.is_active ? 'Actif' : 'Termine'}</Badge>
                       </div>
                     ))}
                   </div>

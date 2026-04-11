@@ -97,7 +97,7 @@ export const dossierService = {
     const { data, error } = await supabase
       .from('contracts')
       .select('*')
-      .eq('user_id', userId)
+      .eq('employee_id', userId)
       .order('created_at', { ascending: false });
     if (error) throw error;
     return data || [];
@@ -163,7 +163,7 @@ export const dossierService = {
   async getFormateurModules(userId: string) {
     const { data, error } = await supabase
       .from('schedule_slots')
-      .select('formation_modules(id, title), formations(id, title)')
+      .select('formation_modules(id, title)')
       .eq('instructor_id', userId);
     if (error) throw error;
     return data || [];
