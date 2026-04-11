@@ -115,57 +115,60 @@ export const useNotifications = () => {
 
     fetchNotifications();
 
-    const channel = supabase
-      .channel(`notifications-${userId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${userId}`
-      }, (payload) => {
-        const newNotification = payload.new as Notification;
-        setNotifications(prev => [newNotification, ...prev]);
-        setUnreadCount(prev => prev + 1);
-        
-        // Show toast for new notification
-        toast.info(newNotification.title, {
-          description: newNotification.message,
-          duration: 5000,
-        });
-      })
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${userId}`
-      }, (payload) => {
-        const updatedNotification = payload.new as Notification;
-        setNotifications(prev => 
-          prev.map(n => n.id === updatedNotification.id ? updatedNotification : n)
-        );
-        // Recalculate unread count
-        setNotifications(prev => {
-          const unread = prev.filter(n => !n.is_read).length;
-          setUnreadCount(unread);
-          return prev;
-        });
-      })
-      .on('postgres_changes', {
-        event: 'DELETE',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${userId}`
-      }, (payload) => {
-        const deletedNotification = payload.old as Notification;
-        setNotifications(prev => prev.filter(n => n.id !== deletedNotification.id));
-        if (!deletedNotification.is_read) {
-          setUnreadCount(prev => Math.max(0, prev - 1));
-        }
-      })
-      .subscribe();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    
+    try {
+      channel = supabase
+        .channel(`notifications-${userId}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`
+        }, (payload) => {
+          const newNotification = payload.new as Notification;
+          setNotifications(prev => [newNotification, ...prev]);
+          setUnreadCount(prev => prev + 1);
+          toast.info(newNotification.title, {
+            description: newNotification.message,
+            duration: 5000,
+          });
+        })
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`
+        }, (payload) => {
+          const updatedNotification = payload.new as Notification;
+          setNotifications(prev => 
+            prev.map(n => n.id === updatedNotification.id ? updatedNotification : n)
+          );
+          setNotifications(prev => {
+            const unread = prev.filter(n => !n.is_read).length;
+            setUnreadCount(unread);
+            return prev;
+          });
+        })
+        .on('postgres_changes', {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`
+        }, (payload) => {
+          const deletedNotification = payload.old as Notification;
+          setNotifications(prev => prev.filter(n => n.id !== deletedNotification.id));
+          if (!deletedNotification.is_read) {
+            setUnreadCount(prev => Math.max(0, prev - 1));
+          }
+        })
+        .subscribe();
+    } catch (err) {
+      console.warn('Notifications realtime subscription failed (non-critical):', err);
+    }
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
   }, [userId, fetchNotifications]);
 

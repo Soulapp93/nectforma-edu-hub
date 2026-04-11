@@ -63,43 +63,26 @@ export const useUserSchedules = () => {
   useEffect(() => {
     if (!userId || !userRole) return;
 
-    // S'abonner aux changements sur schedule_slots
-    const slotsSubscription = supabase
-      .channel('schedule_slots_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'schedule_slots'
-        },
-        () => {
-          // Rafraîchir les données quand un créneau change
-          fetchSchedules();
-        }
-      )
-      .subscribe();
+    let slotsSubscription: ReturnType<typeof supabase.channel> | null = null;
+    let schedulesSubscription: ReturnType<typeof supabase.channel> | null = null;
+    
+    try {
+      slotsSubscription = supabase
+        .channel(`schedule_slots_changes-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'schedule_slots' }, () => fetchSchedules())
+        .subscribe();
 
-    // S'abonner aux changements sur schedules
-    const schedulesSubscription = supabase
-      .channel('schedules_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'schedules'
-        },
-        () => {
-          // Rafraîchir les données quand un emploi du temps change
-          fetchSchedules();
-        }
-      )
-      .subscribe();
+      schedulesSubscription = supabase
+        .channel(`schedules_changes-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'schedules' }, () => fetchSchedules())
+        .subscribe();
+    } catch (err) {
+      console.warn('User schedules realtime subscription failed (non-critical):', err);
+    }
 
     return () => {
-      slotsSubscription.unsubscribe();
-      schedulesSubscription.unsubscribe();
+      if (slotsSubscription) supabase.removeChannel(slotsSubscription);
+      if (schedulesSubscription) supabase.removeChannel(schedulesSubscription);
     };
   }, [userId, userRole, userFormations]);
 

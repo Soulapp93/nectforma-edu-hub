@@ -103,35 +103,26 @@ export const useTutorSchedules = () => {
   useEffect(() => {
     if (!userId || userRole !== 'Tuteur') return;
 
-    const slotsSubscription = supabase
-      .channel('tutor_schedule_slots_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'schedule_slots'
-        },
-        () => fetchTutorSchedules()
-      )
-      .subscribe();
+    let slotsSubscription: ReturnType<typeof supabase.channel> | null = null;
+    let schedulesSubscription: ReturnType<typeof supabase.channel> | null = null;
+    
+    try {
+      slotsSubscription = supabase
+        .channel(`tutor_schedule_slots_changes-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'schedule_slots' }, () => fetchTutorSchedules())
+        .subscribe();
 
-    const schedulesSubscription = supabase
-      .channel('tutor_schedules_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'schedules'
-        },
-        () => fetchTutorSchedules()
-      )
-      .subscribe();
+      schedulesSubscription = supabase
+        .channel(`tutor_schedules_changes-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'schedules' }, () => fetchTutorSchedules())
+        .subscribe();
+    } catch (err) {
+      console.warn('Tutor schedules realtime subscription failed (non-critical):', err);
+    }
 
     return () => {
-      slotsSubscription.unsubscribe();
-      schedulesSubscription.unsubscribe();
+      if (slotsSubscription) supabase.removeChannel(slotsSubscription);
+      if (schedulesSubscription) supabase.removeChannel(schedulesSubscription);
     };
   }, [userId, userRole]);
 

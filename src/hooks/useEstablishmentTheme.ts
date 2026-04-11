@@ -162,24 +162,24 @@ export const useEstablishmentTheme = () => {
   useEffect(() => {
     if (!establishment?.id) return;
 
-    const channel = supabase
-      .channel(`theme-${establishment.id}`)
-      .on(
-        'postgres_changes',
-        {
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    
+    try {
+      channel = supabase
+        .channel(`theme-${establishment.id}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`)
+        .on('postgres_changes', {
           event: 'UPDATE',
           schema: 'public',
           table: 'establishments',
           filter: `id=eq.${establishment.id}`
-        },
-        () => {
-          fetchTheme();
-        }
-      )
-      .subscribe();
+        }, () => fetchTheme())
+        .subscribe();
+    } catch (err) {
+      console.warn('Theme realtime subscription failed (non-critical):', err);
+    }
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
   }, [establishment?.id, fetchTheme]);
 

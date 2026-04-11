@@ -51,7 +51,7 @@ const AttendanceManagement = () => {
 
     // Abonnement realtime pour les nouvelles signatures
     const channel = supabase
-      .channel('attendance-signatures-realtime')
+      .channel(`attendance-signatures-realtime-${Date.now()}`)
       .on(
         'postgres_changes',
         {

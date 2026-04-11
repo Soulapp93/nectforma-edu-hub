@@ -1,0 +1,108 @@
+{
+  "summary": "Frontend testing completed for Dossiers Administratifs module and Supabase Realtime bug fix. All 10 test scenarios passed. Login via demo account works without Realtime errors crashing the app. PDF export functionality verified.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "dossierService.getUserTranscripts",
+        "issue": "Query uses 'transcripts.semester' but column does not exist - error 42703",
+        "priority": "MEDIUM",
+        "file": "/app/src/services/dossierService.ts",
+        "console_error": "column transcripts.semester does not exist"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_3.json"
+  ],
+  "action_items": [
+    "Fix dossierService.getUserTranscripts: Update query to use correct column name for semester field in transcripts table"
+  ],
+  "critical_code_review_comments": [
+    "Supabase Realtime 'postgres_changes' error fix verified - try-catch blocks in hooks prevent ErrorBoundary crash",
+    "PDF export using jspdf and jspdf-autotable works correctly - generates client-side PDF with proper formatting",
+    "DossierDetail component has all required data-testid attributes for testing",
+    "2-column layout (Etudiants/Formateurs) displays correctly with proper counts",
+    "4-tab dossier detail view (Infos civiles, Pedagogique, Documents, Historique) fully functional",
+    "Edit mode for civil info works with inline form and save/cancel buttons"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only testing)",
+    "frontend": "100% (10/10 tests passed)"
+  },
+  "test_credentials": "Demo accounts via /auth page - Sophie Martin (AdminPrincipal): admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "N/A - using existing demo data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All Dossiers Administratifs features working correctly. Realtime bug fix verified - no ErrorBoundary crashes on login. PDF export generates file 'dossier_Dubois_Alice_2026-04-11.pdf'. One database query error persists: transcripts.semester column does not exist (non-blocking, shows empty data).",
+  "tests_executed": [
+    {
+      "test": "Login via demo account (Sophie Martin - AdminPrincipal) without Realtime errors",
+      "status": "PASSED",
+      "details": "One-click login via Comptes démo accordion works correctly, no ErrorBoundary crash"
+    },
+    {
+      "test": "Dashboard loads properly after login (no ErrorBoundary crash)",
+      "status": "PASSED",
+      "details": "Dashboard shows 'Bonjour Sophie' with statistics (3 Étudiants, 1 Formateur)"
+    },
+    {
+      "test": "Administration page loads with 'Gestion des utilisateurs' and 'Dossiers administratifs' tabs",
+      "status": "PASSED",
+      "details": "Both tabs visible, 7 users listed in Gestion des utilisateurs"
+    },
+    {
+      "test": "Dossiers administratifs tab shows 2 columns: Etudiants (3) and Formateurs (1)",
+      "status": "PASSED",
+      "details": "2-column layout with correct counts, search functionality available"
+    },
+    {
+      "test": "Click on Alice Dubois opens DossierDetail with 4 tabs",
+      "status": "PASSED",
+      "details": "Tabs: Infos civiles, Pedagogique, Documents, Historique - all present with data-testid"
+    },
+    {
+      "test": "Exporter PDF button (data-testid='export-pdf-btn') is visible in DossierDetail header",
+      "status": "PASSED",
+      "details": "Button visible with text 'Exporter PDF' and FileDown icon"
+    },
+    {
+      "test": "Click on 'Exporter PDF' triggers PDF download",
+      "status": "PASSED",
+      "details": "PDF downloaded successfully: dossier_Dubois_Alice_2026-04-11.pdf"
+    },
+    {
+      "test": "Civil info tab shows user data",
+      "status": "PASSED",
+      "details": "Fields displayed: Prenom (Alice), Nom (Dubois), Email, Telephone (06 45 67 89 01), Pays (France), Inscrit le (09/04/2026)"
+    },
+    {
+      "test": "Edit button (data-testid='edit-civil-btn') allows editing civil information",
+      "status": "PASSED",
+      "details": "Edit mode shows form with all fields editable, Sauvegarder and cancel buttons present"
+    },
+    {
+      "test": "Back button (data-testid='dossier-back-btn') returns to the dossier list",
+      "status": "PASSED",
+      "details": "Successfully returns to 2-column dossier list view"
+    }
+  ],
+  "realtime_bug_fix_verification": {
+    "issue": "Supabase Realtime 'cannot add postgres_changes callbacks after subscribe()' error was crashing the app via ErrorBoundary",
+    "fix_applied": "try-catch blocks added to all hooks using Realtime channels (useMyContext, useNotifications, useMessages, useSchedules, useUserSchedules, useEstablishmentTheme, useTutorSchedules)",
+    "verification_result": "PASSED - No ErrorBoundary crash on login or navigation"
+  },
+  "console_errors_found": [
+    {
+      "error": "column transcripts.semester does not exist",
+      "code": "42703",
+      "impact": "Transcripts section shows empty for students - non-blocking"
+    }
+  ]
+}

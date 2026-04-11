@@ -26,41 +26,26 @@ export const useSchedules = () => {
 
   // Synchronisation en temps réel avec Supabase
   useEffect(() => {
-    // S'abonner aux changements sur schedules
-    const schedulesSubscription = supabase
-      .channel('admin_schedules_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'schedules'
-        },
-        () => {
-          fetchSchedules();
-        }
-      )
-      .subscribe();
+    let schedulesSubscription: ReturnType<typeof supabase.channel> | null = null;
+    let slotsSubscription: ReturnType<typeof supabase.channel> | null = null;
+    
+    try {
+      schedulesSubscription = supabase
+        .channel(`admin_schedules_changes-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'schedules' }, () => fetchSchedules())
+        .subscribe();
 
-    // S'abonner aux changements sur schedule_slots
-    const slotsSubscription = supabase
-      .channel('admin_slots_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'schedule_slots'
-        },
-        () => {
-          fetchSchedules();
-        }
-      )
-      .subscribe();
+      slotsSubscription = supabase
+        .channel(`admin_slots_changes-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'schedule_slots' }, () => fetchSchedules())
+        .subscribe();
+    } catch (err) {
+      console.warn('Schedules realtime subscription failed (non-critical):', err);
+    }
 
     return () => {
-      schedulesSubscription.unsubscribe();
-      slotsSubscription.unsubscribe();
+      if (schedulesSubscription) supabase.removeChannel(schedulesSubscription);
+      if (slotsSubscription) supabase.removeChannel(slotsSubscription);
     };
   }, []);
 

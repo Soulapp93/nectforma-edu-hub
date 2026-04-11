@@ -30,42 +30,39 @@ export const useMessages = () => {
     // Initial fetch
     fetchMessages();
 
-    // Subscribe to realtime changes on messages and message_recipients tables
-    const channel = supabase
-      .channel('messages-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'messages'
-        },
-        (payload) => {
-          console.log('Messages realtime update:', payload.eventType);
-          // Refetch all messages to get complete data with recipient info
-          fetchMessages();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'message_recipients'
-        },
-        (payload) => {
-          console.log('Message recipients realtime update:', payload.eventType);
-          // Refetch to update recipient info (read status, favorites, etc.)
-          fetchMessages();
-        }
-      )
-      .subscribe((status) => {
-        console.log('Messages realtime subscription status:', status);
-      });
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    
+    try {
+      channel = supabase
+        .channel(`messages-realtime-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'messages'
+          },
+          () => {
+            fetchMessages();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'message_recipients'
+          },
+          () => {
+            fetchMessages();
+          }
+        )
+        .subscribe();
+      channelRef.current = channel;
+    } catch (err) {
+      console.warn('Messages realtime subscription failed (non-critical):', err);
+    }
 
-    channelRef.current = channel;
-
-    // Cleanup subscription on unmount
     return () => {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);

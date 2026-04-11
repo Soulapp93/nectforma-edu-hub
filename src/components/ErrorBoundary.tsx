@@ -22,7 +22,6 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): Partial<State> {
-    // Generate unique error ID for tracking
     const errorId = `err_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     return { hasError: true, error, errorId };
   }

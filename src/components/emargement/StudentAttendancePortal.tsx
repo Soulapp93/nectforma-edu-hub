@@ -142,7 +142,7 @@ const StudentAttendancePortal: React.FC<StudentAttendancePortalProps> = ({
 
     // S'abonner aux changements de signatures en temps réel
     const channel = supabase
-      .channel('student_attendance_portal')
+      .channel(`student_attendance_portal-${Date.now()}`)
       .on(
         'postgres_changes',
         {

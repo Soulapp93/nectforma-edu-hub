@@ -141,44 +141,43 @@ export const useMyContext = () => {
     // Fetch initial
     fetchContext();
 
-    // Subscribe to realtime changes on users and tutors tables for profile updates
-    const channel = supabase
-      .channel('profile-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'users'
-        },
-        (payload) => {
-          // Only refetch if the update is for the current user
-          if (userIdRef.current && payload.new && (payload.new as any).id === userIdRef.current) {
-            console.log('User profile realtime update detected');
-            fetchContext();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    
+    try {
+      const channelName = `profile-realtime-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      channel = supabase.channel(channelName);
+      channel
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'users'
+          },
+          (payload) => {
+            if (userIdRef.current && payload.new && (payload.new as any).id === userIdRef.current) {
+              fetchContext();
+            }
           }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'tutors'
-        },
-        (payload) => {
-          // Only refetch if the update is for the current tutor
-          if (userIdRef.current && payload.new && (payload.new as any).id === userIdRef.current) {
-            console.log('Tutor profile realtime update detected');
-            fetchContext();
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'tutors'
+          },
+          (payload) => {
+            if (userIdRef.current && payload.new && (payload.new as any).id === userIdRef.current) {
+              fetchContext();
+            }
           }
-        }
-      )
-      .subscribe((status) => {
-        console.log('Profile realtime subscription status:', status);
-      });
-
-    channelRef.current = channel;
+        )
+        .subscribe();
+      channelRef.current = channel;
+    } catch (err) {
+      console.warn('Realtime subscription setup failed (non-critical):', err);
+    }
 
     // Écouter les changements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
