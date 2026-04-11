@@ -1,0 +1,170 @@
+{
+  "summary": "Tests des 3 fonctionnalités critiques signalées par l'utilisateur. 3 bugs CRITIQUES identifiés: 1) Création d'établissement échoue (Edge Function 400), 2) Création de formation échoue (colonne 'semesters_count' manquante), 3) Upload de documents échoue (RLS policy violation).",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "Edge Function 'create-establishment'",
+        "issue": "Retourne HTTP 400 - FunctionsHttpError: Edge Function returned a non-2xx status code",
+        "priority": "CRITICAL",
+        "file": "/app/src/pages/CreateEstablishment.tsx",
+        "console_error": "Error creating establishment: FunctionsHttpError: Edge Function returned a non-2xx status code",
+        "root_cause": "L'Edge Function 'create-establishment' dans Supabase retourne une erreur 400. Vérifier les logs de l'Edge Function dans le dashboard Supabase pour identifier la cause exacte."
+      },
+      {
+        "endpoint": "POST /formations (Supabase)",
+        "issue": "Could not find the 'semesters_count' column of 'formations' in the schema cache",
+        "priority": "CRITICAL",
+        "file": "/app/src/services/formationService.ts",
+        "console_error": "PGRST204: Could not find the 'semesters_count' column of 'formations' in the schema cache",
+        "root_cause": "La colonne 'semesters_count' n'existe pas dans la table 'formations' de la base de données Supabase. Le code frontend envoie ce champ mais la table ne l'a pas."
+      },
+      {
+        "endpoint": "Supabase Storage 'establishment-docs'",
+        "issue": "new row violates row-level security policy",
+        "priority": "CRITICAL",
+        "file": "/app/src/components/administration/EstablishmentDocuments.tsx",
+        "console_error": "Erreur upload: new row violates row-level security policy",
+        "root_cause": "Les politiques RLS (Row Level Security) du bucket 'establishment-docs' bloquent l'insertion de fichiers. Il faut vérifier/créer les politiques RLS appropriées dans Supabase Storage."
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Création d'établissement",
+        "issue": "Le formulaire se remplit correctement mais la soumission échoue à cause de l'Edge Function",
+        "affected_selectors": ["button[type='submit']"]
+      },
+      {
+        "flow": "Création de formation",
+        "issue": "Le modal s'ouvre et se remplit correctement mais la création échoue à cause de la colonne manquante",
+        "affected_selectors": ["button:has-text('Créer la formation')"]
+      },
+      {
+        "flow": "Upload de documents",
+        "issue": "Le sélecteur de fichier fonctionne mais l'upload échoue à cause des politiques RLS",
+        "affected_selectors": ["[data-testid='upload-btn']", "[data-testid='file-upload-input']"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_4.json"
+  ],
+  "action_items": [
+    "CRITIQUE 1: Vérifier et corriger l'Edge Function 'create-establishment' dans Supabase. Consulter les logs de l'Edge Function pour identifier l'erreur exacte.",
+    "CRITIQUE 2: Ajouter la colonne 'semesters_count' à la table 'formations' dans Supabase: ALTER TABLE formations ADD COLUMN semesters_count INTEGER DEFAULT 2;",
+    "CRITIQUE 3: Configurer les politiques RLS pour le bucket 'establishment-docs' dans Supabase Storage pour permettre l'upload aux utilisateurs authentifiés",
+    "Alternative pour CRITIQUE 2: Modifier CreateFormationModal.tsx pour ne pas envoyer 'semesters_count' si la colonne n'existe pas"
+  ],
+  "critical_code_review_comments": [
+    "CreateFormationModal.tsx ligne 125-135: Le code envoie 'semesters_count' et 'duration_years' mais ces colonnes n'existent peut-être pas dans la table formations",
+    "formationService.ts: Le service ne gère pas correctement les erreurs de schéma Supabase",
+    "EstablishmentDocuments.tsx: L'upload vers Supabase Storage nécessite des politiques RLS correctement configurées"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "0% (3/3 fonctionnalités critiques échouent)",
+    "frontend": "100% (UI fonctionne, problèmes côté backend/Supabase)"
+  },
+  "test_credentials": "Demo accounts via /auth page - Sophie Martin (AdminPrincipal): admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "N/A",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "3 bugs critiques identifiés, tous liés à Supabase: 1) Edge Function create-establishment retourne 400, 2) Colonne semesters_count manquante dans table formations, 3) RLS policies bloquent l'upload de documents. L'UI frontend fonctionne correctement - les problèmes sont côté backend Supabase.",
+  "tests_executed": [
+    {
+      "test": "Création d'établissement - Étape 1 (Informations établissement)",
+      "status": "PASSED",
+      "details": "Formulaire se remplit correctement, navigation vers étape 2 fonctionne"
+    },
+    {
+      "test": "Création d'établissement - Étape 2 (Administrateur)",
+      "status": "PASSED",
+      "details": "Formulaire se remplit correctement, validation mot de passe fonctionne, checkbox RGPD fonctionne"
+    },
+    {
+      "test": "Création d'établissement - Soumission",
+      "status": "FAILED",
+      "details": "Edge Function 'create-establishment' retourne HTTP 400"
+    },
+    {
+      "test": "Login via compte démo (Sophie Martin)",
+      "status": "PASSED",
+      "details": "Connexion réussie, redirection vers dashboard"
+    },
+    {
+      "test": "Navigation vers Pédagogie > Gestion des formations",
+      "status": "PASSED",
+      "details": "Page se charge correctement, onglet formations accessible"
+    },
+    {
+      "test": "Ouverture modal 'Nouvelle formation'",
+      "status": "PASSED",
+      "details": "Modal s'ouvre correctement avec tous les champs"
+    },
+    {
+      "test": "Création de formation - Soumission",
+      "status": "FAILED",
+      "details": "Erreur PGRST204: colonne 'semesters_count' n'existe pas dans la table formations"
+    },
+    {
+      "test": "Navigation vers Documents & Archives",
+      "status": "PASSED",
+      "details": "Page se charge correctement, dossiers existants visibles"
+    },
+    {
+      "test": "Upload de document",
+      "status": "FAILED",
+      "details": "Erreur RLS: new row violates row-level security policy"
+    },
+    {
+      "test": "Import Excel des étudiants - Ouverture modal",
+      "status": "PASSED",
+      "details": "Modal d'import s'ouvre correctement avec instructions"
+    }
+  ],
+  "rca_of_issues": {
+    "issue_1_create_establishment": {
+      "symptom": "Création d'établissement échoue avec HTTP 400",
+      "root_cause": "L'Edge Function 'create-establishment' dans Supabase retourne une erreur. Causes possibles: validation des données échoue, erreur dans le code de l'Edge Function, ou problème de configuration.",
+      "reproduction_steps": [
+        "1. Aller sur /create-establishment",
+        "2. Remplir étape 1 (nom, type 'Organisme de formation', adresse)",
+        "3. Cliquer 'Continuer'",
+        "4. Remplir étape 2 (prénom, nom, email unique, mot de passe fort)",
+        "5. Cocher RGPD",
+        "6. Cliquer 'Créer mon établissement'",
+        "7. Observer l'erreur dans la console"
+      ],
+      "mitigation": "Vérifier les logs de l'Edge Function dans le dashboard Supabase (Project > Edge Functions > create-establishment > Logs)"
+    },
+    "issue_2_create_formation": {
+      "symptom": "Création de formation échoue avec erreur PGRST204",
+      "root_cause": "Le code frontend (CreateFormationModal.tsx) envoie le champ 'semesters_count' mais cette colonne n'existe pas dans la table 'formations' de Supabase.",
+      "reproduction_steps": [
+        "1. Se connecter avec Sophie Martin",
+        "2. Aller sur /pedagogie?tab=formations",
+        "3. Cliquer 'Nouvelle formation'",
+        "4. Remplir le titre",
+        "5. Cliquer 'Créer la formation'",
+        "6. Observer l'erreur dans la console"
+      ],
+      "mitigation": "Option A: Ajouter la colonne dans Supabase: ALTER TABLE formations ADD COLUMN semesters_count INTEGER DEFAULT 2; ALTER TABLE formations ADD COLUMN duration_years INTEGER DEFAULT 1; ALTER TABLE formations ADD COLUMN formation_type TEXT DEFAULT 'ecole_sup'; Option B: Modifier le code pour ne pas envoyer ces champs"
+    },
+    "issue_3_document_upload": {
+      "symptom": "Upload de document échoue avec erreur RLS",
+      "root_cause": "Les politiques Row Level Security du bucket 'establishment-docs' ne permettent pas l'insertion de fichiers par l'utilisateur authentifié.",
+      "reproduction_steps": [
+        "1. Se connecter avec Sophie Martin",
+        "2. Aller sur /documents-archives",
+        "3. Cliquer 'Ajouter un fichier'",
+        "4. Sélectionner un fichier",
+        "5. Observer l'erreur dans le toast"
+      ],
+      "mitigation": "Configurer les politiques RLS dans Supabase Storage: 1) Aller dans Storage > Policies, 2) Créer une politique INSERT pour 'establishment-docs' permettant aux utilisateurs authentifiés d'uploader"
+    }
+  }
+}
