@@ -23,25 +23,25 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 
 ### Session 12 - Classes Virtuelles (2026-04-10)
 - Table `virtual_classes` creee avec RLS
-- Vue Etudiant/Formateur/Tuteur (`StudentVirtualClasses.tsx`) :
-  - Liste des classes avec statut temps reel (en cours / a venir / terminee)
-  - Banniere verte quand une classe est en cours
-  - Bouton "Participer" actif uniquement pendant la session (15 min avant -> fin)
-  - Bouton "Pas encore commencee" grise pour les classes futures
-  - Badge "dans Xh" / "dans X jours" pour les classes a venir
-  - Filtre (toutes/en cours/a venir/terminees)
-  - Refresh auto toutes les 30s
-  - Informations : date, heure, duree, formateur, formation
+- Vue Etudiant/Formateur/Tuteur (`StudentVirtualClasses.tsx`)
 - Page `/classes-virtuelles` + route dans App.tsx
-- Sidebar + MobileDrawerMenu mis a jour pour tous les roles
-- Vue Admin fonctionne deja dans Pedagogie > Classes virtuelles (existant)
-- 3 classes de test creees (1 en cours, 2 a venir)
+- Vue Admin dans Pedagogie > Classes virtuelles
+
+### Session 13 - Integration Zoom E2E (2026-04-11)
+- Connexion Zoom Server-to-Server OAuth configuree et testee
+- Credentials Zoom sauves dans `zoom_connections` pour l'etablissement demo
+- Edge Function `zoom-meeting` redeployee avec `verify_jwt: false` (ES256 compat)
+- Flux complet teste : Login -> Test connexion -> Creation meeting -> Sync
+- 4 classes virtuelles synchronisees avec de vrais meetings Zoom
+- URLs Zoom factices remplacees par de vraies URLs fonctionnelles
+- Journal d'integration fonctionnel
 
 ## Flux complet
-1. Admin cree une classe dans Pedagogie > Classes virtuelles
-2. Si Zoom connecte (OAuth), le meeting est cree automatiquement
-3. Etudiants/Formateurs voient les classes dans leur sidebar
-4. Bouton "Participer" redirige vers Zoom quand la session est active
+1. Admin connecte Zoom (Account ID, Client ID, Client Secret) dans Pedagogie > Integrations
+2. Admin cree une classe dans Pedagogie > Classes virtuelles
+3. Si Zoom connecte, le meeting est cree automatiquement via Edge Function
+4. Etudiants/Formateurs voient les classes dans leur sidebar
+5. Bouton "Participer" redirige vers Zoom quand la session est active
 
 ## Task Status
 
@@ -51,6 +51,7 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 - [x] Entreprises partenaires, Diplomes, Notes
 - [x] Documents etablissement
 - [x] Classes virtuelles (creation admin + vue participant + join Zoom)
+- [x] Integration Zoom E2E (connexion + creation meetings + sync automatique)
 
 ### P1 - A faire
 - [ ] Integrer test:rls dans CI GitHub Actions
@@ -59,3 +60,4 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 ### P2-P3
 - [ ] Patterns N+1, pagination
 - [ ] Structure code, monitoring, Storybook, doc API
+- [ ] Refactoring composants monolithiques (VirtualClassesManagement, Notes)
