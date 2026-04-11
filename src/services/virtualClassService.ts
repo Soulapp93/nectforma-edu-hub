@@ -1,4 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
+import { notificationService } from './notificationService';
+import { emailNotificationService } from './emailNotificationService';
 
 export interface VirtualClass {
   id: string;
@@ -218,7 +220,11 @@ export const virtualClassService = {
             .select('*')
             .eq('id', vc.id)
             .single();
-          if (updated) return updated as VirtualClass;
+          if (updated) {
+            // Send notifications after successful Zoom sync
+            this._sendVirtualClassNotifications(updated as VirtualClass, params.establishment_id, params.formation_id, params.instructor_id).catch(console.error);
+            return updated as VirtualClass;
+          }
         }
       } catch (err: any) {
         await supabase
@@ -228,7 +234,128 @@ export const virtualClassService = {
       }
     }
 
+    // Send notifications even without Zoom (no join_url)
+    this._sendVirtualClassNotifications(vc as VirtualClass, params.establishment_id, params.formation_id, params.instructor_id).catch(console.error);
+
     return vc as VirtualClass;
+  },
+
+  /**
+   * Send all notifications (in-app + email + messagerie) for a new virtual class.
+   * Fire-and-forget: errors are logged but never block the caller.
+   */
+  async _sendVirtualClassNotifications(
+    vc: VirtualClass,
+    establishmentId: string,
+    formationId?: string,
+    instructorId?: string
+  ) {
+    try {
+      // 1. In-app bell notifications
+      await notificationService.notifyVirtualClassCreated(
+        establishmentId,
+        vc.title,
+        vc.scheduled_at,
+        vc.duration,
+        vc.join_url || undefined,
+        formationId,
+        instructorId
+      );
+
+      // 2. Collect user IDs for email + messaging
+      let userIds: string[] = [];
+      if (formationId) {
+        const { data: assignments } = await supabase
+          .from('user_formation_assignments')
+          .select('user_id')
+          .eq('formation_id', formationId);
+        if (assignments) userIds = assignments.map(a => a.user_id);
+      } else {
+        const { data: users } = await supabase
+          .from('users')
+          .select('id')
+          .eq('establishment_id', establishmentId)
+          .in('role', ['Étudiant', 'Formateur']);
+        if (users) userIds = users.map(u => u.id);
+      }
+      if (instructorId && !userIds.includes(instructorId)) {
+        userIds.push(instructorId);
+      }
+
+      if (userIds.length === 0) return;
+
+      // Get instructor name for emails
+      let instructorName: string | undefined;
+      if (instructorId) {
+        const { data: inst } = await supabase
+          .from('users')
+          .select('first_name, last_name')
+          .eq('id', instructorId)
+          .single();
+        if (inst) instructorName = `${inst.first_name} ${inst.last_name}`;
+      }
+
+      // 3. Send emails to each user
+      for (const userId of userIds) {
+        const userInfo = await emailNotificationService.getUserEmailInfo(userId);
+        if (userInfo) {
+          emailNotificationService.notifyVirtualClassCreated(
+            userInfo.email,
+            userInfo.firstName,
+            userInfo.lastName,
+            vc.title,
+            vc.scheduled_at,
+            vc.duration,
+            vc.join_url || undefined,
+            vc.password || undefined,
+            instructorName
+          ).catch(console.error);
+        }
+      }
+
+      // 4. Send message in Nectforma messagerie
+      const formattedDate = new Date(vc.scheduled_at).toLocaleDateString('fr-FR', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+      });
+      const formattedTime = new Date(vc.scheduled_at).toLocaleTimeString('fr-FR', {
+        hour: '2-digit', minute: '2-digit'
+      });
+      const endTime = new Date(new Date(vc.scheduled_at).getTime() + vc.duration * 60000).toLocaleTimeString('fr-FR', {
+        hour: '2-digit', minute: '2-digit'
+      });
+
+      const msgContent = [
+        `Bonjour,`,
+        ``,
+        `Une nouvelle classe virtuelle a ete programmee :`,
+        ``,
+        `Titre : ${vc.title}`,
+        vc.description ? `Description : ${vc.description}` : null,
+        `Date : ${formattedDate}`,
+        `Horaires : ${formattedTime} - ${endTime} (${vc.duration} min)`,
+        instructorName ? `Formateur : ${instructorName}` : null,
+        ``,
+        vc.join_url ? `Lien pour rejoindre la session :` : null,
+        vc.join_url ? vc.join_url : null,
+        vc.password ? `Code d'acces : ${vc.password}` : null,
+        ``,
+        `Bonne session !`,
+        `L'equipe Nectforma`
+      ].filter(Boolean).join('\n');
+
+      const { messageService } = await import('./messageService');
+      await messageService.createMessage({
+        subject: `Classe virtuelle : ${vc.title} - ${formattedDate}`,
+        content: msgContent,
+        recipients: {
+          type: 'user',
+          ids: userIds
+        }
+      });
+
+    } catch (err) {
+      console.error('Error sending virtual class notifications:', err);
+    }
   },
 
   async updateVirtualClass(id: string, params: {

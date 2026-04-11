@@ -8,7 +8,8 @@ export type EmailNotificationType =
   | 'correction_published'
   | 'attendance_open'
   | 'attendance_reminder'
-  | 'schedule_change';
+  | 'schedule_change'
+  | 'virtual_class_created';
 
 interface EmailRecipient {
   email: string;
@@ -394,6 +395,65 @@ export const emailNotificationService = {
         message: config.message,
         ctaText: 'Voir mon emploi du temps',
         ctaUrl: '/emploi-temps',
+        additionalInfo
+      }
+    );
+  },
+
+  /**
+   * Envoyer un email pour une nouvelle classe virtuelle
+   */
+  async notifyVirtualClassCreated(
+    recipientEmail: string,
+    recipientFirstName: string,
+    recipientLastName: string,
+    classTitle: string,
+    scheduledAt: string,
+    duration: number,
+    joinUrl?: string,
+    password?: string,
+    instructorName?: string
+  ) {
+    const formattedDate = new Date(scheduledAt).toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+    const formattedTime = new Date(scheduledAt).toLocaleTimeString('fr-FR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    const endTime = new Date(new Date(scheduledAt).getTime() + duration * 60000).toLocaleTimeString('fr-FR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    const additionalInfo: Record<string, string> = {
+      'Classe virtuelle': classTitle,
+      'Date': formattedDate,
+      'Horaires': `${formattedTime} - ${endTime} (${duration} min)`
+    };
+
+    if (instructorName) {
+      additionalInfo['Formateur'] = instructorName;
+    }
+    if (joinUrl) {
+      additionalInfo['Lien Zoom'] = `<a href="${joinUrl}" style="color: #7C3AED; font-weight: 600;">${joinUrl}</a>`;
+    }
+    if (password) {
+      additionalInfo['Code d\'acces'] = password;
+    }
+
+    return this.sendEmailNotification(
+      { email: recipientEmail, firstName: recipientFirstName, lastName: recipientLastName },
+      {
+        type: 'virtual_class_created',
+        subject: `Classe virtuelle: ${classTitle} - NECTFORMA`,
+        title: 'Nouvelle classe virtuelle programmee',
+        message: `Une classe virtuelle "${classTitle}" a ete programmee le ${formattedDate} de ${formattedTime} a ${endTime}.${joinUrl ? ' Cliquez sur le bouton ci-dessous pour rejoindre la session le jour J.' : ''}`,
+        ctaText: joinUrl ? 'Rejoindre la classe virtuelle' : 'Voir mes classes virtuelles',
+        ctaUrl: joinUrl || '/classes-virtuelles',
         additionalInfo
       }
     );

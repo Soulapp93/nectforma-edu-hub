@@ -19,7 +19,8 @@ export type NotificationType =
   | 'reminder'
   | 'system'
   | 'general'
-  | 'textbook_reminder';
+  | 'textbook_reminder'
+  | 'virtual_class';
 
 export interface NotificationMetadata {
   message_id?: string;
@@ -551,6 +552,71 @@ export const notificationService = {
       console.error('Erreur lors de l\'envoi des notifications d\'événement:', error);
       throw error;
     }
+  },
+
+  // ============================================
+  // VIRTUAL CLASS NOTIFICATIONS
+  // ============================================
+
+  async notifyVirtualClassCreated(
+    establishmentId: string,
+    classTitle: string,
+    scheduledAt: string,
+    duration: number,
+    joinUrl?: string,
+    formationId?: string,
+    instructorId?: string
+  ) {
+    const formattedDate = new Date(scheduledAt).toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    const zoomText = joinUrl ? `\nLien Zoom: ${joinUrl}` : '';
+    const message = `Nouvelle classe virtuelle "${classTitle}" programmee le ${formattedDate} (${duration} min).${zoomText}`;
+    const metadata: NotificationMetadata = {
+      action_url: '/classes-virtuelles',
+      date: scheduledAt,
+    };
+
+    const userIds: string[] = [];
+
+    // Get students/formateurs from the formation if linked
+    if (formationId) {
+      const { data: assignments } = await supabase
+        .from('user_formation_assignments')
+        .select('user_id')
+        .eq('formation_id', formationId);
+
+      if (assignments) {
+        userIds.push(...assignments.map(a => a.user_id));
+      }
+    } else {
+      // Notify all students + formateurs of the establishment
+      const { data: users } = await supabase
+        .from('users')
+        .select('id')
+        .eq('establishment_id', establishmentId)
+        .in('role', ['Étudiant', 'Formateur']);
+
+      if (users) {
+        userIds.push(...users.map(u => u.id));
+      }
+    }
+
+    // Also notify the instructor specifically if not already included
+    if (instructorId && !userIds.includes(instructorId)) {
+      userIds.push(instructorId);
+    }
+
+    if (userIds.length === 0) {
+      return { success: true, notified_users: 0 };
+    }
+
+    return this.notifyUsers(userIds, 'Nouvelle classe virtuelle', message, 'virtual_class', metadata);
   },
 
   // ============================================
