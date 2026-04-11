@@ -73,7 +73,8 @@ export const CreateVirtualClassModal: React.FC<Props> = ({
         <DialogHeader>
           <DialogTitle>Nouvelle classe virtuelle</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="space-y-4" aria-describedby="vc-form-description">
+          <span id="vc-form-description" className="sr-only">Formulaire de creation d'une classe virtuelle</span>
           <div>
             <Label>Titre *</Label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Cours de mathematiques" data-testid="vc-title-input" />

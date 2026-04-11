@@ -36,18 +36,29 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 - Secret `BREVO_API_KEY` configure
 
 ### Session 15 - Rappels Automatiques 15 min (2026-04-11)
-- Edge Function `virtual-class-reminder` deployee et testee
-- Colonne `reminder_sent_at` ajoutee pour idempotence
-- pg_cron job `*/5 * * * *` via pg_net pour invocation automatique
-- 3 canaux de rappel : notification + messagerie + email avec template specifique (urgence jaune)
-- Teste E2E : 4 notifications + 4 emails + 1 message envoyes, idempotent confirme
+- Edge Function `virtual-class-reminder` deployee
+- pg_cron job `*/5 * * * *` via pg_net
+- 3 canaux de rappel : notification + messagerie + email
 
-## Flux complet Classes Virtuelles
-1. Admin connecte Zoom dans Pedagogie > Integrations
-2. Admin cree une classe > Meeting Zoom cree automatiquement
-3. **Notifications creation** : notification + messagerie + email a tous les participants
-4. **Rappel automatique 15 min avant** : pg_cron verifie toutes les 5 min, envoie rappel via 3 canaux
-5. Etudiants/Formateurs voient la classe et cliquent "Participer" > Zoom
+### Session 16 - Refactoring + CI (2026-04-11)
+- VirtualClassesManagement.tsx: 619 -> 138 lignes (7 sous-composants extraits)
+  - VirtualClassList, VirtualClassStatusBadge, ZoomSetupModal, ZoomIntegrationPanel
+  - IntegrationLogsPanel, VirtualClassDetailModal, CreateVirtualClassModal
+- ScheduleManagement.tsx: 1489 -> 1088 lignes (2 sous-composants extraits)
+  - ScheduleListView, ScheduleMonthView
+- CI: test.yml mis a jour avec job `rls-tests` (pg_cron via pg_net, push main only)
+- Testing agent: 8/8 tests passes, 100% frontend
+
+## Architecture composants virtual-classes/
+- VirtualClassesManagement.tsx (138 lignes - orchestrateur)
+- VirtualClassList.tsx (101 lignes - liste des classes)
+- VirtualClassStatusBadge.tsx (22 lignes - badge statut)
+- CreateVirtualClassModal.tsx (158 lignes - modal creation)
+- ZoomSetupModal.tsx (94 lignes - modal config Zoom)
+- ZoomIntegrationPanel.tsx (102 lignes - panneau integrations)
+- IntegrationLogsPanel.tsx (43 lignes - journal)
+- VirtualClassDetailModal.tsx (93 lignes - detail classe)
+- StudentVirtualClasses.tsx (314 lignes - vue etudiant/formateur)
 
 ## Task Status
 
@@ -58,12 +69,12 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 - [x] Documents etablissement
 - [x] Classes virtuelles + Integration Zoom E2E
 - [x] Notifications automatiques (creation + rappel 15 min)
+- [x] Refactoring composants monolithiques
+- [x] CI test:rls dans GitHub Actions
 
 ### P1 - A faire
-- [ ] Integrer test:rls dans CI GitHub Actions
 - [ ] Activer TypeScript strict
 
 ### P2-P3
 - [ ] Patterns N+1, pagination
 - [ ] Structure code, monitoring, Storybook, doc API
-- [ ] Refactoring composants monolithiques
