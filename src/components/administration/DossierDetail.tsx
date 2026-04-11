@@ -288,14 +288,12 @@ export const DossierDetail: React.FC<Props> = ({ user, establishmentId, onBack }
                           <div>
                             <p className="font-medium text-sm">{(t.formations as any)?.title || 'Formation'}</p>
                             <p className="text-xs text-muted-foreground">
-                              {t.semester} • {t.academic_year}
+                              {t.evaluation_periods?.name || `Semestre ${t.semester_number}`} • {t.academic_year || ''}
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
-                            {t.gpa && <Badge variant="outline">Moy: {t.gpa}</Badge>}
-                            {t.total_ects && <Badge variant="outline">{t.total_ects} ECTS</Badge>}
-                            <Badge className={t.status === 'published' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}>
-                              {t.status === 'published' ? 'Publie' : 'Brouillon'}
+                            <Badge className={t.is_published ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}>
+                              {t.is_published ? 'Publie' : 'Brouillon'}
                             </Badge>
                           </div>
                         </div>
@@ -388,7 +386,7 @@ export const DossierDetail: React.FC<Props> = ({ user, establishmentId, onBack }
                   <TimelineItem key={f.formation_id} date={f.formations?.start_date} label={`Affecte a : ${f.formations?.title || 'Formation'}`} />
                 ))}
                 {transcripts.map((t: any) => (
-                  <TimelineItem key={t.id} date={t.created_at} label={`Releve de notes : ${(t.formations as any)?.title} - ${t.semester}`} />
+                  <TimelineItem key={t.id} date={t.created_at} label={`Releve de notes : ${(t.formations as any)?.title} - ${t.evaluation_periods?.name || `S${t.semester_number}`}`} />
                 ))}
                 {userDocuments.map(d => (
                   <TimelineItem key={d.id} date={d.created_at} label={`Document depose : ${d.title}`} />

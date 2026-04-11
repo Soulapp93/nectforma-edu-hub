@@ -76,7 +76,7 @@ export const dossierService = {
   async getUserTranscripts(userId: string) {
     const { data, error } = await supabase
       .from('transcripts')
-      .select('id, formation_id, semester, academic_year, status, gpa, total_ects, created_at, formations(title)')
+      .select('id, formation_id, semester_number, academic_year, is_published, created_at, formations(title), evaluation_periods(name)')
       .eq('student_id', userId)
       .order('created_at', { ascending: false });
     if (error) throw error;

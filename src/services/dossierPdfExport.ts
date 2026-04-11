@@ -162,16 +162,14 @@ export function exportDossierPDF(
     y = checkPageBreak(doc, y, 30);
     const transcriptRows = transcripts.map((t: any) => [
       (t.formations as any)?.title || 'Formation',
-      t.semester || '—',
+      t.evaluation_periods?.name || `Semestre ${t.semester_number}`,
       t.academic_year || '—',
-      t.gpa ? String(t.gpa) : '—',
-      t.total_ects ? String(t.total_ects) : '—',
-      t.status === 'published' ? 'Publie' : 'Brouillon',
+      t.is_published ? 'Publie' : 'Brouillon',
     ]);
 
     autoTable(doc, {
       startY: y,
-      head: [['Formation', 'Semestre', 'Annee', 'Moyenne', 'ECTS', 'Statut']],
+      head: [['Formation', 'Periode', 'Annee', 'Statut']],
       body: transcriptRows,
       margin: { left: 20, right: 15 },
       headStyles: { fillColor: [...NECT_BLUE] as [number, number, number], fontSize: 8, font: 'helvetica' },
@@ -249,7 +247,7 @@ export function exportDossierPDF(
     if (f.formations?.start_date) events.push({ date: f.formations.start_date, label: `Affecte a : ${f.formations.title}` });
   });
   transcripts.forEach((t: any) => {
-    events.push({ date: t.created_at, label: `Releve de notes : ${(t.formations as any)?.title || 'Formation'} - ${t.semester}` });
+    events.push({ date: t.created_at, label: `Releve de notes : ${(t.formations as any)?.title || 'Formation'} - ${t.evaluation_periods?.name || `S${t.semester_number}`}` });
   });
   userDocuments.forEach(d => {
     events.push({ date: d.created_at, label: `Document depose : ${d.title}` });

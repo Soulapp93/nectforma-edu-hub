@@ -40,11 +40,19 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 - Connecte a transcripts, formations, contracts, user_documents
 - Testing: 14/14 tests passes + 2 bugs DB corriges
 
+### Session 18 - Export PDF + Bug Fix Realtime (2026-04-11)
+- Export PDF dossier administratif via jsPDF + jspdf-autotable
+- Fix Vite allowedHosts pour acces preview
+- Fix erreur Supabase Realtime "cannot add postgres_changes callbacks after subscribe()" dans 9 hooks/composants
+- Fix query transcripts.semester -> semester_number + evaluation_periods
+- Testing: 10/10 tests passes (iteration_3)
+
 ## Architecture Dossiers Administratifs
 - Administration.tsx -> tabs: users | dossiers
 - DossiersAdministratifs.tsx -> 2 colonnes + recherche
-- DossierDetail.tsx -> 4 onglets (civil/pedagogique/documents/historique)
+- DossierDetail.tsx -> 4 onglets (civil/pedagogique/documents/historique) + Exporter PDF
 - dossierService.ts -> requetes Supabase (profil, formations, transcripts, contracts, documents)
+- dossierPdfExport.ts -> generation PDF client-side (jsPDF + autotable)
 
 ## Task Status
 
@@ -54,10 +62,13 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 - [x] Classes virtuelles + Zoom E2E + Notifications
 - [x] Refactoring + CI
 - [x] Dossiers Administratifs (remplace Entreprises partenaires)
+- [x] Export PDF dossiers administratifs
+- [x] Bug fix Supabase Realtime channel errors
 
 ### P1 - A faire
 - [ ] Activer TypeScript strict
 
 ### P2-P3
+- [ ] Refactoring TranscriptsPanel.tsx (>1200 lignes)
 - [ ] Patterns N+1, pagination
 - [ ] Structure code, monitoring, Storybook, doc API
