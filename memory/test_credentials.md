@@ -24,6 +24,12 @@
 - Client Secret: gPURxks7C9fM2cfd5Dk3G7ZdWo1AdAr9
 - Establishment ID (demo): e889e84b-9f11-4b29-bedf-c677dce636f9
 
+## Brevo (Email)
+- Secret name in Supabase: BREVO_API_KEY
+- Edge Function: send-email-brevo
+
 ## Notes techniques
 - Edge Function `zoom-meeting` : verify_jwt = false (ES256 JWT compat)
+- Edge Function `send-email-brevo` : verify_jwt = false
+- Edge Function `send-message` : verify_jwt = false
 - Anon key JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRsaXRkamJtcXBzZG1ocmJsdWFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMTUzODcsImV4cCI6MjA5MDc5MTM4N30.XJ5i1H_jM9rdXOHGvlVa3JkjqDjDrW5Md094uXdCdfo
