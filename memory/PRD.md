@@ -11,59 +11,41 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 
 ## What's Been Implemented
 
-### Sessions 1-6 (2026-04-09)
-- Audit architecture, 105 tests Vitest, 42 tests RLS, fix RLS recursion, comptes demo
-
-### Sessions 7-10 - Sidebar + Mobile + Fonctionnalites (2026-04-10)
-- Sidebar aplatie avec pages hub et onglets horizontaux, mobile responsive
-
-### Sessions 12-15 - Classes Virtuelles + Zoom + Notifications (2026-04-10/11)
-- Integration Zoom E2E, notifications creation + rappel 15 min
-
-### Session 16 - Refactoring + CI (2026-04-11)
-- VirtualClassesManagement + ScheduleManagement refactored, CI test:rls
-
-### Session 17 - Dossiers Administratifs (2026-04-11)
-- Module Dossiers administratifs complet (4 onglets, CRUD, export PDF)
+### Sessions 1-17 (2026-04-09 to 2026-04-11)
+- Audit, tests, RLS, comptes demo, sidebar, mobile, Zoom, notifications, refactoring, CI, dossiers administratifs
 
 ### Session 18 - Export PDF + Bug Fix Realtime (2026-04-11)
-- Export PDF dossier administratif, fix Supabase Realtime try-catch 9 hooks
+- Export PDF dossier administratif, fix Supabase Realtime
 
-### Session 19 - Fix 3 Bugs Critiques Pre-Deploiement (2026-04-12)
-- Creation etablissement, creation formation, upload documents (RLS)
+### Session 19 - Fix 3 Bugs Critiques (2026-04-12)
+- Creation etablissement, formation, upload documents (RLS)
 
-### Session 20 - Logique Creation Automatique Promotions (2026-04-12)
+### Session 20 - Creation Automatique Promotions (2026-04-12)
 - Chaine: Formation -> Promotion -> Emploi du temps + Cahier de texte
-- Composant PromotionsList.tsx, service promotionService.ts
 
 ### Session 21 - Preview Fichiers Universel (2026-04-12)
-- **ProductionFileViewer integre dans toute l'application**
-- Composants modifies:
-  1. DossierDetail.tsx: fichiers cliquables + bouton Eye + ProductionFileViewer
-  2. EstablishmentDocuments.tsx: fichiers cliquables + bouton Eye + menu Visualiser + ProductionFileViewer
-  3. StudentFilesManagement.tsx: remplace window.open par ProductionFileViewer
-  4. AbsenceManagement.tsx: remplace window.open par ProductionFileViewer
-  5. AbsenceReviewModal.tsx: remplace window.open par ProductionFileViewer
-- Deja integre: ChatRoom, MessageAttachmentsViewer, ModuleContentTab, ModuleDocumentsTab, TextBookDetail
-- Testing: 3/3 tests passes (iteration_7)
+- ProductionFileViewer integre dans 5 composants supplementaires
+- Fichiers cliquables + bouton Eye partout
+
+### Session 22 - Tooltip Preview au Survol (2026-04-12)
+- **FilePreviewTooltip** composant reutilisable
+  - Images: miniature preview au survol
+  - PDF: icone rouge + badge PDF
+  - Autres: icone type + badge extension + "Cliquer pour visualiser"
+- Integre dans: EstablishmentDocuments, DossierDetail, ChatRoom, MessageAttachmentsViewer
+- Radix Tooltip avec delai 400ms
+- Testing: 5/5 tests passes (iteration_8)
 
 ## Task Status
 
 ### P0 - TOUS RESOLUS
-- [x] Audit, tests, RLS, comptes demo
-- [x] Sidebar plate + pages hub + mobile responsive
-- [x] Classes virtuelles + Zoom E2E + Notifications
-- [x] Refactoring + CI
-- [x] Dossiers Administratifs + Export PDF
-- [x] Bug fix Supabase Realtime
-- [x] Creation etablissement, formation, upload docs
-- [x] Logique creation automatique promotions
-- [x] Preview fichiers universel (ProductionFileViewer partout)
+- [x] Toutes fonctionnalites precedentes
+- [x] Preview fichiers universel + tooltip au survol
 
-### P1 - A faire
+### P1
 - [ ] Deploiement production
 
 ### P2-P3
 - [ ] Activer TypeScript strict
-- [ ] Refactoring TranscriptsPanel.tsx (>1200 lignes)
+- [ ] Refactoring TranscriptsPanel.tsx
 - [ ] Patterns N+1, pagination
