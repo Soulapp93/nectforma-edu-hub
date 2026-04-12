@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { studentDocumentService, documentTypeLabels, documentStatusLabels, StudentDocument, StudentDocumentType } from '@/services/studentDocumentService';
 import { useEstablishment } from '@/hooks/useEstablishment';
+import ProductionFileViewer from '@/components/ui/viewers/ProductionFileViewer';
 
 interface Student {
   user_id: string;
@@ -39,6 +40,7 @@ const StudentFilesManagement: React.FC = () => {
   const [uploadDescription, setUploadDescription] = useState('');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [viewerFile, setViewerFile] = useState<{ url: string; name: string } | null>(null);
 
   useEffect(() => {
     if (establishment?.id) {
@@ -278,7 +280,7 @@ const StudentFilesManagement: React.FC = () => {
                 ) : (
                   <div className="space-y-2">
                     {filteredDocuments.map(doc => (
-                      <div key={doc.id} className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/30 transition-all">
+                      <div key={doc.id} className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/30 transition-all cursor-pointer" onClick={() => doc.file_url && setViewerFile({ url: doc.file_url, name: doc.title })}>
                         <FileText className="h-8 w-8 text-primary/60 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm text-foreground truncate">{doc.title}</p>
@@ -291,16 +293,16 @@ const StudentFilesManagement: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-1">
                           {doc.file_url && (
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => window.open(doc.file_url!, '_blank')}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setViewerFile({ url: doc.file_url!, name: doc.title }); }}>
                               <Eye className="h-4 w-4" />
                             </Button>
                           )}
                           {doc.status === 'draft' && (
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-600" onClick={() => handleValidate(doc.id)}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-emerald-600" onClick={(e) => { e.stopPropagation(); handleValidate(doc.id); }}>
                               <CheckCircle className="h-4 w-4" />
                             </Button>
                           )}
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(doc.id)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={(e) => { e.stopPropagation(); handleDelete(doc.id); }}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -358,6 +360,14 @@ const StudentFilesManagement: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* File Viewer */}
+      <ProductionFileViewer
+        fileUrl={viewerFile?.url || ''}
+        fileName={viewerFile?.name || ''}
+        isOpen={!!viewerFile}
+        onClose={() => setViewerFile(null)}
+      />
     </div>
   );
 };

@@ -13,11 +13,12 @@ import { LoadingState } from '@/components/ui/loading-state';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import ProductionFileViewer from '@/components/ui/viewers/ProductionFileViewer';
 import {
   FolderOpen, Plus, Search, Trash2, Download, Upload, File,
   Folder, FolderPlus, ChevronRight, ArrowLeft, MoreVertical,
   FileText, FileImage, FileSpreadsheet, FileArchive, FileVideo,
-  Pencil, HardDrive, X,
+  Pencil, HardDrive, X, Eye,
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -97,6 +98,7 @@ const EstablishmentDocuments: React.FC = () => {
   const [renameValue, setRenameValue] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; type: 'folder' | 'file'; name: string } | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [viewerFile, setViewerFile] = useState<{ url: string; name: string } | null>(null);
 
   const estId = establishment?.id || '';
 
@@ -512,8 +514,9 @@ const EstablishmentDocuments: React.FC = () => {
               return (
                 <div
                   key={file.id}
-                  className="flex items-center gap-3 px-3 sm:px-4 py-3 hover:bg-muted/30 transition-colors group"
+                  className="flex items-center gap-3 px-3 sm:px-4 py-3 hover:bg-muted/30 transition-colors group cursor-pointer"
                   data-testid={`file-${file.id}`}
+                  onClick={() => setViewerFile({ url: file.file_url, name: file.original_name || file.name })}
                 >
                   <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-muted/50 flex items-center justify-center flex-shrink-0">
                     <FileIcon className={`h-5 w-5 ${fileColor}`} />
@@ -527,16 +530,22 @@ const EstablishmentDocuments: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDownload(file)} data-testid={`download-${file.id}`}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setViewerFile({ url: file.file_url, name: file.original_name || file.name }); }} title="Visualiser" data-testid={`view-${file.id}`}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleDownload(file); }} data-testid={`download-${file.id}`}>
                       <Download className="h-4 w-4" />
                     </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" data-testid={`file-menu-${file.id}`}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity" data-testid={`file-menu-${file.id}`} onClick={(e) => e.stopPropagation()}>
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setViewerFile({ url: file.file_url, name: file.original_name || file.name })}>
+                          <Eye className="h-4 w-4 mr-2" />Visualiser
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleDownload(file)}>
                           <Download className="h-4 w-4 mr-2" />Télécharger
                         </DropdownMenuItem>
@@ -645,6 +654,14 @@ const EstablishmentDocuments: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* File Viewer */}
+      <ProductionFileViewer
+        fileUrl={viewerFile?.url || ''}
+        fileName={viewerFile?.name || ''}
+        isOpen={!!viewerFile}
+        onClose={() => setViewerFile(null)}
+      />
     </div>
   );
 };

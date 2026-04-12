@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import AbsenceReviewModal from '@/components/emargement/AbsenceReviewModal';
 import { toast } from 'sonner';
+import ProductionFileViewer from '@/components/ui/viewers/ProductionFileViewer';
 
 interface EnrichedJustification extends AbsenceJustification {
   userName?: string;
@@ -25,6 +26,7 @@ const AbsenceManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('pending');
   const [reviewModal, setReviewModal] = useState<{ isOpen: boolean; signatureId: string }>({ isOpen: false, signatureId: '' });
+  const [viewerFile, setViewerFile] = useState<{ url: string; name: string } | null>(null);
 
   useEffect(() => {
     loadJustifications();
@@ -209,7 +211,7 @@ const AbsenceManagement: React.FC = () => {
                             variant="ghost"
                             size="sm"
                             className="gap-1 text-xs"
-                            onClick={() => window.open(justif.file_url, '_blank')}
+                            onClick={() => setViewerFile({ url: justif.file_url, name: justif.file_name || 'Justificatif' })}
                           >
                             <FileText className="h-3 w-3" />
                             {justif.file_name?.substring(0, 15)}...
@@ -251,6 +253,14 @@ const AbsenceManagement: React.FC = () => {
         signatureId={reviewModal.signatureId}
         adminUserId={userId || ''}
         onReviewed={loadJustifications}
+      />
+
+      {/* File Viewer */}
+      <ProductionFileViewer
+        fileUrl={viewerFile?.url || ''}
+        fileName={viewerFile?.name || ''}
+        isOpen={!!viewerFile}
+        onClose={() => setViewerFile(null)}
       />
     </div>
   );

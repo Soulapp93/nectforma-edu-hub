@@ -9,6 +9,7 @@ import { CheckCircle, XCircle, FileText, Calendar, Clock, User, ExternalLink, Lo
 import { absenceJustificationService } from '@/services/absenceJustificationService';
 import { notificationService } from '@/services/notificationService';
 import { toast } from 'sonner';
+import ProductionFileViewer from '@/components/ui/viewers/ProductionFileViewer';
 
 interface AbsenceReviewModalProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ const AbsenceReviewModal: React.FC<AbsenceReviewModalProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [reviewComment, setReviewComment] = useState('');
   const [details, setDetails] = useState<any>(null);
+  const [showFileViewer, setShowFileViewer] = useState(false);
 
   useEffect(() => {
     if (isOpen && signatureId) {
@@ -97,6 +99,7 @@ const AbsenceReviewModal: React.FC<AbsenceReviewModalProps> = ({
   };
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
@@ -169,7 +172,7 @@ const AbsenceReviewModal: React.FC<AbsenceReviewModalProps> = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => window.open(details.justification.file_url, '_blank')}
+                      onClick={() => setShowFileViewer(true)}
                     >
                       <ExternalLink className="h-4 w-4 mr-1" />
                       Voir
@@ -240,6 +243,17 @@ const AbsenceReviewModal: React.FC<AbsenceReviewModalProps> = ({
         )}
       </DialogContent>
     </Dialog>
+
+    {/* File Viewer for justification */}
+    {details?.justification?.file_url && (
+      <ProductionFileViewer
+        fileUrl={details.justification.file_url}
+        fileName={details.justification.file_name || 'Justificatif'}
+        isOpen={showFileViewer}
+        onClose={() => setShowFileViewer(false)}
+      />
+    )}
+    </>
   );
 };
 

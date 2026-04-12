@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, User, BookOpen, FileText, Clock, Edit2, Save, X, Upload, Trash2, Download, ExternalLink, FileDown } from 'lucide-react';
+import { ArrowLeft, User, BookOpen, FileText, Clock, Edit2, Save, X, Upload, Trash2, Download, ExternalLink, FileDown, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { toast } from 'sonner';
 import { dossierService, UserProfile, UserDocument } from '@/services/dossierService';
 import { exportDossierPDF } from '@/services/dossierPdfExport';
+import ProductionFileViewer from '@/components/ui/viewers/ProductionFileViewer';
 
 interface Props {
   user: UserProfile;
@@ -33,6 +34,7 @@ export const DossierDetail: React.FC<Props> = ({ user, establishmentId, onBack }
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [viewerFile, setViewerFile] = useState<{ url: string; name: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -345,7 +347,7 @@ export const DossierDetail: React.FC<Props> = ({ user, establishmentId, onBack }
                 ) : (
                   <div className="space-y-2">
                     {userDocuments.map(doc => (
-                      <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50" data-testid={`doc-${doc.id}`}>
+                      <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors" data-testid={`doc-${doc.id}`} onClick={() => doc.file_url && setViewerFile({ url: doc.file_url, name: doc.file_name || doc.title })}>
                         <div className="flex items-center gap-3 min-w-0">
                           <FileText className="w-5 h-5 text-primary shrink-0" />
                           <div className="min-w-0">
@@ -358,11 +360,16 @@ export const DossierDetail: React.FC<Props> = ({ user, establishmentId, onBack }
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
                           {doc.file_url && (
-                            <Button variant="ghost" size="icon" asChild title="Telecharger">
+                            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setViewerFile({ url: doc.file_url!, name: doc.file_name || doc.title }); }} title="Visualiser">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          )}
+                          {doc.file_url && (
+                            <Button variant="ghost" size="icon" asChild title="Telecharger" onClick={(e) => e.stopPropagation()}>
                               <a href={doc.file_url} target="_blank" rel="noopener noreferrer"><Download className="w-4 h-4" /></a>
                             </Button>
                           )}
-                          <Button variant="ghost" size="icon" onClick={() => handleDeleteDoc(doc)} className="text-destructive" title="Supprimer">
+                          <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleDeleteDoc(doc); }} className="text-destructive" title="Supprimer">
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
@@ -433,6 +440,14 @@ export const DossierDetail: React.FC<Props> = ({ user, establishmentId, onBack }
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* File Viewer */}
+      <ProductionFileViewer
+        fileUrl={viewerFile?.url || ''}
+        fileName={viewerFile?.name || ''}
+        isOpen={!!viewerFile}
+        onClose={() => setViewerFile(null)}
+      />
     </div>
   );
 };
