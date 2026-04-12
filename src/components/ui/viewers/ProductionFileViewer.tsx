@@ -245,16 +245,7 @@ const ProductionFileViewer: React.FC<ProductionFileViewerProps> = ({
   }, [isOpen, isFullscreen, fileType, pdfPages, onClose, isPowerPoint]);
 
   const toggleFullscreen = async () => {
-    if (!containerRef.current) return;
-    try {
-      if (!document.fullscreenElement) {
-        await containerRef.current.requestFullscreen();
-      } else {
-        await document.exitFullscreen();
-      }
-    } catch (err) {
-      console.error('Fullscreen error:', err);
-    }
+    setIsFullscreen(prev => !prev);
   };
 
   const handleDownload = async () => {
@@ -650,7 +641,7 @@ const ProductionFileViewer: React.FC<ProductionFileViewerProps> = ({
             variant="ghost"
             size="icon"
             onClick={() => {
-              if (isFullscreen) document.exitFullscreen?.().finally(onClose);
+              if (isFullscreen) setIsFullscreen(false);
               else onClose();
             }}
             className="shrink-0 h-9 w-9 hover:bg-destructive/10 hover:text-destructive"
@@ -670,7 +661,7 @@ const ProductionFileViewer: React.FC<ProductionFileViewerProps> = ({
         <div className="flex items-center gap-1">
           {/* PDF Navigation */}
           {fileType === 'pdf' && pdfPages > 1 && (
-            <div className="hidden sm:flex items-center gap-1 mr-2 bg-muted/50 rounded-lg px-2 py-1">
+            <div className="flex items-center gap-1 mr-2 bg-muted/50 rounded-lg px-2 py-1">
               <Button
                 variant="ghost"
                 size="icon"
@@ -696,8 +687,8 @@ const ProductionFileViewer: React.FC<ProductionFileViewerProps> = ({
           )}
 
           {/* Zoom controls */}
-          {(fileType === 'image' || fileType === 'pdf') && !isMobile && (
-            <div className="hidden sm:flex items-center gap-1 mr-2 bg-muted/50 rounded-lg px-2 py-1">
+          {(fileType === 'image' || fileType === 'pdf') && (
+            <div className="flex items-center gap-1 mr-2 bg-muted/50 rounded-lg px-2 py-1">
               <Button 
                 variant="ghost" 
                 size="icon" 

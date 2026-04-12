@@ -1,8 +1,6 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
-import { ChevronLeft, ChevronRight, Grid3X3, List } from 'lucide-react';
+import React, { useRef, useEffect } from 'react';
+import { ChevronLeft, Grid3X3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
 interface PDFThumbnailNavProps {
@@ -23,18 +21,6 @@ const PDFThumbnailNav: React.FC<PDFThumbnailNavProps> = ({
   onToggle
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [visiblePages, setVisiblePages] = useState<number[]>([]);
-
-  // Calculate which pages to render based on current view
-  useEffect(() => {
-    const startPage = Math.max(1, currentPage - 5);
-    const endPage = Math.min(numPages, currentPage + 5);
-    const pages = [];
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-    setVisiblePages(pages);
-  }, [currentPage, numPages]);
 
   // Scroll to current page thumbnail
   useEffect(() => {
@@ -52,7 +38,8 @@ const PDFThumbnailNav: React.FC<PDFThumbnailNavProps> = ({
         variant="outline"
         size="sm"
         onClick={onToggle}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-50 bg-background/95 backdrop-blur-sm shadow-lg"
+        className="absolute left-4 top-4 z-50 bg-background/95 backdrop-blur-sm shadow-lg"
+        data-testid="pdf-thumbnails-toggle"
       >
         <Grid3X3 className="h-4 w-4 mr-2" />
         Pages
@@ -61,76 +48,54 @@ const PDFThumbnailNav: React.FC<PDFThumbnailNavProps> = ({
   }
 
   return (
-    <div className="w-40 bg-background/95 backdrop-blur-sm border-r flex flex-col shrink-0">
-      <div className="flex items-center justify-between p-2 border-b">
-        <span className="text-xs font-medium">Pages</span>
-        <Button variant="ghost" size="icon" onClick={onToggle} className="h-6 w-6">
+    <div className="w-36 bg-[#2b2b2b] border-r border-[#444] flex flex-col shrink-0">
+      <div className="flex items-center justify-between p-2 border-b border-[#444]">
+        <span className="text-xs font-medium text-white/80">Pages</span>
+        <Button variant="ghost" size="icon" onClick={onToggle} className="h-6 w-6 text-white/60 hover:text-white hover:bg-white/10">
           <ChevronLeft className="h-4 w-4" />
         </Button>
       </div>
       
-      <ScrollArea className="flex-1">
-        <div ref={scrollRef} className="p-2 space-y-2">
-          {Array.from({ length: numPages }, (_, i) => i + 1).map((pageNum) => (
-            <button
-              key={pageNum}
-              data-page={pageNum}
-              onClick={() => onPageChange(pageNum)}
-              className={cn(
-                "w-full aspect-[3/4] rounded-md border-2 overflow-hidden transition-all hover:border-primary/50",
-                pageNum === currentPage 
-                  ? "border-primary ring-2 ring-primary/20" 
-                  : "border-border"
-              )}
-            >
-              {visiblePages.includes(pageNum) ? (
-                <Document file={fileUrl} loading={null} error={null}>
-                  <Page
-                    pageNumber={pageNum}
-                    width={120}
-                    renderTextLayer={false}
-                    renderAnnotationLayer={false}
-                    loading={
-                      <div className="w-full h-full bg-muted animate-pulse" />
-                    }
-                  />
-                </Document>
-              ) : (
-                <div className="w-full h-full bg-muted flex items-center justify-center">
-                  <span className="text-xs text-muted-foreground">{pageNum}</span>
-                </div>
-              )}
-              <div className="text-xs text-center py-1 bg-background border-t">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-2 space-y-2">
+        {Array.from({ length: numPages }, (_, i) => i + 1).map((pageNum) => (
+          <button
+            key={pageNum}
+            data-page={pageNum}
+            onClick={() => onPageChange(pageNum)}
+            className={cn(
+              "w-full rounded-md overflow-hidden transition-all",
+              pageNum === currentPage 
+                ? "ring-2 ring-blue-500" 
+                : "hover:ring-1 hover:ring-white/30"
+            )}
+          >
+            {/* Simple placeholder thumbnail - just page number */}
+            <div className={cn(
+              "w-full aspect-[3/4] flex items-center justify-center",
+              pageNum === currentPage ? "bg-blue-500/20" : "bg-white/10"
+            )}>
+              <span className={cn(
+                "text-lg font-bold",
+                pageNum === currentPage ? "text-blue-400" : "text-white/40"
+              )}>
                 {pageNum}
-              </div>
-            </button>
-          ))}
-        </div>
-      </ScrollArea>
+              </span>
+            </div>
+            <div className={cn(
+              "text-[10px] text-center py-0.5",
+              pageNum === currentPage ? "text-blue-400 font-medium" : "text-white/50"
+            )}>
+              {pageNum}
+            </div>
+          </button>
+        ))}
+      </div>
 
-      {/* Quick navigation */}
-      <div className="p-2 border-t flex items-center justify-center gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-          disabled={currentPage <= 1}
-          className="h-7 w-7"
-        >
-          <ChevronLeft className="h-3 w-3" />
-        </Button>
-        <span className="text-xs tabular-nums">
-          {currentPage}/{numPages}
+      {/* Quick nav */}
+      <div className="p-2 border-t border-[#444] text-center">
+        <span className="text-[10px] text-white/50 tabular-nums">
+          {currentPage} / {numPages}
         </span>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => onPageChange(Math.min(numPages, currentPage + 1))}
-          disabled={currentPage >= numPages}
-          className="h-7 w-7"
-        >
-          <ChevronRight className="h-3 w-3" />
-        </Button>
       </div>
     </div>
   );
