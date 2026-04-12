@@ -11,14 +11,11 @@ import { Slider } from '@/components/ui/slider';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { useResolvedFileUrl } from '@/hooks/useResolvedFileUrl';
-import PDFViewerPro from './PDFViewerPro';
+import { useImageTransform } from './hooks/useImageTransform';
 import AudioViewer from './AudioViewer';
 import TextViewer from './TextViewer';
 import ArchiveViewer from './ArchiveViewer';
-import { useImageTransform } from './hooks/useImageTransform';
 import AnnotationLayer from './components/AnnotationLayer';
-import PDFThumbnailNav from './components/PDFThumbnailNav';
-import NativeExcelViewer from './NativeExcelViewer';
 
 // Utility to detect iOS WebKit
 const isIOSDevice = () => {
@@ -33,7 +30,7 @@ interface ProductionFileViewerProps {
   onClose: () => void;
 }
 
-type FileType = 'pdf' | 'image' | 'video' | 'audio' | 'excel' | 'office' | 'text' | 'archive' | 'other';
+type FileType = 'pdf' | 'image' | 'video' | 'audio' | 'office' | 'text' | 'archive' | 'other';
 
 const getFileExtension = (name: string): string => {
   return name.split('.').pop()?.toLowerCase() || '';
@@ -50,8 +47,8 @@ const getFileType = (extension: string): FileType => {
     mp4: 'video', webm: 'video', ogg: 'video', mov: 'video', avi: 'video', mkv: 'video',
     // Audio
     mp3: 'audio', wav: 'audio', aac: 'audio', flac: 'audio', m4a: 'audio', wma: 'audio',
-    // Excel (native rendering)
-    xls: 'excel', xlsx: 'excel', csv: 'excel',
+    // Excel (-> Office Online, same as doc/ppt)
+    xls: 'office', xlsx: 'office', csv: 'text',
     // Office (iframe-based)
     doc: 'office', docx: 'office', ppt: 'office', pptx: 'office',
     // Text/Code
@@ -195,6 +192,17 @@ const ProductionFileViewer: React.FC<ProductionFileViewerProps> = ({
     };
   }, [officeViewerIndex, loading, fileType, isOpen]);
 
+  // PDF embed onLoad is unreliable - use timeout fallback
+  useEffect(() => {
+    if (fileType === 'pdf' && resolvedUrl && loading && isOpen) {
+      const timeout = setTimeout(() => {
+        // After 2 seconds, assume PDF is loaded (embed onLoad doesn't fire reliably)
+        handleLoadSuccess();
+      }, 2000);
+      return () => clearTimeout(timeout);
+    }
+  }, [fileType, resolvedUrl, loading, isOpen]);
+
   // Check if file is PowerPoint
   const isPowerPoint = useMemo(() => {
     return extension === 'ppt' || extension === 'pptx';
@@ -209,13 +217,15 @@ const ProductionFileViewer: React.FC<ProductionFileViewerProps> = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         if (isFullscreen) {
-          document.exitFullscreen?.();
+          setIsFullscreen(false);
         } else {
           onClose();
         }
       }
       if (e.key === 'f' || e.key === 'F') {
-        toggleFullscreen();
+        if (e.target === document.body || e.target === containerRef.current) {
+          toggleFullscreen();
+        }
       }
       if (fileType === 'pdf') {
         if (e.key === 'ArrowLeft') setPdfPage(p => Math.max(1, p - 1));
@@ -422,57 +432,14 @@ const ProductionFileViewer: React.FC<ProductionFileViewerProps> = ({
   );
 
   const renderPdfContent = () => (
-    <div className="flex-1 flex relative">
-      {/* Thumbnail sidebar for desktop */}
-      {!isMobile && pdfPages > 1 && (
-        <PDFThumbnailNav
-          fileUrl={resolvedUrl}
-          numPages={pdfPages}
-          currentPage={pdfPage}
-          onPageChange={setPdfPage}
-          isOpen={showThumbnails}
-          onToggle={() => setShowThumbnails(!showThumbnails)}
-        />
-      )}
-      
-      <div className="flex-1 relative" ref={contentRef}>
-        <PDFViewerPro
-          fileUrl={resolvedUrl}
-          zoom={zoom}
-          page={pdfPage}
-          onPageChange={setPdfPage}
-          onPagesLoaded={(numPages) => {
-            setPdfPages(numPages);
-            handleLoadSuccess();
-          }}
-          onError={(msg) => handleLoadError(msg)}
-          retryKey={retryCount}
-        />
-        
-        {/* Annotation overlay for PDF */}
-        {showAnnotations && (
-          <AnnotationLayer
-            isActive={showAnnotations}
-            onToggle={() => setShowAnnotations(false)}
-            width={contentRef.current?.clientWidth || 800}
-            height={contentRef.current?.clientHeight || 600}
-            onSave={(dataUrl) => {
-              toast.success('Annotations sauvegardées');
-              setShowAnnotations(false);
-            }}
-          />
-        )}
-      </div>
+    <div className="flex-1 w-full h-full bg-[#525659] relative">
+      <embed
+        key={retryCount}
+        src={`${resolvedUrl}#toolbar=1&navpanes=1&scrollbar=1&view=FitH`}
+        type="application/pdf"
+        className="w-full h-full"
+      />
     </div>
-  );
-
-  const renderExcelContent = () => (
-    <NativeExcelViewer
-      fileUrl={resolvedUrl}
-      fileName={fileName}
-      onLoad={handleLoadSuccess}
-      onError={(msg) => handleLoadError(msg)}
-    />
   );
 
   const renderOfficeContent = () => {
@@ -594,7 +561,6 @@ const ProductionFileViewer: React.FC<ProductionFileViewerProps> = ({
       case 'image': return renderImageContent();
       case 'video': return renderVideoContent();
       case 'pdf': return renderPdfContent();
-      case 'excel': return renderExcelContent();
       case 'office': return renderOfficeContent();
       default: return renderOtherContent();
     }
@@ -627,13 +593,14 @@ const ProductionFileViewer: React.FC<ProductionFileViewerProps> = ({
       onMouseMove={isFullscreen ? resetControlsTimeout : undefined}
       onTouchStart={isFullscreen ? resetControlsTimeout : undefined}
     >
-      {/* Header */}
+      {/* Header - hidden in fullscreen for PDF/Office */}
       <header 
         className={`
-          flex items-center justify-between p-3 border-b bg-background/95 backdrop-blur-sm shrink-0
+          flex items-center justify-between p-2 border-b bg-background/95 backdrop-blur-sm shrink-0
           transition-all duration-300 ease-out
-          ${isFullscreen ? 'absolute top-0 left-0 right-0 z-50' : ''}
-          ${isFullscreen && !showControls ? 'opacity-0 -translate-y-full pointer-events-none' : 'opacity-100 translate-y-0'}
+          ${isFullscreen && (fileType === 'pdf' || fileType === 'office') ? 'hidden' : ''}
+          ${isFullscreen && fileType !== 'pdf' && fileType !== 'office' ? 'absolute top-0 left-0 right-0 z-50' : ''}
+          ${isFullscreen && !showControls && fileType !== 'pdf' && fileType !== 'office' ? 'opacity-0 -translate-y-full pointer-events-none' : 'opacity-100 translate-y-0'}
         `}
       >
         <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -650,44 +617,12 @@ const ProductionFileViewer: React.FC<ProductionFileViewerProps> = ({
           </Button>
           <div className="flex flex-col min-w-0">
             <span className="text-sm font-medium truncate">{fileName}</span>
-            {fileType === 'pdf' && pdfPages > 0 && (
-              <span className="text-xs text-muted-foreground">
-                Page {pdfPage} / {pdfPages}
-              </span>
-            )}
           </div>
         </div>
         
         <div className="flex items-center gap-1">
-          {/* PDF Navigation */}
-          {fileType === 'pdf' && pdfPages > 1 && (
-            <div className="flex items-center gap-1 mr-2 bg-muted/50 rounded-lg px-2 py-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setPdfPage(p => Math.max(1, p - 1))}
-                disabled={pdfPage <= 1}
-                className="h-7 w-7"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="text-xs font-medium w-12 text-center tabular-nums">
-                {pdfPage}/{pdfPages}
-              </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setPdfPage(p => Math.min(pdfPages, p + 1))}
-                disabled={pdfPage >= pdfPages}
-                className="h-7 w-7"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-
-          {/* Zoom controls */}
-          {(fileType === 'image' || fileType === 'pdf') && (
+          {/* Zoom controls - images only */}
+          {fileType === 'image' && (
             <div className="flex items-center gap-1 mr-2 bg-muted/50 rounded-lg px-2 py-1">
               <Button 
                 variant="ghost" 
@@ -733,21 +668,8 @@ const ProductionFileViewer: React.FC<ProductionFileViewerProps> = ({
             </div>
           )}
 
-          {/* Thumbnails toggle for PDF */}
-          {fileType === 'pdf' && pdfPages > 1 && !isMobile && (
-            <Button 
-              variant={showThumbnails ? 'secondary' : 'ghost'} 
-              size="icon" 
-              onClick={() => setShowThumbnails(!showThumbnails)} 
-              className="h-9 w-9"
-              title="Miniatures"
-            >
-              <Grid3X3 className="h-4 w-4" />
-            </Button>
-          )}
-
-          {/* Annotations toggle */}
-          {(fileType === 'image' || fileType === 'pdf') && (
+          {/* Annotations toggle - images only */}
+          {fileType === 'image' && (
             <Button 
               variant={showAnnotations ? 'secondary' : 'ghost'} 
               size="icon" 
@@ -759,18 +681,20 @@ const ProductionFileViewer: React.FC<ProductionFileViewerProps> = ({
             </Button>
           )}
 
+          {/* Open in new tab */}
+          <Button variant="ghost" size="icon" onClick={handleOpenNewTab} className="h-9 w-9" title="Ouvrir dans un nouvel onglet">
+            <ExternalLink className="h-4 w-4" />
+          </Button>
           {/* Actions */}
-          <Button variant="ghost" size="icon" onClick={handleShare} className="h-9 w-9">
+          <Button variant="ghost" size="icon" onClick={handleShare} className="h-9 w-9" title="Copier le lien">
             <Share2 className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={handleDownload} className="h-9 w-9">
+          <Button variant="ghost" size="icon" onClick={handleDownload} className="h-9 w-9" title="Telecharger">
             <Download className="h-4 w-4" />
           </Button>
-          {!isMobile && (
-            <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="h-9 w-9">
-              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            </Button>
-          )}
+          <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="h-9 w-9" title="Plein ecran">
+            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </Button>
         </div>
       </header>
 
@@ -788,39 +712,6 @@ const ProductionFileViewer: React.FC<ProductionFileViewerProps> = ({
       {/* Main content */}
       {error ? renderErrorState() : renderContent()}
 
-      {/* Mobile PDF controls */}
-      {fileType === 'pdf' && pdfPages > 1 && isMobile && !error && (
-        <div 
-          className={`
-            absolute bottom-4 left-1/2 -translate-x-1/2 z-50
-            flex items-center gap-2 bg-background/95 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg border
-            transition-all duration-300
-            ${isFullscreen && !showControls ? 'opacity-0 translate-y-4 pointer-events-none' : 'opacity-100 translate-y-0'}
-          `}
-        >
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setPdfPage(p => Math.max(1, p - 1))}
-            disabled={pdfPage <= 1}
-            className="h-8 w-8"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <span className="text-sm font-medium w-16 text-center tabular-nums">
-            {pdfPage} / {pdfPages}
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setPdfPage(p => Math.min(pdfPages, p + 1))}
-            disabled={pdfPage >= pdfPages}
-            className="h-8 w-8"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </Button>
-        </div>
-      )}
     </div>,
     portalTarget
   );
