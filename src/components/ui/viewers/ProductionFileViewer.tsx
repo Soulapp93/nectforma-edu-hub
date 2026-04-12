@@ -18,6 +18,7 @@ import ArchiveViewer from './ArchiveViewer';
 import { useImageTransform } from './hooks/useImageTransform';
 import AnnotationLayer from './components/AnnotationLayer';
 import PDFThumbnailNav from './components/PDFThumbnailNav';
+import NativeExcelViewer from './NativeExcelViewer';
 
 // Utility to detect iOS WebKit
 const isIOSDevice = () => {
@@ -32,7 +33,7 @@ interface ProductionFileViewerProps {
   onClose: () => void;
 }
 
-type FileType = 'pdf' | 'image' | 'video' | 'audio' | 'office' | 'text' | 'archive' | 'other';
+type FileType = 'pdf' | 'image' | 'video' | 'audio' | 'excel' | 'office' | 'text' | 'archive' | 'other';
 
 const getFileExtension = (name: string): string => {
   return name.split('.').pop()?.toLowerCase() || '';
@@ -49,8 +50,10 @@ const getFileType = (extension: string): FileType => {
     mp4: 'video', webm: 'video', ogg: 'video', mov: 'video', avi: 'video', mkv: 'video',
     // Audio
     mp3: 'audio', wav: 'audio', aac: 'audio', flac: 'audio', m4a: 'audio', wma: 'audio',
-    // Office
-    doc: 'office', docx: 'office', xls: 'office', xlsx: 'office', ppt: 'office', pptx: 'office',
+    // Excel (native rendering)
+    xls: 'excel', xlsx: 'excel', csv: 'excel',
+    // Office (iframe-based)
+    doc: 'office', docx: 'office', ppt: 'office', pptx: 'office',
     // Text/Code
     txt: 'text', md: 'text', markdown: 'text', log: 'text', json: 'text', xml: 'text',
     yaml: 'text', yml: 'text', js: 'text', jsx: 'text', ts: 'text', tsx: 'text',
@@ -472,6 +475,15 @@ const ProductionFileViewer: React.FC<ProductionFileViewerProps> = ({
     </div>
   );
 
+  const renderExcelContent = () => (
+    <NativeExcelViewer
+      fileUrl={resolvedUrl}
+      fileName={fileName}
+      onLoad={handleLoadSuccess}
+      onError={(msg) => handleLoadError(msg)}
+    />
+  );
+
   const renderOfficeContent = () => {
     const encodedUrl = encodeURIComponent(resolvedUrl);
     
@@ -591,6 +603,7 @@ const ProductionFileViewer: React.FC<ProductionFileViewerProps> = ({
       case 'image': return renderImageContent();
       case 'video': return renderVideoContent();
       case 'pdf': return renderPdfContent();
+      case 'excel': return renderExcelContent();
       case 'office': return renderOfficeContent();
       default: return renderOtherContent();
     }

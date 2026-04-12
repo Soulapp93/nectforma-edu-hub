@@ -6,12 +6,10 @@ import { Button } from '@/components/ui/button';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
-// PDF.js worker configuration - must happen before any PDF rendering
-// Using CDN worker for maximum compatibility across all platforms
 const PDFJS_VERSION = pdfjs.version;
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.worker.min.mjs`;
+// Use unpkg CDN as cdnjs may not have all versions
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${PDFJS_VERSION}/build/pdf.worker.min.mjs`;
 
-// Detect iOS for fallback strategy
 const isIOS = (): boolean => {
   if (typeof navigator === 'undefined') return false;
   return /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -42,11 +40,12 @@ const PDFViewerPro: React.FC<PDFViewerProProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [numPages, setNumPages] = useState(0);
   const [hasTriedFallback, setHasTriedFallback] = useState(false);
+  const [renderedPages, setRenderedPages] = useState<Set<number>>(new Set());
   const containerRef = useRef<HTMLDivElement>(null);
+  const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const isScrollingRef = useRef(false);
 
-  // Determine initial strategy based on device
   useEffect(() => {
-    // On iOS, react-pdf has known issues with workers - use Google Viewer
     if (isIOS()) {
       setStrategy('google-viewer');
     } else {
@@ -54,6 +53,7 @@ const PDFViewerPro: React.FC<PDFViewerProProps> = ({
     }
     setIsLoading(true);
     setHasTriedFallback(false);
+    setRenderedPages(new Set());
   }, [fileUrl, retryKey]);
 
   const handleReactPdfSuccess = useCallback(({ numPages: n }: { numPages: number }) => {
@@ -64,8 +64,6 @@ const PDFViewerPro: React.FC<PDFViewerProProps> = ({
 
   const handleReactPdfError = useCallback((error: Error) => {
     console.error('react-pdf error:', error);
-    
-    // Try fallback strategies
     if (!hasTriedFallback) {
       setHasTriedFallback(true);
       setStrategy('google-viewer');
@@ -77,7 +75,6 @@ const PDFViewerPro: React.FC<PDFViewerProProps> = ({
 
   const handleIframeLoad = useCallback(() => {
     setIsLoading(false);
-    // For iframe strategies, we can't know page count
     onPagesLoaded(1);
   }, [onPagesLoaded]);
 
@@ -91,18 +88,60 @@ const PDFViewerPro: React.FC<PDFViewerProProps> = ({
     }
   }, [strategy, hasTriedFallback, onError]);
 
-  const openInNewTab = () => {
-    window.open(fileUrl, '_blank', 'noopener,noreferrer');
-  };
+  // Scroll to page when page prop changes (from thumbnail click)
+  useEffect(() => {
+    if (strategy !== 'react-pdf' || numPages === 0) return;
+    const el = pageRefs.current.get(page);
+    if (el && !isScrollingRef.current) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [page, strategy, numPages]);
+
+  // Track visible page on scroll
+  const handleScroll = useCallback(() => {
+    if (!containerRef.current || numPages === 0) return;
+    isScrollingRef.current = true;
+    clearTimeout((handleScroll as any)._timeout);
+    (handleScroll as any)._timeout = setTimeout(() => { isScrollingRef.current = false; }, 200);
+
+    const container = containerRef.current;
+    const scrollTop = container.scrollTop;
+    const containerHeight = container.clientHeight;
+    const midPoint = scrollTop + containerHeight / 3;
+
+    let closestPage = 1;
+    let closestDist = Infinity;
+    pageRefs.current.forEach((el, p) => {
+      const dist = Math.abs(el.offsetTop - midPoint);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closestPage = p;
+      }
+    });
+
+    if (closestPage !== page) {
+      onPageChange(closestPage);
+    }
+  }, [numPages, page, onPageChange]);
+
+  const handlePageRender = useCallback((pageNum: number) => {
+    setRenderedPages(prev => {
+      const next = new Set(prev);
+      next.add(pageNum);
+      return next;
+    });
+  }, []);
 
   const scale = zoom / 100;
+  const openInNewTab = () => window.open(fileUrl, '_blank', 'noopener,noreferrer');
 
-  // React-PDF strategy (best quality, but can fail on iOS)
+  // Continuous scroll PDF (all pages) - like Edge
   if (strategy === 'react-pdf') {
     return (
-      <div 
+      <div
         ref={containerRef}
-        className="flex-1 w-full h-full bg-muted overflow-auto flex items-start justify-center p-4"
+        className="flex-1 w-full h-full bg-[#525659] overflow-auto"
+        onScroll={handleScroll}
       >
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-muted/50 z-10">
@@ -117,23 +156,44 @@ const PDFViewerPro: React.FC<PDFViewerProProps> = ({
           loading={null}
           error={null}
         >
-          <Page
-            pageNumber={page}
-            scale={scale}
-            renderTextLayer
-            renderAnnotationLayer
-            className="shadow-2xl rounded-lg"
-            onRenderSuccess={() => setIsLoading(false)}
-          />
+          <div className="flex flex-col items-center gap-3 py-4 px-2">
+            {Array.from({ length: numPages }, (_, i) => i + 1).map((pageNum) => (
+              <div
+                key={pageNum}
+                ref={(el) => { if (el) pageRefs.current.set(pageNum, el); }}
+                className="relative"
+              >
+                <Page
+                  pageNumber={pageNum}
+                  scale={scale}
+                  renderTextLayer
+                  renderAnnotationLayer
+                  className="shadow-xl"
+                  onRenderSuccess={() => handlePageRender(pageNum)}
+                  loading={
+                    <div
+                      className="flex items-center justify-center bg-white shadow-xl"
+                      style={{ width: 600 * scale, height: 848 * scale }}
+                    >
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  }
+                />
+                {/* Page number overlay */}
+                <div className="absolute bottom-2 right-3 bg-black/50 text-white text-[10px] px-2 py-0.5 rounded-full">
+                  {pageNum}
+                </div>
+              </div>
+            ))}
+          </div>
         </Document>
       </div>
     );
   }
 
-  // Google Docs Viewer strategy (works on all platforms)
+  // Google Docs Viewer fallback
   if (strategy === 'google-viewer') {
     const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
-    
     return (
       <div className="flex-1 w-full h-full bg-muted relative">
         {isLoading && (
@@ -155,7 +215,7 @@ const PDFViewerPro: React.FC<PDFViewerProProps> = ({
     );
   }
 
-  // Native embed fallback (last resort)
+  // Native embed fallback
   if (strategy === 'native-embed') {
     return (
       <div className="flex-1 w-full h-full bg-muted relative flex flex-col">

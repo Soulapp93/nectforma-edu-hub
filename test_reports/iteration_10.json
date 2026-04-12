@@ -1,0 +1,124 @@
+{
+  "summary": "Tests de validation des nouvelles fonctionnalités de visualisation de fichiers: NativeExcelViewer (SheetJS) et PDFViewerPro (scroll continu). TOUS LES TESTS PASSENT après correction du worker PDF.js (changement de cdnjs vers unpkg). Excel: onglets feuilles, numéros lignes, lettres colonnes, recherche avec surlignage, barre de statut. PDF: scroll continu toutes pages, vignettes latérales, numéro de page sur chaque page, zoom +/-.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_10.json"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "NativeExcelViewer.tsx: Utilise SheetJS (xlsx) pour parser les fichiers Excel côté client. Rendu en tableau HTML avec styles (couleurs, bordures, gras, italique, fusion cellules, largeurs colonnes). Onglets feuilles, numéros lignes, en-têtes colonnes (A,B,C...), recherche avec surlignage jaune (#fff3cd), barre de statut.",
+    "PDFViewerPro.tsx: Rendu de TOUTES les pages en scroll continu (gap-3 entre pages). Chaque page a un overlay numéro de page en bas à droite. Tracking du scroll pour mettre à jour la page courante. Vignettes latérales via PDFThumbnailNav.",
+    "ProductionFileViewer.tsx: Routing correct - type 'excel' (xls, xlsx, csv) vers NativeExcelViewer au lieu de Office Online iframe.",
+    "FIX APPLIQUÉ: PDFViewerPro.tsx ligne 10 - Changement du CDN worker de cdnjs vers unpkg car la version 5.4.296 n'existe pas sur cdnjs."
+  ],
+  "updated_files": [
+    "/app/src/components/ui/viewers/PDFViewerPro.tsx"
+  ],
+  "success_rate": {
+    "backend": "N/A (frontend only test)",
+    "frontend": "100% (tous les tests passés)"
+  },
+  "test_credentials": "Sophie Martin (AdminPrincipal): admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "Créé 2 fichiers de test: /tmp/test_notes.xlsx (Excel avec formatage, 2 feuilles) et /tmp/test_document.pdf (PDF 3 pages). Uploadés dans Documents & Archives.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Les viewers de fichiers fonctionnent correctement. NativeExcelViewer parse les fichiers Excel avec SheetJS et affiche un tableau avec tous les éléments demandés. PDFViewerPro affiche toutes les pages en scroll continu avec vignettes latérales. Le fix du worker PDF.js (unpkg au lieu de cdnjs) est critique pour le bon fonctionnement.",
+  "tests_executed": [
+    {
+      "test": "Login Sophie Martin via Comptes démo",
+      "status": "PASSED",
+      "details": "Connexion réussie avec admin.principal@nectforma-demo.com / NectDemo2026!, redirection vers /dashboard"
+    },
+    {
+      "test": "Navigation vers Documents & Archives",
+      "status": "PASSED",
+      "details": "Clic sur 'Documents & Archives' dans la sidebar, navigation vers /documents-archives"
+    },
+    {
+      "test": "Upload fichier Excel (.xlsx)",
+      "status": "PASSED",
+      "details": "Upload de test_notes.xlsx (5.6 Ko) via input file. Fichier visible dans la liste avec icône Excel verte."
+    },
+    {
+      "test": "NativeExcelViewer - Ouverture et éléments UI",
+      "status": "PASSED",
+      "details": "Clic sur test_notes.xlsx ouvre le NativeExcelViewer. Éléments vérifiés: 2 onglets feuilles (Notes, Statistiques), numéros de lignes (1-5), lettres colonnes (A,B,C,D), barre de statut '5 lignes × 4 colonnes', bouton recherche."
+    },
+    {
+      "test": "NativeExcelViewer - Données et formatage",
+      "status": "PASSED",
+      "details": "Données affichées correctement: Nom, Prénom, Note, Commentaire avec valeurs (Dubois/Alice/18/Excellent travail, etc.). Formatage conservé."
+    },
+    {
+      "test": "NativeExcelViewer - Recherche avec surlignage",
+      "status": "PASSED",
+      "details": "Clic sur bouton recherche, saisie 'Alice'. La cellule contenant 'Alice' est surlignée en jaune (#fff3cd)."
+    },
+    {
+      "test": "Upload fichier PDF",
+      "status": "PASSED",
+      "details": "Upload de test_document.pdf (2.8 Ko, 3 pages) via input file. Fichier visible dans la liste avec icône PDF rouge."
+    },
+    {
+      "test": "PDFViewerPro - Scroll continu",
+      "status": "PASSED",
+      "details": "Clic sur test_document.pdf ouvre le PDFViewerPro. Les 3 pages sont rendues en scroll continu (toutes visibles en scrollant). Pages 1 et 2 visibles simultanément."
+    },
+    {
+      "test": "PDFViewerPro - Numéro de page sur chaque page",
+      "status": "PASSED",
+      "details": "3 overlays de numéro de page trouvés (un par page). Badge '1' visible en bas à droite de la page 1."
+    },
+    {
+      "test": "PDFViewerPro - Vignettes latérales",
+      "status": "PASSED",
+      "details": "Clic sur bouton vignettes (icône grille) ouvre le panneau 'Pages' à gauche avec les 3 vignettes des pages."
+    },
+    {
+      "test": "PDFViewerPro - Zoom +/-",
+      "status": "PASSED",
+      "details": "Zoom in: 100% → 125%. Zoom out: 125% → 100%. Contrôles fonctionnels."
+    },
+    {
+      "test": "PDFViewerPro - Navigation",
+      "status": "PASSED",
+      "details": "Indicateur 'Page 1 / 3' en haut avec flèches de navigation gauche/droite."
+    }
+  ],
+  "features_validated": {
+    "NativeExcelViewer_SheetJS": "Parsing Excel côté client avec SheetJS (xlsx library). Pas de dépendance externe Office Online.",
+    "NativeExcelViewer_sheet_tabs": "Onglets de feuilles en bas permettant de naviguer entre les feuilles du classeur.",
+    "NativeExcelViewer_row_numbers": "Numéros de lignes affichés dans la première colonne sticky.",
+    "NativeExcelViewer_column_headers": "Lettres de colonnes (A, B, C...) affichées en en-tête sticky.",
+    "NativeExcelViewer_status_bar": "Barre de statut en bas affichant le nom de la feuille et 'X lignes × Y colonnes'.",
+    "NativeExcelViewer_search": "Recherche dans la feuille avec surlignage jaune des cellules correspondantes.",
+    "NativeExcelViewer_formatting": "Conservation du formatage: couleurs de fond, couleurs de texte, gras, italique, fusion de cellules, largeurs de colonnes.",
+    "PDFViewerPro_continuous_scroll": "Toutes les pages rendues en scroll continu (style Edge) avec gap-3 entre les pages.",
+    "PDFViewerPro_page_number_overlay": "Numéro de page affiché en bas à droite de chaque page (badge arrondi noir/blanc).",
+    "PDFViewerPro_thumbnails": "Panneau de vignettes latérales pour navigation rapide entre les pages.",
+    "PDFViewerPro_zoom": "Contrôles zoom +/- fonctionnels avec affichage du pourcentage.",
+    "PDFViewerPro_navigation": "Indicateur de page courante et flèches de navigation."
+  },
+  "code_changes": {
+    "PDFViewerPro.tsx": {
+      "line": 10,
+      "before": "pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.worker.min.mjs`;",
+      "after": "pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${PDFJS_VERSION}/build/pdf.worker.min.mjs`;",
+      "reason": "La version 5.4.296 de pdf.js n'existe pas sur cdnjs (404). Unpkg a le fichier disponible."
+    }
+  },
+  "root_cause_analysis": {
+    "issue": "PDF viewer utilisait le fallback Google Docs Viewer au lieu du rendu natif react-pdf",
+    "root_cause": "Le worker pdf.js version 5.4.296 n'est pas disponible sur cdnjs.cloudflare.com (erreur 404). react-pdf@10.4.1 dépend de pdfjs-dist@5.4.296.",
+    "fix_applied": "Changement du CDN de cdnjs vers unpkg qui héberge toutes les versions de pdfjs-dist.",
+    "verification": "Après le fix, le PDF viewer utilise react-pdf natif avec scroll continu et toutes les fonctionnalités."
+  }
+}
