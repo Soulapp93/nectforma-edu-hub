@@ -16,7 +16,7 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 
 ### Sessions 7-10 - Sidebar + Mobile + Fonctionnalites (2026-04-10)
 - Sidebar aplatie avec pages hub et onglets horizontaux
-- Version mobile responsive, Entreprises partenaires, Diplomes, Documents etablissement
+- Version mobile responsive, Diplomes, Documents etablissement
 
 ### Sessions 12-15 - Classes Virtuelles + Zoom + Notifications (2026-04-10/11)
 - Integration Zoom E2E, notifications creation + rappel 15 min (in-app + email + messagerie)
@@ -27,21 +27,31 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 - CI test:rls dans GitHub Actions
 
 ### Session 17 - Dossiers Administratifs (2026-04-11)
-- Remplace "Entreprises partenaires" par "Dossiers administratifs"
-- Schema DB enrichi, table user_documents, bucket Storage
-- Vue 2 colonnes, dossier 4 onglets, formulaire enrichi
+- Module Dossiers administratifs complet (4 onglets, CRUD, export PDF)
 
 ### Session 18 - Export PDF + Bug Fix Realtime (2026-04-11)
-- Export PDF dossier administratif via jsPDF + jspdf-autotable
-- Fix Vite allowedHosts, Supabase Realtime try-catch dans 9 hooks
-- Fix query transcripts.semester -> semester_number
+- Export PDF dossier administratif, fix Supabase Realtime try-catch 9 hooks
 
 ### Session 19 - Fix 3 Bugs Critiques Pre-Deploiement (2026-04-12)
-- **Creation etablissement**: Nettoyage rate limit + meilleur message d'erreur frontend
-- **Creation formation**: Ajout colonne semesters_count en DB + null check establishment + champs explicites
-- **Upload documents**: Ajout politiques RLS sur buckets establishment-docs et user-documents (INSERT/SELECT/UPDATE/DELETE)
-- **Bonus**: Ajout colonne description dans text_books
-- Testing: 6/6 tests passes (iteration_5), 3/3 bugs critiques corriges
+- Creation etablissement, creation formation, upload documents (RLS)
+
+### Session 20 - Logique Creation Automatique Promotions (2026-04-12)
+- **Nouvelle fonctionnalite majeure**: Creation automatique de promotion lors de la creation de formation
+- Chaine automatique: Formation -> Promotion -> Emploi du temps + Cahier de texte
+- Service `promotionService.ts` avec `createPromotionWithResources()`
+- Composant `PromotionsList.tsx` dans onglet "Gestion des promotions"
+- Chaque promotion affiche: formation, annee, nb etudiants, liens vers emploi du temps/cahier/emargement
+- Boutons Desactiver/Activer et Supprimer
+- DB: Ajout promotion_id dans schedules, text_books, attendance_sheets
+- DB: Ajout colonnes title, description dans text_books
+- RLS promotions configuree
+- Testing: 7/7 tests passes (iteration_6)
+
+## Architecture Promotions
+- CreateFormationModal.tsx -> formationService.createFormation() -> promotionService.createPromotionWithResources()
+- promotionService.ts: cree promotion + schedule + text_book lies par promotion_id
+- PromotionsList.tsx: affiche les promotions avec liens vers ressources
+- Pedagogie.tsx: 5 onglets (emplois du temps, cahiers de textes, formations, promotions, classes virtuelles)
 
 ## Task Status
 
@@ -51,10 +61,9 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 - [x] Classes virtuelles + Zoom E2E + Notifications
 - [x] Refactoring + CI
 - [x] Dossiers Administratifs + Export PDF
-- [x] Bug fix Supabase Realtime channel errors
-- [x] Creation etablissement fonctionnelle
-- [x] Creation formation fonctionnelle
-- [x] Upload documents fonctionnel (RLS corrige)
+- [x] Bug fix Supabase Realtime
+- [x] Creation etablissement, formation, upload docs
+- [x] Logique creation automatique promotions
 
 ### P1 - A faire
 - [ ] Activer TypeScript strict
