@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import ProductionFileViewer from '@/components/ui/viewers/ProductionFileViewer';
+import FilePreviewTooltip from '@/components/ui/FilePreviewTooltip';
 import {
   FolderOpen, Plus, Search, Trash2, Download, Upload, File,
   Folder, FolderPlus, ChevronRight, ArrowLeft, MoreVertical,
@@ -512,8 +513,8 @@ const EstablishmentDocuments: React.FC = () => {
               const FileIcon = getFileIcon(file.content_type);
               const fileColor = getFileColor(file.content_type);
               return (
+                <FilePreviewTooltip key={file.id} fileUrl={file.file_url} fileName={file.original_name || file.name}>
                 <div
-                  key={file.id}
                   className="flex items-center gap-3 px-3 sm:px-4 py-3 hover:bg-muted/30 transition-colors group cursor-pointer"
                   data-testid={`file-${file.id}`}
                   onClick={() => setViewerFile({ url: file.file_url, name: file.original_name || file.name })}
@@ -559,6 +560,7 @@ const EstablishmentDocuments: React.FC = () => {
                     </DropdownMenu>
                   </div>
                 </div>
+                </FilePreviewTooltip>
               );
             })}
           </CardContent>

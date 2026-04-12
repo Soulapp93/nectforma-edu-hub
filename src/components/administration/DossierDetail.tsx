@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { dossierService, UserProfile, UserDocument } from '@/services/dossierService';
 import { exportDossierPDF } from '@/services/dossierPdfExport';
 import ProductionFileViewer from '@/components/ui/viewers/ProductionFileViewer';
+import FilePreviewTooltip from '@/components/ui/FilePreviewTooltip';
 
 interface Props {
   user: UserProfile;
@@ -347,7 +348,8 @@ export const DossierDetail: React.FC<Props> = ({ user, establishmentId, onBack }
                 ) : (
                   <div className="space-y-2">
                     {userDocuments.map(doc => (
-                      <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors" data-testid={`doc-${doc.id}`} onClick={() => doc.file_url && setViewerFile({ url: doc.file_url, name: doc.file_name || doc.title })}>
+                      <FilePreviewTooltip key={doc.id} fileUrl={doc.file_url || ''} fileName={doc.file_name || doc.title}>
+                      <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors" data-testid={`doc-${doc.id}`} onClick={() => doc.file_url && setViewerFile({ url: doc.file_url, name: doc.file_name || doc.title })}>
                         <div className="flex items-center gap-3 min-w-0">
                           <FileText className="w-5 h-5 text-primary shrink-0" />
                           <div className="min-w-0">
@@ -374,6 +376,7 @@ export const DossierDetail: React.FC<Props> = ({ user, establishmentId, onBack }
                           </Button>
                         </div>
                       </div>
+                      </FilePreviewTooltip>
                     ))}
                   </div>
                 )}

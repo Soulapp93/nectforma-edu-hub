@@ -14,6 +14,7 @@ import { chatService } from '@/services/chatService';
 import { useToast } from '@/hooks/use-toast';
 import type { ChatMessage } from '@/services/chatService';
 import FileViewerModal from './FileViewerModal';
+import FilePreviewTooltip from '@/components/ui/FilePreviewTooltip';
 
 interface ChatRoomProps {
   groupId: string;
@@ -397,8 +398,8 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
                             // PDF preview
                             if (isPDF(contentType)) {
                               return (
+                                <FilePreviewTooltip key={attachment.id} fileUrl={attachment.file_url} fileName={attachment.file_name}>
                                 <div
-                                  key={attachment.id}
                                   className={cn(
                                     'flex items-center gap-3 px-4 py-3 rounded-xl transition-all shadow-sm border-l-4 cursor-pointer group',
                                     isOwnMessage
@@ -435,13 +436,14 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
                                     <Download className="h-4 w-4" />
                                   </Button>
                                 </div>
+                                </FilePreviewTooltip>
                               );
                             }
                             
                             // Other files
                             return (
+                              <FilePreviewTooltip key={attachment.id} fileUrl={attachment.file_url} fileName={attachment.file_name}>
                               <div
-                                key={attachment.id}
                                 className={cn(
                                   'flex items-center gap-3 px-4 py-3 rounded-xl transition-all shadow-sm cursor-pointer group',
                                   isOwnMessage
@@ -478,6 +480,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
                                   <Download className="h-4 w-4" />
                                 </Button>
                               </div>
+                              </FilePreviewTooltip>
                             );
                           })}
                         </div>

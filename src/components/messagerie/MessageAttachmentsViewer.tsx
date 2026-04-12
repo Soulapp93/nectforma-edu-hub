@@ -3,6 +3,7 @@ import { FileText, Download, Eye, File, Image, Film, Music, Archive, FileSpreads
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import MobileResponsiveFileViewer from '@/components/ui/viewers/MobileResponsiveFileViewer';
+import FilePreviewTooltip from '@/components/ui/FilePreviewTooltip';
 
 interface Attachment {
   id: string;
@@ -117,9 +118,10 @@ const MessageAttachmentsViewer: React.FC<MessageAttachmentsViewerProps> = ({ mes
         </h4>
         <div className="grid gap-2">
           {attachments.map((attachment) => (
+            <FilePreviewTooltip key={attachment.id} fileUrl={attachment.file_url} fileName={attachment.file_name}>
             <div
-              key={attachment.id}
-              className="flex items-center justify-between gap-3 p-3 bg-muted/50 hover:bg-muted rounded-lg border border-border/50 transition-colors"
+              className="flex items-center justify-between gap-3 p-3 bg-muted/50 hover:bg-muted rounded-lg border border-border/50 transition-colors cursor-pointer"
+              onClick={() => handleView(attachment)}
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 {getFileIcon(attachment.file_name, attachment.content_type)}
@@ -136,7 +138,7 @@ const MessageAttachmentsViewer: React.FC<MessageAttachmentsViewerProps> = ({ mes
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleView(attachment)}
+                  onClick={(e) => { e.stopPropagation(); handleView(attachment); }}
                   className="h-8 w-8 p-0"
                   title="Visualiser"
                 >
@@ -145,7 +147,7 @@ const MessageAttachmentsViewer: React.FC<MessageAttachmentsViewerProps> = ({ mes
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleDownload(attachment)}
+                  onClick={(e) => { e.stopPropagation(); handleDownload(attachment); }}
                   className="h-8 w-8 p-0"
                   title="Télécharger"
                 >
@@ -153,6 +155,7 @@ const MessageAttachmentsViewer: React.FC<MessageAttachmentsViewerProps> = ({ mes
                 </Button>
               </div>
             </div>
+            </FilePreviewTooltip>
           ))}
         </div>
       </div>

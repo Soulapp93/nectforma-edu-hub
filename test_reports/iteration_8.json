@@ -1,0 +1,72 @@
+{
+  "summary": "Tests de validation du FilePreviewTooltip dans Documents & Archives. TOUS LES TESTS PASSENT: 1) Login Sophie Martin réussi, 2) Navigation vers /documents-archives, 3) Hover sur test_upload.txt affiche le tooltip avec icône TXT + nom fichier + 'Cliquer pour visualiser', 4) Clic sur le fichier ouvre le ProductionFileViewer avec le contenu et les contrôles (X, télécharger, plein écran), 5) Fermeture du viewer avec X retourne à la liste des fichiers.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_8.json"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "FilePreviewTooltip est correctement intégré dans EstablishmentDocuments.tsx (ligne 516-563)",
+    "Le tooltip utilise Radix Tooltip avec delayDuration=400ms",
+    "Pour les fichiers TXT: affiche icône File + badge TXT + nom fichier + 'Cliquer pour visualiser'",
+    "Le ProductionFileViewer s'ouvre correctement au clic sur la ligne du fichier",
+    "Les contrôles du viewer sont présents: fermeture (X), téléchargement, partage, plein écran"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only test)",
+    "frontend": "100% (5/5 tests passés)"
+  },
+  "test_credentials": "Sophie Martin (AdminPrincipal): admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Le FilePreviewTooltip fonctionne correctement dans Documents & Archives. Le tooltip affiche: pour fichiers TXT - icône File + badge TXT + nom + 'Cliquer pour visualiser'. Le ProductionFileViewer s'ouvre au clic et affiche le contenu du fichier avec tous les contrôles nécessaires.",
+  "tests_executed": [
+    {
+      "test": "Login Sophie Martin via Comptes démo",
+      "status": "PASSED",
+      "details": "Connexion réussie avec admin.principal@nectforma-demo.com / NectDemo2026!, redirection vers /dashboard"
+    },
+    {
+      "test": "Navigation vers Documents & Archives",
+      "status": "PASSED",
+      "details": "Clic sur 'Documents & Archives' dans la sidebar, navigation vers /documents-archives. 3 dossiers et 2 fichiers visibles dont test_upload.txt (42 o)"
+    },
+    {
+      "test": "Hover sur test_upload.txt - Tooltip de prévisualisation",
+      "status": "PASSED",
+      "details": "Hover sur la ligne du fichier test_upload.txt. Après 400ms+, le tooltip apparaît avec: icône TXT, nom 'test_upload.txt', texte 'Cliquer pour visualiser'. Contenu du tooltip: 'TXTtest_upload.txtCliquer pour visualiser'"
+    },
+    {
+      "test": "Clic sur test_upload.txt - ProductionFileViewer",
+      "status": "PASSED",
+      "details": "Clic sur la ligne du fichier ouvre le ProductionFileViewer. Le contenu 'test pour l'upload.' est affiché. Contrôles présents: bouton fermeture (X), téléchargement, partage, plein écran"
+    },
+    {
+      "test": "Fermeture du viewer avec X",
+      "status": "PASSED",
+      "details": "Clic sur le bouton X ferme le viewer et retourne à la liste des fichiers dans Documents & Archives"
+    }
+  ],
+  "features_validated": {
+    "FilePreviewTooltip_TXT": "Tooltip affiche icône File + badge TXT + nom fichier + 'Cliquer pour visualiser' pour les fichiers .txt",
+    "FilePreviewTooltip_delay": "Délai de 400ms avant affichage du tooltip (Radix TooltipProvider delayDuration=400)",
+    "ProductionFileViewer_open": "Le viewer s'ouvre au clic sur la ligne du fichier",
+    "ProductionFileViewer_content": "Le contenu du fichier texte est affiché correctement",
+    "ProductionFileViewer_controls": "Contrôles présents: fermeture (X), téléchargement, partage, plein écran, recherche, taille police",
+    "ProductionFileViewer_close": "Le viewer se ferme correctement avec le bouton X"
+  },
+  "code_review": {
+    "FilePreviewTooltip.tsx": "Composant bien structuré avec gestion des différents types de fichiers (images, PDF, autres). Utilise Radix Tooltip avec delayDuration=400. Affiche miniature pour images, icône PDF rouge pour PDF, icône type + badge extension pour autres fichiers.",
+    "EstablishmentDocuments.tsx": "FilePreviewTooltip intégré autour des lignes de fichiers (ligne 516-563). Le wrapper entoure correctement le div cliquable avec data-testid='file-{id}'"
+  }
+}
