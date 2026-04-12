@@ -4,19 +4,23 @@
 - **Name:** Nectforma - SaaS multi-tenant pour centres de formation
 - **Stack:** React 18 + TypeScript + Vite + Tailwind CSS + Supabase (BaaS) + Capacitor
 
-## Session 24 - Viewers Natifs Excel + PDF Scroll Continu (2026-04-12)
-- **NativeExcelViewer**: Parsing natif SheetJS (xlsx) cote client, remplace Office Online
-  - Conservation formatage: couleurs, bordures, gras, italique, fusion cellules, largeurs colonnes
-  - Onglets feuilles, numeros lignes, lettres colonnes (A,B,C...)
-  - Recherche avec surlignage jaune, barre de statut
-- **PDFViewerPro reecrit**: Scroll continu toutes pages (style Edge)
-  - Numero de page overlay en bas droite de chaque page
-  - Tracking scroll pour mettre a jour la page courante
-  - Fix CDN worker pdf.js: cdnjs -> unpkg (version 5.4.296 manquante sur cdnjs)
-- **ProductionFileViewer**: Type 'excel' (xls,xlsx,csv) route vers NativeExcelViewer
-- Testing: 100% passes (iteration_10)
+## Session 25 - Fix Viewers Excel + PDF (2026-04-12)
+- **NativeExcelViewer reecrit**: sheet_to_html() de SheetJS pour rendu natif
+  - Conserve structure, fusions, donnees telles quelles
+  - Onglets feuilles style Excel (fond gris, actif blanc, bordure verte)
+  - Barre de statut verte (#217346) comme Excel
+  - Recherche avec surlignage orange
+  - CSS Calibri, bordures fines, table responsive
+- **PDFThumbnailNav simplifie**: Plus de Document par vignette (causait lag extreme)
+  - Vignettes numerotees simples, fond sombre, selection bleue
+  - Navigation par clic fonctionne
+- **ProductionFileViewer fixes**:
+  - Plein ecran CSS (toggle state) au lieu API native (ne fonctionne pas en iframe)
+  - Navigation PDF toujours visible (removed hidden sm:flex)
+  - Bouton X ferme le plein ecran au lieu de quitter
+- Testing: 12/12 passes (iteration_11)
 
-## All P0 Tasks - DONE
+## All Completed Tasks
 - [x] Audit, tests, RLS, comptes demo, sidebar, mobile
 - [x] Zoom E2E, notifications, reminders
 - [x] Refactoring + CI
@@ -25,7 +29,8 @@
 - [x] Promotions automatiques
 - [x] Preview fichiers universel + tooltip hover
 - [x] Chat WhatsApp-like
-- [x] Viewers natifs Excel (SheetJS) + PDF scroll continu (Edge-like)
+- [x] Viewers natifs Excel + PDF scroll continu
+- [x] Fix viewers Excel (sheet_to_html) + PDF (navigation, fullscreen, thumbnails)
 
 ## P1
 - [ ] Deploiement production
