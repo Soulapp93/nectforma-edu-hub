@@ -15,16 +15,13 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 - Audit architecture, 105 tests Vitest, 42 tests RLS, fix RLS recursion, comptes demo
 
 ### Sessions 7-10 - Sidebar + Mobile + Fonctionnalites (2026-04-10)
-- Sidebar aplatie avec pages hub et onglets horizontaux
-- Version mobile responsive, Diplomes, Documents etablissement
+- Sidebar aplatie avec pages hub et onglets horizontaux, mobile responsive
 
 ### Sessions 12-15 - Classes Virtuelles + Zoom + Notifications (2026-04-10/11)
-- Integration Zoom E2E, notifications creation + rappel 15 min (in-app + email + messagerie)
+- Integration Zoom E2E, notifications creation + rappel 15 min
 
 ### Session 16 - Refactoring + CI (2026-04-11)
-- VirtualClassesManagement: 619 -> 138 lignes (7 sous-composants)
-- ScheduleManagement: 1489 -> 1088 lignes (2 sous-composants)
-- CI test:rls dans GitHub Actions
+- VirtualClassesManagement + ScheduleManagement refactored, CI test:rls
 
 ### Session 17 - Dossiers Administratifs (2026-04-11)
 - Module Dossiers administratifs complet (4 onglets, CRUD, export PDF)
@@ -36,22 +33,19 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 - Creation etablissement, creation formation, upload documents (RLS)
 
 ### Session 20 - Logique Creation Automatique Promotions (2026-04-12)
-- **Nouvelle fonctionnalite majeure**: Creation automatique de promotion lors de la creation de formation
-- Chaine automatique: Formation -> Promotion -> Emploi du temps + Cahier de texte
-- Service `promotionService.ts` avec `createPromotionWithResources()`
-- Composant `PromotionsList.tsx` dans onglet "Gestion des promotions"
-- Chaque promotion affiche: formation, annee, nb etudiants, liens vers emploi du temps/cahier/emargement
-- Boutons Desactiver/Activer et Supprimer
-- DB: Ajout promotion_id dans schedules, text_books, attendance_sheets
-- DB: Ajout colonnes title, description dans text_books
-- RLS promotions configuree
-- Testing: 7/7 tests passes (iteration_6)
+- Chaine: Formation -> Promotion -> Emploi du temps + Cahier de texte
+- Composant PromotionsList.tsx, service promotionService.ts
 
-## Architecture Promotions
-- CreateFormationModal.tsx -> formationService.createFormation() -> promotionService.createPromotionWithResources()
-- promotionService.ts: cree promotion + schedule + text_book lies par promotion_id
-- PromotionsList.tsx: affiche les promotions avec liens vers ressources
-- Pedagogie.tsx: 5 onglets (emplois du temps, cahiers de textes, formations, promotions, classes virtuelles)
+### Session 21 - Preview Fichiers Universel (2026-04-12)
+- **ProductionFileViewer integre dans toute l'application**
+- Composants modifies:
+  1. DossierDetail.tsx: fichiers cliquables + bouton Eye + ProductionFileViewer
+  2. EstablishmentDocuments.tsx: fichiers cliquables + bouton Eye + menu Visualiser + ProductionFileViewer
+  3. StudentFilesManagement.tsx: remplace window.open par ProductionFileViewer
+  4. AbsenceManagement.tsx: remplace window.open par ProductionFileViewer
+  5. AbsenceReviewModal.tsx: remplace window.open par ProductionFileViewer
+- Deja integre: ChatRoom, MessageAttachmentsViewer, ModuleContentTab, ModuleDocumentsTab, TextBookDetail
+- Testing: 3/3 tests passes (iteration_7)
 
 ## Task Status
 
@@ -64,12 +58,12 @@ Realiser un audit de l'architecture de cette application (Nectforma - Plateforme
 - [x] Bug fix Supabase Realtime
 - [x] Creation etablissement, formation, upload docs
 - [x] Logique creation automatique promotions
+- [x] Preview fichiers universel (ProductionFileViewer partout)
 
 ### P1 - A faire
-- [ ] Activer TypeScript strict
 - [ ] Deploiement production
 
 ### P2-P3
+- [ ] Activer TypeScript strict
 - [ ] Refactoring TranscriptsPanel.tsx (>1200 lignes)
 - [ ] Patterns N+1, pagination
-- [ ] Structure code, monitoring, Storybook, doc API
