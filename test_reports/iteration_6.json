@@ -1,0 +1,77 @@
+{
+  "summary": "Tests complets de la logique de création automatique de promotion. TOUS LES TESTS PASSENT: 1) Création de formation crée automatiquement une promotion avec emploi du temps et cahier de texte, 2) La promotion apparaît dans l'onglet 'Gestion des promotions' avec badges corrects, 3) L'emploi du temps apparaît dans 'Gestion des emplois du temps', 4) Le cahier de texte apparaît dans 'Gestion des cahiers de textes', 5) Bouton 'Désactiver/Activer' fonctionne, 6) Bouton 'Supprimer' fonctionne.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_6.json"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only test)",
+    "frontend": "100% (7/7 tests passés)"
+  },
+  "test_credentials": "Sophie Martin (AdminPrincipal): admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "Formation 'Licence Informatique Test 1775986219' créée avec promotion, emploi du temps et cahier de texte automatiques",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "La logique de création automatique de promotion fonctionne parfaitement. Lors de la création d'une formation, une promotion est automatiquement créée avec: 1) Un emploi du temps lié (visible dans tab 'schedules'), 2) Un cahier de texte lié (visible dans tab 'textbooks'). Les badges sur la carte de promotion indiquent correctement les ressources liées (bleu=emploi du temps, vert=cahier de texte, orange=émargement). Les boutons Désactiver/Activer et Supprimer fonctionnent correctement.",
+  "tests_executed": [
+    {
+      "test": "Login Sophie Martin via Comptes démo",
+      "status": "PASSED",
+      "details": "Connexion réussie, redirection vers /dashboard"
+    },
+    {
+      "test": "Navigation vers /pedagogie?tab=formations et création de formation",
+      "status": "PASSED",
+      "details": "Formation 'Licence Informatique Test 1775986219' créée avec succès, toast 'Formation créée avec succès' affiché, formation visible dans la liste avec badge '1 promotion'"
+    },
+    {
+      "test": "Vérification promotion dans /pedagogie?tab=promotions",
+      "status": "PASSED",
+      "details": "Promotion 'Licence Informatique Test 1775986219 2026-2027' visible avec: badge 'Active', année académique '2026-2027', badges 'Emploi du temps' (bleu), 'Cahier de texte' (vert), 'Émargement' (orange)"
+    },
+    {
+      "test": "Vérification emploi du temps dans /pedagogie?tab=schedules",
+      "status": "PASSED",
+      "details": "Emploi du temps 'Licence Informatique Test 1775986219' visible dans la liste"
+    },
+    {
+      "test": "Vérification cahier de texte dans /pedagogie?tab=textbooks",
+      "status": "PASSED",
+      "details": "Cahier de texte 'Licence Informatique Test 1775986219' visible dans la liste"
+    },
+    {
+      "test": "Test bouton 'Désactiver' sur promotion",
+      "status": "PASSED",
+      "details": "Badge passe de 'Active' à 'Inactive', bouton devient 'Activer', toast 'Promotion désactivée' affiché"
+    },
+    {
+      "test": "Test bouton 'Activer' sur promotion",
+      "status": "PASSED",
+      "details": "Badge repasse à 'Active', bouton redevient 'Désactiver', toast 'Promotion activée' affiché"
+    },
+    {
+      "test": "Test bouton 'Supprimer' sur promotion",
+      "status": "PASSED",
+      "details": "Dialogue de confirmation affiché, promotion supprimée après confirmation, toast 'Promotion supprimée' affiché, promotion disparaît de la liste"
+    }
+  ],
+  "features_validated": {
+    "auto_creation_promotion": "Lors de la création d'une formation, une promotion est automatiquement créée avec le nom '{titre_formation} {année_académique}'",
+    "auto_creation_schedule": "Un emploi du temps est automatiquement créé et lié à la promotion (visible dans tab 'schedules')",
+    "auto_creation_textbook": "Un cahier de texte est automatiquement créé et lié à la promotion (visible dans tab 'textbooks')",
+    "promotion_card_badges": "Les badges sur la carte de promotion indiquent les ressources liées: bleu=emploi du temps, vert=cahier de texte, orange=émargement",
+    "toggle_active_status": "Le bouton Désactiver/Activer permet de changer le statut de la promotion",
+    "delete_promotion": "Le bouton Supprimer permet de supprimer une promotion après confirmation"
+  }
+}

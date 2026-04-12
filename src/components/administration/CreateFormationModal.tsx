@@ -210,25 +210,19 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         }
       }
 
-      // Auto-create textbook and schedule for the new formation
+      // Auto-create promotion with all linked resources (schedule, textbook)
       try {
-        const { textBookService } = await import('@/services/textBookService');
-        await textBookService.createTextBook({
-          formation_id: formation.id,
-          title: `Cahier de texte - ${formData.title} ${formData.academic_year}`,
+        const { promotionService } = await import('@/services/promotionService');
+        await promotionService.createPromotionWithResources({
+          formationId: formation.id,
+          formationTitle: formData.title,
+          establishmentId: establishment.id,
+          academicYear: formData.academic_year,
+          startDate: formationData.start_date,
+          endDate: formationData.end_date,
         });
       } catch (e) {
-        console.warn('Auto-création cahier de texte échouée:', e);
-      }
-
-      try {
-        const { scheduleService } = await import('@/services/scheduleService');
-        await scheduleService.createSchedule({
-          formation_id: formation.id,
-          title: `Emploi du temps - ${formData.title} ${formData.academic_year}`,
-        });
-      } catch (e) {
-        console.warn('Auto-création emploi du temps échouée:', e);
+        console.warn('Auto-création promotion avec ressources échouée:', e);
       }
 
       onSuccess();

@@ -6,6 +6,7 @@ import HubPageHeader, { HubTab } from '../components/HubPageHeader';
 const ScheduleManagement = React.lazy(() => import('../components/administration/ScheduleManagement'));
 const TextBooksList = React.lazy(() => import('../components/administration/TextBooksList'));
 const FormationsList = React.lazy(() => import('../components/administration/FormationsList'));
+const PromotionsList = React.lazy(() => import('../components/administration/PromotionsList'));
 const VirtualClassesManagement = React.lazy(() => import('../components/administration/VirtualClassesManagement'));
 
 const TabFallback = () => (
@@ -53,17 +54,7 @@ const Pedagogie = () => {
           {activeTab === 'schedules' && <ScheduleManagement />}
           {activeTab === 'textbooks' && <TextBooksList />}
           {activeTab === 'formations' && <FormationsList />}
-          {activeTab === 'promotions' && (
-            <div className="glass-card rounded-xl p-6 sm:p-8 text-center">
-              <div className="max-w-md mx-auto">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <UsersRound className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
-                </div>
-                <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">Gestion des promotions</h3>
-                <p className="text-sm text-muted-foreground">Cette section sera disponible prochainement.</p>
-              </div>
-            </div>
-          )}
+          {activeTab === 'promotions' && <PromotionsList />}
           {activeTab === 'virtual-classes' && <VirtualClassesManagement />}
         </Suspense>
       </div>
