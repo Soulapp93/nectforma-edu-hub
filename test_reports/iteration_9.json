@@ -1,0 +1,84 @@
+{
+  "summary": "Tests de validation du fix d'affichage des fichiers dans le chat (Groupe établissement). TOUS LES TESTS PASSENT: 1) Login Sophie Martin réussi, 2) Navigation vers Communication > Gestion des groupes > Général, 3) Upload d'image → miniature inline WhatsApp-like avec boutons Eye/Download au hover, 4) Clic sur image → ProductionFileViewer s'ouvre avec tous les contrôles, 5) Upload de PDF → carte avec icône PDF rouge + nom + taille. Le fix file_type → content_type fonctionne correctement pour les NOUVEAUX uploads.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Chat - Anciens messages avec fichiers",
+        "issues": ["Les fichiers uploadés AVANT le fix (0FE33102..., dossier_Bernard_Lucas..., IMG_2565.png) s'affichent toujours comme des liens texte car leurs attachments n'ont pas été sauvegardés en DB (erreur PGRST204 silencieuse). C'est un comportement ATTENDU - seuls les nouveaux uploads fonctionnent."]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_9.json"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "chatService.ts ligne 327: content_type correctement utilisé au lieu de file_type - FIX VALIDÉ",
+    "ChatRoom.tsx ligne 173-180: detectType() avec fallback sur extension de fichier - FONCTIONNE",
+    "ChatRoom.tsx ligne 374-413: Rendu image en miniature inline avec overlay hover - WHATSAPP-LIKE ✓",
+    "ChatRoom.tsx ligne 417-441: Rendu PDF en carte avec icône rouge - WHATSAPP-LIKE ✓",
+    "FileViewerModal.tsx: Utilise ProductionFileViewer correctement"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only test)",
+    "frontend": "100% (5/5 tests passés)"
+  },
+  "test_credentials": "Sophie Martin (AdminPrincipal): admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "Créé 2 fichiers de test dans le chat: test_image_chat.png (image PNG) et test_document.pdf (PDF)",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Le fix file_type → content_type dans chatService.ts fonctionne. Les NOUVEAUX uploads de fichiers dans le chat s'affichent correctement: images en miniatures inline avec overlay hover (Eye/Download), PDFs en cartes avec icône rouge. Les anciens fichiers (avant fix) restent en liens texte car leurs attachments n'ont jamais été sauvegardés en DB. Pour tester: Communication > Gestion des groupes > Général > Uploader un fichier avec le bouton paperclip.",
+  "tests_executed": [
+    {
+      "test": "Login Sophie Martin via Comptes démo",
+      "status": "PASSED",
+      "details": "Connexion réussie avec admin.principal@nectforma-demo.com / NectDemo2026!, redirection vers /dashboard"
+    },
+    {
+      "test": "Navigation vers Communication > Gestion des groupes > Général",
+      "status": "PASSED",
+      "details": "Clic sur Communication dans sidebar, puis Gestion des groupes, puis canal Général. Chat chargé avec 6+ messages existants."
+    },
+    {
+      "test": "Upload d'image → Miniature inline WhatsApp-like",
+      "status": "PASSED",
+      "details": "Upload de test_image_chat.png via input file. Console logs: '📎 Uploading file: test_image_chat.png size: 138' puis '✅ File uploaded'. L'image s'affiche en miniature inline (max-w-[300px]) avec overlay au hover montrant boutons Eye et Download. Nom du fichier en overlay en bas de l'image."
+    },
+    {
+      "test": "Clic sur image → ProductionFileViewer s'ouvre",
+      "status": "PASSED",
+      "details": "Clic sur la miniature d'image ouvre le ProductionFileViewer en plein écran. Header avec nom du fichier 'test_image_chat.png', contrôles: X (fermer), zoom 100%, rotation, édition, partage, téléchargement, plein écran. Fermeture avec bouton X fonctionne."
+    },
+    {
+      "test": "Upload de PDF → Carte avec icône PDF rouge",
+      "status": "PASSED",
+      "details": "Upload de test_document.pdf via input file. Console logs: '📎 Uploading file: test_document.pdf size: 380' puis '✅ File uploaded'. Le PDF s'affiche comme une carte avec: icône PDF rouge (FileText), nom 'test_document.pdf', taille 'PDF • 0 Ko'. Style WhatsApp-like avec fond bg-muted/60 et hover effect."
+    }
+  ],
+  "features_validated": {
+    "chatService_content_type_fix": "Le champ content_type est correctement utilisé dans uploadAttachment() au lieu de file_type - les attachments sont maintenant sauvegardés en DB",
+    "detectType_fallback": "La fonction detectType() utilise content_type OU l'extension du fichier pour déterminer le type - robuste même si content_type est vide",
+    "image_thumbnail_inline": "Les images s'affichent en miniatures inline (max-w-[300px], max-h-[320px]) avec object-cover et coins arrondis",
+    "image_hover_overlay": "Au hover sur une image, overlay avec boutons Eye (visualiser) et Download (télécharger) apparaît",
+    "pdf_card_display": "Les PDFs s'affichent comme des cartes avec icône rouge (FileText), nom du fichier et taille",
+    "file_viewer_integration": "Le ProductionFileViewer s'ouvre au clic sur un fichier avec tous les contrôles (zoom, rotation, téléchargement, etc.)"
+  },
+  "code_review": {
+    "chatService.ts": "Ligne 320-333: uploadAttachment() utilise maintenant 'content_type: file.type' au lieu de 'file_type'. FIX VALIDÉ.",
+    "ChatRoom.tsx": "Ligne 173-180: detectType() avec fallback sur extension. Ligne 374-413: rendu image miniature. Ligne 417-441: rendu PDF carte. Ligne 444-469: rendu autres fichiers.",
+    "FileViewerModal.tsx": "Wrapper simple autour de ProductionFileViewer - fonctionne correctement."
+  },
+  "root_cause_analysis": {
+    "issue": "Les fichiers dans le chat s'affichaient comme des liens texte au lieu de miniatures/cartes",
+    "root_cause": "chatService.ts envoyait 'file_type' mais la colonne DB s'appelle 'content_type', causant l'erreur PGRST204 (no rows returned) lors de l'insert des attachments",
+    "fix_applied": "Changement de 'file_type: file.type' à 'content_type: file.type' dans la méthode uploadAttachment()",
+    "verification": "Les nouveaux uploads fonctionnent correctement. Les anciens fichiers restent en liens texte car leurs attachments n'ont jamais été sauvegardés."
+  }
+}

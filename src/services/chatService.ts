@@ -324,7 +324,7 @@ export const chatService = {
         file_name: file.name,
         file_url: publicUrl,
         file_size: file.size,
-        file_type: file.type
+        content_type: file.type
       })
       .select()
       .single();

@@ -169,6 +169,16 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
     return <File className="h-4 w-4" />;
   };
 
+  // Detect type from content_type OR file extension
+  const detectType = (attachment: any) => {
+    const ct = attachment.file_type || attachment.content_type || '';
+    const ext = (attachment.file_name || '').split('.').pop()?.toLowerCase() || '';
+    const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'heic'];
+    const isImg = ct.startsWith('image/') || imageExts.includes(ext);
+    const isPdf = ct.includes('pdf') || ext === 'pdf';
+    return { isImg, isPdf, ext };
+  };
+
   const isImage = (contentType: string) => contentType.startsWith('image/');
   const isPDF = (contentType: string) => contentType.includes('pdf');
   
@@ -358,129 +368,104 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
                       {message.attachments && message.attachments.length > 0 && (
                         <div className="flex flex-col gap-2 mt-2">
                           {message.attachments.map((attachment) => {
-                            const contentType = attachment.file_type || attachment.content_type || '';
+                            const { isImg, isPdf, ext } = detectType(attachment);
                             
-                            // Image preview
-                            if (isImage(contentType)) {
+                            // Image preview - WhatsApp style inline
+                            if (isImg) {
                               return (
                                 <div
                                   key={attachment.id}
-                                  className="relative group rounded-xl overflow-hidden max-w-[300px]"
+                                  className="relative group rounded-xl overflow-hidden max-w-[300px] cursor-pointer"
+                                  onClick={() => handleViewFile(attachment.file_url, attachment.file_name)}
                                 >
                                   <img 
                                     src={attachment.file_url} 
                                     alt={attachment.file_name}
-                                    className="w-full h-auto rounded-xl shadow-md"
+                                    className="w-full h-auto rounded-xl shadow-md max-h-[320px] object-cover"
                                     loading="lazy"
+                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                                   />
-                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors rounded-xl flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors rounded-xl flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                                     <Button
                                       size="sm"
                                       variant="secondary"
-                                      className="h-8 w-8 p-0 rounded-full"
-                                      onClick={() => handleViewFile(attachment.file_url, attachment.file_name)}
+                                      className="h-9 w-9 p-0 rounded-full shadow-lg"
+                                      onClick={(e) => { e.stopPropagation(); handleViewFile(attachment.file_url, attachment.file_name); }}
                                     >
                                       <Eye className="h-4 w-4" />
                                     </Button>
                                     <Button
                                       size="sm"
                                       variant="secondary"
-                                      className="h-8 w-8 p-0 rounded-full"
-                                      onClick={() => handleDownloadFile(attachment.file_url, attachment.file_name)}
+                                      className="h-9 w-9 p-0 rounded-full shadow-lg"
+                                      onClick={(e) => { e.stopPropagation(); handleDownloadFile(attachment.file_url, attachment.file_name); }}
                                     >
                                       <Download className="h-4 w-4" />
                                     </Button>
                                   </div>
+                                  <div className={cn(
+                                    "absolute bottom-0 left-0 right-0 px-3 py-1.5 text-xs truncate",
+                                    "bg-gradient-to-t from-black/60 to-transparent text-white"
+                                  )}>
+                                    {attachment.file_name}
+                                  </div>
                                 </div>
                               );
                             }
                             
-                            // PDF preview
-                            if (isPDF(contentType)) {
+                            // PDF card - WhatsApp style
+                            if (isPdf) {
                               return (
-                                <FilePreviewTooltip key={attachment.id} fileUrl={attachment.file_url} fileName={attachment.file_name}>
                                 <div
+                                  key={attachment.id}
                                   className={cn(
-                                    'flex items-center gap-3 px-4 py-3 rounded-xl transition-all shadow-sm border-l-4 cursor-pointer group',
+                                    'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all cursor-pointer group max-w-[320px]',
                                     isOwnMessage
-                                      ? 'bg-primary/80 text-primary-foreground border-primary-foreground/30 hover:bg-primary/90'
-                                      : 'bg-card text-foreground border-primary/50 hover:bg-card/80'
+                                      ? 'bg-white/15 hover:bg-white/25'
+                                      : 'bg-muted/60 hover:bg-muted border border-border/40'
                                   )}
                                   onClick={() => handleViewFile(attachment.file_url, attachment.file_name)}
                                 >
-                                  <div className={cn(
-                                    "p-2 rounded-lg",
-                                    isOwnMessage ? "bg-primary-foreground/20" : "bg-primary/10"
-                                  )}>
-                                    <FileText className="h-6 w-6" />
+                                  <div className="w-10 h-10 rounded-lg bg-red-500/15 flex items-center justify-center shrink-0">
+                                    <FileText className="h-5 w-5 text-red-500" />
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <p className="font-medium truncate">
-                                      {attachment.file_name}
+                                    <p className="font-medium truncate text-sm">{attachment.file_name}</p>
+                                    <p className="text-[11px] opacity-60">
+                                      PDF {attachment.file_size ? `• ${Math.round(attachment.file_size / 1024)} Ko` : ''}
                                     </p>
-                                    {attachment.file_size && (
-                                      <p className="text-xs opacity-70">
-                                        PDF • {Math.round(attachment.file_size / 1024)} KB
-                                      </p>
-                                    )}
                                   </div>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDownloadFile(attachment.file_url, attachment.file_name);
-                                    }}
-                                  >
-                                    <Download className="h-4 w-4" />
-                                  </Button>
+                                  <Download className="h-4 w-4 opacity-0 group-hover:opacity-70 shrink-0 transition-opacity" onClick={(e) => { e.stopPropagation(); handleDownloadFile(attachment.file_url, attachment.file_name); }} />
                                 </div>
-                                </FilePreviewTooltip>
                               );
                             }
                             
-                            // Other files
+                            // Other files - WhatsApp style card
                             return (
-                              <FilePreviewTooltip key={attachment.id} fileUrl={attachment.file_url} fileName={attachment.file_name}>
                               <div
+                                key={attachment.id}
                                 className={cn(
-                                  'flex items-center gap-3 px-4 py-3 rounded-xl transition-all shadow-sm cursor-pointer group',
+                                  'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all cursor-pointer group max-w-[320px]',
                                   isOwnMessage
-                                    ? 'bg-primary/80 text-primary-foreground hover:bg-primary/90'
-                                    : 'bg-card/80 text-foreground border border-border/50 hover:bg-card'
+                                    ? 'bg-white/15 hover:bg-white/25'
+                                    : 'bg-muted/60 hover:bg-muted border border-border/40'
                                 )}
                                 onClick={() => handleViewFile(attachment.file_url, attachment.file_name)}
                               >
                                 <div className={cn(
-                                  "p-2 rounded-lg",
-                                  isOwnMessage ? "bg-primary-foreground/20" : "bg-muted"
+                                  "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
+                                  isOwnMessage ? "bg-white/20" : "bg-primary/10"
                                 )}>
-                                  {getFileIcon(contentType)}
+                                  {getFileIcon(attachment.content_type || attachment.file_type || '')}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="font-medium truncate text-sm">
-                                    {attachment.file_name}
+                                  <p className="font-medium truncate text-sm">{attachment.file_name}</p>
+                                  <p className="text-[11px] opacity-60">
+                                    {ext.toUpperCase()} {attachment.file_size ? `• ${Math.round(attachment.file_size / 1024)} Ko` : ''}
                                   </p>
-                                  {attachment.file_size && (
-                                    <p className="text-xs opacity-70">
-                                      {Math.round(attachment.file_size / 1024)} KB
-                                    </p>
-                                  )}
                                 </div>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDownloadFile(attachment.file_url, attachment.file_name);
-                                  }}
-                                >
-                                  <Download className="h-4 w-4" />
-                                </Button>
+                                <Download className="h-4 w-4 opacity-0 group-hover:opacity-70 shrink-0 transition-opacity" onClick={(e) => { e.stopPropagation(); handleDownloadFile(attachment.file_url, attachment.file_name); }} />
                               </div>
-                              </FilePreviewTooltip>
                             );
                           })}
                         </div>
