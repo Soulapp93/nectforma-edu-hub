@@ -201,7 +201,14 @@ const CreateEstablishment = () => {
 
     } catch (error: any) {
       console.error('Error creating establishment:', error);
-      toast.error(error.message || 'Erreur lors de la création du compte');
+      const msg = error?.message || '';
+      if (msg.includes('Trop de tentatives') || msg.includes('rate') || msg.includes('too many')) {
+        toast.error('Trop de tentatives de création. Veuillez réessayer dans quelques minutes.');
+      } else if (msg.includes('FunctionsHttpError') || msg.includes('non-2xx')) {
+        toast.error('Le service de création est temporairement indisponible. Veuillez réessayer.');
+      } else {
+        toast.error(msg || 'Erreur lors de la création du compte');
+      }
     } finally {
       setLoading(false);
     }

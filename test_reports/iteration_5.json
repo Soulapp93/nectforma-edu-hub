@@ -1,0 +1,86 @@
+{
+  "summary": "Tests de validation des 3 corrections de bugs critiques de l'itération 4. TOUS LES 3 BUGS SONT CORRIGÉS: 1) Création d'établissement fonctionne (redirection vers /dashboard), 2) Création de formation fonctionne (colonne semesters_count ajoutée), 3) Upload de documents fonctionne (politiques RLS configurées).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "POST /text_books (Supabase)",
+        "issue": "Colonne 'description' manquante dans la table text_books - erreur lors de la création automatique du cahier de texte après création de formation",
+        "priority": "LOW",
+        "console_error": "Could not find the 'description' column of 'text_books' in the schema cache",
+        "impact": "N'empêche pas la création de formation, juste la création automatique du cahier de texte"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_5.json"
+  ],
+  "action_items": [
+    "MINEUR: Ajouter la colonne 'description' à la table 'text_books' dans Supabase: ALTER TABLE text_books ADD COLUMN description TEXT;"
+  ],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100% (3/3 fonctionnalités critiques fonctionnent)",
+    "frontend": "100% (UI fonctionne correctement)"
+  },
+  "test_credentials": "Demo accounts via /auth page - Sophie Martin (AdminPrincipal): admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "Formation Test 1775958513 créée, fichier test_upload.txt uploadé, établissement Test Établissement 1775958387 créé",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Les 3 bugs critiques de l'itération 4 sont tous corrigés. Un bug mineur reste: colonne 'description' manquante dans table 'text_books'. L'application fonctionne correctement pour les flux principaux testés.",
+  "tests_executed": [
+    {
+      "test": "Création d'établissement - Flux complet",
+      "status": "PASSED",
+      "details": "Étape 1 (nom unique, type Organisme de formation, adresse) + Étape 2 (prénom, nom, email unique avec timestamp, mot de passe fort MonPass123!, RGPD coché) -> Redirection vers /dashboard avec message 'Bonjour Jean' et nom établissement visible"
+    },
+    {
+      "test": "Login via compte démo (Sophie Martin)",
+      "status": "PASSED",
+      "details": "Connexion réussie via Comptes démo -> Sophie Martin -> Se connecter"
+    },
+    {
+      "test": "Navigation vers Pédagogie > Gestion des formations",
+      "status": "PASSED",
+      "details": "Page se charge correctement, onglet 'Gestion des formations' accessible"
+    },
+    {
+      "test": "Création de formation - Flux complet",
+      "status": "PASSED",
+      "details": "Modal 'Nouvelle formation' ouvert, titre 'Formation Test 1775958513' rempli, clic 'Créer la formation' -> Formation créée avec succès, visible dans la liste avec détails (BAC+1, 1 promotion, dates)"
+    },
+    {
+      "test": "Navigation vers Documents & Archives",
+      "status": "PASSED",
+      "details": "Page se charge correctement, dossiers existants visibles (Contrats et conventions, Règlement intérieur)"
+    },
+    {
+      "test": "Upload de document",
+      "status": "PASSED",
+      "details": "Fichier test_upload.txt uploadé avec succès, visible dans la liste avec taille (42 o) et date. Aucune erreur RLS."
+    }
+  ],
+  "bugs_fixed_validation": {
+    "bug_1_create_establishment": {
+      "original_issue": "Edge Function 'create-establishment' retournait HTTP 400",
+      "fix_applied": "Rate limit entries nettoyées + meilleur message d'erreur frontend",
+      "validation_result": "CORRIGÉ - Création d'établissement fonctionne, redirection vers /dashboard"
+    },
+    "bug_2_create_formation": {
+      "original_issue": "Colonne 'semesters_count' manquante dans table formations",
+      "fix_applied": "ALTER TABLE formations ADD COLUMN semesters_count INTEGER + null check sur establishment",
+      "validation_result": "CORRIGÉ - Formation créée avec succès, visible dans la liste"
+    },
+    "bug_3_document_upload": {
+      "original_issue": "RLS policy violation sur bucket 'establishment-docs'",
+      "fix_applied": "Politiques RLS ajoutées sur buckets establishment-docs et user-documents",
+      "validation_result": "CORRIGÉ - Upload de fichier réussi sans erreur RLS"
+    }
+  }
+}

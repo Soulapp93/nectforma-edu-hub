@@ -116,6 +116,11 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
       }
 
       const establishment = await establishmentService.getOrCreateDefaultEstablishment();
+      
+      if (!establishment?.id) {
+        setError('Impossible de récupérer l\'établissement. Veuillez vous reconnecter.');
+        return;
+      }
 
       const today = new Date();
       const defaultStartDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -123,10 +128,15 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
 
       const semesters_count = formData.duration_years * 2;
       const formationData = {
-        ...formData,
+        title: formData.title,
+        description: formData.description,
+        level: formData.level,
         start_date: formData.start_date || defaultStartDate.toISOString().split('T')[0],
         end_date: formData.end_date || defaultEndDate.toISOString().split('T')[0],
+        status: formData.status,
+        color: formData.color,
         duration: formData.duration || 0,
+        academic_year: formData.academic_year,
         max_students: 25,
         price: 0,
         establishment_id: establishment.id,
