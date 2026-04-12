@@ -4,17 +4,17 @@
 - **Name:** Nectforma - SaaS multi-tenant pour centres de formation
 - **Stack:** React 18 + TypeScript + Vite + Tailwind CSS + Supabase (BaaS) + Capacitor
 
-## Session 23 - Fix Chat Files WhatsApp-like (2026-04-12)
-- **Root cause**: chatService.ts envoyait `file_type` mais la colonne DB est `content_type` → erreur PGRST204 silencieuse → attachments jamais sauvegardes
-- **Fix**: `file_type` → `content_type` dans uploadAttachment()
-- **Ameliorations ChatRoom**:
-  - detectType() avec fallback sur extension fichier
-  - Images: miniatures inline max-w-300px avec overlay hover (Eye/Download) + nom fichier en gradient
-  - PDF: cartes avec icone rouge + nom + taille Ko
-  - Autres fichiers: cartes avec icone type + badge extension
-  - Tout cliquable → ProductionFileViewer
-- Testing: 5/5 passes (iteration_9)
-- Note: anciens messages avant fix restent en texte (attachments pas sauvegardes en DB)
+## Session 24 - Viewers Natifs Excel + PDF Scroll Continu (2026-04-12)
+- **NativeExcelViewer**: Parsing natif SheetJS (xlsx) cote client, remplace Office Online
+  - Conservation formatage: couleurs, bordures, gras, italique, fusion cellules, largeurs colonnes
+  - Onglets feuilles, numeros lignes, lettres colonnes (A,B,C...)
+  - Recherche avec surlignage jaune, barre de statut
+- **PDFViewerPro reecrit**: Scroll continu toutes pages (style Edge)
+  - Numero de page overlay en bas droite de chaque page
+  - Tracking scroll pour mettre a jour la page courante
+  - Fix CDN worker pdf.js: cdnjs -> unpkg (version 5.4.296 manquante sur cdnjs)
+- **ProductionFileViewer**: Type 'excel' (xls,xlsx,csv) route vers NativeExcelViewer
+- Testing: 100% passes (iteration_10)
 
 ## All P0 Tasks - DONE
 - [x] Audit, tests, RLS, comptes demo, sidebar, mobile
@@ -24,7 +24,8 @@
 - [x] Bug fix Realtime, creation etablissement/formation/upload
 - [x] Promotions automatiques
 - [x] Preview fichiers universel + tooltip hover
-- [x] Chat WhatsApp-like (images inline, PDF cartes, viewer)
+- [x] Chat WhatsApp-like
+- [x] Viewers natifs Excel (SheetJS) + PDF scroll continu (Edge-like)
 
 ## P1
 - [ ] Deploiement production
