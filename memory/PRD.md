@@ -4,23 +4,22 @@
 - **Name:** Nectforma - SaaS multi-tenant pour centres de formation
 - **Stack:** React 18 + TypeScript + Vite + Tailwind CSS + Supabase (BaaS) + Capacitor
 
-## Session 27 - Refonte Gestion des Promotions (2026-04-13)
-- Architecture 2 niveaux: Formations groupees -> Promotions detail
-- Vue par defaut: formations avec nb promotions, nb etudiants, badges annees
-- Clic formation -> promotions avec 5 boutons raccourcis colores:
-  - Participants (bleu) -> /administration?tab=users&formation={id}
-  - Emploi du temps (violet) -> tab=schedules
-  - Cahier de texte (vert) -> tab=textbooks
-  - Emargement (ambre) -> /suivi-emargement-admin
-  - Notes (rose) -> /notes-admin
-- Toggle vue grille/liste dans les 2 niveaux
-- Bouton retour (fleche) entre les niveaux
-- Recherche dans les 2 niveaux
-- Testing: 8/8 passes (iteration_13)
+## Session 28 - Raccourcis Promotions Directs + Modal Participants (2026-04-13)
+- **Modal Participants**: Popup avec liste etudiants (avatar initiales, nom, email, phone)
+  - Appelle formationService.getFormationStudents() via RPC
+  - Style: header violet, cards etudiants, bouton Fermer
+- **Navigation directe**: Les boutons raccourcis passent formationId dans l'URL
+  - Emploi du temps: ?tab=schedules&formationId=xxx -> auto-selection formation
+  - Cahier de texte: ?tab=textbooks&formationId=xxx -> auto-selection formation
+  - Emargement: /suivi-emargement-admin?formationId=xxx
+  - Notes: /notes-admin?formationId=xxx
+- **ScheduleManagement + TextBooksList**: useEffect lit searchParams.get('formationId') au montage et appelle handlePromotionSelect()
+- **Toutes formations affichees**: fetch allFormations + merge avec promotions
+- Testing: 5/5 passes (iteration_15)
 
 ## All Completed
 - [x] Toutes fonctionnalites precedentes
-- [x] Gestion promotions par formation avec raccourcis
+- [x] Raccourcis promotions directs + modal participants + toutes formations
 
 ## P1 - [ ] Deploiement production
 ## P2 - [ ] TypeScript strict, Refactoring TranscriptsPanel, N+1/pagination
