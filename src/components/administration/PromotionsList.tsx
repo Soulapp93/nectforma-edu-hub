@@ -1,15 +1,18 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Search, Users, Calendar, BookText, CalendarClock, ClipboardCheck,
   ChevronRight, ChevronLeft, ToggleLeft, ToggleRight, Trash2,
   GraduationCap, LayoutGrid, List, FileSpreadsheet, ArrowLeft,
+  Mail, Phone, X, Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LoadingState } from '@/components/ui/loading-state';
 import { promotionService, Promotion } from '@/services/promotionService';
+import { formationService } from '@/services/formationService';
 import { useMyContext } from '@/hooks/useMyContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -33,6 +36,20 @@ const PromotionsList: React.FC = () => {
   const { establishment } = useMyContext();
   const [, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  // Participants modal
+  const [participantsModal, setParticipantsModal] = useState<{ open: boolean; formationId: string; formationTitle: string; students: any[]; loading: boolean }>({ open: false, formationId: '', formationTitle: '', students: [], loading: false });
+
+  const openParticipants = useCallback(async (formationId: string, formationTitle: string) => {
+    setParticipantsModal({ open: true, formationId, formationTitle, students: [], loading: true });
+    try {
+      const students = await formationService.getFormationStudents(formationId);
+      setParticipantsModal(prev => ({ ...prev, students: students || [], loading: false }));
+    } catch {
+      setParticipantsModal(prev => ({ ...prev, loading: false }));
+      toast.error('Erreur lors du chargement des participants');
+    }
+  }, []);
 
   const fetchPromotions = async () => {
     if (!establishment?.id) return;
@@ -111,12 +128,12 @@ const PromotionsList: React.FC = () => {
     } catch { toast.error('Erreur lors de la suppression'); }
   };
 
-  // Shortcut navigation
-  const goToParticipants = (formationId: string) => navigate(`/administration?tab=users&formation=${formationId}`);
-  const goToTextBook = () => setSearchParams({ tab: 'textbooks' });
-  const goToSchedule = () => setSearchParams({ tab: 'schedules' });
-  const goToEmargement = () => navigate('/suivi-emargement-admin');
-  const goToNotes = () => navigate('/notes-admin');
+  // Shortcut navigation - go directly to content for the formation
+  const goToParticipants = (formationId: string, formationTitle: string) => openParticipants(formationId, formationTitle);
+  const goToTextBook = (formationId: string) => setSearchParams({ tab: 'textbooks', formationId });
+  const goToSchedule = (formationId: string) => setSearchParams({ tab: 'schedules', formationId });
+  const goToEmargement = (formationId: string) => navigate(`/suivi-emargement-admin?formationId=${formationId}`);
+  const goToNotes = (formationId: string) => navigate(`/notes-admin?formationId=${formationId}`);
   const goToFormations = () => setSearchParams({ tab: 'formations' });
 
   if (loading) return <LoadingState message="Chargement des promotions..." />;
@@ -136,10 +153,54 @@ const PromotionsList: React.FC = () => {
     );
   }
 
+  // === PARTICIPANTS MODAL JSX ===
+  const participantsModalJSX = (
+    <Dialog open={participantsModal.open} onOpenChange={(open) => !open && setParticipantsModal(prev => ({ ...prev, open: false }))}>
+      <DialogContent className="max-w-lg max-h-[80vh] overflow-hidden flex flex-col" data-testid="participants-modal">
+        <DialogHeader className="bg-primary/90 -mx-6 -mt-6 px-6 py-4 rounded-t-lg">
+          <DialogTitle className="text-white text-lg">Participants</DialogTitle>
+          <p className="text-white/70 text-sm">{participantsModal.formationTitle}</p>
+        </DialogHeader>
+        <div className="flex-1 overflow-y-auto py-2 space-y-2">
+          {participantsModal.loading ? (
+            <div className="flex items-center justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+          ) : participantsModal.students.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">Aucun participant inscrit</p>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground flex items-center gap-2 px-1">
+                <Users className="h-4 w-4" /> {participantsModal.students.length} participant{participantsModal.students.length > 1 ? 's' : ''}
+              </p>
+              {participantsModal.students.map((s: any) => (
+                <div key={s.id} className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors">
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold text-sm shrink-0">
+                    {(s.first_name?.[0] || '').toUpperCase()}{(s.last_name?.[0] || '').toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm">{s.first_name} {s.last_name}</p>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      {s.email && <span className="flex items-center gap-1 truncate"><Mail className="h-3 w-3 shrink-0" /> {s.email}</span>}
+                      {s.phone && <span className="flex items-center gap-1"><Phone className="h-3 w-3 shrink-0" /> {s.phone}</span>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+        <div className="flex justify-end pt-2 border-t">
+          <Button onClick={() => setParticipantsModal(prev => ({ ...prev, open: false }))} data-testid="close-participants">Fermer</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
   // === DETAIL VIEW: Selected formation ===
   if (selectedFormation) {
     const promos = filteredPromotions;
     return (
+      <>
+      {participantsModalJSX}
       <div className="space-y-4" data-testid="promotion-detail-view">
         {/* Back + Title */}
         <div className="flex items-center gap-3">
@@ -178,8 +239,8 @@ const PromotionsList: React.FC = () => {
             {promos.map(p => (
               <PromotionCard key={p.id} promotion={p} color={selectedFormation.color}
                 onToggle={() => handleToggleActive(p)} onDelete={() => handleDelete(p)}
-                onParticipants={() => goToParticipants(p.formation_id)} onTextBook={goToTextBook}
-                onSchedule={goToSchedule} onEmargement={goToEmargement} onNotes={goToNotes} />
+                onParticipants={() => goToParticipants(p.formation_id, selectedFormation.title)} onTextBook={() => goToTextBook(p.formation_id)}
+                onSchedule={() => goToSchedule(p.formation_id)} onEmargement={() => goToEmargement(p.formation_id)} onNotes={() => goToNotes(p.formation_id)} />
             ))}
           </div>
         ) : (
@@ -187,17 +248,20 @@ const PromotionsList: React.FC = () => {
             {promos.map(p => (
               <PromotionRow key={p.id} promotion={p} color={selectedFormation.color}
                 onToggle={() => handleToggleActive(p)} onDelete={() => handleDelete(p)}
-                onParticipants={() => goToParticipants(p.formation_id)} onTextBook={goToTextBook}
-                onSchedule={goToSchedule} onEmargement={goToEmargement} onNotes={goToNotes} />
+                onParticipants={() => goToParticipants(p.formation_id, selectedFormation.title)} onTextBook={() => goToTextBook(p.formation_id)}
+                onSchedule={() => goToSchedule(p.formation_id)} onEmargement={() => goToEmargement(p.formation_id)} onNotes={() => goToNotes(p.formation_id)} />
             ))}
           </div>
         )}
       </div>
+      </>
     );
   }
 
   // === FORMATIONS LIST ===
   return (
+    <>
+    {participantsModalJSX}
     <div className="space-y-4" data-testid="promotions-list">
       {/* Header */}
       <div className="flex items-center gap-3">
@@ -278,6 +342,7 @@ const PromotionsList: React.FC = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

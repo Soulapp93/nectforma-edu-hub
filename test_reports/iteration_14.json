@@ -1,0 +1,93 @@
+{
+  "summary": "Tests des raccourcis des promotions: Modal Participants, navigation Emploi du temps et Cahier de texte avec formationId. BUG CRITIQUE: Seules les formations avec promotions s'affichent dans 'Gestion des promotions' - les formations 'Rh' et 'Formation Test Suppression' sont absentes.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "PromotionsList.tsx",
+        "issue": "Les formations sans promotion ne s'affichent pas dans 'Gestion des promotions'. Seule 'Master Digital Marketing 2026' apparaît alors que 3 formations existent ('Rh', 'Master Digital Marketing 2026', 'Formation Test Suppression')",
+        "selector": "[data-testid^='formation-group-']",
+        "priority": "HIGH"
+      },
+      {
+        "component": "Participants Modal",
+        "issue": "Le modal affiche 'Aucun participant inscrit' pour 'Master Digital Marketing 2026' alors que le problème statement indique que 'Rh' a 3 étudiants. Impossible de tester avec des étudiants car 'Rh' n'apparaît pas.",
+        "selector": "[data-testid='participants-modal']",
+        "priority": "MEDIUM"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Participants Modal",
+        "issues": ["Warning console: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}"]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_14.json"
+  ],
+  "action_items": [
+    "CRITIQUE: Modifier PromotionsList.tsx pour afficher TOUTES les formations, pas seulement celles avec des promotions. Le code actuel groupe les promotions par formation_id, donc les formations sans promotion sont ignorées.",
+    "Ajouter un fetch des formations via formationService.getFormations() et fusionner avec les formations des promotions pour afficher toutes les formations",
+    "Vérifier que la formation 'Rh' a bien des étudiants assignés (Alice Dubois, Lucas Bernard, Emma Petit) pour tester le modal Participants"
+  ],
+  "critical_code_review_comments": [
+    "PromotionsList.tsx ligne 71-90: formationGroups est construit uniquement à partir des promotions existantes. Les formations sans promotion ne sont jamais ajoutées à la liste.",
+    "Le modal Participants fonctionne correctement (ouverture, fermeture, data-testid présents) mais ne peut pas être testé avec des étudiants car la formation 'Rh' n'apparaît pas.",
+    "Navigation Emploi du temps: fonctionne correctement avec formationId dans l'URL (?tab=schedules&formationId=xxx)",
+    "Navigation Cahier de texte: fonctionne correctement avec formationId dans l'URL (?tab=textbooks&formationId=xxx)",
+    "Auto-sélection de la formation dans ScheduleManagement et TextBooksList fonctionne via useEffect qui lit searchParams.get('formationId')"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only test)",
+    "frontend": "60% - 3/5 tests passés"
+  },
+  "test_credentials": "Sophie Martin (AdminPrincipal): admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Le bug principal est dans PromotionsList.tsx qui ne récupère pas toutes les formations. Il faut ajouter un fetch des formations et les fusionner avec les formations des promotions. Les formations 'Rh' et 'Formation Test Suppression' existent dans 'Gestion des formations' mais n'apparaissent pas dans 'Gestion des promotions'.",
+  "tests_executed": [
+    {
+      "test": "Login Sophie Martin",
+      "status": "PASSED",
+      "details": "Connexion réussie avec admin.principal@nectforma-demo.com / NectDemo2026!, redirection vers /dashboard"
+    },
+    {
+      "test": "Vérifier que TOUTES les formations s'affichent dans Gestion des promotions",
+      "status": "FAILED",
+      "details": "Seule 'Master Digital Marketing 2026' s'affiche (1 formation). Les formations 'Rh' et 'Formation Test Suppression' sont absentes. Dans 'Gestion des formations', 3 formations sont visibles."
+    },
+    {
+      "test": "Bouton Participants - Modal popup",
+      "status": "PASSED (partiel)",
+      "details": "Le modal s'ouvre correctement avec data-testid='participants-modal'. Affiche 'Aucun participant inscrit' pour Master Digital Marketing 2026. Bouton 'Fermer' fonctionne."
+    },
+    {
+      "test": "Bouton Emploi du temps - Navigation avec formationId",
+      "status": "PASSED",
+      "details": "Navigation vers /pedagogie?tab=schedules&formationId=69fb21b1-c1c2-4bec-aef2-6b1371dc1b62. L'emploi du temps de la formation est auto-sélectionné."
+    },
+    {
+      "test": "Bouton Cahier de texte - Navigation avec formationId",
+      "status": "PASSED",
+      "details": "Navigation vers /pedagogie?tab=textbooks&formationId=69fb21b1-c1c2-4bec-aef2-6b1371dc1b62. Le cahier de texte de la formation est auto-sélectionné."
+    }
+  ],
+  "features_validated": {
+    "participants_modal": "Modal s'ouvre et se ferme correctement. data-testid présents (participants-modal, close-participants, participants-{id})",
+    "schedule_navigation": "Navigation avec formationId fonctionne. Auto-sélection de la formation dans ScheduleManagement.",
+    "textbook_navigation": "Navigation avec formationId fonctionne. Auto-sélection de la formation dans TextBooksList.",
+    "all_formations_display": "ÉCHEC - Seules les formations avec promotions s'affichent"
+  },
+  "root_cause_analysis": {
+    "issue": "Formations sans promotion non affichées dans Gestion des promotions",
+    "cause": "PromotionsList.tsx construit formationGroups uniquement à partir des promotions existantes (ligne 71-90). Les formations sans promotion ne sont jamais ajoutées.",
+    "solution": "Ajouter un fetch de toutes les formations via formationService.getFormations() et fusionner avec les formations des promotions. Afficher les formations sans promotion avec un message 'Aucune promotion' ou un bouton pour créer une promotion."
+  }
+}

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, BookText, Grid, List, Download, Archive, BookOpen } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import CreateTextBookModal from './CreateTextBookModal';
 import TextBookCard from './TextBookCard';
 import FormationPromotionSelector from './FormationPromotionSelector';
@@ -24,6 +24,7 @@ const TextBooksList: React.FC = () => {
   const [promotionLoading, setPromotionLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const fetchData = async () => {
     try {
@@ -43,6 +44,15 @@ const TextBooksList: React.FC = () => {
   };
 
   useEffect(() => { fetchData(); }, []);
+
+  // Auto-select formation from URL param
+  useEffect(() => {
+    const fId = searchParams.get('formationId');
+    if (fId && formations.length > 0 && !selectedFormation) {
+      const match = formations.find((f: any) => f.id === fId);
+      if (match) handlePromotionSelect(match);
+    }
+  }, [searchParams, formations, selectedFormation]);
 
   const handlePromotionSelect = async (formation: any) => {
     setSelectedFormation(formation);

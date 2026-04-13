@@ -60,7 +60,7 @@ import { formatTimeRange, isAutonomieSlot, getSlotModuleTitle, getSlotInstructor
 import { ScheduleListView } from '@/components/schedule/ScheduleListView';
 import { ScheduleMonthView } from '@/components/schedule/ScheduleMonthView';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import FormationPromotionSelector from './FormationPromotionSelector';
 import { formationService } from '@/services/formationService';
 
@@ -69,6 +69,7 @@ type ViewMode = 'day' | 'week' | 'month' | 'list';
 const ScheduleManagement = () => {
   const { schedules, loading, refetch } = useSchedules();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   
   // Hierarchical navigation state
   const [hierarchicalView, setHierarchicalView] = useState<'selector' | 'schedule'>('selector');
@@ -113,6 +114,15 @@ const ScheduleManagement = () => {
     };
     fetchFormations();
   }, []);
+
+  // Auto-select formation from URL param
+  useEffect(() => {
+    const fId = searchParams.get('formationId');
+    if (fId && allFormations.length > 0 && !selectedPromotionFormation) {
+      const match = allFormations.find((f: any) => f.id === fId);
+      if (match) handlePromotionSelect(match);
+    }
+  }, [searchParams, allFormations, selectedPromotionFormation]);
 
   // Filter schedules for selected promotion
   const promotionSchedules = useMemo(() => {
