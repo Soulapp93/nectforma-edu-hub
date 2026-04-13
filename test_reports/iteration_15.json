@@ -1,0 +1,72 @@
+{
+  "summary": "Retest après fix PromotionsList.tsx: TOUTES les formations s'affichent maintenant dans Gestion des promotions (3 formations: 'Rh', 'Master Digital Marketing 2026', 'Formation Test Suppression'). Le fix fonctionne correctement. Modal Participants et navigation Emploi du temps fonctionnent.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Participants Modal",
+        "issues": ["Warning console: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}"]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_15.json"
+  ],
+  "action_items": [
+    "DONNÉES: La formation 'Rh' affiche '0 étudiant' alors que le problem statement indique 3 étudiants (Alice Dubois, Lucas Bernard, Emma Petit). Vérifier que les étudiants sont bien assignés à la formation 'Rh' dans la table user_formation_assignments.",
+    "OPTIONNEL: Ajouter aria-describedby au DialogContent du modal Participants pour corriger le warning d'accessibilité"
+  ],
+  "critical_code_review_comments": [
+    "Le fix dans PromotionsList.tsx (lignes 68-111) fonctionne correctement: allFormations est récupéré via formationService.getFormations() et fusionné avec les promotions",
+    "Le code crée d'abord des FormationGroup pour toutes les formations, puis ajoute les promotions à leurs formations respectives",
+    "Les formations sans promotion s'affichent maintenant avec '0 promotion' et '0 étudiant'"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only test)",
+    "frontend": "100% - 5/5 tests passés"
+  },
+  "test_credentials": "Sophie Martin (AdminPrincipal): admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Le fix PromotionsList.tsx fonctionne. Toutes les formations s'affichent. Le modal Participants fonctionne mais affiche 'Aucun participant inscrit' car les étudiants ne sont pas assignés aux formations dans la base de données. La navigation Emploi du temps avec formationId fonctionne correctement.",
+  "tests_executed": [
+    {
+      "test": "Login Sophie Martin",
+      "status": "PASSED",
+      "details": "Connexion réussie avec admin.principal@nectforma-demo.com / NectDemo2026!, redirection vers /dashboard"
+    },
+    {
+      "test": "Vérifier que TOUTES les formations s'affichent dans Gestion des promotions",
+      "status": "PASSED",
+      "details": "3 formations affichées: 'Formation Test Suppression 1775986375', 'Master Digital Marketing 2026', 'Rh'. Badge '3 formations' visible."
+    },
+    {
+      "test": "Cliquer sur formation 'Rh' - vérifier état vide",
+      "status": "PASSED",
+      "details": "Formation 'Rh' cliquable, vue détail affichée avec '0 promotion'. État vide correct car pas de promotion."
+    },
+    {
+      "test": "Modal Participants - Master Digital Marketing 2026",
+      "status": "PASSED",
+      "details": "Modal s'ouvre correctement avec data-testid='participants-modal'. Affiche 'Aucun participant inscrit'. Bouton 'Fermer' fonctionne."
+    },
+    {
+      "test": "Navigation Emploi du temps avec formationId",
+      "status": "PASSED",
+      "details": "Navigation vers /pedagogie?tab=schedules&formationId=69fb21b1-c1c2-4bec-aef2-6b1371dc1b62. Formation 'Master Digital Marketing 2026 2026-2027' auto-sélectionnée."
+    }
+  ],
+  "features_validated": {
+    "all_formations_display": "SUCCÈS - Toutes les formations s'affichent (3 formations)",
+    "participants_modal": "SUCCÈS - Modal s'ouvre et se ferme correctement",
+    "schedule_navigation": "SUCCÈS - Navigation avec formationId fonctionne, auto-sélection de la formation"
+  },
+  "data_issue_note": "Les étudiants (Alice Dubois, Lucas Bernard, Emma Petit) ne sont pas assignés à la formation 'Rh' dans la base de données. Le modal Participants affiche correctement 'Aucun participant inscrit' car la fonction RPC get_formation_students ne retourne aucun étudiant pour cette formation."
+}

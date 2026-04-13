@@ -65,11 +65,31 @@ const PromotionsList: React.FC = () => {
     }
   };
 
-  useEffect(() => { fetchPromotions(); }, [establishment?.id]);
+  const [allFormations, setAllFormations] = useState<any[]>([]);
 
-  // Group by formation
+  useEffect(() => {
+    fetchPromotions();
+    // Also fetch all formations
+    formationService.getFormations().then(data => setAllFormations(data || [])).catch(() => {});
+  }, [establishment?.id]);
+
+  // Group by formation - include ALL formations (even without promotions)
   const formationGroups = useMemo(() => {
     const map = new Map<string, FormationGroup>();
+
+    // First add all formations
+    allFormations.forEach((f: any) => {
+      map.set(f.id, {
+        formationId: f.id,
+        title: f.title || 'Formation',
+        level: f.level || '',
+        color: f.color || '#6366f1',
+        promotions: [],
+        totalStudents: 0,
+      });
+    });
+
+    // Then add promotions to their formations
     promotions.forEach(p => {
       const fId = p.formation_id;
       if (!map.has(fId)) {
@@ -86,8 +106,9 @@ const PromotionsList: React.FC = () => {
       g.promotions.push(p);
       g.totalStudents += p.student_count || 0;
     });
+
     return Array.from(map.values());
-  }, [promotions]);
+  }, [promotions, allFormations]);
 
   // Filter
   const filtered = useMemo(() => {
