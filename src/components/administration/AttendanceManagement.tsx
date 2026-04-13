@@ -21,6 +21,7 @@ import SendAttendanceLinkModal from './SendAttendanceLinkModal';
 import { pdfExportService } from '@/services/pdfExportService';
 import BlankAttendanceSlotModal from './BlankAttendanceSlotModal';
 import FormationPromotionSelector from './FormationPromotionSelector';
+import { useSearchParams } from 'react-router-dom';
 
 const AttendanceManagement = () => {
   const [pendingSheets, setPendingSheets] = useState<AttendanceSheet[]>([]);
@@ -42,6 +43,15 @@ const AttendanceManagement = () => {
   const [view, setView] = useState<'selector' | 'sheets'>('selector');
   const { userId } = useCurrentUser();
   const { formations, loading: formationsLoading } = useFormations();
+  const [searchParams] = useSearchParams();
+
+  // Auto-select formation from URL param
+  useEffect(() => {
+    const fId = searchParams.get('formationId');
+    if (fId && formations.length > 0 && !selectedFormationId) {
+      handleFormationClick(fId);
+    }
+  }, [searchParams, formations]);
 
   useEffect(() => {
     fetchData();

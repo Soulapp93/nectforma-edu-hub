@@ -1,0 +1,75 @@
+{
+  "summary": "Test des boutons de raccourci dans Gestion des promotions: Emargement, Notes, Emploi du temps, Cahier de texte. TOUS LES TESTS PASSENT - Les boutons redirigent correctement vers le contenu de la formation sélectionnée avec formationId dans l'URL et auto-sélection de la formation.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "performance_issues": [
+      {
+        "component": "GradeSheetView.tsx",
+        "issue": "Warning: Maximum update depth exceeded - boucle infinie dans useEffect (ligne 208-221)",
+        "priority": "MEDIUM",
+        "details": "Le useEffect qui initialise localGrades a allGradesData dans ses dépendances. Comme allGradesData change de référence à chaque fetch, cela déclenche des re-renders excessifs. N'empêche pas le fonctionnement mais dégrade les performances.",
+        "suggested_fix": "Utiliser une comparaison profonde ou mémoriser allGradesData avec useMemo basé sur les valeurs, pas la référence"
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_16.json"
+  ],
+  "action_items": [
+    "OPTIONNEL: Corriger le bug 'Maximum update depth exceeded' dans GradeSheetView.tsx pour améliorer les performances"
+  ],
+  "critical_code_review_comments": [
+    "AttendanceManagement.tsx: useEffect (lignes 49-54) lit correctement formationId depuis useSearchParams et appelle handleFormationClick(fId) pour auto-sélectionner la formation",
+    "Notes.tsx: useEffect (lignes 106-115) lit correctement formationId depuis useSearchParams et définit selectedFormationId + selectedProgramName",
+    "PromotionsList.tsx: Les fonctions goToEmargement et goToNotes (lignes 156-157) passent correctement formationId dans l'URL"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only test)",
+    "frontend": "100% - 4/4 tests passés"
+  },
+  "test_credentials": "Sophie Martin (AdminPrincipal): admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Les boutons de raccourci dans Gestion des promotions fonctionnent correctement. La formation 'Master Digital Marketing 2026' (ID: 69fb21b1-c1c2-4bec-aef2-6b1371dc1b62) a été utilisée pour les tests. Un bug de performance existe dans GradeSheetView.tsx mais n'affecte pas le fonctionnement.",
+  "tests_executed": [
+    {
+      "test": "Bouton Emargement - Navigation et auto-sélection",
+      "status": "PASSED",
+      "details": "URL: /suivi-emargement-admin?formationId=69fb21b1-c1c2-4bec-aef2-6b1371dc1b62. Page affiche 'Feuilles - Master Digital Marketing 2026 (2026-2027)'. Vue 'sheets' affichée (pas 'selector')."
+    },
+    {
+      "test": "Bouton Notes - Navigation et auto-sélection avec 4 onglets",
+      "status": "PASSED",
+      "details": "URL: /notes-admin?formationId=69fb21b1-c1c2-4bec-aef2-6b1371dc1b62. Formation 'Master Digital Marketing 2026' avec badges 'BAC+1' et '2026-2027' visible. 4 onglets présents: Saisie des notes, Calcul & Validation, Jury & Délibération, Bulletin de notes."
+    },
+    {
+      "test": "Bouton Emploi du temps - Navigation et auto-sélection",
+      "status": "PASSED",
+      "details": "URL: /pedagogie?tab=schedules&formationId=69fb21b1-c1c2-4bec-aef2-6b1371dc1b62. Page affiche 'Emploi du temps - Master Digital Marketing 2026 2026-2027'. Calendrier avec navigation par semaines visible."
+    },
+    {
+      "test": "Bouton Cahier de texte - Navigation et auto-sélection",
+      "status": "PASSED",
+      "details": "URL: /pedagogie?tab=textbooks&formationId=69fb21b1-c1c2-4bec-aef2-6b1371dc1b62. Page affiche 'Cahiers de texte - Master Digital Marketing 2026' avec '1 cahier(s)'. Options Ouvrir, Exporter PDF, Archiver visibles."
+    }
+  ],
+  "features_validated": {
+    "emargement_shortcut": "SUCCÈS - Navigation vers /suivi-emargement-admin avec formationId, formation auto-sélectionnée",
+    "notes_shortcut": "SUCCÈS - Navigation vers /notes-admin avec formationId, formation auto-sélectionnée avec 4 onglets",
+    "schedule_shortcut": "SUCCÈS - Navigation vers ?tab=schedules&formationId, formation auto-sélectionnée",
+    "textbook_shortcut": "SUCCÈS - Navigation vers ?tab=textbooks&formationId, formation auto-sélectionnée"
+  },
+  "bug_fix_verification": {
+    "original_issue": "Les boutons émargement et notes des promotions ne redirigent pas directement vers le contenu de la formation. Ils doivent pointer vers les feuilles d'émargement et la gestion des notes DE la promotion sélectionnée, pas juste l'onglet général.",
+    "fix_status": "CORRIGÉ",
+    "verification_details": "Tous les boutons passent maintenant formationId dans l'URL et les pages cibles auto-sélectionnent la formation grâce aux useEffect qui lisent formationId depuis useSearchParams"
+  }
+}

@@ -1,6 +1,7 @@
-import React, { useState, useMemo, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useEstablishment } from '@/hooks/useEstablishment';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -61,6 +62,7 @@ const Notes = () => {
   const [activeTab, setActiveTab] = useState('saisie');
   const [showCreatePeriod, setShowCreatePeriod] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
+  const [searchParams] = useSearchParams();
 
   const { data: formations = [], isLoading } = useQuery({
     queryKey: ['formations-notes-page', userId, isAdmin],
@@ -99,6 +101,18 @@ const Notes = () => {
   });
 
   const selectedFormation = formations.find((f: any) => f.id === selectedFormationId);
+
+  // Auto-select formation from URL param
+  useEffect(() => {
+    const fId = searchParams.get('formationId');
+    if (fId && formations.length > 0 && !selectedFormationId) {
+      const match = formations.find((f: any) => f.id === fId);
+      if (match) {
+        setSelectedFormationId(fId);
+        setSelectedProgramName(match.title);
+      }
+    }
+  }, [searchParams, formations, selectedFormationId]);
 
   const { data: periods = [] } = useQuery({
     queryKey: ['evaluation-periods', selectedFormationId],
