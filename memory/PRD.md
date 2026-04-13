@@ -4,22 +4,17 @@
 - **Name:** Nectforma - SaaS multi-tenant pour centres de formation
 - **Stack:** React 18 + TypeScript + Vite + Tailwind CSS + Supabase (BaaS) + Capacitor
 
-## Session 28 - Raccourcis Promotions Directs + Modal Participants (2026-04-13)
-- **Modal Participants**: Popup avec liste etudiants (avatar initiales, nom, email, phone)
-  - Appelle formationService.getFormationStudents() via RPC
-  - Style: header violet, cards etudiants, bouton Fermer
-- **Navigation directe**: Les boutons raccourcis passent formationId dans l'URL
-  - Emploi du temps: ?tab=schedules&formationId=xxx -> auto-selection formation
-  - Cahier de texte: ?tab=textbooks&formationId=xxx -> auto-selection formation
-  - Emargement: /suivi-emargement-admin?formationId=xxx
-  - Notes: /notes-admin?formationId=xxx
-- **ScheduleManagement + TextBooksList**: useEffect lit searchParams.get('formationId') au montage et appelle handlePromotionSelect()
-- **Toutes formations affichees**: fetch allFormations + merge avec promotions
-- Testing: 5/5 passes (iteration_15)
+## Session 29 - Raccourcis Promotions Direct au Contenu (2026-04-13)
+- Les 5 boutons raccourcis redirigent maintenant DIRECTEMENT vers le contenu:
+  - Participants: modal popup avec liste etudiants
+  - Emploi du temps: ?tab=schedules&formationId=xxx -> auto-selection
+  - Cahier de texte: ?tab=textbooks&formationId=xxx -> auto-selection
+  - Emargement: /suivi-emargement-admin?formationId=xxx -> auto-selection
+  - Notes: /notes-admin?formationId=xxx -> auto-selection avec 4 onglets
+- Composants modifies: AttendanceManagement, Notes, ScheduleManagement, TextBooksList
+- Toutes formations affichees (meme sans promotions)
+- Testing: 4/4 passes (iteration_16)
 
-## All Completed
-- [x] Toutes fonctionnalites precedentes
-- [x] Raccourcis promotions directs + modal participants + toutes formations
-
+## All Completed - [x]
 ## P1 - [ ] Deploiement production
 ## P2 - [ ] TypeScript strict, Refactoring TranscriptsPanel, N+1/pagination
