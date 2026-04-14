@@ -4,17 +4,20 @@
 - **Name:** Nectforma - SaaS multi-tenant pour centres de formation
 - **Stack:** React 18 + TypeScript + Vite + Tailwind CSS + Supabase (BaaS) + Capacitor
 
-## Session 30 - Gestion des Notes et Releves (2026-04-13)
-- Navigation par periodes: pills groupees par type (semestres vert, examens ambre, separateur)
-- Etat vide avec CTA "Creer une periode" si aucune periode
-- CreatePeriodModal: types semestre/trimestre/examen_blanc/examen_final/partiels/rattrapage/custom
-- 4 onglets: Saisie des notes (GradeSheetView), Calcul & Validation, Jury & Deliberation, Bulletin de notes
-- Auto-selection formation depuis URL (formationId param)
-- Testing: 6/6 passes (iteration_17)
+## Session 31 - Gestion Notes Phase 2 + 3 (2026-04-13)
+- **Phase 2 - Configuration** (deja existante, validee):
+  - Blocs/Sections: creer UE, assigner modules
+  - Regles: seuils validation, compensation, mentions, credits
+  - Combinaisons: fusionner semestres (S1+S2=Bulletin Annee 1)
+- **Phase 3 - Publication amelioree**:
+  - Dialog refait avec 3 sections:
+    1. Periodes individuelles (pills cliquables S1, S2, S3...)
+    2. Examens (Examen Blanc, Examen Final - bordure ambre)
+    3. Bulletins combines (S1+S2 Annee 1, Tous semestres, CC+Examens Complet)
+  - Semestres deja publies marques avec check vert
+  - Disposition bulletin: Par UE/Section, Par Bloc, Par Semestre
+- Testing: 6/6 passes (iteration_18)
 
-## All Completed
-- [x] Toutes fonctionnalites precedentes
-- [x] Gestion notes: periodes, navigation, 4 onglets
-
+## All Completed - [x]
 ## P1 - [ ] Deploiement production
-## P2 - [ ] Fix GradeSheetView perf, TypeScript strict, Refactoring TranscriptsPanel
+## P2 - [ ] Fix GradeSheetView perf, TypeScript strict
