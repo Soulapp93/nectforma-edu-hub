@@ -703,30 +703,127 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
         </div>
       </div>
 
-      {/* Publish Dialog */}
+      {/* Publish Dialog - Enhanced with flexible options */}
       <Dialog open={showPublishDialog} onOpenChange={setShowPublishDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Publier les relevés de notes</DialogTitle>
+            <DialogTitle>Publier les releves de notes</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <p className="text-sm text-muted-foreground">
-              Sélectionnez le semestre pour lequel vous souhaitez publier les relevés de notes. Les étudiants pourront consulter leur relevé dans leur espace.
+              Choisissez ce que vous souhaitez publier. Les etudiants pourront consulter leur releve dans leur espace.
             </p>
-            <Select value={publishSemester} onValueChange={setPublishSemester}>
-              <SelectTrigger>
-                <SelectValue placeholder="Choisir un semestre" />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: semestersCount }, (_, i) => (
-                  <SelectItem key={i + 1} value={String(i + 1)}>Semestre {i + 1}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {/* Show published semesters */}
-            {publishedSemesters.length > 0 && (
+
+            {/* Semester selection */}
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-foreground">Periodes individuelles</p>
+              <div className="flex flex-wrap gap-2">
+                {Array.from({ length: semestersCount }, (_, i) => {
+                  const val = String(i + 1);
+                  const isSelected = publishSemester === val;
+                  const isPublished = publishedSemesters.some((ps: any) => ps.semester_number === i + 1);
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => setPublishSemester(isSelected ? '' : val)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                        isSelected
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : isPublished
+                            ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                            : 'bg-background border-border hover:border-primary/50'
+                      }`}
+                    >
+                      {isPublished && <Check className="h-3 w-3 inline mr-1" />}
+                      Semestre {i + 1}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Exam periods */}
+            {periods.some((p: any) => p.period_type === 'examen_blanc' || p.period_type === 'examen_final') && (
               <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">Semestres déjà publiés :</p>
+                <p className="text-xs font-semibold text-foreground">Examens</p>
+                <div className="flex flex-wrap gap-2">
+                  {periods.filter((p: any) => p.period_type === 'examen_blanc' || p.period_type === 'examen_final').map((p: any) => {
+                    const isSelected = publishSemester === `exam-${p.id}`;
+                    return (
+                      <button
+                        key={p.id}
+                        onClick={() => setPublishSemester(isSelected ? '' : `exam-${p.id}`)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                          isSelected
+                            ? 'bg-amber-500 text-white border-amber-500'
+                            : 'bg-background border-amber-200 text-amber-700 hover:border-amber-400'
+                        }`}
+                      >
+                        {p.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Combined options */}
+            <div className="space-y-2 border-t pt-3">
+              <p className="text-xs font-semibold text-foreground">Bulletins combines</p>
+              <div className="flex flex-wrap gap-2">
+                {semestersCount >= 2 && (
+                  <button
+                    onClick={() => setPublishSemester(publishSemester === 'combine-year1' ? '' : 'combine-year1')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                      publishSemester === 'combine-year1'
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-background border-border hover:border-primary/50'
+                    }`}
+                  >
+                    S1 + S2 (Annee 1)
+                  </button>
+                )}
+                {semestersCount >= 4 && (
+                  <button
+                    onClick={() => setPublishSemester(publishSemester === 'combine-year2' ? '' : 'combine-year2')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                      publishSemester === 'combine-year2'
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-background border-border hover:border-primary/50'
+                    }`}
+                  >
+                    S3 + S4 (Annee 2)
+                  </button>
+                )}
+                <button
+                  onClick={() => setPublishSemester(publishSemester === 'combine-all' ? '' : 'combine-all')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                    publishSemester === 'combine-all'
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-background border-border hover:border-primary/50'
+                  }`}
+                >
+                  Tous les semestres
+                </button>
+                {periods.some((p: any) => p.period_type === 'examen_blanc' || p.period_type === 'examen_final') && (
+                  <button
+                    onClick={() => setPublishSemester(publishSemester === 'combine-cc-exam' ? '' : 'combine-cc-exam')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                      publishSemester === 'combine-cc-exam'
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-background border-border hover:border-primary/50'
+                    }`}
+                  >
+                    CC + Examens (Complet)
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Already published */}
+            {publishedSemesters.length > 0 && (
+              <div className="space-y-2 border-t pt-3">
+                <p className="text-xs font-medium text-muted-foreground">Deja publies :</p>
                 <div className="flex flex-wrap gap-1.5">
                   {publishedSemesters.map((ps: any) => (
                     <Badge key={ps.id} variant="secondary" className="gap-1 text-xs">
