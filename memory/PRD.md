@@ -4,17 +4,17 @@
 - **Name:** Nectforma - SaaS multi-tenant pour centres de formation
 - **Stack:** React 18 + TypeScript + Vite + Tailwind CSS + Supabase (BaaS) + Capacitor
 
-## Session 29 - Raccourcis Promotions Direct au Contenu (2026-04-13)
-- Les 5 boutons raccourcis redirigent maintenant DIRECTEMENT vers le contenu:
-  - Participants: modal popup avec liste etudiants
-  - Emploi du temps: ?tab=schedules&formationId=xxx -> auto-selection
-  - Cahier de texte: ?tab=textbooks&formationId=xxx -> auto-selection
-  - Emargement: /suivi-emargement-admin?formationId=xxx -> auto-selection
-  - Notes: /notes-admin?formationId=xxx -> auto-selection avec 4 onglets
-- Composants modifies: AttendanceManagement, Notes, ScheduleManagement, TextBooksList
-- Toutes formations affichees (meme sans promotions)
-- Testing: 4/4 passes (iteration_16)
+## Session 30 - Gestion des Notes et Releves (2026-04-13)
+- Navigation par periodes: pills groupees par type (semestres vert, examens ambre, separateur)
+- Etat vide avec CTA "Creer une periode" si aucune periode
+- CreatePeriodModal: types semestre/trimestre/examen_blanc/examen_final/partiels/rattrapage/custom
+- 4 onglets: Saisie des notes (GradeSheetView), Calcul & Validation, Jury & Deliberation, Bulletin de notes
+- Auto-selection formation depuis URL (formationId param)
+- Testing: 6/6 passes (iteration_17)
 
-## All Completed - [x]
+## All Completed
+- [x] Toutes fonctionnalites precedentes
+- [x] Gestion notes: periodes, navigation, 4 onglets
+
 ## P1 - [ ] Deploiement production
-## P2 - [ ] TypeScript strict, Refactoring TranscriptsPanel, N+1/pagination
+## P2 - [ ] Fix GradeSheetView perf, TypeScript strict, Refactoring TranscriptsPanel
