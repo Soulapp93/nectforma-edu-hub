@@ -201,10 +201,12 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     enabled: !!selectedFormation,
   });
 
-  // Filter modules by semester
+  // Filter modules by semester - fallback to all modules if none match
   const modules = useMemo(() => {
-    if (!activeSemesterNums) return allModules;
-    return allModules.filter((m: any) => semesterMatchesFilter(m.semester, activeSemesterNums));
+    if (!activeSemesterNums || activeSemesterNums.length === 0) return allModules;
+    const filtered = allModules.filter((m: any) => semesterMatchesFilter(m.semester, activeSemesterNums));
+    // Fallback: if no modules match the semester filter, show all modules
+    return filtered.length > 0 ? filtered : allModules;
   }, [allModules, activeSemesterNums]);
 
   const { data: teachingUnits = [] } = useQuery({
@@ -441,7 +443,24 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
 
   // Build bulletins
   const bulletins: StudentBulletin[] = useMemo(() => {
-    if (!students.length || !modules.length) return [];
+    if (!students.length) return [];
+    // If no modules for this semester, still show students with empty data
+    if (!modules.length) {
+      return students.map(student => ({
+        studentId: student.user_id,
+        studentName: `${student.last_name} ${student.first_name}`,
+        studentEmail: student.email || '',
+        modules: [],
+        ccGeneralAverage: null,
+        ccClassGeneralAverage: null,
+        examTotalPoints: 0,
+        examTotalCoeff: 0,
+        examBlancTotalPoints: 0,
+        examBlancTotalCoeff: 0,
+        mention: null,
+        decision: 'en_cours',
+      }));
+    }
 
     const defaultRules = {
       validation_threshold: 10, allow_compensation: true, compensation_threshold: 8,
