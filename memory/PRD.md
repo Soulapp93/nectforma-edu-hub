@@ -1,23 +1,11 @@
 # PRD - Nectforma
 
-## Application Overview
-- **Name:** Nectforma - SaaS multi-tenant pour centres de formation
-- **Stack:** React 18 + TypeScript + Vite + Tailwind CSS + Supabase (BaaS) + Capacitor
-
-## Session 31 - Gestion Notes Phase 2 + 3 (2026-04-13)
-- **Phase 2 - Configuration** (deja existante, validee):
-  - Blocs/Sections: creer UE, assigner modules
-  - Regles: seuils validation, compensation, mentions, credits
-  - Combinaisons: fusionner semestres (S1+S2=Bulletin Annee 1)
-- **Phase 3 - Publication amelioree**:
-  - Dialog refait avec 3 sections:
-    1. Periodes individuelles (pills cliquables S1, S2, S3...)
-    2. Examens (Examen Blanc, Examen Final - bordure ambre)
-    3. Bulletins combines (S1+S2 Annee 1, Tous semestres, CC+Examens Complet)
-  - Semestres deja publies marques avec check vert
-  - Disposition bulletin: Par UE/Section, Par Bloc, Par Semestre
-- Testing: 6/6 passes (iteration_18)
+## Session 32 - Fix Bulletin de Notes (2026-04-13)
+- **Bug**: "Aucun etudiant" affiche dans l'onglet Bulletin de notes meme avec 3 etudiants inscrits
+- **Root cause**: bulletins useMemo retournait [] quand modules.length === 0 (modules filtres par semestre ne matchaient pas)
+- **Fix**: 1) Fallback: quand modules vide, retourner etudiants avec donnees vides. 2) Quand aucun module ne match le semestre, fallback vers tous les modules. 3) Structure objet corrigee (studentId au lieu de student.id)
+- Testing: 4/4 passes (iteration_19)
 
 ## All Completed - [x]
 ## P1 - [ ] Deploiement production
-## P2 - [ ] Fix GradeSheetView perf, TypeScript strict
+## P2 - [ ] Fix GradeSheetView perf (Maximum update depth exceeded)
