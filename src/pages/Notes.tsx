@@ -174,6 +174,10 @@ const Notes = () => {
   // ============ Formation detail view with sidebar ============
   if (selectedFormationId && selectedFormation) {
     
+    // Group periods by type for display
+    const semesterPeriods = periods.filter((p: any) => p.period_type === 'semestre');
+    const examPeriods = periods.filter((p: any) => p.period_type === 'examen_blanc' || p.period_type === 'examen_final' || p.period_type === 'partiels');
+    const otherPeriods = periods.filter((p: any) => !['semestre', 'examen_blanc', 'examen_final', 'partiels'].includes(p.period_type));
     
     return (
       <div className="p-4 md:p-6 pb-20 md:pb-6">
@@ -189,9 +193,9 @@ const Notes = () => {
             {selectedFormation.academic_year && <Badge variant="outline" className="text-xs">{selectedFormation.academic_year}</Badge>}
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowCreatePeriod(true)} className="gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowCreatePeriod(true)} className="gap-2" data-testid="create-period-btn">
               <Plus className="h-4 w-4" />
-              Créer une période
+              <span className="hidden sm:inline">Creer une periode</span>
             </Button>
             {isAdmin && (
               <Button variant="outline" size="sm" onClick={() => setShowConfig(!showConfig)} className={`gap-2 ${showConfig ? 'bg-primary text-primary-foreground' : ''}`}>
@@ -201,6 +205,71 @@ const Notes = () => {
             )}
           </div>
         </div>
+
+        {/* Periods navigation pills */}
+        {periods.length > 0 && (
+          <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1" data-testid="periods-nav">
+            {semesterPeriods.map((p: any) => {
+              const semNum = p.name.match(/\d+/)?.[0] || '1';
+              return (
+                <Badge
+                  key={p.id}
+                  variant="outline"
+                  className={`cursor-pointer px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors shrink-0 ${
+                    p.is_locked
+                      ? 'bg-muted/50 text-muted-foreground border-muted'
+                      : 'hover:bg-primary/10 hover:border-primary'
+                  }`}
+                  data-testid={`period-pill-${p.id}`}
+                >
+                  <div className={`w-2 h-2 rounded-full mr-1.5 ${p.is_locked ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                  {p.name}
+                </Badge>
+              );
+            })}
+            {examPeriods.length > 0 && semesterPeriods.length > 0 && (
+              <div className="w-px h-5 bg-border shrink-0" />
+            )}
+            {examPeriods.map((p: any) => (
+              <Badge
+                key={p.id}
+                variant="outline"
+                className={`cursor-pointer px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors shrink-0 border-amber-300 text-amber-700 ${
+                  p.is_locked ? 'bg-muted/50 opacity-60' : 'hover:bg-amber-50'
+                }`}
+                data-testid={`period-pill-${p.id}`}
+              >
+                <div className={`w-2 h-2 rounded-full mr-1.5 ${p.is_locked ? 'bg-red-400' : 'bg-amber-400'}`} />
+                {p.name}
+              </Badge>
+            ))}
+            {otherPeriods.map((p: any) => (
+              <Badge
+                key={p.id}
+                variant="outline"
+                className="cursor-pointer px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors shrink-0 hover:bg-primary/10"
+                data-testid={`period-pill-${p.id}`}
+              >
+                <div className={`w-2 h-2 rounded-full mr-1.5 ${p.is_locked ? 'bg-red-400' : 'bg-blue-400'}`} />
+                {p.name}
+              </Badge>
+            ))}
+          </div>
+        )}
+
+        {/* Empty state if no periods */}
+        {periods.length === 0 && (
+          <Card className="mb-4">
+            <CardContent className="flex flex-col items-center justify-center py-8">
+              <Calendar className="h-10 w-10 text-muted-foreground/50 mb-3" />
+              <p className="text-muted-foreground text-sm font-medium">Aucune periode d'evaluation</p>
+              <p className="text-muted-foreground/70 text-xs mb-3">Commencez par creer une periode (Semestre, Examen Blanc...)</p>
+              <Button size="sm" onClick={() => setShowCreatePeriod(true)} className="gap-1">
+                <Plus className="h-3.5 w-3.5" /> Creer une periode
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {showConfig ? (
           <div>
