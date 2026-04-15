@@ -17,9 +17,10 @@ import { EmptyState } from '@/components/ui/empty-state';
 
 interface Props {
   formationId: string;
+  periodId?: string | null;
 }
 
-const CalculValidation: React.FC<Props> = ({ formationId }) => {
+const CalculValidation: React.FC<Props> = ({ formationId, periodId }) => {
   const { data: formation } = useQuery({
     queryKey: ['formation-calc', formationId],
     queryFn: async () => {

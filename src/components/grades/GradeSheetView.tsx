@@ -24,9 +24,10 @@ import CreateEvaluationModal from './CreateEvaluationModal';
 interface GradeSheetViewProps {
   mode: 'admin' | 'instructor';
   formationId: string;
+  periodId?: string | null;
 }
 
-const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) => {
+const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, periodId }) => {
   const { userId, userRole } = useCurrentUser();
   const { establishment } = useEstablishment();
   const queryClient = useQueryClient();
@@ -79,6 +80,30 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId }) =>
   useEffect(() => {
     if (currentFormationData && !semesterView) setSemesterView('s1');
   }, [currentFormationData]);
+
+  // Sync semesterView with parent periodId when it changes
+  useEffect(() => {
+    if (periodId && periods.length > 0) {
+      const period = periods.find((p: any) => p.id === periodId);
+      if (period) {
+        const pType = period.period_type;
+        if (pType === 'examen_blanc' || pType === 'examen_final') {
+          setSemesterView('exam_blanc');
+        } else {
+          // Find the index of this period among semester-type periods
+          const semPeriods = periods.filter((p: any) => p.period_type === 'semestre' || p.period_type === 'semester');
+          const idx = semPeriods.findIndex((p: any) => p.id === periodId);
+          if (idx >= 0) {
+            setSemesterView(`s${idx + 1}`);
+          } else {
+            // Fallback: use name to extract semester number
+            const num = period.name.match(/\d+/)?.[0];
+            if (num) setSemesterView(`s${num}`);
+          }
+        }
+      }
+    }
+  }, [periodId, periods]);
 
   const activePeriodIds = useMemo(() => {
     if (!semesterView || periods.length === 0 || isExamBlancView) return [];

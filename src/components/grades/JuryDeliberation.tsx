@@ -26,6 +26,7 @@ import { fr } from 'date-fns/locale';
 
 interface Props {
   formationId: string;
+  periodId?: string | null;
 }
 
 const JURY_DECISIONS = [
@@ -35,7 +36,7 @@ const JURY_DECISIONS = [
   { value: 'felicitations', label: 'Félicitations', icon: Star, color: 'text-purple-600', bgColor: 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800' },
 ];
 
-const JuryDeliberation: React.FC<Props> = ({ formationId }) => {
+const JuryDeliberation: React.FC<Props> = ({ formationId, periodId }) => {
   const { userId } = useCurrentUser();
   const { establishment } = useEstablishment();
   const queryClient = useQueryClient();

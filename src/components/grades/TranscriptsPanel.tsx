@@ -39,6 +39,8 @@ interface Props {
   mode: 'admin' | 'student';
   studentId?: string;
   formationId?: string;
+  periodId?: string | null;
+  periodName?: string;
 }
 
 interface ModuleBulletinData {
@@ -74,7 +76,7 @@ interface StudentBulletin {
   mention: string | null;
 }
 
-const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propFormationId }) => {
+const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propFormationId, periodId, periodName }) => {
   const { userId, userRole } = useCurrentUser();
   const { establishment } = useEstablishment();
   const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';

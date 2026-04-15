@@ -62,6 +62,7 @@ const Notes = () => {
   const [activeTab, setActiveTab] = useState('saisie');
   const [showCreatePeriod, setShowCreatePeriod] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
 
   const { data: formations = [], isLoading } = useQuery({
@@ -119,6 +120,20 @@ const Notes = () => {
     queryFn: () => getEvaluationPeriods(selectedFormationId!),
     enabled: !!selectedFormationId,
   });
+
+  // Auto-select first period when periods load
+  useEffect(() => {
+    if (periods.length > 0 && !selectedPeriodId) {
+      setSelectedPeriodId(periods[0].id);
+    }
+  }, [periods]);
+
+  // Reset period when formation changes
+  useEffect(() => {
+    setSelectedPeriodId(null);
+  }, [selectedFormationId]);
+
+  const selectedPeriod = periods.find((p: any) => p.id === selectedPeriodId);
 
   const formationGroups = useMemo(() => {
     const groups: Record<string, any[]> = {};
@@ -209,50 +224,57 @@ const Notes = () => {
         {/* Periods navigation pills */}
         {periods.length > 0 && (
           <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1" data-testid="periods-nav">
-            {semesterPeriods.map((p: any) => {
-              const semNum = p.name.match(/\d+/)?.[0] || '1';
-              return (
-                <Badge
-                  key={p.id}
-                  variant="outline"
-                  className={`cursor-pointer px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors shrink-0 ${
-                    p.is_locked
+            {semesterPeriods.map((p: any) => (
+              <button
+                key={p.id}
+                onClick={() => setSelectedPeriodId(p.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border shrink-0 ${
+                  selectedPeriodId === p.id
+                    ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                    : p.is_locked
                       ? 'bg-muted/50 text-muted-foreground border-muted'
-                      : 'hover:bg-primary/10 hover:border-primary'
-                  }`}
-                  data-testid={`period-pill-${p.id}`}
-                >
-                  <div className={`w-2 h-2 rounded-full mr-1.5 ${p.is_locked ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                  {p.name}
-                </Badge>
-              );
-            })}
+                      : 'bg-background border-border hover:bg-primary/10 hover:border-primary/50'
+                }`}
+                data-testid={`period-pill-${p.id}`}
+              >
+                <div className={`w-2 h-2 rounded-full ${selectedPeriodId === p.id ? 'bg-white' : p.is_locked ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                {p.name}
+              </button>
+            ))}
             {examPeriods.length > 0 && semesterPeriods.length > 0 && (
               <div className="w-px h-5 bg-border shrink-0" />
             )}
             {examPeriods.map((p: any) => (
-              <Badge
+              <button
                 key={p.id}
-                variant="outline"
-                className={`cursor-pointer px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors shrink-0 border-amber-300 text-amber-700 ${
-                  p.is_locked ? 'bg-muted/50 opacity-60' : 'hover:bg-amber-50'
+                onClick={() => setSelectedPeriodId(p.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border shrink-0 ${
+                  selectedPeriodId === p.id
+                    ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
+                    : p.is_locked
+                      ? 'bg-muted/50 opacity-60 border-muted'
+                      : 'bg-background border-amber-300 text-amber-700 hover:bg-amber-50'
                 }`}
                 data-testid={`period-pill-${p.id}`}
               >
-                <div className={`w-2 h-2 rounded-full mr-1.5 ${p.is_locked ? 'bg-red-400' : 'bg-amber-400'}`} />
+                <div className={`w-2 h-2 rounded-full ${selectedPeriodId === p.id ? 'bg-white' : p.is_locked ? 'bg-red-400' : 'bg-amber-400'}`} />
                 {p.name}
-              </Badge>
+              </button>
             ))}
             {otherPeriods.map((p: any) => (
-              <Badge
+              <button
                 key={p.id}
-                variant="outline"
-                className="cursor-pointer px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors shrink-0 hover:bg-primary/10"
+                onClick={() => setSelectedPeriodId(p.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border shrink-0 ${
+                  selectedPeriodId === p.id
+                    ? 'bg-blue-500 text-white border-blue-500 shadow-sm'
+                    : 'bg-background border-border hover:bg-blue-50'
+                }`}
                 data-testid={`period-pill-${p.id}`}
               >
-                <div className={`w-2 h-2 rounded-full mr-1.5 ${p.is_locked ? 'bg-red-400' : 'bg-blue-400'}`} />
+                <div className={`w-2 h-2 rounded-full ${selectedPeriodId === p.id ? 'bg-white' : p.is_locked ? 'bg-red-400' : 'bg-blue-400'}`} />
                 {p.name}
-              </Badge>
+              </button>
             ))}
           </div>
         )}
@@ -340,19 +362,28 @@ const Notes = () => {
               })}
             </div>
 
-            {/* Main content */}
+            {/* Active period indicator */}
+            {selectedPeriod && (
+              <div className="bg-muted/40 rounded-lg px-4 py-2 flex items-center gap-2 text-sm">
+                <Calendar className="h-4 w-4 text-primary" />
+                <span className="font-medium">{selectedPeriod.name}</span>
+                {selectedPeriod.is_locked && <Badge variant="destructive" className="text-[10px] px-1.5">Verrouille</Badge>}
+              </div>
+            )}
+
+            {/* Main content - filtered by selected period */}
             <div>
               {activeTab === 'saisie' && (
-                <GradeSheetView mode={isAdmin ? 'admin' : 'instructor'} formationId={selectedFormationId} />
+                <GradeSheetView mode={isAdmin ? 'admin' : 'instructor'} formationId={selectedFormationId} periodId={selectedPeriodId} />
               )}
               {activeTab === 'calcul' && (
-                <CalculValidation formationId={selectedFormationId} />
+                <CalculValidation formationId={selectedFormationId} periodId={selectedPeriodId} />
               )}
               {activeTab === 'jury' && (
-                <JuryDeliberation formationId={selectedFormationId} />
+                <JuryDeliberation formationId={selectedFormationId} periodId={selectedPeriodId} />
               )}
               {activeTab === 'bulletin' && (
-                <TranscriptsPanel mode="admin" formationId={selectedFormationId} />
+                <TranscriptsPanel mode="admin" formationId={selectedFormationId} periodId={selectedPeriodId} periodName={selectedPeriod?.name} />
               )}
             </div>
           </div>
