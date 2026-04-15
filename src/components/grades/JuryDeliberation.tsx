@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import {
   getEvaluations,
   getGradesByEvaluation,
   getGradingRules,
+  getEvaluationPeriods,
   calculateWeightedAverage,
   getMention,
   getDecision,
@@ -23,6 +24,7 @@ import { Users, Award, CheckCircle, XCircle, AlertTriangle, Star, FileText } fro
 import { EmptyState } from '@/components/ui/empty-state';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import PeriodSelector from './PeriodSelector';
 
 interface Props {
   formationId: string;
@@ -41,6 +43,21 @@ const JuryDeliberation: React.FC<Props> = ({ formationId, periodId }) => {
   const { establishment } = useEstablishment();
   const queryClient = useQueryClient();
   const [juryDecisions, setJuryDecisions] = useState<Record<string, string>>({});
+  const [localPeriodId, setLocalPeriodId] = useState<string | null>(periodId || null);
+
+  useEffect(() => { if (periodId) setLocalPeriodId(periodId); }, [periodId]);
+
+  const { data: periods = [] } = useQuery({
+    queryKey: ['periods-jury', formationId],
+    queryFn: () => getEvaluationPeriods(formationId),
+    enabled: !!formationId,
+  });
+
+  useEffect(() => {
+    if (periods.length > 0 && !localPeriodId) setLocalPeriodId(periods[0].id);
+  }, [periods]);
+
+  const selectedPeriod = periods.find((p: any) => p.id === localPeriodId);
 
   const { data: formation } = useQuery({
     queryKey: ['formation-jury', formationId],
@@ -161,12 +178,15 @@ const JuryDeliberation: React.FC<Props> = ({ formationId, periodId }) => {
 
   return (
     <div className="space-y-5">
+      {/* Period selector */}
+      <PeriodSelector periods={periods} selectedPeriodId={localPeriodId} onSelectPeriod={setLocalPeriodId} label="Periode :" />
+
       {/* Session info banner */}
       <div className="bg-primary text-primary-foreground rounded-xl p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Award className="h-6 w-6" />
           <div>
-            <h3 className="font-bold text-sm">Session du Jury — {formation?.academic_year || ''}</h3>
+            <h3 className="font-bold text-sm">Session du Jury — {formation?.academic_year || ''} {selectedPeriod ? `• ${selectedPeriod.name}` : ''}</h3>
             <p className="text-xs opacity-80">
               {format(new Date(), "d MMMM yyyy", { locale: fr })}
             </p>

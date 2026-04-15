@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,6 +6,7 @@ import {
   getEvaluations,
   getGradesByEvaluation,
   getGradingRules,
+  getEvaluationPeriods,
   calculateWeightedAverage,
   getMention,
   EVALUATION_TYPES,
@@ -14,6 +15,7 @@ import {
 } from '@/services/gradesService';
 import { Trash2, Users } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
+import PeriodSelector from './PeriodSelector';
 
 interface Props {
   formationId: string;
@@ -21,6 +23,22 @@ interface Props {
 }
 
 const CalculValidation: React.FC<Props> = ({ formationId, periodId }) => {
+  const [localPeriodId, setLocalPeriodId] = useState<string | null>(periodId || null);
+
+  useEffect(() => { if (periodId) setLocalPeriodId(periodId); }, [periodId]);
+
+  const { data: periods = [] } = useQuery({
+    queryKey: ['periods-calc', formationId],
+    queryFn: () => getEvaluationPeriods(formationId),
+    enabled: !!formationId,
+  });
+
+  useEffect(() => {
+    if (periods.length > 0 && !localPeriodId) setLocalPeriodId(periods[0].id);
+  }, [periods]);
+
+  const selectedPeriod = periods.find((p: any) => p.id === localPeriodId);
+
   const { data: formation } = useQuery({
     queryKey: ['formation-calc', formationId],
     queryFn: async () => {
@@ -159,9 +177,12 @@ const CalculValidation: React.FC<Props> = ({ formationId, periodId }) => {
 
   return (
     <div className="space-y-4">
+      {/* Period selector */}
+      <PeriodSelector periods={periods} selectedPeriodId={localPeriodId} onSelectPeriod={setLocalPeriodId} label="Periode :" />
+
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-foreground">
-          Récapitulatif des moyennes — {formation?.title}
+          Recapitulatif des moyennes — {formation?.title} {selectedPeriod ? `• ${selectedPeriod.name}` : ''}
         </h2>
       </div>
 
