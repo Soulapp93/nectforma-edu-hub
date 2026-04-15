@@ -1,10 +1,18 @@
 # PRD - Nectforma
 
-## Session 32 - Fix Bulletin de Notes (2026-04-13)
-- **Bug**: "Aucun etudiant" affiche dans l'onglet Bulletin de notes meme avec 3 etudiants inscrits
-- **Root cause**: bulletins useMemo retournait [] quand modules.length === 0 (modules filtres par semestre ne matchaient pas)
-- **Fix**: 1) Fallback: quand modules vide, retourner etudiants avec donnees vides. 2) Quand aucun module ne match le semestre, fallback vers tous les modules. 3) Structure objet corrigee (studentId au lieu de student.id)
-- Testing: 4/4 passes (iteration_19)
+## Session 33 - Periodes d'Evaluation Independantes (2026-04-13)
+- **Navigation par periodes**: Pills cliquables avec etat actif colore (semestres = primary, examens = ambre)
+- **Periodes independantes**: Chaque periode (S1, S2, Examen Blanc) est independante
+  - selectedPeriodId state dans Notes.tsx
+  - Auto-selection premiere periode, reset au changement de formation
+  - Indicateur actif avec icone calendrier sous les onglets
+- **4 onglets filtres par periode**: 
+  - Saisie des notes: GradeSheetView sync semesterView avec periodId
+  - Calcul & Validation: accepte periodId
+  - Jury & Deliberation: accepte periodId
+  - Bulletin de notes: accepte periodId + periodName
+- **Publication flexible**: Dialog avec periodes individuelles, examens, bulletins combines (S1+S2, CC+Examens)
+- Testing: 7/7 passes (iteration_20)
 
 ## All Completed - [x]
 ## P1 - [ ] Deploiement production
