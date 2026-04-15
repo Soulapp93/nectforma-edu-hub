@@ -1,19 +1,12 @@
 # PRD - Nectforma
 
-## Session 33 - Periodes d'Evaluation Independantes (2026-04-13)
-- **Navigation par periodes**: Pills cliquables avec etat actif colore (semestres = primary, examens = ambre)
-- **Periodes independantes**: Chaque periode (S1, S2, Examen Blanc) est independante
-  - selectedPeriodId state dans Notes.tsx
-  - Auto-selection premiere periode, reset au changement de formation
-  - Indicateur actif avec icone calendrier sous les onglets
-- **4 onglets filtres par periode**: 
-  - Saisie des notes: GradeSheetView sync semesterView avec periodId
-  - Calcul & Validation: accepte periodId
-  - Jury & Deliberation: accepte periodId
-  - Bulletin de notes: accepte periodId + periodName
-- **Publication flexible**: Dialog avec periodes individuelles, examens, bulletins combines (S1+S2, CC+Examens)
-- Testing: 7/7 passes (iteration_20)
+## Session 34 - PeriodSelector dans tous les onglets (2026-04-15)
+- **PeriodSelector** composant reutilisable: pills semestres (primary), examens (ambre), autres (bleu)
+- Integre dans CalculValidation et JuryDeliberation (en plus de Notes.tsx parent)
+- Chaque onglet a son propre localPeriodId synchronise avec le parent
+- Titre dynamique inclut le nom de la periode selectionnee
+- Fix doublons: standardise period_type 'semester' -> 'semestre', supprime doublons DB
+- Testing: 5/5 passes (iteration_21) - navigation par periode dans les 4 onglets
 
 ## All Completed - [x]
 ## P1 - [ ] Deploiement production
-## P2 - [ ] Fix GradeSheetView perf (Maximum update depth exceeded)
