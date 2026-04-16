@@ -1,19 +1,21 @@
 # PRD - Nectforma
 
-## Session 35 - Selection Modules pour Examens (2026-04-15)
-- **CreatePeriodModal reecrit**: Pour types Examen Blanc/Final, Partiels, Rattrapage:
-  - Liste tous les modules de la formation groupes par semestre
-  - Checkboxes individuelles par module
-  - Boutons "Tout" / "Aucun" pour selection rapide
-  - Clic sur titre semestre pour selectionner/deselectionner tout le semestre
-  - Recherche de modules
-  - Badge compteur (X/Y modules selectionnes)
-  - Bouton "Creer" desactive si aucun module selectionne
-  - Toast affiche le nombre de modules
-- **DB**: Table `period_modules` creee (period_id, module_id, UNIQUE) avec RLS
-- Pour types Semestre/Trimestre: pas de selection modules (comportement inchange)
-- Testing: 6/6 passes (iteration_22)
+## Session 36 - Phase 1 Coefficients (2026-04-15)
+- **Coefficient modules**: Champ coefficient ajoute dans ModuleForm (creation formation)
+  - Input number avec valeur par defaut 1, step 0.5
+  - Passe a moduleService.createModule via CreateFormationModal
+- **Coefficient evaluations**: Deja existant dans CreateEvaluationModal (input number)
+- **Coefficients examens specifiques**: 
+  - Colonne coefficient ajoutee dans period_modules (DB)
+  - CreatePeriodModal: quand module selectionne pour examen, input ambre "Coeff exam:" apparait
+  - Affichage "CC: X" en gris a cote de chaque module pour comparaison
+  - examCoefficients state stocke les coefficients exam par module
+  - Sauvegarde dans period_modules.coefficient
+- Testing: 4/4 passes (iteration_23, 100%)
+
+## Prochaines phases:
+- Phase 2: Bulletin modulable drag & drop
+- Phase 3: Signatures par lien unique
 
 ## All Completed - [x]
 ## P1 - [ ] Deploiement production
-## P2 - [ ] Fix GradeSheetView perf (Maximum update depth exceeded)
