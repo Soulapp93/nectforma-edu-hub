@@ -38,6 +38,7 @@ const CreatePeriodModal: React.FC<Props> = ({ isOpen, onClose, formationId, seme
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedModuleIds, setSelectedModuleIds] = useState<string[]>([]);
+  const [examCoefficients, setExamCoefficients] = useState<Record<string, number>>({});
   const [moduleSearch, setModuleSearch] = useState('');
 
   const needsSemesterSelection = periodType === 'semestre';
@@ -84,13 +85,26 @@ const CreatePeriodModal: React.FC<Props> = ({ isOpen, onClose, formationId, seme
   }, [name, periodType, semesterNumber]);
 
   const toggleModule = (moduleId: string) => {
-    setSelectedModuleIds(prev =>
-      prev.includes(moduleId) ? prev.filter(id => id !== moduleId) : [...prev, moduleId]
-    );
+    setSelectedModuleIds(prev => {
+      if (prev.includes(moduleId)) {
+        const next = prev.filter(id => id !== moduleId);
+        setExamCoefficients(c => { const n = { ...c }; delete n[moduleId]; return n; });
+        return next;
+      } else {
+        const mod = allModules.find((m: any) => m.id === moduleId);
+        setExamCoefficients(c => ({ ...c, [moduleId]: mod?.coefficient || 1 }));
+        return [...prev, moduleId];
+      }
+    });
   };
 
-  const selectAll = () => setSelectedModuleIds(allModules.map((m: any) => m.id));
-  const deselectAll = () => setSelectedModuleIds([]);
+  const selectAll = () => {
+    setSelectedModuleIds(allModules.map((m: any) => m.id));
+    const coeffs: Record<string, number> = {};
+    allModules.forEach((m: any) => { coeffs[m.id] = m.coefficient || 1; });
+    setExamCoefficients(coeffs);
+  };
+  const deselectAll = () => { setSelectedModuleIds([]); setExamCoefficients({}); };
   const selectBySemester = (sem: number) => {
     const semModIds = allModules.filter((m: any) => m.semester === sem).map((m: any) => m.id);
     const allSelected = semModIds.every(id => selectedModuleIds.includes(id));
@@ -114,11 +128,12 @@ const CreatePeriodModal: React.FC<Props> = ({ isOpen, onClose, formationId, seme
         is_locked: false,
       });
 
-      // 2. If exam/rattrapage, save selected modules
+      // 2. If exam/rattrapage, save selected modules with exam-specific coefficients
       if (needsModuleSelection && selectedModuleIds.length > 0 && period?.id) {
         const rows = selectedModuleIds.map(moduleId => ({
           period_id: period.id,
           module_id: moduleId,
+          coefficient: examCoefficients[moduleId] || 1,
         }));
         await supabase.from('period_modules').insert(rows);
       }
@@ -140,6 +155,7 @@ const CreatePeriodModal: React.FC<Props> = ({ isOpen, onClose, formationId, seme
     setStartDate('');
     setEndDate('');
     setSelectedModuleIds([]);
+    setExamCoefficients({});
     setModuleSearch('');
   };
 
@@ -253,9 +269,9 @@ const CreatePeriodModal: React.FC<Props> = ({ isOpen, onClose, formationId, seme
                       </button>
                       <div className="space-y-1 ml-1">
                         {visibleModules.map((m: any) => (
-                          <label
+                          <div
                             key={m.id}
-                            className="flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-muted/50 cursor-pointer transition-colors"
+                            className="flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-muted/50 transition-colors"
                             data-testid={`module-checkbox-${m.id}`}
                           >
                             <Checkbox
@@ -263,8 +279,23 @@ const CreatePeriodModal: React.FC<Props> = ({ isOpen, onClose, formationId, seme
                               onCheckedChange={() => toggleModule(m.id)}
                             />
                             <span className="text-sm flex-1">{m.title}</span>
-                            <span className="text-[10px] text-muted-foreground">Coeff. {m.coefficient || 1}</span>
-                          </label>
+                            <span className="text-[10px] text-muted-foreground shrink-0">CC: {m.coefficient || 1}</span>
+                            {selectedModuleIds.includes(m.id) && (
+                              <div className="flex items-center gap-1 shrink-0">
+                                <label className="text-[10px] text-amber-600 font-medium">Coeff exam:</label>
+                                <input
+                                  type="number"
+                                  min="0.5"
+                                  step="0.5"
+                                  value={examCoefficients[m.id] || 1}
+                                  onChange={(e) => setExamCoefficients(prev => ({ ...prev, [m.id]: Number(e.target.value) || 1 }))}
+                                  className="w-14 px-1.5 py-0.5 text-xs border border-amber-300 rounded bg-amber-50 text-amber-800 focus:outline-none focus:ring-1 focus:ring-amber-400"
+                                  data-testid={`exam-coeff-${m.id}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </div>
+                            )}
+                          </div>
                         ))}
                       </div>
                     </div>

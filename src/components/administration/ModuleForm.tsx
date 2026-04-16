@@ -17,6 +17,7 @@ export interface ModuleFormData {
   description: string;
   instructorIds: string[];
   duration_hours: number;
+  coefficient: number;
   subModules: SubModuleFormData[];
   semester?: number;
 }
@@ -37,6 +38,7 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex, i
       description: '',
       instructorIds: [],
       duration_hours: 0,
+      coefficient: 1,
       subModules: [],
       semester: undefined
     }
@@ -142,7 +144,7 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex, i
 
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
-            Durée du module (nombre d'heures)
+            Duree du module (nombre d'heures)
           </label>
           <input
             type="number"
@@ -151,6 +153,22 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex, i
             onChange={handleChange}
             min="0"
             className="w-full px-3 py-2 border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1">
+            Coefficient
+          </label>
+          <input
+            type="number"
+            name="coefficient"
+            value={formData.coefficient}
+            onChange={handleChange}
+            min="0.5"
+            step="0.5"
+            className="w-full px-3 py-2 border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            data-testid={`module-coeff-${moduleIndex}`}
           />
         </div>
 
