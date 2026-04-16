@@ -1,0 +1,104 @@
+{
+  "summary": "Tests Phase 2 - Bulletin modulable drag & drop avec aperçu live. Le bouton 'Personnaliser le modèle' était MANQUANT dans TranscriptsPanel.tsx - CORRIGÉ. L'éditeur de template TranscriptTemplateEditor fonctionne correctement avec les 4 onglets (Sections, Colonnes, En-tête, Style), le bouton Aperçu et Sauvegarder.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "TranscriptsPanel.tsx",
+        "issue": "Le bouton 'Personnaliser le modèle' était MANQUANT - CORRIGÉ en ajoutant le bouton avec data-testid='customize-template-btn'",
+        "selector": "[data-testid='customize-template-btn']",
+        "priority": "HIGH - FIXED"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_24.json"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "GradeSheetView.tsx: Warning 'Maximum update depth exceeded' - useEffect avec dépendances qui changent à chaque render. Ce n'est pas bloquant mais devrait être corrigé pour éviter les re-renders inutiles.",
+    "TranscriptTemplateEditor.tsx: Bien implémenté avec drag & drop HTML5, flèches haut/bas pour réorganiser les sections, aperçu live, et les 4 onglets demandés."
+  ],
+  "updated_files": [
+    "/app/src/components/grades/TranscriptsPanel.tsx"
+  ],
+  "success_rate": {
+    "backend": "N/A (frontend only test)",
+    "frontend": "100% - Toutes les fonctionnalités testées fonctionnent correctement après correction"
+  },
+  "test_credentials": "Sophie Martin (AdminPrincipal): admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Phase 2 Bulletin modulable validée. Le bouton 'Personnaliser le modèle' a été ajouté dans TranscriptsPanel.tsx. L'éditeur de template est accessible via: /notes-admin -> Sélectionner formation Rh -> Onglet 'Bulletin de notes' -> Bouton 'Personnaliser le modèle'.",
+  "tests_executed": [
+    {
+      "test": "Test 1: Login Sophie Martin -> /notes-admin -> Sélectionner 'Rh' -> Cliquer 'Bulletin de notes' -> Cliquer 'Personnaliser le modèle'",
+      "status": "PASSED (après correction)",
+      "details": "Le bouton 'Personnaliser le modèle' était manquant. Ajouté avec data-testid='customize-template-btn'. L'éditeur de template s'ouvre correctement."
+    },
+    {
+      "test": "Test 2: Vérifier les 4 onglets (Sections, Colonnes, En-tête, Style)",
+      "status": "PASSED",
+      "details": "Les 4 onglets sont visibles dans l'éditeur de template: Sections (avec icône Layout), Colonnes (avec icône FileText), En-tête (avec icône Type), Style (avec icône Palette)."
+    },
+    {
+      "test": "Test 3: Onglet Sections - Ajouter une section avec grip handle et flèches haut/bas",
+      "status": "PASSED",
+      "details": "Le bouton '+ Ajouter une section' est présent. Les sections ajoutées ont: GripVertical pour drag & drop, ArrowUp/ArrowDown pour réorganiser, Trash2 pour supprimer, Input pour renommer."
+    },
+    {
+      "test": "Test 4: Bouton 'Aperçu' - Panneau droit avec aperçu live",
+      "status": "PASSED",
+      "details": "Le bouton 'Aperçu' (data-testid='toggle-preview') est présent. Quand cliqué, le panneau droit (data-testid='bulletin-preview') s'affiche avec l'aperçu HTML du bulletin en temps réel."
+    },
+    {
+      "test": "Test 5: Onglet Colonnes - Cocher/décocher 'Moyenne Classe'",
+      "status": "PASSED",
+      "details": "L'onglet Colonnes contient les options CC (Moyenne Stagiaire, Moyenne Classe, Appreciations) et Exam (Notes, Coefficient, Points, Appreciation). Les checkboxes fonctionnent et l'aperçu se met à jour."
+    },
+    {
+      "test": "Test 6: Onglet Style - Changer la couleur",
+      "status": "PASSED",
+      "details": "L'onglet Style contient un color picker et des boutons de couleurs prédéfinies. Le changement de couleur met à jour l'aperçu en temps réel."
+    },
+    {
+      "test": "Test 7: Bouton 'Sauvegarder' - Toast de succès",
+      "status": "PASSED",
+      "details": "Le bouton 'Sauvegarder' (data-testid='save-template') est présent. Quand cliqué, il appelle upsertTranscriptTemplate et linkTemplateToFormation, puis affiche un toast 'Modele de bulletin sauvegarde'."
+    }
+  ],
+  "feature_verification": {
+    "button_personnaliser_modele": "FIXED - Bouton ajouté dans TranscriptsPanel.tsx ligne 721-724",
+    "4_tabs_editor": "VERIFIED - Sections, Colonnes, En-tête, Style",
+    "sections_drag_drop": "VERIFIED - HTML5 drag & drop + flèches haut/bas",
+    "live_preview": "VERIFIED - Panneau droit avec aperçu HTML en temps réel",
+    "columns_toggle": "VERIFIED - Checkboxes pour CC et Exam columns",
+    "style_color_picker": "VERIFIED - Color picker + couleurs prédéfinies",
+    "save_template": "VERIFIED - Sauvegarde avec toast de succès"
+  },
+  "data_testids_verified": [
+    "customize-template-btn - Bouton 'Personnaliser le modèle' dans TranscriptsPanel",
+    "toggle-preview - Bouton 'Aperçu' dans TranscriptTemplateEditor",
+    "save-template - Bouton 'Sauvegarder' dans TranscriptTemplateEditor",
+    "bulletin-preview - Panneau d'aperçu live"
+  ],
+  "code_changes_made": {
+    "file": "/app/src/components/grades/TranscriptsPanel.tsx",
+    "change": "Ajout du bouton 'Personnaliser le modèle' avec onClick={() => setShowTemplateEditor(true)} et data-testid='customize-template-btn'",
+    "lines": "718-728"
+  },
+  "known_issues": [
+    {
+      "component": "GradeSheetView.tsx",
+      "issue": "Warning: Maximum update depth exceeded - useEffect avec dépendances qui changent à chaque render",
+      "severity": "LOW",
+      "impact": "Performance - re-renders inutiles mais pas bloquant"
+    }
+  ]
+}

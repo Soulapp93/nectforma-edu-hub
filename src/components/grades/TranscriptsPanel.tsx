@@ -716,10 +716,16 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
             </div>
           )}
           {isAdmin && selectedFormation && (
-            <Button variant="default" size="sm" onClick={() => setShowPublishDialog(true)} className="gap-2">
-              <Send className="h-4 w-4" />
-              Publier les relevés
-            </Button>
+            <>
+              <Button variant="outline" size="sm" onClick={() => setShowTemplateEditor(true)} className="gap-2" data-testid="customize-template-btn">
+                <Settings2 className="h-4 w-4" />
+                Personnaliser le modèle
+              </Button>
+              <Button variant="default" size="sm" onClick={() => setShowPublishDialog(true)} className="gap-2">
+                <Send className="h-4 w-4" />
+                Publier les relevés
+              </Button>
+            </>
           )}
         </div>
       </div>
