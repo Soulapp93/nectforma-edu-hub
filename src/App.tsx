@@ -107,7 +107,7 @@ const AppContent = () => {
     monitoring.trackPageLoad();
   }, []);
   
-  const isSignaturePage = location.pathname.startsWith('/emargement/signer/');
+  const isSignaturePage = location.pathname.startsWith('/emargement/signer/') || location.pathname.startsWith('/sign/');
   const isLinkedInCallback = location.pathname === '/linkedin-callback';
 
   if (isSignaturePage || isLinkedInCallback) {

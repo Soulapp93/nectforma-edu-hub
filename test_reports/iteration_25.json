@@ -1,0 +1,116 @@
+{
+  "summary": "Tested signature request system for bulletins de notes. All core features work correctly: SignatureRequestPanel visible, dialog opens with correct fields, signature request creation works, 'En attente' badge displays, public /sign/:token page shows 'Lien invalide ou expire' for invalid tokens. GradeSheetView still shows 'Maximum update depth exceeded' warning in console but renders correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "performance_issues": [
+      {
+        "component": "GradeSheetView.tsx",
+        "issue": "Warning: Maximum update depth exceeded - still appearing in console despite useMemo fix for allGradesData. The page renders correctly but the warning indicates potential performance issues.",
+        "priority": "MEDIUM",
+        "details": "The warning appears multiple times when navigating to the grade sheet. The fix with evalIdsKey was applied but the warning persists. This doesn't block functionality but should be investigated."
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_25.json"
+  ],
+  "action_items": [
+    "Investigate and fix the 'Maximum update depth exceeded' warning in GradeSheetView.tsx - the current fix with evalIdsKey and useMemo for allGradesData is not fully resolving the issue"
+  ],
+  "critical_code_review_comments": [
+    "GradeSheetView.tsx line 80-82: useEffect has currentFormationData as dependency but doesn't include semesterView - this could cause stale closure issues",
+    "GradeSheetView.tsx: The Maximum update depth warning suggests there's still a dependency cycle somewhere in the useEffect/useMemo chain"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only test)",
+    "frontend": "95% - All signature features work correctly, only performance warning remains"
+  },
+  "test_credentials": "Sophie Martin (AdminPrincipal): admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "Created signature request: M. Test Directeur (test@ecole.fr, Directeur role)",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Signature request system is fully functional. The /sign/:token public route works correctly. GradeSheetView has a performance warning that should be investigated but doesn't block functionality.",
+  "tests_executed": [
+    {
+      "test": "Test 1: Login as admin and navigate to notes-admin page",
+      "status": "PASSED",
+      "details": "Successfully logged in as admin.principal@nectforma-demo.com and navigated to /notes-admin"
+    },
+    {
+      "test": "Test 2: Click on 'Rh' formation, then 'Gérer les notes'",
+      "status": "PASSED",
+      "details": "Clicked 'Voir les promotions' for Rh formation, then 'Gérer les notes' to access grade management"
+    },
+    {
+      "test": "Test 3: Navigate to 'Bulletin de notes' tab and verify SignatureRequestPanel",
+      "status": "PASSED",
+      "details": "SignatureRequestPanel is visible with 'Signatures des bulletins' header and 'Demander une signature' button"
+    },
+    {
+      "test": "Test 4: Click 'Demander une signature' and verify dialog",
+      "status": "PASSED",
+      "details": "Dialog opens with fields: Nom du signataire, Email, Role (dropdown with Directeur default). Info message and Annuler/Envoyer buttons present."
+    },
+    {
+      "test": "Test 5: Fill and submit signature request form",
+      "status": "PASSED",
+      "details": "Filled form with 'M. Test Directeur', 'test@ecole.fr', 'Directeur'. Submit successful with toast 'Demande de signature envoyée'"
+    },
+    {
+      "test": "Test 6: Verify signature request appears with 'En attente' badge",
+      "status": "PASSED",
+      "details": "New signature request visible in list with name, role, email, 'En attente' badge, copy link and delete buttons"
+    },
+    {
+      "test": "Test 7: Test /sign/:token with invalid token",
+      "status": "PASSED",
+      "details": "Page shows 'Lien invalide ou expire' with message 'Ce lien de signature n'est plus valide. Veuillez contacter l'administrateur.'"
+    },
+    {
+      "test": "Test 8: Test 'Saisie des notes' tab loads correctly",
+      "status": "PASSED with WARNING",
+      "details": "Grade sheet renders correctly with students and modules. However, 'Maximum update depth exceeded' warning appears in console multiple times."
+    },
+    {
+      "test": "Test 9: Navigate between S1 and S2 periods",
+      "status": "PASSED",
+      "details": "S1 shows Paie/Rse modules with grades. S2 shows Absence/Congé modules. Navigation works without infinite loops."
+    }
+  ],
+  "feature_verification": {
+    "signature_request_panel_visible": "VERIFIED - Panel shows in Bulletin de notes tab",
+    "demander_signature_button": "VERIFIED - Button with data-testid='request-signature-btn' works",
+    "signature_dialog_fields": "VERIFIED - Nom, Email, Role fields present with correct data-testids",
+    "signature_request_creation": "VERIFIED - Creates request in Supabase, shows toast, updates list",
+    "en_attente_badge": "VERIFIED - Badge displays correctly for pending requests",
+    "public_sign_page_invalid_token": "VERIFIED - Shows 'Lien invalide ou expire' error",
+    "grade_sheet_renders": "VERIFIED - Renders correctly despite console warning",
+    "s1_s2_navigation": "VERIFIED - Navigation between semesters works"
+  },
+  "data_testids_verified": [
+    "request-signature-btn - Demander une signature button",
+    "create-signature-dialog - Dialog container",
+    "signer-name - Name input field",
+    "signer-email - Email input field",
+    "signer-role - Role dropdown",
+    "submit-request - Submit button",
+    "signature-panel - SignatureRequestPanel container"
+  ],
+  "known_issues": [
+    {
+      "component": "GradeSheetView.tsx",
+      "issue": "Warning: Maximum update depth exceeded - appears multiple times in console",
+      "severity": "MEDIUM",
+      "impact": "Performance - potential unnecessary re-renders but doesn't block functionality",
+      "suggested_fix": "Review all useEffect dependencies and ensure no circular updates. Consider using useRef for values that shouldn't trigger re-renders."
+    }
+  ],
+  "rca_of_the_issue": "The 'Maximum update depth exceeded' warning in GradeSheetView.tsx appears to be caused by a dependency cycle in the useEffect hooks. The fix with evalIdsKey and useMemo for allGradesData was applied but the warning persists. The issue likely stems from the interaction between multiple useEffects that update state based on each other's outputs. The page still renders correctly because React limits the update depth, but this indicates suboptimal performance."
+}

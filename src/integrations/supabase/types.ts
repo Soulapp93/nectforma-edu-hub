@@ -4282,6 +4282,75 @@ export type Database = {
           },
         ]
       }
+      signature_requests: {
+        Row: {
+          id: string
+          formation_id: string
+          period_id: string | null
+          establishment_id: string
+          signer_name: string
+          signer_email: string
+          signer_role: string
+          token: string
+          status: string
+          signature_image_url: string | null
+          signed_at: string | null
+          signed_ip: string | null
+          requested_by: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          formation_id: string
+          period_id?: string | null
+          establishment_id: string
+          signer_name: string
+          signer_email: string
+          signer_role?: string
+          token?: string
+          status?: string
+          signature_image_url?: string | null
+          signed_at?: string | null
+          signed_ip?: string | null
+          requested_by?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          formation_id?: string
+          period_id?: string | null
+          establishment_id?: string
+          signer_name?: string
+          signer_email?: string
+          signer_role?: string
+          token?: string
+          status?: string
+          signature_image_url?: string | null
+          signed_at?: string | null
+          signed_ip?: string | null
+          requested_by?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signature_requests_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "formations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signature_requests_establishment_id_fkey"
+            columns: ["establishment_id"]
+            isOneToOne: false
+            referencedRelation: "establishments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       social_analytics: {
         Row: {
           clicks: number | null

@@ -216,7 +216,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
   }, [moduleEvalGroups]);
 
   // Fetch all grades
-  const { data: allGradesData = [] } = useQuery({
+  const { data: rawGradesData } = useQuery({
     queryKey: ['all-grades-sheet', allDisplayedEvals.map(e => e.id).join(',')],
     queryFn: async () => {
       const results: { evalId: string; grades: Grade[] }[] = [];
@@ -228,6 +228,10 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
     },
     enabled: allDisplayedEvals.length > 0,
   });
+  const allGradesData = useMemo(() => rawGradesData ?? [], [rawGradesData]);
+
+  // Stable eval IDs string to avoid re-running effect on reference changes
+  const evalIdsKey = useMemo(() => allDisplayedEvals.map(e => e.id).join(','), [allDisplayedEvals]);
 
   // Init local grades
   useEffect(() => {
@@ -243,7 +247,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
     });
     setLocalGrades(gradeMap);
     setIsDirty(false);
-  }, [students, allDisplayedEvals, allGradesData]);
+  }, [students, evalIdsKey, allGradesData]);
 
   const updateGrade = useCallback((studentId: string, evaluationId: string, value: number | null) => {
     setLocalGrades(prev => {
