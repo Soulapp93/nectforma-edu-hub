@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -13,14 +14,14 @@ import {
   getGradesByEvaluation,
   getGradingRules,
   getEvaluationPeriods,
+  togglePeriodLock,
   calculateWeightedAverage,
   getMention,
   getDecision,
   EVALUATION_TYPES,
-  DECISIONS,
   MENTIONS,
 } from '@/services/gradesService';
-import { Users, Award, CheckCircle, XCircle, AlertTriangle, Star, FileText } from 'lucide-react';
+import { Users, Award, CheckCircle, XCircle, AlertTriangle, Star, FileText, Lock, Unlock, Loader2, ShieldCheck, PenLine } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -34,8 +35,8 @@ interface Props {
 const JURY_DECISIONS = [
   { value: 'admis', label: 'Admis', icon: CheckCircle, color: 'text-green-600', bgColor: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' },
   { value: 'rattrapage', label: 'Rattrapage', icon: AlertTriangle, color: 'text-amber-600', bgColor: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800' },
-  { value: 'ajourne', label: 'Ajourné', icon: XCircle, color: 'text-red-600', bgColor: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' },
-  { value: 'felicitations', label: 'Félicitations', icon: Star, color: 'text-purple-600', bgColor: 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800' },
+  { value: 'ajourne', label: 'Ajourne', icon: XCircle, color: 'text-red-600', bgColor: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' },
+  { value: 'felicitations', label: 'Felicitations', icon: Star, color: 'text-purple-600', bgColor: 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800' },
 ];
 
 const JuryDeliberation: React.FC<Props> = ({ formationId, periodId }) => {
@@ -44,6 +45,8 @@ const JuryDeliberation: React.FC<Props> = ({ formationId, periodId }) => {
   const queryClient = useQueryClient();
   const [juryDecisions, setJuryDecisions] = useState<Record<string, string>>({});
   const [localPeriodId, setLocalPeriodId] = useState<string | null>(periodId || null);
+  const [showConfirmValidate, setShowConfirmValidate] = useState(false);
+  const [validating, setValidating] = useState(false);
 
   useEffect(() => { if (periodId) setLocalPeriodId(periodId); }, [periodId]);
 
@@ -58,6 +61,7 @@ const JuryDeliberation: React.FC<Props> = ({ formationId, periodId }) => {
   }, [periods]);
 
   const selectedPeriod = periods.find((p: any) => p.id === localPeriodId);
+  const isPVValidated = selectedPeriod?.is_locked === true;
 
   const { data: formation } = useQuery({
     queryKey: ['formation-jury', formationId],
@@ -115,6 +119,16 @@ const JuryDeliberation: React.FC<Props> = ({ formationId, periodId }) => {
     enabled: !!formationId,
   });
 
+  // Existing transcripts for this formation
+  const { data: existingTranscripts = [] } = useQuery({
+    queryKey: ['transcripts-jury', formationId],
+    queryFn: async () => {
+      const { data } = await supabase.from('transcripts').select('id, student_id, decision, mention, general_average, is_published').eq('formation_id', formationId);
+      return data || [];
+    },
+    enabled: !!formationId,
+  });
+
   const ccTypes = EVALUATION_TYPES.filter(t => t.category === 'cc').map(t => t.value);
 
   const studentResults = useMemo(() => {
@@ -142,9 +156,23 @@ const JuryDeliberation: React.FC<Props> = ({ formationId, periodId }) => {
       const mention = generalAvg !== null ? getMention(generalAvg, rules as any) : null;
       const autoDecision = generalAvg !== null ? getDecision(generalAvg, rules as any) : 'en_cours';
 
-      return { ...student, generalAvg, mention, autoDecision };
+      // If PV is validated, load existing transcript decision
+      const existingT = existingTranscripts.find((t: any) => t.student_id === student.user_id);
+
+      return { ...student, generalAvg, mention, autoDecision, existingTranscript: existingT };
     });
-  }, [students, modules, allEvaluations, allGradesData, gradingRules]);
+  }, [students, modules, allEvaluations, allGradesData, gradingRules, existingTranscripts]);
+
+  // Init jury decisions from existing transcripts if PV validated
+  useEffect(() => {
+    if (isPVValidated && existingTranscripts.length > 0) {
+      const decisions: Record<string, string> = {};
+      existingTranscripts.forEach((t: any) => {
+        if (t.decision) decisions[t.student_id] = t.decision;
+      });
+      setJuryDecisions(decisions);
+    }
+  }, [isPVValidated, existingTranscripts]);
 
   const rankedStudents = useMemo(() => {
     const sorted = [...studentResults].filter(s => s.generalAvg !== null).sort((a, b) => (b.generalAvg || 0) - (a.generalAvg || 0));
@@ -155,7 +183,6 @@ const JuryDeliberation: React.FC<Props> = ({ formationId, periodId }) => {
     }));
   }, [studentResults]);
 
-  // Stats
   const stats = useMemo(() => {
     const decisions = rankedStudents.map(s => juryDecisions[s.user_id] || s.autoDecision);
     return {
@@ -166,14 +193,70 @@ const JuryDeliberation: React.FC<Props> = ({ formationId, periodId }) => {
     };
   }, [rankedStudents, juryDecisions]);
 
-  const handleSignValidate = async () => {
-    toast.success('Procès-verbal signé et validé avec succès');
+  // VALIDATE PV: lock period + upsert transcripts with decisions
+  const handleValidatePV = async () => {
+    if (!localPeriodId || !formationId) return;
+    setValidating(true);
+    try {
+      // 1. Upsert transcripts for each student
+      for (const student of rankedStudents) {
+        const decision = juryDecisions[student.user_id] || student.autoDecision;
+        const mention = student.mention;
+        const existing = existingTranscripts.find((t: any) => t.student_id === student.user_id);
+
+        if (existing) {
+          await supabase.from('transcripts').update({
+            decision, mention, general_average: student.generalAvg,
+            jury_date: new Date().toISOString().split('T')[0],
+            updated_at: new Date().toISOString(),
+          } as any).eq('id', existing.id);
+        } else {
+          await supabase.from('transcripts').insert({
+            student_id: student.user_id,
+            formation_id: formationId,
+            period_id: localPeriodId,
+            decision, mention,
+            general_average: student.generalAvg,
+            jury_date: new Date().toISOString().split('T')[0],
+            is_published: false,
+          } as any);
+        }
+      }
+
+      // 2. Lock the period
+      await togglePeriodLock(localPeriodId, true);
+
+      queryClient.invalidateQueries({ queryKey: ['periods-jury'] });
+      queryClient.invalidateQueries({ queryKey: ['transcripts-jury'] });
+      queryClient.invalidateQueries({ queryKey: ['evaluation-periods'] });
+      queryClient.invalidateQueries({ queryKey: ['periods-sheet'] });
+      toast.success('PV et resultats valides avec succes');
+      setShowConfirmValidate(false);
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de la validation');
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  // UNLOCK PV: unlock period to allow modifications
+  const handleUnlockPV = async () => {
+    if (!localPeriodId) return;
+    try {
+      await togglePeriodLock(localPeriodId, false);
+      queryClient.invalidateQueries({ queryKey: ['periods-jury'] });
+      queryClient.invalidateQueries({ queryKey: ['evaluation-periods'] });
+      queryClient.invalidateQueries({ queryKey: ['periods-sheet'] });
+      toast.success('PV et resultats deverrouilles — vous pouvez modifier les notes');
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur');
+    }
   };
 
   const mentionLabel = (m: string | null) => MENTIONS.find(x => x.value === m)?.label || '';
 
   if (students.length === 0) {
-    return <EmptyState icon={Users} title="Aucun étudiant" description="Aucun étudiant inscrit" />;
+    return <EmptyState icon={Users} title="Aucun etudiant" description="Aucun etudiant inscrit" />;
   }
 
   return (
@@ -182,21 +265,45 @@ const JuryDeliberation: React.FC<Props> = ({ formationId, periodId }) => {
       <PeriodSelector periods={periods} selectedPeriodId={localPeriodId} onSelectPeriod={setLocalPeriodId} label="Periode :" />
 
       {/* Session info banner */}
-      <div className="bg-primary text-primary-foreground rounded-xl p-4 flex items-center justify-between">
+      <div className={`rounded-xl p-4 flex items-center justify-between ${isPVValidated ? 'bg-emerald-600 text-white' : 'bg-primary text-primary-foreground'}`}>
         <div className="flex items-center gap-3">
-          <Award className="h-6 w-6" />
+          {isPVValidated ? <ShieldCheck className="h-6 w-6" /> : <Award className="h-6 w-6" />}
           <div>
-            <h3 className="font-bold text-sm">Session du Jury — {formation?.academic_year || ''} {selectedPeriod ? `• ${selectedPeriod.name}` : ''}</h3>
+            <h3 className="font-bold text-sm flex items-center gap-2">
+              Session du Jury — {formation?.academic_year || ''} {selectedPeriod ? `\u2022 ${selectedPeriod.name}` : ''}
+              {isPVValidated && <Badge className="bg-white/20 text-white text-[10px]">PV et resultats valides</Badge>}
+            </h3>
             <p className="text-xs opacity-80">
-              {format(new Date(), "d MMMM yyyy", { locale: fr })}
+              {isPVValidated && selectedPeriod?.locked_at
+                ? `Valide le ${format(new Date(selectedPeriod.locked_at), "d MMMM yyyy 'a' HH:mm", { locale: fr })}`
+                : format(new Date(), "d MMMM yyyy", { locale: fr })}
             </p>
           </div>
         </div>
-        <Button variant="secondary" size="sm" onClick={handleSignValidate} className="gap-2">
-          <FileText className="h-4 w-4" />
-          Signer & Valider le PV
-        </Button>
+        <div className="flex items-center gap-2">
+          {isPVValidated ? (
+            <Button variant="secondary" size="sm" onClick={handleUnlockPV} className="gap-2" data-testid="unlock-pv-btn">
+              <PenLine className="h-4 w-4" />
+              Modifier le PV et resultats
+            </Button>
+          ) : (
+            <Button variant="secondary" size="sm" onClick={() => setShowConfirmValidate(true)} className="gap-2" data-testid="validate-pv-btn">
+              <ShieldCheck className="h-4 w-4" />
+              Valider le PV et les resultats
+            </Button>
+          )}
+        </div>
       </div>
+
+      {/* Locked info banner */}
+      {isPVValidated && (
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3 flex items-center gap-2">
+          <Lock className="h-4 w-4 text-emerald-600 shrink-0" />
+          <p className="text-xs text-emerald-700 dark:text-emerald-300">
+            Le PV et les resultats sont valides. La saisie des notes est verrouillee. Cliquez "Modifier le PV et resultats" pour deverrouiller.
+          </p>
+        </div>
+      )}
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -223,11 +330,11 @@ const JuryDeliberation: React.FC<Props> = ({ formationId, periodId }) => {
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="bg-primary/10">
-                <th className="text-left p-3 border-b border-border font-semibold">Étudiant</th>
-                <th className="text-center p-3 border-b border-border font-semibold">Moy. Gén.</th>
+                <th className="text-left p-3 border-b border-border font-semibold">Etudiant</th>
+                <th className="text-center p-3 border-b border-border font-semibold">Moy. Gen.</th>
                 <th className="text-center p-3 border-b border-border font-semibold">Mention</th>
                 <th className="text-center p-3 border-b border-border font-semibold">Rang</th>
-                <th className="text-center p-3 border-b border-border font-semibold min-w-[160px]">Décision du Jury</th>
+                <th className="text-center p-3 border-b border-border font-semibold min-w-[160px]">Decision du Jury</th>
               </tr>
             </thead>
             <tbody>
@@ -235,57 +342,51 @@ const JuryDeliberation: React.FC<Props> = ({ formationId, periodId }) => {
                 const currentDecision = juryDecisions[student.user_id] || student.autoDecision;
                 const decisionInfo = JURY_DECISIONS.find(d => d.value === currentDecision) || JURY_DECISIONS[0];
                 return (
-                  <tr key={student.user_id} className={`hover:bg-muted/20 ${idx % 2 === 0 ? '' : 'bg-muted/10'}`}>
+                  <tr key={student.user_id} className={`hover:bg-muted/20 ${idx % 2 === 0 ? '' : 'bg-muted/10'}`} data-testid={`jury-row-${student.user_id}`}>
                     <td className="p-3 border-b border-border/50 font-medium whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
                           {(student.first_name?.[0] || '').toUpperCase()}{(student.last_name?.[0] || '').toUpperCase()}
                         </div>
-                        <div>
-                          <div>{student.last_name} {student.first_name}</div>
-                        </div>
+                        <div>{student.last_name} {student.first_name}</div>
                       </div>
                     </td>
                     <td className={`p-3 border-b border-border/50 text-center font-bold ${student.generalAvg !== null ? (student.generalAvg >= 10 ? 'text-green-600' : 'text-red-600') : ''}`}>
-                      {student.generalAvg !== null ? `${student.generalAvg.toFixed(2)}/20` : '—'}
+                      {student.generalAvg !== null ? `${student.generalAvg.toFixed(2)}/20` : '\u2014'}
                     </td>
                     <td className="p-3 border-b border-border/50 text-center">
-                      {student.mention && (
-                        <Badge variant="outline" className="text-xs">
-                          {mentionLabel(student.mention)}
-                        </Badge>
-                      )}
+                      {student.mention && <Badge variant="outline" className="text-xs">{mentionLabel(student.mention)}</Badge>}
                     </td>
                     <td className="p-3 border-b border-border/50 text-center font-bold">
                       {student.rank !== null ? (
                         <span className="flex items-center justify-center gap-1">
                           {student.rank === 1 && <Award className="h-4 w-4 text-amber-500" />}
-                          {student.rank}<sup className="text-[8px]">{student.rank === 1 ? 'er' : 'ème'}</sup>
+                          {student.rank}<sup className="text-[8px]">{student.rank === 1 ? 'er' : 'eme'}</sup>
                         </span>
-                      ) : '—'}
+                      ) : '\u2014'}
                     </td>
                     <td className="p-3 border-b border-border/50 text-center">
-                      <Select
-                        value={currentDecision}
-                        onValueChange={(v) => setJuryDecisions(prev => ({ ...prev, [student.user_id]: v }))}
-                      >
-                        <SelectTrigger className={`w-[150px] mx-auto text-xs h-8 ${decisionInfo.bgColor}`}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {JURY_DECISIONS.map(d => {
-                            const Icon = d.icon;
-                            return (
-                              <SelectItem key={d.value} value={d.value}>
-                                <span className={`flex items-center gap-1.5 ${d.color}`}>
-                                  <Icon className="h-3.5 w-3.5" />
-                                  {d.label}
-                                </span>
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
+                      {isPVValidated ? (
+                        <Badge className={`${decisionInfo.bgColor} ${decisionInfo.color} gap-1`}>
+                          <decisionInfo.icon className="h-3 w-3" />{decisionInfo.label}
+                        </Badge>
+                      ) : (
+                        <Select value={currentDecision} onValueChange={(v) => setJuryDecisions(prev => ({ ...prev, [student.user_id]: v }))}>
+                          <SelectTrigger className={`w-[150px] mx-auto text-xs h-8 ${decisionInfo.bgColor}`} data-testid={`decision-select-${student.user_id}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {JURY_DECISIONS.map(d => {
+                              const Icon = d.icon;
+                              return (
+                                <SelectItem key={d.value} value={d.value}>
+                                  <span className={`flex items-center gap-1.5 ${d.color}`}><Icon className="h-3.5 w-3.5" />{d.label}</span>
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                      )}
                     </td>
                   </tr>
                 );
@@ -294,6 +395,35 @@ const JuryDeliberation: React.FC<Props> = ({ formationId, periodId }) => {
           </table>
         </div>
       </div>
+
+      {/* Confirm Validate Dialog */}
+      <Dialog open={showConfirmValidate} onOpenChange={setShowConfirmValidate}>
+        <DialogContent className="sm:max-w-md" data-testid="confirm-validate-dialog">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" />Valider le PV et les resultats</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              Cette action va :
+            </p>
+            <ul className="text-sm space-y-1.5 ml-4">
+              <li className="flex items-center gap-2"><CheckCircle className="h-3.5 w-3.5 text-emerald-500 shrink-0" />Enregistrer les decisions du jury pour {rankedStudents.length} etudiant(s)</li>
+              <li className="flex items-center gap-2"><Lock className="h-3.5 w-3.5 text-amber-500 shrink-0" />Verrouiller la saisie des notes pour cette periode</li>
+              <li className="flex items-center gap-2"><FileText className="h-3.5 w-3.5 text-blue-500 shrink-0" />Generer les releves de notes</li>
+            </ul>
+            <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 text-xs text-amber-700">
+              Vous pourrez toujours modifier le PV et les resultats ulterieurement en cliquant "Modifier le PV et resultats".
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowConfirmValidate(false)}>Annuler</Button>
+            <Button onClick={handleValidatePV} disabled={validating} className="gap-1.5" data-testid="confirm-validate-btn">
+              {validating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5" />}
+              Valider
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

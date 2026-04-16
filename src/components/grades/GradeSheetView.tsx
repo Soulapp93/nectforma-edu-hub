@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Save, Plus, AlertCircle, BookOpen, GraduationCap, Printer } from 'lucide-react';
+import { Save, Plus, AlertCircle, BookOpen, GraduationCap, Printer, Lock } from 'lucide-react';
 import { EVALUATION_TYPES } from '@/services/gradesService';
 import { semesterMatchesFilter } from '@/utils/semesterUtils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -78,6 +78,13 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
   const semestersCount = (currentFormationData as any)?.semesters_count || durationYears * 2;
   const isBTS = (currentFormationData as any)?.formation_type === 'bts';
   const isExamBlancView = semesterView === 'exam_blanc';
+
+  // Check if the current period is locked (PV validated)
+  const isPeriodLocked = useMemo(() => {
+    if (!periodId || periods.length === 0) return false;
+    const currentPeriod = periods.find((p: any) => p.id === periodId);
+    return currentPeriod?.is_locked === true;
+  }, [periodId, periods]);
 
   useEffect(() => {
     if (currentFormationData && !semesterView) setSemesterView('s1');
@@ -398,7 +405,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
     const value = studentGrades?.get(ev.id);
     const isOpen = ev.status === 'ouvert' || ev.status === 'brouillon';
 
-    if (canEdit && isOpen) {
+    if (canEdit && isOpen && !isPeriodLocked) {
       return (
         <Input
           type="number"
@@ -498,12 +505,12 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
           </Button>
           <Button
             onClick={() => saveMutation.mutate()}
-            disabled={!isDirty || saveMutation.isPending}
+            disabled={!isDirty || saveMutation.isPending || isPeriodLocked}
             size="sm"
             className="gap-2"
           >
             <Save className="h-4 w-4" />
-            {saveMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
+            {isPeriodLocked ? 'PV valide (verrouille)' : saveMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
           </Button>
         </div>
       </div>
@@ -525,6 +532,15 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
         </Card>
       ) : (
         <div ref={printRef}>
+          {/* Locked banner */}
+          {isPeriodLocked && (
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 flex items-center gap-2 mb-3">
+              <Lock className="h-4 w-4 text-amber-600 shrink-0" />
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                PV et resultats valides — la saisie est verrouillee. Pour modifier, deverrouillez dans l'onglet "Jury & Deliberation".
+              </p>
+            </div>
+          )}
           {/* Header */}
           <div className="flex items-center justify-between gap-4 mb-3 px-2">
             <div className="flex items-center gap-2">

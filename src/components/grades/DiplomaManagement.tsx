@@ -181,6 +181,9 @@ const DiplomaManagement: React.FC = () => {
   }, [students, transcripts, generatedDiplomas]);
 
   const admisCount = studentData.filter(s => s.isAdmis).length;
+  const publishedCount = transcripts.filter((t: any) => t.is_published).length;
+  const allBulletinsPublished = transcripts.length > 0 && publishedCount === transcripts.length;
+  const canGenerateDiplomas = admisCount > 0 && allBulletinsPublished;
 
   // Generate diplomas
   const handleGenerate = async () => {
@@ -246,7 +249,8 @@ const DiplomaManagement: React.FC = () => {
               <LayoutTemplate className="h-3.5 w-3.5" /> Creer un modele
             </Button>
             {templates.length > 0 && (
-              <Button size="sm" className="gap-1.5 h-8 text-xs" onClick={() => setShowGenerateDialog(true)} disabled={admisCount === 0} data-testid="generate-diplomas-btn">
+              <Button size="sm" className="gap-1.5 h-8 text-xs" onClick={() => setShowGenerateDialog(true)} disabled={!canGenerateDiplomas} data-testid="generate-diplomas-btn"
+                title={!allBulletinsPublished ? 'Les bulletins doivent etre publies avant de generer les diplomes' : admisCount === 0 ? 'Aucun etudiant admis' : ''}>
                 <Sparkles className="h-3.5 w-3.5" /> Generer les diplomes ({admisCount})
               </Button>
             )}
@@ -266,6 +270,25 @@ const DiplomaManagement: React.FC = () => {
             <Button variant="ghost" size="sm" className="h-6 text-xs shrink-0" onClick={() => { setEditingTemplateId(selectedTemplateId); setShowEditor(true); }}>
               <Settings2 className="h-3 w-3 mr-1" /> Modifier
             </Button>
+          </div>
+        )}
+
+        {/* Warning: bulletins not published */}
+        {transcripts.length > 0 && !allBulletinsPublished && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 flex items-center gap-2">
+            <FileText className="h-4 w-4 text-amber-600 shrink-0" />
+            <p className="text-xs text-amber-700 dark:text-amber-300">
+              Les bulletins de notes doivent etre publies avant de generer les diplomes. Publiez-les dans l'onglet "Gestion des notes et releves" &gt; "Bulletin de notes".
+            </p>
+          </div>
+        )}
+
+        {transcripts.length === 0 && students.length > 0 && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex items-center gap-2">
+            <FileText className="h-4 w-4 text-blue-600 shrink-0" />
+            <p className="text-xs text-blue-700 dark:text-blue-300">
+              Aucun PV valide. Validez le PV et les resultats dans l'onglet "Gestion des notes et releves" &gt; "Jury & Deliberation" avant de generer les diplomes.
+            </p>
           </div>
         )}
 
