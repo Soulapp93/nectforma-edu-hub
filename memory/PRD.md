@@ -3,31 +3,31 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
-## Session 38 - Diplomes, PV, Signatures, Email, Performance (2026-04-16)
+## Session 38 (2026-04-16)
 
-### Validation PV et Resultats (NEW)
-- Bouton **"Valider le PV et les resultats"** remplace l'ancien "Signer & Valider le PV"
-- **Validation** : persiste les decisions du jury (upsert transcripts), verrouille la periode (`is_locked=true`)
-- **Apres validation** :
-  - Banner vert "PV et resultats valides" avec timestamp
-  - Decisions deviennent des badges statiques (non modifiables)
-  - Saisie des notes verrouille (banner ambre + bouton "PV valide (verrouille)" desactive)
-- **"Modifier le PV et resultats"** : deverrouille la periode, re-autorise la saisie des notes
-- **Diplomes** : generation bloquee tant que bulletins non publies (warning banner)
-- Flux complet : Saisie > Jury > Valider PV > Publier bulletins > Generer diplomes
+### Historique Audit PV (NEW)
+- Table `pv_audit_log` (period_id, formation_id, action, performed_by, performer_name, details jsonb, created_at)
+- Chaque validation/deverrouillage du PV trace automatiquement dans l'audit log
+- Section "Historique des modifications" dans JuryDeliberation avec toggle collapse/expand
+- Entrees avec icones (vert=validation, ambre=deverrouillage), nom du performer, timestamp, badges stats
+- Tri par date decroissante (plus recent en premier)
+- Testing: iteration_29 (100%, 10/10 tests)
+
+### Validation PV et Resultats
+- "Valider le PV et les resultats" persiste decisions + verrouille periode
+- "Modifier le PV et resultats" deverrouille
+- Saisie notes bloquee quand PV valide
+- Diplomes bloques tant que bulletins non publies
 - Testing: iteration_28 (100%, 13/13 tests)
 
 ### Gestion des Diplomes
-- **Navigation 3 niveaux** (Formations > Promotions > Etudiants)
-- **Editeur Drag & Drop** style Canva : 6 types elements, 12 variables, 4 presets
-- Generation par lot pour etudiants admis, apercu live
-- Tables: `diploma_templates`, `generated_diplomas` avec RLS
+- Navigation 3 niveaux, Editeur Drag & Drop style Canva
+- 6 elements, 12 variables, 4 presets, panneau proprietes complet
 - Testing: iteration_27 (100%, 14/14 tests)
 
-### Signatures Publiques (Phase 3) + Email Brevo
-- `SignatureRequestPanel` + page publique `/sign/:token`
-- Email auto-envoye + bouton "Renvoyer l'email"
-- Testing: iteration_25-26 (100%)
+### Signatures Publiques + Email Brevo
+- SignatureRequestPanel + page /sign/:token + email auto
+- Testing: iterations 25-26 (100%)
 
 ### Fix Performance GradeSheetView
 - "Maximum update depth exceeded" corrige via useMemo
@@ -40,6 +40,7 @@ ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 - Drag & Drop Transcript/Diploma Template Editors
 - Public Signatures + Email Brevo
 - Validation PV et Resultats (verrouillage notes)
+- Historique Audit PV
 - Gestion Diplomes avec flux lie aux notes
 
 ## P1 - [ ] Deploiement production
