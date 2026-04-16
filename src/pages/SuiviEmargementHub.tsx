@@ -1,10 +1,11 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ClipboardCheck, AlertTriangle } from 'lucide-react';
+import { ClipboardCheck, AlertTriangle, FileBarChart } from 'lucide-react';
 import HubPageHeader, { HubTab } from '../components/HubPageHeader';
 
 const AttendanceManagement = React.lazy(() => import('../components/administration/AttendanceManagement'));
 const AbsenceManagement = React.lazy(() => import('../components/administration/AbsenceManagement'));
+const AttendanceReportPanel = React.lazy(() => import('../components/attendance/AttendanceReportPanel'));
 
 const TabFallback = () => (
   <div className="flex items-center justify-center py-20">
@@ -15,6 +16,7 @@ const TabFallback = () => (
 const tabs: HubTab[] = [
   { id: 'attendance', label: 'Gestion des émargements', icon: ClipboardCheck },
   { id: 'absences', label: 'Gestion des absences', icon: AlertTriangle },
+  { id: 'reports', label: 'Rapport émargement', icon: FileBarChart },
 ];
 
 const SuiviEmargementHub = () => {
@@ -47,6 +49,7 @@ const SuiviEmargementHub = () => {
         <Suspense fallback={<TabFallback />}>
           {activeTab === 'attendance' && <AttendanceManagement />}
           {activeTab === 'absences' && <AbsenceManagement />}
+          {activeTab === 'reports' && <AttendanceReportPanel />}
         </Suspense>
       </div>
     </div>
