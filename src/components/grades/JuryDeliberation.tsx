@@ -21,7 +21,7 @@ import {
   EVALUATION_TYPES,
   MENTIONS,
 } from '@/services/gradesService';
-import { Users, Award, CheckCircle, XCircle, AlertTriangle, Star, FileText, Lock, Unlock, Loader2, ShieldCheck, PenLine } from 'lucide-react';
+import { Users, Award, CheckCircle, XCircle, AlertTriangle, Star, FileText, Lock, Unlock, Loader2, ShieldCheck, PenLine, History, Clock } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -47,6 +47,7 @@ const JuryDeliberation: React.FC<Props> = ({ formationId, periodId }) => {
   const [localPeriodId, setLocalPeriodId] = useState<string | null>(periodId || null);
   const [showConfirmValidate, setShowConfirmValidate] = useState(false);
   const [validating, setValidating] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => { if (periodId) setLocalPeriodId(periodId); }, [periodId]);
 
@@ -129,6 +130,21 @@ const JuryDeliberation: React.FC<Props> = ({ formationId, periodId }) => {
     enabled: !!formationId,
   });
 
+  // Audit log for PV history
+  const { data: auditLog = [] } = useQuery({
+    queryKey: ['pv-audit-log', formationId, localPeriodId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('pv_audit_log')
+        .select('*')
+        .eq('formation_id', formationId)
+        .eq('period_id', localPeriodId!)
+        .order('created_at', { ascending: false });
+      return data || [];
+    },
+    enabled: !!formationId && !!localPeriodId,
+  });
+
   const ccTypes = EVALUATION_TYPES.filter(t => t.category === 'cc').map(t => t.value);
 
   const studentResults = useMemo(() => {
@@ -193,6 +209,27 @@ const JuryDeliberation: React.FC<Props> = ({ formationId, periodId }) => {
     };
   }, [rankedStudents, juryDecisions]);
 
+  // Write to audit log
+  const writeAuditLog = async (action: 'validate' | 'unlock' | 'modify_decisions', details: Record<string, any> = {}) => {
+    if (!localPeriodId || !formationId || !userId) return;
+    try {
+      // Get current user name
+      const { data: userData } = await supabase.from('users').select('first_name, last_name').eq('id', userId).single();
+      const performerName = userData ? `${userData.first_name} ${userData.last_name}` : 'Utilisateur';
+      await supabase.from('pv_audit_log').insert({
+        period_id: localPeriodId,
+        formation_id: formationId,
+        action,
+        performed_by: userId,
+        performer_name: performerName,
+        details,
+      } as any);
+      queryClient.invalidateQueries({ queryKey: ['pv-audit-log', formationId, localPeriodId] });
+    } catch (e) {
+      console.error('Audit log error:', e);
+    }
+  };
+
   // VALIDATE PV: lock period + upsert transcripts with decisions
   const handleValidatePV = async () => {
     if (!localPeriodId || !formationId) return;
@@ -226,6 +263,16 @@ const JuryDeliberation: React.FC<Props> = ({ formationId, periodId }) => {
       // 2. Lock the period
       await togglePeriodLock(localPeriodId, true);
 
+      // 3. Write audit log
+      const decisionsMap: Record<string, string> = {};
+      rankedStudents.forEach(s => { decisionsMap[`${s.first_name} ${s.last_name}`] = juryDecisions[s.user_id] || s.autoDecision; });
+      await writeAuditLog('validate', {
+        students_count: rankedStudents.length,
+        decisions: decisionsMap,
+        period_name: selectedPeriod?.name || '',
+        stats: { admis: stats.admis, rattrapage: stats.rattrapage, ajourne: stats.ajourne, felicitations: stats.felicitations },
+      });
+
       queryClient.invalidateQueries({ queryKey: ['periods-jury'] });
       queryClient.invalidateQueries({ queryKey: ['transcripts-jury'] });
       queryClient.invalidateQueries({ queryKey: ['evaluation-periods'] });
@@ -244,6 +291,7 @@ const JuryDeliberation: React.FC<Props> = ({ formationId, periodId }) => {
     if (!localPeriodId) return;
     try {
       await togglePeriodLock(localPeriodId, false);
+      await writeAuditLog('unlock', { period_name: selectedPeriod?.name || '', reason: 'Modification manuelle' });
       queryClient.invalidateQueries({ queryKey: ['periods-jury'] });
       queryClient.invalidateQueries({ queryKey: ['evaluation-periods'] });
       queryClient.invalidateQueries({ queryKey: ['periods-sheet'] });
@@ -302,6 +350,52 @@ const JuryDeliberation: React.FC<Props> = ({ formationId, periodId }) => {
           <p className="text-xs text-emerald-700 dark:text-emerald-300">
             Le PV et les resultats sont valides. La saisie des notes est verrouillee. Cliquez "Modifier le PV et resultats" pour deverrouiller.
           </p>
+        </div>
+      )}
+
+      {/* Audit History */}
+      {auditLog.length > 0 && (
+        <div data-testid="pv-audit-section">
+          <button onClick={() => setShowHistory(!showHistory)} className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors mb-2" data-testid="toggle-history-btn">
+            <History className="h-3.5 w-3.5" />
+            Historique des modifications ({auditLog.length})
+            <span className={`transition-transform ${showHistory ? 'rotate-180' : ''}`}>&#9662;</span>
+          </button>
+          {showHistory && (
+            <div className="border rounded-lg divide-y bg-card overflow-hidden mb-1" data-testid="pv-history-list">
+              {auditLog.map((log: any) => {
+                const isValidate = log.action === 'validate';
+                const isUnlock = log.action === 'unlock';
+                return (
+                  <div key={log.id} className="px-3 py-2.5 flex items-start gap-3" data-testid={`audit-entry-${log.id}`}>
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${isValidate ? 'bg-emerald-100' : isUnlock ? 'bg-amber-100' : 'bg-blue-100'}`}>
+                      {isValidate ? <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> : isUnlock ? <Unlock className="h-3.5 w-3.5 text-amber-600" /> : <PenLine className="h-3.5 w-3.5 text-blue-600" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium">
+                        {isValidate ? 'PV et resultats valides' : isUnlock ? 'PV et resultats deverrouilles' : 'Decisions modifiees'}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        par <span className="font-medium text-foreground">{log.performer_name}</span>
+                      </p>
+                      {isValidate && log.details?.stats && (
+                        <div className="flex gap-2 mt-1 flex-wrap">
+                          {log.details.stats.admis > 0 && <Badge className="bg-emerald-100 text-emerald-700 text-[9px] px-1.5 py-0">{log.details.stats.admis} Admis</Badge>}
+                          {log.details.stats.rattrapage > 0 && <Badge className="bg-amber-100 text-amber-700 text-[9px] px-1.5 py-0">{log.details.stats.rattrapage} Rattrapage</Badge>}
+                          {log.details.stats.ajourne > 0 && <Badge className="bg-red-100 text-red-700 text-[9px] px-1.5 py-0">{log.details.stats.ajourne} Ajourne</Badge>}
+                          {log.details.stats.felicitations > 0 && <Badge className="bg-purple-100 text-purple-700 text-[9px] px-1.5 py-0">{log.details.stats.felicitations} Felicitations</Badge>}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground shrink-0">
+                      <Clock className="h-3 w-3" />
+                      {format(new Date(log.created_at), "dd/MM/yy HH:mm", { locale: fr })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
