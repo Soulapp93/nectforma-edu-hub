@@ -52,7 +52,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
   });
 
   // Modules
-  const { data: modules = [] } = useQuery({
+  const { data: rawModules } = useQuery({
     queryKey: ['formation-modules-sheet', selectedFormation],
     queryFn: async () => {
       const { data } = await supabase
@@ -64,13 +64,15 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
     },
     enabled: !!selectedFormation,
   });
+  const modules = useMemo(() => rawModules ?? [], [rawModules]);
 
   // Periods
-  const { data: periods = [] } = useQuery({
+  const { data: rawPeriods } = useQuery({
     queryKey: ['periods-sheet', selectedFormation],
     queryFn: () => getEvaluationPeriods(selectedFormation),
     enabled: !!selectedFormation,
   });
+  const periods = useMemo(() => rawPeriods ?? [], [rawPeriods]);
 
   const durationYears = (currentFormationData as any)?.duration_years || 1;
   const semestersCount = (currentFormationData as any)?.semesters_count || durationYears * 2;
@@ -146,7 +148,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
   }, [semesterView, isFinalView, durationYears, isExamBlancView]);
 
   // Students
-  const { data: students = [] } = useQuery({
+  const { data: rawStudents } = useQuery({
     queryKey: ['students-grade-sheet', selectedFormation],
     queryFn: async () => {
       const { data } = await supabase.rpc('get_formation_students', { formation_id_param: selectedFormation });
@@ -157,13 +159,15 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
     },
     enabled: !!selectedFormation,
   });
+  const students = useMemo(() => rawStudents ?? [], [rawStudents]);
 
   // All evaluations
-  const { data: allEvaluations = [] } = useQuery({
+  const { data: rawAllEvaluations } = useQuery({
     queryKey: ['evaluations-sheet-all', selectedFormation],
     queryFn: async () => getEvaluations(selectedFormation),
     enabled: !!selectedFormation,
   });
+  const allEvaluations = useMemo(() => rawAllEvaluations ?? [], [rawAllEvaluations]);
 
   // Filtered modules by semester (exam blanc view: show all modules)
   const filteredModules = useMemo(() => {

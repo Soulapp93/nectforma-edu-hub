@@ -1,5 +1,22 @@
 # PRD - Nectforma
 
+## Plateforme
+ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
+
+## Session 38 - Signatures Publiques & Fix Performance (2026-04-16)
+- **Phase 3 Signatures Publiques completee**:
+  - `SignatureRequestPanel.tsx` integre dans l'onglet Bulletin de notes
+  - `signatureService.ts` : CRUD complet pour table `signature_requests`
+  - `SignPage.tsx` : page publique `/sign/:token` avec canvas de signature (dessin souris/tactile)
+  - Route `/sign/:token` rendue publique dans `App.tsx` (fix routing)
+  - Table Supabase `signature_requests` avec RLS (admin manage, public read/sign par token)
+  - Types TypeScript Supabase mis a jour pour `signature_requests`
+- **Fix Performance GradeSheetView.tsx**:
+  - Corrige "Maximum update depth exceeded" en stabilisant les references useQuery avec `useMemo`
+  - Remplace `= []` inline par `useMemo(() => rawData ?? [], [rawData])` pour modules, periods, students, evaluations, grades
+  - Navigation S1/S2 sans warnings
+- Testing: iteration_25 - 95% (all signature tests passed, performance warning resolved)
+
 ## Session 37 - Phase 2 Bulletin Modulable Drag & Drop (2026-04-15)
 - **TranscriptTemplateEditor reecrit** avec:
   - Layout split: editeur gauche + apercu live droite
@@ -11,11 +28,22 @@
   - Couleur personnalisable via color picker + presets
   - En-tete/pied de page configurables (logo, titre, signatures, texte)
   - Bouton Sauvegarder persistant dans Supabase
-- **Bouton 'Personnaliser le modele'** ajoute dans TranscriptsPanel (corrige par testing agent)
+- **Bouton 'Personnaliser le modele'** ajoute dans TranscriptsPanel
 - Testing: 7/7 passes (iteration_24, 100%)
 
-## Prochaine phase:
-- Phase 3: Signatures par lien unique
-
 ## All Completed - [x]
+- Supabase Realtime fix
+- Pre-deployment blockers (rate limits, schema, RLS)
+- Auto-generation Promotions/Schedules/Textbooks
+- File Visualization (FilePreviewTooltip, WhatsApp-like chat previews)
+- Native PDF Fullscreen (embed tag)
+- Hub deep-linking (formationId via URL params)
+- Independent Grading Periods (PeriodSelector)
+- Module Coefficients
+- Drag & Drop Transcript Template Editor
+- Public Signatures for Bulletins (Phase 3)
+- GradeSheetView performance fix
+
 ## P1 - [ ] Deploiement production
+## P2 - [ ] Refactoring TranscriptsPanel.tsx (>1400 lignes)
+## P2 - [ ] Pagination N+1 sur pages hub
