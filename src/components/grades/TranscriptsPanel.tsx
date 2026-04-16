@@ -34,6 +34,7 @@ import {
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import TranscriptTemplateEditor from './TranscriptTemplateEditor';
+import SignatureRequestPanel from './SignatureRequestPanel';
 
 interface Props {
   mode: 'admin' | 'student';
@@ -884,6 +885,13 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
           formationId={selectedFormation}
           establishmentId={establishment.id}
         />
+      )}
+
+      {/* Signature Requests */}
+      {isAdmin && selectedFormation && (
+        <div className="mb-4">
+          <SignatureRequestPanel formationId={selectedFormation} periodId={periodId} />
+        </div>
       )}
 
       {!selectedFormation ? (

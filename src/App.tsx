@@ -30,6 +30,7 @@ const TextBookDetail = React.lazy(() => import('./pages/TextBookDetail'));
 const TextBookByFormation = React.lazy(() => import('./pages/TextBookByFormation'));
 const SuiviEmargement = React.lazy(() => import('./pages/SuiviEmargement'));
 const SignaturePublique = React.lazy(() => import('./pages/SignaturePublique'));
+const SignPage = React.lazy(() => import('./pages/SignPage'));
 const EmploiTemps = React.lazy(() => import('./pages/EmploiTemps'));
 const Messagerie = React.lazy(() => import('./pages/Messagerie'));
 const Groupes = React.lazy(() => import('./pages/Groupes'));
@@ -115,6 +116,7 @@ const AppContent = () => {
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
             <Route path="/emargement/signer/:token" element={<SignaturePublique />} />
+            <Route path="/sign/:token" element={<SignPage />} />
             <Route path="/questionnaire/:token" element={<QuestionnairePublic />} />
             <Route path="/linkedin-callback" element={<LinkedInCallback />} />
           </Routes>
