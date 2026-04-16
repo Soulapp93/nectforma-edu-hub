@@ -9,7 +9,8 @@ export type EmailNotificationType =
   | 'attendance_open'
   | 'attendance_reminder'
   | 'schedule_change'
-  | 'virtual_class_created';
+  | 'virtual_class_created'
+  | 'signature_request';
 
 interface EmailRecipient {
   email: string;
@@ -457,6 +458,117 @@ export const emailNotificationService = {
         additionalInfo
       }
     );
+  },
+
+  /**
+   * Envoyer un email de demande de signature pour les bulletins
+   */
+  async notifySignatureRequest(
+    signerEmail: string,
+    signerName: string,
+    signerRole: string,
+    signatureLink: string,
+    establishmentName: string,
+    formationTitle: string
+  ) {
+    const htmlContent = `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demande de signature - Bulletins de notes</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f7;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f7; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <tr>
+            <td style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 30px 40px; border-radius: 12px 12px 0 0;">
+              <h1 style="color: #f59e0b; margin: 0; font-size: 24px; font-weight: 600;">NECTFORMA</h1>
+              <p style="color: rgba(255, 255, 255, 0.9); margin: 8px 0 0 0; font-size: 14px;">${establishmentName}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 40px;">
+              <p style="color: #374151; font-size: 16px; margin: 0 0 20px 0;">
+                Bonjour <strong>${signerName}</strong>,
+              </p>
+              <div style="background-color: #FEF3C7; border-left: 4px solid #f59e0b; padding: 20px; border-radius: 0 8px 8px 0; margin-bottom: 24px;">
+                <h2 style="color: #1F2937; font-size: 18px; margin: 0 0 12px 0;">Signature de bulletins requise</h2>
+                <p style="color: #4B5563; font-size: 15px; margin: 0; line-height: 1.6;">
+                  L'etablissement <strong>${establishmentName}</strong> vous invite a signer les bulletins de notes en tant que <strong>${signerRole}</strong>.
+                </p>
+              </div>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 24px;">
+                <tr>
+                  <td style="padding: 8px 0; border-bottom: 1px solid #E5E7EB;">
+                    <span style="color: #6B7280; font-size: 14px;">Formation</span>
+                  </td>
+                  <td style="padding: 8px 0; border-bottom: 1px solid #E5E7EB; text-align: right;">
+                    <span style="color: #1F2937; font-size: 14px; font-weight: 500;">${formationTitle}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; border-bottom: 1px solid #E5E7EB;">
+                    <span style="color: #6B7280; font-size: 14px;">Votre role</span>
+                  </td>
+                  <td style="padding: 8px 0; border-bottom: 1px solid #E5E7EB; text-align: right;">
+                    <span style="color: #1F2937; font-size: 14px; font-weight: 500;">${signerRole}</span>
+                  </td>
+                </tr>
+              </table>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center" style="padding: 20px 0;">
+                    <a href="${signatureLink}" style="display: inline-block; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #f59e0b; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600; box-shadow: 0 4px 6px rgba(26, 26, 46, 0.3);">Signer les bulletins</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="color: #6B7280; font-size: 13px; text-align: center;">
+                Ou copiez ce lien dans votre navigateur :<br/>
+                <a href="${signatureLink}" style="color: #1a1a2e; word-break: break-all;">${signatureLink}</a>
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #F9FAFB; padding: 24px 40px; border-radius: 0 0 12px 12px; border-top: 1px solid #E5E7EB;">
+              <p style="color: #6B7280; font-size: 13px; margin: 0 0 8px 0; text-align: center;">
+                Cet email a ete envoye automatiquement par NECTFORMA.
+              </p>
+              <p style="color: #9CA3AF; font-size: 12px; margin: 0; text-align: center;">
+                &copy; ${new Date().getFullYear()} NECTFORMA. Tous droits reserves.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`.trim();
+
+    try {
+      const { data: response, error } = await supabase.functions.invoke('send-email-brevo', {
+        body: {
+          to: signerEmail,
+          subject: `Signature de bulletins requise - ${establishmentName}`,
+          htmlContent,
+          tags: ['notification', 'signature_request']
+        }
+      });
+
+      if (error) {
+        console.error('Erreur envoi email signature:', error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Erreur emailNotificationService (signature):', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Erreur inconnue' };
+    }
   },
 
   /**

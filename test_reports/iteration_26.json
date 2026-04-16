@@ -1,0 +1,97 @@
+{
+  "summary": "Tested email notification features for signature requests. All features work correctly: auto-send email on creation, resend email button, copy link button, dialog info text updated, and public /sign/:token page with invalid token.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "performance_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_26.json"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only test)",
+    "frontend": "100% - All email notification features work correctly"
+  },
+  "test_credentials": "Sophie Martin (AdminPrincipal): admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "Created signature request: Mme Responsable Test (resp.test@ecole.fr, Responsable Pedagogique role)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Email notification for signature requests is fully functional. The Brevo email integration is working (emails are being sent successfully). Two signature requests exist in Rh formation: 'M. Test Directeur' and 'Mme Responsable Test'.",
+  "tests_executed": [
+    {
+      "test": "Test 1: Login as admin and navigate to notes-admin > Rh > Gérer les notes > Bulletin de notes tab",
+      "status": "PASSED",
+      "details": "Successfully logged in as admin.principal@nectforma-demo.com and navigated to Bulletin de notes tab in Rh formation"
+    },
+    {
+      "test": "Test 2: Verify signature panel shows existing request 'M. Test Directeur' with 3 action buttons",
+      "status": "PASSED",
+      "details": "SignatureRequestPanel visible with 'M. Test Directeur' showing mail icon, copy icon, and delete icon buttons"
+    },
+    {
+      "test": "Test 3: Click 'Demander une signature' and verify dialog shows updated info text",
+      "status": "PASSED",
+      "details": "Dialog shows info text: 'Un email contenant le lien de signature sera envoye automatiquement au signataire.'"
+    },
+    {
+      "test": "Test 4: Create new signature request (Mme Responsable Test, resp.test@ecole.fr, Responsable Pedagogique)",
+      "status": "PASSED",
+      "details": "Form filled and submitted successfully. Toast shows 'Demande de signature envoyee par email'"
+    },
+    {
+      "test": "Test 5: Verify success toast mentions email was sent",
+      "status": "PASSED",
+      "details": "Toast message: 'Demande de signature envoyee par email' - confirms email was sent automatically"
+    },
+    {
+      "test": "Test 6: Verify new request appears in list with 'En attente' badge and 3 action buttons",
+      "status": "PASSED",
+      "details": "New request 'Mme Responsable Test' visible with 'En attente' badge and mail/copy/delete buttons"
+    },
+    {
+      "test": "Test 7: Click mail icon (resend email) - verify loading spinner then success toast",
+      "status": "PASSED",
+      "details": "Clicked resend email button. Toast shows 'Email renvoye avec succes' (Email resent successfully)"
+    },
+    {
+      "test": "Test 8: Click copy icon - verify clipboard toast",
+      "status": "PASSED",
+      "details": "Clicked copy link button. Toast shows 'Lien copie dans le presse-papier' (Link copied to clipboard)"
+    },
+    {
+      "test": "Test 9: Test /sign/:token public page with invalid token",
+      "status": "PASSED",
+      "details": "Page shows 'Lien invalide ou expire' with message 'Ce lien de signature n'est plus valide. Veuillez contacter l'administrateur.' Page is NOT redirected to auth page (public access works)"
+    }
+  ],
+  "feature_verification": {
+    "auto_email_on_creation": "VERIFIED - Toast shows 'Demande de signature envoyee par email' after creating request",
+    "resend_email_button": "VERIFIED - Mail icon button works, shows 'Email renvoye avec succes' toast",
+    "copy_link_button": "VERIFIED - Copy icon button works, shows 'Lien copie dans le presse-papier' toast",
+    "dialog_info_text_updated": "VERIFIED - Dialog shows 'Un email contenant le lien de signature sera envoye automatiquement au signataire.'",
+    "three_action_buttons": "VERIFIED - Mail icon, copy icon, and delete icon visible for pending requests",
+    "en_attente_badge": "VERIFIED - Badge displays correctly for pending requests",
+    "public_sign_page_invalid_token": "VERIFIED - Shows 'Lien invalide ou expire' error, not redirected to auth"
+  },
+  "data_testids_verified": [
+    "request-signature-btn - Demander une signature button",
+    "create-signature-dialog - Dialog container",
+    "signer-name - Name input field",
+    "signer-email - Email input field",
+    "signer-role - Role dropdown",
+    "submit-request - Submit button",
+    "signature-panel - SignatureRequestPanel container",
+    "resend-email-{id} - Resend email button for each request"
+  ],
+  "email_integration_status": "WORKING - Brevo email integration is functional. Emails are being sent successfully via the send-email-brevo edge function.",
+  "known_issues": [],
+  "rca_of_the_issue": "N/A - All features working correctly"
+}

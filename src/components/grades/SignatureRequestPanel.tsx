@@ -7,10 +7,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { signatureService, SignatureRequest } from '@/services/signatureService';
+import { emailNotificationService } from '@/services/emailNotificationService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useEstablishment } from '@/hooks/useEstablishment';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { PenTool, Send, Copy, Check, Trash2, Clock, Loader2, Link2 } from 'lucide-react';
+import { PenTool, Send, Copy, Check, Trash2, Clock, Loader2, Link2, Mail, MailCheck } from 'lucide-react';
 
 interface Props {
   formationId: string;
@@ -28,6 +30,16 @@ const SignatureRequestPanel: React.FC<Props> = ({ formationId, periodId }) => {
   const [newEmail, setNewEmail] = useState('');
   const [newRole, setNewRole] = useState('Directeur');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [resendingId, setResendingId] = useState<string | null>(null);
+
+  const { data: formationData } = useQuery({
+    queryKey: ['formation-for-sig', formationId],
+    queryFn: async () => {
+      const { data } = await supabase.from('formations').select('title').eq('id', formationId).single();
+      return data;
+    },
+    enabled: !!formationId,
+  });
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['signature-requests', formationId],
@@ -45,10 +57,24 @@ const SignatureRequestPanel: React.FC<Props> = ({ formationId, periodId }) => {
       signerRole: newRole,
       requestedBy: userId || '',
     }),
-    onSuccess: () => {
+    onSuccess: async (created) => {
       queryClient.invalidateQueries({ queryKey: ['signature-requests', formationId] });
-      toast.success('Demande de signature envoyee');
       setShowCreate(false);
+      const signUrl = getSignUrl(created.token);
+      // Send email notification
+      const emailResult = await emailNotificationService.notifySignatureRequest(
+        newEmail,
+        newName,
+        newRole,
+        signUrl,
+        establishment?.name || 'Etablissement',
+        formationData?.title || 'Formation'
+      );
+      if (emailResult.success) {
+        toast.success('Demande de signature envoyee par email');
+      } else {
+        toast.success('Demande creee. Email non envoye — partagez le lien manuellement.');
+      }
       setNewName('');
       setNewEmail('');
       setNewRole('Directeur');
@@ -71,6 +97,25 @@ const SignatureRequestPanel: React.FC<Props> = ({ formationId, periodId }) => {
     setCopiedId(req.id);
     toast.success('Lien copie dans le presse-papier');
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const resendEmail = async (req: SignatureRequest) => {
+    setResendingId(req.id);
+    const signUrl = getSignUrl(req.token);
+    const result = await emailNotificationService.notifySignatureRequest(
+      req.signer_email,
+      req.signer_name,
+      req.signer_role,
+      signUrl,
+      establishment?.name || 'Etablissement',
+      formationData?.title || 'Formation'
+    );
+    setResendingId(null);
+    if (result.success) {
+      toast.success('Email renvoye avec succes');
+    } else {
+      toast.error('Echec de l\'envoi de l\'email');
+    }
   };
 
   return (
@@ -121,9 +166,14 @@ const SignatureRequestPanel: React.FC<Props> = ({ formationId, periodId }) => {
                   </div>
                 )}
                 {req.status === 'pending' && (
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => copyLink(req)} title="Copier le lien">
-                    {copiedId === req.id ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
-                  </Button>
+                  <>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => resendEmail(req)} title="Renvoyer l'email" data-testid={`resend-email-${req.id}`}>
+                      {resendingId === req.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mail className="h-3.5 w-3.5" />}
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => copyLink(req)} title="Copier le lien">
+                      {copiedId === req.id ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                    </Button>
+                  </>
                 )}
                 <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteMutation.mutate(req.id)} title="Supprimer">
                   <Trash2 className="h-3.5 w-3.5" />
@@ -164,8 +214,8 @@ const SignatureRequestPanel: React.FC<Props> = ({ formationId, periodId }) => {
               </Select>
             </div>
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-xs text-blue-700">
-              <Link2 className="h-3.5 w-3.5 inline mr-1" />
-              Un lien unique sera genere. Partagez-le avec le signataire pour qu'il puisse signer les bulletins.
+              <Mail className="h-3.5 w-3.5 inline mr-1" />
+              Un email contenant le lien de signature sera envoye automatiquement au signataire.
             </div>
           </div>
           <DialogFooter>
