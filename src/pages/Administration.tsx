@@ -1,10 +1,11 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Users, FolderOpen, ShieldCheck } from 'lucide-react';
+import { Users, FolderOpen, ShieldCheck, CreditCard } from 'lucide-react';
 import HubPageHeader, { HubTab } from '../components/HubPageHeader';
 
 const EnhancedUsersList = React.lazy(() => import('../components/administration/EnhancedUsersList'));
 const DossiersAdministratifs = React.lazy(() => import('../components/administration/DossiersAdministratifs'));
+const StudentCardManagement = React.lazy(() => import('../components/administration/StudentCardManagement'));
 
 const TabFallback = () => (
   <div className="flex items-center justify-center py-20">
@@ -15,6 +16,7 @@ const TabFallback = () => (
 const tabs: HubTab[] = [
   { id: 'users', label: 'Gestion des utilisateurs', icon: Users },
   { id: 'dossiers', label: 'Dossiers administratifs', icon: FolderOpen },
+  { id: 'cards', label: 'Gestion des cartes etudiantes', icon: CreditCard },
 ];
 
 const Administration = () => {
@@ -47,6 +49,7 @@ const Administration = () => {
         <Suspense fallback={<TabFallback />}>
           {activeTab === 'users' && <EnhancedUsersList />}
           {activeTab === 'dossiers' && <DossiersAdministratifs />}
+          {activeTab === 'cards' && <StudentCardManagement />}
         </Suspense>
       </div>
     </div>
