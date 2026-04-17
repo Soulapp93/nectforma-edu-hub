@@ -6,6 +6,7 @@
 | Role | Email | Nom | Mot de passe |
 |------|-------|-----|-------------|
 | AdminPrincipal | admin.principal@nectforma-demo.com | Sophie Martin | NectDemo2026! |
+| AdminPrincipal (SuperAdmin Demo) | superadmin@nectforma-demo.com | Demo SuperAdmin | SuperAdmin2026! |
 | Admin | admin@nectforma-demo.com | Pierre Durand | NectDemo2026! |
 | Formateur | formateur@nectforma-demo.com | Jean Lefebvre | NectDemo2026! |
 | Etudiant 1 | etudiant1@nectforma-demo.com | Alice Dubois | NectDemo2026! |

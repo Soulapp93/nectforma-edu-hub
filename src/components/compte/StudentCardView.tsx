@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import QRCode from 'react-qr-code';
-import { CreditCard, CheckCircle, XCircle, Wallet, Smartphone, Users, Download } from 'lucide-react';
+import { CreditCard, CheckCircle, XCircle, Users } from 'lucide-react';
 import { studentCardService } from '@/services/studentCardService';
 
 const StudentCardView: React.FC = () => {
@@ -132,17 +132,6 @@ const StudentCardView: React.FC = () => {
               </div>
             </div>
 
-            {/* Wallet buttons */}
-            <div className="flex flex-wrap justify-center gap-3">
-              <Button variant="outline" size="sm" className="gap-2 h-9 text-xs" onClick={() => {
-                const url = studentCardService.generateGoogleWalletUrl(card, profile, card.formations, establishment);
-                window.open(url, '_blank');
-              }} data-testid="student-google-wallet">
-                <Wallet className="h-4 w-4" /> Ajouter a Google Wallet
-              </Button>
-              <Button variant="outline" size="sm" className="gap-2 h-9 text-xs" onClick={() => toast.info('Apple Wallet necessite une configuration serveur.')} data-testid="student-apple-wallet">
-                <Smartphone className="h-4 w-4" /> Ajouter a Apple Wallet
-              </Button>
             </div>
           </div>
         );

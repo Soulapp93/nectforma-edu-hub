@@ -18,7 +18,7 @@ import QRCode from 'react-qr-code';
 import {
   CreditCard, Search, ArrowLeft, ChevronRight, Users, Calendar, GraduationCap,
   BookOpen, Clock, LayoutTemplate, Settings2, Sparkles, Loader2, Eye,
-  Download, Smartphone, CheckCircle, XCircle, Wallet,
+  Download, CheckCircle, XCircle,
 } from 'lucide-react';
 import { studentCardService, type StudentCardTemplate, CARD_PRESETS } from '@/services/studentCardService';
 
@@ -371,18 +371,6 @@ const StudentCardManagement: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Wallet buttons */}
-                <div className="flex justify-center gap-3">
-                  <Button variant="outline" size="sm" className="gap-2 h-9 text-xs" onClick={() => {
-                    const url = studentCardService.generateGoogleWalletUrl(previewStudent.card, previewStudent, selectedFormation, establishment);
-                    window.open(url, '_blank');
-                  }} data-testid="add-google-wallet">
-                    <Wallet className="h-4 w-4" /> Ajouter a Google Wallet
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-2 h-9 text-xs" onClick={() => toast.info('Apple Wallet necessite une configuration serveur. Contactez le support.')} data-testid="add-apple-wallet">
-                    <Smartphone className="h-4 w-4" /> Ajouter a Apple Wallet
-                  </Button>
-                </div>
               </div>
             )}
             <DialogFooter><Button variant="outline" onClick={() => setShowPreview(false)}>Fermer</Button></DialogFooter>
