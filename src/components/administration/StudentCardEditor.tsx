@@ -11,13 +11,13 @@ import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Save, Plus, Trash2, Type, Image, Minus, Square, Variable, QrCode,
+  Save, Plus, Trash2, Type, Image, Minus, Square, Variable, QrCode, Flag,
   Bold, Italic, AlignLeft, AlignCenter, AlignRight,
   Copy, Lock, Unlock, Loader2, Palette, LayoutTemplate, Layers,
   Move, ChevronUp, ChevronDown, RotateCcw, CreditCard,
 } from 'lucide-react';
 import {
-  studentCardService, type CardElement, type CardTemplateData, CARD_VARIABLES, CARD_PRESETS,
+  studentCardService, type CardElement, type CardTemplateData, CARD_VARIABLES, CARD_PRESETS, FRENCH_FLAG_SVG,
 } from '@/services/studentCardService';
 
 interface Props {
@@ -27,8 +27,8 @@ interface Props {
   templateId?: string | null;
 }
 
-const CARD_W = 500;
-const CARD_H = 260;
+const CARD_W = 320;
+const CARD_H = 400;
 const FONTS = ['Helvetica', 'Georgia', 'Arial', 'Verdana', 'Courier New', 'Times New Roman'];
 
 let nextId = 200;
@@ -230,8 +230,12 @@ const StudentCardEditor: React.FC<Props> = ({ open, onOpenChange, establishmentI
         ...base, fontSize: el.styles.fontSize, fontFamily: el.styles.fontFamily, fontWeight: el.styles.fontWeight as any,
         fontStyle: el.styles.fontStyle, textAlign: el.styles.textAlign as any, color: el.styles.color,
         letterSpacing: el.styles.letterSpacing, textTransform: el.styles.textTransform as any,
+        backgroundColor: el.styles.backgroundColor || 'transparent',
+        borderRadius: el.styles.borderRadius ?? 0,
         display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap',
         justifyContent: el.styles.textAlign === 'center' ? 'center' : el.styles.textAlign === 'right' ? 'flex-end' : 'flex-start',
+        opacity: el.styles.opacity ?? 1,
+        padding: el.styles.backgroundColor ? '0 4px' : undefined,
       }} onMouseDown={e => handleMouseDown(e, el.id)}>
         {isVar && <Badge variant="outline" className="absolute -top-3.5 left-0 text-[7px] px-1 py-0 bg-amber-50 text-amber-700 border-amber-300">var</Badge>}
         <span className="truncate w-full" style={{ textAlign: el.styles.textAlign as any }}>{el.content}</span>
@@ -288,6 +292,9 @@ const StudentCardEditor: React.FC<Props> = ({ open, onOpenChange, establishmentI
                     </Button>
                   ))}
                 </div>
+                <Button variant="outline" size="sm" className="w-full h-8 text-[9px] gap-1.5" onClick={() => addElement('image', FRENCH_FLAG_SVG)} data-testid="add-card-flag">
+                  <Flag className="h-3.5 w-3.5" /> Drapeau France
+                </Button>
                 <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider pt-1">Variables</p>
                 <div className="space-y-0.5 max-h-36 overflow-y-auto">
                   {CARD_VARIABLES.map(v => (
@@ -309,14 +316,24 @@ const StudentCardEditor: React.FC<Props> = ({ open, onOpenChange, establishmentI
                 </div>
               </TabsContent>
               <TabsContent value="presets" className="p-2.5 space-y-2 mt-0">
-                {CARD_PRESETS.map((p, i) => (
-                  <Card key={i} className="cursor-pointer hover:ring-2 hover:ring-primary/50" onClick={() => loadPreset(i)} data-testid={`card-preset-${i}`}>
-                    <CardContent className="p-2">
-                      <div className="h-10 rounded border mb-1.5" style={{ backgroundColor: p.data.recto.backgroundColor, border: '1px solid #e5e7eb' }} />
-                      <p className="text-xs font-medium">{p.name}</p>
-                    </CardContent>
-                  </Card>
-                ))}
+                {CARD_PRESETS.map((p, i) => {
+                  // Show a mini preview with the header color
+                  const headerEl = p.data.elements.find(el => el.face === 'recto' && el.type === 'rectangle' && el.y === 0);
+                  const headerBg = headerEl?.styles.backgroundColor || '#1e3a5f';
+                  return (
+                    <Card key={i} className="cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all" onClick={() => loadPreset(i)} data-testid={`card-preset-${i}`}>
+                      <CardContent className="p-1.5">
+                        <div className="rounded border overflow-hidden mb-1" style={{ height: 50 }}>
+                          <div style={{ height: 16, backgroundColor: headerBg }} />
+                          <div style={{ height: 34, backgroundColor: p.data.recto.backgroundColor, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <span style={{ fontSize: 6, color: headerBg, fontWeight: 700, letterSpacing: 1 }}>CARTE ETUDIANT</span>
+                          </div>
+                        </div>
+                        <p className="text-[10px] font-medium truncate">{p.name}</p>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </TabsContent>
               <TabsContent value="canvas" className="p-2.5 space-y-3 mt-0">
                 <div className="space-y-1.5">
@@ -394,10 +411,18 @@ const StudentCardEditor: React.FC<Props> = ({ open, onOpenChange, establishmentI
                       <Slider value={[selected.styles.fontSize || 12]} onValueChange={v => updateStyles(selected.id, { fontSize: v[0] })} min={6} max={36} step={1} />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[10px]">Couleur</Label>
+                      <Label className="text-[10px]">Couleur texte</Label>
                       <div className="flex gap-1.5 items-center">
                         <input type="color" value={selected.styles.color || '#000'} onChange={e => updateStyles(selected.id, { color: e.target.value })} className="w-6 h-6 rounded border cursor-pointer" />
                         <Input value={selected.styles.color || '#000'} onChange={e => updateStyles(selected.id, { color: e.target.value })} className="h-6 text-[10px] flex-1" />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">Fond de l'element</Label>
+                      <div className="flex gap-1.5 items-center">
+                        <input type="color" value={selected.styles.backgroundColor || '#ffffff'} onChange={e => updateStyles(selected.id, { backgroundColor: e.target.value })} className="w-6 h-6 rounded border cursor-pointer" />
+                        <Input value={selected.styles.backgroundColor || ''} onChange={e => updateStyles(selected.id, { backgroundColor: e.target.value })} placeholder="transparent" className="h-6 text-[10px] flex-1" />
+                        {selected.styles.backgroundColor && <button onClick={() => updateStyles(selected.id, { backgroundColor: undefined })} className="text-[8px] text-destructive shrink-0">X</button>}
                       </div>
                     </div>
                     <div className="flex gap-0.5 flex-wrap">
@@ -411,15 +436,67 @@ const StudentCardEditor: React.FC<Props> = ({ open, onOpenChange, establishmentI
                       <Label className="text-[10px]">Espacement ({selected.styles.letterSpacing ?? 0})</Label>
                       <Slider value={[selected.styles.letterSpacing ?? 0]} onValueChange={v => updateStyles(selected.id, { letterSpacing: v[0] })} min={0} max={10} step={1} />
                     </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">Arrondi ({selected.styles.borderRadius ?? 0}px)</Label>
+                      <Slider value={[selected.styles.borderRadius ?? 0]} onValueChange={v => updateStyles(selected.id, { borderRadius: v[0] })} min={0} max={30} step={1} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">Opacite ({Math.round((selected.styles.opacity ?? 1) * 100)}%)</Label>
+                      <Slider value={[(selected.styles.opacity ?? 1) * 100]} onValueChange={v => updateStyles(selected.id, { opacity: v[0] / 100 })} min={10} max={100} step={5} />
+                    </div>
                   </>
                 )}
                 {(selected.type === 'rectangle' || selected.type === 'line') && (
-                  <div className="space-y-1">
-                    <Label className="text-[10px]">Couleur</Label>
-                    <input type="color" value={selected.type === 'line' ? (selected.styles.backgroundColor || '#000') : (selected.styles.borderColor || '#000')}
-                      onChange={e => selected.type === 'line' ? updateStyles(selected.id, { backgroundColor: e.target.value }) : updateStyles(selected.id, { borderColor: e.target.value })}
-                      className="w-6 h-6 rounded border cursor-pointer" />
-                  </div>
+                  <>
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">Couleur de fond</Label>
+                      <div className="flex gap-1.5 items-center">
+                        <input type="color" value={selected.styles.backgroundColor || '#000'} onChange={e => updateStyles(selected.id, { backgroundColor: e.target.value })} className="w-6 h-6 rounded border cursor-pointer" />
+                        <Input value={selected.styles.backgroundColor || ''} onChange={e => updateStyles(selected.id, { backgroundColor: e.target.value })} className="h-6 text-[10px] flex-1" />
+                      </div>
+                    </div>
+                    {selected.type === 'rectangle' && (
+                      <>
+                        <div className="space-y-1">
+                          <Label className="text-[10px]">Couleur bordure</Label>
+                          <div className="flex gap-1.5 items-center">
+                            <input type="color" value={selected.styles.borderColor || '#000'} onChange={e => updateStyles(selected.id, { borderColor: e.target.value })} className="w-6 h-6 rounded border cursor-pointer" />
+                            <Input value={selected.styles.borderColor || ''} onChange={e => updateStyles(selected.id, { borderColor: e.target.value })} className="h-6 text-[10px] flex-1" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[10px]">Epaisseur bordure ({selected.styles.borderWidth ?? 0}px)</Label>
+                          <Slider value={[selected.styles.borderWidth ?? 0]} onValueChange={v => updateStyles(selected.id, { borderWidth: v[0] })} min={0} max={8} step={1} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[10px]">Arrondi ({selected.styles.borderRadius ?? 0}px)</Label>
+                          <Slider value={[selected.styles.borderRadius ?? 0]} onValueChange={v => updateStyles(selected.id, { borderRadius: v[0] })} min={0} max={50} step={1} />
+                        </div>
+                      </>
+                    )}
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">Opacite ({Math.round((selected.styles.opacity ?? 1) * 100)}%)</Label>
+                      <Slider value={[(selected.styles.opacity ?? 1) * 100]} onValueChange={v => updateStyles(selected.id, { opacity: v[0] / 100 })} min={10} max={100} step={5} />
+                    </div>
+                  </>
+                )}
+                {selected.type === 'image' && (
+                  <>
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">Arrondi ({selected.styles.borderRadius ?? 0}px)</Label>
+                      <Slider value={[selected.styles.borderRadius ?? 0]} onValueChange={v => updateStyles(selected.id, { borderRadius: v[0] })} min={0} max={100} step={1} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px]">Bordure ({selected.styles.borderWidth ?? 0}px)</Label>
+                      <Slider value={[selected.styles.borderWidth ?? 0]} onValueChange={v => updateStyles(selected.id, { borderWidth: v[0] })} min={0} max={6} step={1} />
+                    </div>
+                    {(selected.styles.borderWidth ?? 0) > 0 && (
+                      <div className="space-y-1">
+                        <Label className="text-[10px]">Couleur bordure</Label>
+                        <input type="color" value={selected.styles.borderColor || '#ccc'} onChange={e => updateStyles(selected.id, { borderColor: e.target.value })} className="w-6 h-6 rounded border cursor-pointer" />
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             ) : (
