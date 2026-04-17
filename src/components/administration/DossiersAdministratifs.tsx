@@ -61,9 +61,13 @@ const DossiersAdministratifs: React.FC = () => {
       onClick={onClick}
       data-testid={`dossier-user-${user.id}`}
     >
-      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm shrink-0">
-        {user.first_name?.[0]}{user.last_name?.[0]}
-      </div>
+      {user.profile_photo_url ? (
+        <img src={user.profile_photo_url} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" />
+      ) : (
+        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm shrink-0">
+          {user.first_name?.[0]}{user.last_name?.[0]}
+        </div>
+      )}
       <div className="flex-1 min-w-0">
         <p className="font-medium text-sm truncate">{user.first_name} {user.last_name}</p>
         <p className="text-xs text-muted-foreground truncate">{user.email}</p>

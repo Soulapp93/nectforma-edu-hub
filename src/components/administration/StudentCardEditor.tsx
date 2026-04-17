@@ -31,6 +31,15 @@ const CARD_W = 320;
 const CARD_H = 400;
 const FONTS = ['Helvetica', 'Georgia', 'Arial', 'Verdana', 'Courier New', 'Times New Roman'];
 
+// ISO ID-1 format: 85.60mm x 53.98mm (credit card size)
+// At 96dpi: ~323px x 204px  |  Scale factor for display
+const CARD_DIMENSIONS = [
+  { label: 'ISO ID-1 (85.6 x 54 mm)', w: 320, h: 202, desc: 'Format carte bancaire / ID standard' },
+  { label: 'Portrait (54 x 85.6 mm)', w: 202, h: 320, desc: 'Format vertical' },
+  { label: 'Grande (90 x 128 mm)', w: 320, h: 455, desc: 'Format badge evenement' },
+  { label: 'Custom', w: 320, h: 400, desc: 'Dimensions personnalisees' },
+];
+
 let nextId = 200;
 const genId = () => `cel-${++nextId}-${Date.now()}`;
 
@@ -48,6 +57,9 @@ const StudentCardEditor: React.FC<Props> = ({ open, onOpenChange, establishmentI
   const [resizing, setResizing] = useState<{ id: string; startW: number; startH: number; startX: number; startY: number } | null>(null);
   const [dbId, setDbId] = useState<string | null>(templateId || null);
   const [activePanel, setActivePanel] = useState('elements');
+  const [cardW, setCardW] = useState(CARD_W);
+  const [cardH, setCardH] = useState(CARD_H);
+  const [dimPreset, setDimPreset] = useState('Grande (90 x 128 mm)');
 
   const { data: existingTemplate } = useQuery({
     queryKey: ['card-template-edit', templateId],
@@ -153,8 +165,8 @@ const StudentCardEditor: React.FC<Props> = ({ open, onOpenChange, establishmentI
       if (dragging) {
         const rect = canvasRef.current?.getBoundingClientRect();
         if (!rect) return;
-        let nx = Math.max(0, Math.min(e.clientX - rect.left - dragging.offX, CARD_W - 20));
-        let ny = Math.max(0, Math.min(e.clientY - rect.top - dragging.offY, CARD_H - 10));
+        let nx = Math.max(0, Math.min(e.clientX - rect.left - dragging.offX, cardW - 20));
+        let ny = Math.max(0, Math.min(e.clientY - rect.top - dragging.offY, cardH - 10));
         updateElement(dragging.id, { x: Math.round(nx), y: Math.round(ny) });
       }
       if (resizing) {
@@ -337,6 +349,26 @@ const StudentCardEditor: React.FC<Props> = ({ open, onOpenChange, establishmentI
               </TabsContent>
               <TabsContent value="canvas" className="p-2.5 space-y-3 mt-0">
                 <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Dimensions</Label>
+                  <Select value={dimPreset} onValueChange={v => {
+                    setDimPreset(v);
+                    const d = CARD_DIMENSIONS.find(x => x.label === v);
+                    if (d) { setCardW(d.w); setCardH(d.h); }
+                  }}>
+                    <SelectTrigger className="h-7 text-[10px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {CARD_DIMENSIONS.map(d => <SelectItem key={d.label} value={d.label}><span className="text-[10px]">{d.label}</span></SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[8px] text-muted-foreground">{CARD_DIMENSIONS.find(d => d.label === dimPreset)?.desc}</p>
+                  {dimPreset === 'Custom' && (
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <div className="flex items-center gap-1"><span className="text-[8px] w-3">L</span><Input type="number" value={cardW} onChange={e => setCardW(+e.target.value)} className="h-6 text-[10px]" /></div>
+                      <div className="flex items-center gap-1"><span className="text-[8px] w-3">H</span><Input type="number" value={cardH} onChange={e => setCardH(+e.target.value)} className="h-6 text-[10px]" /></div>
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-1.5">
                   <Label className="text-xs">Fond ({activeFace})</Label>
                   <div className="flex gap-2 items-center">
                     <input type="color" value={currentBg} onChange={e => setBg(e.target.value)} className="w-7 h-7 rounded border cursor-pointer" />
@@ -353,7 +385,7 @@ const StudentCardEditor: React.FC<Props> = ({ open, onOpenChange, establishmentI
           {/* Canvas */}
           <div className="flex-1 overflow-auto bg-muted/50 flex items-center justify-center p-6" onClick={() => setSelectedId(null)}>
             <div ref={canvasRef} className="relative shadow-2xl rounded-xl overflow-hidden"
-              style={{ width: CARD_W, height: CARD_H, backgroundColor: currentBg, flexShrink: 0 }}
+              style={{ width: cardW, height: cardH, backgroundColor: currentBg, flexShrink: 0 }}
               onClick={e => e.stopPropagation()} data-testid="card-canvas">
               {faceElements.map(renderElement)}
             </div>

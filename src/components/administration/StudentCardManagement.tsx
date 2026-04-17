@@ -128,7 +128,7 @@ const StudentCardManagement: React.FC = () => {
           establishmentId: establishment.id,
           templateId: selectedTemplateId,
           studentNumber: s.card?.student_number || studentNumber,
-          photoUrl: s.avatar_url || null,
+          photoUrl: s.profile_photo_url || null,
         });
         count++;
       }
@@ -338,7 +338,7 @@ const StudentCardManagement: React.FC = () => {
                       <p style={{ fontSize: 14, fontWeight: 700, color: '#1a1a2e', letterSpacing: 3, marginBottom: 10 }}>CARTE ETUDIANT</p>
                       <div style={{ display: 'flex', gap: 16 }}>
                         <div style={{ width: 90, height: 108, borderRadius: 6, border: '2px solid #e2e8f0', backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                          {previewStudent.avatar_url ? <img src={previewStudent.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Users className="h-8 w-8 text-gray-300" />}
+                          {previewStudent.profile_photo_url ? <img src={previewStudent.profile_photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Users className="h-8 w-8 text-gray-300" />}
                         </div>
                         <div style={{ flex: 1, fontSize: 12 }}>
                           <p style={{ fontSize: 16, fontWeight: 700, color: '#1a1a2e', marginBottom: 4 }}>{previewStudent.first_name} {previewStudent.last_name}</p>

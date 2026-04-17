@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { UserCircle, Shield, Palette } from 'lucide-react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { UserCircle, Shield, Palette, CreditCard } from 'lucide-react';
 import ProfileSettings from '../components/compte/ProfileSettings';
 import RGPDSettings from '../components/compte/RGPDSettings';
 import ThemeCustomization from '../components/compte/ThemeCustomization';
@@ -8,6 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { fileUploadService } from '@/services/fileUploadService';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+const StudentCardView = React.lazy(() => import('../components/compte/StudentCardView'));
 
 interface ProfileApiResponse {
   id: string;
@@ -205,6 +207,8 @@ const Compte = () => {
     }
   };
 
+  const isStudent = userRole === 'Étudiant';
+
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -231,18 +235,24 @@ const Compte = () => {
       <div className="p-4 sm:p-6 lg:p-8">
         <div className="max-w-4xl">
           <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 max-w-lg">
+            <TabsList className={`grid w-full ${isStudent ? 'grid-cols-4' : 'grid-cols-3'} max-w-xl`}>
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <UserCircle className="h-4 w-4" />
-                Profil
+                <span className="hidden sm:inline">Profil</span>
               </TabsTrigger>
+              {isStudent && (
+                <TabsTrigger value="card" className="flex items-center gap-2" data-testid="student-card-tab">
+                  <CreditCard className="h-4 w-4" />
+                  <span className="hidden sm:inline">Carte etudiant</span>
+                </TabsTrigger>
+              )}
               <TabsTrigger value="theme" className="flex items-center gap-2">
                 <Palette className="h-4 w-4" />
-                Design
+                <span className="hidden sm:inline">Design</span>
               </TabsTrigger>
               <TabsTrigger value="rgpd" className="flex items-center gap-2">
                 <Shield className="h-4 w-4" />
-                Données & RGPD
+                <span className="hidden sm:inline">RGPD</span>
               </TabsTrigger>
             </TabsList>
 
@@ -257,6 +267,14 @@ const Compte = () => {
                 isDeletingPhoto={isDeletingPhoto}
               />
             </TabsContent>
+
+            {isStudent && (
+              <TabsContent value="card">
+                <Suspense fallback={<div className="py-8 text-center text-muted-foreground text-sm">Chargement...</div>}>
+                  <StudentCardView />
+                </Suspense>
+              </TabsContent>
+            )}
 
             <TabsContent value="theme">
               <ThemeCustomization />
