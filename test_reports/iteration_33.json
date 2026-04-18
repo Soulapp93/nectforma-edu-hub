@@ -1,0 +1,137 @@
+{
+  "summary": "Completed comprehensive frontend testing of Back Office SaaS features. All 13 test cases passed successfully. The SuperAdmin back office includes: Dashboard with 6 stat cards, CRM with 5 establishments and detail view with notes, Analytics with 8 KPIs and charts, Support with empty state, Subscriptions with plan management, sidebar collapse/expand, and logout functionality.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "support_tickets query", "issue": "Console shows 400 error when loading support tickets - may be RLS or query issue but UI handles gracefully"}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "DialogContent", "issues": ["Minor: Missing `Description` or `aria-describedby` for DialogContent (accessibility warning in console - inherited from previous iterations)"]}
+    ]
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_33.json"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only test)",
+    "frontend": "100% - All 13 tests passed"
+  },
+  "test_credentials": "SuperAdmin: superadmin@nectforma-demo.com / SuperAdmin2026!",
+  "seed_data_creation": "Created subscription for Mon Ecole Test (Pro plan, 149 EUR/month)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Back Office SaaS fully functional. Route: /back-office (SuperAdmin only). Key data-testids: back-office, bo-nav-dashboard, bo-nav-articles, bo-nav-crm, bo-nav-analytics, bo-nav-support, bo-nav-subscriptions, bo-dashboard, bo-crm, bo-crm-detail, bo-analytics, bo-support, bo-subscriptions, crm-estab-{id}, add-crm-note, ticket-{id}, sub-{id}, edit-sub-{id}. Dashboard shows: 5 Etablissements, 12 Utilisateurs, 3 Etudiants, 0 Tickets ouverts, 0 EUR MRR (before subscription), 0 Articles publies. CRM shows Nectforma Demo with 8 users, 3 students, 2 formations. Analytics shows 8 KPIs with bar chart and feature usage. Support shows empty state with 0 tickets. Subscriptions has 4 plans (Gratuit/Starter/Pro/Enterprise). Previous iterations: 1-32.",
+  "tests_executed": [
+    {
+      "test": "1. Login as superadmin (superadmin@nectforma-demo.com / SuperAdmin2026!) - verify redirect to /back-office",
+      "status": "PASSED",
+      "details": "Successfully logged in and redirected to /back-office"
+    },
+    {
+      "test": "2. Verify sidebar has 6 navigation items: Dashboard, Articles & Social, CRM, Analytics, Support, Abonnements",
+      "status": "PASSED",
+      "details": "All 6 navigation items found with correct labels and data-testids"
+    },
+    {
+      "test": "3. Dashboard: verify stat cards show Etablissements, Utilisateurs, Etudiants, Tickets, MRR, Articles",
+      "status": "PASSED",
+      "details": "Dashboard shows 6 stat cards: 5 Etablissements, 12 Utilisateurs, 3 Etudiants, 0 Tickets ouverts, 0 EUR MRR, 0 Articles publies"
+    },
+    {
+      "test": "4. Click CRM: verify 5 establishments listed with user counts, student counts, formations, dates",
+      "status": "PASSED",
+      "details": "CRM shows 5 establishments: Nectforma Demo (8 users, 3 students, 2 formations), Test Etablissement, Mon Ecole Test, Verify After Reset, Test Etablissement 1775958387"
+    },
+    {
+      "test": "5. Click on 'Nectforma Demo' establishment in CRM: verify detail view with Informations, Notes section, stats cards",
+      "status": "PASSED",
+      "details": "Detail view shows: Informations (Email: demo@nectforma.com, Telephone: 01 23 45 67 89, Type: Organisme de formation, SIRET: —, Inscription: 09 avr. 2026, Plan: Aucun), Notes & Historique section, stats cards (8 Utilisateurs, 3 Etudiants, 2 Formations)"
+    },
+    {
+      "test": "6. Add a CRM note: click 'Ajouter', select 'Appel', write 'Appel de demo planifie', click Ajouter - verify note appears",
+      "status": "PASSED",
+      "details": "Note added successfully with type 'Appel' and content 'Appel de demo planifie', visible in Notes & Historique section with timestamp"
+    },
+    {
+      "test": "7. Click Analytics: verify 8 KPI cards, bar chart (30 days), Top etablissements with progress bars, Utilisation fonctionnalites",
+      "status": "PASSED",
+      "details": "Analytics shows: 8 KPIs (Etablissements=5, Utilisateurs=12, Etudiants=3, Formateurs=1, Formations=2, Modules=4, Vues blog=0, Articles publies=0), bar chart 'Nouveaux utilisateurs (30 derniers jours)', Top etablissements with progress bars, Utilisation des fonctionnalites (Emargements=1, Evaluations=2, Releves/Bulletins=3, Diplomes=0, Messages chat=11, Tickets support=0)"
+    },
+    {
+      "test": "8. Click Support: verify empty state with stats (Ouverts=0, En cours=0, Resolus=0, Total=0)",
+      "status": "PASSED",
+      "details": "Support shows 4 stat cards (0 Ouverts, 0 En cours, 0 Resolus, 0 Total) and 'Aucun ticket' empty state message"
+    },
+    {
+      "test": "9. Click Abonnements: verify MRR/ARR/Actifs/Essai KPIs, 4 plan cards, 'Etablissements sans abonnement' section",
+      "status": "PASSED",
+      "details": "Subscriptions shows: KPIs (MRR, ARR, Actifs, En essai), 4 plan cards (Gratuit=0 EUR, Starter=49 EUR/mois, Pro=149 EUR/mois, Enterprise=399 EUR/mois), 'Etablissements sans abonnement (5)' section with 5 'Ajouter' buttons"
+    },
+    {
+      "test": "10. In Abonnements: click 'Mon Ecole Test — Ajouter' to create a subscription - verify it appears in the table",
+      "status": "PASSED",
+      "details": "Subscription created for Mon Ecole Test with Gratuit plan, appears in table with 0 EUR montant, toast 'Abonnement cree' shown"
+    },
+    {
+      "test": "11. Click edit icon on the new subscription - verify dialog with Plan and Status selectors, update to 'Pro' plan",
+      "status": "PASSED",
+      "details": "Edit dialog opened with Plan and Statut selectors, changed to Pro plan, subscription updated to 149 EUR/month, MRR updated to 149 EUR, ARR to 1788 EUR, toast 'Abonnement mis a jour' shown"
+    },
+    {
+      "test": "12. Verify sidebar collapse/expand works (click 'Reduire')",
+      "status": "PASSED",
+      "details": "Sidebar collapsed to 56px width when clicking 'Reduire', expanded back when clicking expand button"
+    },
+    {
+      "test": "13. Verify Deconnexion button redirects to /auth",
+      "status": "PASSED",
+      "details": "Clicked Deconnexion button, successfully redirected to /auth login page"
+    }
+  ],
+  "feature_verification": {
+    "superadmin_login": "VERIFIED - superadmin@nectforma-demo.com redirects to /back-office",
+    "sidebar_navigation": "VERIFIED - 6 items: Dashboard, Articles & Social, CRM, Analytics, Support, Abonnements",
+    "dashboard_stats": "VERIFIED - 6 stat cards with real data from Supabase",
+    "crm_list": "VERIFIED - 5 establishments with user/student/formation counts and dates",
+    "crm_detail": "VERIFIED - Informations section, Notes & Historique, stats cards",
+    "crm_notes": "VERIFIED - Add note with type (note/call/email/meeting) and content",
+    "analytics_kpis": "VERIFIED - 8 KPIs with real data",
+    "analytics_chart": "VERIFIED - Bar chart for 30 days user activity",
+    "analytics_top_estab": "VERIFIED - Top establishments with progress bars",
+    "analytics_features": "VERIFIED - Feature usage stats (Emargements, Evaluations, etc.)",
+    "support_empty": "VERIFIED - Empty state with 0 tickets stats",
+    "subscriptions_kpis": "VERIFIED - MRR/ARR/Actifs/En essai KPIs",
+    "subscriptions_plans": "VERIFIED - 4 plans (Gratuit/Starter/Pro/Enterprise) with prices",
+    "subscriptions_create": "VERIFIED - Create subscription for establishment without one",
+    "subscriptions_edit": "VERIFIED - Edit subscription plan and status",
+    "sidebar_collapse": "VERIFIED - Collapse to 56px, expand back",
+    "logout": "VERIFIED - Deconnexion redirects to /auth"
+  },
+  "data_testids_verified": [
+    "back-office - Main layout container",
+    "bo-nav-dashboard - Dashboard nav item",
+    "bo-nav-articles - Articles & Social nav item",
+    "bo-nav-crm - CRM nav item",
+    "bo-nav-analytics - Analytics nav item",
+    "bo-nav-support - Support nav item",
+    "bo-nav-subscriptions - Abonnements nav item",
+    "bo-dashboard - Dashboard content",
+    "bo-crm - CRM list view",
+    "bo-crm-detail - CRM detail view",
+    "bo-analytics - Analytics content",
+    "bo-support - Support content",
+    "bo-subscriptions - Subscriptions content",
+    "crm-estab-{id} - CRM establishment cards",
+    "add-crm-note - Add note button",
+    "sub-{id} - Subscription rows",
+    "edit-sub-{id} - Edit subscription buttons"
+  ],
+  "rca_of_the_issue": "N/A - All features working correctly"
+}

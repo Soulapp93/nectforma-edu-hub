@@ -56,7 +56,7 @@ const Documentation = React.lazy(() => import('./pages/Documentation'));
 const Blog = React.lazy(() => import('./pages/Blog'));
 const Install = React.lazy(() => import('./pages/Install'));
 const BlogPost = React.lazy(() => import('./pages/BlogPost'));
-const BlogAdmin = React.lazy(() => import('./pages/BlogAdmin'));
+const BackOffice = React.lazy(() => import('./pages/BackOffice'));
 const LinkedInCallback = React.lazy(() => import('./pages/LinkedInCallback'));
 const EspaceTravail = React.lazy(() => import('./pages/EspaceTravail'));
 const QuestionnairePublic = React.lazy(() => import('./pages/QuestionnairePublic'));
@@ -128,7 +128,7 @@ const AppContent = () => {
     );
   }
 
-  const isBlogAdminPage = location.pathname === '/blog-admin';
+  const isBlogAdminPage = location.pathname === '/blog-admin' || location.pathname === '/back-office';
   if (isBlogAdminPage) {
     if (authLoading) return <LoadingFallback />;
 
@@ -153,7 +153,7 @@ const AppContent = () => {
     return (
       <>
         <GoogleAnalytics measurementId={import.meta.env.VITE_GA_MEASUREMENT_ID || ''} />
-        <Suspense fallback={<LoadingFallback />}><BlogAdmin /></Suspense>
+        <Suspense fallback={<LoadingFallback />}><BackOffice /></Suspense>
         <Toaster />
       </>
     );
@@ -168,7 +168,7 @@ const AppContent = () => {
   if (isAuthPage) {
     if (authLoading) return <LoadingFallback />;
     if (userId && userRole) {
-      if (userRole === 'SuperAdmin') return <Navigate to="/blog-admin" replace />;
+      if (userRole === 'SuperAdmin') return <Navigate to="/back-office" replace />;
       const home = userRole === 'Admin' || userRole === 'AdminPrincipal' ? '/dashboard' : '/formations';
       return <Navigate to={home} replace />;
     }
@@ -249,7 +249,7 @@ const AppContent = () => {
     }
 
     if (userId && !isLegalPage && !isBlogArticlePage) {
-      if (userRole === 'SuperAdmin') return <Navigate to="/blog-admin" replace />;
+      if (userRole === 'SuperAdmin') return <Navigate to="/back-office" replace />;
       const home = userRole === 'Admin' || userRole === 'AdminPrincipal' ? '/dashboard' : '/formations';
       return <Navigate to={home} replace />;
     }
