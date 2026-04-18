@@ -3,37 +3,32 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
-## Session 38 (2026-04-16/17)
+## Session 38 (2026-04-16/18)
 
-### Carte Etudiant - Dimensions ISO + Photos + Profil Etudiant (UPDATE)
-- **Dimensions ISO ID-1** (85.6x54mm) + Portrait + Grande + Custom dans editeur
-- **Photos de profil** recuperees depuis `profile_photo_url` pour les cartes generees
-- **Photos dans Dossiers Administratifs** : avatar ou initiales fallback
-- **Onglet "Carte etudiant" dans profil etudiant** (/compte) :
-  - 4 onglets : Profil, Carte etudiant, Design, RGPD (visible uniquement pour les etudiants)
-  - Recto/Verso avec QR code, infos, photo, mentions legales
-  - Boutons Google Wallet + Apple Wallet
-- `profile_photo_url` utilise dans StudentCardManagement pour la generation
-- Testing: manuel verifie (screenshot etudiant + admin + dimensions)
+### Back Office SaaS (NEW - Major Feature)
+- **Route** : `/back-office` (SuperAdmin uniquement)
+- **6 modules** avec sidebar sombre navigable :
+  1. **Dashboard** : 6 stat cards (Etablissements, Utilisateurs, Etudiants, Tickets, MRR, Articles), derniers etablissements, derniers tickets
+  2. **Articles & Social** : Reutilise BlogAdmin existant (redaction, publication, reseaux sociaux)
+  3. **CRM** : Liste 5 etablissements avec stats (users, etudiants, formations, date), fiche detaillee (infos, plan, notes), notes CRM (note/appel/email/reunion)
+  4. **Analytics** : 8 KPIs, graphique 30 jours (nouveaux users), Top etablissements (barres progression), Utilisation fonctionnalites (emargements, evaluations, releves, diplomes, chat, tickets)
+  5. **Support** : Inbox tickets (Ouvert/En cours/Resolu/Ferme), vue conversation avec reponse directe, changement statut
+  6. **Abonnements & Revenus** : MRR/ARR/Actifs/Essai, 4 plans (Gratuit/Starter 49EUR/Pro 149EUR/Enterprise 399EUR), creation/modification abonnements par etablissement
+- Tables Supabase : `support_tickets`, `support_messages`, `establishment_subscriptions`, `crm_notes`
+- RLS SuperAdmin policies sur establishments, users, formations
+- Sidebar collapsible + deconnexion
+- Testing: iteration_33 (100%, 13/13 tests)
 
-### Carte Etudiant - Editeur Ameliore
-- 10 modeles predefinis (Classique a Artistique), format portrait
-- Drapeau France, proprietes etendues (fond element, arrondi, opacite)
-- Testing: iteration_32 (100%, 11/11 tests)
+### Carte Etudiant (Sessions precedentes)
+- 10 presets, editeur drag&drop, dimensions ISO, photos profil, page verification QR
+- Onglet "Carte etudiant" dans profil etudiant
 
-### Rapport Emargement
-- Testing: iteration_30 (100%, 12/12 tests)
+### Rapport Emargement, Audit PV, Validation PV, Diplomes, Signatures
+- Tous testes et fonctionnels (iterations 25-32)
 
-### Historique Audit PV + Validation PV
-- Testing: iterations 28-29 (100%)
-
-### Gestion des Diplomes
-- Testing: iteration_27 (100%, 14/14 tests)
-
-### Signatures Publiques + Email Brevo
-- Testing: iterations 25-26 (100%)
+## SuperAdmin : superadmin@nectforma-demo.com / SuperAdmin2026!
 
 ## P1 - [ ] Deploiement production
 ## P2 - [ ] Export PDF diplomes
+## P2 - [ ] Integration support sidebar (cote etablissement)
 ## P2 - [ ] Refactoring TranscriptsPanel.tsx
-## P2 - [ ] Pagination N+1 sur pages hub
