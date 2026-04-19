@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, 
@@ -20,6 +20,8 @@ import {
   FolderOpen,
   BookOpen,
   Video,
+  Send,
+  Loader2,
 } from 'lucide-react';
 import {
   Sidebar as SidebarWrapper,
@@ -58,6 +60,38 @@ const Sidebar = () => {
   const establishmentLogoUrl = establishmentLogoRaw ? (
     establishmentLogoRaw.startsWith('http') ? establishmentLogoRaw : supabase.storage.from('avatars').getPublicUrl(establishmentLogoRaw).data?.publicUrl || null
   ) : null;
+
+  // Support ticket state
+  const [showSupport, setShowSupport] = useState(false);
+  const [supportSubject, setSupportSubject] = useState('');
+  const [supportMessage, setSupportMessage] = useState('');
+  const [sendingSupport, setSendingSupport] = useState(false);
+  const [supportSent, setSupportSent] = useState(false);
+
+  const handleSendSupport = async () => {
+    if (!supportSubject.trim() || !supportMessage.trim()) return;
+    setSendingSupport(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase.from('support_tickets').insert({
+        establishment_id: establishment?.id || null,
+        created_by: user?.id,
+        subject: supportSubject,
+        description: supportMessage,
+        status: 'open',
+        priority: 'medium',
+        category: 'general',
+      } as any);
+      setSupportSent(true);
+      setSupportSubject('');
+      setSupportMessage('');
+      setTimeout(() => { setSupportSent(false); setShowSupport(false); }, 2000);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSendingSupport(false);
+    }
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -270,24 +304,76 @@ const Sidebar = () => {
         {/* Support Card */}
         {!collapsed && (
           <div className="mt-6 p-4 rounded-2xl bg-white/[0.08] border border-white/10" data-testid="support-card">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-9 h-9 rounded-full bg-golden/20 flex items-center justify-center">
-                <HelpCircle className="w-5 h-5 text-golden" />
+            {showSupport ? (
+              <div className="space-y-2.5">
+                {supportSent ? (
+                  <div className="text-center py-4">
+                    <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-2">
+                      <Send className="w-5 h-5 text-emerald-400" />
+                    </div>
+                    <p className="text-sm font-semibold text-white">Demande envoyee !</p>
+                    <p className="text-[11px] text-white/50">Notre equipe vous repondra rapidement.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <p className="text-[13px] font-bold text-white">Contacter le support</p>
+                      <button onClick={() => setShowSupport(false)} className="text-white/40 hover:text-white text-xs">Fermer</button>
+                    </div>
+                    <input
+                      type="text"
+                      value={supportSubject}
+                      onChange={e => setSupportSubject(e.target.value)}
+                      placeholder="Sujet de votre demande..."
+                      className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder:text-white/30 text-xs focus:outline-none focus:ring-1 focus:ring-golden"
+                      data-testid="support-subject-input"
+                    />
+                    <textarea
+                      value={supportMessage}
+                      onChange={e => setSupportMessage(e.target.value)}
+                      placeholder="Decrivez votre probleme ou question..."
+                      rows={3}
+                      className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder:text-white/30 text-xs focus:outline-none focus:ring-1 focus:ring-golden resize-none"
+                      data-testid="support-message-input"
+                    />
+                    <button
+                      onClick={handleSendSupport}
+                      disabled={!supportSubject.trim() || !supportMessage.trim() || sendingSupport}
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-golden text-golden-foreground text-[13px] font-bold hover:bg-golden/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      data-testid="support-send-btn"
+                    >
+                      {sendingSupport ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      Envoyer
+                    </button>
+                  </>
+                )}
               </div>
-              <div>
-                <p className="text-[14px] font-bold text-white">Support</p>
-                <p className="text-[11px] text-white/50">Contactez le support</p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-golden text-golden-foreground text-[13px] font-bold hover:bg-golden/90 transition-colors">
-                <HelpCircle className="w-4 h-4" />
-                Aide
-              </button>
-              <button className="p-2.5 rounded-xl bg-white/10 text-white/70 hover:bg-white/20 transition-colors">
-                <Headphones className="w-5 h-5" />
-              </button>
-            </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div className="w-9 h-9 rounded-full bg-golden/20 flex items-center justify-center">
+                    <HelpCircle className="w-5 h-5 text-golden" />
+                  </div>
+                  <div>
+                    <p className="text-[14px] font-bold text-white">Support</p>
+                    <p className="text-[11px] text-white/50">Contactez le support</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowSupport(true)}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-golden text-golden-foreground text-[13px] font-bold hover:bg-golden/90 transition-colors"
+                    data-testid="support-open-btn"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                    Aide
+                  </button>
+                  <button className="p-2.5 rounded-xl bg-white/10 text-white/70 hover:bg-white/20 transition-colors">
+                    <Headphones className="w-5 h-5" />
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
       </SidebarContent>

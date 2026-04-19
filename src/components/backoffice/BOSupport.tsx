@@ -23,16 +23,30 @@ const BOSupport: React.FC = () => {
   const { data: tickets = [] } = useQuery({
     queryKey: ['bo-support-tickets'],
     queryFn: async () => {
-      const { data } = await supabase.from('support_tickets').select('*, establishments(name), users!support_tickets_created_by_fkey(first_name, last_name, email)').order('created_at', { ascending: false });
-      return data || [];
+      const { data } = await supabase.from('support_tickets').select('*').order('created_at', { ascending: false });
+      if (!data) return [];
+      // Enrich with establishment and user names
+      const enriched = await Promise.all(data.map(async (t: any) => {
+        const [estab, user] = await Promise.all([
+          t.establishment_id ? supabase.from('establishments').select('name').eq('id', t.establishment_id).single().then(r => r.data) : null,
+          t.created_by ? supabase.from('users').select('first_name, last_name, email').eq('id', t.created_by).single().then(r => r.data) : null,
+        ]);
+        return { ...t, establishments: estab, users: user };
+      }));
+      return enriched;
     },
   });
 
   const { data: messages = [] } = useQuery({
     queryKey: ['bo-support-messages', selectedId],
     queryFn: async () => {
-      const { data } = await supabase.from('support_messages').select('*, users!support_messages_sender_id_fkey(first_name, last_name)').eq('ticket_id', selectedId!).order('created_at', { ascending: true });
-      return data || [];
+      const { data } = await supabase.from('support_messages').select('*').eq('ticket_id', selectedId!).order('created_at', { ascending: true });
+      if (!data) return [];
+      const enriched = await Promise.all(data.map(async (m: any) => {
+        const user = m.sender_id ? await supabase.from('users').select('first_name, last_name').eq('id', m.sender_id).single().then(r => r.data) : null;
+        return { ...m, users: user };
+      }));
+      return enriched;
     },
     enabled: !!selectedId,
   });
