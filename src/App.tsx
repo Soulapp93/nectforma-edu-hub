@@ -57,6 +57,7 @@ const Blog = React.lazy(() => import('./pages/Blog'));
 const Install = React.lazy(() => import('./pages/Install'));
 const BlogPost = React.lazy(() => import('./pages/BlogPost'));
 const BackOffice = React.lazy(() => import('./pages/BackOffice'));
+const SupportPage = React.lazy(() => import('./pages/SupportPage'));
 const LinkedInCallback = React.lazy(() => import('./pages/LinkedInCallback'));
 const EspaceTravail = React.lazy(() => import('./pages/EspaceTravail'));
 const QuestionnairePublic = React.lazy(() => import('./pages/QuestionnairePublic'));
@@ -344,6 +345,7 @@ const AppContent = () => {
               <Route path="/emargement-qr" element={<ProtectedRoute><TutorRestrictedRoute><EmargementQR /></TutorRestrictedRoute></ProtectedRoute>} />
               <Route path="/gestion-etablissement" element={<ProtectedRoute><AdminPrincipalRoute><GestionEtablissement /></AdminPrincipalRoute></ProtectedRoute>} />
               <Route path="/compte" element={<ProtectedRoute><Compte /></ProtectedRoute>} />
+              <Route path="/support" element={<ProtectedRoute><SupportPage /></ProtectedRoute>} />
               <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
               <Route path="/espace-travail" element={<ProtectedRoute><TutorRestrictedRoute><EspaceTravail /></TutorRestrictedRoute></ProtectedRoute>} />
               <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />

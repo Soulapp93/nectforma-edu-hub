@@ -1,0 +1,68 @@
+{
+  "summary": "End-to-end validation of the new /support page (SupportPage.tsx) and full round-trip between AdminPrincipal (Nectforma Demo) and SuperAdmin via BackOffice. ALL 9 scenarios PASSED.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_36.json"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "SupportPage.tsx (lines 61-67): N+1 query pattern - for each message, a separate supabase.from('users').select() is awaited sequentially inside Promise.all's callbacks. For tickets with many messages this will be slow. Recommend fetching sender users in a single .in('id', senderIds) query and joining client-side.",
+    "SupportPage.tsx (line 43): supabase query uses '!' non-null assertion on establishment?.id (.eq('establishment_id', establishment?.id!)); if establishment is briefly undefined the query will run with undefined and hit RLS. The 'enabled: !!establishment?.id' guard already mitigates, but the non-null assertion is misleading.",
+    "SupportPage.tsx (lines 85-91): insert + update are fired sequentially without catching individual errors - if the UPDATE on support_tickets.updated_at silently fails due to RLS, the user still sees success. Consider an RPC or edge function that does both atomically.",
+    "SupportPage.tsx: initial description attachment parsing (lines 163-175) is string-based on 'Pieces jointes:' convention - brittle if the description format changes. A dedicated attachments column or support_attachments table would be cleaner.",
+    "SupportPage.tsx (lines 107-127): uses 'as any' to bypass typing on insert; regenerate Supabase types or add proper typed insert payload.",
+    "No realtime subscription on support_messages in SupportPage - user must manually refresh/click the ticket to see the SuperAdmin reply. Consider supabase.channel().on('postgres_changes', ...) for live updates.",
+    "File 1134 lines in Sidebar.tsx - already flagged in prior iterations, exceeds 700-line guideline."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (Supabase direct, no FastAPI)",
+    "frontend": "100% - 9/9 scenarios passed"
+  },
+  "test_credentials": "AdminPrincipal: admin.principal@nectforma-demo.com / NectDemo2026! ; SuperAdmin: superadmin@nectforma-demo.com / SuperAdmin2026!",
+  "seed_data_creation": "Created ticket 'TEST_RoundTrip_1776609063' (id=26a318c4-4cf6-42ca-a10d-7139b9a4627a) with 3 messages (initial description, establishment reply, superadmin reply). Also created 'TEST_NewTicketBtn_1776609063' via /support 'Nouveau ticket' button. Both under establishment 'Nectforma Demo'. Can be cleaned up via SQL DELETE on support_tickets WHERE subject LIKE 'TEST_%'.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Feature VALIDATED: bidirectional chat between establishment AdminPrincipal and SuperAdmin. Flow: (1) Sidebar 'Aide' form creates support_ticket; (2) /support page (data-testid=support-page) lists tickets; (3) clicking a ticket (data-testid=my-ticket-<id>) opens conversation view (data-testid=support-conversation-view); (4) establishment replies via support-reply-field + support-send-reply; (5) SuperAdmin replies from /back-office Support module; (6) replies with is_admin_reply=true appear LEFT-aligned with Headphones icon + 'Support Nectforma' label; establishment messages RIGHT-aligned with User icon + user full name. /support link reachable via data-testid=support-tickets-link next to 'Aide' button in Sidebar. 'Nouveau ticket' button (data-testid=new-ticket-btn) with fields new-ticket-subject, new-ticket-message, submit-new-ticket works and auto-opens the created ticket in conversation view. RLS policies correctly allow the establishment to read SuperAdmin replies (is_admin_reply=true). Closed-ticket hiding of reply field verified by code review (lines 200-224 of SupportPage.tsx). Previous iterations 25-35 validated sidebar form, voice, attach, BO replies.",
+  "tests_executed": [
+    {"test": "1. Login AdminPrincipal + open sidebar Aide, fill & send ticket 'TEST_RoundTrip_1776609063' with paperclip+mic visible, voice toggles 'Ecoute en cours' on", "status": "PASSED"},
+    {"test": "2. Verify paperclip (support-attach-btn) and mic (support-voice-btn) buttons visible and mic toggles recording state", "status": "PASSED"},
+    {"test": "3. Navigate to /support via support-tickets-link; support-page data-testid loads and the new ticket is visible in list", "status": "PASSED"},
+    {"test": "4. Click my-ticket-<id>, conversation view opens with initial description visible (Message initial depuis Sidebar)", "status": "PASSED"},
+    {"test": "5. Establishment replies via support-reply-field + support-send-reply, reply appears immediately right-aligned (is_admin_reply=false)", "status": "PASSED"},
+    {"test": "6. 'Nouveau ticket' button on /support page creates a ticket and auto-opens conversation view", "status": "PASSED"},
+    {"test": "7. Logout, login SuperAdmin (redirected to /back-office)", "status": "PASSED"},
+    {"test": "8. SuperAdmin opens BO Support, finds ticket 'TEST_RoundTrip_1776609063', sends reply 'Reponse de SuperAdmin - 1776609063' (is_admin_reply=true)", "status": "PASSED"},
+    {"test": "9. Re-login AdminPrincipal, open /support > ticket > verify SuperAdmin reply visible with 'Support Nectforma' label and Headphones icon on LEFT side, establishment reply still RIGHT side", "status": "PASSED"},
+    {"test": "10. Closed ticket: reply field hidden + 'Ce ticket est ferme' message - verified via code review lines 200-224 of SupportPage.tsx (not executed in runtime as no closed test ticket was available and modifying status requires admin action)", "status": "VERIFIED BY CODE REVIEW"}
+  ],
+  "feature_verification": {
+    "support_page_loads": "VERIFIED - /support route protected, SupportPage.tsx renders with data-testid=support-page",
+    "tickets_listed_for_establishment": "VERIFIED - query filters by establishment.id, 6+ tickets returned including newly created",
+    "ticket_click_opens_conversation": "VERIFIED - my-ticket-<id> clickable, opens support-conversation-view",
+    "alignment_admin_vs_superadmin": "VERIFIED - establishment messages flex-row-reverse (right) with User icon, SuperAdmin messages on LEFT with Headphones icon and 'Support Nectforma' label",
+    "establishment_reply": "VERIFIED - support-reply-field + support-send-reply writes support_messages with is_admin_reply=false",
+    "superadmin_reply_visible_to_establishment": "VERIFIED - RLS policies allow has_platform_role/is_super_admin override; establishment sees SuperAdmin reply after reload",
+    "new_ticket_button_on_support_page": "VERIFIED - new-ticket-btn opens form with new-ticket-subject + new-ticket-message + submit-new-ticket; auto-opens created ticket",
+    "closed_ticket_reply_hidden": "VERIFIED by code review (conditional block lines 200-224)"
+  },
+  "data_testids_verified": [
+    "support-open-btn (Sidebar Aide)",
+    "support-subject-input, support-message-input, support-voice-btn, support-attach-btn, support-files-list, support-send-btn (Sidebar form)",
+    "support-tickets-link (Sidebar MessageSquare next to Aide)",
+    "support-page (SupportPage root)",
+    "new-ticket-btn, new-ticket-subject, new-ticket-message, submit-new-ticket",
+    "my-ticket-<id> (ticket list cards)",
+    "support-conversation-view, support-reply-field, support-send-reply",
+    "bo-nav-support, support-reply-input, send-reply-btn (BackOffice side)"
+  ],
+  "rca_of_the_issue": "N/A - All features working correctly. Bidirectional chat round-trip verified end-to-end."
+}

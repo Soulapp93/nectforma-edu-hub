@@ -28,6 +28,7 @@ import {
   X,
   FileText,
   Image as ImageIcon,
+  MessageSquare,
 } from 'lucide-react';
 import {
   Sidebar as SidebarWrapper,
@@ -483,9 +484,9 @@ const Sidebar = () => {
                     <HelpCircle className="w-4 h-4" />
                     Aide
                   </button>
-                  <button className="p-2.5 rounded-xl bg-white/10 text-white/70 hover:bg-white/20 transition-colors">
-                    <Headphones className="w-5 h-5" />
-                  </button>
+                  <NavLink to="/support" className="p-2.5 rounded-xl bg-white/10 text-white/70 hover:bg-white/20 transition-colors" title="Mes tickets" data-testid="support-tickets-link">
+                    <MessageSquare className="w-5 h-5" />
+                  </NavLink>
                 </div>
               </>
             )}
