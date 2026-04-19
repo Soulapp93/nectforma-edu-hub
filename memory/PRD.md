@@ -3,6 +3,18 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
+## Session 39 (2026-04-19)
+
+### Espace d'echange Support Etablissement <-> SuperAdmin (DONE)
+- Nouvelle page `/support` (SupportPage.tsx) : liste tickets + vue conversation
+- Vue conversation bidirectionnelle : etablissement (droite, icone User) / SuperAdmin (gauche, icone Headphones, label "Support Nectforma")
+- Replies : textarea + envoi (Entree = envoyer, Shift+Entree = saut de ligne)
+- Bouton "Nouveau ticket" sur la page /support ouvre automatiquement la conversation apres creation
+- Ticket ferme -> input masque avec message "Ce ticket est ferme"
+- Parsing automatique des pieces jointes inline (depuis description du sidebar form)
+- Lien sidebar : icone MessageSquare a cote de "Aide" -> /support
+- Testing: iteration_36 (100%, 9/9 scenarios + code review scenario 10)
+
 ## Session 38 (2026-04-16/19)
 
 ### Support Ameliore - Fichiers & Vocal (UPDATE)
