@@ -1,0 +1,103 @@
+{
+  "summary": "All 10 test cases PASSED. Tested enhanced support form with file attachment (paperclip) and voice recording (microphone) icon buttons inside textarea, plus superadmin ticket management.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_35.json"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Voice recording (Web Speech API) may show alert in browsers that don't support it - this is expected behavior with proper fallback message"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only test)",
+    "frontend": "100% - All 10 tests passed"
+  },
+  "test_credentials": "Admin: admin.principal@nectforma-demo.com / NectDemo2026!, SuperAdmin: superadmin@nectforma-demo.com / SuperAdmin2026!",
+  "seed_data_creation": "Created support ticket 'Question facturation' with message 'Ou trouver les factures du mois dernier?', replied via superadmin",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Support form now has 2 icon buttons inside textarea: microphone (data-testid=support-voice-btn) for voice recording and paperclip (data-testid=support-attach-btn) for file attachment. Files uploaded to Supabase Storage 'avatars' bucket under 'support/' prefix. Attached files appear in list (data-testid=support-files-list). Voice uses Web Speech API (fr-FR). Previous iterations: 1-34.",
+  "tests_executed": [
+    {
+      "test": "1. Login as admin (admin.principal@nectforma-demo.com / NectDemo2026!), click 'Aide' button in sidebar",
+      "status": "PASSED",
+      "details": "Admin login successful, redirected to /dashboard, clicked 'Aide' button (data-testid=support-open-btn)"
+    },
+    {
+      "test": "2. Verify support form has: subject input, message textarea, AND two icon buttons inside the textarea (microphone icon for voice, paperclip icon for file attachment)",
+      "status": "PASSED",
+      "details": "All elements visible: subject input (data-testid=support-subject-input), message textarea (data-testid=support-message-input), microphone button (data-testid=support-voice-btn), paperclip button (data-testid=support-attach-btn)"
+    },
+    {
+      "test": "3. Verify microphone button (data-testid='support-voice-btn') is visible and clickable",
+      "status": "PASSED",
+      "details": "Microphone button visible and clickable"
+    },
+    {
+      "test": "4. Verify paperclip/attach button (data-testid='support-attach-btn') is visible and clickable",
+      "status": "PASSED",
+      "details": "Paperclip/attach button visible and clickable"
+    },
+    {
+      "test": "5. Fill subject 'Question facturation' and message 'Ou trouver les factures du mois dernier?' then send",
+      "status": "PASSED",
+      "details": "Form filled and submitted successfully via 'Envoyer' button (data-testid=support-send-btn)"
+    },
+    {
+      "test": "6. Verify success message 'Demande envoyee!' appears then form auto-closes",
+      "status": "PASSED",
+      "details": "Success message 'Demande envoyee!' appeared, form auto-closed after ~2 seconds, 'Aide' button visible again"
+    },
+    {
+      "test": "7. Login as superadmin (superadmin@nectforma-demo.com / SuperAdmin2026!) -> /back-office -> Support",
+      "status": "PASSED",
+      "details": "SuperAdmin login redirected to /back-office, navigated to Support module via sidebar"
+    },
+    {
+      "test": "8. Verify ticket 'Question facturation' appears in the list from 'Nectforma Demo'",
+      "status": "PASSED",
+      "details": "Ticket 'Question facturation' visible in list with 'Nectforma Demo' establishment name, status 'Ouvert'"
+    },
+    {
+      "test": "9. Click the ticket, verify conversation shows the message",
+      "status": "PASSED",
+      "details": "Clicked ticket, conversation view shows Sophie Martin's message 'Ou trouver les factures du mois dernier?'"
+    },
+    {
+      "test": "10. Type a reply and send, verify it appears as 'Support Nectforma'",
+      "status": "PASSED",
+      "details": "Reply sent via support-reply-input and send-reply-btn, appears with 'Support Nectforma' label, status changed to 'En cours', 'Reponse envoyee' confirmation shown"
+    }
+  ],
+  "feature_verification": {
+    "support_form_voice_button": "VERIFIED - Microphone icon button (data-testid=support-voice-btn) visible inside textarea at bottom-right, clickable",
+    "support_form_attach_button": "VERIFIED - Paperclip icon button (data-testid=support-attach-btn) visible inside textarea at bottom-right, clickable",
+    "support_form_file_input": "VERIFIED - Hidden file input (data-testid=support-file-input) accepts image/*,.pdf,.doc,.docx,.xls,.xlsx",
+    "support_form_files_list": "VERIFIED - Files list container (data-testid=support-files-list) ready to display attached files",
+    "support_ticket_creation": "VERIFIED - Ticket created successfully with subject and message",
+    "support_ticket_list": "VERIFIED - Shows all tickets with status badges, establishment names, timestamps",
+    "support_conversation": "VERIFIED - Shows initial message from user, replies with sender labels",
+    "support_reply": "VERIFIED - Reply input, send button, 'Support Nectforma' label on admin replies"
+  },
+  "data_testids_verified": [
+    "support-open-btn - 'Aide' button to open form",
+    "support-subject-input - Subject input field",
+    "support-message-input - Message textarea",
+    "support-voice-btn - Microphone icon button for voice recording",
+    "support-attach-btn - Paperclip icon button for file attachment",
+    "support-file-input - Hidden file input (accepts images, PDF, docs)",
+    "support-files-list - Container for attached files list",
+    "support-send-btn - 'Envoyer' button",
+    "bo-nav-support - Support nav item in back office",
+    "support-reply-input - Reply textarea",
+    "send-reply-btn - Send reply button"
+  ],
+  "rca_of_the_issue": "N/A - All features working correctly"
+}

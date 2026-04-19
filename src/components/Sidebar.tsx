@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, 
@@ -22,6 +22,12 @@ import {
   Video,
   Send,
   Loader2,
+  Paperclip,
+  Mic,
+  MicOff,
+  X,
+  FileText,
+  Image as ImageIcon,
 } from 'lucide-react';
 import {
   Sidebar as SidebarWrapper,
@@ -67,17 +73,82 @@ const Sidebar = () => {
   const [supportMessage, setSupportMessage] = useState('');
   const [sendingSupport, setSendingSupport] = useState(false);
   const [supportSent, setSupportSent] = useState(false);
+  const [supportFiles, setSupportFiles] = useState<{ name: string; url: string; type: string }[]>([]);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<any>(null);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploadingFile(true);
+    try {
+      for (const file of Array.from(files)) {
+        const ext = file.name.split('.').pop();
+        const path = `support/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error } = await supabase.storage.from('avatars').upload(path, file);
+        if (error) { console.error(error); continue; }
+        const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+        setSupportFiles(prev => [...prev, { name: file.name, url: data.publicUrl, type: file.type }]);
+      }
+    } catch (err) { console.error(err); }
+    finally { setUploadingFile(false); if (fileInputRef.current) fileInputRef.current.value = ''; }
+  };
+
+  const removeFile = (idx: number) => setSupportFiles(prev => prev.filter((_, i) => i !== idx));
+
+  const toggleVoiceRecording = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) { alert('La saisie vocale n\'est pas supportee par votre navigateur.'); return; }
+
+    if (isRecording && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'fr-FR';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognitionRef.current = recognition;
+
+    let finalTranscript = '';
+    recognition.onresult = (event: any) => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript + ' ';
+        } else {
+          interim += event.results[i][0].transcript;
+        }
+      }
+      setSupportMessage(prev => {
+        const base = prev.replace(/\[...\]$/, '').trimEnd();
+        const combined = base ? `${base} ${finalTranscript}${interim ? `[...]` : ''}` : `${finalTranscript}${interim ? `[...]` : ''}`;
+        return combined.trimStart();
+      });
+    };
+    recognition.onerror = () => setIsRecording(false);
+    recognition.onend = () => setIsRecording(false);
+    recognition.start();
+    setIsRecording(true);
+  };
 
   const handleSendSupport = async () => {
     if (!supportSubject.trim() || !supportMessage.trim()) return;
     setSendingSupport(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      const description = supportFiles.length > 0
+        ? `${supportMessage}\n\n---\nPieces jointes:\n${supportFiles.map(f => `- [${f.name}](${f.url})`).join('\n')}`
+        : supportMessage;
       await supabase.from('support_tickets').insert({
         establishment_id: establishment?.id || null,
         created_by: user?.id,
         subject: supportSubject,
-        description: supportMessage,
+        description,
         status: 'open',
         priority: 'medium',
         category: 'general',
@@ -85,6 +156,7 @@ const Sidebar = () => {
       setSupportSent(true);
       setSupportSubject('');
       setSupportMessage('');
+      setSupportFiles([]);
       setTimeout(() => { setSupportSent(false); setShowSupport(false); }, 2000);
     } catch (e) {
       console.error(e);
@@ -318,7 +390,7 @@ const Sidebar = () => {
                   <>
                     <div className="flex items-center justify-between">
                       <p className="text-[13px] font-bold text-white">Contacter le support</p>
-                      <button onClick={() => setShowSupport(false)} className="text-white/40 hover:text-white text-xs">Fermer</button>
+                      <button onClick={() => { setShowSupport(false); setSupportFiles([]); }} className="text-white/40 hover:text-white text-xs">Fermer</button>
                     </div>
                     <input
                       type="text"
@@ -328,14 +400,57 @@ const Sidebar = () => {
                       className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder:text-white/30 text-xs focus:outline-none focus:ring-1 focus:ring-golden"
                       data-testid="support-subject-input"
                     />
-                    <textarea
-                      value={supportMessage}
-                      onChange={e => setSupportMessage(e.target.value)}
-                      placeholder="Decrivez votre probleme ou question..."
-                      rows={3}
-                      className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder:text-white/30 text-xs focus:outline-none focus:ring-1 focus:ring-golden resize-none"
-                      data-testid="support-message-input"
-                    />
+                    <div className="relative">
+                      <textarea
+                        value={supportMessage}
+                        onChange={e => setSupportMessage(e.target.value)}
+                        placeholder="Decrivez votre probleme ou question..."
+                        rows={3}
+                        className="w-full px-3 py-2 pr-16 rounded-lg bg-white/10 border border-white/10 text-white placeholder:text-white/30 text-xs focus:outline-none focus:ring-1 focus:ring-golden resize-none"
+                        data-testid="support-message-input"
+                      />
+                      {/* Voice + File buttons inside textarea */}
+                      <div className="absolute bottom-2 right-2 flex gap-1">
+                        <button
+                          type="button"
+                          onClick={toggleVoiceRecording}
+                          className={`p-1.5 rounded-lg transition-colors ${isRecording ? 'bg-red-500/30 text-red-400 animate-pulse' : 'bg-white/10 text-white/50 hover:text-white/80 hover:bg-white/20'}`}
+                          title={isRecording ? 'Arreter l\'enregistrement' : 'Saisie vocale'}
+                          data-testid="support-voice-btn"
+                        >
+                          {isRecording ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="p-1.5 rounded-lg bg-white/10 text-white/50 hover:text-white/80 hover:bg-white/20 transition-colors"
+                          title="Joindre un fichier"
+                          data-testid="support-attach-btn"
+                        >
+                          {uploadingFile ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Paperclip className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                      <input ref={fileInputRef} type="file" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" onChange={handleFileUpload} className="hidden" data-testid="support-file-input" />
+                    </div>
+                    {/* Recording indicator */}
+                    {isRecording && (
+                      <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20">
+                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                        <span className="text-[10px] text-red-400 font-medium">Ecoute en cours... Parlez</span>
+                      </div>
+                    )}
+                    {/* Attached files */}
+                    {supportFiles.length > 0 && (
+                      <div className="space-y-1" data-testid="support-files-list">
+                        {supportFiles.map((f, idx) => (
+                          <div key={idx} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                            {f.type.startsWith('image/') ? <ImageIcon className="w-3 h-3 text-blue-400 shrink-0" /> : <FileText className="w-3 h-3 text-amber-400 shrink-0" />}
+                            <span className="text-[10px] text-white/70 truncate flex-1">{f.name}</span>
+                            <button onClick={() => removeFile(idx)} className="text-white/30 hover:text-red-400 shrink-0"><X className="w-3 h-3" /></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <button
                       onClick={handleSendSupport}
                       disabled={!supportSubject.trim() || !supportMessage.trim() || sendingSupport}
@@ -343,7 +458,7 @@ const Sidebar = () => {
                       data-testid="support-send-btn"
                     >
                       {sendingSupport ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                      Envoyer
+                      Envoyer{supportFiles.length > 0 ? ` (${supportFiles.length} fichier${supportFiles.length > 1 ? 's' : ''})` : ''}
                     </button>
                   </>
                 )}
