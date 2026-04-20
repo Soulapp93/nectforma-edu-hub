@@ -10,6 +10,7 @@ import StudentCorrectionViewModal from './StudentCorrectionViewModal';
 import AssignmentDetailModal from './AssignmentDetailModal';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { getEvaluationMeta } from '@/utils/evaluationTypes';
 
 interface ModuleAssignmentsTabProps {
   moduleId: string;
@@ -94,19 +95,19 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
   const handleCreateSuccess = () => {
     fetchAssignments();
     setShowCreateModal(false);
-    toast.success('Devoir créé avec succès');
+    toast.success('Évaluation créée avec succès');
   };
 
   const handleEditSuccess = () => {
     fetchAssignments();
     setShowEditModal(null);
-    toast.success('Devoir modifié avec succès');
+    toast.success('Évaluation modifiée avec succès');
   };
 
   const handleSubmitSuccess = () => {
     fetchAssignments();
     setShowSubmitModal(null);
-    toast.success('Devoir rendu avec succès');
+    toast.success('Travail rendu avec succès');
   };
 
   const handleDelete = async (id: string) => {
@@ -114,7 +115,7 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
       try {
         await assignmentService.deleteAssignment(id);
         fetchAssignments();
-        toast.success('Devoir supprimé');
+        toast.success('Évaluation supprimée');
       } catch (error) {
         console.error('Erreur lors de la suppression:', error);
         toast.error('Erreur lors de la suppression');
@@ -158,12 +159,12 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-foreground">Devoirs & Évaluations</h2>
+        <h2 className="text-xl font-bold text-foreground">Évaluations</h2>
         
         {canCreateAssignment && (
           <Button onClick={() => setShowCreateModal(true)} className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 shadow-lg">
             <Plus className="h-4 w-4 mr-2" />
-            Créer un devoir
+            Nouvelle évaluation
           </Button>
         )}
       </div>
@@ -202,10 +203,20 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
                     )}
                     
                     <div className="flex items-center flex-wrap gap-3 text-sm text-muted-foreground">
-                      <span className="flex items-center">
-                        <FileText className="h-4 w-4 mr-1" />
-                        {assignment.assignment_type}
-                      </span>
+                      {(() => {
+                        const meta = getEvaluationMeta(assignment.assignment_type);
+                        const Icon = meta.icon;
+                        return (
+                          <span
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border"
+                            style={{ color: meta.color, borderColor: `${meta.color}40`, backgroundColor: `${meta.color}12` }}
+                            data-testid={`assignment-type-badge-${assignment.id}`}
+                          >
+                            <Icon className="h-3 w-3" />
+                            {meta.label}
+                          </span>
+                        );
+                      })()}
                       {assignment.due_date && (
                         <span className={`flex items-center ${isOverdue && !hasSubmitted ? 'text-destructive' : ''}`}>
                           <Calendar className="h-4 w-4 mr-1" />

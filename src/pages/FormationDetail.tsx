@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Clock, Users, Eye, Edit, FileText, GraduationCap, BookText, UsersRound } from 'lucide-react';
+import { ArrowLeft, BookOpen, Clock, Users, Eye, Edit, FileText, GraduationCap, BookText, UsersRound, FolderOpen, ClipboardCheck } from 'lucide-react';
 import { formationService, Formation } from '@/services/formationService';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ import ModuleAssignmentsTab from '@/components/module/ModuleAssignmentsTab';
 import ModuleCorrectionsTab from '@/components/module/ModuleCorrectionsTab';
 import ModuleDocumentsTab from '@/components/module/ModuleDocumentsTab';
 import ModuleGroupsTab from '@/components/module/ModuleGroupsTab';
+import ModuleTasksTab from '@/components/module/ModuleTasksTab';
 import CreateAttendanceSessionModal from '@/components/emargement/CreateAttendanceSessionModal';
 import FormationParticipantsModal from '@/components/administration/FormationParticipantsModal';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -293,40 +294,58 @@ const FormationDetail = () => {
                     <AccordionContent className="px-0 pb-0">
                       <div className="border-t border-primary/10 bg-gradient-to-b from-muted/20 to-transparent">
                         <Tabs defaultValue="content" className="w-full">
-                          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 gap-3 !bg-transparent !p-4 !h-auto !rounded-none !border-0 !shadow-none">
+                          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3 !bg-transparent !p-4 !h-auto !rounded-none !border-0 !shadow-none">
                             <TabsTrigger
                               value="content"
-                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-4 py-3 text-xs sm:text-sm font-medium transition-all"
+                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
+                              data-testid="tab-content"
                             >
-                              <BookOpen className="h-4 w-4 mr-2" />
-                              Contenu
-                            </TabsTrigger>
-                            <TabsTrigger
-                              value="assignments"
-                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-4 py-3 text-xs sm:text-sm font-medium transition-all"
-                            >
-                              <Edit className="h-4 w-4 mr-2" />
-                              Devoirs
-                            </TabsTrigger>
-                            <TabsTrigger
-                              value="corrections"
-                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-4 py-3 text-xs sm:text-sm font-medium transition-all"
-                            >
-                              <Users className="h-4 w-4 mr-2" />
-                              Corrections
+                              <BookOpen className="h-4 w-4 sm:mr-2" />
+                              <span className="hidden sm:inline">Support de cours</span>
+                              <span className="sm:hidden">Support</span>
                             </TabsTrigger>
                             <TabsTrigger
                               value="documents"
-                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-4 py-3 text-xs sm:text-sm font-medium transition-all"
+                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
+                              data-testid="tab-documents"
                             >
-                              <BookOpen className="h-4 w-4 mr-2" />
-                              Documents
+                              <FolderOpen className="h-4 w-4 sm:mr-2" />
+                              <span className="hidden sm:inline">Ressources péd.</span>
+                              <span className="sm:hidden">Ressources</span>
+                            </TabsTrigger>
+                            <TabsTrigger
+                              value="tasks"
+                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
+                              data-testid="tab-tasks"
+                            >
+                              <ClipboardCheck className="h-4 w-4 sm:mr-2" />
+                              <span className="hidden sm:inline">Travail à faire</span>
+                              <span className="sm:hidden">Travail</span>
+                            </TabsTrigger>
+                            <TabsTrigger
+                              value="assignments"
+                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
+                              data-testid="tab-assignments"
+                            >
+                              <FileText className="h-4 w-4 sm:mr-2" />
+                              <span className="hidden sm:inline">Évaluations</span>
+                              <span className="sm:hidden">Éval.</span>
+                            </TabsTrigger>
+                            <TabsTrigger
+                              value="corrections"
+                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
+                              data-testid="tab-corrections"
+                            >
+                              <Edit className="h-4 w-4 sm:mr-2" />
+                              <span className="hidden sm:inline">Correction éval.</span>
+                              <span className="sm:hidden">Corr.</span>
                             </TabsTrigger>
                             <TabsTrigger
                               value="groups"
-                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-4 py-3 text-xs sm:text-sm font-medium transition-all"
+                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
+                              data-testid="tab-groups"
                             >
-                              <UsersRound className="h-4 w-4 mr-2" />
+                              <UsersRound className="h-4 w-4 sm:mr-2" />
                               Groupes
                             </TabsTrigger>
                           </TabsList>
@@ -335,7 +354,15 @@ const FormationDetail = () => {
                             <TabsContent value="content" className="mt-0">
                               <ModuleContentTab moduleId={module.id} />
                             </TabsContent>
-                            
+
+                            <TabsContent value="documents" className="mt-0">
+                              <ModuleDocumentsTab moduleId={module.id} />
+                            </TabsContent>
+
+                            <TabsContent value="tasks" className="mt-0">
+                              <ModuleTasksTab moduleId={module.id} />
+                            </TabsContent>
+
                             <TabsContent value="assignments" className="mt-0">
                               <ModuleAssignmentsTab moduleId={module.id} />
                             </TabsContent>
@@ -343,11 +370,7 @@ const FormationDetail = () => {
                             <TabsContent value="corrections" className="mt-0">
                               <ModuleCorrectionsTab moduleId={module.id} />
                             </TabsContent>
-                            
-                            <TabsContent value="documents" className="mt-0">
-                              <ModuleDocumentsTab moduleId={module.id} />
-                            </TabsContent>
-                            
+
                             <TabsContent value="groups" className="mt-0">
                               <ModuleGroupsTab moduleId={module.id} formationId={formation?.id || ''} />
                             </TabsContent>

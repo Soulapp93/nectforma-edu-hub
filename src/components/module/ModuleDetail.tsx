@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ArrowLeft, BookOpen, FileText, Edit, FolderOpen, Clock, Users } from 'lucide-react';
+import { ArrowLeft, BookOpen, FileText, Edit, FolderOpen, Clock, Users, ClipboardCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import ModuleAssignmentsTab from './ModuleAssignmentsTab';
 import ModuleCorrectionsTab from './ModuleCorrectionsTab';
 import ModuleDocumentsTab from './ModuleDocumentsTab';
 import ModuleGroupsTab from './ModuleGroupsTab';
+import ModuleTasksTab from './ModuleTasksTab';
 
 interface ModuleDetailProps {
   module: {
@@ -61,40 +62,58 @@ const ModuleDetail: React.FC<ModuleDetailProps> = ({ module, formationColor, for
       <div className="px-4 py-4">
         <Tabs defaultValue="content" className="space-y-4">
           {/* Tab buttons with rounded outline design - grid layout like reference */}
-          <TabsList className="grid grid-cols-3 sm:grid-cols-5 gap-3 bg-transparent h-auto p-0 w-full max-w-xl mx-auto">
-            <TabsTrigger 
+          <TabsList className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3 bg-transparent h-auto p-0 w-full max-w-3xl mx-auto">
+            <TabsTrigger
               value="content"
-              className="rounded-full border-2 border-[#8B5CF6] text-[#8B5CF6] bg-white hover:bg-purple-50 data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:border-[#8B5CF6] px-4 py-3 text-sm font-medium transition-all"
+              className="rounded-full border-2 border-[#8B5CF6] text-[#8B5CF6] bg-white hover:bg-purple-50 data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:border-[#8B5CF6] px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
+              data-testid="tab-content"
             >
-              <BookOpen className="h-4 w-4 mr-2" />
-              Contenu
+              <BookOpen className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Support de cours</span>
+              <span className="sm:hidden">Support</span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="assignments"
-              className="rounded-full border-2 border-[#8B5CF6] text-[#8B5CF6] bg-white hover:bg-purple-50 data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:border-[#8B5CF6] px-4 py-3 text-sm font-medium transition-all"
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Devoirs
-            </TabsTrigger>
-            <TabsTrigger 
-              value="corrections"
-              className="rounded-full border-2 border-[#8B5CF6] text-[#8B5CF6] bg-white hover:bg-purple-50 data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:border-[#8B5CF6] px-4 py-3 text-sm font-medium transition-all"
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              Corr.
-            </TabsTrigger>
-            <TabsTrigger 
+            <TabsTrigger
               value="documents"
-              className="rounded-full border-2 border-[#8B5CF6] text-[#8B5CF6] bg-white hover:bg-purple-50 data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:border-[#8B5CF6] px-4 py-3 text-sm font-medium transition-all"
+              className="rounded-full border-2 border-[#8B5CF6] text-[#8B5CF6] bg-white hover:bg-purple-50 data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:border-[#8B5CF6] px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
+              data-testid="tab-documents"
             >
-              <FolderOpen className="h-4 w-4 mr-2" />
-              Docs
+              <FolderOpen className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Ressources péd.</span>
+              <span className="sm:hidden">Ressources</span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="groups"
-              className="rounded-full border-2 border-[#8B5CF6] text-[#8B5CF6] bg-white hover:bg-purple-50 data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:border-[#8B5CF6] px-4 py-3 text-sm font-medium transition-all"
+            <TabsTrigger
+              value="tasks"
+              className="rounded-full border-2 border-[#8B5CF6] text-[#8B5CF6] bg-white hover:bg-purple-50 data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:border-[#8B5CF6] px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
+              data-testid="tab-tasks"
             >
-              <Users className="h-4 w-4 mr-2" />
+              <ClipboardCheck className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Travail à faire</span>
+              <span className="sm:hidden">Travail</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="assignments"
+              className="rounded-full border-2 border-[#8B5CF6] text-[#8B5CF6] bg-white hover:bg-purple-50 data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:border-[#8B5CF6] px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
+              data-testid="tab-assignments"
+            >
+              <FileText className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Évaluations</span>
+              <span className="sm:hidden">Éval.</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="corrections"
+              className="rounded-full border-2 border-[#8B5CF6] text-[#8B5CF6] bg-white hover:bg-purple-50 data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:border-[#8B5CF6] px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
+              data-testid="tab-corrections"
+            >
+              <Edit className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Correction éval.</span>
+              <span className="sm:hidden">Corr.</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="groups"
+              className="rounded-full border-2 border-[#8B5CF6] text-[#8B5CF6] bg-white hover:bg-purple-50 data-[state=active]:bg-[#8B5CF6] data-[state=active]:text-white data-[state=active]:border-[#8B5CF6] px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
+              data-testid="tab-groups"
+            >
+              <Users className="h-4 w-4 sm:mr-2" />
               Groupes
             </TabsTrigger>
           </TabsList>
@@ -103,16 +122,20 @@ const ModuleDetail: React.FC<ModuleDetailProps> = ({ module, formationColor, for
             <ModuleContentTab moduleId={module.id} />
           </TabsContent>
 
+          <TabsContent value="documents" className="mt-4">
+            <ModuleDocumentsTab moduleId={module.id} />
+          </TabsContent>
+
+          <TabsContent value="tasks" className="mt-4">
+            <ModuleTasksTab moduleId={module.id} />
+          </TabsContent>
+
           <TabsContent value="assignments" className="mt-4">
             <ModuleAssignmentsTab moduleId={module.id} />
           </TabsContent>
 
           <TabsContent value="corrections" className="mt-4">
             <ModuleCorrectionsTab moduleId={module.id} />
-          </TabsContent>
-
-          <TabsContent value="documents" className="mt-4">
-            <ModuleDocumentsTab moduleId={module.id} />
           </TabsContent>
 
           <TabsContent value="groups" className="mt-4">

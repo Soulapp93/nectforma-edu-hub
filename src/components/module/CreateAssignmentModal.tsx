@@ -9,7 +9,7 @@ import { DateTimePicker } from '@/components/ui/datetime-picker';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { EVALUATION_TYPE_META, EVALUATION_TYPE_ORDER, type EvaluationType } from '@/utils/evaluationTypes';
 import {
   Dialog,
   DialogContent,
@@ -37,7 +37,7 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    assignment_type: 'devoir' as 'devoir' | 'evaluation',
+    assignment_type: 'devoir_maison' as EvaluationType,
     due_date: '',
     max_points: 100
   });
@@ -51,7 +51,7 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
       setFormData({
         title: editAssignment.title,
         description: editAssignment.description || '',
-        assignment_type: editAssignment.assignment_type as 'devoir' | 'evaluation',
+        assignment_type: (editAssignment.assignment_type as EvaluationType) || 'devoir_maison',
         due_date: editAssignment.due_date ? new Date(editAssignment.due_date).toISOString().slice(0, 16) : '',
         max_points: editAssignment.max_points
       });
@@ -60,7 +60,7 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
       setFormData({
         title: '',
         description: '',
-        assignment_type: 'devoir',
+        assignment_type: 'devoir_maison',
         due_date: '',
         max_points: 100
       });
@@ -124,12 +124,12 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
         <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4 border-b">
           <DialogTitle className="flex items-center gap-2 text-lg">
             <ClipboardList className="h-5 w-5 text-primary" />
-            {editAssignment ? 'Modifier le devoir' : 'Créer un devoir'}
+            {editAssignment ? 'Modifier l\'évaluation' : 'Nouvelle évaluation'}
           </DialogTitle>
           <DialogDescription>
             {editAssignment 
               ? 'Modifiez les informations du devoir existant.'
-              : 'Remplissez les informations pour créer un nouveau devoir ou évaluation.'
+              : 'Remplissez les informations pour créer une nouvelle évaluation.'
             }
           </DialogDescription>
         </DialogHeader>
@@ -152,36 +152,39 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
               />
             </div>
 
-            {/* Type */}
+            {/* Type - grille cliquable 8 options */}
             <div className="space-y-2">
               <Label className="flex items-center gap-1.5">
                 <ClipboardList className="h-4 w-4 text-muted-foreground" />
-                Type <span className="text-destructive">*</span>
+                Type d'évaluation <span className="text-destructive">*</span>
               </Label>
-              <Select
-                value={formData.assignment_type}
-                onValueChange={(value: 'devoir' | 'evaluation') => 
-                  setFormData({ ...formData, assignment_type: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner le type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="devoir">
-                    <span className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      Devoir
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="evaluation">
-                    <span className="flex items-center gap-2">
-                      <Award className="h-4 w-4" />
-                      Évaluation
-                    </span>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {EVALUATION_TYPE_ORDER.map((t) => {
+                  const meta = EVALUATION_TYPE_META[t];
+                  const Icon = meta.icon;
+                  const active = formData.assignment_type === t;
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, assignment_type: t })}
+                      data-testid={`eval-type-${t}`}
+                      className={`p-2.5 rounded-xl border-2 transition-all flex flex-col items-center gap-1.5 min-h-[78px] ${
+                        active ? 'shadow-md scale-[1.02]' : 'border-border hover:border-foreground/40 bg-card'
+                      }`}
+                      style={active ? { backgroundColor: `${meta.color}15`, borderColor: meta.color } : undefined}
+                    >
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: `${meta.color}20` }}
+                      >
+                        <Icon className="h-[18px] w-[18px]" style={{ color: meta.color }} />
+                      </div>
+                      <span className="text-[11px] font-semibold text-center leading-tight">{meta.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Description */}
@@ -272,7 +275,7 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
                 ) : (
                   <>
                     <ClipboardList className="h-4 w-4" />
-                    {editAssignment ? 'Modifier' : 'Créer le devoir'}
+                    {editAssignment ? 'Modifier' : 'Créer l\'évaluation'}
                   </>
                 )}
               </Button>

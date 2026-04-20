@@ -1,0 +1,58 @@
+{
+  "summary": "Test des 3 nouvelles fonctionnalites module: (1) renommage des 6 onglets, (2) nouvel onglet Travail a faire avec CRUD, (3) modal evaluation a 8 types. 6 tabs OK, CRUD task OK end-to-end (create/toggle done/edit/delete + toast + persistence DB). MAIS BUG CRITIQUE detecte sur la creation d'evaluation avec un des 7 NOUVEAUX types (examen_blanc, controle_continu, devoir_surveille, examen_final, partiel, rattrapage, autre): le backend Postgres rejette avec erreur 400 / code 23514 violation CHECK constraint 'module_assignments_assignment_type_check'. Cette contrainte autorise uniquement ('devoir','evaluation') alors que le frontend envoie les nouveaux libelles. La MIGRATION DB pour mettre a jour le CHECK constraint est MANQUANTE. Seul 'devoir_maison' (mappe peut-etre vers 'devoir'?) ou 'autre' (peut-etre 'evaluation'?) ne sont PAS testes mais selon le code ils echouent egalement. Test etudiant non execute jusqu'au bout (timeout sur eval-type-rattrapage car modal toujours ouvert apres echec).",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "INSERT module_assignments (RPC/Supabase)", "issue": "CHECK constraint 'module_assignments_assignment_type_check' n'autorise que ('devoir','evaluation') mais le frontend envoie examen_blanc/controle_continu/devoir_surveille/examen_final/partiel/rattrapage/devoir_maison/autre. Code 23514, HTTP 400. Migration pour etendre la liste des valeurs autorisees est manquante.", "priority": "CRITICAL"}
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Creation evaluation 8 types", "issue": "Modal s'ouvre, 8 boutons type cliquables avec border orange OK, mais submit echoue silencieusement cote UI (toast erreur PEU visible) car backend rejette avec contrainte CHECK. Pas de pre-validation cote frontend ni de mapping de l'enum.", "affected_selectors": ["eval-type-examen_blanc","eval-type-controle_continu","eval-type-devoir_surveille","eval-type-examen_final","eval-type-partiel","eval-type-rattrapage","eval-type-devoir_maison","eval-type-autre"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_39.json"],
+  "action_items": [
+    "CRITIQUE: Creer une migration Supabase pour ALTER TABLE module_assignments DROP CONSTRAINT module_assignments_assignment_type_check, puis ADD CONSTRAINT avec la nouvelle liste: CHECK (assignment_type IN ('devoir_maison','controle_continu','devoir_surveille','examen_blanc','examen_final','partiel','rattrapage','autre')). Verifier aussi que les anciennes lignes 'devoir'/'evaluation' soient migrees vers le nouvel enum (UPDATE ... SET assignment_type='devoir_maison' WHERE assignment_type='devoir' par exemple).",
+    "CRITIQUE: verifier le mapping cote frontend dans CreateAssignmentModal.tsx / evaluationTypes.ts pour s'assurer que la valeur envoyee correspond bien aux values du nouveau CHECK.",
+    "Ameliorer le toast erreur pour qu'il affiche un message plus clair que l'erreur Postgres brute (ex: 'Type d'evaluation invalide').",
+    "Apres fix migration: re-tester creation des 8 types + verifier le badge orange/Orange vif et la coexistence dans la liste."
+  ],
+  "critical_code_review_comments": [
+    "Migration 20260420010000_module_tasks.sql: OK, table creee, RLS coherent (SELECT pour membres etablissement, ALL reserve AdminPrincipal/Admin/Formateur). 11 colonnes attendues toutes presentes en DB.",
+    "ModuleTasksTab + CreateTaskModal: code propre, data-testid bien places, etat 'done' en localStorage (cle nect-module-task-done) - rappel: pas de persistance multi-device pour le 'fait', acceptable pour MVP.",
+    "BUG IMPACT: la fonctionnalite 'grille 8 types d'evaluation' est INUTILISABLE en production tant que la migration DB n'est pas appliquee. C'est une regression majeure - la creation d'evaluation est completement cassee."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "50% (DB module_tasks OK, RLS OK; mais module_assignments CHECK constraint pas mis a jour)",
+    "frontend": "85% (6 tabs OK, CRUD task complet OK, modal eval s'ouvre + 8 types cliquables OK, mais submit eval cassé a cause du backend)"
+  },
+  "test_credentials": "admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "Aucune donnee TEST_ persistee (la task TEST_ a ete supprimee via UI; les eval TEST_ ont echoue a la creation a cause du bug). Cleanup DELETE FROM module_tasks/module_assignments WHERE title LIKE 'TEST_%' execute en fin de test - 0 row retournee.",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Resultats valides cette iteration: (1) 6 tabs avec libelles renommes confirmes presents (tab-content=Support de cours, tab-documents=Ressources ped., tab-tasks=Travail a faire, tab-assignments=Evaluations, tab-corrections=Correction eval., tab-groups=Groupes); (2) CRUD task end-to-end fonctionne (create avec priority high + toast 'Travail a faire cree', toggle done = line-through + opacity 60%, edit = pre-rempli + update OK, delete = card disparait); (3) Modal Nouvelle evaluation affiche bien les 8 boutons type cliquables (eval-type-* tous presents) et la border orange apparait sur la selection. Bug bloquant a fixer: CHECK constraint module_assignments_assignment_type_check autorise seulement ('devoir','evaluation'). Une fois fix applique, retest: creer eval examen_blanc + rattrapage, verifier les 2 cards avec assignment-type-badge-<id>, puis tester role Etudiant (etudiant1@nectforma-demo.com / NectDemo2026!) sur meme formation/module pour verifier que tab-tasks visible mais new-task-btn ABSENT (RLS staff only). Formation Rh ID: 0ed6b9d1-bc28-4054-b8b8-9b8a9326b07c. Path: /formations/{id}?from=administration apres clic Pedagogie > Gestion des formations > Voir les promotions (Rh) > Detail.",
+  "rca_of_the_issue": "RCA confirme via Supabase Management API: SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conname='module_assignments_assignment_type_check'; renvoie CHECK ((assignment_type = ANY (ARRAY['devoir'::text, 'evaluation'::text]))). Donc le frontend envoie 'examen_blanc' qui n'est pas dans la liste -> Postgres rejette avec code 23514 + HTTP 400 (visible dans CONSOLE [error] Erreur lors de la sauvegarde + module_assignments_assignment_type_check). Reproduction: login AdminPrincipal, naviguer Formation Rh > module Paie > onglet Evaluations > Nouvelle evaluation > selectionner examen_blanc + saisir titre/description > Creer l'evaluation -> echec. Mitigation: nouvelle migration SQL ALTER TABLE module_assignments DROP CONSTRAINT puis ADD CONSTRAINT avec la nouvelle liste 8 valeurs + UPDATE des lignes existantes pour migrer 'devoir'->'devoir_maison' et 'evaluation'->'examen_final' (ou 'autre' selon la convention metier).",
+  "tests_executed": [
+    {"test":"Login AdminPrincipal","status":"PASSED"},
+    {"test":"Navigation Pedagogie > Gestion des formations > Rh > Detail","status":"PASSED"},
+    {"test":"Module Paie deplie - 6 tabs presents avec bons libelles","status":"PASSED"},
+    {"test":"Tab Travail a faire: module-tasks-tab + new-task-btn visibles","status":"PASSED"},
+    {"test":"Modal create-task-modal s'ouvre","status":"PASSED"},
+    {"test":"Creation task priority=high + toast succes + card affiche","status":"PASSED"},
+    {"test":"Toggle done: line-through + opacity 60%","status":"PASSED"},
+    {"test":"Toggle back: retour etat normal","status":"PASSED"},
+    {"test":"Edit task: modal pre-rempli + nouveau titre persiste","status":"PASSED"},
+    {"test":"Delete task: confirm + card disparait","status":"PASSED"},
+    {"test":"Tab Evaluations: titre + bouton Nouvelle evaluation","status":"PASSED"},
+    {"test":"Modal evaluation: 8 boutons eval-type-* presents","status":"PASSED"},
+    {"test":"Selection examen_blanc -> bordure orange","status":"PASSED"},
+    {"test":"Submit evaluation examen_blanc","status":"FAILED - CHECK constraint violation 23514"},
+    {"test":"Creation evaluation rattrapage + coexistence 2 cards","status":"NOT EXECUTED - bloque par bug precedent"},
+    {"test":"Verif DB module_tasks structure (11 colonnes)","status":"PASSED via Supabase API"},
+    {"test":"RLS Etudiant: tab-tasks visible sans new-task-btn","status":"NOT COMPLETED - bloque par modal toujours ouvert apres echec submit eval"}
+  ]
+}
