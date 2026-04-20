@@ -25,7 +25,18 @@ export interface ScheduleSlot {
   room?: string;
   color?: string;
   notes?: string;
-  session_type?: string; // 'encadree' | 'autonomie'
+  session_type?: string; // legacy - kept for compat. New slots are always 'encadree'.
+  // --- New fields (2026-04-20) ---
+  slot_kind?: 'course' | 'event';
+  event_type?: EventType | null;
+  event_label?: string | null;
+  event_scope?: 'formation' | 'establishment';
+  is_cancelled?: boolean;
+  cancellation_reason?: string | null;
+  cancelled_at?: string | null;
+  cancelled_by?: string | null;
+  all_day?: boolean;
+  // --- Joined relations ---
   created_at: string;
   updated_at: string;
   formation_modules?: {
@@ -45,6 +56,31 @@ export interface ScheduleSlot {
     };
   };
 }
+
+export type EventType =
+  | 'holiday'
+  | 'closed'
+  | 'public_holiday'
+  | 'open_day'
+  | 'autonomy'
+  | 'mock_exam'
+  | 'final_exam'
+  | 'midterm'
+  | 'makeup'
+  | 'custom';
+
+export const EVENT_TYPE_META: Record<EventType, { label: string; color: string; icon: string }> = {
+  holiday:        { label: 'Congés',              color: '#10B981', icon: 'Palmtree' },
+  closed:         { label: 'Établissement fermé', color: '#6B7280', icon: 'Lock' },
+  public_holiday: { label: 'Jour férié',          color: '#EF4444', icon: 'Flag' },
+  open_day:       { label: 'Portes ouvertes',     color: '#F59E0B', icon: 'DoorOpen' },
+  autonomy:       { label: 'Autonomie',           color: '#3B82F6', icon: 'BookOpen' },
+  mock_exam:      { label: 'Examen blanc',        color: '#8B5CF6', icon: 'FileText' },
+  final_exam:     { label: 'Examen final',        color: '#DC2626', icon: 'GraduationCap' },
+  midterm:        { label: 'Partiels',            color: '#EC4899', icon: 'FileCheck' },
+  makeup:         { label: 'Rattrapage',          color: '#F97316', icon: 'RefreshCw' },
+  custom:         { label: 'Autre',               color: '#64748B', icon: 'Sparkles' },
+};
 
 const RETRY_OPTIONS = {
   maxRetries: 3,
@@ -223,6 +259,89 @@ export const scheduleService = {
           .catch(console.error);
       });
     }
+  },
+
+  // Cancel a course (soft cancel - keeps the slot visible but marked as cancelled)
+  async cancelScheduleSlot(id: string, reason: string, userId: string): Promise<ScheduleSlot> {
+    const { data, error } = await (supabase as any)
+      .from('schedule_slots')
+      .update({
+        is_cancelled: true,
+        cancellation_reason: reason,
+        cancelled_at: new Date().toISOString(),
+        cancelled_by: userId,
+      })
+      .eq('id', id)
+      .select(`*, formation_modules(title), users(first_name, last_name)`)
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  // Restore a previously cancelled course
+  async restoreScheduleSlot(id: string): Promise<ScheduleSlot> {
+    const { data, error } = await (supabase as any)
+      .from('schedule_slots')
+      .update({
+        is_cancelled: false,
+        cancellation_reason: null,
+        cancelled_at: null,
+        cancelled_by: null,
+      })
+      .eq('id', id)
+      .select(`*, formation_modules(title), users(first_name, last_name)`)
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  // Create a non-course event (holiday, closed, exams, etc.)
+  async createScheduleEvent(payload: {
+    schedule_id: string;
+    event_type: EventType;
+    event_label?: string;
+    event_scope: 'formation' | 'establishment';
+    date: string;              // start date (single day or range start)
+    end_date?: string;         // optional range end (inclusive)
+    start_time?: string;
+    end_time?: string;
+    all_day: boolean;
+    color?: string;
+    notes?: string;
+  }): Promise<ScheduleSlot[]> {
+    // Build one row per day (inclusive)
+    const startD = new Date(payload.date);
+    const endD = payload.end_date ? new Date(payload.end_date) : startD;
+    if (endD < startD) {
+      throw new Error('La date de fin doit etre posterieure a la date de debut');
+    }
+
+    const rows: any[] = [];
+    const cur = new Date(startD);
+    while (cur <= endD) {
+      rows.push({
+        schedule_id: payload.schedule_id,
+        slot_kind: 'event',
+        event_type: payload.event_type,
+        event_label: payload.event_label || null,
+        event_scope: payload.event_scope,
+        date: cur.toISOString().split('T')[0],
+        start_time: payload.all_day ? '00:00' : (payload.start_time || '09:00'),
+        end_time:   payload.all_day ? '23:59' : (payload.end_time   || '17:00'),
+        all_day: payload.all_day,
+        color: payload.color || null,
+        notes: payload.notes || null,
+        session_type: 'encadree', // legacy field, keep non-null
+      });
+      cur.setDate(cur.getDate() + 1);
+    }
+
+    const { data, error } = await (supabase as any)
+      .from('schedule_slots')
+      .insert(rows)
+      .select('*');
+    if (error) throw error;
+    return data || [];
   },
 
   // Get published schedules for student by formation IDs

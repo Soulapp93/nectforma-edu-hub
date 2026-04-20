@@ -1,0 +1,57 @@
+{
+  "summary": "Tested new Emploi du temps refonte (AddSlotModal simplifie, AddEventModal 10 types, annulation/reactivation). UI structure entierement conforme aux specs (menu split, 10 types evenements, custom label, scope, all-day switch, validations required). MAIS regression CRITIQUE bloquante: le chargement des creneaux echoue avec PGRST201 (relation 'users' ambigue) des l'ouverture de l'emploi du temps. Aucun creneau (existant ou nouvellement cree) ne peut s'afficher dans le calendrier. Impossible donc de valider end-to-end: creation, annulation avec motif, reactivation, badge 'Annule', tag 'EVENEMENT', pattern raye, car le rendu calendrier est cassé.",
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "scheduleService.getScheduleSlots (Supabase PostgREST)", "issue": "PGRST201 Could not embed because more than one relationship was found between schedule_slots and users. L'embed implicite users(...) est ambigu depuis la migration qui a ajoute 'cancelled_by' (en plus de instructor_id). Il faut qualifier l'embed explicitement, ex: users!schedule_slots_instructor_id_fkey(id,first_name,last_name) ou utiliser des aliases distincts pour instructor et cancelled_by. Toast rouge 'Erreur lors du chargement des creneaux' s'affiche des l'arrivee sur la page Modifier l'emploi du temps. Le calendrier reste vide meme apres insertion.", "priority": "CRITICAL"}
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Affichage creneaux + flux cancel/restore + event tags (EVENEMENT, ANNULE, pattern raye)", "issue": "Non verifiable en runtime a cause du PGRST201 ci-dessus - les slots ne sont jamais rendus dans le calendrier apres creation. Le code visuel (strike-through, tags) ne peut pas etre valide tant que la query de chargement echoue.", "affected_selectors": ["slot-card-*","cancelled-badge","cancelled-tag-*","restore-course-btn","cancel-course-btn","event-details-modal"]}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_37.json"],
+  "action_items": [
+    "CRITIQUE: Fixer scheduleService.ts (ligne ~fetch des slots) - remplacer l'embed users(...) par users!schedule_slots_instructor_id_fkey(...) et ajouter un embed separe cancelled_by avec users!schedule_slots_cancelled_by_fkey(...) si besoin d'afficher qui a annule. Meme fix a faire pour createScheduleSlot/createScheduleEvent/cancelScheduleSlot/restoreScheduleSlot si elles font un .select() avec embed users.",
+    "Apres fix, relancer le test end-to-end: creation creneau + annulation avec motif 'Formateur absent' + reactivation + creation evenement holiday (portee formation, 5 jours) + creation evenement custom (portee establishment, non-allday)."
+  ],
+  "critical_code_review_comments": [
+    "AddSlotModal.tsx line 68: setFormData({end_time: selectedSlot.time}) - copie start_time dans end_time ce qui rend end_time=start_time par defaut et declenche la validation 'L'heure de fin doit etre posterieure'. Devrait proposer start_time+1h ou laisser vide.",
+    "AddSlotModal.tsx line 100: session_type:'encadree' est envoye en dur dans le payload alors que la feature spec dit que ce champ a ete retire du formulaire - incoherent; si la colonne n'existe plus en DB cela peut echouer silencieusement ou si CHECK(session_type IN(...)) est plus strict. A nettoyer.",
+    "AddEventModal.tsx: le bouton event-submit-btn utilise un style inline avec EVENT_TYPE_META[type].color pour linear-gradient - risque de fond illisible si la couleur est tres claire; garder un fallback foreground text contrasted.",
+    "AddEventModal.tsx ligne 85-89: end_date est envoye directement, le backend doit generer N slots (un par jour) - verifier que createScheduleEvent iterere bien sur la plage (pas testable a cause du bug PGRST201).",
+    "scheduleService.ts: l'embed 'users(...)' dans la query de liste est la source du PGRST201 - doit etre qualifie explicitement par FK name (!schedule_slots_instructor_id_fkey).",
+    "X-Frame-Options set via <meta> tag - warning navigateur; doit etre envoye en header HTTP cote edge/nginx."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (Supabase direct)",
+    "frontend": "UI structure 100% (menus, modals, 10 types, champs, validations required). Flux end-to-end BLOQUE par PGRST201 -> ~40% global"
+  },
+  "test_credentials": "admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "Aucune donnee persistee creee (le form de creneau a echoue sur validation heure par defaut end_time=start_time; le form evenement a echoue sur date requise - comportements attendus). Aucun TEST_ a nettoyer.",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Verifie a iteration 37: (1) menu split Ajouter (data-testid add-menu-trigger, menu-add-course, menu-add-event) OK. (2) AddSlotModal simplifie OK - plus aucun bouton 'Session encadree/autonomie' (0 occurrences). Champs OK: slot-module-select (liste modules 'Paie' presente), slot-room-input, slot-instructor-select, slot-notes-input, 6 boutons couleur, slot-submit-btn. Validation 'Veuillez remplir tous les champs obligatoires' OK. (3) AddEventModal: 10/10 types presents avec data-testid event-type-{holiday,closed,public_holiday,open_day,autonomy,mock_exam,final_exam,midterm,makeup,custom}. event-scope-formation/establishment, event-allday-switch, event-custom-label (seulement en type=custom), event-submit-btn tous OK. Validation 'Date de debut requise' OK. Ce qui reste a valider APRES fix PGRST201: creation reelle d'un creneau visible dans le calendrier, EventDetailsModal (event-details-modal, cancel-course-btn, cancel-reason-input, confirm-cancel-btn, cancelled-badge, restore-course-btn), banner rouge 'Motif:', tag cancelled-tag-<id> + pattern raye + opacite reduite, creation multi-slots holiday (5 jours lundi-vendredi, tag EVENEMENT en vert #10B981), custom event avec label.",
+  "rca_of_the_issue": "BUG: PGRST201. RCA: la migration 20260420000000_schedule_slots_events_and_cancellation.sql a ajoute la colonne cancelled_by references users(id), en plus de l'existante instructor_id references users(id). Desormais la table schedule_slots a 2 FK vers users. La query PostgREST/Supabase-js dans scheduleService.ts utilise un embed implicite .select('*, users(...)') qui etait non-ambigu avant mais devient ambigu maintenant. Reproduction: login AdminPrincipal -> Pedagogie -> Gestion emplois du temps -> Rh -> Acceder -> Modifier -> le toast 'Erreur lors du chargement des creneaux' apparait + console: PGRST201 details=['schedule_slots_instructor_id_fkey using ...(instructor_id) and users(id)', 'schedule_slots_cancelled_by_fkey using ...(cancelled_by) and users(id)']. Mitigation: dans scheduleService.ts remplacer l'embed users(first_name,last_name,...) par users!schedule_slots_instructor_id_fkey(first_name,last_name,...) pour le formateur; si le champ cancelled_by doit etre affiche, ajouter un deuxieme alias cancelled_by:users!schedule_slots_cancelled_by_fkey(first_name,last_name,...).",
+  "tests_executed": [
+    {"test":"Login AdminPrincipal","status":"PASSED"},
+    {"test":"Navigation Pedagogie > Gestion emplois du temps > Rh > Acceder > Modifier","status":"PASSED"},
+    {"test":"add-menu-trigger visible + menu-add-course + menu-add-event","status":"PASSED"},
+    {"test":"AddSlotModal ouvre (add-slot-modal), aucun bouton 'Session encadree/autonomie' (0 occurrences)","status":"PASSED"},
+    {"test":"Champs module/room/instructor/notes + 6 couleurs + submit presents","status":"PASSED"},
+    {"test":"Validation submit vide slot -> toast 'Veuillez remplir tous les champs obligatoires'","status":"PASSED"},
+    {"test":"AddEventModal ouvre (add-event-modal) avec 10/10 types d'evenements","status":"PASSED"},
+    {"test":"event-scope-formation + event-scope-establishment + event-allday-switch + event-submit-btn presents","status":"PASSED"},
+    {"test":"event-type-custom revele event-custom-label","status":"PASSED"},
+    {"test":"Validation submit event vide -> toast 'Date de debut requise'","status":"PASSED"},
+    {"test":"Chargement des creneaux existants dans le calendrier","status":"FAILED - PGRST201 ambigue users embed"},
+    {"test":"Creation complete d'un creneau visible + slot-card-*","status":"NOT EXECUTED - bloque par PGRST201"},
+    {"test":"Ouverture EventDetailsModal + cancel + reason + restore + badges + tag ANNULE","status":"NOT EXECUTED - bloque par PGRST201"},
+    {"test":"Creation evenement holiday 5 jours avec tag EVENEMENT vert #10B981","status":"NOT EXECUTED - bloque par PGRST201"},
+    {"test":"Creation evenement custom establishment non-allday","status":"NOT EXECUTED - bloque par PGRST201"}
+  ]
+}

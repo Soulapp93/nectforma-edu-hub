@@ -16,7 +16,9 @@ import {
   Edit,
   Trash2,
   Copy,
-  GripVertical
+  GripVertical,
+  Sparkle,
+  CalendarDays
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { EventDetailsModal, ScheduleEvent } from '@/components/schedule/EventDetailsModal';
 import { 
   format, 
@@ -50,6 +53,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { useSchedules } from '@/hooks/useSchedules';
 import { scheduleService, Schedule, ScheduleSlot } from '@/services/scheduleService';
 import AddSlotModal from '@/components/administration/AddSlotModal';
+import AddEventModal from '@/components/administration/AddEventModal';
 import EditSlotModal from '@/components/administration/EditSlotModal';
 import SlotActionMenu from '@/components/administration/SlotActionMenu';
 import ExcelImportModal from '@/components/administration/ExcelImportModal';
@@ -90,6 +94,7 @@ const ScheduleManagement = () => {
   
   // États pour les modales
   const [isAddSlotModalOpen, setIsAddSlotModalOpen] = useState(false);
+  const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
   const [isEditSlotModalOpen, setIsEditSlotModalOpen] = useState(false);
   const [isExcelImportModalOpen, setIsExcelImportModalOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string } | null>(null);
@@ -170,6 +175,14 @@ const ScheduleManagement = () => {
     setTimeout(() => setIsAddSlotModalOpen(true), 0);
   }, [selectedSchedule?.id]);
 
+  const handleOpenAddEventModal = useCallback(() => {
+    if (!selectedSchedule?.id) {
+      toast.error("Veuillez sélectionner un emploi du temps pour ajouter un événement");
+      return;
+    }
+    setTimeout(() => setIsAddEventModalOpen(true), 0);
+  }, [selectedSchedule?.id]);
+
   const handleOpenExcelImportModal = useCallback(() => {
     console.log('Ouverture modale Import Excel', { selectedSchedule: selectedSchedule?.id });
     if (!selectedSchedule?.id) {
@@ -181,19 +194,31 @@ const ScheduleManagement = () => {
 
   // Fonction pour convertir ScheduleSlot en ScheduleEvent pour le modal de détails
   const convertSlotToEvent = useCallback((slot: ScheduleSlot): ScheduleEvent => {
+    const isEvent = slot.slot_kind === 'event';
+    const eventLabel = slot.event_label || '';
+    const title = isEvent
+      ? (eventLabel || 'Événement')
+      : (slot.formation_modules?.title || 'Module non défini');
     return {
       id: slot.id,
-      title: slot.formation_modules?.title || 'Module non défini',
+      title,
       date: new Date(slot.date),
       startTime: slot.start_time,
       endTime: slot.end_time,
-      instructor: slot.users?.first_name && slot.users?.last_name 
+      instructor: slot.users?.first_name && slot.users?.last_name
         ? `${slot.users.first_name} ${slot.users.last_name}`
         : 'Non assigné',
       room: slot.room || 'Non définie',
       formation: selectedSchedule?.formations?.title || '',
       color: slot.color || 'hsl(var(--primary))',
-      description: slot.notes || undefined
+      description: slot.notes || undefined,
+      slotKind: (slot.slot_kind as any) || 'course',
+      eventType: slot.event_type || null,
+      eventLabel: slot.event_label || null,
+      eventScope: (slot.event_scope as any) || 'formation',
+      isCancelled: !!slot.is_cancelled,
+      cancellationReason: slot.cancellation_reason || null,
+      allDay: !!slot.all_day,
     };
   }, [selectedSchedule]);
 
@@ -552,30 +577,41 @@ const ScheduleManagement = () => {
   
    // Prepare week schedule data for week and list views
   const mockSchedule = weekDays.map((date, index) => {
-    const daySlots = slots.filter(slot => 
+    const daySlots = slots.filter(slot =>
       new Date(slot.date).toDateString() === date.toDateString()
     );
-    
+
     const isAutonomie = (slot: ScheduleSlot) => isAutonomieSlot(slot);
-    
+
     return {
       id: (index + 1).toString(),
       day: format(date, 'EEEE', { locale: fr }),
       date: format(date, 'd'),
       actualDate: date, // Ajouter la date réelle pour faciliter l'accès
-      modules: daySlots.map(slot => ({
-        slotId: slot.id, // Ajouter l'ID du slot pour pouvoir le retrouver facilement
-        slot: slot, // Référence directe au slot
-        title: isAutonomie(slot) ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non défini'),
-        time: `${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`,
-        instructor: isAutonomie(slot) ? '' : (slot.users?.first_name && slot.users?.last_name 
-          ? `${slot.users.first_name} ${slot.users.last_name}` 
-          : 'Instructeur non défini'),
-        room: isAutonomie(slot) ? '' : (slot.room || 'Salle non définie'),
-        color: slot.color || '#8B5CF6',
-        sessionType: slot.session_type,
-        notes: slot.notes
-      }))
+      modules: daySlots.map(slot => {
+        const isEventSlot = slot.slot_kind === 'event';
+        const isCancelled = !!slot.is_cancelled;
+        const titleText = isEventSlot
+          ? (slot.event_label || 'Événement')
+          : (isAutonomie(slot) ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non défini'));
+        return {
+          slotId: slot.id,
+          slot: slot,
+          title: titleText,
+          time: slot.all_day ? 'Journée entière' : `${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}`,
+          instructor: (isEventSlot || isAutonomie(slot)) ? '' : (slot.users?.first_name && slot.users?.last_name
+            ? `${slot.users.first_name} ${slot.users.last_name}`
+            : 'Instructeur non défini'),
+          room: (isEventSlot || isAutonomie(slot)) ? '' : (slot.room || 'Salle non définie'),
+          color: slot.color || '#8B5CF6',
+          sessionType: slot.session_type,
+          notes: slot.notes,
+          isEvent: isEventSlot,
+          isCancelled,
+          eventType: slot.event_type || null,
+          eventScope: slot.event_scope || 'formation',
+        };
+      })
     };
   });
 
@@ -750,29 +786,51 @@ const ScheduleManagement = () => {
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <div
-                                draggable={isEditMode}
-                                onDragStart={isEditMode ? (e) => handleDragStart(e, module.slot) : undefined}
+                                draggable={isEditMode && !module.isEvent && !module.isCancelled}
+                                onDragStart={isEditMode && !module.isEvent && !module.isCancelled ? (e) => handleDragStart(e, module.slot) : undefined}
                                 onDragEnd={isEditMode ? handleDragEnd : undefined}
-                                className={`relative p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all duration-200 mb-2 text-white group ${isEditMode ? 'cursor-grab active:cursor-grabbing' : ''} ${draggedSlot?.id === module.slotId ? 'opacity-50 ring-2 ring-primary' : ''}`}
-                                style={{ 
-                                  backgroundColor: module.color || '#8B5CF6'
+                                className={`relative p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all duration-200 mb-2 text-white group ${isEditMode && !module.isEvent && !module.isCancelled ? 'cursor-grab active:cursor-grabbing' : ''} ${draggedSlot?.id === module.slotId ? 'opacity-50 ring-2 ring-primary' : ''} ${module.isCancelled ? 'opacity-60' : ''} ${module.isEvent ? 'ring-1 ring-white/40' : ''}`}
+                                style={{
+                                  backgroundColor: module.color || '#8B5CF6',
+                                  backgroundImage: module.isCancelled
+                                    ? 'repeating-linear-gradient(135deg, rgba(0,0,0,0) 0 6px, rgba(0,0,0,0.18) 6px 12px)'
+                                    : undefined
                                 }}
                                 onClick={() => module.slot && handleSlotClick(module.slot)}
+                                data-testid={`slot-card-${module.slotId}`}
                               >
+                                {/* Status badges */}
+                                <div className="absolute top-1.5 left-1.5 flex gap-1">
+                                  {module.isEvent && (
+                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white/25 text-white backdrop-blur-sm">
+                                      ÉVÉNEMENT
+                                    </span>
+                                  )}
+                                  {module.isCancelled && (
+                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-600 text-white" data-testid={`cancelled-tag-${module.slotId}`}>
+                                      ANNULÉ
+                                    </span>
+                                  )}
+                                </div>
                                 {/* Drag handle indicator */}
-                                {isEditMode && (
+                                {isEditMode && !module.isEvent && !module.isCancelled && (
                                   <div className="absolute top-2 right-2 opacity-50 group-hover:opacity-100 transition-opacity">
                                     <GripVertical className="h-4 w-4 text-white/70" />
                                   </div>
                                 )}
-                                
-                                <div>
-                                  <h4 className="font-semibold text-white text-sm mb-2 pr-6">
-                                    {isAutonomieSlot(module.slot) ? 'AUTONOMIE' : module.title}
+
+                                <div className={module.isEvent || module.isCancelled ? 'mt-4' : ''}>
+                                  <h4 className={`font-semibold text-white text-sm mb-2 pr-6 ${module.isCancelled ? 'line-through' : ''}`}>
+                                    {isAutonomieSlot(module.slot) && !module.isEvent ? 'AUTONOMIE' : module.title}
                                   </h4>
 
-                                  {/* Autonomie: uniquement titre + horaire (sans salle/formateur) */}
-                                  {isAutonomieSlot(module.slot) ? (
+                                  {/* Event: just time + optional scope */}
+                                  {module.isEvent ? (
+                                    <div className="flex items-center text-xs text-white/90">
+                                      <Clock className="h-3 w-3 mr-1 text-white/80" />
+                                      {module.time}
+                                    </div>
+                                  ) : isAutonomieSlot(module.slot) ? (
                                     <div className="flex items-center text-xs text-white/90">
                                       <Clock className="h-3 w-3 mr-1 text-white/80" />
                                       {module.time}
@@ -948,16 +1006,37 @@ const ScheduleManagement = () => {
             <div className="flex items-center gap-2 flex-wrap justify-end">
               {isEditMode ? (
                 <>
-                  <Button 
-                    onClick={handleOpenAddSlotModal}
-                    disabled={!selectedSchedule?.id}
-                    variant="premium"
-                    size="sm"
-                    className="shadow-lg hover:shadow-xl transition-all text-xs"
-                  >
-                    <Plus className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Ajouter un créneau</span>
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        disabled={!selectedSchedule?.id}
+                        variant="premium"
+                        size="sm"
+                        className="shadow-lg hover:shadow-xl transition-all text-xs"
+                        data-testid="add-menu-trigger"
+                      >
+                        <Plus className="h-4 w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Ajouter</span>
+                        <ChevronDown className="h-3.5 w-3.5 ml-1" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuItem onClick={handleOpenAddSlotModal} className="gap-2 cursor-pointer" data-testid="menu-add-course">
+                        <CalendarDays className="h-4 w-4 text-primary" />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">Ajouter un cours</span>
+                          <span className="text-[10px] text-muted-foreground">Module, formateur, salle</span>
+                        </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleOpenAddEventModal} className="gap-2 cursor-pointer" data-testid="menu-add-event">
+                        <Sparkle className="h-4 w-4 text-amber-500" />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">Ajouter un événement</span>
+                          <span className="text-[10px] text-muted-foreground">Congés, fériés, examens...</span>
+                        </div>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   
                   <Button 
                     onClick={handleOpenExcelImportModal}
@@ -1058,6 +1137,17 @@ const ScheduleManagement = () => {
         selectedSlot={selectedSlot}
       />
 
+      <AddEventModal
+        isOpen={isAddEventModalOpen}
+        onClose={() => setIsAddEventModalOpen(false)}
+        onSuccess={() => {
+          fetchScheduleSlots();
+          setIsAddEventModalOpen(false);
+        }}
+        scheduleId={selectedSchedule?.id || ''}
+        defaultDate={selectedSlot?.date}
+      />
+
       <EditSlotModal
         isOpen={isEditSlotModalOpen}
         onClose={() => setIsEditSlotModalOpen(false)}
@@ -1088,6 +1178,25 @@ const ScheduleManagement = () => {
           const slot = slots.find(s => s.id === eventId);
           if (slot) {
             handleDeleteSlot(slot);
+          }
+        } : undefined}
+        onCancel={isEditMode ? async (eventId, reason) => {
+          try {
+            const { data: { user } } = await (await import('@/integrations/supabase/client')).supabase.auth.getUser();
+            await scheduleService.cancelScheduleSlot(eventId, reason, user?.id || '');
+            toast.success('Cours annulé');
+            fetchScheduleSlots();
+          } catch {
+            toast.error("Erreur lors de l'annulation");
+          }
+        } : undefined}
+        onRestore={isEditMode ? async (eventId) => {
+          try {
+            await scheduleService.restoreScheduleSlot(eventId);
+            toast.success('Cours réactivé');
+            fetchScheduleSlots();
+          } catch {
+            toast.error('Erreur lors de la réactivation');
           }
         } : undefined}
         canEdit={isEditMode}
