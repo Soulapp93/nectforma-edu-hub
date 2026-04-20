@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, Users as UsersIcon } from 'lucide-react';
 import { useChatGroups } from '@/hooks/useChatGroups';
+import { markChannelSeen } from '@/hooks/useUnreadCounters';
 import ChatRoom from '@/components/chat/ChatRoom';
 
 const Groupes = () => {
   const { groups, loading } = useChatGroups();
+
+  // Mark groupes channel as seen whenever this page mounts
+  useEffect(() => {
+    markChannelSeen('groupes');
+  }, []);
   // Pick the establishment group with the most members (safeguard against duplicates)
   const establishmentGroup = groups
     .filter(g => g.group_type === 'establishment')

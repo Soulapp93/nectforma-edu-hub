@@ -1,15 +1,27 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Users } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import NotificationBell from './NotificationBell';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useMyContext } from '@/hooks/useMyContext';
+import { useUnreadCounters } from '@/hooks/useUnreadCounters';
 import { supabase } from '@/integrations/supabase/client';
 
+const CounterBadge: React.FC<{ count: number; testId: string }> = ({ count, testId }) => {
+  if (count <= 0) return null;
+  return (
+    <span
+      data-testid={testId}
+      className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[hsl(var(--golden))] text-[hsl(var(--golden-foreground))] text-[10px] font-bold flex items-center justify-center ring-2 ring-[#1a0e2a] shadow-md"
+    >
+      {count > 99 ? '99+' : count}
+    </span>
+  );
+};
+
 const TopHeaderBar = () => {
-  const { user: myUser, role: contextRole } = useMyContext();
-  const { userRole } = useCurrentUser();
+  const { user: myUser } = useMyContext();
+  const { counters } = useUnreadCounters();
 
   const getResolvedPhotoUrl = (profilePhotoUrl: string | null | undefined): string | null => {
     if (!profilePhotoUrl) return null;
@@ -35,13 +47,26 @@ const TopHeaderBar = () => {
 
       {/* Right: Actions */}
       <div className="flex items-center gap-3">
-        {/* Chat / Messagerie */}
+        {/* Groupe etablissement */}
+        <NavLink
+          to="/groupes"
+          className="relative p-2 rounded-full hover:bg-white/10 transition-colors"
+          title="Groupe etablissement"
+          data-testid="header-groupes-link"
+        >
+          <Users className="h-5 w-5 text-white/70" />
+          <CounterBadge count={counters.groupes} testId="header-groupes-badge" />
+        </NavLink>
+
+        {/* Messagerie */}
         <NavLink
           to="/messagerie"
           className="relative p-2 rounded-full hover:bg-white/10 transition-colors"
           title="Messagerie"
+          data-testid="header-messagerie-link"
         >
           <MessageSquare className="h-5 w-5 text-white/70" />
+          <CounterBadge count={counters.messagerie} testId="header-messagerie-badge" />
         </NavLink>
 
         {/* Notifications */}

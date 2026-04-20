@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useEstablishment } from '@/hooks/useEstablishment';
+import { markChannelSeen } from '@/hooks/useUnreadCounters';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +33,11 @@ const SupportPage: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const [creating, setCreating] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Mark support channel as "seen" when page opens or user opens a ticket
+  useEffect(() => {
+    markChannelSeen('support');
+  }, [selectedTicketId]);
 
   // Fetch tickets for this establishment
   const { data: tickets = [], isLoading } = useQuery({

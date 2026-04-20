@@ -43,6 +43,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useMyContext } from '@/hooks/useMyContext';
 import { useEstablishment } from '@/hooks/useEstablishment';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+import { useUnreadCounters } from '@/hooks/useUnreadCounters';
 import { supabase } from '@/integrations/supabase/client';
 import NectformaLogo from './NectformaLogo';
 
@@ -60,6 +61,7 @@ const Sidebar = () => {
   const { user: myUser, establishment: myEstablishment, role: contextRole } = useMyContext();
   const { establishment } = useEstablishment();
   const { counts: unreadCounts } = useUnreadMessages();
+  const { counters: liveCounters } = useUnreadCounters();
   const location = useLocation();
 
   const establishmentName = establishment?.name || myEstablishment?.name || '';
@@ -484,8 +486,16 @@ const Sidebar = () => {
                     <HelpCircle className="w-4 h-4" />
                     Aide
                   </button>
-                  <NavLink to="/support" className="p-2.5 rounded-xl bg-white/10 text-white/70 hover:bg-white/20 transition-colors" title="Mes tickets" data-testid="support-tickets-link">
+                  <NavLink to="/support" className="relative p-2.5 rounded-xl bg-white/10 text-white/70 hover:bg-white/20 transition-colors" title="Mes tickets" data-testid="support-tickets-link">
                     <MessageSquare className="w-5 h-5" />
+                    {liveCounters.support > 0 && (
+                      <span
+                        data-testid="support-tickets-badge"
+                        className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[hsl(var(--golden))] text-[hsl(var(--golden-foreground))] text-[10px] font-bold flex items-center justify-center ring-2 ring-[#1a0e2a] shadow-md"
+                      >
+                        {liveCounters.support > 99 ? '99+' : liveCounters.support}
+                      </span>
+                    )}
                   </NavLink>
                 </div>
               </>

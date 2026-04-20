@@ -3,7 +3,16 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
-## Session 39 (2026-04-19)
+## Session 39 (2026-04-19/20)
+
+### Badges compteur notifications (DONE - 2026-04-20)
+- Nouveau hook `useUnreadCounters` (messagerie + groupes + support) avec subscriptions Realtime Supabase
+- `TopHeaderBar.tsx` : icones Users (groupes) + MessageSquare (messagerie) + cloche, chacun avec badge dore et data-testid (`header-groupes-link/badge`, `header-messagerie-link/badge`)
+- Chaque icone cliquable redirige vers la page correspondante (`/groupes`, `/messagerie`)
+- `Sidebar.tsx` : badge dore `support-tickets-badge` sur l'icone MessageSquare a cote d'Aide, incremente quand le support repond
+- Auto-reset : ouvrir `/support` ou `/groupes` marque le canal comme vu (via `markChannelSeen` + localStorage)
+- Messagerie : lit directement `message_recipients.is_read=false` (pas de localStorage)
+- Tests smoke runtime : 4/4 passes (clics OK, badges OK, reset OK)
 
 ### Espace d'echange Support Etablissement <-> SuperAdmin (DONE)
 - Nouvelle page `/support` (SupportPage.tsx) : liste tickets + vue conversation
