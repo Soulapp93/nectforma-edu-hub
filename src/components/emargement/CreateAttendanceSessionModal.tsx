@@ -50,7 +50,7 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
             .select(`
               *,
               formation_modules(title),
-              users(first_name, last_name),
+              users!schedule_slots_instructor_id_fkey(first_name, last_name),
               schedules!inner(
                 id,
                 formation_id,

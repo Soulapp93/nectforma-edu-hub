@@ -174,7 +174,7 @@ export const scheduleService = {
       .select(`
         *,
         formation_modules(title),
-        users(first_name, last_name)
+        users!schedule_slots_instructor_id_fkey(first_name, last_name)
       `)
       .eq('schedule_id', scheduleId)
       .order('date', { ascending: true })
@@ -192,7 +192,7 @@ export const scheduleService = {
       .select(`
         *,
         formation_modules(title),
-        users(first_name, last_name)
+        users!schedule_slots_instructor_id_fkey(first_name, last_name)
       `)
       .single();
 
@@ -235,7 +235,7 @@ export const scheduleService = {
       .select(`
         *,
         formation_modules(title),
-        users(first_name, last_name)
+        users!schedule_slots_instructor_id_fkey(first_name, last_name)
       `)
       .single();
 
@@ -272,7 +272,7 @@ export const scheduleService = {
         cancelled_by: userId,
       })
       .eq('id', id)
-      .select(`*, formation_modules(title), users(first_name, last_name)`)
+      .select(`*, formation_modules(title), users!schedule_slots_instructor_id_fkey(first_name, last_name)`)
       .single();
     if (error) throw error;
     return data;
@@ -289,7 +289,7 @@ export const scheduleService = {
         cancelled_by: null,
       })
       .eq('id', id)
-      .select(`*, formation_modules(title), users(first_name, last_name)`)
+      .select(`*, formation_modules(title), users!schedule_slots_instructor_id_fkey(first_name, last_name)`)
       .single();
     if (error) throw error;
     return data;
@@ -353,7 +353,7 @@ export const scheduleService = {
       .select(`
         *,
         formation_modules(title),
-        users(first_name, last_name),
+        users!schedule_slots_instructor_id_fkey(first_name, last_name),
         schedules!inner(
           id,
           formation_id,
@@ -376,7 +376,7 @@ export const scheduleService = {
       .select(`
         *,
         formation_modules(title),
-        users(first_name, last_name),
+        users!schedule_slots_instructor_id_fkey(first_name, last_name),
         schedules!inner(
           id,
           formation_id,
@@ -399,7 +399,7 @@ export const scheduleService = {
       .select(`
         *,
         formation_modules(title),
-        users(first_name, last_name),
+        users!schedule_slots_instructor_id_fkey(first_name, last_name),
         schedules!inner(
           id,
           formation_id,

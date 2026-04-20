@@ -72,7 +72,7 @@ const BlankAttendanceSlotModal: React.FC<BlankAttendanceSlotModalProps> = ({
         .select(`
           *,
           formation_modules(title),
-          users(first_name, last_name),
+          users!schedule_slots_instructor_id_fkey(first_name, last_name),
           schedules!inner(id, formation_id, title, formations(title, color, level))
         `)
         .in('schedule_id', scheduleIds)
