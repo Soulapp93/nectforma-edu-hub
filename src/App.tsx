@@ -32,6 +32,7 @@ const SuiviEmargement = React.lazy(() => import('./pages/SuiviEmargement'));
 const SignaturePublique = React.lazy(() => import('./pages/SignaturePublique'));
 const SignPage = React.lazy(() => import('./pages/SignPage'));
 const VerifyCard = React.lazy(() => import('./pages/VerifyCard'));
+const VerifyDiplomaPage = React.lazy(() => import('./pages/VerifyDiplomaPage'));
 const EmploiTemps = React.lazy(() => import('./pages/EmploiTemps'));
 const Messagerie = React.lazy(() => import('./pages/Messagerie'));
 const Groupes = React.lazy(() => import('./pages/Groupes'));
@@ -109,7 +110,7 @@ const AppContent = () => {
     monitoring.trackPageLoad();
   }, []);
   
-  const isSignaturePage = location.pathname.startsWith('/emargement/signer/') || location.pathname.startsWith('/sign/') || location.pathname.startsWith('/verify-card/');
+  const isSignaturePage = location.pathname.startsWith('/emargement/signer/') || location.pathname.startsWith('/sign/') || location.pathname.startsWith('/verify-card/') || location.pathname.startsWith('/verify-diploma/');
   const isLinkedInCallback = location.pathname === '/linkedin-callback';
 
   if (isSignaturePage || isLinkedInCallback) {
@@ -120,6 +121,7 @@ const AppContent = () => {
             <Route path="/emargement/signer/:token" element={<SignaturePublique />} />
             <Route path="/sign/:token" element={<SignPage />} />
             <Route path="/verify-card/:code" element={<VerifyCard />} />
+            <Route path="/verify-diploma/:code" element={<VerifyDiplomaPage />} />
             <Route path="/questionnaire/:token" element={<QuestionnairePublic />} />
             <Route path="/linkedin-callback" element={<LinkedInCallback />} />
           </Routes>

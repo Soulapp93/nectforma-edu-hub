@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -15,12 +16,16 @@ import {
   Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight,
   Copy, Lock, Unlock, Loader2, Palette, LayoutTemplate, Layers,
   Settings2, Move, ChevronUp, ChevronDown, RotateCcw,
+  QrCode, Stamp, Droplet, FileSignature,
 } from 'lucide-react';
+import QRCode from 'react-qr-code';
 import {
   diplomaService,
   type DiplomaElement,
   type DiplomaTemplateData,
   type DiplomaTemplate,
+  type DiplomaFormat,
+  FORMAT_DIMENSIONS,
   DIPLOMA_VARIABLES,
   PRESET_TEMPLATES,
 } from '@/services/diplomaService';
@@ -45,12 +50,18 @@ const DiplomaTemplateEditor: React.FC<Props> = ({ open, onOpenChange, establishm
   const canvasRef = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState('Modele par defaut');
-  const [orientation, setOrientation] = useState<'landscape' | 'portrait'>('landscape');
+  const [format, setFormat] = useState<DiplomaFormat>('A4L');
   const [elements, setElements] = useState<DiplomaElement[]>([]);
   const [bgColor, setBgColor] = useState('#fffef7');
+  const [bgColorVerso, setBgColorVerso] = useState('#f9fafb');
   const [borderStyle, setBorderStyle] = useState<'none' | 'simple' | 'double' | 'ornate'>('double');
   const [borderColor, setBorderColor] = useState('#d4af37');
   const [borderWidth, setBorderWidth] = useState(4);
+  const [hasVerso, setHasVerso] = useState(false);
+  const [activeFace, setActiveFace] = useState<'recto' | 'verso'>('recto');
+  const [watermark, setWatermark] = useState<NonNullable<DiplomaTemplateData['watermark']>>({
+    enabled: false, text: 'ORIGINAL', opacity: 0.05, size: 60, color: '#1f2937', angle: -30,
+  });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dragging, setDragging] = useState<{ id: string; offX: number; offY: number } | null>(null);
   const [resizing, setResizing] = useState<{ id: string; startW: number; startH: number; startX: number; startY: number } | null>(null);
@@ -67,22 +78,28 @@ const DiplomaTemplateEditor: React.FC<Props> = ({ open, onOpenChange, establishm
   useEffect(() => {
     if (existingTemplate) {
       setName(existingTemplate.name);
-      setOrientation(existingTemplate.orientation);
       setDbId(existingTemplate.id);
       const td = existingTemplate.template_data;
-      setElements(td.elements || []);
+      setElements((td.elements || []).map((el: DiplomaElement) => ({ ...el, face: el.face || 'recto' })));
       setBgColor(td.backgroundColor || '#fffef7');
+      setBgColorVerso(td.backgroundColorVerso || '#f9fafb');
       setBorderStyle(td.borderStyle || 'double');
       setBorderColor(td.borderColor || '#d4af37');
       setBorderWidth(td.borderWidth ?? 4);
+      setFormat(td.format || (existingTemplate.orientation === 'portrait' ? 'A4P' : 'A4L'));
+      setHasVerso(!!td.hasVerso);
+      if (td.watermark) setWatermark(td.watermark);
     } else if (!templateId) {
-      // Load default preset
       const preset = PRESET_TEMPLATES[0];
-      setElements(preset.data.elements);
+      setElements(preset.data.elements.map(el => ({ ...el, face: 'recto' as const })));
       setBgColor(preset.data.backgroundColor);
+      setBgColorVerso(preset.data.backgroundColorVerso || '#f9fafb');
       setBorderStyle(preset.data.borderStyle || 'double');
       setBorderColor(preset.data.borderColor || '#d4af37');
       setBorderWidth(preset.data.borderWidth ?? 4);
+      setFormat(preset.data.format || 'A4L');
+      setHasVerso(!!preset.data.hasVerso);
+      if (preset.data.watermark) setWatermark(preset.data.watermark);
     }
   }, [existingTemplate, templateId]);
 
@@ -104,16 +121,20 @@ const DiplomaTemplateEditor: React.FC<Props> = ({ open, onOpenChange, establishm
       line: { width: 400, height: 2, content: '', styles: { backgroundColor: '#d4af37' } },
       rectangle: { width: 200, height: 100, content: '', styles: { borderColor: '#d4af37', borderWidth: 2, backgroundColor: 'transparent', borderRadius: 4 } },
       signature_zone: { width: 200, height: 70, content: 'Le Directeur', styles: { fontSize: 11, textAlign: 'center', color: '#444', fontFamily: 'Georgia' } },
+      qr_code: { width: 100, height: 100, content: '{code_verification}', styles: { backgroundColor: '#ffffff' } },
+      signature_image: { width: 160, height: 60, content: '', styles: { borderRadius: 0 } },
+      stamp: { width: 120, height: 120, content: '', styles: { opacity: 0.9, borderRadius: 999 } },
     };
     const d = defaults[type] || {};
     const newEl: DiplomaElement = {
       id: genId(), type, x: 250, y: 200, width: 200, height: 30, content: content || d.content || '',
+      face: activeFace,
       styles: { fontSize: 14, color: '#000', fontFamily: 'Georgia', textAlign: 'left', ...d.styles },
       ...d,
     };
     setElements(prev => [...prev, newEl]);
     setSelectedId(newEl.id);
-  }, []);
+  }, [activeFace]);
 
   const removeElement = useCallback((id: string) => {
     setElements(prev => prev.filter(el => el.id !== id));
@@ -165,8 +186,8 @@ const DiplomaTemplateEditor: React.FC<Props> = ({ open, onOpenChange, establishm
       if (dragging) {
         const rect = canvasRef.current?.getBoundingClientRect();
         if (!rect) return;
-        const cW = orientation === 'landscape' ? CANVAS_W : CANVAS_H;
-        const cH = orientation === 'landscape' ? CANVAS_H : CANVAS_W;
+        const cW = FORMAT_DIMENSIONS[format].w;
+        const cH = FORMAT_DIMENSIONS[format].h;
         let nx = e.clientX - rect.left - dragging.offX;
         let ny = e.clientY - rect.top - dragging.offY;
         nx = Math.max(0, Math.min(nx, cW - 20));
@@ -183,20 +204,25 @@ const DiplomaTemplateEditor: React.FC<Props> = ({ open, onOpenChange, establishm
     window.addEventListener('mousemove', handleMove);
     window.addEventListener('mouseup', handleUp);
     return () => { window.removeEventListener('mousemove', handleMove); window.removeEventListener('mouseup', handleUp); };
-  }, [dragging, resizing, orientation, updateElement]);
+  }, [dragging, resizing, format, updateElement]);
 
   // Save
   const handleSave = async () => {
     setSaving(true);
     try {
-      const templateData: DiplomaTemplateData = { elements, backgroundColor: bgColor, borderStyle, borderColor, borderWidth };
+      const templateData: DiplomaTemplateData = {
+        elements, backgroundColor: bgColor, borderStyle, borderColor, borderWidth,
+        format, hasVerso, backgroundColorVerso: bgColorVerso,
+        watermark: watermark.enabled ? watermark : undefined,
+      };
+      const orientation = format === 'A4P' ? 'portrait' : 'landscape';
       const result = await diplomaService.upsertTemplate({
         id: dbId || undefined,
         establishment_id: establishmentId,
         name,
         template_data: templateData,
         orientation,
-        page_format: 'A4',
+        page_format: format === 'A3L' ? 'A3' : 'A4',
       });
       setDbId(result.id);
       queryClient.invalidateQueries({ queryKey: ['diploma-templates'] });
@@ -211,17 +237,24 @@ const DiplomaTemplateEditor: React.FC<Props> = ({ open, onOpenChange, establishm
   const loadPreset = (idx: number) => {
     const p = PRESET_TEMPLATES[idx];
     if (!p) return;
-    setElements(p.data.elements.map(el => ({ ...el, id: genId() })));
+    setElements(p.data.elements.map(el => ({ ...el, id: genId(), face: el.face || 'recto' })));
     setBgColor(p.data.backgroundColor);
+    setBgColorVerso(p.data.backgroundColorVerso || '#f9fafb');
     setBorderStyle(p.data.borderStyle || 'none');
     setBorderColor(p.data.borderColor || '#ccc');
     setBorderWidth(p.data.borderWidth ?? 0);
+    setFormat(p.data.format || 'A4L');
+    setHasVerso(!!p.data.hasVerso);
+    setActiveFace('recto');
+    if (p.data.watermark) setWatermark(p.data.watermark); else setWatermark(w => ({ ...w, enabled: false }));
     setSelectedId(null);
     toast.success(`Modele "${p.name}" charge`);
   };
 
-  const canvasWidth = orientation === 'landscape' ? CANVAS_W : CANVAS_H;
-  const canvasHeight = orientation === 'landscape' ? CANVAS_H : CANVAS_W;
+  const canvasWidth = FORMAT_DIMENSIONS[format].w;
+  const canvasHeight = FORMAT_DIMENSIONS[format].h;
+  const activeBg = activeFace === 'recto' ? bgColor : bgColorVerso;
+  const visibleElements = elements.filter(el => (el.face || 'recto') === activeFace);
 
   const getBorderCSS = (): React.CSSProperties => {
     if (borderStyle === 'none') return {};
@@ -283,6 +316,38 @@ const DiplomaTemplateEditor: React.FC<Props> = ({ open, onOpenChange, establishm
       );
     }
 
+    if (el.type === 'qr_code') {
+      const qrValue = el.content || '{code_verification}';
+      return (
+        <div key={el.id} style={{ ...base, backgroundColor: el.styles.backgroundColor || '#fff', padding: 4 }}
+          onMouseDown={e => handleMouseDown(e, el.id)} data-testid={`canvas-el-${el.id}`}>
+          <QRCode value={qrValue} style={{ width: '100%', height: '100%' }} />
+          {isSelected && <div className="absolute -right-1 -bottom-1 w-3 h-3 bg-blue-500 cursor-se-resize rounded-sm" onMouseDown={e => handleResizeStart(e, el.id)} />}
+        </div>
+      );
+    }
+
+    if (el.type === 'signature_image' || el.type === 'stamp') {
+      return (
+        <div key={el.id} style={{
+          ...base, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          backgroundColor: el.content ? 'transparent' : '#fef3c7',
+          borderRadius: el.styles.borderRadius ?? 0,
+          opacity: el.styles.opacity ?? 1,
+          border: el.content ? 'none' : '2px dashed #d97706',
+        }}
+          onMouseDown={e => handleMouseDown(e, el.id)} data-testid={`canvas-el-${el.id}`}>
+          {el.content
+            ? <img src={el.content} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            : el.type === 'stamp'
+              ? <Stamp className="h-6 w-6 text-amber-700" />
+              : <FileSignature className="h-6 w-6 text-amber-700" />
+          }
+          {isSelected && <div className="absolute -right-1 -bottom-1 w-3 h-3 bg-blue-500 cursor-se-resize rounded-sm" onMouseDown={e => handleResizeStart(e, el.id)} />}
+        </div>
+      );
+    }
+
     // text / variable
     const isVar = el.type === 'variable';
     return (
@@ -312,13 +377,36 @@ const DiplomaTemplateEditor: React.FC<Props> = ({ open, onOpenChange, establishm
             <Input value={name} onChange={e => setName(e.target.value)} className="h-8 w-56 text-sm font-medium" data-testid="template-name" />
           </div>
           <div className="flex items-center gap-2">
-            <Select value={orientation} onValueChange={(v: any) => setOrientation(v)}>
-              <SelectTrigger className="h-8 w-32 text-xs"><SelectValue /></SelectTrigger>
+            <Select value={format} onValueChange={(v: DiplomaFormat) => setFormat(v)}>
+              <SelectTrigger className="h-8 w-48 text-xs" data-testid="format-select"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="landscape">Paysage</SelectItem>
-                <SelectItem value="portrait">Portrait</SelectItem>
+                {(Object.keys(FORMAT_DIMENSIONS) as DiplomaFormat[]).map((f) => (
+                  <SelectItem key={f} value={f}>{FORMAT_DIMENSIONS[f].label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
+
+            {/* Recto/Verso toggle */}
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md border bg-card">
+              <Switch id="has-verso" checked={hasVerso} onCheckedChange={setHasVerso} data-testid="toggle-verso" />
+              <Label htmlFor="has-verso" className="text-[11px] cursor-pointer">Verso</Label>
+            </div>
+
+            {hasVerso && (
+              <div className="flex rounded-md border bg-card overflow-hidden">
+                <button
+                  className={`px-2.5 h-8 text-xs font-medium transition-colors ${activeFace === 'recto' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+                  onClick={() => setActiveFace('recto')}
+                  data-testid="face-recto"
+                >Recto</button>
+                <button
+                  className={`px-2.5 h-8 text-xs font-medium transition-colors ${activeFace === 'verso' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+                  onClick={() => setActiveFace('verso')}
+                  data-testid="face-verso"
+                >Verso</button>
+              </div>
+            )}
+
             <Button size="sm" className="h-8 gap-1.5" onClick={handleSave} disabled={saving} data-testid="save-template">
               {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
               Sauvegarder
@@ -347,6 +435,9 @@ const DiplomaTemplateEditor: React.FC<Props> = ({ open, onOpenChange, establishm
                     { type: 'line' as const, icon: Minus, label: 'Ligne' },
                     { type: 'rectangle' as const, icon: Square, label: 'Rectangle' },
                     { type: 'signature_zone' as const, icon: PenTool, label: 'Signature' },
+                    { type: 'qr_code' as const, icon: QrCode, label: 'QR Code' },
+                    { type: 'signature_image' as const, icon: FileSignature, label: 'Signature img' },
+                    { type: 'stamp' as const, icon: Stamp, label: 'Tampon' },
                   ].map(item => (
                     <Button key={item.type} variant="outline" size="sm" className="h-16 flex-col gap-1 text-[10px]"
                       onClick={() => addElement(item.type)} data-testid={`add-${item.type}`}>
@@ -367,9 +458,9 @@ const DiplomaTemplateEditor: React.FC<Props> = ({ open, onOpenChange, establishm
                 </div>
 
                 {/* Layers */}
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pt-2">Calques ({elements.length})</p>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pt-2">Calques {hasVerso ? `— ${activeFace === 'recto' ? 'Recto' : 'Verso'}` : ''} ({visibleElements.length})</p>
                 <div className="space-y-0.5 max-h-40 overflow-y-auto">
-                  {[...elements].reverse().map(el => (
+                  {[...visibleElements].reverse().map(el => (
                     <div key={el.id}
                       className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs cursor-pointer transition-colors ${selectedId === el.id ? 'bg-primary/10 text-primary' : 'hover:bg-muted'}`}
                       onClick={() => setSelectedId(el.id)}>
@@ -405,10 +496,17 @@ const DiplomaTemplateEditor: React.FC<Props> = ({ open, onOpenChange, establishm
 
               <TabsContent value="canvas" className="p-3 space-y-3 mt-0">
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Couleur de fond</Label>
+                  <Label className="text-xs">Couleur de fond — {activeFace === 'recto' ? 'Recto' : 'Verso'}</Label>
                   <div className="flex gap-2 items-center">
-                    <input type="color" value={bgColor} onChange={e => setBgColor(e.target.value)} className="w-8 h-8 rounded border cursor-pointer" />
-                    <Input value={bgColor} onChange={e => setBgColor(e.target.value)} className="h-8 text-xs flex-1" />
+                    <input
+                      type="color"
+                      value={activeBg}
+                      onChange={e => activeFace === 'recto' ? setBgColor(e.target.value) : setBgColorVerso(e.target.value)}
+                      className="w-8 h-8 rounded border cursor-pointer" />
+                    <Input
+                      value={activeBg}
+                      onChange={e => activeFace === 'recto' ? setBgColor(e.target.value) : setBgColorVerso(e.target.value)}
+                      className="h-8 text-xs flex-1" />
                   </div>
                 </div>
                 <div className="space-y-1.5">
@@ -438,9 +536,49 @@ const DiplomaTemplateEditor: React.FC<Props> = ({ open, onOpenChange, establishm
                     </div>
                   </>
                 )}
+
+                {/* Filigrane */}
+                <div className="pt-2 border-t space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs flex items-center gap-1.5"><Droplet className="h-3 w-3" />Filigrane</Label>
+                    <Switch
+                      checked={watermark.enabled}
+                      onCheckedChange={(v) => setWatermark(w => ({ ...w, enabled: v }))}
+                      data-testid="toggle-watermark"
+                    />
+                  </div>
+                  {watermark.enabled && (
+                    <>
+                      <Input
+                        value={watermark.text}
+                        onChange={e => setWatermark(w => ({ ...w, text: e.target.value }))}
+                        placeholder="Ex: ORIGINAL"
+                        className="h-8 text-xs"
+                        data-testid="watermark-text"
+                      />
+                      <div className="flex gap-2 items-center">
+                        <Label className="text-[10px] shrink-0">Couleur</Label>
+                        <input type="color" value={watermark.color} onChange={e => setWatermark(w => ({ ...w, color: e.target.value }))} className="w-6 h-6 rounded border cursor-pointer" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px]">Opacite ({Math.round(watermark.opacity * 100)}%)</Label>
+                        <Slider value={[watermark.opacity * 100]} onValueChange={v => setWatermark(w => ({ ...w, opacity: v[0] / 100 }))} min={1} max={30} step={1} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px]">Taille ({watermark.size}px)</Label>
+                        <Slider value={[watermark.size]} onValueChange={v => setWatermark(w => ({ ...w, size: v[0] }))} min={20} max={120} step={2} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[10px]">Angle ({watermark.angle}°)</Label>
+                        <Slider value={[watermark.angle]} onValueChange={v => setWatermark(w => ({ ...w, angle: v[0] }))} min={-90} max={90} step={5} />
+                      </div>
+                    </>
+                  )}
+                </div>
+
                 <div className="pt-2">
-                  <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs" onClick={() => { setElements([]); setSelectedId(null); }}>
-                    <RotateCcw className="h-3 w-3" /> Tout effacer
+                  <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs" onClick={() => { setElements(prev => prev.filter(el => (el.face || 'recto') !== activeFace)); setSelectedId(null); }}>
+                    <RotateCcw className="h-3 w-3" /> Effacer {activeFace === 'recto' ? 'le recto' : 'le verso'}
                   </Button>
                 </div>
               </TabsContent>
@@ -449,10 +587,41 @@ const DiplomaTemplateEditor: React.FC<Props> = ({ open, onOpenChange, establishm
 
           {/* Canvas */}
           <div className="flex-1 overflow-auto bg-muted/50 flex items-center justify-center p-6" onClick={() => setSelectedId(null)}>
-            <div ref={canvasRef} className="relative shadow-2xl"
-              style={{ width: canvasWidth, height: canvasHeight, backgroundColor: bgColor, ...getBorderCSS(), flexShrink: 0 }}
+            <div ref={canvasRef} className="relative shadow-2xl overflow-hidden"
+              style={{ width: canvasWidth, height: canvasHeight, backgroundColor: activeBg, ...getBorderCSS(), flexShrink: 0 }}
               onClick={e => e.stopPropagation()} data-testid="diploma-canvas">
-              {elements.map(renderElement)}
+              {/* Watermark */}
+              {watermark.enabled && (
+                <div
+                  aria-hidden="true"
+                  style={{
+                    position: 'absolute', inset: 0, pointerEvents: 'none',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    zIndex: 0,
+                  }}
+                >
+                  <span style={{
+                    fontFamily: 'Georgia',
+                    fontWeight: 800,
+                    fontSize: watermark.size,
+                    color: watermark.color,
+                    opacity: watermark.opacity,
+                    transform: `rotate(${watermark.angle}deg)`,
+                    letterSpacing: 12,
+                    whiteSpace: 'nowrap',
+                    textTransform: 'uppercase',
+                  }}>
+                    {watermark.text}
+                  </span>
+                </div>
+              )}
+              {/* Face indicator */}
+              {hasVerso && (
+                <div className="absolute top-2 right-2 z-40 px-2 py-0.5 rounded-full text-[10px] font-bold bg-black/70 text-white">
+                  {activeFace === 'recto' ? 'RECTO' : 'VERSO'}
+                </div>
+              )}
+              {visibleElements.map(renderElement)}
             </div>
           </div>
 

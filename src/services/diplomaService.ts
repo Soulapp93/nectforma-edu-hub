@@ -3,12 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 // ===== Types =====
 export interface DiplomaElement {
   id: string;
-  type: 'text' | 'variable' | 'image' | 'line' | 'rectangle' | 'signature_zone';
+  type: 'text' | 'variable' | 'image' | 'line' | 'rectangle' | 'signature_zone' | 'qr_code' | 'stamp' | 'signature_image';
   x: number;
   y: number;
   width: number;
   height: number;
   content: string;
+  face?: 'recto' | 'verso';
   styles: {
     fontSize?: number;
     fontFamily?: string;
@@ -28,6 +29,8 @@ export interface DiplomaElement {
   locked?: boolean;
 }
 
+export type DiplomaFormat = 'A4L' | 'A4P' | 'A3L' | 'custom';
+
 export interface DiplomaTemplateData {
   elements: DiplomaElement[];
   backgroundColor: string;
@@ -35,7 +38,29 @@ export interface DiplomaTemplateData {
   borderStyle?: 'none' | 'simple' | 'double' | 'ornate';
   borderColor?: string;
   borderWidth?: number;
+  // --- New (2026-04-21) ---
+  format?: DiplomaFormat;
+  customWidth?: number;
+  customHeight?: number;
+  hasVerso?: boolean;
+  backgroundColorVerso?: string;
+  watermark?: {
+    enabled: boolean;
+    text: string;
+    opacity: number;
+    size: number;
+    color: string;
+    angle: number;
+  };
 }
+
+// Page dimensions in px (at ~96dpi for display; scale-preserving for A4/A3 ratios)
+export const FORMAT_DIMENSIONS: Record<DiplomaFormat, { w: number; h: number; label: string }> = {
+  A4L:    { w: 842, h: 595, label: 'A4 Paysage (297×210mm)' },
+  A4P:    { w: 595, h: 842, label: 'A4 Portrait (210×297mm)' },
+  A3L:    { w: 1191, h: 842, label: 'A3 Paysage (420×297mm)' },
+  custom: { w: 800, h: 600, label: 'Dimensions personnalisees' },
+};
 
 export interface DiplomaTemplate {
   id: string;
@@ -63,6 +88,8 @@ export interface GeneratedDiploma {
   generated_at: string;
   delivered_at: string | null;
   created_at: string;
+  diploma_number?: string | null;
+  verification_code?: string | null;
 }
 
 // ===== Variables dynamiques =====
@@ -79,6 +106,7 @@ export const DIPLOMA_VARIABLES = [
   { key: '{etablissement}', label: 'Nom de l\'etablissement', example: 'Nectforma Demo' },
   { key: '{date_delivrance}', label: 'Date de delivrance', example: '20 juillet 2026' },
   { key: '{numero_diplome}', label: 'Numero de diplome', example: 'DIP-2026-0042' },
+  { key: '{code_verification}', label: 'Code de verification', example: 'DIP-2026-a1b2c3d4e5' },
 ];
 
 // ===== Templates prédéfinis =====
@@ -103,7 +131,7 @@ const createDefaultElements = (): DiplomaElement[] => [
 export const PRESET_TEMPLATES: { name: string; data: DiplomaTemplateData }[] = [
   {
     name: 'Classique',
-    data: { elements: createDefaultElements(), backgroundColor: '#fffef7', borderStyle: 'double', borderColor: '#d4af37', borderWidth: 4 },
+    data: { elements: createDefaultElements(), backgroundColor: '#fffef7', borderStyle: 'double', borderColor: '#d4af37', borderWidth: 4, format: 'A4L', hasVerso: false },
   },
   {
     name: 'Moderne',
@@ -112,17 +140,28 @@ export const PRESET_TEMPLATES: { name: string; data: DiplomaTemplateData }[] = [
         ...el,
         styles: { ...el.styles, fontFamily: 'Helvetica', color: el.styles.color === '#1a1a2e' ? '#0f172a' : el.styles.color, backgroundColor: el.styles.backgroundColor === '#d4af37' ? '#3b82f6' : el.styles.backgroundColor },
       })),
-      backgroundColor: '#ffffff', borderStyle: 'simple', borderColor: '#3b82f6', borderWidth: 3,
+      backgroundColor: '#ffffff', borderStyle: 'simple', borderColor: '#3b82f6', borderWidth: 3, format: 'A4L', hasVerso: false,
     },
   },
   {
-    name: 'Elegant',
+    name: 'Elegant dore',
     data: {
       elements: createDefaultElements().map(el => ({
         ...el,
-        styles: { ...el.styles, fontFamily: 'Palatino', color: el.styles.color === '#1a1a2e' ? '#2d1b69' : el.styles.color, backgroundColor: el.styles.backgroundColor === '#d4af37' ? '#9333ea' : el.styles.backgroundColor },
+        styles: { ...el.styles, fontFamily: 'Palatino', color: el.styles.color === '#1a1a2e' ? '#78350f' : el.styles.color, backgroundColor: el.styles.backgroundColor === '#d4af37' ? '#b45309' : el.styles.backgroundColor },
       })),
-      backgroundColor: '#faf5ff', borderStyle: 'ornate', borderColor: '#9333ea', borderWidth: 3,
+      backgroundColor: '#fefce8', borderStyle: 'ornate', borderColor: '#b45309', borderWidth: 4, format: 'A4L', hasVerso: false,
+      watermark: { enabled: true, text: 'DIPLOME OFFICIEL', opacity: 0.04, size: 60, color: '#b45309', angle: -30 },
+    },
+  },
+  {
+    name: 'Prestige violet',
+    data: {
+      elements: createDefaultElements().map(el => ({
+        ...el,
+        styles: { ...el.styles, fontFamily: 'Georgia', color: el.styles.color === '#1a1a2e' ? '#2d1b69' : el.styles.color, backgroundColor: el.styles.backgroundColor === '#d4af37' ? '#9333ea' : el.styles.backgroundColor },
+      })),
+      backgroundColor: '#faf5ff', borderStyle: 'ornate', borderColor: '#9333ea', borderWidth: 3, format: 'A4L', hasVerso: false,
     },
   },
   {
@@ -132,7 +171,50 @@ export const PRESET_TEMPLATES: { name: string; data: DiplomaTemplateData }[] = [
         ...el,
         styles: { ...el.styles, fontFamily: 'Helvetica' },
       })),
-      backgroundColor: '#ffffff', borderStyle: 'none', borderColor: '#e5e7eb', borderWidth: 0,
+      backgroundColor: '#ffffff', borderStyle: 'none', borderColor: '#e5e7eb', borderWidth: 0, format: 'A4L', hasVerso: false,
+    },
+  },
+  {
+    name: 'Corporate bleu',
+    data: {
+      elements: createDefaultElements().map(el => ({
+        ...el,
+        styles: { ...el.styles, fontFamily: 'Arial', color: el.styles.color === '#1a1a2e' ? '#0c4a6e' : el.styles.color, backgroundColor: el.styles.backgroundColor === '#d4af37' ? '#0369a1' : el.styles.backgroundColor },
+      })),
+      backgroundColor: '#f0f9ff', borderStyle: 'simple', borderColor: '#0369a1', borderWidth: 5, format: 'A4L', hasVerso: false,
+    },
+  },
+  {
+    name: 'Portrait academique',
+    data: {
+      elements: createDefaultElements(),
+      backgroundColor: '#fffef7', borderStyle: 'double', borderColor: '#991b1b', borderWidth: 4, format: 'A4P', hasVerso: false,
+    },
+  },
+  {
+    name: 'A3 Ceremonie',
+    data: {
+      elements: createDefaultElements(),
+      backgroundColor: '#fffbeb', borderStyle: 'ornate', borderColor: '#d4af37', borderWidth: 6, format: 'A3L', hasVerso: false,
+    },
+  },
+  {
+    name: 'Biface officiel',
+    data: {
+      elements: createDefaultElements(),
+      backgroundColor: '#fffef7', borderStyle: 'double', borderColor: '#1f2937', borderWidth: 4, format: 'A4L',
+      hasVerso: true, backgroundColorVerso: '#f9fafb',
+      watermark: { enabled: true, text: 'AUTHENTIQUE', opacity: 0.05, size: 72, color: '#1f2937', angle: -25 },
+    },
+  },
+  {
+    name: 'Vert nature',
+    data: {
+      elements: createDefaultElements().map(el => ({
+        ...el,
+        styles: { ...el.styles, color: el.styles.color === '#1a1a2e' ? '#064e3b' : el.styles.color, backgroundColor: el.styles.backgroundColor === '#d4af37' ? '#059669' : el.styles.backgroundColor },
+      })),
+      backgroundColor: '#ecfdf5', borderStyle: 'simple', borderColor: '#059669', borderWidth: 4, format: 'A4L', hasVerso: false,
     },
   },
 ];
@@ -218,7 +300,8 @@ export const diplomaService = {
     formation: { title: string; level?: string; academic_year?: string },
     establishment: { name: string },
     transcript?: { general_average?: number | null; decision?: string; mention?: string; jury_date?: string },
-    diplomaNumber?: string
+    diplomaNumber?: string,
+    verificationCode?: string
   ): string {
     const mentionLabels: Record<string, string> = { tres_bien: 'Tres bien', bien: 'Bien', assez_bien: 'Assez bien', passable: 'Passable' };
     const juryDate = transcript?.jury_date
@@ -238,6 +321,21 @@ export const diplomaService = {
       .replace(/\{annee_academique\}/g, formation.academic_year || '')
       .replace(/\{etablissement\}/g, establishment.name)
       .replace(/\{date_delivrance\}/g, today)
-      .replace(/\{numero_diplome\}/g, diplomaNumber || 'DIP-XXXX');
+      .replace(/\{numero_diplome\}/g, diplomaNumber || 'DIP-XXXX')
+      .replace(/\{code_verification\}/g, verificationCode || '_____________');
+  },
+
+  // Generate a unique verification code for a new diploma (client-side; DB also enforces uniqueness)
+  generateVerificationCode(): string {
+    const year = new Date().getFullYear();
+    const rand = Math.random().toString(36).slice(2, 12);
+    return `DIP-${year}-${rand}`;
+  },
+
+  // Public RPC: verify a diploma by its code (used by the public /verify-diploma/:code route)
+  async verifyByCode(code: string) {
+    const { data, error } = await (supabase as any).rpc('verify_diploma_by_code', { p_code: code });
+    if (error) throw error;
+    return (data && data[0]) || null;
   },
 };

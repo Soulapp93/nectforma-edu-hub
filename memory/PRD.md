@@ -3,6 +3,46 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
+## Session 44 (2026-04-21)
+
+### Gestion des diplomes enrichie (DONE - 2026-04-21)
+Aligne sur Gestion des cartes etudiantes + plus de fonctionnalites.
+
+**Migration DB** (20260421000000_diploma_verification.sql) :
+- `generated_diplomas.diploma_number` (unique) + `verification_code` (unique)
+- RPC publique `verify_diploma_by_code(p_code text)` (SECURITY DEFINER) pour lookup sans auth
+
+**Service (`diplomaService.ts`)** :
+- `DiplomaElement.type` etend avec `'qr_code' | 'stamp' | 'signature_image'`
+- `DiplomaElement.face` = recto | verso
+- `DiplomaTemplateData` etend : `format` (A4L/A4P/A3L/custom), `hasVerso`, `backgroundColorVerso`, `watermark {enabled, text, opacity, size, color, angle}`
+- `FORMAT_DIMENSIONS` constante (A4 595×842, A4L 842×595, A3L 1191×842)
+- 10 presets de templates varies (Classique, Moderne, Elegant dore, Prestige violet, Minimaliste, Corporate bleu, Portrait academique, A3 Ceremonie, Biface officiel, Vert nature)
+- `generateVerificationCode()` + `verifyByCode(code)` + resolve `{code_verification}`
+
+**Editeur (`DiplomaTemplateEditor.tsx`)** :
+- Toggle Recto/Verso (data-testid=`toggle-verso`, `face-recto`, `face-verso`)
+- Select format (A4L/A4P/A3L/custom) data-testid=`format-select`
+- 9 boutons d'ajout : Texte, Variable, Image, Ligne, Rectangle, Signature, QR Code, Signature img, Tampon
+- Panneau "Fond" avec toggle filigrane + personnalisation (texte, couleur, opacite, taille, angle)
+- Canvas filtre par face active + badge indicateur RECTO/VERSO
+- Calques filtres par face
+
+**Renderer partage (`DiplomaRenderer.tsx`)** + helper PDF `pdfExport.ts` (html2canvas + jsPDF)
+
+**Management (`DiplomaManagement.tsx`)** :
+- Apercu recto + verso (si active) avec `DiplomaRenderer`
+- Bouton "Telecharger PDF" (data-testid=`download-pdf-btn`) qui capture recto+verso en multi-pages A4
+- Generation masse : chaque `generated_diploma` recoit automatiquement `diploma_number` + `verification_code`
+- QR code "Code de verification" genere un QR renvoyant vers `/verify-diploma/{code}`
+
+**Page publique** : `/verify-diploma/:code` (`VerifyDiplomaPage.tsx`) — carte de verification publique avec bandeau vert + toutes les infos + date de verification.
+
+**Tests runtime** :
+- Editeur ouvert : canvas=1, toggle-verso=1, format-select=1, add-qr_code=1, add-stamp=1, add-signature_image=1 ✅
+- Vue management : 3 etudiants admis, stats OK, boutons "Creer un modele" / "Generer les diplomes" / "Modifier" / "Apercu" visibles ✅
+- Page publique `/verify-diploma/DIP-2026-TEST123456` : bandeau "Diplome authentique" + toutes les infos (Alice Dubois, Rh, BAC+1, 2026-2027, Nectforma Demo) ✅
+
 ## Session 43 (2026-04-21)
 
 ### Gestion fichiers joints des Evaluations ameliorees (DONE - 2026-04-21)

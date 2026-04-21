@@ -23,6 +23,8 @@ import {
 import {
   diplomaService, type DiplomaTemplate, type DiplomaTemplateData, DIPLOMA_VARIABLES, PRESET_TEMPLATES,
 } from '@/services/diplomaService';
+import DiplomaRenderer from './DiplomaRenderer';
+import { exportElementsToPdf } from '@/utils/pdfExport';
 
 const DiplomaTemplateEditor = React.lazy(() => import('./DiplomaTemplateEditor'));
 
@@ -175,6 +177,8 @@ const DiplomaManagement: React.FC = () => {
         ...s,
         transcript,
         generated,
+        diploma_number: generated?.diploma_number,
+        verification_code: generated?.verification_code,
         isAdmis: transcript?.decision === 'admis',
       };
     });
@@ -191,8 +195,10 @@ const DiplomaManagement: React.FC = () => {
     setGenerating(true);
     try {
       const admisStudents = studentData.filter(s => s.isAdmis);
+      const yearPrefix = `DIP-${new Date().getFullYear()}-`;
       let count = 0;
-      for (const s of admisStudents) {
+      for (let i = 0; i < admisStudents.length; i++) {
+        const s = admisStudents[i];
         await diplomaService.upsertGeneratedDiploma({
           student_id: s.user_id,
           formation_id: selectedFormationId,
@@ -200,7 +206,9 @@ const DiplomaManagement: React.FC = () => {
           transcript_id: s.transcript?.id || null,
           establishment_id: establishment.id,
           status: 'generated',
-        });
+          diploma_number: s.diploma_number || `${yearPrefix}${String(i + 1).padStart(4, '0')}`,
+          verification_code: s.verification_code || diplomaService.generateVerificationCode(),
+        } as any);
         count++;
       }
       queryClient.invalidateQueries({ queryKey: ['generated-diplomas', selectedFormationId] });
@@ -444,62 +452,64 @@ const DiplomaManagement: React.FC = () => {
 
         {/* Preview Dialog */}
         <Dialog open={showPreview} onOpenChange={v => { setShowPreview(v); if (!v) setPreviewStudentId(null); }}>
-          <DialogContent className="max-w-[900px] w-[95vw]" data-testid="preview-dialog">
+          <DialogContent className="max-w-[95vw] w-auto max-h-[90vh] overflow-auto" data-testid="preview-dialog">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2"><Eye className="h-5 w-5 text-primary" />Apercu du diplome</DialogTitle>
             </DialogHeader>
-            {previewStudent && previewTemplate && (
-              <div className="flex justify-center overflow-auto py-4">
-                <div className="shadow-xl" style={{
-                  width: previewTemplate.orientation === 'landscape' ? 800 : 520,
-                  height: previewTemplate.orientation === 'landscape' ? 520 : 800,
-                  backgroundColor: previewTemplate.template_data?.backgroundColor || '#fff',
-                  position: 'relative',
-                  ...(previewTemplate.template_data?.borderStyle === 'double' ? { border: `${previewTemplate.template_data.borderWidth || 4}px double ${previewTemplate.template_data.borderColor || '#d4af37'}` } :
-                    previewTemplate.template_data?.borderStyle === 'simple' ? { border: `${previewTemplate.template_data.borderWidth || 3}px solid ${previewTemplate.template_data.borderColor || '#333'}` } :
-                    previewTemplate.template_data?.borderStyle === 'ornate' ? { border: `${previewTemplate.template_data.borderWidth || 3}px solid ${previewTemplate.template_data.borderColor || '#9333ea'}`, boxShadow: `inset 0 0 0 ${(previewTemplate.template_data.borderWidth || 3) + 6}px ${previewTemplate.template_data.borderColor || '#9333ea'}20` } : {}),
-                }}>
-                  {(previewTemplate.template_data?.elements || []).map((el: any) => {
-                    const content = diplomaService.resolveVariables(
-                      el.content || '',
-                      { first_name: previewStudent.first_name, last_name: previewStudent.last_name },
-                      { title: (selectedFormation as any)?.title, level: (selectedFormation as any)?.level, academic_year: (selectedFormation as any)?.academic_year },
-                      { name: establishment?.name || '' },
-                      previewStudent.transcript ? { general_average: previewStudent.transcript.general_average, decision: previewStudent.transcript.decision, mention: previewStudent.transcript.mention, jury_date: previewStudent.transcript.jury_date } : undefined,
-                      `DIP-${new Date().getFullYear()}-${String(studentData.indexOf(previewStudent) + 1).padStart(4, '0')}`
-                    );
-                    if (el.type === 'line') return <div key={el.id} style={{ position: 'absolute', left: el.x, top: el.y, width: el.width, height: el.height, backgroundColor: el.styles?.backgroundColor || '#000' }} />;
-                    if (el.type === 'rectangle') return <div key={el.id} style={{ position: 'absolute', left: el.x, top: el.y, width: el.width, height: el.height, backgroundColor: el.styles?.backgroundColor || 'transparent', border: `${el.styles?.borderWidth || 1}px solid ${el.styles?.borderColor || '#000'}`, borderRadius: el.styles?.borderRadius || 0 }} />;
-                    if (el.type === 'signature_zone') return (
-                      <div key={el.id} style={{ position: 'absolute', left: el.x, top: el.y, width: el.width, height: el.height, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end' }}>
-                        <div style={{ width: '80%', borderBottom: '1px solid #999', marginBottom: 4, paddingTop: el.height - 30 }} />
-                        <span style={{ fontSize: el.styles?.fontSize || 11, color: el.styles?.color || '#444', fontFamily: el.styles?.fontFamily, fontStyle: 'italic' }}>{content}</span>
+            {previewStudent && previewTemplate && (() => {
+              const diplomaNumber = `DIP-${new Date().getFullYear()}-${String(studentData.indexOf(previewStudent) + 1).padStart(4, '0')}`;
+              const verificationCode = previewStudent.verification_code || diplomaService.generateVerificationCode();
+              const context = {
+                student: { first_name: previewStudent.first_name, last_name: previewStudent.last_name },
+                formation: { title: (selectedFormation as any)?.title, level: (selectedFormation as any)?.level, academic_year: (selectedFormation as any)?.academic_year },
+                establishment: { name: establishment?.name || '' },
+                transcript: previewStudent.transcript ? { general_average: previewStudent.transcript.general_average, decision: previewStudent.transcript.decision, mention: previewStudent.transcript.mention, jury_date: previewStudent.transcript.jury_date } : undefined,
+                diplomaNumber,
+                verificationCode,
+              };
+              const hasVerso = !!(previewTemplate.template_data as any)?.hasVerso;
+              // Auto-fit scale so it doesn't overflow modal
+              const scale = 1;
+              return (
+                <div className="flex flex-col items-center gap-4 py-2">
+                  <div id="diploma-recto-preview" style={{ display: 'inline-block' }}>
+                    <DiplomaRenderer template={previewTemplate} face="recto" context={context} scale={scale} />
+                  </div>
+                  {hasVerso && (
+                    <>
+                      <div className="text-xs font-semibold text-muted-foreground tracking-wider uppercase">Verso</div>
+                      <div id="diploma-verso-preview" style={{ display: 'inline-block' }}>
+                        <DiplomaRenderer template={previewTemplate} face="verso" context={context} scale={scale} />
                       </div>
-                    );
-                    if (el.type === 'image') return (
-                      <div key={el.id} style={{ position: 'absolute', left: el.x, top: el.y, width: el.width, height: el.height }}>
-                        {el.content ? <img src={el.content} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : null}
-                      </div>
-                    );
-                    return (
-                      <div key={el.id} style={{
-                        position: 'absolute', left: el.x, top: el.y, width: el.width, height: el.height,
-                        fontSize: el.styles?.fontSize, fontFamily: el.styles?.fontFamily, fontWeight: el.styles?.fontWeight,
-                        fontStyle: el.styles?.fontStyle, textAlign: el.styles?.textAlign, color: el.styles?.color,
-                        textDecoration: el.styles?.textDecoration, letterSpacing: el.styles?.letterSpacing,
-                        display: 'flex', alignItems: 'center',
-                        justifyContent: el.styles?.textAlign === 'center' ? 'center' : el.styles?.textAlign === 'right' ? 'flex-end' : 'flex-start',
-                        overflow: 'hidden',
-                      }}>
-                        {content}
-                      </div>
-                    );
-                  })}
+                    </>
+                  )}
                 </div>
-              </div>
-            )}
-            <DialogFooter>
+              );
+            })()}
+            <DialogFooter className="gap-2">
               <Button variant="outline" onClick={() => setShowPreview(false)}>Fermer</Button>
+              <Button
+                onClick={async () => {
+                  const elements: HTMLElement[] = [];
+                  const recto = document.getElementById('diploma-recto-preview')?.firstElementChild as HTMLElement | null;
+                  const verso = document.getElementById('diploma-verso-preview')?.firstElementChild as HTMLElement | null;
+                  if (recto) elements.push(recto);
+                  if (verso) elements.push(verso);
+                  if (!elements.length) return;
+                  const fullName = previewStudent ? `${previewStudent.first_name}_${previewStudent.last_name}` : 'diplome';
+                  try {
+                    toast.info('Generation du PDF en cours...');
+                    await exportElementsToPdf(elements, `Diplome_${fullName}.pdf`);
+                    toast.success('PDF telecharge');
+                  } catch (err: any) {
+                    toast.error(err?.message || 'Erreur lors de la generation PDF');
+                  }
+                }}
+                data-testid="download-pdf-btn"
+                className="gap-2"
+              >
+                <Download className="h-4 w-4" /> Telecharger PDF
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
