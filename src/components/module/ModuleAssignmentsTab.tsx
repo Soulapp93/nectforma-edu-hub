@@ -95,13 +95,13 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
   const handleCreateSuccess = () => {
     fetchAssignments();
     setShowCreateModal(false);
-    toast.success('Évaluation créée avec succès');
+    // Toast géré par le modal pour inclure le statut des fichiers
   };
 
   const handleEditSuccess = () => {
     fetchAssignments();
     setShowEditModal(null);
-    toast.success('Évaluation modifiée avec succès');
+    // Toast géré par le modal pour inclure le statut des fichiers
   };
 
   const handleSubmitSuccess = () => {

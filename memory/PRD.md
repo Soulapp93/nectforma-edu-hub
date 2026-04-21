@@ -3,6 +3,22 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
+## Session 43 (2026-04-21)
+
+### Gestion fichiers joints des Evaluations ameliorees (DONE - 2026-04-21)
+- **Bug fix FileUpload** : le bouton X de retrait n'avait pas `type="button"` → pouvait declencher un submit premature du formulaire. Ajout du type="button".
+- **Feedback utilisateur** : dans CreateAssignmentModal, remplacement des `alert()` par des toasts. Messages explicites quand un upload echoue (ex: "2 fichier(s) n'ont pas pu etre ajoutes. 3 fichier(s) ont ete ajoutes avec succes").
+- **Gestion fichiers en edition** : le modal de modification d'une evaluation liste maintenant les fichiers deja associes (avec nom + lien cliquable + corbeille pour supprimer), ET permet d'en ajouter de nouveaux. Avant: aucune gestion de fichier en edition.
+- **Indicateur visuel** : `"✓ X nouveau(x) fichier(s) sera(ont) ajoute(s)"` apparait en vert quand l'utilisateur selectionne des fichiers (plus explicite que l'ancien "X fichier(s) selectionne(s)").
+- **data-testid** ajoutes: `assignment-files-section`, `selected-files-indicator`, `remove-existing-file-<id>`.
+
+**Tests runtime** :
+- Creation TEST_MULTI_FICHIER avec 2 fichiers → DB: 2 rows assignment_files ✅
+- Ouverture modal Details → fichiers visibles avec boutons "Voir" et "Telecharger" ✅
+- Edition: affichage "Fichiers deja associes" + suppression d'un fichier + ajout d'un nouveau → DB: doc2 + doc3 (doc1 supprime) ✅
+- Toast "Fichier supprime" ✅
+- Cleanup test data OK
+
 ## Session 42 (2026-04-21)
 
 ### Notifications automatiques pour Travail à faire (DONE - 2026-04-21)

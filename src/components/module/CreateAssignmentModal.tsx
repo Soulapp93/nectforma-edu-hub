@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { ClipboardList, FileText, Calendar, Award, Paperclip } from 'lucide-react';
+import { ClipboardList, FileText, Calendar, Award, Paperclip, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { assignmentService, Assignment } from '@/services/assignmentService';
 import { fileUploadService } from '@/services/fileUploadService';
+import { supabase } from '@/integrations/supabase/client';
 import FileUpload from '@/components/ui/file-upload';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { DateTimePicker } from '@/components/ui/datetime-picker';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 import { EVALUATION_TYPE_META, EVALUATION_TYPE_ORDER, type EvaluationType } from '@/utils/evaluationTypes';
 import {
   Dialog,
@@ -42,9 +44,40 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
     max_points: 100
   });
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [existingFiles, setExistingFiles] = useState<Array<{ id: string; file_name: string; file_url: string; file_size?: number | null }>>([]);
   const [loading, setLoading] = useState(false);
 
   const { userId } = useCurrentUser();
+
+  // Load existing files when editing
+  useEffect(() => {
+    if (editAssignment && isOpen) {
+      (async () => {
+        const { data } = await (supabase as any)
+          .from('assignment_files')
+          .select('id, file_name, file_url, file_size')
+          .eq('assignment_id', editAssignment.id);
+        setExistingFiles(data || []);
+      })();
+    } else {
+      setExistingFiles([]);
+    }
+  }, [editAssignment, isOpen]);
+
+  const handleRemoveExistingFile = async (fileId: string) => {
+    if (!window.confirm('Supprimer ce fichier ?')) return;
+    try {
+      const { error } = await (supabase as any)
+        .from('assignment_files')
+        .delete()
+        .eq('id', fileId);
+      if (error) throw error;
+      setExistingFiles((prev) => prev.filter((f) => f.id !== fileId));
+      toast.success('Fichier supprimé');
+    } catch (err: any) {
+      toast.error(err?.message || 'Erreur lors de la suppression');
+    }
+  };
 
   useEffect(() => {
     if (editAssignment) {
@@ -72,15 +105,20 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
     e.preventDefault();
     setLoading(true);
 
+    let assignmentId: string | null = null;
+    let isNew = !editAssignment;
+
     try {
       if (editAssignment) {
         await assignmentService.updateAssignment(editAssignment.id, {
           ...formData,
           due_date: formData.due_date || undefined
         });
+        assignmentId = editAssignment.id;
       } else {
         if (!userId) {
-          alert('Utilisateur non authentifié');
+          toast.error('Utilisateur non authentifié');
+          setLoading(false);
           return;
         }
 
@@ -94,25 +132,41 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
           due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null,
           max_points: formData.max_points
         });
+        assignmentId = assignment.id;
+      }
 
-        if (selectedFiles.length > 0) {
-          for (const file of selectedFiles) {
+      // Upload new files (works for both create and edit)
+      if (assignmentId && selectedFiles.length > 0) {
+        let uploadedCount = 0;
+        let failedCount = 0;
+        for (const file of selectedFiles) {
+          try {
             const fileUrl = await fileUploadService.uploadFile(file);
             await assignmentService.addAssignmentFile({
-              assignment_id: assignment.id,
+              assignment_id: assignmentId,
               file_url: fileUrl,
               file_name: file.name,
               file_size: file.size
             });
+            uploadedCount++;
+          } catch (fileErr) {
+            console.error('Erreur upload fichier:', file.name, fileErr);
+            failedCount++;
           }
+        }
+        if (failedCount > 0) {
+          toast.error(`${failedCount} fichier(s) n'ont pas pu être ajoutés. ${uploadedCount} fichier(s) ont été ajoutés avec succès.`);
+        } else if (uploadedCount > 0) {
+          toast.success(`${uploadedCount} fichier(s) ajouté(s)`);
         }
       }
 
+      toast.success(isNew ? 'Évaluation créée avec succès' : 'Évaluation modifiée avec succès');
       onSuccess();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la sauvegarde:', error);
-      alert(editAssignment ? 'Erreur lors de la modification du devoir' : 'Erreur lors de la création du devoir');
+      toast.error(error?.message || (editAssignment ? "Erreur lors de la modification" : "Erreur lors de la création"));
     } finally {
       setLoading(false);
     }
@@ -229,26 +283,58 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
               </div>
             </div>
 
-            {/* Fichiers joints (uniquement en création) */}
-            {!editAssignment && (
-              <div className="space-y-2">
-                <Label className="flex items-center gap-1.5">
-                  <Paperclip className="h-4 w-4 text-muted-foreground" />
-                  Fichiers joints
-                </Label>
-                <FileUpload
-                  onFileSelect={setSelectedFiles}
-                  multiple
-                  accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.ppt,.pptx,.xls,.xlsx"
-                  maxSize={10}
-                />
-                {selectedFiles.length > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    {selectedFiles.length} fichier(s) sélectionné(s)
-                  </p>
-                )}
-              </div>
-            )}
+            {/* Fichiers joints */}
+            <div className="space-y-3" data-testid="assignment-files-section">
+              <Label className="flex items-center gap-1.5">
+                <Paperclip className="h-4 w-4 text-muted-foreground" />
+                Fichiers joints
+              </Label>
+
+              {/* Fichiers existants (edit mode) */}
+              {existingFiles.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-xs text-muted-foreground">Fichiers déjà associés :</p>
+                  {existingFiles.map((f) => (
+                    <div key={f.id} className="flex items-center justify-between gap-2 p-2 bg-muted/40 rounded-lg border border-border">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Paperclip className="h-4 w-4 text-primary shrink-0" />
+                        <a
+                          href={f.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-foreground hover:text-primary hover:underline truncate"
+                          title={f.file_name}
+                        >
+                          {f.file_name}
+                        </a>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleRemoveExistingFile(f.id)}
+                        className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                        data-testid={`remove-existing-file-${f.id}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <FileUpload
+                onFileSelect={setSelectedFiles}
+                multiple
+                accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.ppt,.pptx,.xls,.xlsx"
+                maxSize={10}
+              />
+              {selectedFiles.length > 0 && (
+                <p className="text-xs text-primary font-medium" data-testid="selected-files-indicator">
+                  ✓ {selectedFiles.length} nouveau(x) fichier(s) sera(ont) ajouté(s) à la sauvegarde
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Fixed footer with buttons */}

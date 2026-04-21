@@ -125,6 +125,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
                 </span>
               </div>
               <button
+                type="button"
                 onClick={() => removeFile(index)}
                 className="text-destructive hover:text-destructive/80"
                 disabled={disabled}
