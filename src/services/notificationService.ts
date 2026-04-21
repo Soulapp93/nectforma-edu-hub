@@ -300,6 +300,101 @@ export const notificationService = {
     );
   },
 
+  /**
+   * Notifier les étudiants d'un nouveau travail à faire
+   * (in-app + email via Brevo)
+   */
+  async notifyTaskCreated(
+    moduleId: string,
+    taskId: string,
+    taskTitle: string,
+    dueDate?: string | null,
+    priority?: 'low' | 'medium' | 'high'
+  ) {
+    try {
+      // 1. Resolve formation_id from module
+      const { data: moduleRow, error: moduleErr } = await db
+        .from('formation_modules')
+        .select('formation_id, title')
+        .eq('id', moduleId)
+        .single();
+      if (moduleErr || !moduleRow) throw moduleErr || new Error('Module introuvable');
+      const formationId = moduleRow.formation_id as string;
+      const moduleTitle = moduleRow.title as string;
+
+      // 2. Get student user IDs (only Étudiant role) assigned to the formation
+      const { data: assignments, error: assignErr } = await db
+        .from('user_formation_assignments')
+        .select('user_id, users!inner(id, email, first_name, last_name, role)')
+        .eq('formation_id', formationId);
+      if (assignErr) throw assignErr;
+
+      const students = (assignments || [])
+        .map((a: any) => a.users)
+        .filter((u: any) => u && u.role === 'Étudiant');
+
+      if (students.length === 0) {
+        return { success: true, notified_users: 0, emails_sent: 0 };
+      }
+
+      const studentIds = students.map((u: any) => u.id);
+
+      // 3. Compose labels
+      const priorityLabel =
+        priority === 'high' ? '🔴 Priorité haute'
+        : priority === 'low' ? '🟢 Priorité basse'
+        : '🟡 Priorité moyenne';
+      const dueDateText = dueDate
+        ? ` À faire avant le ${new Date(dueDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}.`
+        : '';
+
+      // 4. In-app notifications (bulk insert)
+      await this.notifyUsers(
+        studentIds,
+        '📌 Nouveau travail à faire',
+        `${moduleTitle} — "${taskTitle}".${dueDateText}`,
+        'assignment',
+        {
+          task_id: taskId,
+          module_id: moduleId,
+          formation_id: formationId,
+          due_date: dueDate || undefined,
+          module_title: moduleTitle,
+          priority,
+          action_url: `/formations`,
+        } as NotificationMetadata
+      );
+
+      // 5. Email notifications (fire-and-forget, best effort)
+      try {
+        const subject = `Nouveau travail à faire — ${moduleTitle}`;
+        const title = `Nouveau travail : ${taskTitle}`;
+        const message = `Votre formateur a publié un nouveau travail dans le module <strong>${moduleTitle}</strong>.<br/><br/><strong>${taskTitle}</strong><br/>${dueDateText ? dueDateText + ' ' : ''}${priorityLabel}`;
+        await db.functions.invoke('send-notification-emails', {
+          body: {
+            type: 'bulk_notification',
+            userIds: studentIds,
+            notificationData: {
+              subject,
+              title,
+              message,
+              ctaText: 'Voir le module',
+              ctaUrl: '/formations',
+            },
+          },
+        });
+      } catch (e) {
+        console.warn('Email notification (task) failed:', e);
+      }
+
+      return { success: true, notified_users: studentIds.length };
+    } catch (error) {
+      console.error('Erreur notifyTaskCreated:', error);
+      // Do not throw - we do not want to block the task creation if the notification fails
+      return { success: false, error };
+    }
+  },
+
   // ============================================
   // ATTENDANCE NOTIFICATIONS
   // ============================================

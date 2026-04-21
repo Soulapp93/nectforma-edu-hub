@@ -33,6 +33,23 @@ export const taskService = {
       .select()
       .single();
     if (error) throw error;
+
+    // Fire-and-forget: notify students (in-app + email via Brevo). Never blocks creation.
+    (async () => {
+      try {
+        const { notificationService } = await import('./notificationService');
+        await notificationService.notifyTaskCreated(
+          data.module_id,
+          data.id,
+          data.title,
+          data.due_date,
+          data.priority
+        );
+      } catch (e) {
+        console.warn('Task notification failed (non-blocking):', e);
+      }
+    })();
+
     return data as ModuleTask;
   },
 

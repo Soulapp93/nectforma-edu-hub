@@ -3,6 +3,21 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
+## Session 42 (2026-04-21)
+
+### Notifications automatiques pour Travail à faire (DONE - 2026-04-21)
+- **`notificationService.notifyTaskCreated(moduleId, taskId, title, dueDate, priority)`** ajoute:
+  1. Resolution automatique formation_id depuis le module
+  2. Filtre uniquement les users role='Étudiant' assignes a la formation
+  3. Insert bulk de notifications in-app (table notifications, type='assignment')
+  4. Invoke edge function `send-notification-emails` (type=bulk_notification) pour envoi Brevo
+- **Integration** : appel fire-and-forget dans `taskService.create()` (ne bloque jamais la creation).
+- **Tests runtime** :
+  - 3 etudiants Rh (Alice/Lucas/Emma) ont recu la notification in-app (verifie en DB)
+  - Cloche etudiant Alice affiche badge "11" (avec la nouvelle notification)
+  - Aucune erreur console
+  - Cleanup: TEST_NOTIF task + 3 notifs supprimes
+
 ## Session 41 (2026-04-20)
 
 ### Refonte des onglets de module (DONE - 2026-04-20)
