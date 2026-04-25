@@ -910,11 +910,16 @@ const SignatoriesManager: React.FC<{ establishmentId: string }> = ({ establishme
   const [editing, setEditing] = useState<EstablishmentSignatory | null>(null);
   const [creating, setCreating] = useState(false);
 
-  const { data: signatories = [] } = useQuery({
+  const { data: signatories = [], error: loadError } = useQuery({
     queryKey: ['establishment-signatories', establishmentId],
     queryFn: () => getEstablishmentSignatories(establishmentId),
     enabled: !!establishmentId,
+    retry: false,
   });
+
+  const tableMissing =
+    !!loadError &&
+    /(relation|table).*(does not exist|n.exist)|42P01|establishment_signatories/i.test((loadError as any)?.message || '');
 
   const upsertMut = useMutation({
     mutationFn: (payload: Partial<EstablishmentSignatory>) =>
@@ -925,7 +930,17 @@ const SignatoriesManager: React.FC<{ establishmentId: string }> = ({ establishme
       setEditing(null);
       setCreating(false);
     },
-    onError: (e: any) => toast.error(e?.message || 'Erreur'),
+    onError: (e: any) => {
+      const msg = e?.message || e?.error_description || 'Erreur inconnue';
+      if (/(relation|table).*(does not exist|n.exist)|42P01/i.test(msg)) {
+        toast.error('La table establishment_signatories est introuvable. Migration SQL non appliquée.');
+      } else if (/permission|policy|rls|row-level/i.test(msg)) {
+        toast.error('Permission refusée par la base (RLS). Vous devez être Admin de l\'établissement.');
+      } else {
+        toast.error('Erreur sauvegarde : ' + msg);
+      }
+      console.error('[Signatory save error]', e);
+    },
   });
 
   const deleteMut = useMutation({
@@ -939,6 +954,24 @@ const SignatoriesManager: React.FC<{ establishmentId: string }> = ({ establishme
 
   return (
     <div className="space-y-5">
+      {tableMissing && (
+        <Card className="rounded-2xl border-2 border-amber-300 bg-amber-50 dark:bg-amber-900/20">
+          <CardContent className="p-4 space-y-2">
+            <h4 className="text-sm font-bold text-amber-700 dark:text-amber-300 flex items-center gap-2">
+              ⚠ Migration SQL requise
+            </h4>
+            <p className="text-xs text-amber-700 dark:text-amber-300">
+              La table <code className="bg-amber-200/60 px-1 rounded">establishment_signatories</code> n'existe pas encore.
+              Ouvrez Supabase Studio → SQL Editor et exécutez le contenu du fichier
+              <code className="bg-amber-200/60 px-1 rounded ml-1">supabase/migrations/20260427000000_establishment_signatories.sql</code>.
+            </p>
+            <p className="text-[11px] text-amber-700/80 dark:text-amber-300/80">
+              Sans cette migration, l'enregistrement et l'affichage des signataires ne fonctionneront pas.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="rounded-2xl">
         <CardContent className="p-5">
           <div className="flex items-start justify-between gap-3 mb-3">
