@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { FileText, Eye, Printer, ChevronLeft, ChevronRight, Users, Settings2, LayoutGrid, Send, Check } from 'lucide-react';
+import { FileText, Eye, Printer, ChevronLeft, ChevronRight, Users, Send, Check } from 'lucide-react';
 import { semesterMatchesFilter } from '@/utils/semesterUtils';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
@@ -33,7 +33,7 @@ import {
 } from '@/services/gradesService';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import TranscriptTemplateEditor from './TranscriptTemplateEditor';
+// (TranscriptTemplateEditor replaced by BulletinConfigurationPanel — no longer used here)
 // (SignaturesCachetTab no longer imported — replaced by BulletinConfigurationPanel signatures tab)
 
 interface Props {
@@ -86,9 +86,10 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   const [semesterView, setSemesterView] = useState<string>('');
   const [currentStudentIndex, setCurrentStudentIndex] = useState<number | null>(null);
   const [showBulletinDialog, setShowBulletinDialog] = useState(false);
-  const [showTemplateEditor, setShowTemplateEditor] = useState(false);
+  const [showTemplateEditor] = useState(false);
+  void showTemplateEditor;
   // (Signatures & Cachet now managed inside the Configuration tab)
-  const [groupingMode, setGroupingMode] = useState<'section' | 'bloc' | 'semester'>('section');
+  const [groupingMode] = useState<'section' | 'bloc' | 'semester'>('section');
   const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [publishSemester, setPublishSemester] = useState<string>('');
   const [isPublishing, setIsPublishing] = useState(false);
@@ -694,40 +695,11 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
           )}
         </div>
         <div className="flex gap-2 flex-wrap items-center">
-          {/* Grouping mode selector */}
-          {selectedFormation && (
-            <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
-              <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground ml-2" />
-              {[
-                { value: 'section' as const, label: 'Par UE/Section' },
-                { value: 'bloc' as const, label: 'Par Bloc' },
-                { value: 'semester' as const, label: 'Par Semestre' },
-              ].map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => setGroupingMode(opt.value)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
-                    groupingMode === opt.value
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          )}
           {isAdmin && selectedFormation && (
-            <>
-              <Button variant="outline" size="sm" onClick={() => setShowTemplateEditor(true)} className="gap-2" data-testid="customize-template-btn">
-                <Settings2 className="h-4 w-4" />
-                Configuration bulletin
-              </Button>
-              <Button variant="default" size="sm" onClick={() => setShowPublishDialog(true)} className="gap-2">
-                <Send className="h-4 w-4" />
-                Publier les relevés
-              </Button>
-            </>
+            <Button variant="default" size="sm" onClick={() => setShowPublishDialog(true)} className="gap-2">
+              <Send className="h-4 w-4" />
+              Publier les relevés
+            </Button>
           )}
         </div>
       </div>
@@ -877,16 +849,6 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Template Editor Dialog */}
-      {isAdmin && selectedFormation && establishment?.id && (
-        <TranscriptTemplateEditor
-          open={showTemplateEditor}
-          onOpenChange={setShowTemplateEditor}
-          formationId={selectedFormation}
-          establishmentId={establishment.id}
-        />
-      )}
 
       {!selectedFormation ? (
         <Card>

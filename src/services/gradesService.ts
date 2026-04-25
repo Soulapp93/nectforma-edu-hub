@@ -756,11 +756,21 @@ export const getEstablishmentSignatories = async (
 export const upsertEstablishmentSignatory = async (
   payload: Partial<EstablishmentSignatory> & { establishment_id: string; role_label: string }
 ): Promise<EstablishmentSignatory> => {
-  if (payload.id) {
+  // Strip read-only / server-managed fields and undefineds
+  const clean: any = {};
+  for (const [k, v] of Object.entries(payload)) {
+    if (v === undefined) continue;
+    if (k === 'created_at' || k === 'updated_at') continue;
+    clean[k] = v;
+  }
+
+  if (clean.id) {
+    const id = clean.id;
+    delete clean.id; // never update PK
     const { data, error } = await (supabase as any)
       .from('establishment_signatories')
-      .update(payload)
-      .eq('id', payload.id)
+      .update(clean)
+      .eq('id', id)
       .select()
       .single();
     if (error) throw error;
@@ -768,7 +778,7 @@ export const upsertEstablishmentSignatory = async (
   }
   const { data, error } = await (supabase as any)
     .from('establishment_signatories')
-    .insert(payload)
+    .insert(clean)
     .select()
     .single();
   if (error) throw error;

@@ -46,6 +46,7 @@ const SIDEBAR_TABS = [
   { value: 'calcul', label: 'Calcul & Validation', icon: Calculator, description: 'Moyennes, rangs et récapitulatif par filière' },
   { value: 'jury', label: 'Jury & Délibération', icon: Scale, description: 'Décisions officielles et procès-verbal' },
   { value: 'bulletin', label: 'Bulletin de notes', icon: ScrollText, description: 'Bulletins individuels par étudiant' },
+  { value: 'config', label: 'Configuration', icon: SlidersHorizontal, description: 'Style, catégories, règles et signatures', adminOnly: true },
 ];
 
 const Notes = () => {
@@ -61,7 +62,6 @@ const Notes = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('saisie');
   const [showCreatePeriod, setShowCreatePeriod] = useState(false);
-  const [showConfig, setShowConfig] = useState(false);
   const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
 
@@ -71,14 +71,14 @@ const Notes = () => {
       if (isAdmin) {
         const { data } = await supabase
           .from('formations')
-          .select('id, title, status, color, level, start_date, end_date, max_students, academic_year, duration, duration_years, semesters_count, formation_type, formation_modules(id)')
+          .select('id, title, status, color, level, start_date, end_date, max_students, academic_year, duration, duration_years, semesters_count, formation_type, establishment_id, formation_modules(id)')
           .eq('establishment_id', establishment?.id || '')
           .order('title');
         return data || [];
       }
       const { data } = await supabase
         .from('user_formation_assignments')
-        .select('formation_id, formations(id, title, status, color, level, start_date, end_date, max_students, academic_year, duration, duration_years, semesters_count, formation_type, formation_modules(id))')
+        .select('formation_id, formations(id, title, status, color, level, start_date, end_date, max_students, academic_year, duration, duration_years, semesters_count, formation_type, establishment_id, formation_modules(id))')
         .eq('user_id', userId!);
       return (data || []).map((d: any) => d.formations).filter(Boolean);
     },
@@ -212,12 +212,6 @@ const Notes = () => {
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">Creer une periode</span>
             </Button>
-            {isAdmin && (
-              <Button variant="outline" size="sm" onClick={() => setShowConfig(!showConfig)} className={`gap-2 ${showConfig ? 'bg-primary text-primary-foreground' : ''}`} data-testid="bulletin-config-btn">
-                <SlidersHorizontal className="h-4 w-4" />
-                <span className="hidden sm:inline">Configuration</span>
-              </Button>
-            )}
           </div>
         </div>
 
@@ -293,33 +287,20 @@ const Notes = () => {
           </Card>
         )}
 
-        {showConfig ? (
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Button variant="ghost" size="sm" onClick={() => setShowConfig(false)} data-testid="config-back-btn">
-                <ArrowLeft className="h-4 w-4 mr-1" /> Retour
-              </Button>
-            </div>
-            <BulletinConfigurationPanel
-              formationId={selectedFormationId}
-              establishmentId={selectedFormation.establishment_id || establishment?.id || ''}
-              formationTitle={selectedFormation.title}
-            />
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {/* Horizontal tab navigation */}
+        <div className="space-y-4">
+          {/* Horizontal tab navigation */}
             <div className="bg-card rounded-xl border border-border shadow-sm p-1.5 flex flex-wrap gap-1">
-              {SIDEBAR_TABS.map((tab) => {
+              {SIDEBAR_TABS.filter((t) => !t.adminOnly || isAdmin).map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.value;
                 return (
                   <button
                     key={tab.value}
                     onClick={() => setActiveTab(tab.value)}
+                    data-testid={`tab-${tab.value}`}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                      isActive 
-                        ? 'bg-primary text-primary-foreground shadow-sm' 
+                      isActive
+                        ? 'bg-primary text-primary-foreground shadow-sm'
                         : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                     }`}
                   >
@@ -331,7 +312,7 @@ const Notes = () => {
               })}
 
               {/* Periods info inline */}
-              {periods.length > 0 && (
+              {periods.length > 0 && activeTab !== 'config' && (
                 <div className="hidden lg:flex items-center gap-2 ml-auto px-3">
                   <div className="w-px h-6 bg-border" />
                   {periods.slice(0, 4).map((p: any) => (
@@ -347,7 +328,7 @@ const Notes = () => {
 
             {/* Mobile bottom tab bar */}
             <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-card border-t border-border px-2 py-1.5 flex gap-1">
-              {SIDEBAR_TABS.map(tab => {
+              {SIDEBAR_TABS.filter((t) => !t.adminOnly || isAdmin).map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.value;
                 return (
@@ -365,8 +346,8 @@ const Notes = () => {
               })}
             </div>
 
-            {/* Active period indicator */}
-            {selectedPeriod && (
+            {/* Active period indicator (hide on config tab) */}
+            {selectedPeriod && activeTab !== 'config' && (
               <div className="bg-muted/40 rounded-lg px-4 py-2 flex items-center gap-2 text-sm">
                 <Calendar className="h-4 w-4 text-primary" />
                 <span className="font-medium">{selectedPeriod.name}</span>
@@ -388,9 +369,15 @@ const Notes = () => {
               {activeTab === 'bulletin' && (
                 <TranscriptsPanel mode="admin" formationId={selectedFormationId} periodId={selectedPeriodId} periodName={selectedPeriod?.name} />
               )}
+              {activeTab === 'config' && isAdmin && (
+                <BulletinConfigurationPanel
+                  formationId={selectedFormationId}
+                  establishmentId={selectedFormation.establishment_id || establishment?.id || ''}
+                  formationTitle={selectedFormation.title}
+                />
+              )}
             </div>
           </div>
-        )}
 
         {/* Create period modal */}
         <CreatePeriodModal
