@@ -723,3 +723,62 @@ export const CREDITS_SYSTEMS = [
   { value: 'ects', label: 'ECTS' },
   { value: 'internal', label: 'Crédits internes' },
 ];
+
+// =====================================================
+// ESTABLISHMENT SIGNATORIES (custom signers per establishment)
+// =====================================================
+
+export interface EstablishmentSignatory {
+  id: string;
+  establishment_id: string;
+  role_label: string;
+  name: string | null;
+  signature_image: string | null;
+  is_stamp: boolean;
+  order_index: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export const getEstablishmentSignatories = async (
+  establishmentId: string
+): Promise<EstablishmentSignatory[]> => {
+  const { data, error } = await (supabase as any)
+    .from('establishment_signatories')
+    .select('*')
+    .eq('establishment_id', establishmentId)
+    .order('order_index', { ascending: true });
+  if (error) throw error;
+  return (data || []) as EstablishmentSignatory[];
+};
+
+export const upsertEstablishmentSignatory = async (
+  payload: Partial<EstablishmentSignatory> & { establishment_id: string; role_label: string }
+): Promise<EstablishmentSignatory> => {
+  if (payload.id) {
+    const { data, error } = await (supabase as any)
+      .from('establishment_signatories')
+      .update(payload)
+      .eq('id', payload.id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as EstablishmentSignatory;
+  }
+  const { data, error } = await (supabase as any)
+    .from('establishment_signatories')
+    .insert(payload)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as EstablishmentSignatory;
+};
+
+export const deleteEstablishmentSignatory = async (id: string): Promise<void> => {
+  const { error } = await (supabase as any)
+    .from('establishment_signatories')
+    .delete()
+    .eq('id', id);
+  if (error) throw error;
+};

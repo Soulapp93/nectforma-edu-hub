@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { FileText, Eye, Printer, ChevronLeft, ChevronRight, Users, Settings2, LayoutGrid, Send, Check, PenTool } from 'lucide-react';
+import { FileText, Eye, Printer, ChevronLeft, ChevronRight, Users, Settings2, LayoutGrid, Send, Check } from 'lucide-react';
 import { semesterMatchesFilter } from '@/utils/semesterUtils';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
@@ -34,7 +34,7 @@ import {
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import TranscriptTemplateEditor from './TranscriptTemplateEditor';
-import SignaturesCachetTab from './SignaturesCachetTab';
+// (SignaturesCachetTab no longer imported — replaced by BulletinConfigurationPanel signatures tab)
 
 interface Props {
   mode: 'admin' | 'student';
@@ -87,7 +87,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   const [currentStudentIndex, setCurrentStudentIndex] = useState<number | null>(null);
   const [showBulletinDialog, setShowBulletinDialog] = useState(false);
   const [showTemplateEditor, setShowTemplateEditor] = useState(false);
-  const [showSignaturesCachet, setShowSignaturesCachet] = useState(false);
+  // (Signatures & Cachet now managed inside the Configuration tab)
   const [groupingMode, setGroupingMode] = useState<'section' | 'bloc' | 'semester'>('section');
   const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [publishSemester, setPublishSemester] = useState<string>('');
@@ -723,18 +723,6 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                 <Settings2 className="h-4 w-4" />
                 Configuration bulletin
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowSignaturesCachet(true)}
-                className="gap-2"
-                disabled={!periodId}
-                data-testid="signatures-cachet-btn"
-                title={!periodId ? 'Sélectionnez d abord une période' : 'Signatures & cachet'}
-              >
-                <PenTool className="h-4 w-4" />
-                Signatures & Cachet
-              </Button>
               <Button variant="default" size="sm" onClick={() => setShowPublishDialog(true)} className="gap-2">
                 <Send className="h-4 w-4" />
                 Publier les relevés
@@ -898,21 +886,6 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
           formationId={selectedFormation}
           establishmentId={establishment.id}
         />
-      )}
-
-      {/* Signatures & Cachet Dialog */}
-      {isAdmin && selectedFormation && (
-        <Dialog open={showSignaturesCachet} onOpenChange={setShowSignaturesCachet}>
-          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" data-testid="signatures-cachet-dialog">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <PenTool className="h-5 w-5 text-primary" />
-                Signatures et cachet du bulletin
-              </DialogTitle>
-            </DialogHeader>
-            <SignaturesCachetTab periodId={periodId} establishmentId={establishment?.id || ''} />
-          </DialogContent>
-        </Dialog>
       )}
 
       {!selectedFormation ? (
