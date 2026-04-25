@@ -21,6 +21,7 @@ import {
   getMention,
   getDecision,
   getTranscriptTemplate,
+  getEstablishmentSignatories,
   DECISIONS,
   MENTIONS,
   EVALUATION_TYPES,
@@ -204,6 +205,13 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
       return data || [];
     },
     enabled: !!selectedFormation,
+  });
+
+  // Custom signatories defined by the establishment (for bulletin footer)
+  const { data: signatories = [] } = useQuery({
+    queryKey: ['bulletin-signatories', establishment?.id],
+    queryFn: () => getEstablishmentSignatories(establishment!.id),
+    enabled: !!establishment?.id,
   });
 
   // Filter modules by semester - fallback to all modules if none match
@@ -1349,16 +1357,44 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                     </p>
                   </div>
 
-                  {/* ===== SIGNATURES ===== */}
-                  <div className="mx-6 mb-2 grid grid-cols-3 gap-6">
-                    {['Responsable pédagogique', 'Président(e) du jury', "Cachet de l'établissement"].map((label, i) => (
-                      <div key={i} className="text-center">
-                        <p className="text-[10px] font-semibold mb-1" style={{ color: '#1a1a2e' }}>{label}</p>
-                        <div className="border-b pt-8" style={{ borderColor: '#cbd5e1' }}></div>
-                        <p className="text-[9px] mt-1 italic" style={{ color: '#94a3b8' }}>Signature / Cachet</p>
-                      </div>
-                    ))}
-                  </div>
+                  {/* ===== SIGNATURES & CACHETS ===== */}
+                  {signatories.length > 0 && (
+                    <div
+                      className={`mx-6 mb-2 grid gap-6 ${
+                        signatories.length === 1
+                          ? 'grid-cols-1 max-w-xs mx-auto'
+                          : signatories.length === 2
+                          ? 'grid-cols-2'
+                          : signatories.length === 3
+                          ? 'grid-cols-3'
+                          : 'grid-cols-4'
+                      }`}
+                    >
+                      {signatories.map((s) => (
+                        <div key={s.id} className="text-center">
+                          <p className="text-[10px] font-semibold mb-1" style={{ color: '#1a1a2e' }}>{s.role_label}</p>
+                          <div className="h-12 flex items-center justify-center">
+                            {s.signature_image ? (
+                              <img
+                                src={s.signature_image}
+                                alt={s.role_label}
+                                className="max-h-12 max-w-full object-contain"
+                                crossOrigin="anonymous"
+                              />
+                            ) : null}
+                          </div>
+                          <div className="border-b" style={{ borderColor: '#cbd5e1' }}></div>
+                          {s.name && !s.is_stamp ? (
+                            <p className="text-[10px] mt-1 font-semibold" style={{ color: '#1a1a2e' }}>{s.name}</p>
+                          ) : s.is_stamp ? (
+                            <p className="text-[9px] mt-1 italic" style={{ color: '#94a3b8' }}>Cachet officiel</p>
+                          ) : (
+                            <p className="text-[9px] mt-1 italic" style={{ color: '#94a3b8' }}>Signature</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   {/* ===== PIED DE PAGE ===== */}
                   <div className="mx-6 pb-4 pt-3 mt-2 text-center" style={{ borderTop: '1px solid #e2e8f0' }}>
