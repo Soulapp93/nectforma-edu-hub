@@ -995,7 +995,7 @@ const SignatoriesManager: React.FC<{ establishmentId: string }> = ({ establishme
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {signatories.map((s) => (
+              {signatories.map((s, idx) => (
                 <div key={s.id} className="border-2 border-border rounded-xl overflow-hidden hover:shadow-lg transition-all" data-testid={`signatory-card-${s.id}`}>
                   <div className="h-1.5 bg-emerald-500" />
                   <div className="p-4 space-y-3">
@@ -1006,6 +1006,34 @@ const SignatoriesManager: React.FC<{ establishmentId: string }> = ({ establishme
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold truncate">{s.role_label}</p>
                         {s.name && <p className="text-[11px] text-muted-foreground truncate">{s.name}</p>}
+                      </div>
+                      <div className="flex flex-col -space-y-0.5">
+                        <Button
+                          size="sm" variant="ghost" className="h-5 w-5 p-0"
+                          disabled={idx === 0}
+                          onClick={() => {
+                            const prev = signatories[idx - 1];
+                            if (!prev) return;
+                            upsertMut.mutate({ ...s, order_index: prev.order_index });
+                            upsertMut.mutate({ ...prev, order_index: s.order_index });
+                          }}
+                          data-testid={`signatory-up-${s.id}`}
+                        >
+                          <ArrowUp className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm" variant="ghost" className="h-5 w-5 p-0"
+                          disabled={idx === signatories.length - 1}
+                          onClick={() => {
+                            const next = signatories[idx + 1];
+                            if (!next) return;
+                            upsertMut.mutate({ ...s, order_index: next.order_index });
+                            upsertMut.mutate({ ...next, order_index: s.order_index });
+                          }}
+                          data-testid={`signatory-down-${s.id}`}
+                        >
+                          <ArrowDown className="h-3 w-3" />
+                        </Button>
                       </div>
                     </div>
 
@@ -1032,6 +1060,82 @@ const SignatoriesManager: React.FC<{ establishmentId: string }> = ({ establishme
           )}
         </CardContent>
       </Card>
+
+      {/* Live preview of bulletin footer */}
+      {signatories.length > 0 && (
+        <Card className="rounded-2xl">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className="text-sm font-bold text-cyan-600 flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4" />
+                  Aperçu du pied de bulletin
+                </h3>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Rendu identique à ce qui apparaîtra en bas du bulletin PDF
+                </p>
+              </div>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground bg-muted px-2 py-1 rounded">
+                Aperçu
+              </span>
+            </div>
+
+            {/* Mock bulletin footer */}
+            <div className="rounded-xl border-2 border-dashed border-border bg-gradient-to-br from-slate-50 to-white dark:from-slate-900/40 dark:to-slate-900/20 p-6">
+              <div
+                className={`grid gap-6 ${
+                  signatories.length === 1
+                    ? 'grid-cols-1 max-w-xs mx-auto'
+                    : signatories.length === 2
+                    ? 'grid-cols-2'
+                    : signatories.length === 3
+                    ? 'grid-cols-3'
+                    : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'
+                }`}
+              >
+                {signatories.map((s) => (
+                  <div key={s.id} className="text-center space-y-1.5" data-testid={`signatory-preview-${s.id}`}>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border/60 pb-1.5">
+                      {s.role_label}
+                    </p>
+                    <div className="h-20 flex items-center justify-center">
+                      {s.signature_image ? (
+                        <img
+                          src={s.signature_image}
+                          alt={s.role_label}
+                          className={`max-h-20 max-w-full object-contain ${s.is_stamp ? 'opacity-90' : ''}`}
+                          style={s.is_stamp ? { filter: 'hue-rotate(-10deg)' } : undefined}
+                        />
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground/60 italic">— Signature manquante —</span>
+                      )}
+                    </div>
+                    {s.name && !s.is_stamp && (
+                      <p className="text-xs font-semibold text-foreground">{s.name}</p>
+                    )}
+                    {s.is_stamp && (
+                      <p className="text-[10px] uppercase tracking-wider text-amber-600 dark:text-amber-400 font-bold">
+                        Cachet officiel
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {signatories.some((s) => !s.signature_image) && (
+                <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-4 text-center italic">
+                  ⚠ Certains signataires n'ont pas encore de signature/image attribuée
+                </p>
+              )}
+            </div>
+
+            {/* Order hint */}
+            <p className="text-[11px] text-muted-foreground mt-3 text-center">
+              💡 L'ordre d'affichage suit l'ordre des cartes ci-dessus. Utilisez les flèches sur chaque carte pour réorganiser.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {(editing || creating) && (
         <SignatoryEditor
