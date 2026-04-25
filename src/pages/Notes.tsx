@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, Suspense } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useEstablishment } from '@/hooks/useEstablishment';
 import { useSearchParams } from 'react-router-dom';
@@ -9,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   FileSpreadsheet, FileText, Settings2, GraduationCap, ClipboardList, 
   ArrowLeft, Calendar, Users, ChevronRight, Clock, BookOpen, Search,
-  Calculator, Scale, ScrollText, Plus, SlidersHorizontal
+  Calculator, Scale, ScrollText, Plus, SlidersHorizontal, PenTool
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { useQuery } from '@tanstack/react-query';
@@ -29,6 +30,7 @@ const TutorGradesView = React.lazy(() => import('@/components/grades/TutorGrades
 const CalculValidation = React.lazy(() => import('@/components/grades/CalculValidation'));
 const JuryDeliberation = React.lazy(() => import('@/components/grades/JuryDeliberation'));
 const CreatePeriodModal = React.lazy(() => import('@/components/grades/CreatePeriodModal'));
+const SignaturesCachetTab = React.lazy(() => import('@/components/grades/SignaturesCachetTab'));
 
 const getLevelColor = (level?: string) => {
   const colors: Record<string, string> = {
@@ -48,6 +50,27 @@ const SIDEBAR_TABS = [
   { value: 'bulletin', label: 'Bulletin de notes', icon: ScrollText, description: 'Bulletins individuels par étudiant' },
 ];
 
+const SignaturesCachetDialog: React.FC<{
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  periodId: string | null;
+  establishmentId: string;
+}> = ({ open, onOpenChange, periodId, establishmentId }) => (
+  <Dialog open={open} onOpenChange={onOpenChange}>
+    <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" data-testid="signatures-cachet-dialog">
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2">
+          <PenTool className="h-5 w-5 text-primary" />
+          Signatures et cachet du bulletin
+        </DialogTitle>
+      </DialogHeader>
+      <Suspense fallback={<div className="py-12 text-center text-sm text-muted-foreground">Chargement...</div>}>
+        <SignaturesCachetTab periodId={periodId} establishmentId={establishmentId} />
+      </Suspense>
+    </DialogContent>
+  </Dialog>
+);
+
 const Notes = () => {
   const { userRole, userId } = useCurrentUser();
   const { establishment } = useEstablishment();
@@ -62,6 +85,7 @@ const Notes = () => {
   const [activeTab, setActiveTab] = useState('saisie');
   const [showCreatePeriod, setShowCreatePeriod] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
+  const [showSignaturesCachet, setShowSignaturesCachet] = useState(false);
   const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
 
@@ -213,10 +237,24 @@ const Notes = () => {
               <span className="hidden sm:inline">Creer une periode</span>
             </Button>
             {isAdmin && (
-              <Button variant="outline" size="sm" onClick={() => setShowConfig(!showConfig)} className={`gap-2 ${showConfig ? 'bg-primary text-primary-foreground' : ''}`}>
-                <SlidersHorizontal className="h-4 w-4" />
-                <span className="hidden sm:inline">Configuration</span>
-              </Button>
+              <>
+                <Button variant="outline" size="sm" onClick={() => setShowConfig(!showConfig)} className={`gap-2 ${showConfig ? 'bg-primary text-primary-foreground' : ''}`} data-testid="bulletin-config-btn">
+                  <SlidersHorizontal className="h-4 w-4" />
+                  <span className="hidden sm:inline">Configuration bulletin</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowSignaturesCachet(true)}
+                  className="gap-2"
+                  disabled={!selectedPeriodId}
+                  title={!selectedPeriodId ? 'Sélectionnez d abord une période' : ''}
+                  data-testid="signatures-cachet-btn"
+                >
+                  <PenTool className="h-4 w-4" />
+                  <span className="hidden sm:inline">Signatures & Cachet</span>
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -397,6 +435,16 @@ const Notes = () => {
           semestersCount={selectedFormation.semesters_count || (selectedFormation.duration_years || 1) * 2}
           existingPeriodsCount={periods.length}
         />
+
+        {/* Signatures & Cachet dialog */}
+        <Suspense fallback={null}>
+          <SignaturesCachetDialog
+            open={showSignaturesCachet}
+            onOpenChange={setShowSignaturesCachet}
+            periodId={selectedPeriodId}
+            establishmentId={selectedFormation.establishment_id || ''}
+          />
+        </Suspense>
       </div>
     );
   }

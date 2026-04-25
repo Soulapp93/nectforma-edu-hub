@@ -3,6 +3,25 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
+## Session 45 (2026-04-25)
+
+### Refonte Notes & Bulletins (DONE - 2026-04-25)
+- **Migration DB** (20260425000000) :
+  - Nouvelle table `bulletin_signatures` (period_id, signature_type IN pedagogue/jury/stamp, name, title, signature_image) + RLS staff/select all establishment members + UNIQUE(period_id, signature_type)
+  - `formation_modules.semester` rendu nullable (les modules ne sont plus rattaches a un semestre)
+- **CreatePeriodModal** : `needsModules: true` pour TOUS les types (Semestre, Trimestre, Examen, Rattrapage, Custom). Plus seulement les examens.
+- **ModuleForm.tsx** : suppression du selecteur Semestre lors de la creation/edition des modules de formation.
+- **SignaturesCachetTab.tsx** (nouveau composant) :
+  - 3 cards (Responsable Pedagogique bleu, President du Jury violet, Cachet de l'Etablissement rouge) avec preview + bouton "Configurer/Modifier"
+  - Section "Apercu sur le bulletin" avec rendu temps reel des 3 signatures
+  - Editor par card : champs Nom + Titre, tabs **Dessiner** (canvas avec mouse/touch + bouton Effacer) ou **Importer** (upload image PNG transparent)
+  - Sauvegarde via upsert (UNIQUE constraint)
+- **Notes.tsx** : 
+  - Bouton **Configuration bulletin** (renomme depuis "Configuration") - regroupe toutes les configs/personnalisations
+  - Nouveau bouton **Signatures & Cachet** (data-testid=`signatures-cachet-btn`) - desactive si pas de periode selectionnee
+  - Suppression de l'ancien `SignatureRequestPanel` (remplace par `SignaturesCachetTab` dans un Dialog)
+- **Tests runtime** : 3 boutons OK, dialog Signatures avec 3 cards + apercu bulletin OK, Editor canvas OK, Modal Periode avec selection modules pour Semestre OK.
+
 ## Session 44 (2026-04-21)
 
 ### Gestion des diplomes enrichie (DONE - 2026-04-21)

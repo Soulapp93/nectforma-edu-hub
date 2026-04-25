@@ -173,27 +173,6 @@ const ModuleForm: React.FC<ModuleFormProps> = ({ onAdd, onRemove, moduleIndex, i
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
-            Semestre
-          </label>
-          <select
-            value={formData.semester ?? ''}
-            onChange={(e) => {
-              const val = e.target.value === '' ? undefined : Number(e.target.value);
-              const newData = { ...formData, semester: val };
-              setFormData(newData);
-              onAdd(newData);
-            }}
-            className="w-full px-3 py-2 border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-          >
-            <option value="">-- Aucun semestre --</option>
-            {getSemesterOptions(semestersCount).map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
           <label className="block text-sm font-medium text-foreground mb-2">
             <User className="h-4 w-4 inline mr-1" />
             Formateurs (optionnel)

@@ -13,13 +13,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { BookOpen, Search, CheckCircle2 } from 'lucide-react';
 
 const PERIOD_OPTIONS = [
-  { value: 'semestre', label: 'Semestre', needsModules: false },
-  { value: 'trimestre', label: 'Trimestre', needsModules: false },
+  { value: 'semestre', label: 'Semestre', needsModules: true },
+  { value: 'trimestre', label: 'Trimestre', needsModules: true },
   { value: 'examen_blanc', label: 'Examen Blanc', needsModules: true },
   { value: 'examen_final', label: 'Examen Final', needsModules: true },
   { value: 'partiels', label: 'Partiels', needsModules: true },
   { value: 'rattrapage', label: 'Rattrapage', needsModules: true },
-  { value: 'custom', label: 'Personnalise', needsModules: false },
+  { value: 'custom', label: 'Personnalise', needsModules: true },
 ];
 
 interface Props {
