@@ -15,6 +15,10 @@ import { PageHeader } from '@/components/ui/page-header';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { deleteEvaluationPeriod } from '@/services/gradesService';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { getEvaluationPeriods } from '@/services/gradesService';
 import { format } from 'date-fns';
@@ -66,21 +70,30 @@ const Notes = () => {
   const [activeTab, setActiveTab] = useState('saisie');
   const [showCreatePeriod, setShowCreatePeriod] = useState(false);
   const [showCreateComposite, setShowCreateComposite] = useState(false);
+  const [periodToDelete, setPeriodToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
 
-  const handleDeletePeriod = async (periodId: string, periodName: string) => {
-    if (!window.confirm(`Supprimer la période "${periodName}" ?\nLes évaluations rattachées seront déliées (mais pas supprimées).`)) return;
+  const handleDeletePeriod = (periodId: string, periodName: string) => {
+    setPeriodToDelete({ id: periodId, name: periodName });
+  };
+  const confirmDeletePeriod = async () => {
+    if (!periodToDelete) return;
+    setIsDeleting(true);
     try {
-      await deleteEvaluationPeriod(periodId);
+      await deleteEvaluationPeriod(periodToDelete.id);
       queryClient.invalidateQueries({ queryKey: ['evaluation-periods'] });
       queryClient.invalidateQueries({ queryKey: ['periods'] });
       queryClient.invalidateQueries({ queryKey: ['periods-sheet'] });
-      if (selectedPeriodId === periodId) setSelectedPeriodId(null);
-      toast.success('Période supprimée');
+      if (selectedPeriodId === periodToDelete.id) setSelectedPeriodId(null);
+      toast.success(`Période "${periodToDelete.name}" supprimée`);
+      setPeriodToDelete(null);
     } catch (e: any) {
       toast.error('Erreur : ' + (e?.message || 'suppression impossible'));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -484,6 +497,34 @@ const Notes = () => {
           formationId={selectedFormationId}
           existingPeriods={periods as any}
         />
+
+        {/* Confirm period deletion */}
+        <AlertDialog open={!!periodToDelete} onOpenChange={(o) => !o && setPeriodToDelete(null)}>
+          <AlertDialogContent data-testid="confirm-delete-period">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                <X className="h-5 w-5" />
+                Supprimer la période ?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-2 pt-2">
+                <p>Vous allez supprimer définitivement la période <strong className="text-foreground">"{periodToDelete?.name}"</strong>.</p>
+                <p className="text-xs">⚠ Les évaluations qui y étaient rattachées seront <strong>déliées</strong> mais pas supprimées (vous pourrez les ré-affecter à une autre période).</p>
+                <p className="text-xs">Cette action est <strong className="text-destructive">irréversible</strong>.</p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting} data-testid="confirm-delete-cancel">Annuler</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDeletePeriod}
+                disabled={isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                data-testid="confirm-delete-confirm"
+              >
+                {isDeleting ? 'Suppression...' : 'Supprimer définitivement'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     );
   }

@@ -33,13 +33,18 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
   const queryClient = useQueryClient();
   const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
   const selectedFormation = formationId;
-  const [semesterView, setSemesterView] = useState<string>('');
   const [selectedModuleId, setSelectedModuleId] = useState<string>('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [preselectedModuleId, setPreselectedModuleId] = useState<string>('');
   const [localGrades, setLocalGrades] = useState<Map<string, Map<string, number | null>>>(new Map());
   const [isDirty, setIsDirty] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
+
+  const isPeriodLocked = useMemo(() => {
+    if (!periodId || periods.length === 0) return false;
+    const cp = periods.find((p: any) => p.id === periodId);
+    return cp?.is_locked === true;
+  }, [periodId, periods]);
 
   // Formation data
   const { data: currentFormationData } = useQuery({
@@ -74,81 +79,43 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
   });
   const periods = useMemo(() => rawPeriods ?? [], [rawPeriods]);
 
-  const durationYears = (currentFormationData as any)?.duration_years || 1;
-  const semestersCount = (currentFormationData as any)?.semesters_count || durationYears * 2;
-  const isBTS = (currentFormationData as any)?.formation_type === 'bts';
-  const isExamBlancView = semesterView === 'exam_blanc';
+  void currentFormationData; // formation data fetch (kept for future enhancements)
+  // Current selected period (from parent prop) — single source of truth
+  const currentPeriod = useMemo(
+    () => periods.find((p: any) => p.id === periodId) || null,
+    [periods, periodId]
+  );
+  const isExamBlancView = currentPeriod?.period_type === 'examen_blanc' || currentPeriod?.period_type === 'examen_final';
+  const isComposite = currentPeriod?.is_composite === true;
 
-  // Check if the current period is locked (PV validated)
-  const isPeriodLocked = useMemo(() => {
-    if (!periodId || periods.length === 0) return false;
-    const currentPeriod = periods.find((p: any) => p.id === periodId);
-    return currentPeriod?.is_locked === true;
-  }, [periodId, periods]);
-
-  useEffect(() => {
-    if (currentFormationData && !semesterView) setSemesterView('s1');
-  }, [currentFormationData]);
-
-  // Sync semesterView with parent periodId
-  useEffect(() => {
-    if (periodId && periods.length > 0) {
-      const period = periods.find((p: any) => p.id === periodId);
-      if (period) {
-        const pType = period.period_type;
-        if (pType === 'examen_blanc' || pType === 'examen_final') {
-          setSemesterView('exam_blanc');
-        } else {
-          const semPeriods = periods.filter((p: any) => p.period_type === 'semestre' || p.period_type === 'semester');
-          const idx = semPeriods.findIndex((p: any) => p.id === periodId);
-          if (idx >= 0) {
-            setSemesterView(`s${idx + 1}`);
-          } else {
-            const num = period.name.match(/\d+/)?.[0];
-            if (num) setSemesterView(`s${num}`);
-          }
-        }
-      }
-    }
-  }, [periodId, periods]);
-
+  // For composite periods, expand to underlying period IDs
   const activePeriodIds = useMemo(() => {
-    if (!semesterView || periods.length === 0 || isExamBlancView) return [];
-    if (semesterView === 'bulletin-global') return periods.map(p => p.id);
-    if (semesterView.startsWith('bulletin-')) {
-      const yearNum = parseInt(semesterView.split('-')[1]);
-      const startIdx = (yearNum - 1) * 2;
-      return periods.filter((_, idx) => idx >= startIdx && idx < startIdx + 2).map(p => p.id);
+    if (!periodId) return [];
+    if (isComposite && Array.isArray((currentPeriod as any)?.combined_period_ids)) {
+      return (currentPeriod as any).combined_period_ids;
     }
-    const semNum = parseInt(semesterView.replace('s', ''));
-    const idx = semNum - 1;
-    return periods[idx] ? [periods[idx].id] : [];
-  }, [semesterView, periods, isExamBlancView]);
+    return [periodId];
+  }, [periodId, isComposite, currentPeriod]);
 
+  const currentPeriodLabel = currentPeriod?.name || '';
+
+  // Active semester numbers (best-effort: parse from period name)
   const activeSemesterNums = useMemo((): number[] | null => {
-    if (!semesterView || isExamBlancView) return null;
-    if (semesterView === 'bulletin-global') return Array.from({ length: semestersCount }, (_, i) => i + 1);
-    if (semesterView.startsWith('bulletin-')) {
-      const yearNum = parseInt(semesterView.split('-')[1]);
-      return [(yearNum - 1) * 2 + 1, (yearNum - 1) * 2 + 2];
+    if (!currentPeriod) return null;
+    if (isExamBlancView) return null;
+    if (isComposite) {
+      // gather semesters from underlying period names
+      const nums: number[] = [];
+      activePeriodIds.forEach((pid: string) => {
+        const p = periods.find((pp: any) => pp.id === pid);
+        const m = p?.name?.match(/\d+/);
+        if (m) nums.push(parseInt(m[0]));
+      });
+      return nums.length > 0 ? nums : null;
     }
-    const num = parseInt(semesterView.replace('s', ''));
-    return isNaN(num) ? null : [num];
-  }, [semesterView, semestersCount, isExamBlancView]);
-
-  const currentPeriodLabel = useMemo(() => {
-    if (isExamBlancView) return 'Examen Blanc';
-    if (semesterView === 'bulletin-global') return 'Bulletin de Formation';
-    if (semesterView.startsWith('bulletin-')) {
-      const yearNum = parseInt(semesterView.split('-')[1]);
-      return durationYears === 1 ? 'Bulletin de Formation' : `Bulletin Année ${yearNum}`;
-    }
-    if (semesterView) {
-      const semNum = parseInt(semesterView.replace('s', ''));
-      return `Semestre ${semNum}`;
-    }
-    return '';
-  }, [semesterView, durationYears, isExamBlancView]);
+    const m = currentPeriod.name.match(/\d+/);
+    return m ? [parseInt(m[0])] : null;
+  }, [currentPeriod, isExamBlancView, isComposite, activePeriodIds, periods]);
 
   // Students
   const { data: rawStudents } = useQuery({
@@ -390,57 +357,8 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
 
   return (
     <div className="space-y-4">
-      {/* Top bar : period tabs + actions */}
-      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap">
-        {semestersCount > 0 && currentFormationData && (
-          <div className="flex flex-wrap items-center gap-1 bg-muted/50 rounded-xl p-1.5">
-            {Array.from({ length: durationYears }, (_, y) => {
-              const s1 = y * 2 + 1;
-              const yearNum = y + 1;
-              return (
-                <React.Fragment key={yearNum}>
-                  {durationYears > 1 && (
-                    <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider ml-1.5 mr-0.5">A{yearNum}</span>
-                  )}
-                  {Array.from({ length: Math.min(2, semestersCount - y * 2) }, (_, si) => {
-                    const semNum = s1 + si;
-                    return (
-                      <button
-                        key={`s${semNum}`}
-                        data-testid={`sheet-period-s${semNum}`}
-                        onClick={() => setSemesterView(`s${semNum}`)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                          semesterView === `s${semNum}`
-                            ? 'bg-primary text-primary-foreground shadow-sm'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                        }`}
-                      >
-                        S{semNum}
-                      </button>
-                    );
-                  })}
-                  {yearNum < durationYears && <div className="w-px h-5 bg-border mx-0.5" />}
-                </React.Fragment>
-              );
-            })}
-            {isBTS && (
-              <>
-                <div className="w-px h-5 bg-border mx-0.5" />
-                <button
-                  onClick={() => setSemesterView('exam_blanc')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                    semesterView === 'exam_blanc'
-                      ? 'bg-amber-500 text-white shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                  }`}
-                >
-                  Examen Blanc
-                </button>
-              </>
-            )}
-          </div>
-        )}
-
+      {/* Top bar : actions only (period selection is handled by parent) */}
+      <div className="flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-2 ml-auto">
           {isDirty && (
             <Badge variant="outline" className="text-amber-600 border-amber-300 animate-pulse">

@@ -133,55 +133,62 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   const durationYears = (selectedFormationObj as any)?.duration_years || 1;
   const semestersCount = (selectedFormationObj as any)?.semesters_count || durationYears * 2;
 
-  // Auto-init semesterView based on formation data
+  // Sync semesterView with the parent-provided periodId (single source of truth)
   useEffect(() => {
-    if (selectedFormationObj && !semesterView) setSemesterView('s1');
-  }, [selectedFormationObj]);
+    if (!periodId || periods.length === 0) return;
+    const period = periods.find((p: any) => p.id === periodId);
+    if (!period) return;
+    // If composite bulletin, use special view
+    if (period.is_composite) {
+      setSemesterView(`composite-${period.id}`);
+      return;
+    }
+    // Best-effort numeric semester from name
+    const m = period.name.match(/\d+/);
+    if (m && period.period_type === 'semestre') setSemesterView(`s${m[0]}`);
+    else setSemesterView(`period-${period.id}`);
+  }, [periodId, periods]);
 
   const activePeriodIds = useMemo(() => {
-    if (!semesterView || periods.length === 0) return [];
-    if (semesterView === 'bulletin-global') {
-      return periods.map(p => p.id);
+    if (!periodId || periods.length === 0) return [];
+    const period = periods.find((p: any) => p.id === periodId);
+    if (!period) return [];
+    // Composite period: expand to combined IDs
+    if (period.is_composite && Array.isArray((period as any).combined_period_ids)) {
+      return (period as any).combined_period_ids;
     }
-    if (semesterView.startsWith('bulletin-')) {
-      const yearNum = parseInt(semesterView.split('-')[1]);
-      const startIdx = (yearNum - 1) * 2;
-      return periods.filter((_, idx) => idx >= startIdx && idx < startIdx + 2).map(p => p.id);
-    }
-    const semNum = parseInt(semesterView.replace('s', ''));
-    const idx = semNum - 1;
-    return periods[idx] ? [periods[idx].id] : [];
-  }, [semesterView, periods]);
+    return [periodId];
+  }, [periodId, periods]);
 
-  const isFinalView = semesterView.startsWith('bulletin-');
+  const isFinalView = useMemo(() => {
+    if (!periodId) return false;
+    const p = periods.find((pp: any) => pp.id === periodId);
+    return p?.is_composite === true;
+  }, [periodId, periods]);
 
   const activeSemesterNums = useMemo((): number[] | null => {
-    if (!semesterView) return null;
-    if (semesterView === 'bulletin-global') {
-      return Array.from({ length: semestersCount }, (_, i) => i + 1);
+    if (!periodId) return null;
+    const period = periods.find((p: any) => p.id === periodId);
+    if (!period) return null;
+    if (period.is_composite && Array.isArray((period as any).combined_period_ids)) {
+      const nums: number[] = [];
+      (period as any).combined_period_ids.forEach((pid: string) => {
+        const cp = periods.find((pp: any) => pp.id === pid);
+        const m = cp?.name?.match(/\d+/);
+        if (m) nums.push(parseInt(m[0]));
+      });
+      return nums.length > 0 ? nums : null;
     }
-    if (semesterView.startsWith('bulletin-')) {
-      const yearNum = parseInt(semesterView.split('-')[1]);
-      return [(yearNum - 1) * 2 + 1, (yearNum - 1) * 2 + 2];
-    }
-    const num = parseInt(semesterView.replace('s', ''));
-    return isNaN(num) ? null : [num];
-  }, [semesterView, semestersCount]);
+    const m = period.name.match(/\d+/);
+    return m ? [parseInt(m[0])] : null;
+  }, [periodId, periods]);
 
   const currentPeriodLabel = useMemo(() => {
-    if (semesterView === 'bulletin-global') {
-      return 'Bulletin de Formation';
-    }
-    if (isFinalView) {
-      const yearNum = parseInt(semesterView.split('-')[1]);
-      return durationYears === 1 ? 'Bulletin de Formation' : `Bulletin Année ${yearNum}`;
-    }
-    if (semesterView) {
-      const semNum = parseInt(semesterView.replace('s', ''));
-      return `Semestre ${semNum}`;
-    }
-    return '';
-  }, [semesterView, isFinalView, durationYears]);
+    if (!periodId) return periodName || '';
+    const p = periods.find((pp: any) => pp.id === periodId);
+    return p?.name || periodName || '';
+  }, [periodId, periods, periodName]);
+  void semestersCount; void durationYears; void selectedFormationObj;
 
   const { data: students = [] } = useQuery({
     queryKey: ['formation-students-transcripts', selectedFormation],
@@ -705,46 +712,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
               </SelectContent>
             </Select>
           )}
-          {/* Semester buttons - no bulletin buttons */}
-          {semestersCount > 0 && selectedFormationObj && (
-            <div className="flex flex-wrap items-center gap-1 bg-muted/50 rounded-xl p-1.5">
-              {Array.from({ length: durationYears }, (_, y) => {
-                const s1 = y * 2 + 1;
-                const yearNum = y + 1;
-                const publishedNums = publishedSemesters.map((ps: any) => ps.semester_number);
-                return (
-                  <React.Fragment key={yearNum}>
-                    {durationYears > 1 && (
-                      <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider ml-1.5 mr-0.5">A{yearNum}</span>
-                    )}
-                    {Array.from({ length: Math.min(2, semestersCount - y * 2) }, (_, si) => {
-                      const semNum = s1 + si;
-                      // Students only see published semesters
-                      if (mode === 'student' && !publishedNums.includes(semNum)) return null;
-                      const isPublished = publishedNums.includes(semNum);
-                      return (
-                        <button
-                          key={`s${semNum}`}
-                          onClick={() => { setSemesterView(`s${semNum}`); setCurrentStudentIndex(0); }}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                            semesterView === `s${semNum}` 
-                              ? 'bg-primary text-primary-foreground shadow-sm' 
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                          }`}
-                        >
-                          S{semNum}
-                          {isPublished && mode === 'admin' && <Check className="h-3 w-3 ml-1 inline text-green-500" />}
-                        </button>
-                      );
-                    })}
-                    {yearNum < durationYears && (
-                      <div className="w-px h-5 bg-border mx-0.5" />
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </div>
-          )}
+          {/* Period selector now handled by parent (Notes page) — internal S1/S2 buttons removed */}
         </div>
         <div className="flex gap-2 flex-wrap items-center">
           {isAdmin && selectedFormation && (
@@ -1064,10 +1032,10 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                       </div>
                       <div className="text-right">
                         <div className="inline-block px-4 py-2 rounded-md text-sm font-bold text-white" style={{ backgroundColor: '#c8a94e' }}>
-                          BULLETIN DE NOTES
+                          BULLETIN DE NOTES — {(periodName || currentPeriodLabel || '').toUpperCase()}
                         </div>
                         <p className="text-[10px] mt-1.5" style={{ color: '#64748b' }}>
-                          Année : {academicYear} - {currentPeriodLabel}
+                          Année : {academicYear}
                         </p>
                         <p className="text-[10px]" style={{ color: '#64748b' }}>Réf : {refNumber}</p>
                       </div>
