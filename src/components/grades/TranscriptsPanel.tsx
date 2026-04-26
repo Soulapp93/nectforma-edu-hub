@@ -34,6 +34,8 @@ import {
 } from '@/services/gradesService';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import BulletinTemplateRenderer, { type BulletinTableRow, type BulletinRenderData } from './BulletinTemplateRenderer';
+import { DEFAULT_TABLE_COLUMNS, DEFAULT_TABLE_STYLE, DEFAULT_HEADER_ELEMENTS, DEFAULT_BODY_ELEMENTS, DEFAULT_FOOTER_ELEMENTS } from './BulletinLayoutEditor';
 // (TranscriptTemplateEditor replaced by BulletinConfigurationPanel — no longer used here)
 // (SignaturesCachetTab no longer imported — replaced by BulletinConfigurationPanel signatures tab)
 
@@ -213,6 +215,30 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     queryFn: () => getEstablishmentSignatories(establishment!.id),
     enabled: !!establishment?.id,
   });
+
+  // Saved transcript template (for custom bulletin layout)
+  const { data: savedTemplate } = useQuery({
+    queryKey: ['transcript-template-render', selectedFormation],
+    queryFn: () => getTranscriptTemplate(selectedFormation),
+    enabled: !!selectedFormation,
+  });
+
+  // Extract layout config from saved template (with defaults)
+  const templateLayout = useMemo(() => {
+    const tpl: any = savedTemplate || {};
+    const hc: any = tpl.header_config || {};
+    const fc: any = tpl.footer_config || {};
+    const cc: any = tpl.columns_config || {};
+    const hasCustom = Array.isArray(hc.elements) && hc.elements.length > 0;
+    return {
+      hasCustom,
+      headerElements: Array.isArray(hc.elements) && hc.elements.length > 0 ? hc.elements : DEFAULT_HEADER_ELEMENTS,
+      bodyElements: Array.isArray(cc.bodyElements) && cc.bodyElements.length > 0 ? cc.bodyElements : DEFAULT_BODY_ELEMENTS,
+      footerElements: Array.isArray(fc.elements) && fc.elements.length > 0 ? fc.elements : DEFAULT_FOOTER_ELEMENTS,
+      tableColumns: Array.isArray(cc.tableColumns) && cc.tableColumns.length > 0 ? cc.tableColumns : DEFAULT_TABLE_COLUMNS,
+      tableStyle: cc.tableStyle ? { ...DEFAULT_TABLE_STYLE, ...cc.tableStyle } : DEFAULT_TABLE_STYLE,
+    };
+  }, [savedTemplate]);
 
   // Filter modules by semester - fallback to all modules if none match
   const modules = useMemo(() => {
@@ -1007,6 +1033,70 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                 </div>
 
                 <div ref={printRef} className="bulletin bg-white text-[#1a1a2e]">
+                  {templateLayout.hasCustom ? (
+                    /* ===== CUSTOM TEMPLATE-DRIVEN BULLETIN ===== */
+                    <div className="flex justify-center p-4">
+                      <BulletinTemplateRenderer
+                        headerElements={templateLayout.headerElements}
+                        bodyElements={templateLayout.bodyElements}
+                        footerElements={templateLayout.footerElements}
+                        tableColumns={templateLayout.tableColumns}
+                        tableStyle={templateLayout.tableStyle}
+                        data={(() => {
+                          const d: BulletinRenderData = {
+                            nom_complet: currentBulletin.studentName,
+                            prenom: nameParts[0] || '',
+                            nom: nameParts.slice(1).join(' ') || nameParts[0] || '',
+                            numero_etudiant: String((currentStudentIndex ?? 0) + 1).padStart(4, '0'),
+                            formation: selectedFormationData?.title || '',
+                            niveau: (selectedFormationData as any)?.level || '',
+                            annee_academique: academicYear,
+                            periode: periodName || semesterView,
+                            etablissement: establishment?.name || '',
+                            adresse_etablissement: (establishment as any)?.address || '',
+                            moyenne_generale: currentBulletin.ccGeneralAverage !== null ? currentBulletin.ccGeneralAverage.toFixed(2) : '—',
+                            rang: `${rank} / ${totalStudents}`,
+                            mention: currentBulletin.ccGeneralAverage !== null ? (getMention(currentBulletin.ccGeneralAverage, gradingRules as any) || '—') : '—',
+                            decision: currentBulletin.ccGeneralAverage !== null ? (getDecision(currentBulletin.ccGeneralAverage, gradingRules as any) === 'admis' ? 'Admis' : 'Ajourné') : 'En cours',
+                            credits_acquis: '—',
+                            numero_bulletin: refNumber,
+                            date_emission: format(new Date(), 'dd/MM/yyyy'),
+                            code_verification: refNumber,
+                          };
+                          return d;
+                        })()}
+                        rows={(() => {
+                          const tableRows: BulletinTableRow[] = [];
+                          modules.forEach((mod: any) => {
+                            const modData = currentBulletin.modules.find(m => m.moduleId === mod.id);
+                            if (!modData) return;
+                            const dsAvg = getStudentModuleDSAvg(currentBulletin.studentId, mod.id);
+                            const examFinal = getStudentModuleExamFinal(currentBulletin.studentId, mod.id);
+                            const oral = getStudentModuleOral(currentBulletin.studentId, mod.id);
+                            const moy = modData.ccAverage;
+                            tableRows.push({
+                              module: mod.title,
+                              coefficient: mod.coefficient || 1,
+                              cc: modData.ccAverage,
+                              ds: dsAvg,
+                              exam: examFinal,
+                              oral: oral,
+                              tp: null,
+                              moyenne: moy !== null ? moy.toFixed(2) : '—',
+                              points: moy !== null ? (moy * (mod.coefficient || 1)).toFixed(2) : '—',
+                              credits: '—',
+                              status: moy !== null && moy >= 10 ? 'Validé' : (moy !== null ? 'Ajourné' : '—'),
+                              appreciation: getAppreciation(moy),
+                            });
+                          });
+                          return tableRows;
+                        })()}
+                        establishmentLogo={establishment?.logo_url}
+                        signatories={signatories as any}
+                      />
+                    </div>
+                  ) : (
+                  <>
                   {/* ===== EN-TÊTE STYLE EDUPRO ===== */}
                   <div className="px-6 pt-6 pb-4">
                     <div className="flex items-start justify-between">
@@ -1402,6 +1492,8 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                       Document officiel — {establishment?.name} - Réf : {refNumber} - Ce bulletin est certifié authentique.
                     </p>
                   </div>
+                  </>
+                  )}
                 </div>
               </>
             );

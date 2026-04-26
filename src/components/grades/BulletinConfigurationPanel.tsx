@@ -30,7 +30,11 @@ import BulletinLayoutEditor, {
   DEFAULT_HEADER_ELEMENTS,
   DEFAULT_BODY_ELEMENTS,
   DEFAULT_FOOTER_ELEMENTS,
+  DEFAULT_TABLE_COLUMNS,
+  DEFAULT_TABLE_STYLE,
   type BulletinElement,
+  type TableColumnConfig,
+  type TableStyleConfig,
 } from './BulletinLayoutEditor';
 
 // ----- Types ---------------------------------------------------------------
@@ -155,6 +159,10 @@ const BulletinConfigurationPanel: React.FC<Props> = ({ formationId, establishmen
   const [bodyElements, setBodyElements] = useState<BulletinElement[]>(DEFAULT_BODY_ELEMENTS);
   const [footerElements, setFooterElements] = useState<BulletinElement[]>(DEFAULT_FOOTER_ELEMENTS);
 
+  // Table customization
+  const [tableColumns, setTableColumns] = useState<TableColumnConfig[]>(DEFAULT_TABLE_COLUMNS);
+  const [tableStyle, setTableStyle] = useState<TableStyleConfig>(DEFAULT_TABLE_STYLE);
+
   // Establishment logo (for layout editor preview)
   const { data: estabData } = useQuery({
     queryKey: ['establishment-logo', establishmentId],
@@ -235,6 +243,13 @@ const BulletinConfigurationPanel: React.FC<Props> = ({ formationId, establishmen
       if (Array.isArray(fc.elements) && fc.elements.length > 0) {
         setFooterElements(fc.elements);
       }
+      // Table customization
+      if (Array.isArray(colcfg.tableColumns) && colcfg.tableColumns.length > 0) {
+        setTableColumns(colcfg.tableColumns);
+      }
+      if (colcfg.tableStyle && typeof colcfg.tableStyle === 'object') {
+        setTableStyle({ ...DEFAULT_TABLE_STYLE, ...colcfg.tableStyle });
+      }
     }
   }, [existingTemplate]);
 
@@ -306,6 +321,8 @@ const BulletinConfigurationPanel: React.FC<Props> = ({ formationId, establishmen
         examColumns: ['notes', 'coefficient', 'points'],
         showExamSection: columns.exam,
         bodyElements: bodyElements,
+        tableColumns: tableColumns,
+        tableStyle: tableStyle,
       };
       const saved = await upsertTranscriptTemplate({
         id: templateId || undefined,
@@ -345,6 +362,7 @@ const BulletinConfigurationPanel: React.FC<Props> = ({ formationId, establishmen
       });
 
       queryClient.invalidateQueries({ queryKey: ['transcript-template', formationId] });
+      queryClient.invalidateQueries({ queryKey: ['transcript-template-render', formationId] });
       queryClient.invalidateQueries({ queryKey: ['grading-rules-config', formationId] });
       toast.success('Configuration sauvegardée');
     } catch (err: any) {
@@ -602,10 +620,15 @@ const BulletinConfigurationPanel: React.FC<Props> = ({ formationId, establishmen
             headerElements={headerElements}
             bodyElements={bodyElements}
             footerElements={footerElements}
+            tableColumns={tableColumns}
+            tableStyle={tableStyle}
             onChange={(h, b, f) => { setHeaderElements(h); setBodyElements(b); setFooterElements(f); }}
+            onTableColumnsChange={setTableColumns}
+            onTableStyleChange={setTableStyle}
             primaryColor={primaryColor}
             accentColor={accentColor}
             establishmentLogo={(estabData as any)?.logo_url || null}
+            establishmentName={(estabData as any)?.name || ''}
             signatoriesPreview={signatoriesPreview as any}
           />
         </TabsContent>

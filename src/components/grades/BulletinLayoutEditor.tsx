@@ -15,6 +15,54 @@ import {
 // Types
 // ============================================================================
 
+export interface TableColumnConfig {
+  id: string;
+  key: 'module' | 'coefficient' | 'cc' | 'ds' | 'exam' | 'oral' | 'tp' | 'moyenne' | 'points' | 'credits' | 'rang' | 'status' | 'appreciation';
+  label: string;
+  visible: boolean;
+  align?: 'left' | 'center' | 'right';
+  width?: number; // 0-100 percent or px
+}
+
+export interface TableStyleConfig {
+  headerBg: string;
+  headerTextColor: string;
+  rowBg: string;
+  rowAltBg: string;
+  rowTextColor: string;
+  borderColor: string;
+  borderRadius: number;
+  fontSize: number;
+  rowHeight: number;
+}
+
+export const DEFAULT_TABLE_COLUMNS: TableColumnConfig[] = [
+  { id: 'col-module', key: 'module', label: 'Matière', visible: true, align: 'left', width: 30 },
+  { id: 'col-coef', key: 'coefficient', label: 'Coef.', visible: true, align: 'center', width: 8 },
+  { id: 'col-cc', key: 'cc', label: 'CC', visible: true, align: 'center', width: 8 },
+  { id: 'col-ds', key: 'ds', label: 'DS', visible: true, align: 'center', width: 8 },
+  { id: 'col-exam', key: 'exam', label: 'Examen', visible: true, align: 'center', width: 10 },
+  { id: 'col-oral', key: 'oral', label: 'Oral', visible: false, align: 'center', width: 8 },
+  { id: 'col-tp', key: 'tp', label: 'TP', visible: false, align: 'center', width: 8 },
+  { id: 'col-moy', key: 'moyenne', label: 'Moyenne', visible: true, align: 'center', width: 10 },
+  { id: 'col-points', key: 'points', label: 'Points', visible: false, align: 'center', width: 8 },
+  { id: 'col-credits', key: 'credits', label: 'Crédits', visible: false, align: 'center', width: 8 },
+  { id: 'col-status', key: 'status', label: 'Statut', visible: true, align: 'center', width: 10 },
+  { id: 'col-appr', key: 'appreciation', label: 'Appréciation', visible: false, align: 'left', width: 18 },
+];
+
+export const DEFAULT_TABLE_STYLE: TableStyleConfig = {
+  headerBg: '#1e40af',
+  headerTextColor: '#ffffff',
+  rowBg: '#ffffff',
+  rowAltBg: '#f8fafc',
+  rowTextColor: '#1a1a2e',
+  borderColor: '#e2e8f0',
+  borderRadius: 8,
+  fontSize: 11,
+  rowHeight: 36,
+};
+
 export type BulletinElementType =
   | 'text'
   | 'variable'
@@ -263,10 +311,15 @@ interface Props {
   headerElements: BulletinElement[];
   bodyElements: BulletinElement[];
   footerElements: BulletinElement[];
+  tableColumns: TableColumnConfig[];
+  tableStyle: TableStyleConfig;
   onChange: (header: BulletinElement[], body: BulletinElement[], footer: BulletinElement[]) => void;
+  onTableColumnsChange: (cols: TableColumnConfig[]) => void;
+  onTableStyleChange: (style: TableStyleConfig) => void;
   primaryColor?: string;
   accentColor?: string;
   establishmentLogo?: string | null;
+  establishmentName?: string;
   signatoriesPreview?: Array<{ id: string; role_label: string; name: string | null; signature_image: string | null; is_stamp: boolean }>;
 }
 
@@ -274,13 +327,18 @@ const BulletinLayoutEditor: React.FC<Props> = ({
   headerElements,
   bodyElements,
   footerElements,
+  tableColumns,
+  tableStyle,
   onChange,
+  onTableColumnsChange,
+  onTableStyleChange,
   primaryColor = '#1e40af',
   accentColor = '#f59e0b',
   establishmentLogo,
+  establishmentName,
   signatoriesPreview = [],
 }) => {
-  const [activeZone, setActiveZone] = useState<'header' | 'body' | 'footer'>('header');
+  const [activeZone, setActiveZone] = useState<'header' | 'body' | 'footer' | 'table' | 'preview'>('header');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dragging, setDragging] = useState<{ id: string; offX: number; offY: number } | null>(null);
   const [resizing, setResizing] = useState<{ id: string; startW: number; startH: number; startX: number; startY: number } | null>(null);
@@ -291,18 +349,20 @@ const BulletinLayoutEditor: React.FC<Props> = ({
   const elements =
     activeZone === 'header' ? headerElements
     : activeZone === 'body' ? bodyElements
-    : footerElements;
+    : activeZone === 'footer' ? footerElements
+    : [];
 
   const setElements = useCallback((next: BulletinElement[]) => {
     if (activeZone === 'header') onChange(next, bodyElements, footerElements);
     else if (activeZone === 'body') onChange(headerElements, next, footerElements);
-    else onChange(headerElements, bodyElements, next);
+    else if (activeZone === 'footer') onChange(headerElements, bodyElements, next);
   }, [activeZone, headerElements, bodyElements, footerElements, onChange]);
 
   const canvasH =
     activeZone === 'header' ? HEADER_H
     : activeZone === 'body' ? BODY_H
-    : FOOTER_H;
+    : activeZone === 'footer' ? FOOTER_H
+    : 0;
   const canvasRef =
     activeZone === 'header' ? headerRef
     : activeZone === 'body' ? bodyRef
@@ -402,24 +462,51 @@ const BulletinLayoutEditor: React.FC<Props> = ({
   const selected = elements.find((el) => el.id === selectedId) || null;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
+    <div className={activeZone === 'table' || activeZone === 'preview' ? 'space-y-4' : 'grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4'}>
       {/* ====== LEFT : Canvas ====== */}
       <div className="space-y-3">
         {/* Zone tabs */}
         <Tabs value={activeZone} onValueChange={(v) => { setActiveZone(v as any); setSelectedId(null); }}>
-          <TabsList className="bg-muted/50 p-1 h-auto">
-            <TabsTrigger value="header" className="gap-2 px-4 py-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+          <TabsList className="bg-muted/50 p-1 h-auto flex-wrap">
+            <TabsTrigger value="header" className="gap-2 px-3 py-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <FileText className="h-3.5 w-3.5" /> En-tête
             </TabsTrigger>
-            <TabsTrigger value="body" className="gap-2 px-4 py-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="table" className="gap-2 px-3 py-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="zone-table">
+              <Move className="h-3.5 w-3.5" /> Tableau de notes
+            </TabsTrigger>
+            <TabsTrigger value="body" className="gap-2 px-3 py-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Move className="h-3.5 w-3.5" /> Corps du bulletin
             </TabsTrigger>
-            <TabsTrigger value="footer" className="gap-2 px-4 py-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="footer" className="gap-2 px-3 py-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <PenTool className="h-3.5 w-3.5" /> Pied de page
+            </TabsTrigger>
+            <TabsTrigger value="preview" className="gap-2 px-3 py-1.5 text-xs data-[state=active]:bg-amber-500 data-[state=active]:text-white" data-testid="zone-preview">
+              <FileText className="h-3.5 w-3.5" /> Aperçu complet
             </TabsTrigger>
           </TabsList>
         </Tabs>
 
+        {activeZone === 'table' ? (
+          <TableEditor
+            columns={tableColumns}
+            style={tableStyle}
+            onColumnsChange={onTableColumnsChange}
+            onStyleChange={onTableStyleChange}
+          />
+        ) : activeZone === 'preview' ? (
+          <FullPreview
+            headerElements={headerElements}
+            bodyElements={bodyElements}
+            footerElements={footerElements}
+            tableColumns={tableColumns}
+            tableStyle={tableStyle}
+            primaryColor={primaryColor}
+            accentColor={accentColor}
+            establishmentLogo={establishmentLogo}
+            establishmentName={establishmentName}
+            signatoriesPreview={signatoriesPreview}
+          />
+        ) : (
         <Card className="rounded-2xl overflow-hidden">
           <CardContent className="p-0">
             {/* Tools bar */}
@@ -524,9 +611,11 @@ const BulletinLayoutEditor: React.FC<Props> = ({
             </div>
           </CardContent>
         </Card>
+        )}
       </div>
 
       {/* ====== RIGHT : Properties panel ====== */}
+      {activeZone !== 'table' && activeZone !== 'preview' && (
       <Card className="rounded-2xl self-start sticky top-4">
         <CardContent className="p-4 space-y-3">
           {selected ? (
@@ -544,6 +633,7 @@ const BulletinLayoutEditor: React.FC<Props> = ({
           )}
         </CardContent>
       </Card>
+      )}
     </div>
   );
 };
@@ -921,5 +1011,284 @@ const labelOf = (t: BulletinElementType) => ({
   mention_block: 'Mention & Rang',
   ects_block: 'Crédits ECTS',
 }[t]);
+
+// ============================================================================
+// TABLE EDITOR — column visibility, labels, order, table styling
+// ============================================================================
+const TableEditor: React.FC<{
+  columns: TableColumnConfig[];
+  style: TableStyleConfig;
+  onColumnsChange: (cols: TableColumnConfig[]) => void;
+  onStyleChange: (style: TableStyleConfig) => void;
+}> = ({ columns, style, onColumnsChange, onStyleChange }) => {
+  const moveCol = (idx: number, dir: -1 | 1) => {
+    const next = [...columns];
+    const tgt = idx + dir;
+    if (tgt < 0 || tgt >= next.length) return;
+    [next[idx], next[tgt]] = [next[tgt], next[idx]];
+    onColumnsChange(next);
+  };
+  const updateCol = (idx: number, updates: Partial<TableColumnConfig>) => {
+    const next = [...columns];
+    next[idx] = { ...next[idx], ...updates };
+    onColumnsChange(next);
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* LEFT — Columns */}
+      <Card className="rounded-2xl">
+        <CardContent className="p-5">
+          <h3 className="text-sm font-bold text-primary flex items-center gap-2 mb-1">
+            <Move className="h-4 w-4" /> Colonnes du tableau
+          </h3>
+          <p className="text-[11px] text-muted-foreground mb-4">
+            Cochez les colonnes à afficher, renommez-les et réorganisez avec les flèches.
+          </p>
+
+          <div className="space-y-2">
+            {columns.map((col, idx) => (
+              <div
+                key={col.id}
+                className={`flex items-center gap-2 p-2 rounded-lg border ${col.visible ? 'bg-primary/5 border-primary/30' : 'bg-muted/30 border-border opacity-60'}`}
+                data-testid={`table-col-${col.key}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={col.visible}
+                  onChange={(e) => updateCol(idx, { visible: e.target.checked })}
+                  className="h-4 w-4 accent-primary"
+                />
+                <Input
+                  value={col.label}
+                  onChange={(e) => updateCol(idx, { label: e.target.value })}
+                  className="h-7 text-xs flex-1"
+                  data-testid={`table-col-label-${col.key}`}
+                />
+                <select
+                  value={col.align || 'left'}
+                  onChange={(e) => updateCol(idx, { align: e.target.value as any })}
+                  className="h-7 text-xs border border-border rounded-md bg-background px-1"
+                >
+                  <option value="left">←</option>
+                  <option value="center">↔</option>
+                  <option value="right">→</option>
+                </select>
+                <Input
+                  type="number" min={4} max={50} value={col.width || 10}
+                  onChange={(e) => updateCol(idx, { width: parseInt(e.target.value) || 10 })}
+                  className="h-7 text-xs w-14"
+                  title="Largeur (%)"
+                />
+                <Button size="sm" variant="ghost" className="h-6 w-6 p-0" disabled={idx === 0} onClick={() => moveCol(idx, -1)}>
+                  <ChevronUp className="h-3 w-3" />
+                </Button>
+                <Button size="sm" variant="ghost" className="h-6 w-6 p-0" disabled={idx === columns.length - 1} onClick={() => moveCol(idx, 1)}>
+                  <ChevronDown className="h-3 w-3" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* RIGHT — Style */}
+      <Card className="rounded-2xl">
+        <CardContent className="p-5 space-y-4">
+          <h3 className="text-sm font-bold text-primary flex items-center gap-2">
+            <Square className="h-4 w-4" /> Apparence du tableau
+          </h3>
+
+          <ColorRow label="Fond de l'en-tête" value={style.headerBg} onChange={(v) => onStyleChange({ ...style, headerBg: v })} />
+          <ColorRow label="Texte de l'en-tête" value={style.headerTextColor} onChange={(v) => onStyleChange({ ...style, headerTextColor: v })} />
+          <ColorRow label="Fond des lignes" value={style.rowBg} onChange={(v) => onStyleChange({ ...style, rowBg: v })} />
+          <ColorRow label="Fond lignes alternées" value={style.rowAltBg} onChange={(v) => onStyleChange({ ...style, rowAltBg: v })} />
+          <ColorRow label="Texte des lignes" value={style.rowTextColor} onChange={(v) => onStyleChange({ ...style, rowTextColor: v })} />
+          <ColorRow label="Couleur bordures" value={style.borderColor} onChange={(v) => onStyleChange({ ...style, borderColor: v })} />
+
+          <div>
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Coins arrondis ({style.borderRadius}px)</Label>
+            <Slider value={[style.borderRadius]} max={20} step={1}
+              onValueChange={([v]) => onStyleChange({ ...style, borderRadius: v })} className="mt-1" />
+          </div>
+
+          <div>
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Taille du texte ({style.fontSize}px)</Label>
+            <Slider value={[style.fontSize]} min={8} max={16} step={1}
+              onValueChange={([v]) => onStyleChange({ ...style, fontSize: v })} className="mt-1" />
+          </div>
+
+          <div>
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Hauteur des lignes ({style.rowHeight}px)</Label>
+            <Slider value={[style.rowHeight]} min={24} max={60} step={2}
+              onValueChange={([v]) => onStyleChange({ ...style, rowHeight: v })} className="mt-1" />
+          </div>
+
+          {/* Mini live preview */}
+          <div className="border rounded-lg overflow-hidden mt-2" style={{ borderColor: style.borderColor, borderRadius: style.borderRadius }}>
+            <table className="w-full" style={{ fontSize: style.fontSize }}>
+              <thead>
+                <tr style={{ background: style.headerBg, color: style.headerTextColor }}>
+                  {columns.filter((c) => c.visible).slice(0, 5).map((c) => (
+                    <th key={c.id} className="px-2 py-1.5 font-semibold text-[10px]" style={{ textAlign: c.align as any }}>{c.label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { mod: 'Mathématiques', cc: '14', exam: '15', moy: '14.5' },
+                  { mod: 'Anglais', cc: '12', exam: '13', moy: '12.5' },
+                ].map((row, i) => (
+                  <tr key={i} style={{ background: i % 2 === 0 ? style.rowBg : style.rowAltBg, color: style.rowTextColor, height: style.rowHeight }}>
+                    {columns.filter((c) => c.visible).slice(0, 5).map((c) => (
+                      <td key={c.id} className="px-2" style={{ textAlign: c.align as any, borderTop: `1px solid ${style.borderColor}` }}>
+                        {c.key === 'module' ? row.mod : c.key === 'cc' ? row.cc : c.key === 'exam' ? row.exam : c.key === 'moyenne' ? row.moy : '—'}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// ============================================================================
+// FULL PREVIEW — header + table + body + footer (interpolated mock data)
+// ============================================================================
+const FullPreview: React.FC<{
+  headerElements: BulletinElement[];
+  bodyElements: BulletinElement[];
+  footerElements: BulletinElement[];
+  tableColumns: TableColumnConfig[];
+  tableStyle: TableStyleConfig;
+  primaryColor: string;
+  accentColor: string;
+  establishmentLogo?: string | null;
+  establishmentName?: string;
+  signatoriesPreview: Array<{ id: string; role_label: string; name: string | null; signature_image: string | null; is_stamp: boolean }>;
+}> = ({
+  headerElements, bodyElements, footerElements, tableColumns, tableStyle,
+  primaryColor, accentColor, establishmentLogo, establishmentName, signatoriesPreview,
+}) => {
+  const mockData: Record<string, string> = {
+    nom_complet: 'Marie Dubois',
+    prenom: 'Marie', nom: 'Dubois',
+    date_naissance: '15/03/2002',
+    numero_etudiant: 'ETU-0042',
+    formation: 'Master Digital Marketing 2026',
+    niveau: 'BAC+1',
+    annee_academique: '2026-2027',
+    periode: 'Semestre 1',
+    etablissement: establishmentName || 'Nectforma',
+    adresse_etablissement: '12 rue de Paris',
+    moyenne_generale: '14.25',
+    rang: '3 / 28',
+    mention: 'Bien',
+    decision: 'Admis',
+    credits_acquis: '28 / 30',
+    numero_bulletin: 'BLT-2026-0042',
+    date_emission: '15/04/2026',
+    code_verification: 'BLT-2026-a1b2',
+  };
+  const interpolate = (s: string) => s.replace(/\{(\w+)\}/g, (m, k) => mockData[k] ?? m);
+
+  const mockRows = [
+    { mod: 'Marketing Digital', cc: '15', ds: '14', exam: '16', oral: '15', tp: '14', moy: '15.20', coef: '3', points: '45.6', credits: '6', status: 'Validé', appr: 'Très bon travail' },
+    { mod: 'Stratégie de Marque', cc: '13', ds: '12', exam: '14', oral: '13', tp: '13', moy: '13.10', coef: '2', points: '26.2', credits: '4', status: 'Validé', appr: 'Solide' },
+    { mod: 'Anglais des Affaires', cc: '14', ds: '15', exam: '13', oral: '16', tp: '—', moy: '14.50', coef: '2', points: '29.0', credits: '4', status: 'Validé', appr: 'Bonne progression' },
+    { mod: 'Analyse de Données', cc: '11', ds: '10', exam: '12', oral: '—', tp: '12', moy: '11.25', coef: '3', points: '33.7', credits: '5', status: 'Validé', appr: 'À consolider' },
+    { mod: 'Gestion de Projet', cc: '16', ds: '15', exam: '17', oral: '15', tp: '15', moy: '15.80', coef: '2', points: '31.6', credits: '4', status: 'Validé', appr: 'Excellent' },
+  ];
+
+  const visibleCols = tableColumns.filter((c) => c.visible);
+
+  return (
+    <Card className="rounded-2xl">
+      <CardContent className="p-6 bg-slate-100 dark:bg-slate-800 flex justify-center">
+        <div className="bg-white shadow-2xl" style={{ width: CANVAS_W, fontFamily: 'Inter' }}>
+          {/* HEADER */}
+          <div className="relative" style={{ height: HEADER_H }}>
+            {headerElements.map((el) => (
+              <RenderedElement
+                key={el.id} el={{ ...el, content: interpolate(el.content) }} selected={false}
+                primaryColor={primaryColor} accentColor={accentColor}
+                establishmentLogo={establishmentLogo} signatoriesPreview={signatoriesPreview}
+                onMouseDown={() => {}} onResizeStart={() => {}}
+              />
+            ))}
+          </div>
+
+          {/* TABLE */}
+          <div className="px-6 py-3">
+            <div className="overflow-hidden" style={{ borderRadius: tableStyle.borderRadius, border: `1px solid ${tableStyle.borderColor}` }}>
+              <table className="w-full" style={{ fontSize: tableStyle.fontSize }}>
+                <thead>
+                  <tr style={{ background: tableStyle.headerBg, color: tableStyle.headerTextColor, height: tableStyle.rowHeight }}>
+                    {visibleCols.map((c) => (
+                      <th key={c.id} className="px-2 font-semibold uppercase text-[10px]" style={{ textAlign: c.align as any, width: `${c.width}%` }}>
+                        {c.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {mockRows.map((row, i) => (
+                    <tr key={i} style={{ background: i % 2 === 0 ? tableStyle.rowBg : tableStyle.rowAltBg, color: tableStyle.rowTextColor, height: tableStyle.rowHeight }}>
+                      {visibleCols.map((c) => (
+                        <td key={c.id} className="px-2" style={{ textAlign: c.align as any, borderTop: `1px solid ${tableStyle.borderColor}` }}>
+                          {c.key === 'module' ? row.mod
+                            : c.key === 'coefficient' ? row.coef
+                            : c.key === 'cc' ? row.cc
+                            : c.key === 'ds' ? row.ds
+                            : c.key === 'exam' ? row.exam
+                            : c.key === 'oral' ? row.oral
+                            : c.key === 'tp' ? row.tp
+                            : c.key === 'moyenne' ? <strong>{row.moy}</strong>
+                            : c.key === 'points' ? row.points
+                            : c.key === 'credits' ? row.credits
+                            : c.key === 'status' ? <span className="text-emerald-600 font-semibold text-[10px]">{row.status}</span>
+                            : c.key === 'appreciation' ? <span className="italic text-[10px]">{row.appr}</span>
+                            : '—'}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* BODY */}
+          <div className="relative" style={{ height: BODY_H }}>
+            {bodyElements.map((el) => (
+              <RenderedElement
+                key={el.id} el={{ ...el, content: interpolate(el.content) }} selected={false}
+                primaryColor={primaryColor} accentColor={accentColor}
+                establishmentLogo={establishmentLogo} signatoriesPreview={signatoriesPreview}
+                onMouseDown={() => {}} onResizeStart={() => {}}
+              />
+            ))}
+          </div>
+
+          {/* FOOTER */}
+          <div className="relative" style={{ height: FOOTER_H }}>
+            {footerElements.map((el) => (
+              <RenderedElement
+                key={el.id} el={{ ...el, content: interpolate(el.content) }} selected={false}
+                primaryColor={primaryColor} accentColor={accentColor}
+                establishmentLogo={establishmentLogo} signatoriesPreview={signatoriesPreview}
+                onMouseDown={() => {}} onResizeStart={() => {}}
+              />
+            ))}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 export default BulletinLayoutEditor;
