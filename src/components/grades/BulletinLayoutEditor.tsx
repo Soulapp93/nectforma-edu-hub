@@ -17,11 +17,21 @@ import {
 
 export interface TableColumnConfig {
   id: string;
-  key: 'module' | 'coefficient' | 'cc' | 'ds' | 'exam' | 'oral' | 'tp' | 'moyenne' | 'points' | 'credits' | 'rang' | 'status' | 'appreciation';
+  key: 'module' | 'coefficient' | 'cc' | 'ds' | 'exam' | 'oral' | 'tp' | 'moyenne' | 'points' | 'credits' | 'rang' | 'status' | 'appreciation' | 'custom_static' | 'custom_formula';
   label: string;
   visible: boolean;
   align?: 'left' | 'center' | 'right';
   width?: number; // 0-100 percent or px
+  // Phase 2 — Custom columns
+  staticValue?: string;          // for key === 'custom_static'
+  formula?: string;              // for key === 'custom_formula' — e.g. "{cc} * 0.4 + {exam} * 0.6"
+  decimals?: number;             // round formula result
+  suffix?: string;               // e.g. "/20", "%", " pts"
+  // Phase 2 — Per-column styling
+  bgColor?: string;
+  textColor?: string;
+  fontWeight?: '400' | '600' | '700';
+  isHighlight?: boolean;         // visually emphasize this column
 }
 
 export interface TableStyleConfig {
@@ -462,7 +472,8 @@ const BulletinLayoutEditor: React.FC<Props> = ({
   const selected = elements.find((el) => el.id === selectedId) || null;
 
   return (
-    <div className={activeZone === 'table' || activeZone === 'preview' ? 'space-y-4' : 'grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4'}>
+    <div className="space-y-4">
+      <div key={activeZone} className={(activeZone === 'header' || activeZone === 'body' || activeZone === 'footer') ? 'grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4' : 'space-y-4'}>
       {/* ====== LEFT : Canvas ====== */}
       <div className="space-y-3">
         {/* Zone tabs */}
@@ -488,6 +499,7 @@ const BulletinLayoutEditor: React.FC<Props> = ({
 
         {activeZone === 'table' ? (
           <TableEditor
+            key="table-editor"
             columns={tableColumns}
             style={tableStyle}
             onColumnsChange={onTableColumnsChange}
@@ -495,6 +507,7 @@ const BulletinLayoutEditor: React.FC<Props> = ({
           />
         ) : activeZone === 'preview' ? (
           <FullPreview
+            key="full-preview"
             headerElements={headerElements}
             bodyElements={bodyElements}
             footerElements={footerElements}
@@ -507,7 +520,7 @@ const BulletinLayoutEditor: React.FC<Props> = ({
             signatoriesPreview={signatoriesPreview}
           />
         ) : (
-        <Card className="rounded-2xl overflow-hidden">
+        <Card key="canvas-zone" className="rounded-2xl overflow-hidden">
           <CardContent className="p-0">
             {/* Tools bar */}
             <div className="flex flex-wrap items-center gap-1.5 p-3 bg-muted/30 border-b border-border">
@@ -615,7 +628,7 @@ const BulletinLayoutEditor: React.FC<Props> = ({
       </div>
 
       {/* ====== RIGHT : Properties panel ====== */}
-      {activeZone !== 'table' && activeZone !== 'preview' && (
+      {(activeZone === 'header' || activeZone === 'body' || activeZone === 'footer') && (
       <Card className="rounded-2xl self-start sticky top-4">
         <CardContent className="p-4 space-y-3">
           {selected ? (
@@ -634,6 +647,7 @@ const BulletinLayoutEditor: React.FC<Props> = ({
         </CardContent>
       </Card>
       )}
+      </div>
     </div>
   );
 };
@@ -1013,6 +1027,33 @@ const labelOf = (t: BulletinElementType) => ({
 }[t]);
 
 // ============================================================================
+// Formula evaluator — safe arithmetic on cell values
+// Supports: + - * / ( ) numeric literals and {column_key} references
+// ============================================================================
+export const evaluateFormula = (
+  formula: string,
+  rowValues: Record<string, number | null | undefined>
+): number | null => {
+  if (!formula) return null;
+  try {
+    // Replace {key} with the value
+    let expr = formula.replace(/\{(\w+)\}/g, (_m, k) => {
+      const v = rowValues[k];
+      if (v === null || v === undefined || v === '' || (typeof v === 'number' && isNaN(v))) return '0';
+      return String(v);
+    });
+    // Whitelist: only digits, dots, +-*/(), spaces
+    if (!/^[0-9.+\-*/()\s]+$/.test(expr)) return null;
+    // eslint-disable-next-line no-new-func
+    const result = Function(`"use strict"; return (${expr});`)();
+    if (typeof result !== 'number' || isNaN(result) || !isFinite(result)) return null;
+    return result;
+  } catch {
+    return null;
+  }
+};
+
+// ============================================================================
 // TABLE EDITOR — column visibility, labels, order, table styling
 // ============================================================================
 const TableEditor: React.FC<{
@@ -1034,60 +1075,156 @@ const TableEditor: React.FC<{
     onColumnsChange(next);
   };
 
+  const addCustomColumn = (kind: 'static' | 'formula') => {
+    const id = `col-custom-${Date.now()}`;
+    const col: TableColumnConfig = kind === 'static' ? {
+      id, key: 'custom_static', label: 'Nouvelle colonne', visible: true, align: 'center', width: 10,
+      staticValue: '—',
+    } : {
+      id, key: 'custom_formula', label: 'Calcul', visible: true, align: 'center', width: 12,
+      formula: '{cc} * 0.4 + {exam} * 0.6',
+      decimals: 2,
+    };
+    onColumnsChange([...columns, col]);
+  };
+  const removeCol = (idx: number) => {
+    onColumnsChange(columns.filter((_, i) => i !== idx));
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {/* LEFT — Columns */}
       <Card className="rounded-2xl">
         <CardContent className="p-5">
-          <h3 className="text-sm font-bold text-primary flex items-center gap-2 mb-1">
-            <Move className="h-4 w-4" /> Colonnes du tableau
-          </h3>
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-sm font-bold text-primary flex items-center gap-2">
+              <Move className="h-4 w-4" /> Colonnes du tableau
+            </h3>
+            <div className="flex gap-1">
+              <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1 px-2" onClick={() => addCustomColumn('static')} data-testid="add-custom-static">
+                <Plus className="h-3 w-3" /> Statique
+              </Button>
+              <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1 px-2" onClick={() => addCustomColumn('formula')} data-testid="add-custom-formula">
+                <Plus className="h-3 w-3" /> Formule
+              </Button>
+            </div>
+          </div>
           <p className="text-[11px] text-muted-foreground mb-4">
-            Cochez les colonnes à afficher, renommez-les et réorganisez avec les flèches.
+            Cochez, renommez, réorganisez. <strong>Statique</strong> = valeur fixe, <strong>Formule</strong> = calcul dérivé d'autres colonnes.
           </p>
 
           <div className="space-y-2">
-            {columns.map((col, idx) => (
+            {columns.map((col, idx) => {
+              const isCustom = col.key === 'custom_static' || col.key === 'custom_formula';
+              return (
               <div
                 key={col.id}
-                className={`flex items-center gap-2 p-2 rounded-lg border ${col.visible ? 'bg-primary/5 border-primary/30' : 'bg-muted/30 border-border opacity-60'}`}
+                className={`p-2 rounded-lg border ${col.visible ? 'bg-primary/5 border-primary/30' : 'bg-muted/30 border-border opacity-60'}`}
                 data-testid={`table-col-${col.key}`}
               >
-                <input
-                  type="checkbox"
-                  checked={col.visible}
-                  onChange={(e) => updateCol(idx, { visible: e.target.checked })}
-                  className="h-4 w-4 accent-primary"
-                />
-                <Input
-                  value={col.label}
-                  onChange={(e) => updateCol(idx, { label: e.target.value })}
-                  className="h-7 text-xs flex-1"
-                  data-testid={`table-col-label-${col.key}`}
-                />
-                <select
-                  value={col.align || 'left'}
-                  onChange={(e) => updateCol(idx, { align: e.target.value as any })}
-                  className="h-7 text-xs border border-border rounded-md bg-background px-1"
-                >
-                  <option value="left">←</option>
-                  <option value="center">↔</option>
-                  <option value="right">→</option>
-                </select>
-                <Input
-                  type="number" min={4} max={50} value={col.width || 10}
-                  onChange={(e) => updateCol(idx, { width: parseInt(e.target.value) || 10 })}
-                  className="h-7 text-xs w-14"
-                  title="Largeur (%)"
-                />
-                <Button size="sm" variant="ghost" className="h-6 w-6 p-0" disabled={idx === 0} onClick={() => moveCol(idx, -1)}>
-                  <ChevronUp className="h-3 w-3" />
-                </Button>
-                <Button size="sm" variant="ghost" className="h-6 w-6 p-0" disabled={idx === columns.length - 1} onClick={() => moveCol(idx, 1)}>
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={col.visible}
+                    onChange={(e) => updateCol(idx, { visible: e.target.checked })}
+                    className="h-4 w-4 accent-primary"
+                  />
+                  <Input
+                    value={col.label}
+                    onChange={(e) => updateCol(idx, { label: e.target.value })}
+                    className="h-7 text-xs flex-1"
+                    data-testid={`table-col-label-${col.key}`}
+                  />
+                  <select
+                    value={col.align || 'left'}
+                    onChange={(e) => updateCol(idx, { align: e.target.value as any })}
+                    className="h-7 text-xs border border-border rounded-md bg-background px-1"
+                  >
+                    <option value="left">←</option>
+                    <option value="center">↔</option>
+                    <option value="right">→</option>
+                  </select>
+                  <Input
+                    type="number" min={4} max={50} value={col.width || 10}
+                    onChange={(e) => updateCol(idx, { width: parseInt(e.target.value) || 10 })}
+                    className="h-7 text-xs w-14"
+                    title="Largeur (%)"
+                  />
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" disabled={idx === 0} onClick={() => moveCol(idx, -1)}>
+                    <ChevronUp className="h-3 w-3" />
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" disabled={idx === columns.length - 1} onClick={() => moveCol(idx, 1)}>
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                  {isCustom && (
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive hover:bg-destructive/10" onClick={() => removeCol(idx)} title="Supprimer cette colonne">
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+
+                {/* Per-column extras */}
+                {col.key === 'custom_static' && (
+                  <div className="mt-2 grid grid-cols-[80px_1fr] gap-2 items-center">
+                    <Label className="text-[10px] text-muted-foreground">Valeur fixe</Label>
+                    <Input value={col.staticValue || ''} onChange={(e) => updateCol(idx, { staticValue: e.target.value })} className="h-7 text-xs" placeholder="Ex: Acquis" />
+                  </div>
+                )}
+                {col.key === 'custom_formula' && (
+                  <div className="mt-2 space-y-1.5">
+                    <div className="grid grid-cols-[80px_1fr] gap-2 items-center">
+                      <Label className="text-[10px] text-muted-foreground">Formule</Label>
+                      <Input
+                        value={col.formula || ''}
+                        onChange={(e) => updateCol(idx, { formula: e.target.value })}
+                        className="h-7 text-xs font-mono"
+                        placeholder="{cc} * 0.4 + {exam} * 0.6"
+                        data-testid={`formula-input-${col.id}`}
+                      />
+                    </div>
+                    <div className="grid grid-cols-[80px_60px_1fr] gap-2 items-center">
+                      <Label className="text-[10px] text-muted-foreground">Décimales</Label>
+                      <Input type="number" min={0} max={4} value={col.decimals ?? 2} onChange={(e) => updateCol(idx, { decimals: parseInt(e.target.value) || 0 })} className="h-7 text-xs" />
+                      <Input value={col.suffix || ''} onChange={(e) => updateCol(idx, { suffix: e.target.value })} className="h-7 text-xs" placeholder="Suffixe (ex: /20)" />
+                    </div>
+                    <p className="text-[9px] text-muted-foreground italic">Variables disponibles : {`{cc}`}, {`{ds}`}, {`{exam}`}, {`{oral}`}, {`{tp}`}, {`{coefficient}`}, {`{moyenne}`}, {`{points}`}, {`{credits}`}</p>
+                  </div>
+                )}
+
+                {/* Per-column styling */}
+                <div className="mt-2 grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
+                  <div>
+                    <Label className="text-[9px] uppercase tracking-wider text-muted-foreground">Fond colonne</Label>
+                    <input type="color" value={col.bgColor || '#ffffff'} onChange={(e) => updateCol(idx, { bgColor: e.target.value })} className="h-7 w-full rounded cursor-pointer border border-border" />
+                  </div>
+                  <div>
+                    <Label className="text-[9px] uppercase tracking-wider text-muted-foreground">Texte colonne</Label>
+                    <input type="color" value={col.textColor || '#1a1a2e'} onChange={(e) => updateCol(idx, { textColor: e.target.value })} className="h-7 w-full rounded cursor-pointer border border-border" />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant={col.fontWeight === '700' ? 'default' : 'outline'}
+                      className="h-7 w-7 p-0"
+                      onClick={() => updateCol(idx, { fontWeight: col.fontWeight === '700' ? '400' : '700' })}
+                      title="Gras"
+                    >
+                      <Bold className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={col.isHighlight ? 'default' : 'outline'}
+                      className="h-7 w-7 p-0"
+                      onClick={() => updateCol(idx, { isHighlight: !col.isHighlight })}
+                      title="Mise en évidence"
+                    >
+                      ★
+                    </Button>
+                  </div>
+                </div>
               </div>
-            ))}
+            );
+            })}
           </div>
         </CardContent>
       </Card>
@@ -1238,9 +1375,34 @@ const FullPreview: React.FC<{
                 <tbody>
                   {mockRows.map((row, i) => (
                     <tr key={i} style={{ background: i % 2 === 0 ? tableStyle.rowBg : tableStyle.rowAltBg, color: tableStyle.rowTextColor, height: tableStyle.rowHeight }}>
-                      {visibleCols.map((c) => (
-                        <td key={c.id} className="px-2" style={{ textAlign: c.align as any, borderTop: `1px solid ${tableStyle.borderColor}` }}>
-                          {c.key === 'module' ? row.mod
+                      {visibleCols.map((c) => {
+                        const baseTd: React.CSSProperties = {
+                          textAlign: c.align as any,
+                          borderTop: `1px solid ${tableStyle.borderColor}`,
+                          background: c.bgColor || undefined,
+                          color: c.textColor || undefined,
+                          fontWeight: c.fontWeight as any,
+                          padding: '0 8px',
+                        };
+                        const rowVals: Record<string, number | null> = {
+                          cc: parseFloat(row.cc) || null,
+                          ds: parseFloat(row.ds) || null,
+                          exam: parseFloat(row.exam) || null,
+                          oral: parseFloat(row.oral) || null,
+                          tp: row.tp === '—' ? null : parseFloat(row.tp) || null,
+                          moyenne: parseFloat(row.moy) || null,
+                          coefficient: parseFloat(row.coef) || null,
+                          points: parseFloat(row.points) || null,
+                          credits: parseFloat(row.credits) || null,
+                        };
+                        let cellContent: React.ReactNode = '—';
+                        if (c.key === 'custom_static') {
+                          cellContent = c.staticValue ?? '—';
+                        } else if (c.key === 'custom_formula') {
+                          const r = evaluateFormula(c.formula || '', rowVals);
+                          cellContent = r !== null ? r.toFixed(c.decimals ?? 2) + (c.suffix || '') : '—';
+                        } else {
+                          cellContent = c.key === 'module' ? row.mod
                             : c.key === 'coefficient' ? row.coef
                             : c.key === 'cc' ? row.cc
                             : c.key === 'ds' ? row.ds
@@ -1252,9 +1414,10 @@ const FullPreview: React.FC<{
                             : c.key === 'credits' ? row.credits
                             : c.key === 'status' ? <span className="text-emerald-600 font-semibold text-[10px]">{row.status}</span>
                             : c.key === 'appreciation' ? <span className="italic text-[10px]">{row.appr}</span>
-                            : '—'}
-                        </td>
-                      ))}
+                            : '—';
+                        }
+                        return <td key={c.id} style={baseTd}>{cellContent}</td>;
+                      })}
                     </tr>
                   ))}
                 </tbody>

@@ -7,6 +7,7 @@ import {
   HEADER_H,
   BODY_H,
   FOOTER_H,
+  evaluateFormula,
 } from './BulletinLayoutEditor';
 
 // ============================================================================
@@ -245,6 +246,24 @@ const BulletinTemplateRenderer: React.FC<Props> = ({
   const visibleCols = tableColumns.filter((c) => c.visible);
 
   const cellValue = (col: TableColumnConfig, row: BulletinTableRow): React.ReactNode => {
+    if (col.key === 'custom_static') {
+      return col.staticValue ?? '—';
+    }
+    if (col.key === 'custom_formula') {
+      const rowVals: Record<string, number | null | undefined> = {
+        cc: typeof row.cc === 'number' ? row.cc : (row.cc ? parseFloat(String(row.cc)) : null),
+        ds: typeof row.ds === 'number' ? row.ds : (row.ds ? parseFloat(String(row.ds)) : null),
+        exam: typeof row.exam === 'number' ? row.exam : (row.exam ? parseFloat(String(row.exam)) : null),
+        oral: typeof row.oral === 'number' ? row.oral : (row.oral ? parseFloat(String(row.oral)) : null),
+        tp: typeof row.tp === 'number' ? row.tp : (row.tp ? parseFloat(String(row.tp)) : null),
+        moyenne: typeof row.moyenne === 'number' ? row.moyenne : (row.moyenne ? parseFloat(String(row.moyenne)) : null),
+        coefficient: typeof row.coefficient === 'number' ? row.coefficient : parseFloat(String(row.coefficient)),
+        points: typeof row.points === 'number' ? row.points : (row.points ? parseFloat(String(row.points)) : null),
+        credits: typeof row.credits === 'number' ? row.credits : (row.credits ? parseFloat(String(row.credits)) : null),
+      };
+      const r = evaluateFormula(col.formula || '', rowVals);
+      return r !== null ? r.toFixed(col.decimals ?? 2) + (col.suffix || '') : '—';
+    }
     switch (col.key) {
       case 'module': return row.module;
       case 'coefficient': return row.coefficient;
@@ -324,6 +343,9 @@ const BulletinTemplateRenderer: React.FC<Props> = ({
                         padding: '0 8px',
                         textAlign: c.align as any,
                         borderTop: `1px solid ${tableStyle.borderColor}`,
+                        background: c.bgColor || undefined,
+                        color: c.textColor || undefined,
+                        fontWeight: c.fontWeight as any,
                       }}>
                         {cellValue(c, row)}
                       </td>
