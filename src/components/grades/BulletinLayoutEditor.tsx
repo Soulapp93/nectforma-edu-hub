@@ -23,12 +23,16 @@ export type BulletinElementType =
   | 'line'
   | 'rectangle'
   | 'qr_code'
-  | 'signatures_block';
+  | 'signatures_block'
+  | 'appreciation_block'
+  | 'assiduity_block'
+  | 'mention_block'
+  | 'ects_block';
 
 export interface BulletinElement {
   id: string;
   type: BulletinElementType;
-  zone: 'header' | 'footer';
+  zone: 'header' | 'body' | 'footer';
   x: number;
   y: number;
   width: number;
@@ -77,6 +81,7 @@ export const BULLETIN_VARIABLES = [
 // Canvas dimensions matching A4 portrait at 96 DPI (595 wide; we use 560 for inner)
 export const CANVAS_W = 720;
 export const HEADER_H = 200;
+export const BODY_H = 280;
 export const FOOTER_H = 220;
 
 // ============================================================================
@@ -197,6 +202,34 @@ export const DEFAULT_FOOTER_ELEMENTS: BulletinElement[] = [
   },
 ];
 
+export const DEFAULT_BODY_ELEMENTS: BulletinElement[] = [
+  {
+    id: 'def-b-1', type: 'appreciation_block', zone: 'body',
+    x: 24, y: 12, width: 440, height: 90, content: '',
+    styles: { backgroundColor: '#fffbeb', borderRadius: 8, borderColor: '#fbbf24', borderWidth: 1 },
+  },
+  {
+    id: 'def-b-2', type: 'mention_block', zone: 'body',
+    x: 478, y: 12, width: 222, height: 90, content: '',
+    styles: { backgroundColor: '#eff6ff', borderRadius: 8, borderColor: '#3b82f6', borderWidth: 1 },
+  },
+  {
+    id: 'def-b-3', type: 'assiduity_block', zone: 'body',
+    x: 24, y: 116, width: 336, height: 80, content: '',
+    styles: { backgroundColor: '#f0fdf4', borderRadius: 8, borderColor: '#22c55e', borderWidth: 1 },
+  },
+  {
+    id: 'def-b-4', type: 'ects_block', zone: 'body',
+    x: 372, y: 116, width: 328, height: 80, content: '',
+    styles: { backgroundColor: '#faf5ff', borderRadius: 8, borderColor: '#a855f7', borderWidth: 1 },
+  },
+  {
+    id: 'def-b-5', type: 'text', zone: 'body',
+    x: 24, y: 210, width: 676, height: 50, content: 'L\'étudiant a fait preuve de sérieux et d\'application tout au long de cette période. Les progrès enregistrés sont encourageants. Nous l\'invitons à maintenir cet effort constant.',
+    styles: { fontSize: 10, color: '#475569', fontFamily: 'Inter', textAlign: 'justify', fontStyle: 'italic', lineHeight: 1.5 },
+  },
+];
+
 // ============================================================================
 // Element creation defaults (for "Add" buttons)
 // ============================================================================
@@ -216,6 +249,10 @@ const TYPE_DEFAULTS: Record<BulletinElementType, Partial<BulletinElement>> = {
   rectangle: { width: 200, height: 80, content: '', styles: { backgroundColor: '#f1f5f9', borderRadius: 6, borderColor: '#cbd5e1', borderWidth: 1 } },
   qr_code: { width: 70, height: 70, content: '{code_verification}', styles: {} },
   signatures_block: { width: 600, height: 100, content: '', styles: {} },
+  appreciation_block: { width: 400, height: 90, content: '', styles: { backgroundColor: '#fffbeb', borderRadius: 8, borderColor: '#fbbf24', borderWidth: 1 } },
+  assiduity_block: { width: 320, height: 80, content: '', styles: { backgroundColor: '#f0fdf4', borderRadius: 8, borderColor: '#22c55e', borderWidth: 1 } },
+  mention_block: { width: 220, height: 90, content: '', styles: { backgroundColor: '#eff6ff', borderRadius: 8, borderColor: '#3b82f6', borderWidth: 1 } },
+  ects_block: { width: 320, height: 80, content: '', styles: { backgroundColor: '#faf5ff', borderRadius: 8, borderColor: '#a855f7', borderWidth: 1 } },
 };
 
 // ============================================================================
@@ -224,8 +261,9 @@ const TYPE_DEFAULTS: Record<BulletinElementType, Partial<BulletinElement>> = {
 
 interface Props {
   headerElements: BulletinElement[];
+  bodyElements: BulletinElement[];
   footerElements: BulletinElement[];
-  onChange: (header: BulletinElement[], footer: BulletinElement[]) => void;
+  onChange: (header: BulletinElement[], body: BulletinElement[], footer: BulletinElement[]) => void;
   primaryColor?: string;
   accentColor?: string;
   establishmentLogo?: string | null;
@@ -234,6 +272,7 @@ interface Props {
 
 const BulletinLayoutEditor: React.FC<Props> = ({
   headerElements,
+  bodyElements,
   footerElements,
   onChange,
   primaryColor = '#1e40af',
@@ -241,21 +280,33 @@ const BulletinLayoutEditor: React.FC<Props> = ({
   establishmentLogo,
   signatoriesPreview = [],
 }) => {
-  const [activeZone, setActiveZone] = useState<'header' | 'footer'>('header');
+  const [activeZone, setActiveZone] = useState<'header' | 'body' | 'footer'>('header');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dragging, setDragging] = useState<{ id: string; offX: number; offY: number } | null>(null);
   const [resizing, setResizing] = useState<{ id: string; startW: number; startH: number; startX: number; startY: number } | null>(null);
   const headerRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   const footerRef = useRef<HTMLDivElement>(null);
 
-  const elements = activeZone === 'header' ? headerElements : footerElements;
-  const setElements = useCallback((next: BulletinElement[]) => {
-    if (activeZone === 'header') onChange(next, footerElements);
-    else onChange(headerElements, next);
-  }, [activeZone, headerElements, footerElements, onChange]);
+  const elements =
+    activeZone === 'header' ? headerElements
+    : activeZone === 'body' ? bodyElements
+    : footerElements;
 
-  const canvasH = activeZone === 'header' ? HEADER_H : FOOTER_H;
-  const canvasRef = activeZone === 'header' ? headerRef : footerRef;
+  const setElements = useCallback((next: BulletinElement[]) => {
+    if (activeZone === 'header') onChange(next, bodyElements, footerElements);
+    else if (activeZone === 'body') onChange(headerElements, next, footerElements);
+    else onChange(headerElements, bodyElements, next);
+  }, [activeZone, headerElements, bodyElements, footerElements, onChange]);
+
+  const canvasH =
+    activeZone === 'header' ? HEADER_H
+    : activeZone === 'body' ? BODY_H
+    : FOOTER_H;
+  const canvasRef =
+    activeZone === 'header' ? headerRef
+    : activeZone === 'body' ? bodyRef
+    : footerRef;
 
   const updateElement = useCallback((id: string, updates: Partial<BulletinElement>) => {
     setElements(elements.map((el) => (el.id === id ? { ...el, ...updates } : el)));
@@ -360,6 +411,9 @@ const BulletinLayoutEditor: React.FC<Props> = ({
             <TabsTrigger value="header" className="gap-2 px-4 py-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <FileText className="h-3.5 w-3.5" /> En-tête
             </TabsTrigger>
+            <TabsTrigger value="body" className="gap-2 px-4 py-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Move className="h-3.5 w-3.5" /> Corps du bulletin
+            </TabsTrigger>
             <TabsTrigger value="footer" className="gap-2 px-4 py-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <PenTool className="h-3.5 w-3.5" /> Pied de page
             </TabsTrigger>
@@ -392,6 +446,23 @@ const BulletinLayoutEditor: React.FC<Props> = ({
                   </Button>
                 );
               })}
+              {activeZone === 'body' && (
+                <>
+                  <div className="w-px h-5 bg-border mx-1" />
+                  <Button size="sm" variant="outline" onClick={() => addElement('appreciation_block')} className="h-7 text-[11px] gap-1 px-2" data-testid="add-element-appreciation">
+                    <FileText className="h-3 w-3" /> Appréciation
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => addElement('mention_block')} className="h-7 text-[11px] gap-1 px-2" data-testid="add-element-mention">
+                    <FileText className="h-3 w-3" /> Mention/Rang
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => addElement('assiduity_block')} className="h-7 text-[11px] gap-1 px-2" data-testid="add-element-assiduity">
+                    <FileText className="h-3 w-3" /> Assiduité
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => addElement('ects_block')} className="h-7 text-[11px] gap-1 px-2" data-testid="add-element-ects">
+                    <FileText className="h-3 w-3" /> Crédits ECTS
+                  </Button>
+                </>
+              )}
               {activeZone === 'footer' && (
                 <Button
                   size="sm" variant="outline"
@@ -428,15 +499,25 @@ const BulletinLayoutEditor: React.FC<Props> = ({
                   />
                 ))}
 
-                {/* Placeholder for body table when on header preview */}
+                {/* Placeholder labels around the canvas */}
                 {activeZone === 'header' && (
                   <div className="absolute -bottom-7 left-0 right-0 text-center text-[10px] text-muted-foreground italic">
                     ↓ Tableau de notes (généré automatiquement) ↓
                   </div>
                 )}
+                {activeZone === 'body' && (
+                  <>
+                    <div className="absolute -top-7 left-0 right-0 text-center text-[10px] text-muted-foreground italic">
+                      ↑ Tableau de notes (généré automatiquement) ↑
+                    </div>
+                    <div className="absolute -bottom-7 left-0 right-0 text-center text-[10px] text-muted-foreground italic">
+                      ↓ Pied de page ↓
+                    </div>
+                  </>
+                )}
                 {activeZone === 'footer' && (
                   <div className="absolute -top-7 left-0 right-0 text-center text-[10px] text-muted-foreground italic">
-                    ↑ Tableau de notes (généré automatiquement) ↑
+                    ↑ Corps du bulletin ↑
                   </div>
                 )}
               </div>
@@ -567,6 +648,47 @@ const RenderedElement: React.FC<{
             {s.is_stamp ? <div className="text-[8px] italic mt-0.5 text-amber-600">Cachet</div> : null}
           </div>
         ))}
+      </div>
+    );
+  } else if (el.type === 'appreciation_block') {
+    inner = (
+      <div className="w-full h-full p-2.5 flex flex-col">
+        <div className="text-[9px] uppercase tracking-wider font-bold text-amber-700">Appréciation générale</div>
+        <p className="text-[10px] italic text-slate-700 mt-1 leading-snug overflow-hidden">
+          Élève sérieux et appliqué. Bonne participation et résultats encourageants.
+        </p>
+      </div>
+    );
+  } else if (el.type === 'mention_block') {
+    inner = (
+      <div className="w-full h-full p-2.5 flex flex-col">
+        <div className="text-[9px] uppercase tracking-wider font-bold text-blue-700">Mention & Rang</div>
+        <div className="text-base font-bold text-blue-900 mt-1">Bien</div>
+        <div className="text-[10px] text-slate-600 mt-0.5">Rang : 3 / 28</div>
+      </div>
+    );
+  } else if (el.type === 'assiduity_block') {
+    inner = (
+      <div className="w-full h-full p-2.5 flex flex-col">
+        <div className="text-[9px] uppercase tracking-wider font-bold text-emerald-700">Assiduité</div>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 mt-1.5 text-[10px] text-slate-700">
+          <span>Absences :</span><span className="font-semibold text-right">2 j</span>
+          <span>Retards :</span><span className="font-semibold text-right">1</span>
+          <span>Justifiées :</span><span className="font-semibold text-right">100%</span>
+        </div>
+      </div>
+    );
+  } else if (el.type === 'ects_block') {
+    inner = (
+      <div className="w-full h-full p-2.5 flex flex-col">
+        <div className="text-[9px] uppercase tracking-wider font-bold text-purple-700">Crédits ECTS</div>
+        <div className="flex items-baseline gap-1 mt-1">
+          <span className="text-xl font-bold text-purple-900">28</span>
+          <span className="text-[11px] text-slate-500">/ 30 crédits</span>
+        </div>
+        <div className="w-full bg-purple-200 rounded-full h-1.5 mt-1.5 overflow-hidden">
+          <div className="h-full bg-purple-500" style={{ width: '93%' }} />
+        </div>
       </div>
     );
   }
@@ -794,6 +916,10 @@ const labelOf = (t: BulletinElementType) => ({
   rectangle: 'Forme',
   qr_code: 'QR Code',
   signatures_block: 'Bloc signatures',
+  appreciation_block: 'Appréciation générale',
+  assiduity_block: 'Bloc assiduité',
+  mention_block: 'Mention & Rang',
+  ects_block: 'Crédits ECTS',
 }[t]);
 
 export default BulletinLayoutEditor;

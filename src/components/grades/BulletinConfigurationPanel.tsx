@@ -28,6 +28,7 @@ import { fileUploadService } from '@/services/fileUploadService';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import BulletinLayoutEditor, {
   DEFAULT_HEADER_ELEMENTS,
+  DEFAULT_BODY_ELEMENTS,
   DEFAULT_FOOTER_ELEMENTS,
   type BulletinElement,
 } from './BulletinLayoutEditor';
@@ -149,8 +150,9 @@ const BulletinConfigurationPanel: React.FC<Props> = ({ formationId, establishmen
   // Calc config
   const [calc, setCalc] = useState<CalcConfig>(DEFAULT_CALC);
 
-  // Layout editor (drag-drop) - header + footer elements
+  // Layout editor (drag-drop) - header + body + footer elements
   const [headerElements, setHeaderElements] = useState<BulletinElement[]>(DEFAULT_HEADER_ELEMENTS);
+  const [bodyElements, setBodyElements] = useState<BulletinElement[]>(DEFAULT_BODY_ELEMENTS);
   const [footerElements, setFooterElements] = useState<BulletinElement[]>(DEFAULT_FOOTER_ELEMENTS);
 
   // Establishment logo (for layout editor preview)
@@ -220,11 +222,15 @@ const BulletinConfigurationPanel: React.FC<Props> = ({ formationId, establishmen
           }))
         );
       }
-      // Layout (header + footer drag-drop elements)
+      // Layout (header + body + footer drag-drop elements)
       const hc: any = existingTemplate.header_config || {};
       const fc: any = existingTemplate.footer_config || {};
+      const colcfg: any = existingTemplate.columns_config || {};
       if (Array.isArray(hc.elements) && hc.elements.length > 0) {
         setHeaderElements(hc.elements);
+      }
+      if (Array.isArray(colcfg.bodyElements) && colcfg.bodyElements.length > 0) {
+        setBodyElements(colcfg.bodyElements);
       }
       if (Array.isArray(fc.elements) && fc.elements.length > 0) {
         setFooterElements(fc.elements);
@@ -299,6 +305,7 @@ const BulletinConfigurationPanel: React.FC<Props> = ({ formationId, establishmen
         ccColumns: ['moyenne_stagiaire', 'moyenne_classe', 'appreciation'],
         examColumns: ['notes', 'coefficient', 'points'],
         showExamSection: columns.exam,
+        bodyElements: bodyElements,
       };
       const saved = await upsertTranscriptTemplate({
         id: templateId || undefined,
@@ -585,7 +592,7 @@ const BulletinConfigurationPanel: React.FC<Props> = ({ formationId, establishmen
                 <div>
                   <h3 className="text-sm font-bold text-cyan-600">Mise en page du bulletin (glisser-déposer)</h3>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
-                    Personnalisez librement <strong>l'en-tête</strong> et le <strong>pied de page</strong> du bulletin. Le tableau de notes est généré automatiquement entre les deux. Glissez les éléments, redimensionnez-les avec le coin inférieur droit, et utilisez les variables (clic = copier) pour insérer des données dynamiques.
+                    Personnalisez librement <strong>l'en-tête</strong>, le <strong>corps</strong> et le <strong>pied de page</strong> du bulletin. Le tableau de notes est généré automatiquement entre l'en-tête et le corps. Glissez les éléments, redimensionnez-les avec le coin inférieur droit, et utilisez les variables (clic = copier) pour insérer des données dynamiques.
                   </p>
                 </div>
               </div>
@@ -593,8 +600,9 @@ const BulletinConfigurationPanel: React.FC<Props> = ({ formationId, establishmen
           </Card>
           <BulletinLayoutEditor
             headerElements={headerElements}
+            bodyElements={bodyElements}
             footerElements={footerElements}
-            onChange={(h, f) => { setHeaderElements(h); setFooterElements(f); }}
+            onChange={(h, b, f) => { setHeaderElements(h); setBodyElements(b); setFooterElements(f); }}
             primaryColor={primaryColor}
             accentColor={accentColor}
             establishmentLogo={(estabData as any)?.logo_url || null}
