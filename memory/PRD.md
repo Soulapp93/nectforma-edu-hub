@@ -5,6 +5,17 @@ ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
 ## Session 46 (2026-04-26)
 
+### Bulletin composite — Configuration complète multi-blocs (DONE - 2026-04-26)
+- **Migration DB** (20260426140000_composite_config.sql) : ajout colonne `composite_config` JSONB sur `evaluation_periods`. Stocke `{ blocks: [...], total: {...} }`.
+- **Service** (`gradesService.ts`) : nouveaux types `CompositeBulletinConfig`, `CompositeBlockConfig`, `CompositeTotalConfig`. Champ `composite_config` ajouté à `EvaluationPeriod`.
+- **Modale enrichie** (`CreateCompositePeriodModal.tsx`, refonte complète) : 3 étapes en une seule modale.
+  - Étape 1 : nom + sélection des périodes
+  - Étape 2 : par bloc -> mode rendu (Bloc séparé / Fusion ligne), titre custom, choix colonnes (15 colonnes regroupées Base/Notes/Calculs/Annotations), réordonnancement (haut/bas)
+  - Étape 3 : Total/décision avec libellé custom, 4 modes de calcul (somme points, moyenne moyennes, moyenne pondérée, formule personnalisée), seuil + libellés ADMIS/NON ADMIS personnalisables
+- **Renderer dédié** (`CompositeBulletinRenderer.tsx`, nouveau) : rend N blocs séparés (chacun avec son titre + colonnes choisies) + un mode "Fusion" qui combine plusieurs périodes en colonnes côte-à-côte. Affiche total final + décision colorée (vert/rouge).
+- **Intégration** (`TranscriptsPanel.tsx`) : calcul auto des moyennes par période et par module (CC/DS/Exam/Oral/TP), moyenne de classe, points = moyenne × coef, status, appréciation. Total calculé selon la formule choisie. Branche conditionnelle dans le rendu : si `composite_config` présent -> `<CompositeBulletinRenderer />` ; sinon templates classiques.
+- **Validation runtime** : modale ouvre 3 étapes OK, création composite OK, bulletin rendu avec 2 blocs séparés + ligne TOTAL + NON ADMIS, signataires affichés, aucune erreur console.
+
 ### Bug Fix - Crash "Cannot access 'periods' before initialization" (DONE - 2026-04-26)
 - **Fichier** : `/app/src/components/grades/GradeSheetView.tsx`
 - **Cause** : `isPeriodLocked` (useMemo) était défini AVANT le useMemo `periods` qu'il référence -> Temporal Dead Zone

@@ -36,6 +36,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import BulletinTemplateRenderer, { type BulletinTableRow, type BulletinRenderData } from './BulletinTemplateRenderer';
 import { DEFAULT_TABLE_COLUMNS, DEFAULT_TABLE_STYLE, DEFAULT_HEADER_ELEMENTS, DEFAULT_BODY_ELEMENTS, DEFAULT_FOOTER_ELEMENTS } from './BulletinLayoutEditor';
+import CompositeBulletinRenderer, { type CompositeBlockData, type CompositeBlockRow } from './CompositeBulletinRenderer';
 // (TranscriptTemplateEditor replaced by BulletinConfigurationPanel — no longer used here)
 // (SignaturesCachetTab no longer imported — replaced by BulletinConfigurationPanel signatures tab)
 
@@ -635,6 +636,139 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   const currentBulletin = currentStudentIndex !== null ? (bulletins[currentStudentIndex] || null) : null;
   const selectedFormationData = availableFormations.find((f: any) => f.id === selectedFormation);
 
+  // Composite period rendering
+  const currentCompositePeriod = useMemo(() => {
+    if (!periodId) return null;
+    const p = periods.find((pp: any) => pp.id === periodId);
+    return p?.is_composite && (p as any)?.composite_config ? p : null;
+  }, [periodId, periods]);
+
+  const compositeConfig = (currentCompositePeriod as any)?.composite_config as any;
+
+  const compositeBlocks: CompositeBlockData[] = useMemo(() => {
+    if (!compositeConfig || !currentBulletin) return [];
+
+    const studentId = currentBulletin.studentId;
+    const ccTypeValues = EVALUATION_TYPES.filter((t) => t.category === 'cc').map((t) => t.value);
+
+    return compositeConfig.blocks.map((blockCfg: any) => {
+      const periodEvals = evaluations.filter((e: any) => e.period_id === blockCfg.period_id);
+      const periodGradesByMod: Record<string, { cc: number[]; ds: number[]; exam: number[]; oral: number[]; tp: number[] }> = {};
+
+      // Helper: collect grades per evaluation type
+      modules.forEach((mod: any) => {
+        periodGradesByMod[mod.id] = { cc: [], ds: [], exam: [], oral: [], tp: [] };
+      });
+
+      periodEvals.forEach((ev: any) => {
+        const grades = (allGrades as Map<string, any[]>).get(ev.id) || [];
+        const studentGrade = grades.find((g: any) => g.student_id === studentId);
+        if (!studentGrade || studentGrade.score === null || studentGrade.score === undefined) return;
+        const bucket = periodGradesByMod[ev.module_id];
+        if (!bucket) return;
+        const val = parseFloat(String(studentGrade.score));
+        if (isNaN(val)) return;
+        if (ccTypeValues.includes(ev.evaluation_type)) bucket.cc.push(val);
+        else if (ev.evaluation_type === 'partiels' || ev.evaluation_type === 'ds') bucket.ds.push(val);
+        else if (ev.evaluation_type === 'examen_final' || ev.evaluation_type === 'examen_blanc') bucket.exam.push(val);
+        else if (ev.evaluation_type === 'oral' || ev.evaluation_type === 'soutenance') bucket.oral.push(val);
+        else if (ev.evaluation_type === 'tp') bucket.tp.push(val);
+      });
+
+      const avg = (arr: number[]): number | null => arr.length === 0 ? null : Math.round((arr.reduce((a, b) => a + b, 0) / arr.length) * 100) / 100;
+
+      // Class average for "moyenne_classe" — same module, same period, all students
+      const classAvgsByMod: Record<string, number | null> = {};
+      modules.forEach((mod: any) => {
+        const allStudentMeans: number[] = [];
+        students.forEach((s: any) => {
+          const sBucket: number[] = [];
+          periodEvals.filter((e: any) => e.module_id === mod.id).forEach((ev: any) => {
+            const grades = (allGrades as Map<string, any[]>).get(ev.id) || [];
+            const sg = grades.find((g: any) => g.student_id === s.user_id);
+            if (sg?.score !== null && sg?.score !== undefined) {
+              const v = parseFloat(String(sg.score));
+              if (!isNaN(v)) sBucket.push(v);
+            }
+          });
+          const m = avg(sBucket);
+          if (m !== null) allStudentMeans.push(m);
+        });
+        classAvgsByMod[mod.id] = avg(allStudentMeans);
+      });
+
+      const rows: CompositeBlockRow[] = modules.map((mod: any) => {
+        const b = periodGradesByMod[mod.id] || { cc: [], ds: [], exam: [], oral: [], tp: [] };
+        const ccAvg = avg(b.cc);
+        const dsAvg = avg(b.ds);
+        const examAvg = avg(b.exam);
+        const oralAvg = avg(b.oral);
+        const tpAvg = avg(b.tp);
+        const allVals = [ccAvg, dsAvg, examAvg, oralAvg, tpAvg].filter((v) => v !== null) as number[];
+        const moyenne = allVals.length === 0 ? null : Math.round((allVals.reduce((a, b) => a + b, 0) / allVals.length) * 100) / 100;
+        const coef = (mod as any).coefficient || 1;
+        const points = moyenne !== null ? Math.round(moyenne * coef * 100) / 100 : null;
+        const appreciation = moyenne === null ? '' : moyenne >= 16 ? 'Excellent' : moyenne >= 14 ? 'Très bien' : moyenne >= 12 ? 'Bien' : moyenne >= 10 ? 'Assez bien' : 'Insuffisant';
+        return {
+          module: mod.title,
+          coefficient: coef,
+          cc: ccAvg,
+          ds: dsAvg,
+          exam: examAvg,
+          oral: oralAvg,
+          tp: tpAvg,
+          moyenne,
+          moyenne_classe: classAvgsByMod[mod.id],
+          points,
+          credits: '',
+          status: moyenne === null ? '' : moyenne >= 10 ? 'Validé' : 'Ajourné',
+          appreciation,
+        };
+      });
+
+      // Block summary: weighted mean
+      const totalCoef = rows.reduce((s, r) => s + (r.coefficient || 0), 0);
+      const totalPts = rows.reduce((s, r) => s + (r.points || 0), 0);
+      const blockMean = totalCoef > 0 ? Math.round((totalPts / totalCoef) * 100) / 100 : null;
+      const totalPointsRaw = totalPts;
+
+      return {
+        period_id: blockCfg.period_id,
+        title: blockCfg.title || (periods.find((p: any) => p.id === blockCfg.period_id)?.name) || 'Bloc',
+        render_mode: blockCfg.render_mode,
+        columns: blockCfg.columns,
+        rows,
+        summary: blockMean !== null ? {
+          label: blockCfg.render_mode === 'block' ? 'Moyenne du bloc' : 'Total points',
+          value: blockCfg.render_mode === 'block' ? blockMean.toFixed(2) : totalPointsRaw.toFixed(2),
+        } : undefined,
+      } as CompositeBlockData;
+    });
+  }, [compositeConfig, currentBulletin, evaluations, allGrades, modules, periods, students]);
+
+  // Compute total based on formula
+  const compositeTotal: number | null = useMemo(() => {
+    if (!compositeConfig || compositeBlocks.length === 0) return null;
+    const formula = compositeConfig.total?.formula || 'sum_points';
+    const allRows = compositeBlocks.flatMap((b) => b.rows);
+    if (formula === 'sum_points') {
+      return Math.round(allRows.reduce((s, r) => s + (r.points || 0), 0) * 100) / 100;
+    }
+    if (formula === 'average_avg') {
+      const means = compositeBlocks.map((b) => {
+        const vals = b.rows.map((r) => r.moyenne).filter((v) => v !== null) as number[];
+        return vals.length === 0 ? null : vals.reduce((a, b) => a + b, 0) / vals.length;
+      }).filter((v) => v !== null) as number[];
+      return means.length === 0 ? null : Math.round((means.reduce((a, b) => a + b, 0) / means.length) * 100) / 100;
+    }
+    if (formula === 'weighted_avg') {
+      const totalCoef = allRows.reduce((s, r) => s + (r.coefficient || 0), 0);
+      const totalPts = allRows.reduce((s, r) => s + (r.points || 0), 0);
+      return totalCoef > 0 ? Math.round((totalPts / totalCoef) * 100) / 100 : null;
+    }
+    return null;
+  }, [compositeConfig, compositeBlocks]);
+
   const handlePrint = () => {
     const content = printRef.current;
     if (!content) return;
@@ -946,7 +1080,59 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                 </div>
 
                 <div ref={printRef} className="bulletin bg-white text-[#1a1a2e]">
-                  {templateLayout.hasCustom ? (
+                  {compositeConfig && compositeBlocks.length > 0 ? (
+                    /* ===== COMPOSITE BULLETIN (separate blocks like IRTA/BTS) ===== */
+                    <>
+                      {/* Simple header for composite */}
+                      <div className="px-6 pt-6 pb-2">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-3">
+                            {establishment?.logo_url ? (
+                              <img src={establishment.logo_url} alt="" className="h-14 w-14 rounded-lg object-contain" />
+                            ) : (
+                              <div className="h-14 w-14 rounded-lg flex items-center justify-center text-white font-bold text-xl" style={{ backgroundColor: tplStyle.primaryColor }}>
+                                {establishment?.name?.charAt(0) || 'E'}
+                              </div>
+                            )}
+                            <div>
+                              <h2 className="text-lg font-bold" style={{ color: tplStyle.primaryColor }}>{establishment?.name}</h2>
+                              <p className="text-[10px] text-muted-foreground">{selectedFormationData?.title} · {(selectedFormationData as any)?.level}</p>
+                              <p className="text-[10px] text-muted-foreground">SESSION {academicYear}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="inline-block px-4 py-2 rounded-md text-sm font-bold text-white" style={{ backgroundColor: tplStyle.primaryColor }}>
+                              {(periodName || currentPeriodLabel || 'BULLETIN COMPOSITE').toUpperCase()}
+                            </div>
+                            <p className="text-[10px] mt-1" style={{ color: '#64748b' }}>Réf : {refNumber}</p>
+                          </div>
+                        </div>
+                        <div className="mt-3 mx-0 p-2 text-center rounded" style={{ backgroundColor: `${tplStyle.primaryColor}15`, color: tplStyle.primaryColor }}>
+                          <p className="font-bold text-base">{currentBulletin.studentName}</p>
+                        </div>
+                      </div>
+                      <CompositeBulletinRenderer
+                        config={compositeConfig}
+                        blocks={compositeBlocks}
+                        totalValue={compositeTotal}
+                        primaryColor={tplStyle.primaryColor}
+                      />
+                      {/* Signatories */}
+                      {signatories && signatories.length > 0 && (
+                        <div className="px-6 pb-6 pt-4 grid grid-cols-3 gap-4 border-t" style={{ borderColor: '#e2e8f0' }}>
+                          {signatories.slice(0, 3).map((s: any) => (
+                            <div key={s.id} className="text-center">
+                              <p className="text-[9px] uppercase tracking-wider font-bold text-muted-foreground">{s.role_label}</p>
+                              <div className="h-12 flex items-center justify-center mt-1">
+                                {s.signature_image ? <img src={s.signature_image} alt="" className="max-h-12 object-contain" /> : <span className="text-[10px] italic text-muted-foreground">— signature —</span>}
+                              </div>
+                              {s.name && !s.is_stamp && <p className="text-[10px] font-semibold mt-1 border-t pt-1">{s.name}</p>}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  ) : templateLayout.hasCustom ? (
                     /* ===== CUSTOM TEMPLATE-DRIVEN BULLETIN ===== */
                     <div className="flex justify-center p-4">
                       <BulletinTemplateRenderer

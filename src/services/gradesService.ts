@@ -27,6 +27,33 @@ export interface EvaluationPeriod {
   locked_by: string | null;
   is_composite?: boolean;
   combined_period_ids?: string[] | null;
+  composite_config?: CompositeBulletinConfig | null;
+}
+
+export interface CompositeBlockConfig {
+  period_id: string;
+  render_mode: 'block' | 'merged';
+  title?: string;
+  /** Visible column keys: module, coefficient, cc, ds, exam, oral, tp, moyenne, moyenne_classe, points, credits, status, appreciation, rang */
+  columns: string[];
+  show_appreciation?: boolean;
+  order_index: number;
+}
+
+export interface CompositeTotalConfig {
+  enabled: boolean;
+  label: string;
+  /** Formula type: sum_points | average_avg | weighted_avg | custom */
+  formula: 'sum_points' | 'average_avg' | 'weighted_avg' | 'custom';
+  custom_expression?: string;
+  threshold: number;
+  admitted_label: string;
+  rejected_label: string;
+}
+
+export interface CompositeBulletinConfig {
+  blocks: CompositeBlockConfig[];
+  total: CompositeTotalConfig;
 }
 
 export interface Evaluation {
