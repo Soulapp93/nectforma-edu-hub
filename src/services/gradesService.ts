@@ -25,6 +25,8 @@ export interface EvaluationPeriod {
   is_locked: boolean;
   locked_at: string | null;
   locked_by: string | null;
+  is_composite?: boolean;
+  combined_period_ids?: string[] | null;
 }
 
 export interface Evaluation {

@@ -332,20 +332,38 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     if (!publishSemester || !selectedFormation || !userId) return;
     setIsPublishing(true);
     try {
+      // publishSemester format: "period-<uuid>"
+      let periodId: string | null = null;
+      let semesterNumber: number = 0;
+      let displayName = '';
+      if (publishSemester.startsWith('period-')) {
+        periodId = publishSemester.substring('period-'.length);
+        const period = periods.find((p: any) => p.id === periodId);
+        if (period) {
+          displayName = period.name;
+          // Best-effort numeric semester from period order or name
+          const m = period.name.match(/\d+/);
+          semesterNumber = m ? parseInt(m[0]) : (periods.indexOf(period) + 1);
+        }
+      } else {
+        semesterNumber = parseInt(publishSemester);
+        displayName = `Semestre ${semesterNumber}`;
+      }
       const { error } = await supabase
         .from('published_transcripts')
         .upsert({
           formation_id: selectedFormation,
-          semester_number: parseInt(publishSemester),
+          semester_number: semesterNumber,
+          period_id: periodId,
           published_by: userId,
           published_at: new Date().toISOString(),
           academic_year: selectedFormationData?.academic_year || null,
-        }, { onConflict: 'formation_id,semester_number' });
+        } as any, { onConflict: periodId ? 'formation_id,period_id' : 'formation_id,semester_number' });
       if (error) throw error;
       await refetchPublished();
       setShowPublishDialog(false);
       setPublishSemester('');
-      toast.success(`Relevés du Semestre ${publishSemester} publiés avec succès`);
+      toast.success(`${displayName} publié avec succès`);
     } catch (e: any) {
       toast.error(e.message || 'Erreur lors de la publication');
     } finally {
@@ -746,111 +764,38 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
           </DialogHeader>
           <div className="space-y-4 py-4">
             <p className="text-sm text-muted-foreground">
-              Choisissez ce que vous souhaitez publier. Les etudiants pourront consulter leur releve dans leur espace.
+              Sélectionnez les bulletins à publier. Les étudiants pourront consulter leur relevé dans leur espace.
             </p>
 
-            {/* Semester selection */}
+            {/* All available periods/bulletins */}
             <div className="space-y-2">
-              <p className="text-xs font-semibold text-foreground">Periodes individuelles</p>
-              <div className="flex flex-wrap gap-2">
-                {Array.from({ length: semestersCount }, (_, i) => {
-                  const val = String(i + 1);
-                  const isSelected = publishSemester === val;
-                  const isPublished = publishedSemesters.some((ps: any) => ps.semester_number === i + 1);
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => setPublishSemester(isSelected ? '' : val)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                        isSelected
-                          ? 'bg-primary text-primary-foreground border-primary'
-                          : isPublished
-                            ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                            : 'bg-background border-border hover:border-primary/50'
-                      }`}
-                    >
-                      {isPublished && <Check className="h-3 w-3 inline mr-1" />}
-                      Semestre {i + 1}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Exam periods */}
-            {periods.some((p: any) => p.period_type === 'examen_blanc' || p.period_type === 'examen_final') && (
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-foreground">Examens</p>
-                <div className="flex flex-wrap gap-2">
-                  {periods.filter((p: any) => p.period_type === 'examen_blanc' || p.period_type === 'examen_final').map((p: any) => {
-                    const isSelected = publishSemester === `exam-${p.id}`;
+              <p className="text-xs font-semibold text-foreground">Bulletins disponibles</p>
+              <div className="space-y-1.5 max-h-72 overflow-y-auto">
+                {periods.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic py-3">Aucune période d'évaluation. Créez-en une depuis l'onglet principal.</p>
+                ) : (
+                  periods.map((p: any) => {
+                    const isSelected = publishSemester === `period-${p.id}`;
+                    const isPublished = publishedSemesters.some((ps: any) => ps.period_id === p.id);
+                    const colorClass = p.is_composite
+                      ? (isSelected ? 'bg-violet-500 text-white border-violet-500' : 'border-violet-300 text-violet-700 hover:bg-violet-50')
+                      : (p.period_type === 'examen_blanc' || p.period_type === 'examen_final')
+                      ? (isSelected ? 'bg-amber-500 text-white border-amber-500' : 'border-amber-300 text-amber-700 hover:bg-amber-50')
+                      : (isSelected ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:border-primary/50');
                     return (
                       <button
                         key={p.id}
-                        onClick={() => setPublishSemester(isSelected ? '' : `exam-${p.id}`)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                          isSelected
-                            ? 'bg-amber-500 text-white border-amber-500'
-                            : 'bg-background border-amber-200 text-amber-700 hover:border-amber-400'
-                        }`}
+                        onClick={() => setPublishSemester(isSelected ? '' : `period-${p.id}`)}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-all ${colorClass}`}
+                        data-testid={`publish-period-${p.id}`}
                       >
-                        {p.name}
+                        {isPublished && <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" />}
+                        {p.is_composite && <span className="text-amber-400">★</span>}
+                        <span className="flex-1 text-left">{p.name}</span>
+                        <span className="text-[10px] uppercase tracking-wider opacity-70">{p.is_composite ? 'Bulletin combiné' : p.period_type}</span>
                       </button>
                     );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Combined options */}
-            <div className="space-y-2 border-t pt-3">
-              <p className="text-xs font-semibold text-foreground">Bulletins combines</p>
-              <div className="flex flex-wrap gap-2">
-                {semestersCount >= 2 && (
-                  <button
-                    onClick={() => setPublishSemester(publishSemester === 'combine-year1' ? '' : 'combine-year1')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                      publishSemester === 'combine-year1'
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-background border-border hover:border-primary/50'
-                    }`}
-                  >
-                    S1 + S2 (Annee 1)
-                  </button>
-                )}
-                {semestersCount >= 4 && (
-                  <button
-                    onClick={() => setPublishSemester(publishSemester === 'combine-year2' ? '' : 'combine-year2')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                      publishSemester === 'combine-year2'
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-background border-border hover:border-primary/50'
-                    }`}
-                  >
-                    S3 + S4 (Annee 2)
-                  </button>
-                )}
-                <button
-                  onClick={() => setPublishSemester(publishSemester === 'combine-all' ? '' : 'combine-all')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                    publishSemester === 'combine-all'
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-background border-border hover:border-primary/50'
-                  }`}
-                >
-                  Tous les semestres
-                </button>
-                {periods.some((p: any) => p.period_type === 'examen_blanc' || p.period_type === 'examen_final') && (
-                  <button
-                    onClick={() => setPublishSemester(publishSemester === 'combine-cc-exam' ? '' : 'combine-cc-exam')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                      publishSemester === 'combine-cc-exam'
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-background border-border hover:border-primary/50'
-                    }`}
-                  >
-                    CC + Examens (Complet)
-                  </button>
+                  })
                 )}
               </div>
             </div>
@@ -858,12 +803,12 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
             {/* Already published */}
             {publishedSemesters.length > 0 && (
               <div className="space-y-2 border-t pt-3">
-                <p className="text-xs font-medium text-muted-foreground">Deja publies :</p>
+                <p className="text-xs font-medium text-muted-foreground">Déjà publiés :</p>
                 <div className="flex flex-wrap gap-1.5">
                   {publishedSemesters.map((ps: any) => (
                     <Badge key={ps.id} variant="secondary" className="gap-1 text-xs">
                       <Check className="h-3 w-3 text-green-500" />
-                      S{ps.semester_number}
+                      {ps.period_id ? (periods.find((p: any) => p.id === ps.period_id)?.name || `S${ps.semester_number}`) : `S${ps.semester_number}`}
                     </Badge>
                   ))}
                 </div>
