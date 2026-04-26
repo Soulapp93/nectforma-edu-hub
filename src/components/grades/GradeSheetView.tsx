@@ -40,12 +40,6 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
   const [isDirty, setIsDirty] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
-  const isPeriodLocked = useMemo(() => {
-    if (!periodId || periods.length === 0) return false;
-    const cp = periods.find((p: any) => p.id === periodId);
-    return cp?.is_locked === true;
-  }, [periodId, periods]);
-
   // Formation data
   const { data: currentFormationData } = useQuery({
     queryKey: ['formation-data-sheet', selectedFormation],
@@ -78,6 +72,12 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
     enabled: !!selectedFormation,
   });
   const periods = useMemo(() => rawPeriods ?? [], [rawPeriods]);
+
+  const isPeriodLocked = useMemo(() => {
+    if (!periodId || periods.length === 0) return false;
+    const cp = periods.find((p: any) => p.id === periodId);
+    return cp?.is_locked === true;
+  }, [periodId, periods]);
 
   void currentFormationData; // formation data fetch (kept for future enhancements)
   // Current selected period (from parent prop) — single source of truth

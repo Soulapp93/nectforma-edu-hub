@@ -3,6 +3,15 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
+## Session 46 (2026-04-26)
+
+### Bug Fix - Crash "Cannot access 'periods' before initialization" (DONE - 2026-04-26)
+- **Fichier** : `/app/src/components/grades/GradeSheetView.tsx`
+- **Cause** : `isPeriodLocked` (useMemo) était défini AVANT le useMemo `periods` qu'il référence -> Temporal Dead Zone
+- **Fix** : Déplacement du bloc `isPeriodLocked` après la déclaration `const periods = useMemo(...)`
+- **Validation** : Login admin -> /notes-admin -> clic formation -> page détail rend correctement (matières, périodes, onglets), aucune erreur console PageError/TDZ.
+
+
 ## Session 45 (2026-04-25)
 
 ### Refonte Notes & Bulletins (DONE - 2026-04-25)
