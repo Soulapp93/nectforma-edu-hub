@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Save, Palette, FolderKanban, Settings2, PenTool, Upload, Eraser,
+  Save, Palette, FolderKanban, Settings2, PenTool, Upload, Eraser, Layout,
   Plus, X, ArrowUp, ArrowDown, Trash2, Stamp, UserCircle2, Image as ImageIcon, Pencil,
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -26,6 +26,11 @@ import {
 } from '@/services/gradesService';
 import { fileUploadService } from '@/services/fileUploadService';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import BulletinLayoutEditor, {
+  DEFAULT_HEADER_ELEMENTS,
+  DEFAULT_FOOTER_ELEMENTS,
+  type BulletinElement,
+} from './BulletinLayoutEditor';
 
 // ----- Types ---------------------------------------------------------------
 
@@ -144,6 +149,27 @@ const BulletinConfigurationPanel: React.FC<Props> = ({ formationId, establishmen
   // Calc config
   const [calc, setCalc] = useState<CalcConfig>(DEFAULT_CALC);
 
+  // Layout editor (drag-drop) - header + footer elements
+  const [headerElements, setHeaderElements] = useState<BulletinElement[]>(DEFAULT_HEADER_ELEMENTS);
+  const [footerElements, setFooterElements] = useState<BulletinElement[]>(DEFAULT_FOOTER_ELEMENTS);
+
+  // Establishment logo (for layout editor preview)
+  const { data: estabData } = useQuery({
+    queryKey: ['establishment-logo', establishmentId],
+    queryFn: async () => {
+      const { data } = await supabase.from('establishments').select('logo_url, name').eq('id', establishmentId).single();
+      return data;
+    },
+    enabled: !!establishmentId,
+  });
+
+  // Existing signatories for the layout preview
+  const { data: signatoriesPreview = [] } = useQuery({
+    queryKey: ['establishment-signatories', establishmentId],
+    queryFn: () => getEstablishmentSignatories(establishmentId),
+    enabled: !!establishmentId,
+  });
+
   // Modules to assign in categories
   const { data: modules = [] } = useQuery({
     queryKey: ['formation-modules-config', formationId],
@@ -193,6 +219,15 @@ const BulletinConfigurationPanel: React.FC<Props> = ({ formationId, establishmen
             moduleIds: s.moduleIds || [],
           }))
         );
+      }
+      // Layout (header + footer drag-drop elements)
+      const hc: any = existingTemplate.header_config || {};
+      const fc: any = existingTemplate.footer_config || {};
+      if (Array.isArray(hc.elements) && hc.elements.length > 0) {
+        setHeaderElements(hc.elements);
+      }
+      if (Array.isArray(fc.elements) && fc.elements.length > 0) {
+        setFooterElements(fc.elements);
       }
     }
   }, [existingTemplate]);
@@ -272,8 +307,19 @@ const BulletinConfigurationPanel: React.FC<Props> = ({ formationId, establishmen
         template_type: 'bulletin',
         is_active: true,
         columns_config: colCfg,
-        header_config: { title: 'Bulletin de notes', showLogo: display.showLogo, showSession: true, subtitle: '' },
-        footer_config: { showAssiduity: false, customText: '', showSignature: display.showSignatures },
+        header_config: {
+          title: 'Bulletin de notes',
+          showLogo: display.showLogo,
+          showSession: true,
+          subtitle: '',
+          elements: headerElements,
+        },
+        footer_config: {
+          showAssiduity: false,
+          customText: '',
+          showSignature: display.showSignatures,
+          elements: footerElements,
+        },
         style_config: styleCfg,
       });
       await linkTemplateToFormation(formationId, saved.id);
@@ -332,9 +378,12 @@ const BulletinConfigurationPanel: React.FC<Props> = ({ formationId, establishmen
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="bg-transparent p-0 h-auto border-b border-border w-full justify-start rounded-none gap-6">
+        <TabsList className="bg-transparent p-0 h-auto border-b border-border w-full justify-start rounded-none gap-6 flex-wrap">
           <TabsTrigger value="style" className="gap-2 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-amber-500 rounded-none pb-3 px-1">
             <Palette className="h-4 w-4 text-rose-500" /> Style du bulletin
+          </TabsTrigger>
+          <TabsTrigger value="layout" className="gap-2 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-amber-500 rounded-none pb-3 px-1" data-testid="layout-tab">
+            <Layout className="h-4 w-4 text-cyan-500" /> Mise en page
           </TabsTrigger>
           <TabsTrigger value="categories" className="gap-2 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-amber-500 rounded-none pb-3 px-1">
             <FolderKanban className="h-4 w-4 text-amber-500" /> Catégories & Blocs
@@ -523,6 +572,34 @@ const BulletinConfigurationPanel: React.FC<Props> = ({ formationId, establishmen
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* TAB — LAYOUT (drag & drop editor) */}
+        <TabsContent value="layout" className="mt-5">
+          <Card className="rounded-2xl mb-4">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="h-9 w-9 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center shrink-0">
+                  <Layout className="h-4 w-4 text-cyan-600" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-cyan-600">Mise en page du bulletin (glisser-déposer)</h3>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Personnalisez librement <strong>l'en-tête</strong> et le <strong>pied de page</strong> du bulletin. Le tableau de notes est généré automatiquement entre les deux. Glissez les éléments, redimensionnez-les avec le coin inférieur droit, et utilisez les variables (clic = copier) pour insérer des données dynamiques.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <BulletinLayoutEditor
+            headerElements={headerElements}
+            footerElements={footerElements}
+            onChange={(h, f) => { setHeaderElements(h); setFooterElements(f); }}
+            primaryColor={primaryColor}
+            accentColor={accentColor}
+            establishmentLogo={(estabData as any)?.logo_url || null}
+            signatoriesPreview={signatoriesPreview as any}
+          />
         </TabsContent>
 
         {/* TAB 2 — CATEGORIES */}
