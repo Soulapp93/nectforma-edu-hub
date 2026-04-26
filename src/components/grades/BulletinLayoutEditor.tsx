@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Type, Image as ImageIcon, Variable, Minus, Square,
+  Type, Image as ImageIcon, Variable, Minus, Square, Plus,
   Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight,
   Copy, Trash2, ChevronUp, ChevronDown, Move, FileText, PenTool, QrCode,
 } from 'lucide-react';
@@ -44,6 +44,8 @@ export interface TableStyleConfig {
   borderRadius: number;
   fontSize: number;
   rowHeight: number;
+  // Phase 2 — cell overrides keyed by `${rowKey}__${colId}`
+  cellOverrides?: Record<string, { value?: string; bgColor?: string; textColor?: string; fontWeight?: '400'|'600'|'700' }>;
 }
 
 export const DEFAULT_TABLE_COLUMNS: TableColumnConfig[] = [
@@ -506,19 +508,35 @@ const BulletinLayoutEditor: React.FC<Props> = ({
             onStyleChange={onTableStyleChange}
           />
         ) : activeZone === 'preview' ? (
-          <FullPreview
-            key="full-preview"
-            headerElements={headerElements}
-            bodyElements={bodyElements}
-            footerElements={footerElements}
-            tableColumns={tableColumns}
-            tableStyle={tableStyle}
-            primaryColor={primaryColor}
-            accentColor={accentColor}
-            establishmentLogo={establishmentLogo}
-            establishmentName={establishmentName}
-            signatoriesPreview={signatoriesPreview}
-          />
+          <>
+            <Card className="rounded-xl bg-amber-50 dark:bg-amber-900/20 border-amber-200">
+              <CardContent className="p-3 text-[11px] text-amber-700 dark:text-amber-300">
+                💡 <strong>Astuce</strong> : cliquez sur n'importe quelle cellule du tableau ci-dessous pour la modifier. Les valeurs personnalisées sont sauvegardées et appliquées sur les bulletins réels.
+              </CardContent>
+            </Card>
+            <FullPreview
+              key="full-preview"
+              headerElements={headerElements}
+              bodyElements={bodyElements}
+              footerElements={footerElements}
+              tableColumns={tableColumns}
+              tableStyle={tableStyle}
+              primaryColor={primaryColor}
+              accentColor={accentColor}
+              establishmentLogo={establishmentLogo}
+              establishmentName={establishmentName}
+              signatoriesPreview={signatoriesPreview}
+              onCellOverride={(key, value) => {
+                const next = { ...(tableStyle.cellOverrides || {}) };
+                if (value === '' || value === '—') {
+                  delete next[key];
+                } else {
+                  next[key] = { ...(next[key] || {}), value };
+                }
+                onTableStyleChange({ ...tableStyle, cellOverrides: next });
+              }}
+            />
+          </>
         ) : (
         <Card key="canvas-zone" className="rounded-2xl overflow-hidden">
           <CardContent className="p-0">
@@ -1295,6 +1313,7 @@ const TableEditor: React.FC<{
 
 // ============================================================================
 // FULL PREVIEW — header + table + body + footer (interpolated mock data)
+// Cells are EDITABLE (click to modify) — overrides are saved in tableStyle.cellOverrides
 // ============================================================================
 const FullPreview: React.FC<{
   headerElements: BulletinElement[];
@@ -1307,9 +1326,11 @@ const FullPreview: React.FC<{
   establishmentLogo?: string | null;
   establishmentName?: string;
   signatoriesPreview: Array<{ id: string; role_label: string; name: string | null; signature_image: string | null; is_stamp: boolean }>;
+  onCellOverride?: (key: string, value: string) => void;
 }> = ({
   headerElements, bodyElements, footerElements, tableColumns, tableStyle,
   primaryColor, accentColor, establishmentLogo, establishmentName, signatoriesPreview,
+  onCellOverride,
 }) => {
   const mockData: Record<string, string> = {
     nom_complet: 'Marie Dubois',
@@ -1376,13 +1397,16 @@ const FullPreview: React.FC<{
                   {mockRows.map((row, i) => (
                     <tr key={i} style={{ background: i % 2 === 0 ? tableStyle.rowBg : tableStyle.rowAltBg, color: tableStyle.rowTextColor, height: tableStyle.rowHeight }}>
                       {visibleCols.map((c) => {
+                        const overrideKey = `${row.mod}__${c.id}`;
+                        const override = tableStyle.cellOverrides?.[overrideKey];
                         const baseTd: React.CSSProperties = {
                           textAlign: c.align as any,
                           borderTop: `1px solid ${tableStyle.borderColor}`,
-                          background: c.bgColor || undefined,
-                          color: c.textColor || undefined,
-                          fontWeight: c.fontWeight as any,
+                          background: override?.bgColor || c.bgColor || undefined,
+                          color: override?.textColor || c.textColor || undefined,
+                          fontWeight: (override?.fontWeight || c.fontWeight) as any,
                           padding: '0 8px',
+                          cursor: 'cell',
                         };
                         const rowVals: Record<string, number | null> = {
                           cc: parseFloat(row.cc) || null,
@@ -1396,7 +1420,9 @@ const FullPreview: React.FC<{
                           credits: parseFloat(row.credits) || null,
                         };
                         let cellContent: React.ReactNode = '—';
-                        if (c.key === 'custom_static') {
+                        if (override?.value !== undefined) {
+                          cellContent = override.value;
+                        } else if (c.key === 'custom_static') {
                           cellContent = c.staticValue ?? '—';
                         } else if (c.key === 'custom_formula') {
                           const r = evaluateFormula(c.formula || '', rowVals);
@@ -1416,7 +1442,21 @@ const FullPreview: React.FC<{
                             : c.key === 'appreciation' ? <span className="italic text-[10px]">{row.appr}</span>
                             : '—';
                         }
-                        return <td key={c.id} style={baseTd}>{cellContent}</td>;
+                        return (
+                          <td
+                            key={c.id}
+                            style={baseTd}
+                            title="Cliquer pour modifier la valeur de cette cellule"
+                            onClick={() => {
+                              if (!onCellOverride) return;
+                              const current = override?.value ?? (typeof cellContent === 'string' ? cellContent : '');
+                              const next = window.prompt(`Modifier "${c.label}" pour ${row.mod} :`, String(current));
+                              if (next !== null) onCellOverride(overrideKey, next);
+                            }}
+                          >
+                            {cellContent}
+                          </td>
+                        );
                       })}
                     </tr>
                   ))}

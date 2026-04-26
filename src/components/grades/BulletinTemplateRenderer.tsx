@@ -338,18 +338,22 @@ const BulletinTemplateRenderer: React.FC<Props> = ({
                     color: tableStyle.rowTextColor,
                     height: tableStyle.rowHeight,
                   }}>
-                    {visibleCols.map((c) => (
+                    {visibleCols.map((c) => {
+                      const overrideKey = `${row.module}__${c.id}`;
+                      const override = tableStyle.cellOverrides?.[overrideKey];
+                      return (
                       <td key={c.id} style={{
                         padding: '0 8px',
                         textAlign: c.align as any,
                         borderTop: `1px solid ${tableStyle.borderColor}`,
-                        background: c.bgColor || undefined,
-                        color: c.textColor || undefined,
-                        fontWeight: c.fontWeight as any,
+                        background: override?.bgColor || c.bgColor || undefined,
+                        color: override?.textColor || c.textColor || undefined,
+                        fontWeight: (override?.fontWeight || c.fontWeight) as any,
                       }}>
-                        {cellValue(c, row)}
+                        {override?.value !== undefined ? override.value : cellValue(c, row)}
                       </td>
-                    ))}
+                      );
+                    })}
                   </tr>
                 ))
               )}
