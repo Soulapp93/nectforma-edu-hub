@@ -36,6 +36,8 @@ import BulletinLayoutEditor, {
   type TableColumnConfig,
   type TableStyleConfig,
 } from './BulletinLayoutEditor';
+import BulletinTemplateLibrary from './BulletinTemplateLibrary';
+import { type BulletinPreset } from './bulletinPresets';
 
 // ----- Types ---------------------------------------------------------------
 
@@ -162,6 +164,29 @@ const BulletinConfigurationPanel: React.FC<Props> = ({ formationId, establishmen
   // Table customization
   const [tableColumns, setTableColumns] = useState<TableColumnConfig[]>(DEFAULT_TABLE_COLUMNS);
   const [tableStyle, setTableStyle] = useState<TableStyleConfig>(DEFAULT_TABLE_STYLE);
+
+  // Active preset id (for highlighting in library)
+  const [activePresetId, setActivePresetId] = useState<string | null>(null);
+
+  // Apply a preset from the library — overrides ALL visual config (style + layout + table)
+  const applyPreset = (preset: BulletinPreset) => {
+    setPrimaryColor(preset.primaryColor);
+    setAccentColor(preset.accentColor);
+    setFontFamily(preset.fontFamily);
+    setHeaderElements(preset.headerElements);
+    setBodyElements(preset.bodyElements);
+    setFooterElements(preset.footerElements);
+    setTableColumns(preset.tableColumns);
+    setTableStyle(preset.tableStyle);
+    setColumns({
+      ccColumns: preset.ccColumns,
+      examColumns: preset.examColumns,
+      showExamSection: preset.showExamSection,
+    } as any);
+    setActivePresetId(preset.id);
+    toast.success(`Modèle "${preset.name}" appliqué — n'oubliez pas d'enregistrer`);
+    setActiveTab('layout'); // Auto-switch to layout to let user customize
+  };
 
   // Establishment logo (for layout editor preview)
   const { data: estabData } = useQuery({
@@ -405,6 +430,9 @@ const BulletinConfigurationPanel: React.FC<Props> = ({ formationId, establishmen
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="bg-transparent p-0 h-auto border-b border-border w-full justify-start rounded-none gap-6 flex-wrap">
+          <TabsTrigger value="library" className="gap-2 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-amber-500 rounded-none pb-3 px-1" data-testid="library-tab">
+            <Layout className="h-4 w-4 text-amber-500" /> Bibliothèque de modèles
+          </TabsTrigger>
           <TabsTrigger value="style" className="gap-2 data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-amber-500 rounded-none pb-3 px-1">
             <Palette className="h-4 w-4 text-rose-500" /> Style du bulletin
           </TabsTrigger>
@@ -421,6 +449,14 @@ const BulletinConfigurationPanel: React.FC<Props> = ({ formationId, establishmen
             <PenTool className="h-4 w-4 text-emerald-500" /> Signatures & Cachets
           </TabsTrigger>
         </TabsList>
+
+        {/* TAB 0 — LIBRARY */}
+        <TabsContent value="library" className="mt-5">
+          <BulletinTemplateLibrary
+            currentPresetId={activePresetId}
+            onApply={applyPreset}
+          />
+        </TabsContent>
 
         {/* TAB 1 — STYLE */}
         <TabsContent value="style" className="mt-5">

@@ -1146,7 +1146,27 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                         headerElements={templateLayout.headerElements}
                         bodyElements={templateLayout.bodyElements}
                         footerElements={templateLayout.footerElements}
-                        tableColumns={templateLayout.tableColumns}
+                        tableColumns={(() => {
+                          // Auto-filter: only keep columns whose evaluation type actually exists for this period
+                          const existingTypes = new Set<string>();
+                          evaluations.forEach((e: any) => existingTypes.add(e.evaluation_type));
+                          const ccTypes = EVALUATION_TYPES.filter((t) => t.category === 'cc').map((t) => t.value);
+                          const hasCC = ccTypes.some((t) => existingTypes.has(t));
+                          const hasDS = existingTypes.has('partiels') || existingTypes.has('ds');
+                          const hasExam = existingTypes.has('examen_final') || existingTypes.has('examen_blanc');
+                          const hasOral = existingTypes.has('oral') || existingTypes.has('soutenance');
+                          const hasTP = existingTypes.has('tp');
+                          return templateLayout.tableColumns.filter((c: any) => {
+                            // Always keep these structural columns
+                            if (['module', 'coefficient', 'moyenne', 'points', 'credits', 'status', 'appreciation', 'rang', 'custom_static', 'custom_formula'].includes(c.key)) return true;
+                            if (c.key === 'cc') return hasCC;
+                            if (c.key === 'ds') return hasDS;
+                            if (c.key === 'exam') return hasExam;
+                            if (c.key === 'oral') return hasOral;
+                            if (c.key === 'tp') return hasTP;
+                            return true;
+                          });
+                        })()}
                         tableStyle={templateLayout.tableStyle}
                         data={(() => {
                           const d: BulletinRenderData = {

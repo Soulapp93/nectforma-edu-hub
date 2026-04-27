@@ -350,34 +350,40 @@ const BulletinLayoutEditor: React.FC<Props> = ({
   establishmentName,
   signatoriesPreview = [],
 }) => {
-  const [activeZone, setActiveZone] = useState<'header' | 'body' | 'footer' | 'table' | 'preview'>('header');
+  const [activeZone, setActiveZone] = useState<'unified' | 'table' | 'preview'>('unified');
+  const [unifiedFocus, setUnifiedFocus] = useState<'header' | 'body' | 'footer'>('header');
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [dragging, setDragging] = useState<{ id: string; offX: number; offY: number } | null>(null);
-  const [resizing, setResizing] = useState<{ id: string; startW: number; startH: number; startX: number; startY: number } | null>(null);
+  const [dragging, setDragging] = useState<{ id: string; offX: number; offY: number; zone: 'header' | 'body' | 'footer' } | null>(null);
+  const [resizing, setResizing] = useState<{ id: string; startW: number; startH: number; startX: number; startY: number; zone: 'header' | 'body' | 'footer' } | null>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const footerRef = useRef<HTMLDivElement>(null);
 
-  const elements =
-    activeZone === 'header' ? headerElements
-    : activeZone === 'body' ? bodyElements
-    : activeZone === 'footer' ? footerElements
-    : [];
+  // Determine elements & setter based on zone
+  const getZoneElements = (z: 'header' | 'body' | 'footer') =>
+    z === 'header' ? headerElements : z === 'body' ? bodyElements : footerElements;
+
+  const setZoneElements = useCallback((z: 'header' | 'body' | 'footer', next: BulletinElement[]) => {
+    if (z === 'header') onChange(next, bodyElements, footerElements);
+    else if (z === 'body') onChange(headerElements, next, footerElements);
+    else onChange(headerElements, bodyElements, next);
+  }, [headerElements, bodyElements, footerElements, onChange]);
+
+  // Active zone based on selected element (for properties panel) or unifiedFocus (for inserting)
+  const elements = unifiedFocus === 'header' ? headerElements : unifiedFocus === 'body' ? bodyElements : footerElements;
+  const activeZone_internal = unifiedFocus;
 
   const setElements = useCallback((next: BulletinElement[]) => {
-    if (activeZone === 'header') onChange(next, bodyElements, footerElements);
-    else if (activeZone === 'body') onChange(headerElements, next, footerElements);
-    else if (activeZone === 'footer') onChange(headerElements, bodyElements, next);
-  }, [activeZone, headerElements, bodyElements, footerElements, onChange]);
+    setZoneElements(activeZone_internal, next);
+  }, [activeZone_internal, setZoneElements]);
 
   const canvasH =
-    activeZone === 'header' ? HEADER_H
-    : activeZone === 'body' ? BODY_H
-    : activeZone === 'footer' ? FOOTER_H
-    : 0;
+    activeZone_internal === 'header' ? HEADER_H
+    : activeZone_internal === 'body' ? BODY_H
+    : FOOTER_H;
   const canvasRef =
-    activeZone === 'header' ? headerRef
-    : activeZone === 'body' ? bodyRef
+    activeZone_internal === 'header' ? headerRef
+    : activeZone_internal === 'body' ? bodyRef
     : footerRef;
 
   const updateElement = useCallback((id: string, updates: Partial<BulletinElement>) => {
@@ -393,14 +399,14 @@ const BulletinLayoutEditor: React.FC<Props> = ({
     const newEl: BulletinElement = {
       id: genId(),
       type,
-      zone: activeZone,
+      zone: unifiedFocus,
       x: 50, y: 30, width: 200, height: 30, content: '',
       styles: {},
       ...d,
     } as BulletinElement;
     setElements([...elements, newEl]);
     setSelectedId(newEl.id);
-  }, [activeZone, elements, setElements]);
+  }, [unifiedFocus, elements, setElements]);
 
   const removeElement = useCallback((id: string) => {
     setElements(elements.filter((el) => el.id !== id));
@@ -425,76 +431,146 @@ const BulletinLayoutEditor: React.FC<Props> = ({
     setElements(arr);
   }, [elements, setElements]);
 
-  // Drag handling
+  // Drag handling (works across all 3 zones in unified mode)
   const handleMouseDown = useCallback((e: React.MouseEvent, elId: string) => {
     e.stopPropagation();
-    const el = elements.find((x) => x.id === elId);
-    if (!el) return;
+    // Find element in any zone
+    let foundEl: BulletinElement | undefined;
+    let foundZone: 'header' | 'body' | 'footer' = 'header';
+    for (const z of ['header', 'body', 'footer'] as const) {
+      const arr = z === 'header' ? headerElements : z === 'body' ? bodyElements : footerElements;
+      const found = arr.find((x) => x.id === elId);
+      if (found) { foundEl = found; foundZone = z; break; }
+    }
+    if (!foundEl) return;
     setSelectedId(elId);
-    const rect = canvasRef.current?.getBoundingClientRect();
+    setUnifiedFocus(foundZone);
+    const ref = foundZone === 'header' ? headerRef : foundZone === 'body' ? bodyRef : footerRef;
+    const rect = ref.current?.getBoundingClientRect();
     if (!rect) return;
-    setDragging({ id: elId, offX: e.clientX - rect.left - el.x, offY: e.clientY - rect.top - el.y });
-  }, [elements, canvasRef]);
+    setDragging({ id: elId, offX: e.clientX - rect.left - foundEl.x, offY: e.clientY - rect.top - foundEl.y, zone: foundZone });
+  }, [headerElements, bodyElements, footerElements]);
 
   const handleResizeStart = useCallback((e: React.MouseEvent, elId: string) => {
     e.stopPropagation();
     e.preventDefault();
-    const el = elements.find((x) => x.id === elId);
-    if (!el) return;
-    setResizing({ id: elId, startW: el.width, startH: el.height, startX: e.clientX, startY: e.clientY });
-  }, [elements]);
+    let foundEl: BulletinElement | undefined;
+    let foundZone: 'header' | 'body' | 'footer' = 'header';
+    for (const z of ['header', 'body', 'footer'] as const) {
+      const arr = z === 'header' ? headerElements : z === 'body' ? bodyElements : footerElements;
+      const found = arr.find((x) => x.id === elId);
+      if (found) { foundEl = found; foundZone = z; break; }
+    }
+    if (!foundEl) return;
+    setResizing({ id: elId, startW: foundEl.width, startH: foundEl.height, startX: e.clientX, startY: e.clientY, zone: foundZone });
+  }, [headerElements, bodyElements, footerElements]);
 
   useEffect(() => {
     if (!dragging && !resizing) return;
     const move = (e: MouseEvent) => {
       if (dragging) {
-        const rect = canvasRef.current?.getBoundingClientRect();
+        const ref = dragging.zone === 'header' ? headerRef : dragging.zone === 'body' ? bodyRef : footerRef;
+        const rect = ref.current?.getBoundingClientRect();
         if (!rect) return;
+        const zoneH = dragging.zone === 'header' ? HEADER_H : dragging.zone === 'body' ? BODY_H : FOOTER_H;
         let nx = e.clientX - rect.left - dragging.offX;
         let ny = e.clientY - rect.top - dragging.offY;
         nx = Math.max(0, Math.min(nx, CANVAS_W - 20));
-        ny = Math.max(0, Math.min(ny, canvasH - 10));
-        updateElement(dragging.id, { x: Math.round(nx), y: Math.round(ny) });
+        ny = Math.max(0, Math.min(ny, zoneH - 10));
+        // Update the element in the right zone
+        const arr = getZoneElements(dragging.zone);
+        const next = arr.map((el) => el.id === dragging.id ? { ...el, x: Math.round(nx), y: Math.round(ny) } : el);
+        setZoneElements(dragging.zone, next);
       }
       if (resizing) {
         const dx = e.clientX - resizing.startX;
         const dy = e.clientY - resizing.startY;
-        updateElement(resizing.id, {
+        const arr = getZoneElements(resizing.zone);
+        const next = arr.map((el) => el.id === resizing.id ? {
+          ...el,
           width: Math.max(20, Math.round(resizing.startW + dx)),
           height: Math.max(8, Math.round(resizing.startH + dy)),
-        });
+        } : el);
+        setZoneElements(resizing.zone, next);
       }
     };
     const up = () => { setDragging(null); setResizing(null); };
     window.addEventListener('mousemove', move);
     window.addEventListener('mouseup', up);
     return () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
-  }, [dragging, resizing, canvasRef, canvasH, updateElement]);
+  }, [dragging, resizing, headerElements, bodyElements, footerElements, setZoneElements]);
 
-  const selected = elements.find((el) => el.id === selectedId) || null;
+  // Selected element: search across all zones
+  const selected = headerElements.find((el) => el.id === selectedId)
+    || bodyElements.find((el) => el.id === selectedId)
+    || footerElements.find((el) => el.id === selectedId)
+    || null;
+  const selectedZone: 'header' | 'body' | 'footer' = headerElements.some((el) => el.id === selectedId) ? 'header'
+    : bodyElements.some((el) => el.id === selectedId) ? 'body'
+    : 'footer';
+
+  // updateElement / updateStyle / removeElement / duplicateElement / moveLayer must operate on the correct zone (where the selectedId lives)
+  const updateSelectedElement = useCallback((updates: Partial<BulletinElement>) => {
+    if (!selectedId) return;
+    const z = selectedZone;
+    const arr = getZoneElements(z);
+    setZoneElements(z, arr.map((el) => el.id === selectedId ? { ...el, ...updates } : el));
+  }, [selectedId, selectedZone, setZoneElements]);
+
+  const updateSelectedStyle = useCallback((styles: Partial<BulletinElement['styles']>) => {
+    if (!selectedId) return;
+    const z = selectedZone;
+    const arr = getZoneElements(z);
+    setZoneElements(z, arr.map((el) => el.id === selectedId ? { ...el, styles: { ...el.styles, ...styles } } : el));
+  }, [selectedId, selectedZone, setZoneElements]);
+
+  const removeSelectedElement = useCallback(() => {
+    if (!selectedId) return;
+    const z = selectedZone;
+    const arr = getZoneElements(z);
+    setZoneElements(z, arr.filter((el) => el.id !== selectedId));
+    setSelectedId(null);
+  }, [selectedId, selectedZone, setZoneElements]);
+
+  const duplicateSelectedElement = useCallback(() => {
+    if (!selectedId) return;
+    const z = selectedZone;
+    const arr = getZoneElements(z);
+    const el = arr.find((e) => e.id === selectedId);
+    if (!el) return;
+    const newEl = { ...el, id: genId(), x: Math.min(el.x + 16, CANVAS_W - el.width), y: el.y + 8 };
+    setZoneElements(z, [...arr, newEl]);
+    setSelectedId(newEl.id);
+  }, [selectedId, selectedZone, setZoneElements]);
+
+  const moveSelectedLayer = useCallback((dir: 'up' | 'down') => {
+    if (!selectedId) return;
+    const z = selectedZone;
+    const arr = [...getZoneElements(z)];
+    const idx = arr.findIndex((e) => e.id === selectedId);
+    if (idx < 0) return;
+    const swap = dir === 'up' ? idx + 1 : idx - 1;
+    if (swap < 0 || swap >= arr.length) return;
+    [arr[idx], arr[swap]] = [arr[swap], arr[idx]];
+    setZoneElements(z, arr);
+  }, [selectedId, selectedZone, setZoneElements]);
 
   return (
     <div className="space-y-4">
-      <div key={activeZone} className={(activeZone === 'header' || activeZone === 'body' || activeZone === 'footer') ? 'grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4' : 'space-y-4'}>
+      <div key={activeZone} className={activeZone === 'unified' ? 'grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4' : 'space-y-4'}>
       {/* ====== LEFT : Canvas ====== */}
       <div className="space-y-3">
-        {/* Zone tabs */}
+        {/* Top-level mode tabs */}
         <Tabs value={activeZone} onValueChange={(v) => { setActiveZone(v as any); setSelectedId(null); }}>
           <TabsList className="bg-muted/50 p-1 h-auto flex-wrap">
-            <TabsTrigger value="header" className="gap-2 px-3 py-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <FileText className="h-3.5 w-3.5" /> En-tête
+            <TabsTrigger value="unified" className="gap-2 px-3 py-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="zone-unified">
+              <Move className="h-3.5 w-3.5" /> Mise en page complète
             </TabsTrigger>
             <TabsTrigger value="table" className="gap-2 px-3 py-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="zone-table">
-              <Move className="h-3.5 w-3.5" /> Tableau de notes
-            </TabsTrigger>
-            <TabsTrigger value="body" className="gap-2 px-3 py-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Move className="h-3.5 w-3.5" /> Corps du bulletin
-            </TabsTrigger>
-            <TabsTrigger value="footer" className="gap-2 px-3 py-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <PenTool className="h-3.5 w-3.5" /> Pied de page
+              <FileText className="h-3.5 w-3.5" /> Tableau de notes
             </TabsTrigger>
             <TabsTrigger value="preview" className="gap-2 px-3 py-1.5 text-xs data-[state=active]:bg-amber-500 data-[state=active]:text-white" data-testid="zone-preview">
-              <FileText className="h-3.5 w-3.5" /> Aperçu complet
+              <FileText className="h-3.5 w-3.5" /> Aperçu live (données réelles)
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -564,7 +640,7 @@ const BulletinLayoutEditor: React.FC<Props> = ({
                   </Button>
                 );
               })}
-              {activeZone === 'body' && (
+              {unifiedFocus === 'body' && (
                 <>
                   <div className="w-px h-5 bg-border mx-1" />
                   <Button size="sm" variant="outline" onClick={() => addElement('appreciation_block')} className="h-7 text-[11px] gap-1 px-2" data-testid="add-element-appreciation">
@@ -581,7 +657,7 @@ const BulletinLayoutEditor: React.FC<Props> = ({
                   </Button>
                 </>
               )}
-              {activeZone === 'footer' && (
+              {unifiedFocus === 'footer' && (
                 <Button
                   size="sm" variant="outline"
                   onClick={() => addElement('signatures_block')}
@@ -591,54 +667,79 @@ const BulletinLayoutEditor: React.FC<Props> = ({
                   <PenTool className="h-3 w-3" /> Bloc signatures
                 </Button>
               )}
+              {/* Zone selector for inserting */}
+              <div className="ml-auto flex items-center gap-1 text-[11px]">
+                <span className="text-muted-foreground">Zone active:</span>
+                {(['header', 'body', 'footer'] as const).map((z) => (
+                  <button
+                    key={z}
+                    type="button"
+                    onClick={() => { setUnifiedFocus(z); setSelectedId(null); }}
+                    className={`px-2 py-0.5 rounded font-semibold uppercase text-[9px] tracking-wider transition-colors ${
+                      unifiedFocus === z ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/20'
+                    }`}
+                    data-testid={`unified-focus-${z}`}
+                  >
+                    {z === 'header' ? 'En-tête' : z === 'body' ? 'Corps' : 'Pied'}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Canvas */}
-            <div className="p-6 bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-x-auto">
-              <div
-                ref={canvasRef}
-                className="relative bg-white shadow-lg"
-                style={{ width: CANVAS_W, height: canvasH, fontFamily: 'Inter' }}
-                onClick={() => setSelectedId(null)}
-                data-testid="bulletin-canvas"
-              >
-                {/* Render elements */}
-                {elements.map((el) => (
-                  <RenderedElement
-                    key={el.id}
-                    el={el}
-                    selected={selectedId === el.id}
-                    primaryColor={primaryColor}
-                    accentColor={accentColor}
-                    establishmentLogo={establishmentLogo}
-                    signatoriesPreview={signatoriesPreview}
-                    onMouseDown={(e) => handleMouseDown(e, el.id)}
-                    onResizeStart={(e) => handleResizeStart(e, el.id)}
-                  />
-                ))}
-
-                {/* Placeholder labels around the canvas */}
-                {activeZone === 'header' && (
-                  <div className="absolute -bottom-7 left-0 right-0 text-center text-[10px] text-muted-foreground italic">
-                    ↓ Tableau de notes (généré automatiquement) ↓
-                  </div>
-                )}
-                {activeZone === 'body' && (
-                  <>
-                    <div className="absolute -top-7 left-0 right-0 text-center text-[10px] text-muted-foreground italic">
-                      ↑ Tableau de notes (généré automatiquement) ↑
+            {/* UNIFIED CANVAS — all 3 zones stacked vertically with section labels */}
+            <div className="p-6 bg-slate-100 dark:bg-slate-800 flex flex-col items-center gap-2 overflow-x-auto">
+              {(['header', 'body', 'footer'] as const).map((zone) => {
+                const zoneEls = getZoneElements(zone);
+                const zoneH = zone === 'header' ? HEADER_H : zone === 'body' ? BODY_H : FOOTER_H;
+                const ref = zone === 'header' ? headerRef : zone === 'body' ? bodyRef : footerRef;
+                const zoneLabel = zone === 'header' ? 'EN-TÊTE' : zone === 'body' ? 'CORPS DU BULLETIN' : 'PIED DE PAGE';
+                const isActive = unifiedFocus === zone;
+                return (
+                  <React.Fragment key={zone}>
+                    {/* Insert "Tableau de notes" placeholder between header and body */}
+                    {zone === 'body' && (
+                      <div className="w-full flex items-center justify-center" style={{ width: CANVAS_W }}>
+                        <div className="bg-amber-50 dark:bg-amber-900/20 border border-dashed border-amber-300 rounded text-center py-2 px-4 text-[10px] text-amber-700 dark:text-amber-300 italic w-full">
+                          📊 Tableau de notes (généré automatiquement à partir des notes saisies — éditez-le dans l'onglet "Tableau de notes")
+                        </div>
+                      </div>
+                    )}
+                    <div className="w-full flex flex-col items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => { setUnifiedFocus(zone); setSelectedId(null); }}
+                        className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded transition-colors ${
+                          isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted-foreground/10'
+                        }`}
+                        data-testid={`zone-label-${zone}`}
+                      >
+                        {zoneLabel}
+                      </button>
+                      <div
+                        ref={ref}
+                        className={`relative bg-white shadow-lg transition-all ${isActive ? 'ring-2 ring-amber-400 ring-offset-2' : ''}`}
+                        style={{ width: CANVAS_W, height: zoneH, fontFamily: 'Inter' }}
+                        onClick={() => { setUnifiedFocus(zone); setSelectedId(null); }}
+                        data-testid={`bulletin-canvas-${zone}`}
+                      >
+                        {zoneEls.map((el) => (
+                          <RenderedElement
+                            key={el.id}
+                            el={el}
+                            selected={selectedId === el.id}
+                            primaryColor={primaryColor}
+                            accentColor={accentColor}
+                            establishmentLogo={establishmentLogo}
+                            signatoriesPreview={signatoriesPreview}
+                            onMouseDown={(e) => { setUnifiedFocus(zone); handleMouseDown(e, el.id); }}
+                            onResizeStart={(e) => { setUnifiedFocus(zone); handleResizeStart(e, el.id); }}
+                          />
+                        ))}
+                      </div>
                     </div>
-                    <div className="absolute -bottom-7 left-0 right-0 text-center text-[10px] text-muted-foreground italic">
-                      ↓ Pied de page ↓
-                    </div>
-                  </>
-                )}
-                {activeZone === 'footer' && (
-                  <div className="absolute -top-7 left-0 right-0 text-center text-[10px] text-muted-foreground italic">
-                    ↑ Corps du bulletin ↑
-                  </div>
-                )}
-              </div>
+                  </React.Fragment>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -646,18 +747,18 @@ const BulletinLayoutEditor: React.FC<Props> = ({
       </div>
 
       {/* ====== RIGHT : Properties panel ====== */}
-      {(activeZone === 'header' || activeZone === 'body' || activeZone === 'footer') && (
+      {activeZone === 'unified' && (
       <Card className="rounded-2xl self-start sticky top-4">
         <CardContent className="p-4 space-y-3">
           {selected ? (
             <PropertiesPanel
               element={selected}
-              onUpdate={(updates) => updateElement(selected.id, updates)}
-              onUpdateStyle={(s) => updateStyle(selected.id, s)}
-              onDelete={() => removeElement(selected.id)}
-              onDuplicate={() => duplicateElement(selected.id)}
-              onLayerUp={() => moveLayer(selected.id, 'up')}
-              onLayerDown={() => moveLayer(selected.id, 'down')}
+              onUpdate={(updates) => updateSelectedElement(updates)}
+              onUpdateStyle={(s) => updateSelectedStyle(s)}
+              onDelete={() => removeSelectedElement()}
+              onDuplicate={() => duplicateSelectedElement()}
+              onLayerUp={() => moveSelectedLayer('up')}
+              onLayerDown={() => moveSelectedLayer('down')}
             />
           ) : (
             <VariablesHelper />

@@ -5,6 +5,28 @@ ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
 ## Session 46 (2026-04-26)
 
+### Bulletin avancé v2 — Colonnes dynamiques + Vue unifiée + Bibliothèque modèles (DONE - 2026-04-26)
+
+**A. Colonnes dynamiques selon évaluations existantes** (`TranscriptsPanel.tsx`):
+- Détection des `evaluation_type` réellement créés pour la période active.
+- Filtrage automatique des colonnes du bulletin : si seuls des CC sont créés → seule la colonne CC s'affiche (DS, Examen, Oral, TP cachés). Les colonnes structurelles (Matière, Coef, Moyenne, Statut, Appréciation, Rang, custom_*) restent toujours visibles.
+
+**B. Bibliothèque de modèles préconfigurés** (`bulletinPresets.ts` + `BulletinTemplateLibrary.tsx`):
+- 6 presets : BTS (CC + Examen Blanc), Master (ECTS + mention), BAC PRO (compétences + oral), Semestre simple, Trimestre, Personnalisé (vide).
+- Cards visuelles avec mini-aperçu du tableau et badge catégorie. Bouton "Utiliser ce modèle" applique : couleurs, polices, header/body/footer elements, columns config, table style.
+- Auto-switch sur l'onglet "Mise en page" après application.
+
+**C. Mise en page unifiée** (`BulletinLayoutEditor.tsx`):
+- Suppression des onglets séparés "En-tête / Corps du bulletin / Pied de page".
+- Remplacement par 3 onglets globaux : `Mise en page complète` (vue unifiée empilée), `Tableau de notes`, `Aperçu live (données réelles)`.
+- Vue unifiée : les 3 zones (header / body / footer) sont rendues empilées verticalement avec un label cliquable par zone, le placeholder "Tableau de notes" entre header et body, et un sélecteur "Zone active" en haut à droite pour cibler les insertions.
+- Drag/resize/select fonctionnent sur les 3 zones simultanément (zone détectée au mousedown via recherche de l'élément). PropertiesPanel piloté par un `selected` global (cherche dans les 3 zones).
+
+**D. Live preview avec données réelles** :
+- Tab `Aperçu live` réutilise `FullPreview` existant (rendu temps réel de l'état).
+- Toutes les modifications (preset, drag-drop, couleurs, colonnes) reflétées instantanément sans sauvegarder.
+- L'enregistrement propage vers le bulletin via `transcript-template`/`transcript-template-render`/`grading-rules-transcripts` invalidations.
+
 ### Bug Fix - Bulletin vide "Aucune note saisie" (DONE - 2026-04-26)
 - **Cause racine** : la query `formation-modules-transcripts` sélectionnait `competency_block_id` — colonne **inexistante** dans `formation_modules`. La requête échouait avec un 400, retournant silencieusement `[]`. Conséquence : `allModules.length === 0` → `currentBulletin.modules = []` → toutes les lignes du bulletin sautées.
 - **Fix** :
