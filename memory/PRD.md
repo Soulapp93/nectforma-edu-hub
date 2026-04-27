@@ -5,6 +5,13 @@ ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
 ## Session 46 (2026-04-26)
 
+### Bug Fix - Bulletin vide "Aucune note saisie" (DONE - 2026-04-26)
+- **Cause racine** : la query `formation-modules-transcripts` sélectionnait `competency_block_id` — colonne **inexistante** dans `formation_modules`. La requête échouait avec un 400, retournant silencieusement `[]`. Conséquence : `allModules.length === 0` → `currentBulletin.modules = []` → toutes les lignes du bulletin sautées.
+- **Fix** :
+  - `TranscriptsPanel.tsx` : retiré `competency_block_id` du SELECT, ajouté `console.error` en cas d'erreur Supabase, idem pour la query `competency_blocks` (table inexistante) avec `retry: false` pour éviter les retries inutiles.
+  - `BulletinConfigurationPanel.tsx` : ajout de l'invalidation `['grading-rules-transcripts', formationId]` (nom de query utilisé par TranscriptsPanel) en plus de `['grading-rules-config', formationId]` → la configuration appliquée se propage immédiatement au bulletin sans rafraîchissement.
+- **Validation** : Bernard Lucas / Semestre 1 affiche maintenant les vraies notes (seo 9.00 Ajourné, digital 12.50 Validé, refer 13.00 Validé), Moyenne générale 11.50, Mention passable, Décision Admis. Bulletin composite "BTS Final Test 2026" rend les 2 blocs séparés (Semestre 1 + Semestre 2) avec total + décision.
+
 ### Bulletin composite — Configuration complète multi-blocs (DONE - 2026-04-26)
 - **Migration DB** (20260426140000_composite_config.sql) : ajout colonne `composite_config` JSONB sur `evaluation_periods`. Stocke `{ blocks: [...], total: {...} }`.
 - **Service** (`gradesService.ts`) : nouveaux types `CompositeBulletinConfig`, `CompositeBlockConfig`, `CompositeTotalConfig`. Champ `composite_config` ajouté à `EvaluationPeriod`.

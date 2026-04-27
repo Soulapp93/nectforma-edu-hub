@@ -364,6 +364,7 @@ const BulletinConfigurationPanel: React.FC<Props> = ({ formationId, establishmen
       queryClient.invalidateQueries({ queryKey: ['transcript-template', formationId] });
       queryClient.invalidateQueries({ queryKey: ['transcript-template-render', formationId] });
       queryClient.invalidateQueries({ queryKey: ['grading-rules-config', formationId] });
+      queryClient.invalidateQueries({ queryKey: ['grading-rules-transcripts', formationId] });
       toast.success('Configuration sauvegardée');
     } catch (err: any) {
       toast.error('Erreur : ' + (err.message || 'sauvegarde impossible'));

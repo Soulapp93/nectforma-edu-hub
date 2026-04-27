@@ -207,11 +207,16 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   const { data: allModules = [] } = useQuery({
     queryKey: ['formation-modules-transcripts', selectedFormation],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('formation_modules')
-        .select('id, title, coefficient, order_index, teaching_unit_id, semester, competency_block_id')
+        .select('id, title, coefficient, order_index, teaching_unit_id, semester')
         .eq('formation_id', selectedFormation)
         .order('order_index');
+      if (error) {
+        // eslint-disable-next-line no-console
+        console.error('[TranscriptsPanel] modules query failed:', error.message);
+        return [];
+      }
       return data || [];
     },
     enabled: !!selectedFormation,
@@ -272,14 +277,16 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   const { data: competencyBlocks = [] } = useQuery({
     queryKey: ['competency-blocks-transcripts', selectedFormation],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('competency_blocks')
         .select('id, title, code, order_index, coefficient')
         .eq('formation_id', selectedFormation)
         .order('order_index');
+      if (error) return [];
       return data || [];
     },
     enabled: !!selectedFormation,
+    retry: false,
   });
 
   const { data: evaluations = [] } = useQuery({
