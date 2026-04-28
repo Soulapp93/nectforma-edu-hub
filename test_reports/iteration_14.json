@@ -71,12 +71,12 @@
     {
       "test": "Bouton Emploi du temps - Navigation avec formationId",
       "status": "PASSED",
-      "details": "Navigation vers /pedagogie?tab=schedules&formationId=69fb21b1-c1c2-4bec-aef2-6b1371dc1b62. L'emploi du temps de la formation est auto-sélectionné."
+      "details": "Navigation vers /pedagogie?tab=schedules&formationId=audit-complete-12. L'emploi du temps de la formation est auto-sélectionné."
     },
     {
       "test": "Bouton Cahier de texte - Navigation avec formationId",
       "status": "PASSED",
-      "details": "Navigation vers /pedagogie?tab=textbooks&formationId=69fb21b1-c1c2-4bec-aef2-6b1371dc1b62. Le cahier de texte de la formation est auto-sélectionné."
+      "details": "Navigation vers /pedagogie?tab=textbooks&formationId=audit-complete-12. Le cahier de texte de la formation est auto-sélectionné."
     }
   ],
   "features_validated": {

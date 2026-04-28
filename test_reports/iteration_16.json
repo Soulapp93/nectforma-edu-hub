@@ -43,22 +43,22 @@
     {
       "test": "Bouton Emargement - Navigation et auto-sélection",
       "status": "PASSED",
-      "details": "URL: /suivi-emargement-admin?formationId=69fb21b1-c1c2-4bec-aef2-6b1371dc1b62. Page affiche 'Feuilles - Master Digital Marketing 2026 (2026-2027)'. Vue 'sheets' affichée (pas 'selector')."
+      "details": "URL: /suivi-emargement-admin?formationId=audit-complete-12. Page affiche 'Feuilles - Master Digital Marketing 2026 (2026-2027)'. Vue 'sheets' affichée (pas 'selector')."
     },
     {
       "test": "Bouton Notes - Navigation et auto-sélection avec 4 onglets",
       "status": "PASSED",
-      "details": "URL: /notes-admin?formationId=69fb21b1-c1c2-4bec-aef2-6b1371dc1b62. Formation 'Master Digital Marketing 2026' avec badges 'BAC+1' et '2026-2027' visible. 4 onglets présents: Saisie des notes, Calcul & Validation, Jury & Délibération, Bulletin de notes."
+      "details": "URL: /notes-admin?formationId=audit-complete-12. Formation 'Master Digital Marketing 2026' avec badges 'BAC+1' et '2026-2027' visible. 4 onglets présents: Saisie des notes, Calcul & Validation, Jury & Délibération, Bulletin de notes."
     },
     {
       "test": "Bouton Emploi du temps - Navigation et auto-sélection",
       "status": "PASSED",
-      "details": "URL: /pedagogie?tab=schedules&formationId=69fb21b1-c1c2-4bec-aef2-6b1371dc1b62. Page affiche 'Emploi du temps - Master Digital Marketing 2026 2026-2027'. Calendrier avec navigation par semaines visible."
+      "details": "URL: /pedagogie?tab=schedules&formationId=audit-complete-12. Page affiche 'Emploi du temps - Master Digital Marketing 2026 2026-2027'. Calendrier avec navigation par semaines visible."
     },
     {
       "test": "Bouton Cahier de texte - Navigation et auto-sélection",
       "status": "PASSED",
-      "details": "URL: /pedagogie?tab=textbooks&formationId=69fb21b1-c1c2-4bec-aef2-6b1371dc1b62. Page affiche 'Cahiers de texte - Master Digital Marketing 2026' avec '1 cahier(s)'. Options Ouvrir, Exporter PDF, Archiver visibles."
+      "details": "URL: /pedagogie?tab=textbooks&formationId=audit-complete-12. Page affiche 'Cahiers de texte - Master Digital Marketing 2026' avec '1 cahier(s)'. Options Ouvrir, Exporter PDF, Archiver visibles."
     }
   ],
   "features_validated": {

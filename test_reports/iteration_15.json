@@ -60,7 +60,7 @@
     {
       "test": "Navigation Emploi du temps avec formationId",
       "status": "PASSED",
-      "details": "Navigation vers /pedagogie?tab=schedules&formationId=69fb21b1-c1c2-4bec-aef2-6b1371dc1b62. Formation 'Master Digital Marketing 2026 2026-2027' auto-sélectionnée."
+      "details": "Navigation vers /pedagogie?tab=schedules&formationId=audit-complete-12. Formation 'Master Digital Marketing 2026 2026-2027' auto-sélectionnée."
     }
   ],
   "features_validated": {
