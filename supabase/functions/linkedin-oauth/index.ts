@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireSuperAdmin, createSupabaseAdmin, authErrorResponse } from "../_shared/auth.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -20,6 +21,14 @@ const SCOPES = 'openid profile email w_member_social';
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // SECURITY: All LinkedIn OAuth actions are SuperAdmin-only (manage social
+  // media connection for the blog). Tokens are sensitive — protect at all costs.
+  try {
+    await requireSuperAdmin(req, createSupabaseAdmin());
+  } catch (e) {
+    return authErrorResponse(e, corsHeaders);
   }
 
   try {

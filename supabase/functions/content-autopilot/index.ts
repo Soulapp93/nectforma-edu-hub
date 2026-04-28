@@ -1,9 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireAuthOrCron, createSupabaseAdmin, authErrorResponse } from "../_shared/auth.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version, x-cron-secret',
 };
 
 const supabaseAdmin = () => createClient(
@@ -799,6 +800,23 @@ async function saveMultiChannelContent(
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // SECURITY: This endpoint is invoked both by the SuperAdmin UI (blog-admin)
+  // and by the Supabase scheduled trigger. Allow either authenticated user
+  // (we'll check SuperAdmin role below for UI calls) or cron secret.
+  let authedUser: Awaited<ReturnType<typeof requireAuthOrCron>>;
+  try {
+    authedUser = await requireAuthOrCron(req, createSupabaseAdmin());
+    // If invoked by a user (not cron), require SuperAdmin role.
+    if (authedUser && !authedUser.isSuperAdmin) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Accès réservé aux super-administrateurs" }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+  } catch (e) {
+    return authErrorResponse(e, corsHeaders);
   }
 
   try {

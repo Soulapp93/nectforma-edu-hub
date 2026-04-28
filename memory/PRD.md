@@ -3,7 +3,39 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
+## Session 47 (2026-04-28)
+
+### Audit approfondi de l'application (DONE - 2026-04-28)
+- **Document** : `AUDIT_APPROFONDI_2026.md` (complémentaire à `AUDIT_ARCHITECTURE.md` de janvier 2026)
+- **Métriques actualisées** : 151 767 lignes TS/TSX (+15%), 52 pages, 44 services, 239 migrations, 859 politiques RLS, 8 fichiers de tests
+- **Findings P0 critiques** identifiés :
+  - 14 Edge Functions exposées sans vérification d'auth (sur 23 avec `verify_jwt = false`)
+  - Régression typage TypeScript : `as any` +57% (291 → 457)
+  - 3 nouveaux composants monolithes (BulletinLayoutEditor 1598L, BulletinConfigurationPanel 1496L, pdfExportService 1363L)
+- **Améliorations détectées depuis janvier 2026** :
+  - CSP, HSTS, Permissions-Policy ajoutés à `vercel.json`
+  - Vitest installé + 8 fichiers de tests
+  - Aucune politique RLS `USING (true)` dans les migrations actuelles
+- Score de maturité global : **3.1/5** (vs 3.0 en janvier)
+
+### P0 — Sécurisation des 14 Edge Functions exposées (DONE - 2026-04-28)
+- **Module shared créé** : `supabase/functions/_shared/auth.ts` avec helpers `requireAuthenticatedUser`, `requireSuperAdmin`, `requireEstablishmentAdmin`, `requireCronSecret`, `requireAuthOrCron`, `authErrorResponse`, `createSupabaseAdmin`
+- **9 Edge Functions sécurisées** :
+  - **SuperAdmin only** : `cleanup-auth-users` (suppression de comptes), `blog-ai` (coût IA), `linkedin-oauth` (token OAuth)
+  - **Cron only** : `manage-attendance-timing`, `check-expired-attendance-links`, `process-scheduled-messages`
+  - **Auth user OR cron** : `generate-attendance-sheets`, `send-notification-emails`, `content-autopilot` (avec check SuperAdmin pour les calls UI)
+- **5 fonctions identifiées comme légitimement publiques** (pas de modification) : `accept-invitation`, `activate-user-account`, `validate-activation-token`, `create-establishment` (rate-limited DB-side), `send-contact-form`
+- **Guide de déploiement complet** : `SECURITY_DEPLOYMENT_GUIDE.md` avec étapes pour générer/configurer `CRON_SECRET`, mettre à jour `pg_cron`, tester avec curl, checklist mise en production
+- **Validation syntaxe** : toutes les fonctions modifiées ont braces/parens équilibrés ✓
+- **À FAIRE côté production** :
+  1. Générer `CRON_SECRET` (`openssl rand -base64 48`)
+  2. `supabase secrets set CRON_SECRET=...`
+  3. Mettre à jour les jobs `pg_cron` pour envoyer le header `x-cron-secret`
+  4. Déployer les fonctions modifiées (`supabase functions deploy --all`)
+  5. Tester les flux critiques (signature étudiante, génération feuilles, blog AI, etc.)
+
 ## Session 46 (2026-04-26)
+
 
 ### Bulletin avancé v2 — Colonnes dynamiques + Vue unifiée + Bibliothèque modèles (DONE - 2026-04-26)
 

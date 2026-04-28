@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireSuperAdmin, createSupabaseAdmin, authErrorResponse } from "../_shared/auth.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -167,6 +168,14 @@ Réponds TOUJOURS en JSON:
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+
+  // SECURITY: Restrict AI usage to SuperAdmin only — protects against
+  // unauthorized OpenAI/DALL-E consumption (direct cost).
+  try {
+    await requireSuperAdmin(req, createSupabaseAdmin());
+  } catch (e) {
+    return authErrorResponse(e, corsHeaders);
+  }
 
   try {
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
