@@ -3,7 +3,7 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
-## Session 47 (2026-04-28)
+## Session 47 (2026-04-28 / 2026-04-29)
 
 ### Audit approfondi de l'application (DONE - 2026-04-28)
 - **Document** : `AUDIT_APPROFONDI_2026.md` (complémentaire à `AUDIT_ARCHITECTURE.md` de janvier 2026)
@@ -33,6 +33,32 @@ ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
   3. Mettre à jour les jobs `pg_cron` pour envoyer le header `x-cron-secret`
   4. Déployer les fonctions modifiées (`supabase functions deploy --all`)
   5. Tester les flux critiques (signature étudiante, génération feuilles, blog AI, etc.)
+
+### P0 #2 — Audit RLS approfondi (DONE - 2026-04-29)
+- **Méthodologie** : parsing automatique des 239 migrations SQL pour détecter les politiques `USING (true)` créées vs droppées
+- **Découverte** : **30 politiques `USING (true)` probablement encore actives** en production sur des tables critiques (formations, attendance_sheets, schedules, etc.)
+- **4 tables CRITIQUES sans aucune autre politique restrictive** : `formations`, `formation_modules`, `schedules`, `schedule_slots` → blocage si DROP simple
+- **Livrables** :
+  - `scripts/audit-rls-policies.sql` — script SQL d'audit READ-ONLY à exécuter en production (5 sections : USING(true), Allow all, tables sans restriction, RLS désactivé, récap général)
+  - `supabase/migrations/20260429120000_secure_rls_drop_legacy_allow_all.sql` — migration idempotente qui (1) crée des politiques restrictives sur les 4 tables critiques basées sur `establishment_id` + RPC `is_current_user_admin()` (2) DROP IF EXISTS sur les 25 politiques "Allow all for development"
+  - `RLS_AUDIT_REPORT.md` — rapport détaillé avec impact par table, procédure de déploiement, plan de rollback
+- **À FAIRE côté production** :
+  1. Exécuter `scripts/audit-rls-policies.sql` dans Supabase SQL Editor pour confirmer l'état réel
+  2. Tester la migration en staging si dispo
+  3. Pousser : `supabase db push` (ou via Dashboard)
+  4. Re-exécuter le script d'audit pour vérifier 0 politique "Allow all"
+  5. Tester les flux : login, formations, émargement, signature, EDT
+
+### Setup environnement de développement (DONE - 2026-04-29)
+- `npm install --legacy-peer-deps` (1043 packages installés à la racine `/app`)
+- Création du `.env` racine avec `VITE_SUPABASE_URL` + `VITE_SUPABASE_PUBLISHABLE_KEY`
+- Application accessible : https://audit-complete-12.preview.emergentagent.com
+
+### Bug ESBuild scan-deps sur StudentCardView.tsx (DONE - 2026-04-29)
+- **Symptôme** : "Unterminated regular expression" au scan d'esbuild → tous les pre-bundles deps en 504 → page blanche
+- **Cause racine** : combinaison d'un `</div>` orphelin + apostrophes dans le texte JSX (`CARTE D'ETUDIANT`, `l'etablissement`) qui perturbaient le scanner d'esbuild dans certaines conditions
+- **Fix** : refactor du composant pour extraire toutes les chaînes en constantes (objet `L` au début du fichier), suppression du `</div>` orphelin
+- **État** : Vite démarre proprement (`ready in 246ms`), 0 erreur ESBuild, screenshot landing OK
 
 ## Session 46 (2026-04-26)
 
