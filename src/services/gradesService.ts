@@ -700,16 +700,18 @@ export const linkTemplateToFormation = async (formationId: string, templateId: s
 // =====================================================
 
 export const EVALUATION_TYPES = [
-  { value: 'controle_continu', label: 'Contrôle continu (CC)', category: 'cc' },
-  { value: 'devoir_surveille', label: 'Devoir surveillé (DS)', category: 'cc' },
-  { value: 'projet', label: 'Projet', category: 'cc' },
-  { value: 'oral', label: 'Oral', category: 'cc' },
-  { value: 'tp', label: 'Travaux pratiques (TP)', category: 'cc' },
-  { value: 'partiel', label: 'Partiel', category: 'exam' },
-  { value: 'examen_blanc', label: 'Examen blanc (BTS)', category: 'exam_blanc' },
+  { value: 'controle_continu', label: 'Contrôle continu', category: 'cc' },
+  { value: 'examen_blanc', label: 'Examen blanc', category: 'exam_blanc' },
   { value: 'examen_final', label: 'Examen final', category: 'exam' },
+  { value: 'bts_blanc', label: 'BTS blanc', category: 'exam_blanc' },
+  { value: 'partiel', label: 'Partiel', category: 'exam' },
   { value: 'rattrapage', label: 'Rattrapage', category: 'exam' },
-  { value: 'stage', label: 'Stage / Rapport', category: 'cc' },
+  { value: 'devoir_surveille', label: 'Devoir surveillé', category: 'cc' },
+  { value: 'stage', label: 'Rapport de stage', category: 'cc' },
+  { value: 'oral', label: 'Oral', category: 'cc' },
+  { value: 'tp', label: 'Travaux pratiques', category: 'cc' },
+  { value: 'projet', label: 'Projet', category: 'cc' },
+  { value: 'autre', label: 'Autre', category: 'cc' },
 ];
 
 export const FORMATION_TYPES = [
