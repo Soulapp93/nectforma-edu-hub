@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   FileSpreadsheet, FileText, Settings2, GraduationCap, ClipboardList,
   ArrowLeft, Calendar, Users, ChevronRight, Clock, BookOpen, Search,
-  Calculator, Scale, ScrollText, Plus, SlidersHorizontal, X
+  Calculator, Scale, ScrollText, Plus, X
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -30,7 +30,6 @@ import { LoadingState } from '@/components/ui/loading-state';
 const GradeSheetView = React.lazy(() => import('@/components/grades/GradeSheetView'));
 const StudentGradesView = React.lazy(() => import('@/components/grades/StudentGradesView'));
 const TranscriptsPanel = React.lazy(() => import('@/components/grades/TranscriptsPanel'));
-const BulletinConfigurationPanel = React.lazy(() => import('@/components/grades/BulletinConfigurationPanel'));
 const TutorGradesView = React.lazy(() => import('@/components/grades/TutorGradesView'));
 const CalculValidation = React.lazy(() => import('@/components/grades/CalculValidation'));
 const JuryDeliberation = React.lazy(() => import('@/components/grades/JuryDeliberation'));
@@ -53,7 +52,6 @@ const SIDEBAR_TABS = [
   { value: 'calcul', label: 'Calcul & Validation', icon: Calculator, description: 'Moyennes, rangs et récapitulatif par filière' },
   { value: 'jury', label: 'Jury & Délibération', icon: Scale, description: 'Décisions officielles et procès-verbal' },
   { value: 'bulletin', label: 'Bulletin de notes', icon: ScrollText, description: 'Bulletins individuels par étudiant' },
-  { value: 'config', label: 'Configuration', icon: SlidersHorizontal, description: 'Style, catégories, règles et signatures', adminOnly: true },
 ];
 
 const Notes = () => {
@@ -414,7 +412,7 @@ const Notes = () => {
               })}
 
               {/* Periods info inline */}
-              {periods.length > 0 && activeTab !== 'config' && (
+              {periods.length > 0 && (
                 <div className="hidden lg:flex items-center gap-2 ml-auto px-3">
                   <div className="w-px h-6 bg-border" />
                   {periods.slice(0, 4).map((p: any) => (
@@ -448,8 +446,8 @@ const Notes = () => {
               })}
             </div>
 
-            {/* Active period indicator (hide on config tab) */}
-            {selectedPeriod && activeTab !== 'config' && (
+            {/* Active period indicator */}
+            {selectedPeriod && (
               <div className="bg-muted/40 rounded-lg px-4 py-2 flex items-center gap-2 text-sm">
                 <Calendar className="h-4 w-4 text-primary" />
                 <span className="font-medium">{selectedPeriod.name}</span>
@@ -470,13 +468,6 @@ const Notes = () => {
               )}
               {activeTab === 'bulletin' && (
                 <TranscriptsPanel mode="admin" formationId={selectedFormationId} periodId={selectedPeriodId} periodName={selectedPeriod?.name} />
-              )}
-              {activeTab === 'config' && isAdmin && (
-                <BulletinConfigurationPanel
-                  formationId={selectedFormationId}
-                  establishmentId={selectedFormation.establishment_id || establishment?.id || ''}
-                  formationTitle={selectedFormation.title}
-                />
               )}
             </div>
           </div>
