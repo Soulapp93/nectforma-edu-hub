@@ -116,7 +116,7 @@ const StudentCardView: React.FC = () => {
                 <p className="text-[10px] text-muted-foreground text-center mb-1 font-semibold">VERSO</p>
                 <div className="rounded-xl overflow-hidden shadow-lg border mx-auto" style={{ width: 320, backgroundColor: '#fff' }}>
                   <div style={{ backgroundColor: '#1e3a5f', height: 45, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ color: '#fff', fontWeight: 700, fontSize: 11, letterSpacing: 2, textTransform: 'uppercase' }}>CARTE D'ETUDIANT</span>
+                    <span style={{ color: '#fff', fontWeight: 700, fontSize: 11, letterSpacing: 2, textTransform: 'uppercase' }}>{'CARTE D\'ETUDIANT'}</span>
                   </div>
                   <div style={{ padding: 16, textAlign: 'center' }}>
                     <QRCode value={`${window.location.origin}/verify-card/${card.verification_code}`} size={120} style={{ margin: '0 auto 10px' }} />
@@ -125,14 +125,13 @@ const StudentCardView: React.FC = () => {
                   </div>
                   <div style={{ padding: '10px 16px', backgroundColor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
                     <p style={{ fontSize: 7, color: '#94a3b8', textAlign: 'center', lineHeight: 1.4 }}>
-                      Cette carte est strictement personnelle et incessible. En cas de perte, prevenir immediatement l'etablissement.
+                      Cette carte est strictement personnelle et incessible. En cas de perte, prevenir immediatement l&apos;etablissement.
                     </p>
                   </div>
                 </div>
               </div>
             </div>
 
-            </div>
           </div>
         );
       })}
