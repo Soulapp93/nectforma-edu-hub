@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   FileSpreadsheet, FileText, Settings2, GraduationCap, ClipboardList,
   ArrowLeft, Calendar, Users, ChevronRight, Clock, BookOpen, Search,
-  Calculator, Scale, ScrollText, Plus, X
+  Calculator, Scale, ScrollText, Plus, X, Pencil
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
