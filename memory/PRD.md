@@ -60,6 +60,30 @@ ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 - **Fix** : refactor du composant pour extraire toutes les chaînes en constantes (objet `L` au début du fichier), suppression du `</div>` orphelin
 - **État** : Vite démarre proprement (`ready in 246ms`), 0 erreur ESBuild, screenshot landing OK
 
+### Nettoyage composite + fix bug runtime (DONE - 2026-04-30)
+- **`CreateCompositePeriodModal.tsx`** supprimé (496 lignes, orphelin après refactor précédent)
+- **Bug runtime corrigé** : `setState` dans `queryFn` du `useQuery` de CreatePeriodModal → refactoré en pattern `useQuery + useEffect` propre
+- **Bug `Pencil is not defined`** : import manquant dans Notes.tsx après restauration git → ajouté à l'import lucide-react
+- **Logique `isComposite` neutralisée** :
+  - `GradeSheetView.tsx` : `isComposite` forcé à `false`, `activePeriodIds` simplifié à `[periodId]`
+  - `TranscriptsPanel.tsx` : 4 `useMemo` simplifiés, `currentCompositePeriod = null`, `compositeConfig = null` → branche `CompositeBulletinRenderer` inactive, badges UI "★ Bulletin combiné" retirés
+- Sécurité : périodes composites existantes en DB rendues comme des périodes normales (pas de crash)
+
+### Redesign bulletin — format officiel école supérieure française (DONE - 2026-04-30)
+- **Nouveau composant** `OfficialBulletinTemplate.tsx` (~380 lignes) conforme aux standards français :
+  - **En-tête** : logo + nom + adresse établissement (gauche) | BULLETIN DE NOTES + Semestre X + Année (droite)
+  - **Identité étudiant** 2 colonnes : Nom/prénom + Matricule + Né(e) le | Formation + Niveau + Année
+  - **Corps** : tableau 4 colonnes (Matière/Module avec formateurs en italique | Moyenne /20 | Coef. | Appréciation) + ligne total MOYENNE GÉNÉRALE
+  - **Pied** 3 colonnes : Assiduité (absences/retards/justifiées) | Décision (ADMIS/NON ADMIS en grand, vert/rouge) | Appréciation générale
+  - **Signatures & cachet** : grid adaptatif 1-4 colonnes
+  - Style Times New Roman, bordures noires, structure sobre format officiel
+- **3 queries ajoutées** dans TranscriptsPanel : `module-instructors-for-bulletin`, `student-extras-for-bulletin` (DOB + matricule), `absence-stats-for-bulletin`
+- **Bloc de rendu monolithique (~395 lignes)** remplacé par `<OfficialBulletinTemplate data={...} />`
+- TranscriptsPanel.tsx : 1696 → **1351 lignes** (-345 lignes, -20%)
+- Compilation OK, 0 erreur Vite, HMR fonctionnel
+
+
+
 ## Session 46 (2026-04-26)
 
 
