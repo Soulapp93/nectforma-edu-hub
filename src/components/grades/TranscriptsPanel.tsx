@@ -139,47 +139,25 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     if (!periodId || periods.length === 0) return;
     const period = periods.find((p: any) => p.id === periodId);
     if (!period) return;
-    // If composite bulletin, use special view
-    if (period.is_composite) {
-      setSemesterView(`composite-${period.id}`);
-      return;
-    }
+    // NOTE: Composite periods are deprecated. Each period is now independent.
     // Best-effort numeric semester from name
     const m = period.name.match(/\d+/);
     if (m && period.period_type === 'semestre') setSemesterView(`s${m[0]}`);
     else setSemesterView(`period-${period.id}`);
   }, [periodId, periods]);
 
+  // Each period is independent — always scope to the single selected period.
   const activePeriodIds = useMemo(() => {
-    if (!periodId || periods.length === 0) return [];
-    const period = periods.find((p: any) => p.id === periodId);
-    if (!period) return [];
-    // Composite period: expand to combined IDs
-    if (period.is_composite && Array.isArray((period as any).combined_period_ids)) {
-      return (period as any).combined_period_ids;
-    }
-    return [periodId];
-  }, [periodId, periods]);
+    return periodId ? [periodId] : [];
+  }, [periodId]);
 
-  const isFinalView = useMemo(() => {
-    if (!periodId) return false;
-    const p = periods.find((pp: any) => pp.id === periodId);
-    return p?.is_composite === true;
-  }, [periodId, periods]);
+  // Composite "final view" deprecated — always false now.
+  const isFinalView = false;
 
   const activeSemesterNums = useMemo((): number[] | null => {
     if (!periodId) return null;
     const period = periods.find((p: any) => p.id === periodId);
     if (!period) return null;
-    if (period.is_composite && Array.isArray((period as any).combined_period_ids)) {
-      const nums: number[] = [];
-      (period as any).combined_period_ids.forEach((pid: string) => {
-        const cp = periods.find((pp: any) => pp.id === pid);
-        const m = cp?.name?.match(/\d+/);
-        if (m) nums.push(parseInt(m[0]));
-      });
-      return nums.length > 0 ? nums : null;
-    }
     const m = period.name.match(/\d+/);
     return m ? [parseInt(m[0])] : null;
   }, [periodId, periods]);
@@ -644,13 +622,11 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   const selectedFormationData = availableFormations.find((f: any) => f.id === selectedFormation);
 
   // Composite period rendering
-  const currentCompositePeriod = useMemo(() => {
-    if (!periodId) return null;
-    const p = periods.find((pp: any) => pp.id === periodId);
-    return p?.is_composite && (p as any)?.composite_config ? p : null;
-  }, [periodId, periods]);
-
-  const compositeConfig = (currentCompositePeriod as any)?.composite_config as any;
+  // NOTE: Composite periods are deprecated. Each period is now independent
+  // and renders the standard bulletin. We keep these constants as null/empty
+  // so the rendering branch that consumed them is naturally skipped.
+  const currentCompositePeriod = null as any;
+  const compositeConfig: any = null;
 
   const compositeBlocks: CompositeBlockData[] = useMemo(() => {
     if (!compositeConfig || !currentBulletin) return [];
@@ -886,9 +862,8 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                   periods.map((p: any) => {
                     const isSelected = publishSemester === `period-${p.id}`;
                     const isPublished = publishedSemesters.some((ps: any) => ps.period_id === p.id);
-                    const colorClass = p.is_composite
-                      ? (isSelected ? 'bg-violet-500 text-white border-violet-500' : 'border-violet-300 text-violet-700 hover:bg-violet-50')
-                      : (p.period_type === 'examen_blanc' || p.period_type === 'examen_final')
+                    // Color by period type — composite logic deprecated.
+                    const colorClass = (p.period_type === 'examen_blanc' || p.period_type === 'examen_final')
                       ? (isSelected ? 'bg-amber-500 text-white border-amber-500' : 'border-amber-300 text-amber-700 hover:bg-amber-50')
                       : (isSelected ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:border-primary/50');
                     return (
@@ -899,9 +874,8 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                         data-testid={`publish-period-${p.id}`}
                       >
                         {isPublished && <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" />}
-                        {p.is_composite && <span className="text-amber-400">★</span>}
                         <span className="flex-1 text-left">{p.name}</span>
-                        <span className="text-[10px] uppercase tracking-wider opacity-70">{p.is_composite ? 'Bulletin combiné' : p.period_type}</span>
+                        <span className="text-[10px] uppercase tracking-wider opacity-70">{p.period_type}</span>
                       </button>
                     );
                   })

@@ -86,16 +86,15 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
     [periods, periodId]
   );
   const isExamBlancView = currentPeriod?.period_type === 'examen_blanc' || currentPeriod?.period_type === 'examen_final';
-  const isComposite = currentPeriod?.is_composite === true;
+  // NOTE: Composite periods are deprecated. Each period is now independent.
+  // We keep this constant as `false` so existing legacy data renders as
+  // a regular single-period bulletin.
+  const isComposite = false;
 
-  // For composite periods, expand to underlying period IDs
+  // Each period is independent — always scope to the single selected period.
   const activePeriodIds = useMemo(() => {
-    if (!periodId) return [];
-    if (isComposite && Array.isArray((currentPeriod as any)?.combined_period_ids)) {
-      return (currentPeriod as any).combined_period_ids;
-    }
-    return [periodId];
-  }, [periodId, isComposite, currentPeriod]);
+    return periodId ? [periodId] : [];
+  }, [periodId]);
 
   const currentPeriodLabel = currentPeriod?.name || '';
 
@@ -103,19 +102,9 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
   const activeSemesterNums = useMemo((): number[] | null => {
     if (!currentPeriod) return null;
     if (isExamBlancView) return null;
-    if (isComposite) {
-      // gather semesters from underlying period names
-      const nums: number[] = [];
-      activePeriodIds.forEach((pid: string) => {
-        const p = periods.find((pp: any) => pp.id === pid);
-        const m = p?.name?.match(/\d+/);
-        if (m) nums.push(parseInt(m[0]));
-      });
-      return nums.length > 0 ? nums : null;
-    }
     const m = currentPeriod.name.match(/\d+/);
     return m ? [parseInt(m[0])] : null;
-  }, [currentPeriod, isExamBlancView, isComposite, activePeriodIds, periods]);
+  }, [currentPeriod, isExamBlancView]);
 
   // Students
   const { data: rawStudents } = useQuery({

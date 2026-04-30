@@ -66,7 +66,7 @@ const CreatePeriodModal: React.FC<Props> = ({
   }, [editingPeriod, isOpen]);
 
   // Load linked modules when editing an exam-type period
-  useQuery({
+  const { data: linkedModules } = useQuery({
     queryKey: ['period-modules', editingPeriod?.id],
     queryFn: async () => {
       if (!editingPeriod?.id) return [];
@@ -74,15 +74,20 @@ const CreatePeriodModal: React.FC<Props> = ({
         .from('period_modules')
         .select('module_id, coefficient')
         .eq('period_id', editingPeriod.id);
-      const ids = (data || []).map((r: any) => r.module_id);
-      const coeffs: Record<string, number> = {};
-      (data || []).forEach((r: any) => { coeffs[r.module_id] = r.coefficient || 1; });
-      setSelectedModuleIds(ids);
-      setExamCoefficients(coeffs);
       return data || [];
     },
     enabled: !!editingPeriod?.id && isOpen,
   });
+
+  // Sync linked modules into local state when query resolves
+  useEffect(() => {
+    if (!linkedModules) return;
+    const ids = linkedModules.map((r: any) => r.module_id);
+    const coeffs: Record<string, number> = {};
+    linkedModules.forEach((r: any) => { coeffs[r.module_id] = r.coefficient || 1; });
+    setSelectedModuleIds(ids);
+    setExamCoefficients(coeffs);
+  }, [linkedModules]);
 
   const needsSemesterSelection = periodType === 'semestre';
   const needsModuleSelection = PERIOD_OPTIONS.find(o => o.value === periodType)?.needsModules || false;
