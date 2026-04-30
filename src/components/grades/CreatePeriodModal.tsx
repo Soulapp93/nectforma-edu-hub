@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { createEvaluationPeriod } from '@/services/gradesService';
+import { createEvaluationPeriod, updateEvaluationPeriod, type EvaluationPeriod } from '@/services/gradesService';
 import { supabase } from '@/integrations/supabase/client';
 import { BookOpen, Search, CheckCircle2 } from 'lucide-react';
 
@@ -28,10 +28,20 @@ interface Props {
   formationId: string;
   semestersCount: number;
   existingPeriodsCount: number;
+  /** When provided, the modal switches to "edit" mode. */
+  editingPeriod?: EvaluationPeriod | null;
 }
 
-const CreatePeriodModal: React.FC<Props> = ({ isOpen, onClose, formationId, semestersCount, existingPeriodsCount }) => {
+const CreatePeriodModal: React.FC<Props> = ({
+  isOpen,
+  onClose,
+  formationId,
+  semestersCount,
+  existingPeriodsCount,
+  editingPeriod = null,
+}) => {
   const queryClient = useQueryClient();
+  const isEditing = !!editingPeriod;
   const [periodType, setPeriodType] = useState('');
   const [name, setName] = useState('');
   const [semesterNumber, setSemesterNumber] = useState('');
@@ -40,6 +50,39 @@ const CreatePeriodModal: React.FC<Props> = ({ isOpen, onClose, formationId, seme
   const [selectedModuleIds, setSelectedModuleIds] = useState<string[]>([]);
   const [examCoefficients, setExamCoefficients] = useState<Record<string, number>>({});
   const [moduleSearch, setModuleSearch] = useState('');
+
+  // Preload existing values when editing
+  useEffect(() => {
+    if (!isOpen) return;
+    if (editingPeriod) {
+      setPeriodType(editingPeriod.period_type || '');
+      setName(editingPeriod.name || '');
+      // Extract semester number from name like "Semestre 3" if applicable
+      const semMatch = editingPeriod.name?.match(/^Semestre\s+(\d+)/i);
+      setSemesterNumber(semMatch ? semMatch[1] : '');
+      setStartDate(editingPeriod.start_date || '');
+      setEndDate(editingPeriod.end_date || '');
+    }
+  }, [editingPeriod, isOpen]);
+
+  // Load linked modules when editing an exam-type period
+  useQuery({
+    queryKey: ['period-modules', editingPeriod?.id],
+    queryFn: async () => {
+      if (!editingPeriod?.id) return [];
+      const { data } = await supabase
+        .from('period_modules')
+        .select('module_id, coefficient')
+        .eq('period_id', editingPeriod.id);
+      const ids = (data || []).map((r: any) => r.module_id);
+      const coeffs: Record<string, number> = {};
+      (data || []).forEach((r: any) => { coeffs[r.module_id] = r.coefficient || 1; });
+      setSelectedModuleIds(ids);
+      setExamCoefficients(coeffs);
+      return data || [];
+    },
+    enabled: !!editingPeriod?.id && isOpen,
+  });
 
   const needsSemesterSelection = periodType === 'semestre';
   const needsModuleSelection = PERIOD_OPTIONS.find(o => o.value === periodType)?.needsModules || false;
@@ -117,7 +160,31 @@ const CreatePeriodModal: React.FC<Props> = ({ isOpen, onClose, formationId, seme
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      // 1. Create the period
+      if (isEditing && editingPeriod) {
+        // === EDIT MODE ===
+        await updateEvaluationPeriod(editingPeriod.id, {
+          name: computedName,
+          period_type: periodType,
+          start_date: startDate || editingPeriod.start_date,
+          end_date: endDate || editingPeriod.end_date,
+        });
+
+        // Replace linked modules if this is an exam-type period
+        if (needsModuleSelection) {
+          await supabase.from('period_modules').delete().eq('period_id', editingPeriod.id);
+          if (selectedModuleIds.length > 0) {
+            const rows = selectedModuleIds.map(moduleId => ({
+              period_id: editingPeriod.id,
+              module_id: moduleId,
+              coefficient: examCoefficients[moduleId] || 1,
+            }));
+            await supabase.from('period_modules').insert(rows);
+          }
+        }
+        return;
+      }
+
+      // === CREATE MODE ===
       const period = await createEvaluationPeriod({
         formation_id: formationId,
         name: computedName,
@@ -128,7 +195,6 @@ const CreatePeriodModal: React.FC<Props> = ({ isOpen, onClose, formationId, seme
         is_locked: false,
       });
 
-      // 2. If exam/rattrapage, save selected modules with exam-specific coefficients
       if (needsModuleSelection && selectedModuleIds.length > 0 && period?.id) {
         const rows = selectedModuleIds.map(moduleId => ({
           period_id: period.id,
@@ -141,11 +207,16 @@ const CreatePeriodModal: React.FC<Props> = ({ isOpen, onClose, formationId, seme
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['periods'] });
       queryClient.invalidateQueries({ queryKey: ['evaluation-periods'] });
-      toast.success(`Periode "${computedName}" creee avec ${needsModuleSelection ? `${selectedModuleIds.length} module(s)` : 'succes'}`);
+      queryClient.invalidateQueries({ queryKey: ['period-modules'] });
+      toast.success(
+        isEditing
+          ? `Periode "${computedName}" modifiee`
+          : `Periode "${computedName}" creee avec ${needsModuleSelection ? `${selectedModuleIds.length} module(s)` : 'succes'}`
+      );
       onClose();
       resetForm();
     },
-    onError: (e: any) => toast.error(e.message || 'Erreur lors de la creation'),
+    onError: (e: any) => toast.error(e.message || (isEditing ? 'Erreur lors de la modification' : 'Erreur lors de la creation')),
   });
 
   const resetForm = () => {
@@ -165,7 +236,7 @@ const CreatePeriodModal: React.FC<Props> = ({ isOpen, onClose, formationId, seme
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className={`${needsModuleSelection && allModules.length > 0 ? 'sm:max-w-xl' : 'sm:max-w-md'} max-h-[85vh] overflow-hidden flex flex-col`}>
         <DialogHeader>
-          <DialogTitle>Creer une periode d'evaluation</DialogTitle>
+          <DialogTitle>{isEditing ? "Modifier la periode d'evaluation" : "Creer une periode d'evaluation"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2 overflow-y-auto flex-1">
           {/* Type */}
@@ -319,7 +390,9 @@ const CreatePeriodModal: React.FC<Props> = ({ isOpen, onClose, formationId, seme
             disabled={!isValid || createMutation.isPending}
             data-testid="create-period-submit"
           >
-            {createMutation.isPending ? 'Creation...' : 'Creer la periode'}
+            {createMutation.isPending
+              ? (isEditing ? 'Modification...' : 'Creation...')
+              : (isEditing ? 'Enregistrer' : 'Creer la periode')}
           </Button>
         </DialogFooter>
       </DialogContent>

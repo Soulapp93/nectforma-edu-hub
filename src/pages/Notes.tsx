@@ -34,7 +34,6 @@ const TutorGradesView = React.lazy(() => import('@/components/grades/TutorGrades
 const CalculValidation = React.lazy(() => import('@/components/grades/CalculValidation'));
 const JuryDeliberation = React.lazy(() => import('@/components/grades/JuryDeliberation'));
 const CreatePeriodModal = React.lazy(() => import('@/components/grades/CreatePeriodModal'));
-const CreateCompositePeriodModal = React.lazy(() => import('@/components/grades/CreateCompositePeriodModal'));
 
 const getLevelColor = (level?: string) => {
   const colors: Record<string, string> = {
@@ -67,7 +66,7 @@ const Notes = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('saisie');
   const [showCreatePeriod, setShowCreatePeriod] = useState(false);
-  const [showCreateComposite, setShowCreateComposite] = useState(false);
+  const [editingPeriod, setEditingPeriod] = useState<any>(null);
   const [periodToDelete, setPeriodToDelete] = useState<{ id: string; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
@@ -219,11 +218,10 @@ const Notes = () => {
   // ============ Formation detail view with sidebar ============
   if (selectedFormationId && selectedFormation) {
     
-    // Group periods by type for display
-    const semesterPeriods = periods.filter((p: any) => p.period_type === 'semestre' && !p.is_composite);
-    const examPeriods = periods.filter((p: any) => (p.period_type === 'examen_blanc' || p.period_type === 'examen_final' || p.period_type === 'partiels') && !p.is_composite);
-    const compositePeriods = periods.filter((p: any) => p.is_composite === true);
-    const otherPeriods = periods.filter((p: any) => !['semestre', 'examen_blanc', 'examen_final', 'partiels'].includes(p.period_type) && !p.is_composite);
+    // Each period is independent — group only by visual type for display order
+    const semesterPeriods = periods.filter((p: any) => p.period_type === 'semestre');
+    const examPeriods = periods.filter((p: any) => (p.period_type === 'examen_blanc' || p.period_type === 'examen_final' || p.period_type === 'partiels'));
+    const otherPeriods = periods.filter((p: any) => !['semestre', 'examen_blanc', 'examen_final', 'partiels'].includes(p.period_type));
     
     return (
       <div className="p-4 md:p-6 pb-20 md:pb-6">
@@ -243,131 +241,81 @@ const Notes = () => {
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">Créer une période</span>
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowCreateComposite(true)}
-              className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50"
-              data-testid="create-composite-btn"
-              disabled={periods.length < 1}
-              title={periods.length < 1 ? 'Créez au moins une période d\'évaluation d\'abord' : ''}
-            >
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Créer un bulletin spécifique / final</span>
-            </Button>
           </div>
         </div>
 
         {/* Periods navigation pills */}
         {periods.length > 0 && (
           <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1" data-testid="periods-nav">
-            {semesterPeriods.map((p: any) => {
+            {[...semesterPeriods, ...examPeriods, ...otherPeriods].map((p: any, idx, arr) => {
               const isActive = selectedPeriodId === p.id;
+              const isSemester = p.period_type === 'semestre';
+              const isExam = ['examen_blanc', 'examen_final', 'partiels'].includes(p.period_type);
+
+              // Visual separator between groups
+              const prev = arr[idx - 1];
+              const showSeparator = prev && ((
+                (prev.period_type === 'semestre') !== isSemester
+              ) || (
+                (['examen_blanc', 'examen_final', 'partiels'].includes(prev.period_type)) !== isExam
+              ));
+
+              const activeColors = isSemester
+                ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                : isExam
+                  ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
+                  : 'bg-blue-500 text-white border-blue-500 shadow-sm';
+              const inactiveColors = p.is_locked
+                ? 'bg-muted/50 text-muted-foreground border-muted opacity-60'
+                : isSemester
+                  ? 'bg-background border-border hover:bg-primary/10 hover:border-primary/50'
+                  : isExam
+                    ? 'bg-background border-amber-300 text-amber-700 hover:bg-amber-50'
+                    : 'bg-background border-border hover:bg-blue-50';
+              const dotColor = isActive
+                ? 'bg-white'
+                : p.is_locked
+                  ? 'bg-red-400'
+                  : isSemester
+                    ? 'bg-emerald-400'
+                    : isExam
+                      ? 'bg-amber-400'
+                      : 'bg-blue-400';
+
               return (
-                <div key={p.id} className="relative group shrink-0">
-                  <button
-                    onClick={() => setSelectedPeriodId(p.id)}
-                    className={`flex items-center gap-1.5 pl-3 pr-7 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border ${
-                      isActive ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                        : p.is_locked ? 'bg-muted/50 text-muted-foreground border-muted'
-                        : 'bg-background border-border hover:bg-primary/10 hover:border-primary/50'
-                    }`}
-                    data-testid={`period-pill-${p.id}`}
-                  >
-                    <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-white' : p.is_locked ? 'bg-red-400' : 'bg-emerald-400'}`} />
-                    {p.name}
-                  </button>
-                  {isAdmin && !p.is_locked && (
-                    <button onClick={(e) => { e.stopPropagation(); handleDeletePeriod(p.id, p.name); }}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-600 rounded p-0.5 transition-opacity"
-                      title="Supprimer cette période" data-testid={`period-delete-${p.id}`}>
-                      <X className="h-3 w-3" />
+                <React.Fragment key={p.id}>
+                  {showSeparator && <div className="w-px h-5 bg-border shrink-0" />}
+                  <div className="relative group shrink-0">
+                    <button
+                      onClick={() => setSelectedPeriodId(p.id)}
+                      className={`flex items-center gap-1.5 pl-3 ${isAdmin && !p.is_locked ? 'pr-12' : 'pr-3'} py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border ${isActive ? activeColors : inactiveColors}`}
+                      data-testid={`period-pill-${p.id}`}
+                    >
+                      <div className={`w-2 h-2 rounded-full ${dotColor}`} />
+                      {p.name}
                     </button>
-                  )}
-                </div>
-              );
-            })}
-            {examPeriods.length > 0 && semesterPeriods.length > 0 && (
-              <div className="w-px h-5 bg-border shrink-0" />
-            )}
-            {examPeriods.map((p: any) => {
-              const isActive = selectedPeriodId === p.id;
-              return (
-                <div key={p.id} className="relative group shrink-0">
-                  <button
-                    onClick={() => setSelectedPeriodId(p.id)}
-                    className={`flex items-center gap-1.5 pl-3 pr-7 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border ${
-                      isActive ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
-                        : p.is_locked ? 'bg-muted/50 opacity-60 border-muted'
-                        : 'bg-background border-amber-300 text-amber-700 hover:bg-amber-50'
-                    }`}
-                    data-testid={`period-pill-${p.id}`}
-                  >
-                    <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-white' : p.is_locked ? 'bg-red-400' : 'bg-amber-400'}`} />
-                    {p.name}
-                  </button>
-                  {isAdmin && !p.is_locked && (
-                    <button onClick={(e) => { e.stopPropagation(); handleDeletePeriod(p.id, p.name); }}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-600 rounded p-0.5 transition-opacity"
-                      title="Supprimer cette période" data-testid={`period-delete-${p.id}`}>
-                      <X className="h-3 w-3" />
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-            {compositePeriods.length > 0 && (semesterPeriods.length > 0 || examPeriods.length > 0) && (
-              <div className="w-px h-5 bg-border shrink-0" />
-            )}
-            {compositePeriods.map((p: any) => {
-              const isActive = selectedPeriodId === p.id;
-              return (
-                <div key={p.id} className="relative group shrink-0">
-                  <button
-                    onClick={() => setSelectedPeriodId(p.id)}
-                    className={`flex items-center gap-1.5 pl-3 pr-7 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border ${
-                      isActive ? 'bg-violet-500 text-white border-violet-500 shadow-sm'
-                        : p.is_locked ? 'bg-muted/50 opacity-60 border-muted'
-                        : 'bg-background border-violet-300 text-violet-700 hover:bg-violet-50'
-                    }`}
-                    data-testid={`period-pill-${p.id}`}
-                  >
-                    <span>★</span>
-                    {p.name}
-                  </button>
-                  {isAdmin && !p.is_locked && (
-                    <button onClick={(e) => { e.stopPropagation(); handleDeletePeriod(p.id, p.name); }}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-600 rounded p-0.5 transition-opacity"
-                      title="Supprimer ce bulletin" data-testid={`period-delete-${p.id}`}>
-                      <X className="h-3 w-3" />
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-            {otherPeriods.map((p: any) => {
-              const isActive = selectedPeriodId === p.id;
-              return (
-                <div key={p.id} className="relative group shrink-0">
-                  <button
-                    onClick={() => setSelectedPeriodId(p.id)}
-                    className={`flex items-center gap-1.5 pl-3 pr-7 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border ${
-                      isActive ? 'bg-blue-500 text-white border-blue-500 shadow-sm'
-                        : 'bg-background border-border hover:bg-blue-50'
-                    }`}
-                    data-testid={`period-pill-${p.id}`}
-                  >
-                    <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-white' : p.is_locked ? 'bg-red-400' : 'bg-blue-400'}`} />
-                    {p.name}
-                  </button>
-                  {isAdmin && !p.is_locked && (
-                    <button onClick={(e) => { e.stopPropagation(); handleDeletePeriod(p.id, p.name); }}
-                      className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-600 rounded p-0.5 transition-opacity"
-                      title="Supprimer cette période" data-testid={`period-delete-${p.id}`}>
-                      <X className="h-3 w-3" />
-                    </button>
-                  )}
-                </div>
+                    {isAdmin && !p.is_locked && (
+                      <>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setEditingPeriod(p); }}
+                          className="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 hover:bg-primary/10 hover:text-primary rounded p-0.5 transition-opacity"
+                          title="Modifier cette période"
+                          data-testid={`period-edit-${p.id}`}
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeletePeriod(p.id, p.name); }}
+                          className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-600 rounded p-0.5 transition-opacity"
+                          title="Supprimer cette période"
+                          data-testid={`period-delete-${p.id}`}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </React.Fragment>
               );
             })}
           </div>
@@ -472,21 +420,14 @@ const Notes = () => {
             </div>
           </div>
 
-        {/* Create period modal */}
+        {/* Create / Edit period modal */}
         <CreatePeriodModal
-          isOpen={showCreatePeriod}
-          onClose={() => setShowCreatePeriod(false)}
+          isOpen={showCreatePeriod || !!editingPeriod}
+          onClose={() => { setShowCreatePeriod(false); setEditingPeriod(null); }}
           formationId={selectedFormationId}
           semestersCount={selectedFormation.semesters_count || (selectedFormation.duration_years || 1) * 2}
           existingPeriodsCount={periods.length}
-        />
-
-        {/* Create composite/final bulletin modal */}
-        <CreateCompositePeriodModal
-          isOpen={showCreateComposite}
-          onClose={() => setShowCreateComposite(false)}
-          formationId={selectedFormationId}
-          existingPeriods={periods as any}
+          editingPeriod={editingPeriod}
         />
 
         {/* Confirm period deletion */}
