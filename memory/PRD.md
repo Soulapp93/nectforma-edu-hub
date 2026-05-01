@@ -3,6 +3,24 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
+## Session 50 (2026-05-02) — Refonte design Bulletin combiné (1 page A4)
+
+**Demande user** (avec capture d'écran fournie) : afficher le bulletin combiné sur UNE SEULE PAGE avec un design pro :
+- Header navy + pill or "BULLETIN COMBINÉ"
+- Bandeau identité étudiant 5 colonnes (Nom, Matricule, Filière, Niveau, Année)
+- Pour chaque période : tableau compact 7 colonnes (Matière | CC | DS | Exam Final | Oral/Sout. | Moy. | Statut)
+- Footer pointillé par période (Rang | Moy. période | ADMIS/NON ADMIS)
+- Carte finale "RÉSULTAT COMBINÉ" avec 4 stats + chips de calcul
+
+**Changements** :
+- `bulletinClientCalculator.ts` : ajout de `type_averages: Record<string, number | null>` dans `ComputedModuleRow` (mirror de l'edge function)
+- `CombinedBulletinRenderer.tsx` : refonte complète (~620 lignes) — empilage de blocs compacts au lieu d'OfficialBulletinTemplate complets. Chaque période a un tableau 7 cols avec mapping `TYPE_TO_COLUMN` (cc/ds/exam/oral). Couleurs alternées par période (navy/bleu/violet/cyan). Carte finale avec chips de calcul ("Semestre 1 X.XX/20 × 50% = X.XX").
+- `CreateCombinedPeriodModal.tsx` : row entière clickable (role=button + tabIndex + onClick togglePeriod), Checkbox + Input avec stopPropagation pour éviter double-toggle, data-testid `combined-source-checkbox-{id}` ajouté pour fiabiliser l'automation.
+
+**Validation testing agent (iteration_43)** : Layout structurel 100% conforme à la capture user (header navy + gold pill, bandeau 5 cols, tableaux 7 cols par période avec entêtes colorés différemment, footer pointillé, carte RÉSULTAT COMBINÉ avec 4 stats + signatures). Fix whole-row clickable validé en automation. Note : le test agent a mentionné un échec compute-bulletin Edge Function — c'est sans impact sur le bulletin combiné qui utilise `bulletinClientCalculator` (client-side pur).
+
+**Demo data fix** : 2 évaluations de la formation Rh avaient `period_id=NULL` ; assignées respectivement à Semestre 1 et Semestre 2 pour que le bulletin combiné affiche des moyennes réelles (au lieu de "—").
+
 ## Session 49 (2026-05-02)
 
 ### Feature : Periodes combinees / Bulletin combine empile (DONE - 2026-05-02)
