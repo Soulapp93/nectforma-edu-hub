@@ -3,6 +3,66 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
+## Session 48 (2026-05-01)
+
+### Sprint B — Edge Function `compute-bulletin` (DONE - 2026-05-01)
+- **Edge Function** `/app/supabase/functions/compute-bulletin/index.ts` (~470 lignes) :
+  - Auth via `requireAuthenticatedUser` (staff = full access dans son etablissement, etudiant = uniquement son propre bulletin)
+  - Resolution config via RPC `resolve_bulletin_config(period_id)` (cascade etablissement -> formation -> periode)
+  - Determination des periodes sources selon `sources_config.period_scope` (`current` / `all_up_to_current` / `custom`)
+  - Calcul par etudiant x module : grouper notes par evaluation_type (normalisees /20), combiner via `combination_mode` (weighted_average / max / min / replacement) avec `type_weights`
+  - Eliminatoire : seuil `eliminatory_note_threshold` marque le module
+  - Moyenne generale : `weighted_by_module_coefficient` / `weighted_by_ects` / `average_of_teaching_units`
+  - Compensation : `compensation_allowed` + `compensation_scope` (all / teaching_unit_only / none)
+  - Decisions : admis/non-admis selon seuil + eliminatoire + compensation
+  - Mentions : tri haut->bas des seuils, premiere mention atteinte gagne
+  - Stats classe : moyennes min/max/avg par module + moyenne generale + rang
+  - **Cas BTS blanc** : config periode "BTS blanc" avec `period_scope=custom`, `custom_period_ids=[id_semestre_1]`, `combination_mode=weighted_average`, `type_weights={controle_continu:0.6, examen_blanc:0.4}` -> agrege automatiquement les CC du S1 + notes BTS blanc selon les ponderations
+- **Service client** `/app/src/services/bulletinComputeService.ts` : wrapper `computeBulletins()` qui appelle l'edge function via `supabase.functions.invoke`
+- **Integration TranscriptsPanel.tsx** : nouvel `useQuery('computed-bulletins')` qui appelle l'edge function + fallback gracieux client si non deployee. Le tableau d'etudiants ET la modal du bulletin utilisent les valeurs server-side quand disponibles (`general_average`, `mention`, `decision`, `admitted`, `class_general_average`, `class_rank`, `appreciation` par module)
+- **Deploiement requis cote prod** : `supabase functions deploy compute-bulletin` (l'environnement preview tombe sur le fallback client tant que la fonction n'est pas deployee)
+
+### Sprint C — Drag-and-drop colonnes + apercu live (DONE - 2026-05-01)
+- `BulletinConfigModal.tsx` onglet Structure refondu :
+  - Zone "Colonnes affichees" avec drag-and-drop HTML5 natif (draggable + dataTransfer + drop) -> reordering instantane
+  - Zone "Colonnes disponibles" avec boutons d'ajout en pointilles
+  - Apercu de l'en-tete du tableau en bas : rendu live avec la couleur primaire de la config
+  - data-testid `selected-columns-zone`, `selected-column-{key}`, `add-column-{key}`, `remove-column-{key}`
+
+### Sprint D — Watermark + apercu Design live (DONE - 2026-05-01)
+- Onglet Design enrichi :
+  - Input texte du filigrane revele uniquement quand le switch est ON (data-testid `watermark-text-input`)
+  - Zone `design-preview` avec rendu temps reel : titre, badges ADMIS/NON ADMIS/Accent dans les couleurs configurees, filigrane en transparence/rotation, police active
+
+### Nettoyage code legacy (DONE - 2026-05-01)
+- **Supprime** : `BulletinConfigurationPanel.tsx` (1496 lignes orphelines), `CompositeBulletinRenderer.tsx` (mort apres deprecation des periodes composites)
+- **Purge** dans `TranscriptsPanel.tsx` : tous les useMemo `compositeBlocks` / `compositeTotal` (~120 lignes), branche JSX composite (~50 lignes), import `CompositeBulletinRenderer` -> 1425 -> ~1230 lignes
+- Bug TDZ corrige dans `OfficialBulletinTemplate.tsx` : `INK_ = primaryColor || INK_` etait auto-reference, remplace par `|| INK` (constante de fichier)
+
+### Validation testing agent (iteration_40 - 2026-05-01)
+- 95% success rate, tous les flows critiques OK :
+  - Smoke /home/login/notes-admin
+  - Tableau bulletins (colonnes Moyenne/Mention/Decision peuplees correctement : Bernard 10.50 Passable Admis, Dubois 13.00 Assez bien Admis, Petit 14.00 Bien Admis)
+  - Modal "Voir" : OfficialBulletinTemplate rendu avec donnees
+  - Modal Configuration : 6 onglets accessibles, drag-and-drop colonnes + 5 selected + 6 add OK, apercu Design avec switch filigrane qui revele watermark input
+  - Aucune reference cassee aux composants supprimes (grep 0 hit)
+  - Edge Function compute-bulletin non deployee dans le preview -> fallback client confirme fonctionnel
+
+## Reste a faire (P1/P2)
+
+### P1
+- Onglet 7 "Apercu live" : preview complete du bulletin pendant qu'on edite la config
+- Sprint E "Signatures avancees" : upload images signatures + cachet directement dans la modal (actuellement reste sur les signatories existants)
+- 5 templates systeme supplementaires (CFA, Master, Licence pro, Ecole de commerce, Ingenieur)
+- Pont transcript -> diplome : auto-generation diplome quand decision = "admis"
+
+### P2
+- Refactor `BulletinLayoutEditor.tsx` (1598 lignes) et `pdfExportService.ts` (1363 lignes)
+- Application des fixes RLS production (`supabase/migrations/20260429120000_secure_rls_drop_legacy_allow_all.sql` -> `supabase db push`)
+- N+1 query dans `attendanceService.ts`
+- A11y : ajouter `<VisuallyHidden><DialogTitle/></VisuallyHidden>` dans les Dialog sans titre (warning Radix)
+- PWA offline pour la saisie des notes
+
 ## Session 47 (2026-04-28 / 2026-04-29 / 2026-04-30)
 
 ### Audit approfondi de l'application (DONE - 2026-04-28)
