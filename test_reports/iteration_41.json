@@ -1,0 +1,54 @@
+{
+  "summary": "Test complet de la feature 'Périodes combinées' (bulletin empilé + synthèse). TOUS les tests critiques PASSENT. Login admin OK, navigation Notes & Diplômes > Rh > promotion 2026-2027 > Bulletin de notes OK. Le bouton 'create-combined-period-btn' est présent et enabled (4 périodes simples existantes: S1, S2, Examen Blanc x2). Modal 'combined-period-modal' s'ouvre correctement, affiche 4 sources éligibles avec data-testid combined-source-row-{uuid} et checkboxes combined-source-{uuid}. Après cochage de 2 périodes + sélection de 'Moyenne pondérée', 2 inputs combined-weight-{uuid} apparaissent (passage à simple_average -> weights masqués). Submit (combined-period-submit) déclenche POST /rest/v1/evaluation_periods -> 201 Created. Modal se ferme, toast success, et la nouvelle pill 'TEST_Combined_Annuel' apparaît dans periods-nav (3 pills supplémentaires comptées dont la nouvelle en violet). Clic sur le pill combiné: le banner combined-period-notice s'affiche ('Période combinée — Empile Semestre 1 + Semestre 2 selon la règle moyenne simple'). Le tableau des bulletins affiche 'Voir le bulletin →' + badge 'Bulletin combiné' violet au lieu de la note. Clic 'Voir' ouvre la modal avec combined-bulletin: BULLETIN COMBINÉ header + 2 blocs combined-source-bulletin-0/-1 (Bloc 1/2 Semestre 1, Bloc 2/2 Semestre 2) chacun rendant OfficialBulletinTemplate, + combined-final-section. Fonctionnalité 100% opérationnelle. Migration SQL correctement appliquée (colonnes is_composite/combined_period_ids/composite_config fonctionnent, CHECK constraint passe).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "supabase functions/v1/compute-bulletin", "issue": "Edge Function toujours non déployée (CORS preflight + 404). Attendu comme indiqué dans le contexte agent-to-agent. Le fallback client computeStudentPeriodBulletin fonctionne pour le bulletin combiné (les blocs rendent correctement)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "CreateCombinedPeriodModal et modale détail bulletin", "issues": ["Warning Radix répété: 'DialogContent requires a DialogTitle for the component to be accessible for screen reader users' — la modale 'Créer une période combinée' a bien un DialogTitle mais pas la modale TranscriptDetailModal qui affiche le bulletin combiné (à vérifier). A11y only."]}
+    ]
+  },
+  "test_report_links": ["/app/test_reports/iteration_41.json"],
+  "action_items": [
+    "(NETTOYAGE) La période 'TEST_Combined_Annuel' (nom) a été créée dans la formation Rh (formation_id 0ed6b9d1-bc28-4054-b8b8-9b8a9326b07c) et n'a PAS pu être supprimée par l'agent de test (pas de bouton de suppression accessible rapidement depuis la pill). Main agent doit DELETE cette période dans evaluation_periods où name='TEST_Combined_Annuel' AND is_composite=true, sinon elle polluera la démo. SQL: DELETE FROM evaluation_periods WHERE name='TEST_Combined_Annuel' AND is_composite=true;",
+    "(A11y LOW) Ajouter <VisuallyHidden><DialogTitle>…</DialogTitle></VisuallyHidden> dans TranscriptDetailModal / la modale qui enveloppe CombinedBulletinRenderer (warning Radix visible pendant le test)."
+  ],
+  "critical_code_review_comments": [
+    "CreateCombinedPeriodModal.tsx: bien structuré, validation canSubmit correcte (name + dates + ≥2 sources), reset des states à l'ouverture OK. togglePeriod initialise bien le poids à 1.",
+    "combinedPeriodService.createCombinedPeriod fonctionne (201 Created). Sérialisation uuid[] correcte (pas d'erreur CHECK constraint).",
+    "CombinedBulletinRenderer: le rendu empilé Bloc 1/2 + Bloc 2/2 + section finale fonctionne. Le fallback client compute-bulletin s'applique par bloc sans erreur.",
+    "Notes.tsx: la pill combinée a bien une couleur distincte (violet), le disabled conditionnel du bouton (periods simples <2) est correct avec un title tooltip.",
+    "TranscriptsPanel.tsx: détection isCombinedPeriod OK, banner notice affiché, 'Voir le bulletin →' + badge 'Bulletin combiné' rendus correctement dans le tableau."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only — POST evaluation_periods 201 OK)",
+    "frontend": "100% — tous les flows critiques testés passent"
+  },
+  "test_credentials": "admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "Créé une période combinée 'TEST_Combined_Annuel' dans la formation Rh (2 sources: Semestre 1 + Semestre 2, règle moyenne_simple). À SUPPRIMER par main agent (cf. action_items).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Feature 'Périodes combinées' VALIDÉE. Formation Rh a 4 périodes simples: Semestre 1 (4ae5e25b-3239-400c-9464-bd9dc4485540), Semestre 2 (164e4610-eea2-47f2-b10b-3dc216cbec16), 2x Examen Blanc. La période combinée créée empile Semestre 1 + Semestre 2. Path de rejeu: /auth login admin > /notes-admin > Rh 'Voir les promotions' > 'Gérer les notes' > 'Bulletin de notes' > click pill violet 'TEST_Combined_Annuel' > click 'Voir' sur une ligne > modal affiche combined-bulletin. Edge Function compute-bulletin non déployée mais le fallback client fonctionne. Tous les data-testid sont correctement posés.",
+  "rca_of_the_issue": "Aucun bug trouvé sur la feature testée. La migration SQL 20260502000000_combined_periods.sql est bien appliquée (POST evaluation_periods retourne 201 avec is_composite=true et combined_period_ids=uuid[]). Le flow complet end-to-end fonctionne.",
+  "tests_executed": [
+    {"test": "Login admin principal", "status": "PASSED"},
+    {"test": "Navigation /notes-admin > Rh > Gérer les notes > Bulletin de notes", "status": "PASSED"},
+    {"test": "Bouton create-combined-period-btn présent + enabled (4 sources)", "status": "PASSED"},
+    {"test": "Modal combined-period-modal s'ouvre", "status": "PASSED"},
+    {"test": "4 combined-source-row-{uuid} affichés", "status": "PASSED"},
+    {"test": "Remplir name/start/end + cocher 2 sources + switch règle", "status": "PASSED"},
+    {"test": "Moyenne pondérée → combined-weight-{uuid} apparaissent (2)", "status": "PASSED"},
+    {"test": "Submit combined-period-submit → POST 201 + modal fermée + toast", "status": "PASSED"},
+    {"test": "Nouvelle pill violette TEST_Combined_Annuel dans periods-nav", "status": "PASSED"},
+    {"test": "Clic pill combinée → combined-period-notice banner affiché", "status": "PASSED"},
+    {"test": "Tableau: 'Voir le bulletin →' + badge Bulletin combiné", "status": "PASSED"},
+    {"test": "Modal bulletin: combined-bulletin + 2x combined-source-bulletin-{i} + combined-final-section", "status": "PASSED"},
+    {"test": "Aucune erreur console critique (seulement compute-bulletin 404 attendu + A11y DialogTitle warning)", "status": "PASSED"}
+  ]
+}

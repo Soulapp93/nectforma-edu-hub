@@ -35,6 +35,7 @@ const TutorGradesView = React.lazy(() => import('@/components/grades/TutorGrades
 const CalculValidation = React.lazy(() => import('@/components/grades/CalculValidation'));
 const JuryDeliberation = React.lazy(() => import('@/components/grades/JuryDeliberation'));
 const CreatePeriodModal = React.lazy(() => import('@/components/grades/CreatePeriodModal'));
+const CreateCombinedPeriodModal = React.lazy(() => import('@/components/grades/CreateCombinedPeriodModal'));
 
 const getLevelColor = (level?: string) => {
   const colors: Record<string, string> = {
@@ -77,6 +78,8 @@ const Notes = () => {
     }
   }, [activeTab]);
   const [showCreatePeriod, setShowCreatePeriod] = useState(false);
+  const [showCreateCombined, setShowCreateCombined] = useState(false);
+  const [editingCombinedPeriod, setEditingCombinedPeriod] = useState<any>(null);
   const [editingPeriod, setEditingPeriod] = useState<any>(null);
   const [periodToDelete, setPeriodToDelete] = useState<{ id: string; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -252,6 +255,18 @@ const Notes = () => {
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">Créer une période</span>
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowCreateCombined(true)}
+              className="gap-2 border-dashed"
+              data-testid="create-combined-period-btn"
+              disabled={periods.filter((p: any) => !p.is_composite).length < 2}
+              title={periods.filter((p: any) => !p.is_composite).length < 2 ? 'Créez au moins 2 périodes simples avant de pouvoir les combiner' : ''}
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Période combinée</span>
+            </Button>
           </div>
         </div>
 
@@ -262,6 +277,7 @@ const Notes = () => {
               const isActive = selectedPeriodId === p.id;
               const isSemester = p.period_type === 'semestre';
               const isExam = ['examen_blanc', 'examen_final', 'partiels'].includes(p.period_type);
+              const isCombined = !!p.is_composite || p.period_type === 'combined';
 
               // Visual separator between groups
               const prev = arr[idx - 1];
@@ -271,27 +287,33 @@ const Notes = () => {
                 (['examen_blanc', 'examen_final', 'partiels'].includes(prev.period_type)) !== isExam
               ));
 
-              const activeColors = isSemester
-                ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                : isExam
-                  ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
-                  : 'bg-blue-500 text-white border-blue-500 shadow-sm';
+              const activeColors = isCombined
+                ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                : isSemester
+                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                  : isExam
+                    ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
+                    : 'bg-blue-500 text-white border-blue-500 shadow-sm';
               const inactiveColors = p.is_locked
                 ? 'bg-muted/50 text-muted-foreground border-muted opacity-60'
-                : isSemester
-                  ? 'bg-background border-border hover:bg-primary/10 hover:border-primary/50'
-                  : isExam
-                    ? 'bg-background border-amber-300 text-amber-700 hover:bg-amber-50'
-                    : 'bg-background border-border hover:bg-blue-50';
+                : isCombined
+                  ? 'bg-background border-purple-300 text-purple-700 hover:bg-purple-50'
+                  : isSemester
+                    ? 'bg-background border-border hover:bg-primary/10 hover:border-primary/50'
+                    : isExam
+                      ? 'bg-background border-amber-300 text-amber-700 hover:bg-amber-50'
+                      : 'bg-background border-border hover:bg-blue-50';
               const dotColor = isActive
                 ? 'bg-white'
                 : p.is_locked
                   ? 'bg-red-400'
-                  : isSemester
-                    ? 'bg-emerald-400'
-                    : isExam
-                      ? 'bg-amber-400'
-                      : 'bg-blue-400';
+                  : isCombined
+                    ? 'bg-purple-400'
+                    : isSemester
+                      ? 'bg-emerald-400'
+                      : isExam
+                        ? 'bg-amber-400'
+                        : 'bg-blue-400';
 
               return (
                 <React.Fragment key={p.id}>
@@ -308,9 +330,9 @@ const Notes = () => {
                     {isAdmin && !p.is_locked && (
                       <>
                         <button
-                          onClick={(e) => { e.stopPropagation(); setEditingPeriod(p); }}
+                          onClick={(e) => { e.stopPropagation(); if (isCombined) setEditingCombinedPeriod(p); else setEditingPeriod(p); }}
                           className="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 hover:bg-primary/10 hover:text-primary rounded p-0.5 transition-opacity"
-                          title="Modifier cette période"
+                          title={isCombined ? 'Modifier la période combinée' : 'Modifier cette période'}
                           data-testid={`period-edit-${p.id}`}
                         >
                           <Pencil className="h-3 w-3" />
@@ -439,6 +461,15 @@ const Notes = () => {
           semestersCount={selectedFormation.semesters_count || (selectedFormation.duration_years || 1) * 2}
           existingPeriodsCount={periods.length}
           editingPeriod={editingPeriod}
+        />
+
+        {/* Create / Edit combined period modal */}
+        <CreateCombinedPeriodModal
+          isOpen={showCreateCombined || !!editingCombinedPeriod}
+          onClose={() => { setShowCreateCombined(false); setEditingCombinedPeriod(null); }}
+          formationId={selectedFormationId}
+          availablePeriods={periods as any}
+          editingPeriod={editingCombinedPeriod}
         />
 
         {/* Bulletin configuration modal (opened when user clicks the "Configuration" tab) */}

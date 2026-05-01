@@ -37,6 +37,8 @@ import { fr } from 'date-fns/locale';
 import BulletinTemplateRenderer, { type BulletinTableRow, type BulletinRenderData } from './BulletinTemplateRenderer';
 import { DEFAULT_TABLE_COLUMNS, DEFAULT_TABLE_STYLE, DEFAULT_HEADER_ELEMENTS, DEFAULT_BODY_ELEMENTS, DEFAULT_FOOTER_ELEMENTS } from './BulletinLayoutEditor';
 import OfficialBulletinTemplate, { type OfficialBulletinData, type BulletinModuleRow } from './OfficialBulletinTemplate';
+import CombinedBulletinRenderer from './CombinedBulletinRenderer';
+import { getCombinedSourcePeriods } from '@/services/combinedPeriodService';
 import { resolveConfigForPeriod, pickAppreciationForGrade, pickMentionForAverage, pickDecisionForAverage } from '@/services/bulletinConfigService';
 import { computeBulletins, type ComputeBulletinResponse } from '@/services/bulletinComputeService';
 import { DEFAULT_CONFIG } from '@/types/bulletinConfig';
@@ -169,6 +171,21 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     const p = periods.find((pp: any) => pp.id === periodId);
     return p?.name || periodName || '';
   }, [periodId, periods, periodName]);
+
+  // ⭐ Detect if the current period is a COMBINED period
+  const currentPeriod = useMemo(
+    () => periods.find((p: any) => p.id === periodId) || null,
+    [periodId, periods],
+  );
+  const isCombinedPeriod = !!currentPeriod && (currentPeriod as any).is_composite === true;
+
+  // Load source periods for the combined view
+  const { data: combinedSourcePeriods = [] } = useQuery({
+    queryKey: ['combined-source-periods', periodId],
+    queryFn: () => getCombinedSourcePeriods(periodId!),
+    enabled: !!periodId && isCombinedPeriod,
+  });
+
   void semestersCount; void durationYears; void selectedFormationObj;
 
   const { data: students = [] } = useQuery({
@@ -926,6 +943,26 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
           <div className="text-sm text-muted-foreground mb-3">
             {bulletins.length} étudiant(s) • {selectedFormationData?.title} • {currentPeriodLabel}
           </div>
+          {isCombinedPeriod && combinedSourcePeriods.length > 0 && (
+            <div
+              className="mb-3 px-3 py-2 rounded-md border border-purple-200 bg-purple-50 text-purple-800 text-xs flex items-center gap-2"
+              data-testid="combined-period-notice"
+            >
+              <span className="font-semibold">Période combinée</span>
+              <span>—</span>
+              <span>
+                Empile{' '}
+                <strong>{(combinedSourcePeriods as any[]).map((p: any) => p.name).join(' + ')}</strong>
+                {' '}selon la règle{' '}
+                <strong>
+                  {(((currentPeriod as any)?.composite_config as any)?.calculation_rule) === 'simple_average' && 'moyenne simple'}
+                  {(((currentPeriod as any)?.composite_config as any)?.calculation_rule) === 'weighted_average' && 'moyenne pondérée'}
+                  {(((currentPeriod as any)?.composite_config as any)?.calculation_rule) === 'weighted_by_coefficient' && 'pondérée par coefficient'}
+                </strong>
+                . Cliquez sur <em>Voir</em> pour afficher le bulletin combiné complet.
+              </span>
+            </div>
+          )}
           <div className="overflow-x-auto">
             <table className="w-full text-sm border-collapse border border-border rounded-lg overflow-hidden">
               <thead>
@@ -950,22 +987,31 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                     <td className="p-3 text-muted-foreground">{idx + 1}</td>
                     <td className="p-3 font-medium whitespace-nowrap">{b.studentName}</td>
                     <td className={`p-3 text-center font-bold ${avgColor(displayAvg)}`}>
-                      {displayAvg !== null ? `${displayAvg.toFixed(2)}/20` : '—'}
+                      {isCombinedPeriod
+                        ? <span className="text-xs italic text-muted-foreground">Voir le bulletin →</span>
+                        : (displayAvg !== null ? `${displayAvg.toFixed(2)}/20` : '—')}
                     </td>
                     <td className="p-3 text-center">
-                      {displayMention ? (
-                        <Badge variant="outline" className="text-[10px]">
-                          {displayMention}
+                      {isCombinedPeriod ? <span className="text-xs text-muted-foreground">—</span>
+                        : displayMention ? (
+                          <Badge variant="outline" className="text-[10px]">
+                            {displayMention}
+                          </Badge>
+                        ) : '—'}
+                    </td>
+                    <td className="p-3 text-center">
+                      {isCombinedPeriod ? (
+                        <Badge variant="outline" className="text-[10px] bg-purple-50 text-purple-700 border-purple-200">
+                          Bulletin combiné
                         </Badge>
-                      ) : '—'}
-                    </td>
-                    <td className="p-3 text-center">
-                      <Badge
-                        variant="outline"
-                        className={`text-[10px] ${displayAdmitted === true ? 'text-green-700 bg-green-50 border-green-200' : displayAdmitted === false ? 'text-red-700 bg-red-50 border-red-200' : (DECISIONS.find(d => d.value === b.decision)?.color || '')}`}
-                      >
-                        {displayDecision}
-                      </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] ${displayAdmitted === true ? 'text-green-700 bg-green-50 border-green-200' : displayAdmitted === false ? 'text-red-700 bg-red-50 border-red-200' : (DECISIONS.find(d => d.value === b.decision)?.color || '')}`}
+                        >
+                          {displayDecision}
+                        </Badge>
+                      )}
                     </td>
                     <td className="p-3 text-center">
                       <Button size="sm" variant="outline" onClick={() => { setCurrentStudentIndex(idx); setShowBulletinDialog(true); }} className="h-7 px-3 gap-1.5">
@@ -1060,7 +1106,38 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                 </div>
 
                 <div ref={printRef} className="bulletin bg-white text-[#1a1a2e]">
-                  {templateLayout.hasCustom ? (
+                  {isCombinedPeriod && currentPeriod ? (
+                    /* ===== COMBINED BULLETIN (vertical stack of source periods + final summary) ===== */
+                    (() => {
+                      const studentExtra = studentExtrasById.get(currentBulletin.studentId);
+                      const studentMatricule = studentExtra?.matricule || refNumber.split('/')[0] || nameParts.join('').substring(0, 8).toUpperCase();
+                      const studentAbs = (absenceStats as any)?.[currentBulletin.studentId] || { absences: 0, lates: 0, excused: 0 };
+                      return (
+                        <CombinedBulletinRenderer
+                          combinedPeriod={currentPeriod as any}
+                          combinedConfig={bulletinConfig}
+                          sourcePeriods={combinedSourcePeriods as any}
+                          studentId={currentBulletin.studentId}
+                          studentFullName={currentBulletin.studentName}
+                          studentMatricule={studentMatricule}
+                          studentDateOfBirth={studentExtra?.dob}
+                          formationId={selectedFormation}
+                          formationTitle={selectedFormationData?.title || ''}
+                          formationLevel={(selectedFormationData as any)?.level}
+                          academicYear={academicYear}
+                          establishmentName={establishment?.name || ''}
+                          establishmentLogoUrl={establishment?.logo_url}
+                          establishmentAddress={(establishment as any)?.address}
+                          establishmentPhone={(establishment as any)?.phone}
+                          establishmentWebsite={(establishment as any)?.website}
+                          referenceNumber={refNumber}
+                          signatories={signatories as any}
+                          absenceStats={studentAbs}
+                          instructorsByModuleId={instructorsByModuleId}
+                        />
+                      );
+                    })()
+                  ) : templateLayout.hasCustom ? (
                     /* ===== CUSTOM TEMPLATE-DRIVEN BULLETIN ===== */
                     <div className="flex justify-center p-4">
                       <BulletinTemplateRenderer
