@@ -3,6 +3,28 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
+## Session 51 (2026-05-02) — Isolation stricte par période + UX repositionnement barre périodes
+
+**Demande user (avec capture)** : (1) BUG isolation cassée — quand on change de période, les données ne se mettent pas à jour, mêmes données pour toutes les périodes. (2) UX — déplacer la barre des périodes À L'INTÉRIEUR de chaque onglet (Saisie / Calcul / Jury / Bulletin / Configuration) pour que cliquer sur un onglet implique aussi de cliquer sur une période.
+
+**Root cause identifiée** : 3 panneaux (`GradeSheetView`, `TranscriptsPanel`, `CalculValidation`) avaient un filtre `evals.filter(...)` avec un fallback `return true` quand ni `period_id` ni `module.semester` ne matchaient → cross-période contamination systématique.
+
+**Fixes (parallèles)** :
+- **`GradeSheetView.tsx`** : remplacement de l'ancien filtre semester-based avec fallback par un filtre strict `evals.filter(e => e.period_id === currentPeriod.id)`.
+- **`TranscriptsPanel.tsx`** : `evaluations` query refondue → strict `e.period_id === periodId`, `enabled: !!periodId`, queryKey simplifiée.
+- **`CalculValidation.tsx`** : nouveau `useMemo periodEvaluations` qui pré-filtre `allEvaluations` par `localPeriodId`, propagé à `studentData`.
+- **`CreateEvaluationModal.tsx`** : nouveau prop `preselectedPeriodId` propagé depuis `GradeSheetView`, payload inclut `period_id` auto-lié → toute nouvelle évaluation est strictement isolée à sa période dès sa création.
+
+**UX** :
+- **`Notes.tsx`** : barre des périodes (`data-testid='periods-nav'`) déplacée APRÈS la barre des onglets (avant elle était au-dessus). Label "PÉRIODE ACTIVE" uppercase ajouté en début de barre. Suppression du bandeau "Active period indicator" + duplicate "Periods info inline" devenus redondants.
+- **Combined tab notice** : nouveau bloc `combined-period-tab-notice` qui s'affiche sur Saisie/Calcul/Jury quand la période sélectionnée est combinée, expliquant qu'il faut sélectionner une période source ou aller dans Bulletin.
+
+**Migration backfill** :
+- `20260503000000_backfill_evaluation_period_id.sql` (appliquée HTTP 201) : assigne `period_id` aux évaluations legacy en se basant sur `module.semester` + nom/order_index de la période. Vue diagnostic `evaluations_without_period`.
+- UPDATE manuel additionnel : 9 évaluations legacy de Master Digital Marketing 2026 (modules sans `semester` défini) assignées au premier Semestre de leur formation pour préserver la visibilité utilisateur.
+
+**Validation testing agent (iteration_44)** : 100% — barre périodes confirmée Y=314 vs Tabs Y=263 (en-dessous), isolation stricte validée (S1 = 9 évals visibles, S2/S3 = état vide), combined-period-tab-notice OK sur Saisie/Calcul/Jury et masqué sur Bulletin, aucune régression.
+
 ## Session 50 (2026-05-02) — Refonte design Bulletin combiné (1 page A4)
 
 **Demande user** (avec capture d'écran fournie) : afficher le bulletin combiné sur UNE SEULE PAGE avec un design pro :
