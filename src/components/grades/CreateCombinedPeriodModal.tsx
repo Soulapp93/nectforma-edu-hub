@@ -197,13 +197,18 @@ const CreateCombinedPeriodModal: React.FC<Props> = ({
                   return (
                     <div
                       key={p.id}
-                      className="flex items-center gap-2 px-1.5 py-1 rounded hover:bg-muted/40"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => togglePeriod(p.id)}
+                      onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); togglePeriod(p.id); } }}
+                      className={`flex items-center gap-2 px-1.5 py-1 rounded cursor-pointer ${checked ? 'bg-primary/10 ring-1 ring-primary/30' : 'hover:bg-muted/40'}`}
                       data-testid={`combined-source-row-${p.id}`}
                     >
                       <Checkbox
                         checked={checked}
+                        onClick={(e) => e.stopPropagation()}
                         onCheckedChange={() => togglePeriod(p.id)}
-                        data-testid={`combined-source-${p.id}`}
+                        data-testid={`combined-source-checkbox-${p.id}`}
                       />
                       <div className="flex-1 flex items-center gap-2">
                         <span className="text-sm font-medium">{p.name}</span>
@@ -215,6 +220,7 @@ const CreateCombinedPeriodModal: React.FC<Props> = ({
                           step="0.1"
                           min="0"
                           value={weights[p.id] ?? 1}
+                          onClick={(e) => e.stopPropagation()}
                           onChange={(e) => setWeights((w) => ({ ...w, [p.id]: Number(e.target.value) }))}
                           className="w-20 h-7 text-xs"
                           data-testid={`combined-weight-${p.id}`}
