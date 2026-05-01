@@ -20,14 +20,12 @@ import {
 import {
   DEFAULT_CONFIG,
   type ResolvedBulletinConfig,
-  type EvaluationTypeKey,
   type TableColumnKey,
   type BulletinSectionKey,
   type AppreciationRange,
   type SignatoryConfig,
   type MentionConfig,
 } from '@/types/bulletinConfig';
-import { EVALUATION_TYPES } from '@/services/gradesService';
 import { Sparkles, Trash2, Plus, Target, Calculator, LayoutGrid, Palette, Type, Signature as SignatureIcon } from 'lucide-react';
 
 interface Props {
@@ -196,49 +194,9 @@ const BulletinConfigModal: React.FC<Props> = ({ isOpen, onClose, periodId, perio
                 <p className="text-xs text-muted-foreground">
                   Quelles évaluations entrent dans le bulletin et comment sont-elles combinées ?
                   <br />
-                  <strong>Cas BTS blanc :</strong> cochez CC + BTS blanc, définissez les poids, et le bulletin combinera automatiquement les deux.
+                  Le bulletin regroupe automatiquement toutes les évaluations saisies dans la période.
+                  Ajustez ci-dessous la portée des périodes et le mode de combinaison si nécessaire.
                 </p>
-                <div>
-                  <Label className="mb-2 block">Types d'évaluations inclus</Label>
-                  <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto border rounded p-2">
-                    {EVALUATION_TYPES.map((et) => {
-                      const key = et.value as EvaluationTypeKey;
-                      const isChecked = (cfg.sources_config.included_types || []).includes(key);
-                      const weight = cfg.sources_config.type_weights?.[key] ?? 1;
-                      return (
-                        <div key={key} className="flex items-center gap-2 p-1.5 border rounded">
-                          <Checkbox
-                            checked={isChecked}
-                            onCheckedChange={(c) => {
-                              const list = new Set(cfg.sources_config.included_types || []);
-                              if (c) list.add(key); else list.delete(key);
-                              setCfg({ ...cfg, sources_config: { ...cfg.sources_config, included_types: Array.from(list) } });
-                            }}
-                          />
-                          <span className="text-xs flex-1">{et.label}</span>
-                          {isChecked && (
-                            <Input
-                              type="number"
-                              step="0.1"
-                              className="w-16 h-7 text-xs"
-                              value={weight}
-                              onChange={(e) => {
-                                const w = parseFloat(e.target.value) || 0;
-                                setCfg({
-                                  ...cfg,
-                                  sources_config: {
-                                    ...cfg.sources_config,
-                                    type_weights: { ...(cfg.sources_config.type_weights || {}), [key]: w },
-                                  },
-                                });
-                              }}
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
 
                 <div>
                   <Label>Mode de combinaison des notes</Label>
