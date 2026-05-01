@@ -541,6 +541,9 @@ const Notes = () => {
               <div
                 key={formation.id}
                 onClick={() => setSelectedFormationId(formation.id)}
+                data-testid={`promotion-card-${formation.id}`}
+                role="button"
+                tabIndex={0}
                 className="bg-card rounded-2xl shadow-sm border-2 border-primary/20 hover:shadow-lg hover:border-primary/40 transition-all duration-200 cursor-pointer group overflow-hidden"
               >
                 <div className="h-1.5 rounded-t-xl" style={{ backgroundColor: formation.color || 'hsl(var(--primary))' }} />
@@ -565,7 +568,7 @@ const Notes = () => {
                       <Users className="h-3 w-3" />{studentCounts[formation.id] || 0} étudiant{(studentCounts[formation.id] || 0) > 1 ? 's' : ''}
                     </div>
                   </div>
-                  <div className="mt-3 pt-3 border-t border-border flex items-center justify-end text-xs text-primary font-medium group-hover:translate-x-1 transition-transform">
+                  <div className="mt-3 pt-3 border-t border-border flex items-center justify-end text-xs text-primary font-medium group-hover:translate-x-1 transition-transform" data-testid="manage-grades-cta">
                     Gérer les notes <ChevronRight className="h-3.5 w-3.5 ml-1" />
                   </div>
                 </div>
@@ -614,6 +617,9 @@ const Notes = () => {
               <div
                 key={name}
                 onClick={() => setSelectedProgramName(name)}
+                data-testid={`formation-program-card-${name.replace(/\s+/g, '-').toLowerCase()}`}
+                role="button"
+                tabIndex={0}
                 className="bg-card rounded-2xl shadow-sm border-2 border-primary/20 hover:shadow-lg hover:border-primary/40 transition-all duration-200 cursor-pointer group overflow-hidden"
               >
                 <div className="h-2" style={{ backgroundColor: latest?.color || 'hsl(var(--primary))' }} />

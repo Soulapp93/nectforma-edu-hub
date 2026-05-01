@@ -1130,7 +1130,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                         />
                       );
                     })()
-                  ) : templateLayout.hasCustom ? (
+                  ) : templateLayout.hasCustom && false ? (
                     /* ===== CUSTOM TEMPLATE-DRIVEN BULLETIN ===== */
                     <div className="flex justify-center p-4">
                       <BulletinTemplateRenderer
