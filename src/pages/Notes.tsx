@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   FileSpreadsheet, FileText, Settings2, GraduationCap, ClipboardList,
   ArrowLeft, Calendar, Users, ChevronRight, Clock, BookOpen, Search,
-  Calculator, Scale, ScrollText, Plus, X, Pencil
+  Calculator, Scale, ScrollText, Plus, X, Pencil, Settings
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/page-header';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -30,6 +30,7 @@ import { LoadingState } from '@/components/ui/loading-state';
 const GradeSheetView = React.lazy(() => import('@/components/grades/GradeSheetView'));
 const StudentGradesView = React.lazy(() => import('@/components/grades/StudentGradesView'));
 const TranscriptsPanel = React.lazy(() => import('@/components/grades/TranscriptsPanel'));
+const BulletinConfigModal = React.lazy(() => import('@/components/grades/BulletinConfigModal'));
 const TutorGradesView = React.lazy(() => import('@/components/grades/TutorGradesView'));
 const CalculValidation = React.lazy(() => import('@/components/grades/CalculValidation'));
 const JuryDeliberation = React.lazy(() => import('@/components/grades/JuryDeliberation'));
@@ -51,6 +52,7 @@ const SIDEBAR_TABS = [
   { value: 'calcul', label: 'Calcul & Validation', icon: Calculator, description: 'Moyennes, rangs et récapitulatif par filière' },
   { value: 'jury', label: 'Jury & Délibération', icon: Scale, description: 'Décisions officielles et procès-verbal' },
   { value: 'bulletin', label: 'Bulletin de notes', icon: ScrollText, description: 'Bulletins individuels par étudiant' },
+  { value: 'config', label: 'Configuration', icon: Settings, description: 'Règles, design, signatures du bulletin', adminOnly: true },
 ];
 
 const Notes = () => {
@@ -65,6 +67,15 @@ const Notes = () => {
   const [selectedFormationId, setSelectedFormationId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('saisie');
+  const [showConfigModal, setShowConfigModal] = useState(false);
+
+  // Opening the "config" tab actually opens the modal (not an inline view)
+  useEffect(() => {
+    if (activeTab === 'config') {
+      setShowConfigModal(true);
+      setActiveTab('bulletin');
+    }
+  }, [activeTab]);
   const [showCreatePeriod, setShowCreatePeriod] = useState(false);
   const [editingPeriod, setEditingPeriod] = useState<any>(null);
   const [periodToDelete, setPeriodToDelete] = useState<{ id: string; name: string } | null>(null);
@@ -429,6 +440,17 @@ const Notes = () => {
           existingPeriodsCount={periods.length}
           editingPeriod={editingPeriod}
         />
+
+        {/* Bulletin configuration modal (opened when user clicks the "Configuration" tab) */}
+        {selectedPeriodId && (
+          <BulletinConfigModal
+            isOpen={showConfigModal}
+            onClose={() => setShowConfigModal(false)}
+            periodId={selectedPeriodId}
+            periodName={selectedPeriod?.name}
+            formationTitle={selectedFormation?.title}
+          />
+        )}
 
         {/* Confirm period deletion */}
         <AlertDialog open={!!periodToDelete} onOpenChange={(o) => !o && setPeriodToDelete(null)}>

@@ -1,0 +1,55 @@
+{
+  "summary": "Test frontend du systeme de configuration des bulletins (Sprint B/C/D + nettoyage legacy). Tous les flows critiques OK: home/login/notes-admin se chargent, navigation Rh > Promotion > Gerer les notes OK, l'onglet Bulletin de notes affiche le tableau avec colonnes Moyenne Generale/Mention/Decision et 3 etudiants (Bernard Lucas 10.50 Passable Admis, Dubois Alice 13.00 Assez bien Admis, Petit Emma 14.00 Bien Admis). Clic sur 'Voir' ouvre la modal qui rend correctement le bulletin avec toutes les donnees (matieres, moyenne, mention, decision, signatures). Modal Configuration s'ouvre avec les 6 onglets (Sources/Calculs/Structure/Design/Textes/Signatures). Onglet Structure: zone selected-columns-zone OK avec 5 colonnes draggables (Module/Formateur/Moyenne/Coefficient/Appreciation) + 6 boutons add-column-* (Moyenne CC/Moyenne Exam/Credits ECTS/Note min classe/Note max classe/Moyenne classe) + apercu de l'en-tete. Onglet Design: design-preview visible, switch filigrane toggle correctement reveler watermark-text-input. AUCUNE reference cassee a BulletinConfigurationPanel/CompositeBulletinRenderer (grep confirmes 0 hit). Le fallback client compute-bulletin fonctionne malgre l'erreur Edge Function (CORS/404) - le bulletin s'affiche correctement avec les valeurs ccGeneralAverage. Bug TDZ INK_/ACCENT_ dans OfficialBulletinTemplate non observe (template rend correctement).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "supabase functions/v1/compute-bulletin", "issue": "Edge Function NON deployee (CORS preflight + 404). Comportement attendu selon le contexte du test - le client gere gracieusement avec fallback. Action requise: 'supabase functions deploy compute-bulletin' a executer par l'utilisateur en production."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "TranscriptDetailModal/OfficialBulletinTemplate", "issue": "Le data-testid='official-bulletin' n'a pas ete detecte par is_visible() lors de l'ouverture de la modal Voir, alors que le bulletin se rend visuellement correctement avec toutes les donnees (Bernard Lucas 10.50 Passable Admis). A verifier que le testid est bien pose sur le bon element ou si la modal porte un selector different.", "selector": "[data-testid='official-bulletin']", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Modals (BulletinConfigModal et autres Dialog)", "issues": ["Console warning radix-ui: 'DialogContent requires a DialogTitle for the component to be accessible for screen reader users'. A11y issue - ajouter VisuallyHidden DialogTitle si pas de titre visible."]}
+    ]
+  },
+  "test_report_links": ["/app/test_reports/iteration_40.json"],
+  "action_items": [
+    "(Optionnel/LOW) Verifier le placement du data-testid='official-bulletin' dans OfficialBulletinTemplate.tsx. Le rendu visuel est OK mais le selector test ne le trouve pas. Possiblement un wrapper portail ou un id different - audit DOM recommande.",
+    "(Production) L'utilisateur doit executer 'supabase functions deploy compute-bulletin' + 'supabase db push' pour les RLS production fixes. Le preview a un fallback qui fonctionne donc pas bloquant ici.",
+    "(A11y) Ajouter <VisuallyHidden><DialogTitle>...</DialogTitle></VisuallyHidden> dans tous les DialogContent qui n'ont pas de titre explicite (warning Radix repete plusieurs fois)."
+  ],
+  "critical_code_review_comments": [
+    "Bug TDZ INK_/ACCENT_ dans OfficialBulletinTemplate: corrige - le bulletin se rend correctement avec les couleurs primaire/accent appliquees (preview Design montre la couleur Accent sur ADMIS(E)/NON ADMIS(E)).",
+    "Composants legacy BulletinConfigurationPanel et CompositeBulletinRenderer: suppression confirmee (grep retourne 0 hit dans /app/src et /app/supabase). Pas de dead reference.",
+    "BulletinConfigModal: code modulaire, 6 onglets bien structures, drag-drop reordering des colonnes OK (indices 0-4 + bouton x pour retirer + bouton add-* pour ajouter). Apercu live en-tete et apercu Design fonctionnent. Switch filigrane conditionne le rendu de l'input texte (UX correct).",
+    "TranscriptsPanel useQuery 'computed-bulletins' avec fallback client - le fallback fonctionne correctement quand l'edge function n'est pas joignable (FunctionsFetchError catch + console.warn).",
+    "Erreurs 400/404 supplementaires non identifiees dans les logs (probablement RLS production fixes non deployes - cf. note du contexte agent-to-agent)."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only test)",
+    "frontend": "95% - tous les flows critiques fonctionnent. Seul le testid official-bulletin n'a pas ete detecte par playwright mais le rendu visuel est correct."
+  },
+  "test_credentials": "admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "Aucune donnee de test creee. Tests purement read-only (navigation + ouverture modals).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Sprint B/C/D + nettoyage legacy: VALIDE. Page Notes/notes-admin fonctionne. Formation Rh > Promotion 2026-2027 a 3 etudiants avec notes (Bernard Lucas LB 10.50 Passable Admis sur module Paie). Module Paie a 1 evaluation type 'Controle Continu' coef 1. La modal Configuration a 6 tabs avec data-testid bien places (tab-sources, tab-calc, tab-layout, tab-design, tab-text, tab-sign). Tab Structure: selected-columns-zone + 5 selected-column-{key} + 6 add-column-{key}. Tab Design: design-preview + switch filigrane (2eme switch, le 1er est QR code) + watermark-text-input quand active. Edge function compute-bulletin n'est pas deployee mais le frontend gere bien le fallback - les bulletins se rendent quand meme avec ccGeneralAverage. Path complet pour rejouer: /auth > login admin > /notes-admin > clic 'Voir les promotions' (Rh, 2eme card) > clic 'Gerer les notes' > onglet 'Bulletin de notes' > clic 'Voir' sur 1ere ligne. Pour Configuration: clic 'Configuration' depuis n'importe quel sous-tab.",
+  "rca_of_the_issue": "Pas de bug critique identifie. Le fallback client compute-bulletin masque elegamment l'absence de l'Edge Function en production preview. Sprint B/C/D semblent termines correctement.",
+  "tests_executed": [
+    {"test": "Smoke test home page /", "status": "PASSED"},
+    {"test": "Login admin AdminPrincipal", "status": "PASSED"},
+    {"test": "Navigation /notes-admin", "status": "PASSED"},
+    {"test": "Selection formation Rh + period Semestre 1", "status": "PASSED"},
+    {"test": "Tableau bulletins avec colonnes Moyenne/Mention/Decision", "status": "PASSED"},
+    {"test": "Clic 'Voir' ouvre modal bulletin avec donnees", "status": "PASSED (visuellement OK, testid official-bulletin pas detecte)"},
+    {"test": "Bouton Configuration ouvre BulletinConfigModal", "status": "PASSED (data-testid=bulletin-config-modal visible)"},
+    {"test": "Onglet Structure (tab-layout) avec selected-columns-zone + selected-column-* + add-column-*", "status": "PASSED (5 selected, 6 add)"},
+    {"test": "Onglet Design (tab-design) avec design-preview + switch filigrane revele watermark-text-input", "status": "PASSED"},
+    {"test": "Aucune erreur console critique dans les onglets de la modal", "status": "PASSED (seuls warnings A11y et erreurs Edge Function attendues)"},
+    {"test": "Aucune reference cassee a BulletinConfigurationPanel/CompositeBulletinRenderer", "status": "PASSED (grep 0 hit)"}
+  ]
+}

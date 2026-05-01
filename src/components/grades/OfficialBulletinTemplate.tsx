@@ -74,6 +74,21 @@ export interface OfficialBulletinData {
 
   // Reference
   referenceNumber: string;
+
+  // Configuration-driven customization (optional)
+  mainTitle?: string;
+  legalNotice?: string;
+  decisionLabel?: string;
+  primaryColor?: string;
+  accentColor?: string;
+  successColor?: string;
+  errorColor?: string;
+  fontFamily?: string;
+  sectionsEnabled?: Partial<Record<
+    'header' | 'student_identity' | 'grades_table' | 'general_average' | 'class_rank' |
+    'attendance' | 'general_appreciation' | 'decision' | 'signatures' | 'legal_notice',
+    boolean
+  >>;
 }
 
 interface Props {
@@ -125,25 +140,49 @@ const OfficialBulletinTemplate: React.FC<Props> = ({ data }) => {
     generalAppreciation,
     signatories,
     referenceNumber,
+    mainTitle,
+    legalNotice,
+    decisionLabel,
+    primaryColor,
+    accentColor,
+    successColor,
+    errorColor,
+    fontFamily,
+    sectionsEnabled,
   } = data;
 
-  const admittedLabel = admitted === true ? 'ADMIS(E)' : admitted === false ? 'NON ADMIS(E)' : 'EN COURS';
-  const admittedColor = admitted === true ? '#16a34a' : admitted === false ? '#dc2626' : ACCENT;
+  // Config-aware visual tokens — fall back to defaults when not provided
+  const INK_ = primaryColor || INK;
+  const ACCENT_ = accentColor || ACCENT;
+  const OK_ = successColor || '#16a34a';
+  const KO_ = errorColor || '#dc2626';
+  const FONT_ = fontFamily || '"Times New Roman", Georgia, serif';
+
+  // Section toggles — default to true when undefined
+  const show = (k: keyof NonNullable<OfficialBulletinData['sectionsEnabled']>) =>
+    sectionsEnabled?.[k] !== false;
+
+  const resolvedTitle = mainTitle || 'BULLETIN DE NOTES';
+  const resolvedDecisionLabel = decisionLabel
+    ?? (admitted === true ? 'ADMIS(E)' : admitted === false ? 'NON ADMIS(E)' : 'EN COURS');
+  const admittedColor = admitted === true ? OK_ : admitted === false ? KO_ : ACCENT_;
+  const resolvedLegalNotice = legalNotice || 'Ce bulletin est certifié authentique.';
 
   return (
     <div
       className="bg-white mx-auto"
       style={{
         maxWidth: '210mm',
-        fontFamily: '"Times New Roman", Georgia, serif',
-        color: INK,
+        fontFamily: FONT_,
+        color: INK_,
         border: `2px solid ${BORDER}`,
       }}
       data-testid="official-bulletin"
     >
       {/* ════════════════════════════════════════════════════════ */}
-      {/* ENTÊTE : établissement (gauche) + titre bulletin (droite) */}
+      {/* ENTÊTE */}
       {/* ════════════════════════════════════════════════════════ */}
+      {show("header") && (
       <div
         className="flex items-start justify-between"
         style={{ borderBottom: `2px solid ${BORDER}`, padding: '12px 16px' }}
@@ -162,7 +201,7 @@ const OfficialBulletinTemplate: React.FC<Props> = ({ data }) => {
                 height: 56,
                 width: 56,
                 borderRadius: 6,
-                backgroundColor: INK,
+                backgroundColor: INK_,
                 color: '#fff',
                 display: 'flex',
                 alignItems: 'center',
@@ -205,6 +244,7 @@ const OfficialBulletinTemplate: React.FC<Props> = ({ data }) => {
           <p style={{ fontSize: 9, color: SOFT }}>Réf : {referenceNumber}</p>
         </div>
       </div>
+      )}
 
       {/* ════════════════════════════════════════════════════════ */}
       {/* INFOS ÉTUDIANT & FORMATION (2 colonnes)                   */}
@@ -238,7 +278,7 @@ const OfficialBulletinTemplate: React.FC<Props> = ({ data }) => {
         }}
       >
         <thead>
-          <tr style={{ backgroundColor: INK, color: '#fff' }}>
+          <tr style={{ backgroundColor: INK_, color: '#fff' }}>
             <th style={ths({ width: '44%', textAlign: 'left' })}>Matière / Module</th>
             <th style={ths({ width: '13%' })}>Moyenne /20</th>
             <th style={ths({ width: '10%' })}>Coef.</th>
@@ -267,7 +307,7 @@ const OfficialBulletinTemplate: React.FC<Props> = ({ data }) => {
                   style={{
                     ...tds({ textAlign: 'center' }),
                     fontWeight: 700,
-                    color: r.average === null ? SOFT : r.average >= 10 ? '#16a34a' : '#dc2626',
+                    color: r.average === null ? SOFT : r.average >= 10 ? OK_ : KO_,
                   }}
                 >
                   {r.average !== null ? r.average.toFixed(2) : '—'}
@@ -288,7 +328,7 @@ const OfficialBulletinTemplate: React.FC<Props> = ({ data }) => {
                   ...tds({ textAlign: 'center' }),
                   fontSize: 14,
                   fontWeight: 700,
-                  color: generalAverage !== null && generalAverage >= 10 ? '#16a34a' : '#dc2626',
+                  color: generalAverage !== null && generalAverage >= 10 ? OK_ : KO_,
                 }}
               >
                 {generalAverage !== null ? generalAverage.toFixed(2) : '—'}
@@ -351,7 +391,7 @@ const OfficialBulletinTemplate: React.FC<Props> = ({ data }) => {
               letterSpacing: 1,
             }}
           >
-            {admittedLabel}
+            {resolvedDecisionLabel}
           </p>
         </div>
 
@@ -382,7 +422,7 @@ const OfficialBulletinTemplate: React.FC<Props> = ({ data }) => {
               <div
                 style={{
                   height: 60,
-                  borderBottom: `1px solid ${INK}`,
+                  borderBottom: `1px solid ${INK_}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -411,14 +451,14 @@ const OfficialBulletinTemplate: React.FC<Props> = ({ data }) => {
         </div>
       )}
 
-      {/* ════════════════════════════════════════════════════════ */}
-      {/* FOOTER : mention document officiel                        */}
-      {/* ════════════════════════════════════════════════════════ */}
+      {/* FOOTER : legal notice */}
+      {show("legal_notice") && (
       <div style={{ borderTop: `1px solid ${BORDER}`, padding: '6px 16px', textAlign: 'center' }}>
         <p style={{ fontSize: 9, color: SOFT }}>
-          Document officiel — {establishmentName} — Réf : {referenceNumber} — Ce bulletin est certifié authentique.
+          Document officiel — {establishmentName} — Réf : {referenceNumber} — {resolvedLegalNotice}
         </p>
       </div>
+      )}
     </div>
   );
 };

@@ -60,6 +60,40 @@ ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 - **Fix** : refactor du composant pour extraire toutes les chaînes en constantes (objet `L` au début du fichier), suppression du `</div>` orphelin
 - **État** : Vite démarre proprement (`ready in 246ms`), 0 erreur ESBuild, screenshot landing OK
 
+
+### Système de configuration flexible des bulletins (DONE - 2026-05-01)
+**Objectif** : permettre à chaque école (BTS, Licence, CFA…) de configurer ses propres règles de bulletin avec hiérarchie établissement → formation → période + cas BTS blanc natif.
+
+**Architecture** :
+- **Migration** `20260501000000_bulletin_configurations.sql` : nouvelle table `bulletin_configurations` avec 7 blocs JSONB (sources, calculs, layout, design, texts, signatures, decisions) + fonction `resolve_bulletin_config(period_id)` qui merge en cascade (template → établissement → formation → période) + RLS complet + seed de 2 templates système ("BTS France" et "Licence universitaire ECTS")
+- **Types** `src/types/bulletinConfig.ts` : toutes les interfaces (SourcesConfig, CalculationRules, LayoutConfig, DesignConfig, TextConfig, SignaturesConfig, DecisionRules) + `DEFAULT_CONFIG` fallback
+- **Service** `src/services/bulletinConfigService.ts` : `resolveConfigForPeriod(periodId)`, `upsertConfig(scope, patch)`, `cloneTemplateToScope`, `pickAppreciationForGrade`, `pickMentionForAverage`, `pickDecisionForAverage`
+
+**UI de configuration** :
+- Nouveau composant `src/components/grades/BulletinConfigModal.tsx` (~550 lignes) — modal 6 onglets :
+  1. 🎯 **Sources** : choix des types d'évaluations inclus + poids + mode combinaison (weighted_average / replacement / max / min) + portée périodes (current / all_up_to_current / custom)
+  2. 🧮 **Calculs** : moyenne module + moyenne générale + compensation + seuil rattrapage auto + note éliminatoire + barème + décimales
+  3. 📋 **Structure** : sections affichées (10 sections cochables) + colonnes du tableau (11 colonnes, ordre = ordre de sélection) + regroupement UE
+  4. 🎨 **Design** : 4 color pickers + police (6 choix) + format (A4/A3/Letter) + orientation + filigrane + QR code
+  5. ✍️ **Textes** : titre principal + mentions légales + éditeur de tranches d'appréciation (add/edit/delete) + seuil admission + labels ADMIS/NON ADMIS + mentions (Passable/AB/B/TB)
+  6. ✒️ **Signatures** : éditeur de signataires (rôle, ordre, obligatoire) + cachet on/off
+- **Raccourci templates** : bouton pour appliquer instantanément un template système (BTS France / Licence) qui pré-remplit tous les onglets
+
+**Intégration** :
+- Onglet **⚙ Configuration** ajouté dans `Notes.tsx` (à côté de Bulletin, admin uniquement) — son clic ouvre automatiquement le modal puis revient à "Bulletin"
+- `TranscriptsPanel.tsx` charge la config résolue via `resolveConfigForPeriod` dans un `useQuery` et la passe au `OfficialBulletinTemplate` en tant que props (title, couleurs, police, appréciations, décisions)
+- `OfficialBulletinTemplate.tsx` étendu avec props config-aware : `mainTitle`, `legalNotice`, `decisionLabel`, `primaryColor`, `accentColor`, `successColor`, `errorColor`, `fontFamily`, `sectionsEnabled` → rendu adapté dynamiquement (sections masquables : `header`, `legal_notice`)
+
+**Cas BTS blanc** : l'admin école BTS peut créer une config pour la période "BTS blanc" qui combine CC (60%) + BTS blanc (40%) en moyenne pondérée, avec titre personnalisé "BULLETIN BTS BLANC — Simulation" — la config est appliquée automatiquement quand l'étudiant consulte son bulletin de cette période.
+
+**Reste à faire (itérations suivantes)** :
+- Edge Function `compute-bulletin` pour centraliser les calculs serveur-side (actuellement calculs côté client)
+- Uploads de signatures/cachet (actuellement en base64 via signatories existants)
+- Onglet 7 "Aperçu live" avec preview en temps réel dans le modal
+- 5 autres templates système (CFA, École de commerce, Master, etc.)
+- Drag-drop pour réordonner les colonnes du tableau (actuellement ordre = ordre de sélection)
+
+
 ### Nettoyage composite + fix bug runtime (DONE - 2026-04-30)
 - **`CreateCompositePeriodModal.tsx`** supprimé (496 lignes, orphelin après refactor précédent)
 - **Bug runtime corrigé** : `setState` dans `queryFn` du `useQuery` de CreatePeriodModal → refactoré en pattern `useQuery + useEffect` propre
