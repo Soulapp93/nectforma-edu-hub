@@ -40,6 +40,8 @@ export interface ComputedModuleRow {
   module_average: number | null;
   appreciation: string;
   eliminated: boolean;
+  /** Per evaluation_type average (already normalized to /20) */
+  type_averages: Record<string, number | null>;
 }
 
 export interface ComputedPeriodResult {
@@ -144,6 +146,12 @@ export function computeStudentPeriodBulletin(opts: {
     }
     const combined = combineTypes(buckets, config.sources_config);
     const moduleAverage = combined !== null ? roundTo(combined, decimals) : null;
+    // Compute per-type averages (rounded for display)
+    const typeAverages: Record<string, number | null> = {};
+    for (const t of Object.keys(buckets)) {
+      const m = avg(buckets[t]);
+      typeAverages[t] = m !== null ? roundTo(m, decimals) : null;
+    }
     return {
       module_id: mod.id,
       module_title: mod.title,
@@ -151,6 +159,7 @@ export function computeStudentPeriodBulletin(opts: {
       module_average: moduleAverage,
       appreciation: pickAppreciation(config, moduleAverage),
       eliminated: hasElim,
+      type_averages: typeAverages,
     };
   });
 
