@@ -106,7 +106,15 @@ const BulletinConfigModal: React.FC<Props> = ({ isOpen, onClose, periodId, perio
       );
     },
     onSuccess: () => {
+      // Invalidate all queries that depend on the bulletin configuration so
+      // that the bulletin view + listing tables refetch immediately with the
+      // latest design / rules / texts / signatures.
       queryClient.invalidateQueries({ queryKey: ['bulletin-config-resolved'] });
+      queryClient.invalidateQueries({ queryKey: ['bulletin-config-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['computed-bulletins'] });
+      queryClient.invalidateQueries({ queryKey: ['evaluations-transcripts'] });
+      queryClient.invalidateQueries({ queryKey: ['combined-source-bulletins'] });
+      queryClient.invalidateQueries({ queryKey: ['combined-source-results'] });
       toast.success('Configuration enregistree pour cette periode');
       onClose();
     },

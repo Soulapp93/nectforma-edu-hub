@@ -37,6 +37,7 @@ import { fr } from 'date-fns/locale';
 import BulletinTemplateRenderer, { type BulletinTableRow, type BulletinRenderData } from './BulletinTemplateRenderer';
 import { DEFAULT_TABLE_COLUMNS, DEFAULT_TABLE_STYLE, DEFAULT_HEADER_ELEMENTS, DEFAULT_BODY_ELEMENTS, DEFAULT_FOOTER_ELEMENTS } from './BulletinLayoutEditor';
 import OfficialBulletinTemplate, { type OfficialBulletinData, type BulletinModuleRow } from './OfficialBulletinTemplate';
+import SimpleBulletinTemplate from './SimpleBulletinTemplate';
 import CombinedBulletinRenderer from './CombinedBulletinRenderer';
 import { getCombinedSourcePeriods } from '@/services/combinedPeriodService';
 import { resolveConfigForPeriod, pickAppreciationForGrade, pickMentionForAverage, pickDecisionForAverage } from '@/services/bulletinConfigService';
@@ -1214,87 +1215,28 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                   ) : (
                   <>
                   {(() => {
-                    const studentAbs = (absenceStats as any)?.[currentBulletin.studentId] || { absences: 0, lates: 0, excused: 0 };
                     const studentExtra = studentExtrasById.get(currentBulletin.studentId);
                     const nameParts = currentBulletin.studentName.split(' ');
                     const studentMatricule = studentExtra?.matricule || refNumber.split('/')[0] || nameParts.join('').substring(0, 8).toUpperCase();
 
-                    // Server-computed bulletin (honors flexible config).
-                    // When available, use server values (multi-period combination
-                    // "BTS blanc", custom combination_mode, etc.). Otherwise fall
-                    // back to the client-side ccGeneralAverage / ccAverage.
-                    const serverBulletin = computedResponse?.bulletins.find(
-                      (sb) => sb.student_id === currentBulletin.studentId,
+                    return (
+                      <SimpleBulletinTemplate
+                        period={currentPeriod as any}
+                        config={bulletinConfig}
+                        studentId={currentBulletin.studentId}
+                        studentFullName={currentBulletin.studentName}
+                        studentMatricule={studentMatricule}
+                        formationId={selectedFormation}
+                        formationTitle={selectedFormationData?.title || ''}
+                        formationLevel={(selectedFormationData as any)?.level}
+                        academicYear={academicYear}
+                        establishmentName={establishment?.name || ''}
+                        establishmentLogoUrl={establishment?.logo_url}
+                        referenceNumber={refNumber}
+                        signatories={signatories as any}
+                        instructorsByModuleId={instructorsByModuleId}
+                      />
                     );
-                    const serverModuleById = new Map(
-                      (serverBulletin?.modules || []).map((m) => [m.module_id, m]),
-                    );
-
-                    // Build module rows for the bulletin table
-                    const bulletinRows: BulletinModuleRow[] = modules.map((mod: any) => {
-                      const modData = currentBulletin.modules.find((m: any) => m.moduleId === mod.id);
-                      const serverMod = serverModuleById.get(mod.id);
-                      const avg = serverMod?.module_average ?? modData?.ccAverage ?? getStudentModuleCCAvg(currentBulletin.studentId, mod.id);
-                      return {
-                        moduleId: mod.id,
-                        moduleName: mod.title,
-                        instructorNames: instructorsByModuleId.get(mod.id) || [],
-                        average: avg,
-                        coefficient: mod.coefficient || 1,
-                        appreciation: serverMod?.appreciation || pickAppreciationForGrade(bulletinConfig, avg) || getAppreciation(avg),
-                      };
-                    });
-
-                    // Use server-side general average when available
-                    const generalAverage = serverBulletin?.general_average ?? currentBulletin.ccGeneralAverage;
-                    const classGeneralAvg = serverBulletin?.class_general_average ?? currentBulletin.ccClassGeneralAverage;
-                    const serverRank = serverBulletin?.class_rank ?? null;
-
-                    // Config-driven labels (use server decision when available)
-                    const decision = serverBulletin
-                      ? { admitted: serverBulletin.admitted, label: serverBulletin.decision }
-                      : pickDecisionForAverage(bulletinConfig, generalAverage);
-                    const configMention = serverBulletin?.mention ?? pickMentionForAverage(bulletinConfig, generalAverage);
-
-                    const officialData: OfficialBulletinData = {
-                      establishmentName: establishment?.name || '',
-                      establishmentLogoUrl: establishment?.logo_url,
-                      establishmentAddress: establishment?.address,
-                      establishmentPhone: establishment?.phone,
-                      establishmentWebsite: establishment?.website,
-                      studentFullName: currentBulletin.studentName,
-                      studentMatricule,
-                      studentDateOfBirth: studentExtra?.dob,
-                      formationTitle: selectedFormationData?.title || '',
-                      formationLevel: selectedFormationData?.level,
-                      academicYear,
-                      periodTitle: periodName || currentPeriodLabel || 'Semestre',
-                      rows: bulletinRows,
-                      generalAverage,
-                      classGeneralAverage: classGeneralAvg,
-                      rank: serverRank ?? rank ?? null,
-                      totalStudents: totalStudents || null,
-                      mention: configMention || (currentBulletin.mention ? (MENTIONS.find((m: any) => m.value === currentBulletin.mention)?.label || null) : null),
-                      absenceCount: studentAbs.absences,
-                      lateCount: studentAbs.lates,
-                      excusedAbsenceCount: studentAbs.excused,
-                      admitted: decision.admitted,
-                      generalAppreciation: pickAppreciationForGrade(bulletinConfig, generalAverage) || getAppreciation(generalAverage),
-                      signatories: signatories as any,
-                      referenceNumber: refNumber,
-                      // Pass-through config for template-level customization
-                      mainTitle: bulletinConfig.text_config.main_title,
-                      legalNotice: bulletinConfig.text_config.legal_notice,
-                      decisionLabel: decision.label,
-                      primaryColor: bulletinConfig.design_config.primary_color,
-                      accentColor: bulletinConfig.design_config.accent_color,
-                      successColor: bulletinConfig.design_config.success_color,
-                      errorColor: bulletinConfig.design_config.error_color,
-                      fontFamily: bulletinConfig.design_config.font_family,
-                      sectionsEnabled: bulletinConfig.layout_config.sections,
-                    };
-
-                    return <OfficialBulletinTemplate data={officialData} />;
                   })()}
                   </>
                   )}
