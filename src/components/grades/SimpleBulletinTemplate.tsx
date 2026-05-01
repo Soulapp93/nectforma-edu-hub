@@ -4,36 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   computeStudentPeriodBulletin,
 } from '@/services/bulletinClientCalculator';
+import { getStudentAttendanceForRanges, type DateRange } from '@/services/periodAttendanceService';
 import type { ResolvedBulletinConfig } from '@/types/bulletinConfig';
 import type { EvaluationPeriod } from '@/services/gradesService';
-
-// Same column mapping as combined renderer
-const TYPE_TO_COLUMN: Record<string, 'cc' | 'ds' | 'exam' | 'oral'> = {
-  controle_continu: 'cc',
-  projet: 'cc',
-  tp: 'cc',
-  autre: 'cc',
-  devoir_surveille: 'ds',
-  partiel: 'ds',
-  partiels: 'ds',
-  examen_final: 'exam',
-  examen_blanc: 'exam',
-  bts_blanc: 'exam',
-  rattrapage: 'exam',
-  oral: 'oral',
-  soutenance: 'oral',
-  stage: 'oral',
-};
-
-const colValue = (typeAverages: Record<string, number | null>, col: 'cc' | 'ds' | 'exam' | 'oral'): number | null => {
-  const values: number[] = [];
-  for (const [t, v] of Object.entries(typeAverages)) {
-    if (v === null) continue;
-    if (TYPE_TO_COLUMN[t] === col) values.push(v);
-  }
-  if (values.length === 0) return null;
-  return Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 100) / 100;
-};
 
 const fmt = (v: number | null): string => (v === null ? '—' : v.toFixed(v === Math.floor(v) ? 0 : 2));
 
@@ -51,14 +24,19 @@ interface Props {
   establishmentLogoUrl?: string | null;
   referenceNumber: string;
   signatories: any[];
-  /** Optional pre-computed instructor names per module (display only) */
   instructorsByModuleId?: Map<string, string[]>;
+  /** Source periods when `period` is a combined one — used for attendance ranges. */
+  sourcePeriods?: EvaluationPeriod[];
 }
 
 /**
- * Single-period bulletin rendered in the same compact, one-page style
- * used by the combined bulletin. Fully driven by the period's own
- * `bulletin_configurations` (colors, font, texts, signatures, sections).
+ * Single-period bulletin.
+ *
+ * Columns: Matière | Coef | Moy. individuelle | Moy. promotion | Appréciation.
+ * Footer : Moyenne générale (individuelle + promo) + Assiduité (retards,
+ * absences injustifiées) sur la plage de dates de la période.
+ *
+ * For combined periods, attendance ranges are concatenated (sum of S1 + S2 …).
  */
 const SimpleBulletinTemplate: React.FC<Props> = ({
   period,
@@ -74,8 +52,8 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
   establishmentLogoUrl,
   referenceNumber,
   signatories,
+  sourcePeriods,
 }) => {
-  // Visual tokens (entirely from the resolved config)
   const INK = config.design_config.primary_color || '#1a2654';
   const GOLD = config.design_config.accent_color || '#c8a94e';
   const OK = config.design_config.success_color || '#16a34a';
@@ -84,6 +62,7 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
     ? `"${config.design_config.font_family}", Arial, sans-serif`
     : '"Inter", "Helvetica Neue", Arial, sans-serif';
   const sections = config.layout_config.sections || {};
+  const admissionThreshold = config.decision_rules?.admission_threshold ?? 10;
 
   // ─── Load modules ────────────────────────────────────────
   const { data: modules = [] } = useQuery({
@@ -98,7 +77,7 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
     },
   });
 
-  // ─── Load roster for class rank ─────────────────────────
+  // ─── Load roster for class stats + rank ─────────────────
   const { data: roster = [] } = useQuery({
     queryKey: ['simple-bulletin-roster', formationId],
     queryFn: async () => {
@@ -108,7 +87,7 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
     enabled: !!formationId,
   });
 
-  // ─── Compute student bulletin for this single period ──
+  // ─── Compute student bulletin + class averages per module ──
   const computedQ = useQuery({
     queryKey: ['simple-bulletin-compute', period.id, studentId, modules.length, roster.length, JSON.stringify(config.sources_config), JSON.stringify(config.calculation_rules)],
     queryFn: async () => {
@@ -136,37 +115,54 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
         allGrades = data || [];
       }
 
-      const computed = computeStudentPeriodBulletin({
+      // Own bulletin
+      const mine = computeStudentPeriodBulletin({
         studentId, config, modules: modules as any, evaluations: (evals || []) as any, grades: allGrades as any,
       });
 
-      // Class rank
-      const allAvgs = roster.map((s: any) => ({
+      // Compute ALL students' bulletins to derive class stats + rank
+      const others = roster.map((s: any) => ({
         studentId: s.user_id,
-        avg: computeStudentPeriodBulletin({
+        bulletin: computeStudentPeriodBulletin({
           studentId: s.user_id, config, modules: modules as any, evaluations: (evals || []) as any, grades: allGrades as any,
-        }).general_average,
+        }),
       }));
-      const sorted = allAvgs.filter((x: any) => x.avg !== null).sort((a: any, b: any) => (b.avg || 0) - (a.avg || 0));
-      const rankIdx = sorted.findIndex((x: any) => x.studentId === studentId);
+
+      // Class average per module
+      const classAvgByModule = new Map<string, number | null>();
+      for (const mod of modules) {
+        const vals: number[] = [];
+        for (const o of others) {
+          const mm = o.bulletin.modules.find((m) => m.module_id === mod.id);
+          if (mm?.module_average !== null && mm?.module_average !== undefined) vals.push(mm.module_average);
+        }
+        classAvgByModule.set(mod.id, vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 100) / 100 : null);
+      }
+
+      // Class general average
+      const allGen = others.map((o) => o.bulletin.general_average).filter((v): v is number => v !== null);
+      const classGeneral = allGen.length ? Math.round((allGen.reduce((a, b) => a + b, 0) / allGen.length) * 100) / 100 : null;
+
+      // Rank
+      const sorted = others.filter((o) => o.bulletin.general_average !== null).sort((a, b) => (b.bulletin.general_average || 0) - (a.bulletin.general_average || 0));
+      const rankIdx = sorted.findIndex((x) => x.studentId === studentId);
       const rank = rankIdx >= 0 ? rankIdx + 1 : null;
 
       return {
-        rows: computed.modules.map((m) => ({
+        rows: mine.modules.map((m) => ({
           moduleId: m.module_id,
           moduleTitle: m.module_title,
           coefficient: m.coefficient,
-          cc: colValue(m.type_averages, 'cc'),
-          ds: colValue(m.type_averages, 'ds'),
-          exam: colValue(m.type_averages, 'exam'),
-          oral: colValue(m.type_averages, 'oral'),
-          moy: m.module_average,
+          individualAverage: m.module_average,
+          classAverage: classAvgByModule.get(m.module_id) ?? null,
+          appreciation: m.appreciation,
           eliminated: m.eliminated,
         })),
-        general_average: computed.general_average,
-        mention: computed.mention,
-        decision: computed.decision,
-        admitted: computed.admitted,
+        general_average: mine.general_average,
+        class_general_average: classGeneral,
+        mention: mine.mention,
+        decision: mine.decision,
+        admitted: mine.admitted,
         rank,
         totalStudents: roster.length || null,
       };
@@ -174,8 +170,26 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
     enabled: modules.length > 0,
   });
 
+  // ─── Attendance — range = current period's (start_date..end_date),
+  //    or all source periods' ranges for a combined period ───────────
+  const attendanceQ = useQuery({
+    queryKey: ['simple-bulletin-attendance', period.id, studentId, sourcePeriods?.map((p) => p.id).join(',') || ''],
+    queryFn: async () => {
+      const ranges: DateRange[] = [];
+      if ((period as any).is_composite && sourcePeriods && sourcePeriods.length > 0) {
+        for (const sp of sourcePeriods) {
+          if (sp.start_date && sp.end_date) ranges.push({ start: sp.start_date, end: sp.end_date });
+        }
+      } else if (period.start_date && period.end_date) {
+        ranges.push({ start: period.start_date, end: period.end_date });
+      }
+      return getStudentAttendanceForRanges(studentId, formationId, ranges);
+    },
+    enabled: !!studentId && !!formationId,
+  });
+
   const result = computedQ.data;
-  const admissionThreshold = config.decision_rules?.admission_threshold ?? 10;
+  const attendance = attendanceQ.data;
 
   if (computedQ.isLoading || !result) {
     return <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: INK }} /></div>;
@@ -201,19 +215,9 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
       {config.design_config.watermark_enabled && config.design_config.watermark_text && (
         <span
           style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            pointerEvents: 'none',
-            fontSize: 64,
-            fontWeight: 900,
-            letterSpacing: 8,
-            color: INK,
-            opacity: 0.05,
-            transform: 'rotate(-22deg)',
-            zIndex: 0,
+            position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            pointerEvents: 'none', fontSize: 64, fontWeight: 900, letterSpacing: 8, color: INK, opacity: 0.05,
+            transform: 'rotate(-22deg)', zIndex: 0,
           }}
         >
           {config.design_config.watermark_text}
@@ -247,8 +251,6 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
           </div>
         </div>
       </div>
-
-      {/* Gold accent line */}
       <div style={{ height: 3, background: GOLD, position: 'relative', zIndex: 1 }} />
 
       {/* IDENTITY */}
@@ -281,55 +283,74 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Subjects table */}
+        {/* Subjects table — NEW COLUMNS : Matière | Coef | Moy. ind. | Moy. promo | Appréciation */}
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, marginTop: 4 }}>
           <thead>
             <tr style={{ background: INK, color: '#fff' }}>
-              <th style={th({ width: '32%', textAlign: 'left' })}>Matière</th>
-              <th style={th({ width: '10%' })}>CC</th>
-              <th style={th({ width: '10%' })}>DS</th>
-              <th style={th({ width: '14%' })}>Exam Final</th>
-              <th style={th({ width: '12%' })}>Oral/Sout.</th>
-              <th style={th({ width: '10%' })}>Moy.</th>
-              <th style={th({ width: '12%' })}>Statut</th>
+              <th style={th({ width: '34%', textAlign: 'left' })}>Matière</th>
+              <th style={th({ width: '9%' })}>Coef.</th>
+              <th style={th({ width: '14%' })}>Moy. indiv.</th>
+              <th style={th({ width: '14%' })}>Moy. promo</th>
+              <th style={th({ width: '29%', textAlign: 'left' })}>Appréciation</th>
             </tr>
           </thead>
           <tbody>
             {result.rows.length === 0 ? (
-              <tr><td colSpan={7} style={{ padding: 14, textAlign: 'center', fontStyle: 'italic', color: '#64748b', background: '#fafafa' }}>Aucune donnée saisie pour cette période.</td></tr>
+              <tr><td colSpan={5} style={{ padding: 14, textAlign: 'center', fontStyle: 'italic', color: '#64748b', background: '#fafafa' }}>Aucune donnée saisie pour cette période.</td></tr>
             ) : result.rows.map((row, i) => {
-              const validated = row.moy !== null && row.moy >= admissionThreshold && !row.eliminated;
-              const moyColor = row.moy === null ? '#94a3b8' : row.moy >= 14 ? OK : row.moy >= admissionThreshold ? '#1d4ed8' : KO;
+              const moy = row.individualAverage;
+              const moyColor = moy === null ? '#94a3b8' : moy >= 14 ? OK : moy >= admissionThreshold ? '#1d4ed8' : KO;
               return (
                 <tr key={row.moduleId} style={{ background: i % 2 === 0 ? '#fff' : '#f8fafc' }}>
                   <td style={{ ...td(), fontWeight: 600 }}>{row.moduleTitle}</td>
-                  <td style={td({ textAlign: 'center', color: '#475569' })}>{row.cc !== null ? Math.round(row.cc) : '–'}</td>
-                  <td style={td({ textAlign: 'center', color: '#475569' })}>{row.ds !== null ? Math.round(row.ds) : '–'}</td>
-                  <td style={td({ textAlign: 'center', color: '#475569' })}>{row.exam !== null ? Math.round(row.exam) : '–'}</td>
-                  <td style={td({ textAlign: 'center', color: '#7c3aed' })}>{row.oral !== null ? Math.round(row.oral) : '–'}</td>
-                  <td style={{ ...td({ textAlign: 'center' }), fontWeight: 800, color: moyColor }}>{fmt(row.moy)}</td>
-                  <td style={td({ textAlign: 'center' })}>
-                    <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 999, background: validated ? '#dcfce7' : row.moy === null ? '#f1f5f9' : '#fee2e2', color: validated ? '#15803d' : row.moy === null ? '#64748b' : '#b91c1c', fontWeight: 600 }}>
-                      {validated ? 'Validé' : row.moy === null ? '—' : 'Ajourné'}
-                    </span>
-                  </td>
+                  <td style={td({ textAlign: 'center', fontWeight: 600, color: '#475569' })}>{row.coefficient}</td>
+                  <td style={{ ...td({ textAlign: 'center' }), fontWeight: 800, color: moyColor }}>{fmt(moy)}</td>
+                  <td style={td({ textAlign: 'center', color: '#475569' })}>{fmt(row.classAverage)}</td>
+                  <td style={td({ fontStyle: 'italic', color: '#1e293b' })}>{row.appreciation || '—'}</td>
                 </tr>
               );
             })}
           </tbody>
+          {/* Totals row : general average */}
+          <tfoot>
+            <tr style={{ background: `${INK}12`, fontWeight: 700 }}>
+              <td style={{ ...td({ padding: '9px 8px', textAlign: 'right' }), fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.4 }} colSpan={2}>
+                Moyenne générale
+              </td>
+              <td style={{ ...td({ padding: '9px 8px', textAlign: 'center' }), fontSize: 14, fontWeight: 800, color: result.general_average !== null && result.general_average >= admissionThreshold ? INK : KO }}>
+                {fmt(result.general_average)}/20
+              </td>
+              <td style={{ ...td({ padding: '9px 8px', textAlign: 'center' }), fontSize: 13, color: '#475569' }}>
+                {fmt(result.class_general_average)}/20
+              </td>
+              <td style={{ ...td({ padding: '9px 8px', textAlign: 'right' }) }}>
+                <span style={{ fontSize: 11, color: result.admitted === true ? OK : result.admitted === false ? KO : GOLD, fontWeight: 700, letterSpacing: 0.5 }}>
+                  {result.decision}
+                </span>
+              </td>
+            </tr>
+          </tfoot>
         </table>
 
-        {/* Footer: rank + average + decision */}
-        <div className="flex items-center justify-between" style={{ borderTop: `1px dashed #cbd5e1`, fontSize: 11, padding: '6px 4px' }}>
-          <span style={{ color: '#64748b' }}>
-            Rang période : <strong style={{ color: INK }}>{result.rank ? `${result.rank}${result.rank === 1 ? 'er' : 'ème'}` : '—'}{result.totalStudents ? `/${result.totalStudents}` : ''}</strong>
-          </span>
-          <span style={{ fontSize: 12, color: INK, fontWeight: 700 }}>
-            Moyenne : {fmt(result.general_average)}/20
-          </span>
-          <span style={{ color: result.admitted === true ? OK : result.admitted === false ? KO : GOLD, fontWeight: 700, letterSpacing: 0.5 }}>
-            {result.decision}
-          </span>
+        {/* Rang + Assiduité strip */}
+        <div
+          className="grid grid-cols-3"
+          style={{ marginTop: 10, border: `1px solid ${INK}22`, borderRadius: 6, overflow: 'hidden' }}
+          data-testid="attendance-strip"
+        >
+          <MetaCell label="Rang période" value={result.rank ? `${result.rank}${result.rank === 1 ? 'er' : 'ème'}${result.totalStudents ? ` / ${result.totalStudents}` : ''}` : '—'} />
+          <MetaCell
+            label="Retards"
+            value={attendance ? String(attendance.retards) : '—'}
+            divider
+            hint={(period as any).is_composite ? 'cumul périodes sources' : 'sur la période'}
+          />
+          <MetaCell
+            label="Absences injustifiées"
+            value={attendance ? String(attendance.absences_injustifiees) : '—'}
+            divider
+            hint={attendance ? `${attendance.absences_total} abs. totales · ${attendance.total_sheets} séances` : undefined}
+          />
         </div>
       </div>
 
@@ -339,11 +360,9 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
           className="grid"
           style={{
             gridTemplateColumns: `repeat(${Math.min(signatories.length, 4)}, 1fr)`,
-            gap: 16,
-            padding: '14px 18px',
+            gap: 16, padding: '14px 18px',
             borderTop: `1px solid ${INK}22`,
-            position: 'relative',
-            zIndex: 1,
+            position: 'relative', zIndex: 1,
           }}
         >
           {signatories.slice(0, 4).map((s: any) => (
@@ -373,27 +392,25 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
 
 const IdCell: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
   <div>
-    <p style={{ fontSize: 9, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 2 }}>
-      {label}
-    </p>
+    <p style={{ fontSize: 9, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 2 }}>{label}</p>
     <p style={{ fontSize: 12, fontWeight: 700 }}>{value}</p>
   </div>
 );
 
+const MetaCell: React.FC<{ label: string; value: React.ReactNode; divider?: boolean; hint?: string }> = ({ label, value, divider, hint }) => (
+  <div style={{ padding: '8px 12px', borderLeft: divider ? '1px solid #e2e8f0' : 'none', textAlign: 'center' }}>
+    <p style={{ fontSize: 9, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 3 }}>{label}</p>
+    <p style={{ fontSize: 15, fontWeight: 800 }}>{value}</p>
+    {hint && <p style={{ fontSize: 9, color: '#94a3b8', marginTop: 2 }}>{hint}</p>}
+  </div>
+);
+
 const th = (extra: React.CSSProperties = {}): React.CSSProperties => ({
-  padding: '8px 8px',
-  fontSize: 10,
-  fontWeight: 700,
-  textAlign: 'center',
-  letterSpacing: 0.5,
-  textTransform: 'uppercase',
-  ...extra,
+  padding: '8px 8px', fontSize: 10, fontWeight: 700, textAlign: 'center', letterSpacing: 0.5, textTransform: 'uppercase', ...extra,
 });
 
 const td = (extra: React.CSSProperties = {}): React.CSSProperties => ({
-  padding: '6px 8px',
-  borderBottom: '1px solid #f1f5f9',
-  ...extra,
+  padding: '7px 8px', borderBottom: '1px solid #f1f5f9', ...extra,
 });
 
 export default SimpleBulletinTemplate;

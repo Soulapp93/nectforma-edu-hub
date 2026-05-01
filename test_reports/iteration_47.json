@@ -1,0 +1,41 @@
+{
+  "summary": "Iteration 47 — Validation du nouveau SimpleBulletinTemplate refondu (5 colonnes + tfoot moyenne générale + attendance-strip). Tous les requirements du review_request sont validés ✅. Login admin.principal OK, navigation /notes-admin → formation-program-card[0] (Master Digital Marketing 2026) → promotion-card[0] (BAC+1 2026-2027) → tab-bulletin OK. Clic 'Voir' sur Bernard Lucas → data-testid='simple-bulletin' s'affiche. STRUCTURE DU TABLEAU VALIDÉE : exactement 5 colonnes dans l'ordre attendu ['Matière','Coef.','Moy. indiv.','Moy. promo','Appréciation'] — colonnes CC/DS/Exam Final/Oral/Sout. bien SUPPRIMÉES ✅. TFOOT VALIDÉ : ['Moyenne générale','11.50/20','12.25/20','ADMIS(E)'] ✅. ATTENDANCE-STRIP VALIDÉ : data-testid='attendance-strip' présent avec 3 cellules = Rang période '2ème / 2' | Retards '0' (hint 'sur la période' ✅) | Absences injustifiées '0' (hint '0 abs. totales · 0 séances'). Pas de crash, pas de '—' sur les cellules d'assiduité, valeur numérique '0' bien affichée comme attendu. Lignes de matières correctes : seo/1/9/9.50/Insuffisant… — digital/1/12.50/13.09/Assez bien… — refer/1/13/14.17/Assez bien…",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "https://dlitdjbmqpsdmhrbluak.supabase.co/functions/v1/compute-bulletin", "issue": "CORS preflight fail + 404 sur l'Edge Function (FunctionsFetchError). Pré-existant depuis iteration 45/46. Fallback côté client (bulletinComputeService) permet quand même le rendu correct du bulletin (les valeurs 11.50/12.25/ADMIS(E) sont bien calculées côté client)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Période combinée (combined-bulletin)", "issue": "NON TESTABLE en l'état — la formation 'Master Digital Marketing 2026' ne contient actuellement qu'une seule pill de période 'Semestre 1' (data-testid='period-pill-82162e5b...'). Aucune pill violette is_composite n'est présente dans la barre. Le bouton 'Période combinée' visible en haut à droite est le bouton DE CRÉATION (disabled). Selon la note du review_request ('Si aucune période combinée n'existe dans la formation, ignorer ce test'), ce test est légitimement ignoré. Le data-testid='combined-bulletin' est bien défini dans CombinedBulletinRenderer.tsx:269 (vérifié par grep), et TranscriptsPanel.tsx:1109 passe bien sourcePeriods={combinedSourcePeriods} conformément à la spec.", "affected_selectors": ["[data-testid='combined-bulletin']"]}
+    ],
+    "design_issues": [
+      {"screen": "SimpleBulletinTemplate (Bernard Lucas, Semestre 1)", "issues": ["✅ Header navy + pill or 'BULLETIN DE NOTES' conservé", "✅ Tableau 5 cols (Matière/Coef/Moy indiv/Moy promo/Appréciation) + ligne tfoot 'MOYENNE GÉNÉRALE' + valeurs + 'ADMIS(E)' bien alignés et lisibles", "✅ Assiduité strip : 3 cellules bordered inline, labels uppercase gris, valeurs centrées, hints discrets — très propre", "ℹ️ Warning a11y persistant : DialogContent sans DialogTitle (pré-existant, non bloquant)"]}
+    ]
+  },
+  "test_report_links": ["/app/test_reports/iteration_47.json"],
+  "action_items": [
+    "[LOW] (Optionnel) Pour permettre le test E2E de combined-bulletin, créer une période composite 'BULLETIN DE NOTE 1ER ANNEE' dans le seed demo combinant S1+S2, ou documenter clairement dans le context_for_next_testing_agent quelle formation a une période composite.",
+    "[LOW] Investiguer l'erreur CORS récurrente sur l'Edge Function compute-bulletin (pré-existant, n'affecte pas le rendu utilisateur grâce au fallback).",
+    "[LOW] Wrap DialogTitle avec VisuallyHidden dans la BulletinModal (TranscriptsPanel) pour l'accessibilité a11y."
+  ],
+  "critical_code_review_comments": [
+    "✅ SimpleBulletinTemplate.tsx — colonnes et tfoot conformes au review_request ligne 286-333. thead = 5 <th>, tfoot = tr[colSpan=2 + 3 <td>] avec moyenne générale ind/promo + décision. Mise en forme cohérente (INK color tokens, admissionThreshold).",
+    "✅ attendance-strip data-testid correctement positionné ligne 339 dans SimpleBulletinTemplate.tsx, grid-cols-3 avec MetaCell pour Rang période / Retards / Absences injustifiées. Hint conditionnel 'cumul périodes sources' vs 'sur la période' (period.is_composite) bien implémenté ligne 346.",
+    "✅ queryKey 'simple-bulletin-attendance' inclut period.id + studentId + sourcePeriods.map(id).join(',') pour invalider correctement en période combinée (ligne 176).",
+    "✅ periodAttendanceService.ts existe bien avec getStudentAttendanceForRanges.",
+    "✅ TranscriptsPanel.tsx ligne 1109 : CombinedBulletinRenderer est utilisé (sourcePeriods passé implicitement via period.source_periods).",
+    "ℹ️ Pas de data-testid sur bouton 'Voir' dans la table d'étudiants — même remarque que iteration 46. Sélecteur `:has-text('Voir')` a fonctionné mais reste fragile.",
+    "ℹ️ Le fallback client (bulletinComputeService) masque l'échec de l'Edge Function — bien pour l'UX mais problématique en prod si les règles de calcul divergent."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (frontend only)", "frontend": "100% pour les 8 points testables du review_request. 1 point (combined-bulletin) non testable faute de période composite dans la démo — légitimement ignoré selon la note."},
+  "test_credentials": "admin.principal@nectforma-demo.com / NectDemo2026! (depuis /app/memory/test_credentials.md)",
+  "seed_data_creation": "Aucune.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 47 a VALIDÉ intégralement le nouveau SimpleBulletinTemplate : 5 colonnes (Matière/Coef./Moy. indiv./Moy. promo/Appréciation), tfoot 'Moyenne générale' + ADMIS(E), attendance-strip avec Rang/Retards/Absences injustifiées. Valeurs observées pour Bernard Lucas S1 : 11.50/20 ind, 12.25/20 promo, ADMIS(E), 2ème/2, Retards 0, Absences 0. La période combinée n'a pas pu être testée car la formation 'Master Digital Marketing 2026' n'a qu'une seule période 'Semestre 1' — pas de pill is_composite. Pour valider combined-bulletin en prochaine itération, il faut soit créer une période composite via le bouton 'Période combinée' (coin supérieur droit), soit seeder une période combinée dans la démo. Le code CombinedBulletinRenderer.tsx est en place (data-testid='combined-bulletin' ligne 269) et prêt à être testé.",
+  "rca_of_the_issue": "N/A — Aucun bug détecté sur le refonte SimpleBulletinTemplate. Tous les requirements du review_request sont satisfaits côté UI. La seule limitation (combined-bulletin non testé) vient d'une absence de donnée démo (pas de période composite dans Master Digital Marketing 2026), pas d'un bug du code."
+}

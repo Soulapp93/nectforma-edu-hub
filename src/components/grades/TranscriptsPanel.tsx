@@ -1235,6 +1235,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                         referenceNumber={refNumber}
                         signatories={signatories as any}
                         instructorsByModuleId={instructorsByModuleId}
+                        sourcePeriods={combinedSourcePeriods as any}
                       />
                     );
                   })()}
