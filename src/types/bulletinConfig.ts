@@ -196,7 +196,7 @@ export interface ResolvedBulletinConfig {
  */
 export const DEFAULT_CONFIG: ResolvedBulletinConfig = {
   sources_config: {
-    included_types: ['controle_continu', 'devoir_surveille', 'projet', 'oral', 'tp'],
+    included_types: ['controle_continu', 'devoir_surveille', 'projet', 'oral', 'tp', 'examen_blanc', 'examen_final', 'partiels', 'partiel', 'rattrapage', 'soutenance', 'autre'],
     combination_mode: 'weighted_average',
     period_scope: 'current',
   },

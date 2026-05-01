@@ -3,6 +3,36 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
+## Session 54 (2026-05-02) — Type "BTS Blanc" + bulletin dédié au format officiel
+
+**Demande user (avec capture d'écran)** : ajouter un type de période "BTS Blanc" dans la liste de création des périodes. Quand cette période est sélectionnée, le bulletin doit utiliser EXACTEMENT la disposition de la capture :
+- 5 colonnes : Examen Blanc | Notes | C. (coefficient) | Points (note × coef) | Appréciation générale (à droite)
+- Bloc ASSIDUITE en bas à droite (Retards ce semestre/total + Absences ce semestre/total + Absences restantes à rattraper)
+- Ligne totaux finale : TOTAL (Admis si > ou = X) + total des points + ADMIS/NON ADMIS
+- Couleurs cyan/bleu officielles
+
+**Réalisé** :
+- `CreatePeriodModal.tsx` : ajout de `{ value: 'bts_blanc', label: 'BTS Blanc', needsModules: true }` dans `PERIOD_OPTIONS`
+- Nouveau composant `BtsBlancBulletinTemplate.tsx` (~330 lignes) :
+  - Header bleu nuit + titre "BULLETIN BTS BLANC" en or
+  - Identité étudiant sur 1 ligne compacte
+  - Grille 2 colonnes : tableau modules à gauche (cyan/bleu clair alternés), bloc Appréciation+Assiduité à droite
+  - Ligne TOTAL avec badge points + décision ADMIS/NON ADMIS (seuil par défaut 220, configurable via `composite_config.total_admission_threshold`)
+  - Calcul `points = note × coefficient` par module + somme totale
+  - Assiduité dual : période courante + cumul total académique (start year-09-01 → period.end_date)
+- `TranscriptsPanel.tsx` : route automatique vers `BtsBlancBulletinTemplate` quand `period_type === 'bts_blanc' || 'examen_blanc'`
+- `Notes.tsx` : `bts_blanc` ajouté à la catégorie "exam" pour avoir la pill amber/orange
+- `bulletinConfig.ts` DEFAULT_CONFIG : `included_types` étendu à TOUS les types (`controle_continu, devoir_surveille, projet, oral, tp, examen_blanc, examen_final, partiels, partiel, rattrapage, soutenance, autre`) pour que les bulletins n'aient plus à reconfigurer manuellement
+
+**Validation visuelle main agent** : screenshot capturé montrant Bernard Lucas avec :
+- Bandeau bleu marine "BULLETIN BTS BLANC"
+- Tableau 4 colonnes (Examen Blanc, Notes, C., Points) avec lignes cyan alternées
+- Bloc "Appréciation générale" en haut + "ASSIDUITE" en bas avec 5 lignes
+- Footer "TOTAL (Admis si > ou = 220)" + badge "0,00" + "NON ADMIS"
+- Signatures + mention légale en pied
+
+**Cleanup** : période test BTS Blanc 2026 + 3 évaluations + 3 grades supprimées de la DB.
+
 ## Session 53 (2026-05-02) — Bulletin simplifié + Assiduité reliée à l'émargement
 
 **Demande user (avec capture)** : (1) supprimer colonnes CC/DS/Examen/Oral/Sout. ; (2) afficher Matière | Coef | Moy. individuelle | Moy. promotion | Appréciation ; (3) ligne totaux avec moyenne générale individuelle + promotion ; (4) section Assiduité (retards + absences injustifiées) reliée au module suivi/émargement, filtrée par plage de dates de la période (pour combinée = somme des sources).

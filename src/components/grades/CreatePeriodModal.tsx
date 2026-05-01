@@ -15,6 +15,7 @@ import { BookOpen, Search, CheckCircle2 } from 'lucide-react';
 const PERIOD_OPTIONS = [
   { value: 'semestre', label: 'Semestre', needsModules: true },
   { value: 'trimestre', label: 'Trimestre', needsModules: true },
+  { value: 'bts_blanc', label: 'BTS Blanc', needsModules: true },
   { value: 'examen_blanc', label: 'Examen Blanc', needsModules: true },
   { value: 'examen_final', label: 'Examen Final', needsModules: true },
   { value: 'partiels', label: 'Partiels', needsModules: true },

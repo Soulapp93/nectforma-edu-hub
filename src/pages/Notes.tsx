@@ -323,14 +323,14 @@ const Notes = () => {
                 {[...semesterPeriods, ...examPeriods, ...otherPeriods].map((p: any, idx, arr) => {
                   const isActive = selectedPeriodId === p.id;
                   const isSemester = p.period_type === 'semestre';
-                  const isExam = ['examen_blanc', 'examen_final', 'partiels'].includes(p.period_type);
+                  const isExam = ['examen_blanc', 'examen_final', 'partiels', 'bts_blanc'].includes(p.period_type);
                   const isCombined = !!p.is_composite || p.period_type === 'combined';
 
                   const prev = arr[idx - 1];
                   const showSeparator = prev && ((
                     (prev.period_type === 'semestre') !== isSemester
                   ) || (
-                    (['examen_blanc', 'examen_final', 'partiels'].includes(prev.period_type)) !== isExam
+                    (['examen_blanc', 'examen_final', 'partiels', 'bts_blanc'].includes(prev.period_type)) !== isExam
                   ));
 
                   const activeColors = isCombined

@@ -38,6 +38,7 @@ import BulletinTemplateRenderer, { type BulletinTableRow, type BulletinRenderDat
 import { DEFAULT_TABLE_COLUMNS, DEFAULT_TABLE_STYLE, DEFAULT_HEADER_ELEMENTS, DEFAULT_BODY_ELEMENTS, DEFAULT_FOOTER_ELEMENTS } from './BulletinLayoutEditor';
 import OfficialBulletinTemplate, { type OfficialBulletinData, type BulletinModuleRow } from './OfficialBulletinTemplate';
 import SimpleBulletinTemplate from './SimpleBulletinTemplate';
+import BtsBlancBulletinTemplate from './BtsBlancBulletinTemplate';
 import CombinedBulletinRenderer from './CombinedBulletinRenderer';
 import { getCombinedSourcePeriods } from '@/services/combinedPeriodService';
 import { resolveConfigForPeriod, pickAppreciationForGrade, pickMentionForAverage, pickDecisionForAverage } from '@/services/bulletinConfigService';
@@ -1220,23 +1221,43 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                     const studentMatricule = studentExtra?.matricule || refNumber.split('/')[0] || nameParts.join('').substring(0, 8).toUpperCase();
 
                     return (
-                      <SimpleBulletinTemplate
-                        period={currentPeriod as any}
-                        config={bulletinConfig}
-                        studentId={currentBulletin.studentId}
-                        studentFullName={currentBulletin.studentName}
-                        studentMatricule={studentMatricule}
-                        formationId={selectedFormation}
-                        formationTitle={selectedFormationData?.title || ''}
-                        formationLevel={(selectedFormationData as any)?.level}
-                        academicYear={academicYear}
-                        establishmentName={establishment?.name || ''}
-                        establishmentLogoUrl={establishment?.logo_url}
-                        referenceNumber={refNumber}
-                        signatories={signatories as any}
-                        instructorsByModuleId={instructorsByModuleId}
-                        sourcePeriods={combinedSourcePeriods as any}
-                      />
+                      ((currentPeriod as any)?.period_type === 'bts_blanc' || (currentPeriod as any)?.period_type === 'examen_blanc') ? (
+                        <BtsBlancBulletinTemplate
+                          period={currentPeriod as any}
+                          config={bulletinConfig}
+                          studentId={currentBulletin.studentId}
+                          studentFullName={currentBulletin.studentName}
+                          studentMatricule={studentMatricule}
+                          formationId={selectedFormation}
+                          formationTitle={selectedFormationData?.title || ''}
+                          formationLevel={(selectedFormationData as any)?.level}
+                          academicYear={academicYear}
+                          establishmentName={establishment?.name || ''}
+                          establishmentLogoUrl={establishment?.logo_url}
+                          referenceNumber={refNumber}
+                          signatories={signatories as any}
+                          sourcePeriods={combinedSourcePeriods as any}
+                          totalAdmissionThreshold={Number(((currentPeriod as any)?.composite_config as any)?.total_admission_threshold) || 220}
+                        />
+                      ) : (
+                        <SimpleBulletinTemplate
+                          period={currentPeriod as any}
+                          config={bulletinConfig}
+                          studentId={currentBulletin.studentId}
+                          studentFullName={currentBulletin.studentName}
+                          studentMatricule={studentMatricule}
+                          formationId={selectedFormation}
+                          formationTitle={selectedFormationData?.title || ''}
+                          formationLevel={(selectedFormationData as any)?.level}
+                          academicYear={academicYear}
+                          establishmentName={establishment?.name || ''}
+                          establishmentLogoUrl={establishment?.logo_url}
+                          referenceNumber={refNumber}
+                          signatories={signatories as any}
+                          instructorsByModuleId={instructorsByModuleId}
+                          sourcePeriods={combinedSourcePeriods as any}
+                        />
+                      )
                     );
                   })()}
                   </>
