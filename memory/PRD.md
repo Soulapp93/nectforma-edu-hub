@@ -3,6 +3,24 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
+## Session 55 (2026-05-02) — BTS Blanc : entête partagée + coefficients auto
+
+**Demandes user** : (1) le bulletin BTS Blanc doit avoir le MÊME entête que les autres bulletins (Simple, Combiné) — seul le corps change ; (2) les coefficients définis lors de la création de la période BTS Blanc doivent être auto-chargés dans CreateEvaluationModal sans avoir à les ressaisir.
+
+**Réalisé** :
+- 🆕 Nouveau composant `BulletinSharedHeader.tsx` (~115 lignes) : entête réutilisable navy + pill or + bandeau identité 5 cols. Single source of truth pour les 3 templates (Simple, Combined, BTS Blanc).
+- ✏️ `BtsBlancBulletinTemplate.tsx` refactoré : remplace son entête custom par `<BulletinSharedHeader />`. Couleur de la bordure unifiée sur `INK` (config.design_config.primary_color). Les couleurs cyan/bleu du tableau (HEADER_BG, ROW_BG, TOTAL_BG) restent spécifiques pour respecter la capture user du format BTS officiel.
+- 🔧 Auto-chargement des coefficients dans `CreateEvaluationModal.tsx` :
+  - Nouveau useQuery `period-modules` qui lit `period_modules` filtré par `preselectedPeriodId`
+  - useEffect qui auto-set `setCoefficient(periodCoef)` quand l'utilisateur choisit un module qui a un coefficient pré-défini pour cette période
+  - Le dropdown des modules est restreint aux modules de la période (si `period_modules` non vide) + label enrichi "(coef X)" pour visualiser instantanément
+  - Hint italique "Coefficients pré-définis lors de la création de la période — vous pouvez encore les ajuster ci-dessous"
+- 🔧 `BtsBlancBulletinTemplate` : modules query améliorée pour utiliser `period_modules` (avec coefficients per-période) en priorité, fallback `formation_modules` si pas de period_modules → cohérence des coefficients entre la création de période, l'ajout d'évaluations et le rendu du bulletin.
+
+**Validation visuelle (screenshot main agent)** : BTS Blanc Test avec coefficients 5/4/3 affichés correctement dans la colonne C., entête identique aux autres bulletins (logo + Nectforma Demo + pill or BULLETIN DE NOTES + bandeau MATRICULE/FILIÈRE/NIVEAU/ANNÉE), corps cyan avec Examen Blanc | Notes | C. | Points + Appréciation/Assiduité à droite + TOTAL "(Admis si > ou = 220)" + NON ADMIS.
+
+**Cleanup** : période test BTS Blanc Test + period_modules associés supprimés de la DB.
+
 ## Session 54 (2026-05-02) — Type "BTS Blanc" + bulletin dédié au format officiel
 
 **Demande user (avec capture d'écran)** : ajouter un type de période "BTS Blanc" dans la liste de création des périodes. Quand cette période est sélectionnée, le bulletin doit utiliser EXACTEMENT la disposition de la capture :

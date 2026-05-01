@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { computeStudentPeriodBulletin } from '@/services/bulletinClientCalculator';
 import { getStudentAttendanceForRanges, type DateRange } from '@/services/periodAttendanceService';
+import BulletinSharedHeader from './BulletinSharedHeader';
 import type { ResolvedBulletinConfig } from '@/types/bulletinConfig';
 import type { EvaluationPeriod } from '@/services/gradesService';
 
@@ -64,9 +65,30 @@ const BtsBlancBulletinTemplate: React.FC<Props> = ({
   const sections = config.layout_config.sections || {};
 
   // ─── Modules ────────────────────────────────────────────
+  // For BTS Blanc / Examen Blanc, prefer the per-period module list defined
+  // in `period_modules` (which carries the period-specific coefficients).
+  // Fall back to all formation modules.
   const { data: modules = [] } = useQuery({
-    queryKey: ['bts-bulletin-modules', formationId],
+    queryKey: ['bts-bulletin-modules', formationId, period.id],
     queryFn: async () => {
+      // 1) Try period_modules join
+      const { data: pm } = await supabase
+        .from('period_modules')
+        .select('module_id, coefficient, formation_modules!inner(id, title, order_index)')
+        .eq('period_id', period.id);
+
+      if (pm && pm.length > 0) {
+        return pm
+          .map((row: any) => ({
+            id: row.formation_modules.id,
+            title: row.formation_modules.title,
+            order_index: row.formation_modules.order_index,
+            coefficient: row.coefficient || 1,
+          }))
+          .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+      }
+
+      // 2) Fallback to formation modules
       const { data } = await supabase
         .from('formation_modules')
         .select('id, title, coefficient, order_index')
@@ -177,45 +199,35 @@ const BtsBlancBulletinTemplate: React.FC<Props> = ({
         maxWidth: '210mm',
         fontFamily: FONT,
         color: '#000',
-        border: `2px solid #1f4e79`,
+        border: `1px solid ${INK}`,
+        borderRadius: 14,
         overflow: 'hidden',
       }}
       data-testid="bts-blanc-bulletin"
     >
-      {/* HEADER (compact, mirrors classic spreadsheet) */}
-      <div style={{ background: '#1f4e79', color: '#fff', padding: '10px 16px' }}>
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            {establishmentLogoUrl && <img src={establishmentLogoUrl} alt="" style={{ height: 36, background: '#fff', borderRadius: 4, padding: 2 }} crossOrigin="anonymous" />}
-            <div>
-              <p style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.2 }}>{establishmentName}</p>
-              <p style={{ fontSize: 9, opacity: 0.85 }}>BTS Blanc · {academicYear}</p>
-            </div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: 16, fontWeight: 800, letterSpacing: 1 }}>BULLETIN BTS BLANC</p>
-            <p style={{ fontSize: 9, opacity: 0.85 }}>{period.name} · Réf {referenceNumber}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* IDENTITY (single line) */}
-      <div style={{ padding: '8px 16px', fontSize: 11, background: '#f1f5f9', borderBottom: '1px solid #cbd5e1' }}>
-        <span><strong>Candidat·e :</strong> {studentFullName}</span>
-        <span style={{ marginLeft: 16 }}><strong>Matricule :</strong> {studentMatricule || '—'}</span>
-        <span style={{ marginLeft: 16 }}><strong>Formation :</strong> {formationTitle}</span>
-        {formationLevel && <span style={{ marginLeft: 16 }}><strong>Niveau :</strong> {formationLevel}</span>}
-      </div>
+      {/* Shared header (identical to Simple + Combined bulletins) */}
+      <BulletinSharedHeader
+        period={period}
+        config={config}
+        studentFullName={studentFullName}
+        studentMatricule={studentMatricule}
+        formationTitle={formationTitle}
+        formationLevel={formationLevel}
+        academicYear={academicYear}
+        establishmentName={establishmentName}
+        establishmentLogoUrl={establishmentLogoUrl}
+        referenceNumber={referenceNumber}
+      />
 
       {/* MAIN GRID: left table + right appreciation+attendance */}
-      <div className="grid" style={{ gridTemplateColumns: '1.65fr 1fr', borderTop: '1px solid #1f4e79' }}>
+      <div className="grid" style={{ gridTemplateColumns: '1.65fr 1fr', borderTop: `1px solid ${INK}` }}>
         {/* ─── LEFT : modules table ─── */}
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, borderRight: '1px solid #1f4e79' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, borderRight: `1px solid ${INK}` }}>
           <thead>
             <tr style={{ background: HEADER_BG, color: '#000' }}>
-              <th style={th({ borderRight: '1px solid #1f4e79', textAlign: 'center' })}>Examen Blanc</th>
-              <th style={th({ borderRight: '1px solid #1f4e79', width: 60, textAlign: 'center' })}>Notes</th>
-              <th style={th({ borderRight: '1px solid #1f4e79', width: 40, textAlign: 'center' })}>C.</th>
+              <th style={th({ borderRight: `1px solid ${INK}`, textAlign: 'center' })}>Examen Blanc</th>
+              <th style={th({ borderRight: `1px solid ${INK}`, width: 60, textAlign: 'center' })}>Notes</th>
+              <th style={th({ borderRight: `1px solid ${INK}`, width: 40, textAlign: 'center' })}>C.</th>
               <th style={th({ width: 60, textAlign: 'center' })}>Points</th>
             </tr>
           </thead>
@@ -230,8 +242,7 @@ const BtsBlancBulletinTemplate: React.FC<Props> = ({
               const isHighlighted = i % 2 === 0;
               return (
                 <tr key={mod.id} style={{ background: isHighlighted ? ROW_BG : ROW_BG_ALT }}>
-                  <td style={td({ borderRight: '1px solid #1f4e79', fontSize: 11.5 })}>
-                    {/* Module title + code, bold for major modules (E1, E5, E41) */}
+                  <td style={td({ borderRight: `1px solid ${INK}`, fontSize: 11.5 })}>
                     {(() => {
                       const t = formatTitle(mod);
                       const m = t.match(/^(E\d+)\s*-\s*(.*)$/);
@@ -246,8 +257,8 @@ const BtsBlancBulletinTemplate: React.FC<Props> = ({
                       return <span>{t}</span>;
                     })()}
                   </td>
-                  <td style={td({ borderRight: '1px solid #1f4e79', textAlign: 'center', fontWeight: 600 })}>{fmt2(note)}</td>
-                  <td style={td({ borderRight: '1px solid #1f4e79', textAlign: 'center', fontWeight: 700 })}>{coef || '—'}</td>
+                  <td style={td({ borderRight: `1px solid ${INK}`, textAlign: 'center', fontWeight: 600 })}>{fmt2(note)}</td>
+                  <td style={td({ borderRight: `1px solid ${INK}`, textAlign: 'center', fontWeight: 700 })}>{coef || '—'}</td>
                   <td style={td({ textAlign: 'center', fontWeight: 700 })}>{fmt2(points)}</td>
                 </tr>
               );
@@ -257,15 +268,12 @@ const BtsBlancBulletinTemplate: React.FC<Props> = ({
 
         {/* ─── RIGHT : appreciation + assiduity ─── */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {/* Appreciation header */}
-          <div style={{ background: HEADER_BG, color: '#000', padding: '7px 12px', textAlign: 'center', borderBottom: '1px solid #1f4e79' }}>
+          <div style={{ background: HEADER_BG, color: '#000', padding: '7px 12px', textAlign: 'center', borderBottom: `1px solid ${INK}` }}>
             <strong style={{ fontSize: 12 }}>Appréciation générale</strong>
           </div>
-          {/* Appreciation body */}
-          <div style={{ flex: 1, minHeight: 120, padding: '10px 12px', fontSize: 11, fontStyle: 'italic', borderBottom: '1px solid #1f4e79' }}>
+          <div style={{ flex: 1, minHeight: 120, padding: '10px 12px', fontSize: 11, fontStyle: 'italic', borderBottom: `1px solid ${INK}` }}>
             {generalAppreciation || '\u00A0'}
           </div>
-          {/* Assiduity box */}
           <div
             style={{ padding: '8px 12px', fontSize: 11, lineHeight: 1.55 }}
             data-testid="attendance-strip"
@@ -281,7 +289,7 @@ const BtsBlancBulletinTemplate: React.FC<Props> = ({
       </div>
 
       {/* TOTAL ROW */}
-      <div className="grid" style={{ gridTemplateColumns: '1.65fr 1fr', borderTop: '2px solid #1f4e79' }}>
+      <div className="grid" style={{ gridTemplateColumns: '1.65fr 1fr', borderTop: `2px solid ${INK}` }}>
         <div style={{ background: TOTAL_BG, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px' }}>
           <span style={{ fontSize: 14, fontWeight: 800 }}>
             TOTAL (Admis si &gt; ou = {totalAdmissionThreshold})
@@ -292,7 +300,7 @@ const BtsBlancBulletinTemplate: React.FC<Props> = ({
         </div>
         <div
           style={{
-            background: admitted ? '#1f4e79' : '#1f4e79',
+            background: INK,
             color: '#fff',
             display: 'flex',
             alignItems: 'center',
@@ -313,13 +321,13 @@ const BtsBlancBulletinTemplate: React.FC<Props> = ({
           className="grid"
           style={{
             gridTemplateColumns: `repeat(${Math.min(signatories.length, 4)}, 1fr)`,
-            gap: 16, padding: '12px 16px', borderTop: '1px solid #cbd5e1',
+            gap: 16, padding: '12px 16px', borderTop: `1px solid ${INK}22`,
           }}
         >
           {signatories.slice(0, 4).map((s: any) => (
             <div key={s.id} style={{ textAlign: 'center' }}>
               <p style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.4 }}>{s.role_label}</p>
-              <div style={{ height: 36, borderBottom: '1px solid #1f4e79', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ height: 36, borderBottom: `1px solid ${INK}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {s.signature_image && <img src={s.signature_image} alt="" style={{ maxHeight: 32, objectFit: 'contain' }} crossOrigin="anonymous" />}
               </div>
               {s.name && !s.is_stamp && <p style={{ fontSize: 10, fontWeight: 600, marginTop: 2 }}>{s.name}</p>}
@@ -329,7 +337,7 @@ const BtsBlancBulletinTemplate: React.FC<Props> = ({
       )}
 
       {sections.legal_notice !== false && (
-        <div style={{ padding: '5px 12px', textAlign: 'center', fontSize: 9, color: '#475569', borderTop: '1px solid #cbd5e1' }}>
+        <div style={{ padding: '5px 12px', textAlign: 'center', fontSize: 9, color: '#475569', borderTop: `1px solid ${INK}22` }}>
           Document officiel — {establishmentName} — Réf {referenceNumber} —{' '}
           {config.text_config.legal_notice || 'Bulletin BTS Blanc certifié authentique. Le total est admis si ≥ ' + totalAdmissionThreshold + ' points.'}
         </div>

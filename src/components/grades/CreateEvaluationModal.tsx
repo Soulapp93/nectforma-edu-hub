@@ -79,6 +79,40 @@ const CreateEvaluationModal: React.FC<Props> = ({
     enabled: !!formationId,
   });
 
+  // ⭐ When the evaluation is created in a BTS Blanc / Examen Blanc period,
+  // auto-fill the coefficient from the per-module coefficient defined when
+  // the period was created (period_modules table).
+  const { data: periodModules = [] } = useQuery({
+    queryKey: ['period-modules', preselectedPeriodId],
+    queryFn: async () => {
+      if (!preselectedPeriodId) return [];
+      const { data } = await supabase
+        .from('period_modules')
+        .select('module_id, coefficient')
+        .eq('period_id', preselectedPeriodId);
+      return (data || []) as Array<{ module_id: string; coefficient: number }>;
+    },
+    enabled: !!preselectedPeriodId && !isEditing,
+  });
+
+  const periodCoefByModule = React.useMemo(() => {
+    const m = new Map<string, number>();
+    for (const r of periodModules) m.set(r.module_id, r.coefficient || 1);
+    return m;
+  }, [periodModules]);
+
+  // When a module is picked AND the period has a pre-defined coefficient
+  // for that module, auto-update the coefficient field. The user can still
+  // override it manually.
+  React.useEffect(() => {
+    if (isEditing) return;
+    if (!moduleId) return;
+    const periodCoef = periodCoefByModule.get(moduleId);
+    if (periodCoef !== undefined) {
+      setCoefficient(String(periodCoef));
+    }
+  }, [moduleId, periodCoefByModule, isEditing]);
+
   const isOther = evaluationType === 'autre';
   const selectedType = EVALUATION_TYPES.find((t) => t.value === evaluationType);
   // Derived title: use custom input when "Autre", else the type label.
@@ -171,13 +205,31 @@ const CreateEvaluationModal: React.FC<Props> = ({
                 <SelectValue placeholder="Module" />
               </SelectTrigger>
               <SelectContent>
-                {modules.map((m: any) => (
-                  <SelectItem key={m.id} value={m.id}>
-                    {m.title}
-                  </SelectItem>
-                ))}
+                {(() => {
+                  // For BTS Blanc / Examen Blanc periods, restrict the module
+                  // list to those configured for that period (period_modules).
+                  const allowedIds = periodModules.length > 0
+                    ? new Set(periodModules.map((r) => r.module_id))
+                    : null;
+                  const filtered = allowedIds
+                    ? modules.filter((m: any) => allowedIds.has(m.id))
+                    : modules;
+                  return filtered.map((m: any) => {
+                    const periodCoef = periodCoefByModule.get(m.id);
+                    return (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.title}{periodCoef !== undefined ? ` (coef ${periodCoef})` : ''}
+                      </SelectItem>
+                    );
+                  });
+                })()}
               </SelectContent>
             </Select>
+            {periodModules.length > 0 && (
+              <p className="text-[11px] text-muted-foreground mt-1 italic">
+                Coefficients pré-définis lors de la création de la période — vous pouvez encore les ajuster ci-dessous.
+              </p>
+            )}
           </div>
 
           <div>
