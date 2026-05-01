@@ -3,6 +3,29 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
+## Session 53 (2026-05-02) — Bulletin simplifié + Assiduité reliée à l'émargement
+
+**Demande user (avec capture)** : (1) supprimer colonnes CC/DS/Examen/Oral/Sout. ; (2) afficher Matière | Coef | Moy. individuelle | Moy. promotion | Appréciation ; (3) ligne totaux avec moyenne générale individuelle + promotion ; (4) section Assiduité (retards + absences injustifiées) reliée au module suivi/émargement, filtrée par plage de dates de la période (pour combinée = somme des sources).
+
+**Refonte `SimpleBulletinTemplate.tsx`** :
+- Tableau 5 colonnes au lieu de 7 : Matière | Coef. | Moy. indiv. | Moy. promo | Appréciation
+- Calcul de la moyenne de promotion par module : itération sur TOUS les étudiants du roster, `computeStudentPeriodBulletin` pour chacun, moyenne arithmétique des résultats par module
+- Calcul de la moyenne générale de promotion : moyenne des moyennes générales de tous les étudiants
+- Nouvelle ligne `<tfoot>` "MOYENNE GÉNÉRALE" avec colspan=2 + valeur individuelle + valeur promo + décision alignée
+- Nouvelle grille 3 colonnes `attendance-strip` avec Rang période | Retards | Absences injustifiées + hints contextuels ("sur la période" vs "cumul périodes sources")
+
+**Nouveau service `periodAttendanceService.ts`** :
+- `getStudentAttendanceForRanges(studentId, formationId, ranges)` — fetch `attendance_sheets` filtrés par `date BETWEEN ranges[]`, puis `attendance_signatures` du student, compte :
+  - `retards` = signatures avec `absence_reason_type = 'retard'`
+  - `absences_injustifiees` = signatures avec `present=false` et reason null/injustifié/autre, + séances sans signature du tout
+  - `absences_total` = toutes les absences
+  - `total_sheets` = nombre de séances observées
+- Supporte multi-ranges : pour une période combinée, ranges = concatenation des (start_date, end_date) des périodes sources → somme automatique
+
+**TranscriptsPanel.tsx** : passe `sourcePeriods={combinedSourcePeriods}` à `SimpleBulletinTemplate` pour que le calcul d'assiduité utilise les bonnes plages en période combinée.
+
+**Validation testing agent (iteration_47)** : 100% success rate. Pour Bernard Lucas / Semestre 1 : 5 colonnes OK, moy. indiv. 11.50/20, moy. promo 12.25/20, ADMIS(E), rang 2ème/2, Retards 0, Absences 0 (environnement démo sans feuilles d'émargement validées). Structure et rendering conformes au review.
+
 ## Session 52 (2026-05-02) — Bulletin simple refondu + liaison Config-Bulletin opérationnelle
 
 **Demande user (avec capture)** : (1) bouton Configuration relié au Bulletin pour que les modifications de config se propagent automatiquement (actuellement ne fonctionne pas) ; (2) refondre le design du bulletin de notes simple pour qu'il soit identique au combiné (header navy + pill or BULLETIN, identité 5 cols, tableau 7 cols, footer simple).
