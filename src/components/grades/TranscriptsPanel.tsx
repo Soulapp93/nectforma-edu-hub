@@ -402,24 +402,16 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   });
 
   const { data: evaluations = [] } = useQuery({
-    queryKey: ['evaluations-transcripts', selectedFormation, semesterView, activePeriodIds.join(',')],
+    queryKey: ['evaluations-transcripts', selectedFormation, periodId],
     queryFn: async () => {
       const allEvals = await getEvaluations(selectedFormation);
-      if (!activeSemesterNums || activeSemesterNums.length === 0) return allEvals;
-      
-      // Filter by semester: use period_id if available, otherwise use module's semester
-      return allEvals.filter(e => {
-        if (e.period_id && activePeriodIds.length > 0) {
-          return activePeriodIds.includes(e.period_id);
-        }
-        const mod = allModules.find(m => m.id === e.module_id);
-        if (mod?.semester) {
-          return activeSemesterNums.includes(mod.semester as number);
-        }
-        return true;
-      });
+      // ⭐ STRICT period isolation: only return evaluations explicitly linked
+      // to the currently selected period. Evaluations with NULL period_id are
+      // NOT shown anymore (no cross-period contamination).
+      if (!periodId) return [];
+      return allEvals.filter(e => e.period_id === periodId);
     },
-    enabled: !!selectedFormation,
+    enabled: !!selectedFormation && !!periodId,
   });
 
   const { data: allGrades = new Map(), isLoading } = useQuery({

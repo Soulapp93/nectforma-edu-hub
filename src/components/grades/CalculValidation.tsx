@@ -97,13 +97,21 @@ const CalculValidation: React.FC<Props> = ({ formationId, periodId }) => {
 
   const ccTypes = EVALUATION_TYPES.filter(t => t.category === 'cc').map(t => t.value);
 
+  // ⭐ STRICT period isolation: when a period is selected, only its evaluations
+  // are considered. Evaluations with NULL period_id are NOT included (no
+  // cross-period contamination of grades / averages).
+  const periodEvaluations = useMemo(() => {
+    if (!localPeriodId) return [];
+    return allEvaluations.filter((e) => e.period_id === localPeriodId);
+  }, [allEvaluations, localPeriodId]);
+
   // Calculate module averages per student
   const studentData = useMemo(() => {
     return students.map((student: any) => {
       const moduleAverages: Record<string, number | null> = {};
       
       modules.forEach((mod: any) => {
-        const modEvals = allEvaluations.filter(e => e.module_id === mod.id && ccTypes.includes(e.evaluation_type));
+        const modEvals = periodEvaluations.filter(e => e.module_id === mod.id && ccTypes.includes(e.evaluation_type));
         const grades = modEvals.map(ev => {
           const gradeData = allGradesData.find(g => g.evalId === ev.id);
           return gradeData?.grades.find((g: any) => g.student_id === student.user_id);
@@ -143,7 +151,7 @@ const CalculValidation: React.FC<Props> = ({ formationId, periodId }) => {
         mention,
       };
     });
-  }, [students, modules, allEvaluations, allGradesData, gradingRules]);
+  }, [students, modules, periodEvaluations, allGradesData, gradingRules, ccTypes]);
 
   // Rank students
   const rankedStudents = useMemo(() => {

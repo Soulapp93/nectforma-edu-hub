@@ -155,13 +155,11 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
         groups.set(mod.id, { cc: [], exam: examBlancEvals });
         return;
       }
-      if (activeSemesterNums && activeSemesterNums.length > 0) {
-        evals = evals.filter(e => {
-          if (e.period_id && activePeriodIds.length > 0) return activePeriodIds.includes(e.period_id);
-          const m = modules.find(m => m.id === e.module_id);
-          if (m?.semester) return semesterMatchesFilter(m.semester, activeSemesterNums);
-          return true;
-        });
+      // ⭐ STRICT period isolation: when a period is selected, only evaluations
+      // explicitly linked to that period are shown. Evaluations with NULL
+      // period_id are NOT cross-period contaminated anymore.
+      if (currentPeriod) {
+        evals = evals.filter(e => e.period_id === currentPeriod.id);
       }
       const ccTypes = EVALUATION_TYPES.filter(t => t.category === 'cc').map(t => t.value);
       const cc = evals.filter(e => ccTypes.includes(e.evaluation_type));
@@ -169,7 +167,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
       groups.set(mod.id, { cc, exam });
     });
     return groups;
-  }, [filteredModules, allEvaluations, activeSemesterNums, activePeriodIds, modules, isExamBlancView]);
+  }, [filteredModules, allEvaluations, currentPeriod, isExamBlancView]);
 
   // All displayed evaluations (for grade fetching across all modules)
   const allDisplayedEvals = useMemo(() => {
@@ -589,6 +587,7 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
           formationId={selectedFormation}
           mode={mode}
           preselectedModuleId={preselectedModuleId}
+          preselectedPeriodId={periodId}
         />
       )}
     </div>

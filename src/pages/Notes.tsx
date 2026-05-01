@@ -270,90 +270,6 @@ const Notes = () => {
           </div>
         </div>
 
-        {/* Periods navigation pills */}
-        {periods.length > 0 && (
-          <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1" data-testid="periods-nav">
-            {[...semesterPeriods, ...examPeriods, ...otherPeriods].map((p: any, idx, arr) => {
-              const isActive = selectedPeriodId === p.id;
-              const isSemester = p.period_type === 'semestre';
-              const isExam = ['examen_blanc', 'examen_final', 'partiels'].includes(p.period_type);
-              const isCombined = !!p.is_composite || p.period_type === 'combined';
-
-              // Visual separator between groups
-              const prev = arr[idx - 1];
-              const showSeparator = prev && ((
-                (prev.period_type === 'semestre') !== isSemester
-              ) || (
-                (['examen_blanc', 'examen_final', 'partiels'].includes(prev.period_type)) !== isExam
-              ));
-
-              const activeColors = isCombined
-                ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                : isSemester
-                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                  : isExam
-                    ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
-                    : 'bg-blue-500 text-white border-blue-500 shadow-sm';
-              const inactiveColors = p.is_locked
-                ? 'bg-muted/50 text-muted-foreground border-muted opacity-60'
-                : isCombined
-                  ? 'bg-background border-purple-300 text-purple-700 hover:bg-purple-50'
-                  : isSemester
-                    ? 'bg-background border-border hover:bg-primary/10 hover:border-primary/50'
-                    : isExam
-                      ? 'bg-background border-amber-300 text-amber-700 hover:bg-amber-50'
-                      : 'bg-background border-border hover:bg-blue-50';
-              const dotColor = isActive
-                ? 'bg-white'
-                : p.is_locked
-                  ? 'bg-red-400'
-                  : isCombined
-                    ? 'bg-purple-400'
-                    : isSemester
-                      ? 'bg-emerald-400'
-                      : isExam
-                        ? 'bg-amber-400'
-                        : 'bg-blue-400';
-
-              return (
-                <React.Fragment key={p.id}>
-                  {showSeparator && <div className="w-px h-5 bg-border shrink-0" />}
-                  <div className="relative group shrink-0">
-                    <button
-                      onClick={() => setSelectedPeriodId(p.id)}
-                      className={`flex items-center gap-1.5 pl-3 ${isAdmin && !p.is_locked ? 'pr-12' : 'pr-3'} py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border ${isActive ? activeColors : inactiveColors}`}
-                      data-testid={`period-pill-${p.id}`}
-                    >
-                      <div className={`w-2 h-2 rounded-full ${dotColor}`} />
-                      {p.name}
-                    </button>
-                    {isAdmin && !p.is_locked && (
-                      <>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); if (isCombined) setEditingCombinedPeriod(p); else setEditingPeriod(p); }}
-                          className="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 hover:bg-primary/10 hover:text-primary rounded p-0.5 transition-opacity"
-                          title={isCombined ? 'Modifier la période combinée' : 'Modifier cette période'}
-                          data-testid={`period-edit-${p.id}`}
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleDeletePeriod(p.id, p.name); }}
-                          className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-600 rounded p-0.5 transition-opacity"
-                          title="Supprimer cette période"
-                          data-testid={`period-delete-${p.id}`}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </React.Fragment>
-              );
-            })}
-          </div>
-        )}
-
         {/* Empty state if no periods */}
         {periods.length === 0 && (
           <Card className="mb-4">
@@ -368,7 +284,7 @@ const Notes = () => {
           </Card>
         )}
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Horizontal tab navigation */}
             <div className="bg-card rounded-xl border border-border shadow-sm p-1.5 flex flex-wrap gap-1">
               {SIDEBAR_TABS.filter((t) => !t.adminOnly || isAdmin).map((tab) => {
@@ -391,21 +307,98 @@ const Notes = () => {
                   </button>
                 );
               })}
-
-              {/* Periods info inline */}
-              {periods.length > 0 && (
-                <div className="hidden lg:flex items-center gap-2 ml-auto px-3">
-                  <div className="w-px h-6 bg-border" />
-                  {periods.slice(0, 4).map((p: any) => (
-                    <div key={p.id} className="text-[10px] text-muted-foreground flex items-center gap-1">
-                      <div className={`w-1.5 h-1.5 rounded-full ${p.is_locked ? 'bg-red-400' : 'bg-green-400'}`} />
-                      {p.name}
-                    </div>
-                  ))}
-                  {periods.length > 4 && <span className="text-[10px] text-muted-foreground">+{periods.length - 4}</span>}
-                </div>
-              )}
             </div>
+
+            {/* Period pills bar — INSIDE the active tab so the user clearly sees
+                which period is being acted on. Switching periods updates ALL
+                downstream data (strict period isolation). */}
+            {periods.length > 0 && (
+              <div
+                className="bg-card rounded-xl border border-border shadow-sm px-3 py-2.5 flex items-center gap-2 overflow-x-auto"
+                data-testid="periods-nav"
+              >
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground shrink-0 mr-1">
+                  Période active
+                </span>
+                {[...semesterPeriods, ...examPeriods, ...otherPeriods].map((p: any, idx, arr) => {
+                  const isActive = selectedPeriodId === p.id;
+                  const isSemester = p.period_type === 'semestre';
+                  const isExam = ['examen_blanc', 'examen_final', 'partiels'].includes(p.period_type);
+                  const isCombined = !!p.is_composite || p.period_type === 'combined';
+
+                  const prev = arr[idx - 1];
+                  const showSeparator = prev && ((
+                    (prev.period_type === 'semestre') !== isSemester
+                  ) || (
+                    (['examen_blanc', 'examen_final', 'partiels'].includes(prev.period_type)) !== isExam
+                  ));
+
+                  const activeColors = isCombined
+                    ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                    : isSemester
+                      ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                      : isExam
+                        ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
+                        : 'bg-blue-500 text-white border-blue-500 shadow-sm';
+                  const inactiveColors = p.is_locked
+                    ? 'bg-muted/50 text-muted-foreground border-muted opacity-60'
+                    : isCombined
+                      ? 'bg-background border-purple-300 text-purple-700 hover:bg-purple-50'
+                      : isSemester
+                        ? 'bg-background border-border hover:bg-primary/10 hover:border-primary/50'
+                        : isExam
+                          ? 'bg-background border-amber-300 text-amber-700 hover:bg-amber-50'
+                          : 'bg-background border-border hover:bg-blue-50';
+                  const dotColor = isActive
+                    ? 'bg-white'
+                    : p.is_locked
+                      ? 'bg-red-400'
+                      : isCombined
+                        ? 'bg-purple-400'
+                        : isSemester
+                          ? 'bg-emerald-400'
+                          : isExam
+                            ? 'bg-amber-400'
+                            : 'bg-blue-400';
+
+                  return (
+                    <React.Fragment key={p.id}>
+                      {showSeparator && <div className="w-px h-5 bg-border shrink-0" />}
+                      <div className="relative group shrink-0">
+                        <button
+                          onClick={() => setSelectedPeriodId(p.id)}
+                          className={`flex items-center gap-1.5 pl-3 ${isAdmin && !p.is_locked ? 'pr-12' : 'pr-3'} py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border ${isActive ? activeColors : inactiveColors}`}
+                          data-testid={`period-pill-${p.id}`}
+                        >
+                          <div className={`w-2 h-2 rounded-full ${dotColor}`} />
+                          {p.name}
+                        </button>
+                        {isAdmin && !p.is_locked && (
+                          <>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); if (isCombined) setEditingCombinedPeriod(p); else setEditingPeriod(p); }}
+                              className="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 hover:bg-primary/10 hover:text-primary rounded p-0.5 transition-opacity"
+                              title={isCombined ? 'Modifier la période combinée' : 'Modifier cette période'}
+                              data-testid={`period-edit-${p.id}`}
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDeletePeriod(p.id, p.name); }}
+                              className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-600 rounded p-0.5 transition-opacity"
+                              title="Supprimer cette période"
+                              data-testid={`period-delete-${p.id}`}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Mobile bottom tab bar */}
             <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 bg-card border-t border-border px-2 py-1.5 flex gap-1">
@@ -427,28 +420,38 @@ const Notes = () => {
               })}
             </div>
 
-            {/* Active period indicator */}
-            {selectedPeriod && (
-              <div className="bg-muted/40 rounded-lg px-4 py-2 flex items-center gap-2 text-sm">
-                <Calendar className="h-4 w-4 text-primary" />
-                <span className="font-medium">{selectedPeriod.name}</span>
-                {selectedPeriod.is_locked && <Badge variant="destructive" className="text-[10px] px-1.5">Verrouille</Badge>}
-              </div>
-            )}
-
             {/* Main content - filtered by selected period */}
             <div>
-              {activeTab === 'saisie' && (
-                <GradeSheetView mode={isAdmin ? 'admin' : 'instructor'} formationId={selectedFormationId} periodId={selectedPeriodId} />
-              )}
-              {activeTab === 'calcul' && (
-                <CalculValidation formationId={selectedFormationId} periodId={selectedPeriodId} />
-              )}
-              {activeTab === 'jury' && (
-                <JuryDeliberation formationId={selectedFormationId} periodId={selectedPeriodId} />
-              )}
-              {activeTab === 'bulletin' && (
-                <TranscriptsPanel mode="admin" formationId={selectedFormationId} periodId={selectedPeriodId} periodName={selectedPeriod?.name} />
+              {selectedPeriod && (selectedPeriod as any).is_composite && activeTab !== 'bulletin' && activeTab !== 'configuration' ? (
+                <div
+                  className="bg-purple-50 border border-purple-200 rounded-lg p-6 text-center"
+                  data-testid="combined-period-tab-notice"
+                >
+                  <Calendar className="h-8 w-8 text-purple-600 mx-auto mb-3" />
+                  <p className="text-sm font-semibold text-purple-900 mb-1">
+                    Période combinée — pas de saisie / calcul direct
+                  </p>
+                  <p className="text-xs text-purple-700 max-w-md mx-auto">
+                    Une période combinée agrège les données de plusieurs périodes sources.
+                    Sélectionnez l'une des périodes sources ci-dessus pour saisir des notes,
+                    ou allez dans l'onglet <strong>Bulletin de notes</strong> pour voir le bulletin combiné.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {activeTab === 'saisie' && (
+                    <GradeSheetView mode={isAdmin ? 'admin' : 'instructor'} formationId={selectedFormationId} periodId={selectedPeriodId} />
+                  )}
+                  {activeTab === 'calcul' && (
+                    <CalculValidation formationId={selectedFormationId} periodId={selectedPeriodId} />
+                  )}
+                  {activeTab === 'jury' && (
+                    <JuryDeliberation formationId={selectedFormationId} periodId={selectedPeriodId} />
+                  )}
+                  {activeTab === 'bulletin' && (
+                    <TranscriptsPanel mode="admin" formationId={selectedFormationId} periodId={selectedPeriodId} periodName={selectedPeriod?.name} />
+                  )}
+                </>
               )}
             </div>
           </div>

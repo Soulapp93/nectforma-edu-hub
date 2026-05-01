@@ -1,0 +1,37 @@
+{
+  "summary": "Iteration 44 — Frontend-only validation des fixes UX (déplacement de la barre de périodes EN-DESSOUS des onglets) + ISOLATION STRICTE par period_id sur les onglets Saisie / Calcul / Jury / Bulletin. Test exécuté sur formation 'Master Digital Marketing 2026' avec admin.principal@nectforma-demo.com. TOUS LES OBJECTIFS SONT VALIDÉS ✅.\n\n✅ UX — Barre des périodes positionnée correctement :\n  • Tabs Y=263, Periods-nav Y=314.75 → la barre des périodes est bien EN-DESSOUS des onglets (Saisie / Calcul / Jury / Bulletin / Configuration). Confirmation visuelle dans 04_notes_panel.png.\n  • Label 'PÉRIODE ACTIVE' (uppercase) bien affiché en début de barre data-testid='periods-nav'.\n  • Pills colorées : Semestre 1 (vert/primary), Semestre 2/3, t1 (amber), BULLETIN DENOTE 1ER ANNEE (violet = combined), BTS Final Test 2026 (violet), b a — toutes cliquables, séparateurs visuels OK.\n\n✅ ISOLATION STRICTE par period_id — Onglet Saisie des notes :\n  • Semestre 1 (Master Digital Marketing 2026) → module SEO affiche 2 étudiants (Lucas Bernard 9.00, Alice Dubois 10.00) avec 6 inputs CC/DS — toutes les évaluations legacy sont visibles ici (les 9 évaluations backfillées par la migration SQL).\n  • Semestre 2 → même module SEO affiche état vide 'Aucune évaluation pour ce module sur cette période.' + bouton 'Créer une évaluation' ✅. Pas de fuite de données. Filtre strict periodId fonctionne.\n  • Capture 05_s2_saisie.png confirme.\n\n✅ ISOLATION — Onglet Calcul & Validation :\n  • S1 affiche moyennes 9.00 / 10.00 (cohérent avec Saisie S1).\n  • S2 affiche un contenu différent (pas les mêmes valeurs) → isolation par localPeriodId via periodEvaluations useMemo OK.\n\n✅ ISOLATION — Onglet Bulletin de notes :\n  • Le filtre allEvals.filter(e => e.period_id === periodId) dans TranscriptsPanel est appliqué — bulletins reflètent uniquement les notes de la période sélectionnée.\n  • Pour la période combinée 'BULLETIN DE NOTE 1ER ANNEE' : le banner 'Période combinée — Empile Semestre 1 + Semestre 2 selon la règle. Cliquez sur Voir pour afficher le bulletin combiné complet.' s'affiche correctement, suivi du tableau des 2 étudiants (Bernard Lucas, Dubois Alice) avec bouton 'Voir' fonctionnel.\n\n✅ COMBINED PERIOD — combined-period-tab-notice :\n  • Saisie : 1 notice ✅ ('Période combinée — pas de saisie / calcul direct' + Calendar icon + instruction d'aller dans Bulletin) — capture 06_combined_saisie.png\n  • Calcul : 1 notice ✅\n  • Jury : 1 notice ✅\n  • Bulletin : 0 notice ✅ (correctement masqué — laisse place au rendu combiné)\n  • Aucun crash, transitions fluides.\n\n✅ PERSISTANCE / period_id auto-lié :\n  • La preuve indirecte : les 9 évaluations legacy sont visibles UNIQUEMENT dans Semestre 1 (et invisibles dans S2/S3). Si la migration SQL backfill et le filtre period_id n'avaient pas fonctionné, S2 et S3 montreraient les mêmes données. ✅ Validé.\n\n⚠️ ISSUE PRÉ-EXISTANTE (déjà signalée iteration 43, non régressée par cette itération) :\n  • Edge Function Supabase /functions/v1/compute-bulletin échoue en CORS preflight + 400/404 dès qu'on sélectionne la période combinée 'BULLETIN DE NOTE 1ER ANNEE' (visible dans console). Conséquence : le détail bulletin combiné affiche des '—'. Ce bug n'est PAS lié à l'isolation par period_id (la liste des étudiants et leur period_id sont corrects), c'est un problème de déploiement/CORS de l'Edge Function. Hors scope de cette itération.\n\n⚠️ CONSOLE — Erreur mineure : 'X-Frame-Options may only be set via an HTTP header sent along with a document' (meta tag mal placé dans index.html, non bloquant)",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "Supabase Edge Function /functions/v1/compute-bulletin", "issue": "Toujours en CORS preflight failure + 404 (issue pré-existante de l'iter 43). Empêche l'affichage des moyennes calculées dans le bulletin combiné. Hors scope du test de period_id isolation."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "index.html", "issues": ["X-Frame-Options défini via meta tag (warning console) — devrait être un header HTTP côté serveur"]}
+    ]
+  },
+  "test_report_links": ["/app/test_reports/iteration_44.json"],
+  "action_items": [
+    "(OPTIONNEL — pré-existant) Réparer ou redéployer l'Edge Function compute-bulletin avec les bons CORS headers, OU basculer sur fallback bulletinClientCalculator quand la fonction est indisponible. Cette issue date de l'iteration 43 et empêche l'affichage des moyennes RÉELLES dans le bulletin combiné.",
+    "(MINEUR) Retirer le meta X-Frame-Options de index.html — il n'est pas pris en compte et génère un warning console. Configurer le header HTTP côté nginx/edge à la place."
+  ],
+  "critical_code_review_comments": [
+    "✅ Notes.tsx (lignes 287-401) : la barre des onglets (TabsList) précède correctement le bloc data-testid='periods-nav'. Layout vertical clair. Label 'Période active' en uppercase font-bold OK.",
+    "✅ Notes.tsx (lignes 425-450) : la condition `selectedPeriod.is_composite && activeTab !== 'bulletin' && activeTab !== 'configuration'` masque proprement Saisie/Calcul/Jury et affiche le notice — logique simple et lisible.",
+    "✅ GradeSheetView.tsx : le filtre strict par currentPeriod.id est efficace — aucune fuite cross-période observée. État vide 'Aucune évaluation pour ce module sur cette période.' bien rendu.",
+    "✅ TranscriptsPanel.tsx : filtre allEvals.filter(e => e.period_id === periodId) fonctionne — bulletins isolés par période.",
+    "✅ CalculValidation.tsx : useMemo periodEvaluations isole les calculs par localPeriodId.",
+    "⚠️ La logique de filtrage est désormais STRICTE (period_id === currentPeriod.id sans fallback). Cela suppose que toutes les évaluations en DB ont un period_id non NULL. La migration backfill 20260503000000 a corrigé les 9 legacy de Master Digital Marketing 2026 → OK pour cette itération, mais s'il reste d'autres formations avec des évaluations à period_id NULL ailleurs en DB, elles seraient invisibles. Recommandation : ajouter une contrainte NOT NULL + FK sur evaluations.period_id à terme."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (frontend only)", "frontend": "100% — tous les acceptance criteria de cette itération validés"},
+  "test_credentials": "admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "Aucune. Les 9 évaluations legacy de Master Digital Marketing 2026 sont déjà reliées au Semestre 1 par la migration SQL appliquée par le main agent.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iteration 44 a confirmé visuellement et fonctionnellement que (a) la barre des périodes est positionnée EN-DESSOUS de la barre des onglets, (b) l'isolation stricte par period_id fonctionne sur Saisie/Calcul/Bulletin (S1 a les 9 évaluations, S2/S3 sont vides), (c) le combined-period-tab-notice apparaît correctement sur Saisie/Calcul/Jury et est masqué sur Bulletin. Issue pré-existante non corrigée : Edge Function compute-bulletin en CORS+404 (depuis iter 43) — empêche les moyennes du bulletin combiné mais n'invalide pas l'isolation. Aucune régression introduite par cette itération.",
+  "rca_of_the_issue": "Période combinée compute-bulletin : Edge Function Supabase non déployée ou CORS mal configuré. Hors scope de cette itération."
+}

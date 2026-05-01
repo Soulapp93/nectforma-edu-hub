@@ -22,6 +22,8 @@ interface Props {
   formationId: string;
   mode: 'admin' | 'instructor';
   preselectedModuleId?: string;
+  /** Auto-link new evaluations to this period for strict period isolation. */
+  preselectedPeriodId?: string | null;
 }
 
 /**
@@ -49,6 +51,7 @@ const CreateEvaluationModal: React.FC<Props> = ({
   formationId,
   mode,
   preselectedModuleId,
+  preselectedPeriodId,
 }) => {
   const { userId } = useCurrentUser();
   const queryClient = useQueryClient();
@@ -95,6 +98,9 @@ const CreateEvaluationModal: React.FC<Props> = ({
         evaluation_date: evaluationDate || null,
         scale: parseFloat(scale),
         coefficient: parseFloat(coefficient),
+        // Strict period isolation: auto-link new evaluations to the active
+        // period so they only show up in that period's view.
+        period_id: evaluation?.period_id ?? preselectedPeriodId ?? null,
       };
 
       if (isEditing) {
