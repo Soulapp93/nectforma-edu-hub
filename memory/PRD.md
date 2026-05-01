@@ -3,6 +3,29 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
+## Session 52 (2026-05-02) — Bulletin simple refondu + liaison Config-Bulletin opérationnelle
+
+**Demande user (avec capture)** : (1) bouton Configuration relié au Bulletin pour que les modifications de config se propagent automatiquement (actuellement ne fonctionne pas) ; (2) refondre le design du bulletin de notes simple pour qu'il soit identique au combiné (header navy + pill or BULLETIN, identité 5 cols, tableau 7 cols, footer simple).
+
+**Root cause de la non-propagation** : La table `bulletin_configurations` n'avait JAMAIS été appliquée en production (la migration `20260501000000_bulletin_configurations.sql` créée en session 48 n'était que dans `/app/supabase/migrations/`). Le service `resolveConfigForPeriod` retombait silencieusement sur `DEFAULT_CONFIG`, et toute sauvegarde via la modal échouait silencieusement (table inexistante).
+
+**Solution** :
+- Migration `20260501000000_bulletin_configurations.sql` appliquée en prod (HTTP 201). Table créée + 1 template système inséré.
+- Renforcement de l'invalidation dans `BulletinConfigModal` `onSuccess` : `bulletin-config-resolved` + `computed-bulletins` + `evaluations-transcripts` + `combined-source-bulletins` + `combined-source-results` + `bulletin-config-templates`.
+- **Validation E2E end-to-end** : changement couleur primaire `#1a1a2e` → `#dc2626` dans onglet Design → save → re-ouverture du bulletin → header passe de `rgb(26, 26, 46)` à `rgb(220, 38, 38)` — **propagation automatique fonctionnelle, captured + screenshoted**.
+
+**Refonte design bulletin simple** :
+- Nouveau composant `SimpleBulletinTemplate.tsx` (~410 lignes) : design identique au CombinedBulletinRenderer mais pour 1 seule période. Header navy + pill or, identité 5 cols, tableau 7 cols (Matière | CC | DS | Exam Final | Oral/Sout. | Moy. | Statut) avec mapping `TYPE_TO_COLUMN`, footer pointillé (Rang | Moyenne | Décision), signatures + mention légale, watermark conditionnel. Tout intégralement piloté par `config.design_config` + `config.text_config` + `config.layout_config.sections`.
+- `TranscriptsPanel.tsx` : route vers SimpleBulletinTemplate dans le path non-combiné. La branche legacy `templateLayout.hasCustom` désactivée pour garantir que la nouvelle config gagne toujours.
+- queryKey `simple-bulletin-compute` inclut `JSON.stringify(config)` → cache invalidé automatiquement à chaque changement de config.
+
+**Testabilité ajoutée** :
+- `data-testid` sur les cards de programme (`formation-program-card-{slug}`) et de promotion (`promotion-card-{id}`)
+- `data-testid` sur le bouton Voir (`view-bulletin-{userId}`)
+- `data-testid='manage-grades-cta'` sur le CTA "Gérer les notes"
+
+**Validation testing agent (iterations 45 + 46) + self-test main agent** : `simple-bulletin` data-testid OK + `tab-config` ouvre la modal `bulletin-config-modal` OK + `tab-design` accessible + couleur primaire change effectivement le header du bulletin (preuve runtime captured: navy → red → restoration navy).
+
 ## Session 51 (2026-05-02) — Isolation stricte par période + UX repositionnement barre périodes
 
 **Demande user (avec capture)** : (1) BUG isolation cassée — quand on change de période, les données ne se mettent pas à jour, mêmes données pour toutes les périodes. (2) UX — déplacer la barre des périodes À L'INTÉRIEUR de chaque onglet (Saisie / Calcul / Jury / Bulletin / Configuration) pour que cliquer sur un onglet implique aussi de cliquer sur une période.

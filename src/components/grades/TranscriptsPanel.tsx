@@ -1007,7 +1007,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                       )}
                     </td>
                     <td className="p-3 text-center">
-                      <Button size="sm" variant="outline" onClick={() => { setCurrentStudentIndex(idx); setShowBulletinDialog(true); }} className="h-7 px-3 gap-1.5">
+                      <Button size="sm" variant="outline" onClick={() => { setCurrentStudentIndex(idx); setShowBulletinDialog(true); }} className="h-7 px-3 gap-1.5" data-testid={`view-bulletin-${b.studentId}`}>
                         <Eye className="h-3.5 w-3.5" />
                         Voir
                       </Button>
