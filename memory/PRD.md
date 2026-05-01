@@ -3,6 +3,39 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
+## Session 49 (2026-05-02)
+
+### Feature : Periodes combinees / Bulletin combine empile (DONE - 2026-05-02)
+**Besoin** : permettre aux ecoles de combiner 2+ periodes existantes en un bulletin unique qui empile chaque bulletin source verticalement, plus une section finale "Synthese" avec moyenne agregee selon une regle configurable. La periode combinee reste independante (pill propre, propre `bulletin_configurations`, publiable).
+
+**Architecture** :
+- Migration `20260502000000_combined_periods.sql` (appliquee en prod via Management API HTTP 201) :
+  - Reactive les colonnes `is_composite` (bool), `combined_period_ids` (uuid[]), `composite_config` (jsonb) sur `evaluation_periods`
+  - CHECK constraint `evaluation_periods_combined_consistency` (is_composite XOR combined_period_ids IS NULL)
+  - Index `idx_evaluation_periods_is_composite` + RPC `get_combined_source_periods(combined_period_id)` SECURITY DEFINER
+- Service `combinedPeriodService.ts` :
+  - `createCombinedPeriod` / `updateCombinedPeriod` / `getCombinedSourcePeriods` (avec fallback direct query si RPC indispo)
+  - `aggregateCombinedAverage(perPeriodAvg, config)` : 3 regles (`simple_average`, `weighted_average`, `weighted_by_coefficient`)
+- Service `bulletinClientCalculator.ts` (~190 lignes) : mirror client-side de l'Edge Function `compute-bulletin` (computeStudentPeriodBulletin pour 1 etudiant x 1 periode). Permet le calcul pour le bulletin combine sans dependre de l'Edge Function deployee.
+
+**UI** :
+- Nouveau composant `CreateCombinedPeriodModal.tsx` (~250 lignes) : nom + dates + multi-select des periodes sources (cochables) + dropdown 3 regles + inputs poids (visibles en mode "weighted_average") + label custom + recap automatique
+- Nouveau composant `CombinedBulletinRenderer.tsx` (~330 lignes) :
+  - Pour chaque periode source : resolveConfig + load evals/grades + computeStudentPeriodBulletin -> rendu OfficialBulletinTemplate avec sa propre config (couleurs, police, signatures masquees)
+  - Bandeau header "Bulletin combine" avec gradient
+  - Section finale `combined-final-section` : tableau recap par periode (moyenne + poids) + tfoot moyenne combinee + grid mention/decision + signatures + mentions legales
+- `Notes.tsx` : nouveau bouton `create-combined-period-btn` (disabled si <2 periodes simples), period pills purple/violet pour combines, edit pencil ouvre la bonne modal selon `is_composite`
+- `TranscriptsPanel.tsx` : detection `isCombinedPeriod`, banner explicatif `combined-period-notice` au-dessus du tableau, "Voir le bulletin -> + badge violet" dans la liste, route le clic Voir vers `CombinedBulletinRenderer`
+
+**Cas d'usage** :
+- Ecole BTS cree "Annee complete" qui combine S1 + S2 en moyenne simple -> S1=10 + S2=10 -> 10
+- Universite cree "Bulletin annuel pondere" 40% S1 + 60% S2
+- BTS final cree "Recapitulatif final" qui combine S1 + S2 + Examen blanc avec coefficients module
+
+**Validation testing agent (iteration_41)** : 100% success rate, tous les data-testid testes (combined-period-modal, combined-source-{id}, combined-weight-{id}, combined-rule-select, combined-period-submit, combined-period-notice, combined-bulletin, combined-source-bulletin-{i}, combined-final-section). POST /rest/v1/evaluation_periods retourne 201 -> CHECK constraint OK. Migration SQL bien appliquee.
+
+**Cleanup** : periode test "TEST_Combined_Annuel" supprimee de la DB apres validation.
+
 ## Session 48 (2026-05-01)
 
 ### Sprint B — Edge Function `compute-bulletin` (DONE - 2026-05-01)
