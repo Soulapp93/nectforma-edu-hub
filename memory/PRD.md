@@ -3,6 +3,25 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
+## Session 57 (2026-05-02) — UE dans Notes & Saisie des notes
+
+**Demande user (avec capture)** : "mettre à jour notes et relevé — quand on crée une période d'évaluation, sélectionner les UE (comme la logique actuelle) et quand la période est créée, afficher les UE à la place des modules. Cliquer sur une matière d'une UE permet d'ajouter les évaluations."
+
+**Réalisé** :
+- ✏️ `CreatePeriodModal` : regroupement UE pour la sélection de matières lors d'un Examen final / Rattrapage. Chaque bloc UE (`data-testid="period-ue-block-{ueId}"`) dispose d'une checkbox UE tri-état (coché / indéterminé / décoché) via `selectByUE(ueId)`. Les matières ont leur propre checkbox individuelle. Recherche + boutons Tout/Aucun préservés. Suppression du code mort `modulesBySemester` / `selectBySemester` / `CheckCircle2`.
+- ✏️ `GradeSheetView` : sidebar refondée avec entête "UE & Matières" + icône Layers. Chaque UE rendue comme un bloc (`data-testid="grade-ue-{ueId}"`) avec entête colorée, badge code UE, et ses matières en dessous (`data-testid="module-tab-{moduleId}"`).
+- 🆕 Ajout du query `periodModuleIds` dans `GradeSheetView` : récupère `period_modules.module_id` pour la période active. Si non vide, filtre les matières de la sidebar pour n'afficher que celles sélectionnées à la création de la période. Si la période n'a pas de period_modules, toutes les matières s'affichent (fallback).
+- 🆕 Query `teachingUnits` dans les deux composants via `teachingUnitService.listForFormation`. Colonne `teaching_unit_id` ajoutée à la projection `formation_modules` dans `CreatePeriodModal` (déjà présente dans `GradeSheetView`).
+- ✏️ Wording : "3 modules" → "3 matières" sur la landing `/notes` (`Notes.tsx`). Toast création période : "X matière(s)" au lieu de "module(s)".
+
+**Validation** :
+- **Testing agent iteration_50** : 100% (7/7 critères de review_request validés). Tous les data-testid (period-ue-block, period-ue-checkbox, period-ue-block, grade-ue, module-tab, add-evaluation-btn) sont présents et fonctionnels. Zéro bug trouvé, zéro action item.
+- Test manuel : création période 'Examen Final' → bloc UE Principale UE1 affiché avec 3 matières (seo, digital, refer), sélection individuelle + sélection UE fonctionnelles.
+- Sidebar grade sheet : "UE Principale (UB)" entête + 3 matières cliquables → au clic, affichage des évaluations + bouton "Ajouter une évaluation".
+
+**DB Schema utilisée** :
+- `period_modules(period_id, module_id)` : table existante de liaison période ↔ matières. Écrite lors de la création/édition de période, lue par GradeSheetView pour filtrer la sidebar.
+
 ## Session 56 (2026-05-02) — Architecture UE → Matières dans Formation Detail + Modales
 
 **Demande user (avec capture)** : 
