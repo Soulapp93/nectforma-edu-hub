@@ -10,6 +10,7 @@ import {
   aggregateCombinedAverage,
   type CombinedPeriodConfig,
 } from '@/services/combinedPeriodService';
+import { teachingUnitService, type TeachingUnit } from '@/services/teachingUnitService';
 import { DEFAULT_CONFIG, type ResolvedBulletinConfig } from '@/types/bulletinConfig';
 import type { EvaluationPeriod } from '@/services/gradesService';
 
@@ -129,6 +130,19 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
       return (data || []) as any[];
     },
   });
+
+  // ─── Load UEs (for grouping in subjects table) ───────────
+  const { data: teachingUnits = [] } = useQuery<TeachingUnit[]>({
+    queryKey: ['combined-bulletin-ues', formationId],
+    queryFn: () => teachingUnitService.listForFormation(formationId),
+    enabled: !!formationId,
+  });
+
+  const moduleToUE = React.useMemo(() => {
+    const m = new Map<string, string | null>();
+    for (const mod of modules as any[]) m.set(mod.id, mod.teaching_unit_id || null);
+    return m;
+  }, [modules]);
 
   // Total students for rank
   const { data: roster = [] } = useQuery({
@@ -409,34 +423,100 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
                 <tbody>
                   {pr.rows.length === 0 ? (
                     <tr><td colSpan={7} style={{ padding: 14, textAlign: 'center', fontStyle: 'italic', color: '#64748b', background: '#fafafa' }}>Aucune donnée saisie pour cette période.</td></tr>
-                  ) : pr.rows.map((row, i) => {
-                    const validated = row.moy !== null && row.moy >= admissionThreshold && !row.eliminated;
-                    const moyColor = row.moy === null ? '#94a3b8' : row.moy >= 14 ? OK : row.moy >= 10 ? '#1d4ed8' : KO;
-                    return (
-                      <tr key={row.moduleId} style={{ background: i % 2 === 0 ? '#fff' : '#f8fafc' }}>
-                        <td style={{ ...td(), fontWeight: 600 }}>{row.moduleTitle}</td>
-                        <td style={td({ textAlign: 'center', color: '#475569' })}>{row.cc !== null ? Math.round(row.cc) : '–'}</td>
-                        <td style={td({ textAlign: 'center', color: '#475569' })}>{row.ds !== null ? Math.round(row.ds) : '–'}</td>
-                        <td style={td({ textAlign: 'center', color: '#475569' })}>{row.exam !== null ? Math.round(row.exam) : '–'}</td>
-                        <td style={td({ textAlign: 'center', color: '#7c3aed' })}>{row.oral !== null ? Math.round(row.oral) : '–'}</td>
-                        <td style={{ ...td({ textAlign: 'center' }), fontWeight: 800, color: moyColor }}>{fmt(row.moy)}</td>
-                        <td style={td({ textAlign: 'center' })}>
-                          <span
-                            style={{
-                              fontSize: 10,
-                              padding: '2px 8px',
-                              borderRadius: 999,
-                              background: validated ? '#dcfce7' : row.moy === null ? '#f1f5f9' : '#fee2e2',
-                              color: validated ? '#15803d' : row.moy === null ? '#64748b' : '#b91c1c',
-                              fontWeight: 600,
-                            }}
-                          >
-                            {validated ? 'Validé' : row.moy === null ? '—' : 'Ajourné'}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  ) : (() => {
+                    // Group rows by UE
+                    const sections: Array<{ ue: TeachingUnit | null; rows: typeof pr.rows }> = [];
+                    const map = new Map<string, typeof pr.rows>();
+                    for (const r of pr.rows) {
+                      const k = moduleToUE.get(r.moduleId) || '_unassigned';
+                      const arr = map.get(k) || [];
+                      arr.push(r);
+                      map.set(k, arr);
+                    }
+                    for (const ue of teachingUnits) {
+                      const rs = map.get(ue.id);
+                      if (rs && rs.length > 0) sections.push({ ue, rows: rs });
+                    }
+                    const un = map.get('_unassigned') || [];
+                    if (un.length > 0) sections.push({ ue: null, rows: un });
+
+                    return sections.map(({ ue, rows: ueRows }) => {
+                      // UE weighted moyenne
+                      let w = 0, c = 0;
+                      let totalCoef = 0;
+                      for (const r of ueRows) {
+                        if (r.moy !== null) { w += r.moy * r.coefficient; c += r.coefficient; }
+                        totalCoef += r.coefficient;
+                      }
+                      const ueAvg = c > 0 ? Math.round((w / c) * 100) / 100 : null;
+                      const ueColor = ueAvg === null ? '#94a3b8' : ueAvg >= 14 ? OK : ueAvg >= admissionThreshold ? '#1d4ed8' : KO;
+                      const key = ue?.id || '_unassigned';
+                      return (
+                        <React.Fragment key={key}>
+                          {/* UE header */}
+                          <tr style={{ background: `${INK}0d` }} data-testid={`combined-ue-header-${pr.period.id}-${key}`}>
+                            <td colSpan={7} style={{
+                              padding: '6px 8px', fontSize: 10.5, fontWeight: 800, color: INK,
+                              textTransform: 'uppercase', letterSpacing: 0.5,
+                              borderTop: `1px solid ${INK}30`, borderBottom: `1px solid ${INK}22`,
+                            }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                {ue?.code && (
+                                  <span style={{ background: INK, color: '#fff', padding: '1px 6px', borderRadius: 3, fontSize: 9, fontWeight: 800 }}>
+                                    {ue.code}
+                                  </span>
+                                )}
+                                <span>{ue ? ue.title : 'Matières non rattachées'}</span>
+                                {ue?.credits != null && <span style={{ color: '#64748b', fontWeight: 600, fontSize: 9 }}>· {ue.credits} ECTS</span>}
+                                <span style={{ color: '#94a3b8', fontWeight: 600, fontSize: 9 }}>· {ueRows.length} matière{ueRows.length > 1 ? 's' : ''}</span>
+                              </span>
+                            </td>
+                          </tr>
+                          {/* Matières */}
+                          {ueRows.map((row, i) => {
+                            const validated = row.moy !== null && row.moy >= admissionThreshold && !row.eliminated;
+                            const moyColor = row.moy === null ? '#94a3b8' : row.moy >= 14 ? OK : row.moy >= 10 ? '#1d4ed8' : KO;
+                            return (
+                              <tr key={row.moduleId} style={{ background: i % 2 === 0 ? '#fff' : '#f8fafc' }}>
+                                <td style={{ ...td(), fontWeight: 600, paddingLeft: 18 }}>{row.moduleTitle}</td>
+                                <td style={td({ textAlign: 'center', color: '#475569' })}>{row.cc !== null ? Math.round(row.cc) : '–'}</td>
+                                <td style={td({ textAlign: 'center', color: '#475569' })}>{row.ds !== null ? Math.round(row.ds) : '–'}</td>
+                                <td style={td({ textAlign: 'center', color: '#475569' })}>{row.exam !== null ? Math.round(row.exam) : '–'}</td>
+                                <td style={td({ textAlign: 'center', color: '#7c3aed' })}>{row.oral !== null ? Math.round(row.oral) : '–'}</td>
+                                <td style={{ ...td({ textAlign: 'center' }), fontWeight: 800, color: moyColor }}>{fmt(row.moy)}</td>
+                                <td style={td({ textAlign: 'center' })}>
+                                  <span style={{
+                                    fontSize: 10, padding: '2px 8px', borderRadius: 999,
+                                    background: validated ? '#dcfce7' : row.moy === null ? '#f1f5f9' : '#fee2e2',
+                                    color: validated ? '#15803d' : row.moy === null ? '#64748b' : '#b91c1c',
+                                    fontWeight: 600,
+                                  }}>
+                                    {validated ? 'Validé' : row.moy === null ? '—' : 'Ajourné'}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                          {/* UE subtotal */}
+                          <tr style={{ background: `${GOLD}1a` }} data-testid={`combined-ue-subtotal-${pr.period.id}-${key}`}>
+                            <td colSpan={5} style={{
+                              ...td({ padding: '6px 8px', textAlign: 'right' }),
+                              fontWeight: 700, fontSize: 10, color: INK,
+                              textTransform: 'uppercase', letterSpacing: 0.4,
+                            }}>
+                              Moyenne {ue?.code ? `${ue.code} ` : ''}(coef. {totalCoef})
+                            </td>
+                            <td style={{ ...td({ textAlign: 'center', padding: '6px 8px' }), fontWeight: 800, fontSize: 11.5, color: ueColor }}>
+                              {fmt(ueAvg)}
+                            </td>
+                            <td style={{ ...td({ textAlign: 'center', padding: '6px 8px' }), fontStyle: 'italic', fontSize: 10, color: '#64748b' }}>
+                              {ueAvg === null ? '—' : ueAvg >= admissionThreshold ? 'UE validée' : 'UE non validée'}
+                            </td>
+                          </tr>
+                        </React.Fragment>
+                      );
+                    });
+                  })()}
                 </tbody>
               </table>
 

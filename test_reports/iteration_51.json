@@ -1,0 +1,36 @@
+{
+  "summary": "Frontend-only validation of UE grouping in Bulletin de notes (SimpleBulletinTemplate + CombinedBulletinRenderer) for Master Digital Marketing 2026. Login → /notes → 'Master Digital Marketing 2026' → Gérer les notes → onglet 'Bulletin de notes' → Voir Bernard Lucas (Semestre 1 = SimpleBulletinTemplate) puis (Bulletin bts = CombinedBulletinRenderer) puis Alice Dubois (Bulletin bts). SimpleBulletinTemplate 100% conforme. CombinedBulletinRenderer: composant rendu, mais aucune table par-période n'est générée pour 'Bulletin bts' dans ce seed (sourceResults vide) → la grouping UE inline est en place dans le code mais non observable runtime ici.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "CombinedBulletinRenderer / Bulletin bts", "issue": "Le bulletin combiné s'ouvre (data-testid='combined-bulletin' présent) mais ne rend QUE la carte 'Résultat combiné' avec Moy. combinée '—/20' et 'EN COURS', AUCUN bloc per-période n'est affiché → 0 table, 0 combined-ue-header-*, 0 combined-ue-subtotal-*. Cause probable: composite_config.source_period_ids vide pour la période 'Bulletin bts' (ou aucune note dans BTS Blanc source). Le code de grouping UE inline (lignes 426-519 de CombinedBulletinRenderer.tsx) est présent et correct, mais inatteignable car sourceResults est vide. À vérifier en DB: SELECT composite_config FROM evaluation_periods WHERE id = '<bulletin_bts_id>'.", "affected_selectors": ["[data-testid^='combined-ue-header-']", "[data-testid^='combined-ue-subtotal-']", "[data-testid^='combined-source-bulletin-']"]},
+      {"flow": "compute-bulletin Edge Function", "issue": "CORS error répété: 'Access to fetch at https://dlitdjbmqpsdmhrbluak.supabase.co/functions/v1/compute-bulletin from origin https://audit-complete-12.preview.emergentagent.com has been blocked by CORS policy'. Heureusement, le code retombe sur le calcul client (computeStudentPeriodBulletin) donc l'UI fonctionne, mais l'Edge Function n'est pas accessible depuis le preview. Réf: bulletinComputeService.", "affected_selectors": []}
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    ".screenshots/bulletin_simple_bernard.png",
+    ".screenshots/bulletin_bts_period.png",
+    ".screenshots/bulletin_combined_bernard.png",
+    ".screenshots/bulletin_combined_alice.png"
+  ],
+  "action_items": [
+    "Vérifier composite_config.source_period_ids de la période 'Bulletin bts' en DB — si vide, la combined view est inutilisable. Sinon vérifier que les périodes sources ont bien des notes saisies.",
+    "(Hors scope review) CORS sur la Supabase Edge Function compute-bulletin doit autoriser https://audit-complete-12.preview.emergentagent.com — actuellement bloqué et fallback client-side."
+  ],
+  "critical_code_review_comments": [
+    "SimpleBulletinTemplate.tsx (lignes 206-243): grouping UE via moduleToUEId Map + ueSections + ueSubtotals weighted average est propre. data-testid 'bulletin-ue-header-{ueId}' et 'bulletin-ue-subtotal-{ueId}' bien posés. 5 colonnes strictement préservées (Matière | Coef. | Moy. indiv. | Moy. promo | Appréciation).",
+    "CombinedBulletinRenderer.tsx (lignes 426-519): grouping UE inline dans tbody avec moduleToUE useMemo. data-testid 'combined-ue-header-{periodId}-{ueId}' et 'combined-ue-subtotal-{periodId}-{ueId}' OK. Note: dans le subtotal, 'Moyenne {ue.code}' suivi de '(coef. {totalCoef})' colSpan=5 — diffère légèrement du SimpleBulletin qui sépare la cellule coef.",
+    "MINEUR (a11y): Console error répété 'DialogContent requires a DialogTitle for the component to be accessible for screen reader users' sur la modale Voir bulletin → ajouter <DialogTitle> (ou VisuallyHidden) dans le BulletinViewerDialog.",
+    "MINEUR: SimpleBulletinTemplate ligne 410 'Moyenne {ue?.code ? `${ue.code} ` : ''}' — espace en fin si pas de code, et label 'Moyenne UE1 ' avec espace traînant lisible mais pas idéal. CombinedBulletin a 'Moyenne UE1 (coef. X)' — formats incohérents entre les deux templates."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped per request)", "frontend": "SimpleBulletinTemplate: 100% (5/5 critères) ; CombinedBulletinRenderer: 50% (composant rendu mais grouping UE non observable car sourceResults vide en seed)"},
+  "test_credentials": "admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "Aucune création.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "SimpleBulletinTemplate validé 100% (UE1 'UE Principale' 3 matières seo/digital/refer ; Bernard Lucas: 11.50 indiv / 12.25 promo / UE validée / ADMIS(E) ; 5 colonnes intactes). CombinedBulletinRenderer s'affiche pour 'Bulletin bts' mais sourceResults est vide → seul le bloc final 'Résultat combiné' est rendu, AUCUN bloc per-période donc impossible de tester combined-ue-header/subtotal runtime. Bulletin bts bts_id côté Bernard: 3068aa4c-d9c1-4ba0-9ec9-bd304fad0e5c, Alice: 8bf9fba6-c890-4b47-a369-6b7f925ee3d3. Confirmer en DB que 'Bulletin bts' a bien des source_period_ids dans composite_config et que les périodes sources ont des notes. Edge Function compute-bulletin bloqué par CORS — fallback client OK.",
+  "rca of the issue": "(1) SimpleBulletinTemplate: aucun bug. Le code dans lignes 206-243 (rowsByUE + ueSections + ueSubtotals) calcule correctement la moyenne UE pondérée par coefficient et affiche le sous-total en respectant les 5 colonnes existantes. data-testid 'bulletin-ue-header-{ueId}' et 'bulletin-ue-subtotal-{ueId}' présents, badge UE1, label 'UE validée'/'UE non validée' selon admission_threshold. (2) CombinedBulletinRenderer: le grouping UE est correctement codé inline dans le tbody (lignes 426-519) avec data-testid 'combined-ue-header-{periodId}-{ueId}' et 'combined-ue-subtotal-{periodId}-{ueId}' MAIS sourceResults est vide à l'exécution → aucun bloc per-période, donc le grouping UE n'apparaît jamais. À investiguer côté DB: la période 'Bulletin bts' n'a probablement pas de source_period_ids ou les sources n'ont pas de notes pour ces étudiants."
+}

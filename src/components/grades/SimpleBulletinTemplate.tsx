@@ -5,6 +5,7 @@ import {
   computeStudentPeriodBulletin,
 } from '@/services/bulletinClientCalculator';
 import { getStudentAttendanceForRanges, type DateRange } from '@/services/periodAttendanceService';
+import { teachingUnitService, type TeachingUnit } from '@/services/teachingUnitService';
 import type { ResolvedBulletinConfig } from '@/types/bulletinConfig';
 import type { EvaluationPeriod } from '@/services/gradesService';
 
@@ -75,6 +76,13 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
         .order('order_index');
       return (data || []) as any[];
     },
+  });
+
+  // ─── Load UEs for grouping ──────────────────────────────
+  const { data: teachingUnits = [] } = useQuery<TeachingUnit[]>({
+    queryKey: ['simple-bulletin-ues', formationId],
+    queryFn: () => teachingUnitService.listForFormation(formationId),
+    enabled: !!formationId,
   });
 
   // ─── Load roster for class stats + rank ─────────────────
@@ -195,6 +203,45 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
     return <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: INK }} /></div>;
   }
 
+  // ─── Group rows by UE ─────────────────────────────────
+  // Each row → the UE of its module (via teaching_unit_id)
+  const moduleToUEId = new Map<string, string | null>();
+  for (const mod of modules as any[]) {
+    moduleToUEId.set(mod.id, mod.teaching_unit_id || null);
+  }
+  const rowsByUE = new Map<string, typeof result.rows>();
+  for (const row of result.rows) {
+    const k = moduleToUEId.get(row.moduleId) || '_unassigned';
+    const arr = rowsByUE.get(k) || [];
+    arr.push(row);
+    rowsByUE.set(k, arr);
+  }
+  // Ordered sections: known UEs first (by UE order_index), then unassigned
+  const ueSections: Array<{ ue: TeachingUnit | null; rows: typeof result.rows }> = [];
+  for (const ue of teachingUnits) {
+    const rs = rowsByUE.get(ue.id);
+    if (rs && rs.length > 0) ueSections.push({ ue, rows: rs });
+  }
+  const unassignedRows = rowsByUE.get('_unassigned') || [];
+  if (unassignedRows.length > 0) ueSections.push({ ue: null, rows: unassignedRows });
+
+  // Per-UE weighted averages (individual & class) based on matière coefficients
+  const ueSubtotals = new Map<string, { individual: number | null; classAvg: number | null; totalCoef: number }>();
+  for (const { ue, rows } of ueSections) {
+    const key = ue?.id || '_unassigned';
+    let wIndiv = 0, coefIndiv = 0;
+    let wClass = 0, coefClass = 0;
+    for (const r of rows) {
+      if (r.individualAverage !== null) { wIndiv += r.individualAverage * r.coefficient; coefIndiv += r.coefficient; }
+      if (r.classAverage !== null) { wClass += r.classAverage * r.coefficient; coefClass += r.coefficient; }
+    }
+    ueSubtotals.set(key, {
+      individual: coefIndiv > 0 ? Math.round((wIndiv / coefIndiv) * 100) / 100 : null,
+      classAvg: coefClass > 0 ? Math.round((wClass / coefClass) * 100) / 100 : null,
+      totalCoef: rows.reduce((sum, r) => sum + r.coefficient, 0),
+    });
+  }
+
   const mainTitle = config.text_config.main_title || 'BULLETIN';
 
   return (
@@ -297,17 +344,85 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
           <tbody>
             {result.rows.length === 0 ? (
               <tr><td colSpan={5} style={{ padding: 14, textAlign: 'center', fontStyle: 'italic', color: '#64748b', background: '#fafafa' }}>Aucune donnée saisie pour cette période.</td></tr>
-            ) : result.rows.map((row, i) => {
-              const moy = row.individualAverage;
-              const moyColor = moy === null ? '#94a3b8' : moy >= 14 ? OK : moy >= admissionThreshold ? '#1d4ed8' : KO;
+            ) : ueSections.map(({ ue, rows }) => {
+              const key = ue?.id || '_unassigned';
+              const sub = ueSubtotals.get(key);
+              const ueIndiv = sub?.individual ?? null;
+              const ueClass = sub?.classAvg ?? null;
+              const ueColor = ueIndiv === null ? '#94a3b8' : ueIndiv >= 14 ? OK : ueIndiv >= admissionThreshold ? '#1d4ed8' : KO;
               return (
-                <tr key={row.moduleId} style={{ background: i % 2 === 0 ? '#fff' : '#f8fafc' }}>
-                  <td style={{ ...td(), fontWeight: 600 }}>{row.moduleTitle}</td>
-                  <td style={td({ textAlign: 'center', fontWeight: 600, color: '#475569' })}>{row.coefficient}</td>
-                  <td style={{ ...td({ textAlign: 'center' }), fontWeight: 800, color: moyColor }}>{fmt(moy)}</td>
-                  <td style={td({ textAlign: 'center', color: '#475569' })}>{fmt(row.classAverage)}</td>
-                  <td style={td({ fontStyle: 'italic', color: '#1e293b' })}>{row.appreciation || '—'}</td>
-                </tr>
+                <React.Fragment key={key}>
+                  {/* UE header row */}
+                  <tr style={{ background: `${INK}0d` }} data-testid={`bulletin-ue-header-${key}`}>
+                    <td
+                      colSpan={5}
+                      style={{
+                        padding: '6px 8px',
+                        fontSize: 10.5,
+                        fontWeight: 800,
+                        color: INK,
+                        textTransform: 'uppercase',
+                        letterSpacing: 0.5,
+                        borderTop: `1px solid ${INK}30`,
+                        borderBottom: `1px solid ${INK}22`,
+                      }}
+                    >
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        {ue?.code && (
+                          <span style={{ background: INK, color: '#fff', padding: '1px 6px', borderRadius: 3, fontSize: 9, fontWeight: 800 }}>
+                            {ue.code}
+                          </span>
+                        )}
+                        <span>{ue ? ue.title : 'Matières non rattachées'}</span>
+                        {ue?.credits != null && (
+                          <span style={{ color: '#64748b', fontWeight: 600, fontSize: 9, letterSpacing: 0.3 }}>· {ue.credits} ECTS</span>
+                        )}
+                        <span style={{ color: '#94a3b8', fontWeight: 600, fontSize: 9, letterSpacing: 0.3 }}>· {rows.length} matière{rows.length > 1 ? 's' : ''}</span>
+                      </span>
+                    </td>
+                  </tr>
+                  {/* Matières rows of this UE */}
+                  {rows.map((row, i) => {
+                    const moy = row.individualAverage;
+                    const moyColor = moy === null ? '#94a3b8' : moy >= 14 ? OK : moy >= admissionThreshold ? '#1d4ed8' : KO;
+                    return (
+                      <tr key={row.moduleId} style={{ background: i % 2 === 0 ? '#fff' : '#f8fafc' }}>
+                        <td style={{ ...td(), fontWeight: 600, paddingLeft: 18 }}>{row.moduleTitle}</td>
+                        <td style={td({ textAlign: 'center', fontWeight: 600, color: '#475569' })}>{row.coefficient}</td>
+                        <td style={{ ...td({ textAlign: 'center' }), fontWeight: 800, color: moyColor }}>{fmt(moy)}</td>
+                        <td style={td({ textAlign: 'center', color: '#475569' })}>{fmt(row.classAverage)}</td>
+                        <td style={td({ fontStyle: 'italic', color: '#1e293b' })}>{row.appreciation || '—'}</td>
+                      </tr>
+                    );
+                  })}
+                  {/* UE subtotal row */}
+                  <tr style={{ background: `${GOLD}1a` }} data-testid={`bulletin-ue-subtotal-${key}`}>
+                    <td
+                      style={{
+                        ...td({ padding: '6px 8px', textAlign: 'right' }),
+                        fontWeight: 700,
+                        fontSize: 10,
+                        color: INK,
+                        textTransform: 'uppercase',
+                        letterSpacing: 0.4,
+                      }}
+                    >
+                      Moyenne {ue?.code ? `${ue.code} ` : ''}
+                    </td>
+                    <td style={{ ...td({ textAlign: 'center', padding: '6px 8px' }), fontWeight: 700, fontSize: 10, color: '#475569' }}>
+                      {sub?.totalCoef ?? ''}
+                    </td>
+                    <td style={{ ...td({ textAlign: 'center', padding: '6px 8px' }), fontWeight: 800, fontSize: 11.5, color: ueColor }}>
+                      {fmt(ueIndiv)}
+                    </td>
+                    <td style={{ ...td({ textAlign: 'center', padding: '6px 8px' }), fontWeight: 700, fontSize: 11, color: '#475569' }}>
+                      {fmt(ueClass)}
+                    </td>
+                    <td style={{ ...td({ padding: '6px 8px' }), fontStyle: 'italic', fontSize: 10, color: '#64748b' }}>
+                      {ueIndiv === null ? '—' : ueIndiv >= admissionThreshold ? 'UE validée' : 'UE non validée'}
+                    </td>
+                  </tr>
+                </React.Fragment>
               );
             })}
           </tbody>
