@@ -164,7 +164,7 @@ const FormationCard: React.FC<FormationCardProps> = ({
           <div className="border-t border-border pt-2 sm:pt-3 mb-2 sm:mb-3">
             <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
               <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-muted-foreground/70 flex-shrink-0" />
-              <span>{modules.length} module{modules.length > 1 ? 's' : ''}</span>
+              <span>{modules.length} matière{modules.length > 1 ? 's' : ''}</span>
             </div>
           </div>
 

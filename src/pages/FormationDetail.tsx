@@ -337,19 +337,27 @@ const FormationDetail = () => {
                                     </div>
                                   </div>
                                   {(userRole === 'Formateur' || userRole === 'Admin' || userRole === 'AdminPrincipal') && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
+                                    <span
+                                      role="button"
+                                      tabIndex={0}
                                       onClick={(e) => {
                                         e.stopPropagation();
+                                        e.preventDefault();
                                         setShowAttendanceModal(true);
                                       }}
-                                      className="mt-2 sm:mt-0 sm:ml-4 shrink-0 text-xs sm:text-sm w-full sm:w-auto border-primary/30 hover:bg-primary/5 hover:border-primary/50"
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                          e.stopPropagation();
+                                          e.preventDefault();
+                                          setShowAttendanceModal(true);
+                                        }
+                                      }}
+                                      className="inline-flex items-center justify-center mt-2 sm:mt-0 sm:ml-4 shrink-0 text-xs sm:text-sm w-full sm:w-auto border border-primary/30 hover:bg-primary/5 hover:border-primary/50 rounded-md px-3 py-2 cursor-pointer transition-colors"
                                     >
                                       <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                                       <span className="hidden sm:inline">Créer une session d'émargement</span>
                                       <span className="sm:hidden">Émargement</span>
-                                    </Button>
+                                    </span>
                                   )}
                                 </div>
                               </div>

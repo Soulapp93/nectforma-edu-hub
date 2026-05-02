@@ -3,6 +3,46 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
+## Session 56 (2026-05-02) — Architecture UE → Matières dans Formation Detail + Modales
+
+**Demande user (avec capture)** : 
+1. "transformer la creation de formation par unité d'enseignement au lieu de module" — refonte des modales `CreateFormationModal` et `EditFormationModal` pour piloter la hiérarchie UE → Matières au lieu d'une liste plate de modules.
+2. "afficher les UE chaque UE doit etre afficher separer des autres UE et chaque matiere d'une UE doivent acceible comme la logique actuelle avec les onglet : Support de cours, Ressources péd., Travail à faire, Évaluations, Correction éval., Groupes" — refonte de `FormationDetail` pour grouper visuellement les matières par UE tout en préservant les 6 onglets historiques.
+
+**Réalisé** :
+- 🆕 `UEManagerPanel.tsx` enrichi (~470 lignes) : panneau autonome UE → Matières avec
+  - Création/édition/suppression d'UE (titre, code, ECTS optionnel)
+  - **Formulaire inline d'ajout de matière** dans chaque UE (titre, coefficient, durée en heures, multi-formateurs)
+  - Édition inline d'une matière existante (mêmes champs)
+  - Suppression d'une matière avec confirmation
+  - Sélecteur de réassignation UE pour chaque matière
+  - Section "Matières non rattachées" pour les modules legacy sans `teaching_unit_id`
+- ✏️ `EditFormationModal.tsx` refondé : la section "Modules de formation" + la liste de `ModuleForm` ont été supprimées, remplacées par `<UEManagerPanel formationId={...} />`. Le bouton "Enregistrer la formation" ne sauvegarde plus que les infos générales (les UE/matières sont sauvegardées en temps réel via leurs propres mutations TanStack Query).
+- ✏️ `CreateFormationModal.tsx` simplifié : la section "Modules de formation" + boutons "Ajouter un module" supprimés. Remplacés par un **encart bleu informatif** (data-testid='ue-info-card') expliquant qu'une UE par défaut sera créée et qu'il faudra éditer la formation pour ajouter d'autres UE/matières. Le service `teachingUnitService.create()` est appelé après `formationService.createFormation` pour auto-créer "UE 1" (UE1).
+- 🆕 `moduleService.updateModule` accepte désormais le paramètre `coefficient` (au lieu de patch direct via Supabase).
+- 🆕 `FormationCard.tsx` : ajout du data-testid `edit-formation-{id}` sur le bouton crayon (visible au hover). Le compteur affiche maintenant "X matières" (au lieu de "X modules").
+- 🆕 `FormationsList.tsx` : harmonisation wording "modules" → "matières" sur les vues grid + liste (incluant entête de tableau "Matières").
+- 🆕 `FormationDetail.tsx` refondé (~430 lignes) :
+  - Charge `teachingUnits` via `teachingUnitService.listForFormation` en parallèle avec la formation
+  - `groupedByUE` useMemo : Map matière → UE_id → tableau de matières + section spéciale `_unassigned` si applicable
+  - Rendu : pour chaque UE → un bloc `<section data-testid='ue-section-{ueId}'>` avec gradient coloré, badge code (UE1/UE2...), titre, compteur de matières, ECTS si défini
+  - À l'intérieur de chaque UE : Accordion de ses matières. Au clic, l'AccordionItem se déplie et affiche les 6 onglets historiques (`tab-content`, `tab-documents`, `tab-tasks`, `tab-assignments`, `tab-corrections`, `tab-groups`)
+  - Header : `formation_modules.length` matières (badge dynamique). Compteur global "X UE · Y matières".
+  - Filtres semestres (S1, S2, Tous) préservés et appliqués transversalement à toutes les UE.
+  - Fix React DOM nesting : le bouton "Créer une session d'émargement" remplacé par `<span role='button'>` pour éviter button-in-button warning dans AccordionTrigger.
+- 🆕 `formationService.getFormationById` + `getAllFormations` sélectionnent maintenant `teaching_unit_id` et `coefficient` dans `formation_modules` (auparavant absents → cause des matières "non rattachées" même quand la DB avait le lien).
+
+**Validation** :
+- Test manuel main agent : login admin → Pédagogie → Master Digital Marketing 2026 → Détail = page affiche "1 UE · 3 matières" + bloc "UE Principale (UE1) · 3 matières" + 3 matières (seo coef 1, digital coef 1, refer coef 1) + clic sur seo ouvre les 6 onglets.
+- Test manuel main agent EditFormationModal : ouverture sur Master Digital Marketing 2026 → "Unités d'enseignement (UE) & Matières · 1 UE · 3 matières" affichées. Création de "UE 2", "UE 3", ajout de matière "TEST_Mathématiques" dans UE 3 → toasts OK + persistance DB.
+- **Testing agent iteration_49** : 100% (7/7 critères de la review_request validés sur FormationDetail).
+- **Testing agent iteration_48** : flow CREATE 100% validé (encart UE info présent, "Modules de formation" supprimé, formation créée, UE 1 auto-créée).
+- Cleanup : test data (UE 2, UE 3, TEST_Mathématiques) supprimées de la DB après validation.
+
+**DB Schema utilisée** :
+- `teaching_units(id, formation_id, title, code, coefficient=1, credits, order_index)` (table existante depuis migration 20260309225336)
+- `formation_modules.teaching_unit_id` (FK nullable vers teaching_units, ON DELETE SET NULL)
+
 ## Session 55 (2026-05-02) — BTS Blanc : entête partagée + coefficients auto
 
 **Demandes user** : (1) le bulletin BTS Blanc doit avoir le MÊME entête que les autres bulletins (Simple, Combiné) — seul le corps change ; (2) les coefficients définis lors de la création de la période BTS Blanc doivent être auto-chargés dans CreateEvaluationModal sans avoir à les ressaisir.

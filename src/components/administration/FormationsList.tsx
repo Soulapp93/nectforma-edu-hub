@@ -371,7 +371,7 @@ const FormationsList: React.FC = () => {
                         </div>
                         <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
                           <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-muted-foreground/70 flex-shrink-0" />
-                          <span>{latest?.formation_modules?.length || 0} module{(latest?.formation_modules?.length || 0) > 1 ? 's' : ''}</span>
+                          <span>{latest?.formation_modules?.length || 0} matière{(latest?.formation_modules?.length || 0) > 1 ? 's' : ''}</span>
                         </div>
                       </div>
                       <div className="mt-3 pt-3 border-t border-border flex items-center justify-end text-xs text-primary font-medium group-hover:translate-x-1 transition-transform">
@@ -391,7 +391,7 @@ const FormationsList: React.FC = () => {
                       <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Formation</th>
                       <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Niveau</th>
                       <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Durée</th>
-                      <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Modules</th>
+                      <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Matières</th>
                       <th className="px-6 py-3.5 text-left text-sm font-medium text-primary/80">Promotions</th>
                     </tr>
                   </thead>
@@ -420,7 +420,7 @@ const FormationsList: React.FC = () => {
                             <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getLevelColor(latest?.level)}`}>{latest?.level}</span>
                           </td>
                           <td className="px-6 py-4 text-sm text-foreground">{latest?.duration}h</td>
-                          <td className="px-6 py-4 text-sm text-muted-foreground">{latest?.formation_modules?.length || 0} module{(latest?.formation_modules?.length || 0) > 1 ? 's' : ''}</td>
+                          <td className="px-6 py-4 text-sm text-muted-foreground">{latest?.formation_modules?.length || 0} matière{(latest?.formation_modules?.length || 0) > 1 ? 's' : ''}</td>
                           <td className="px-6 py-4">
                             <Badge variant="outline" className="text-xs border-primary/30 text-primary">
                               {group.length} promotion{group.length > 1 ? 's' : ''}
