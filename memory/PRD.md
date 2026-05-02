@@ -3,6 +3,30 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
+## Session 58 (2026-05-02) — Bulletins de notes groupés par UE
+
+**Demande user** : "mettre à jour le bulletin de notes — afficher les bulletins en mode UE, en respectant la disposition des colonnes actuelles : Coef. | Moy. indiv. | Moy. promo | Appréciation".
+
+**Réalisé** :
+- ✏️ `SimpleBulletinTemplate.tsx` : grouping des matières par UE dans le tbody. Pour chaque UE :
+  - Ligne d'entête (data-testid='bulletin-ue-header-{ueId}') avec badge UE code (UE1) + titre + ECTS si défini + nb matières
+  - Matières individuelles avec colonnes inchangées (Matière | Coef. | Moy. indiv. | Moy. promo | Appréciation)
+  - Ligne de sous-total UE (data-testid='bulletin-ue-subtotal-{ueId}') avec 'Moyenne UE1' + totalCoef + moyenne UE pondérée + moyenne promo UE pondérée + label 'UE validée' / 'UE non validée'
+  - Calcul des moyennes UE par pondération coefficient (`ueSubtotals` Map)
+  - Section 'Matières non rattachées' rendue en queue si applicable
+- ✏️ `CombinedBulletinRenderer.tsx` : grouping UE inline dans le tbody de chaque période source. Identique au Simple (entête + matières + sous-total) mais avec data-testid='combined-ue-header-{periodId}-{ueId}' et 'combined-ue-subtotal-{periodId}-{ueId}'. Préserve les 7 colonnes du combined (Matière | CC | DS | Exam Final | Oral/Sout. | Moy. | Statut).
+- 🆕 Chargement des `teachingUnits` via `teachingUnitService.listForFormation` dans les deux composants, avec moduleToUE Map pour le mapping module → UE_id.
+
+**Validation** :
+- **Testing agent iteration_51** :
+  - **SimpleBulletinTemplate : 100% (5/5 critères)** ✅ — UE grouping validé sur Bernard Lucas (Semestre 1) : entête 'UE1 · UE PRINCIPALE · 3 matières', 3 matières (seo/digital/refer) avec leurs coef et moyennes, ligne 'Moyenne UE1 | 3 | 11.50 | 12.25 | UE validée', puis 'Moyenne générale 11.50/20 | 12.25/20 | ADMIS(E)'.
+  - **CombinedBulletinRenderer** : code de grouping UE en place, mais sourceResults vide à l'exécution sur la période 'Bulletin bts' → grouping non observable runtime (lié à CORS sur compute-bulletin Edge Function et données seed manquantes pour les périodes sources, non bloquant pour la demande utilisateur).
+- Test manuel main agent : screenshot Bernard Lucas Semestre 1 confirme rendu parfait avec toutes les colonnes préservées.
+
+**Issues mineures détectées (non bloquantes)** :
+- `compute-bulletin` Edge Function bloquée par CORS sur preview env → fallback client-side computeStudentPeriodBulletin fonctionne. Hors scope de la demande.
+- DialogContent du BulletinViewerDialog manque DialogTitle (warning a11y console). Hors scope.
+
 ## Session 57 (2026-05-02) — UE dans Notes & Saisie des notes
 
 **Demande user (avec capture)** : "mettre à jour notes et relevé — quand on crée une période d'évaluation, sélectionner les UE (comme la logique actuelle) et quand la période est créée, afficher les UE à la place des modules. Cliquer sur une matière d'une UE permet d'ajouter les évaluations."
