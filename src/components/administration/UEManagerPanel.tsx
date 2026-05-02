@@ -143,10 +143,8 @@ const UEManagerPanel: React.FC<Props> = ({ formationId }) => {
         title: draft.title.trim(),
         order_index: orderIndex,
         duration_hours: draft.duration_hours || 0,
+        coefficient: draft.coefficient || 1,
       } as any, draft.instructorIds);
-      // Update coefficient via direct query (not in updateModule signature)
-      const { supabase } = await import('@/integrations/supabase/client');
-      await (supabase as any).from('formation_modules').update({ coefficient: draft.coefficient || 1 }).eq('id', moduleId);
     },
     onSuccess: () => {
       invalidateAll();

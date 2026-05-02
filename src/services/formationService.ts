@@ -63,7 +63,9 @@ export const formationService = {
             title,
             description,
             duration_hours,
-            order_index
+            order_index,
+            coefficient,
+            teaching_unit_id
           )
         `)
         .order('created_at', { ascending: false }),
@@ -97,7 +99,9 @@ export const formationService = {
             description,
             duration_hours,
             order_index,
-            semester
+            semester,
+            coefficient,
+            teaching_unit_id
           )
         `)
         .eq('id', id)

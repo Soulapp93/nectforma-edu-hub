@@ -118,18 +118,22 @@ export const moduleService = {
 
   async updateModule(
     moduleId: string,
-    moduleData: { title: string; description?: string; order_index: number; duration_hours?: number; semester?: number | null },
+    moduleData: { title: string; description?: string; order_index: number; duration_hours?: number; semester?: number | null; coefficient?: number },
     instructorIds: string[]
   ) {
+    const updatePayload: any = {
+      title: moduleData.title,
+      description: moduleData.description,
+      order_index: moduleData.order_index,
+      duration_hours: moduleData.duration_hours,
+      semester: moduleData.semester ?? null,
+    };
+    if (moduleData.coefficient != null) {
+      updatePayload.coefficient = moduleData.coefficient;
+    }
     const { error: moduleError } = await supabase
       .from('formation_modules')
-      .update({
-        title: moduleData.title,
-        description: moduleData.description,
-        order_index: moduleData.order_index,
-        duration_hours: moduleData.duration_hours,
-        semester: moduleData.semester ?? null,
-      })
+      .update(updatePayload)
       .eq('id', moduleId);
 
     if (moduleError) throw moduleError;

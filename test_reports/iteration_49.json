@@ -1,0 +1,30 @@
+{
+  "summary": "Frontend-only validation of the new UE → Matières layout on FormationDetail (/formations/{id}?from=administration). The full navigation flow (login → /pedagogie?tab=formations → click 'Master Digital Marketing 2026' pill → click 'Détail' on the formation card) was successfully completed and the redesigned page renders exactly as specified. All 7 acceptance criteria from the review request are validated as PASSING.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/pedagogie?tab=formations (FormationCard)", "issues": ["La card de formation (vue grille) affiche encore '3 modules' / '4 modules' au lieu de '3 matières' / '4 matières'. Le rebranding 'modules' → 'matières' n'a été fait que sur la page Détail. À harmoniser dans FormationCard.tsx pour cohérence terminologique."]}
+    ]
+  },
+  "test_report_links": [".screenshots/pedagogie.png", ".screenshots/after_pill.png", ".screenshots/formation_detail.png", ".screenshots/accordion_open.png"],
+  "action_items": [
+    "(MINEUR / cohérence) Harmoniser le wording 'modules' → 'matières' dans FormationCard.tsx (vue card sur /pedagogie?tab=formations affiche encore 'X modules' alors que la page Détail dit bien 'X matières').",
+    "(CODE QUALITY) Corriger le warning React 'validateDOMNesting: <button> cannot appear as a descendant of <button>' : le bouton 'Créer une session d'émargement' (FormationDetail.tsx ligne ~340) est rendu à l'intérieur de l'<AccordionTrigger> (lui-même un <button>). Solution : extraire le bouton hors du AccordionTrigger ou le remplacer par un <span role=\"button\"> + onClick + onKeyDown."
+  ],
+  "critical_code_review_comments": [
+    "FormationDetail.tsx (ligne 339-353) : <Button> imbriqué dans <AccordionTrigger> produit un warning React validateDOMNesting (button-in-button). Bien que e.stopPropagation() empêche le toggle de l'accordéon, le HTML reste invalide. Refactor recommandé : déplacer le bouton émargement dans une zone hors AccordionTrigger ou changer son élément en div interactive.",
+    "FormationDetail.tsx (ligne 269-99) : `groupedByUE` filtre les UEs sans matières (mods.length > 0). Cohérent avec la spec mais l'utilisateur ne voit donc jamais une UE vide créée via UEManagerPanel sur la page Détail — vérifier que c'est bien le comportement souhaité (UI 'lecture seule', donc OK).",
+    "FormationDetail.tsx (ligne 175) : utilise `formation.formation_modules?.length` (total NON filtré) pour le compteur dans le header coloré, alors que le compteur de la section UE utilise `filteredModules.length`. Si l'utilisateur change le filtre semestre, le badge du header reste figé sur le total — incohérence mineure visuelle.",
+    "FormationDetail.tsx (ligne 339) : la condition `userRole === 'Formateur' || 'Admin' || 'AdminPrincipal'` masque le bouton émargement aux Tuteurs et Étudiants, ce qui est correct. Bien."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped per request)", "frontend": "100% (7/7 critères de la review_request validés)"},
+  "test_credentials": "admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "Aucune création/modification en DB (test purement de rendu UI conforme à la consigne).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "La refonte UE → Matières de FormationDetail.tsx est validée à 100% pour la formation 'Master Digital Marketing 2026' (1 UE 'UE Principale' / UE1, 3 matières : seo, digital, refer). Sélecteurs vérifiés : data-testid='ue-section-{ueId}' (présent), data-testid='tab-content/documents/tasks/assignments/corrections/groups' (les 6 onglets visibles après ouverture accordéon). Compteur header '1 UE · 3 matières' OK. Pas d'unassigned section (correct, car toutes les matières sont rattachées). Si test futur nécessaire pour la formation 'Rh' (4 matières), même chemin de navigation. Issue mineure non bloquante : warning React button-in-button (bouton émargement dans AccordionTrigger).",
+  "rca of the issue": "Aucun bug bloquant. Validation des 7 critères : (1) header 'Unités d'enseignement & matières' ✅ avec compteur '1 UE · 3 matières' ; (2) bloc UE séparé avec badge 'UE1', titre 'UE Principale', '3 matières' ✅ ; (3) absence de ue-section-unassigned (toutes matières rattachées) ✅ ; (4) AccordionItem dépliable révélant les 6 onglets (tab-content, tab-documents, tab-tasks, tab-assignments, tab-corrections, tab-groups) tous visibles ✅ ; (5) icône colorée + titre matière + badge 'coef 1' + 'Formateur: Jean Lefebvre' + durée 0h + bouton 'Créer une session d'émargement' (admin) ✅ ; (6) filtrage semestre — formations sans semesters_count, 'Tous' actif par défaut, fonctionne ✅ ; (7) header coloré dit '3 matières' (pas 'modules') ✅."
+}
