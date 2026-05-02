@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Save, Plus, AlertCircle, BookOpen, GraduationCap, Printer, Lock } from 'lucide-react';
+import { Save, Plus, AlertCircle, BookOpen, GraduationCap, Printer, Lock, Layers } from 'lucide-react';
 import { EVALUATION_TYPES } from '@/services/gradesService';
 import { semesterMatchesFilter } from '@/utils/semesterUtils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -19,6 +19,7 @@ import {
   type Evaluation,
   type Grade,
 } from '@/services/gradesService';
+import { teachingUnitService, type TeachingUnit } from '@/services/teachingUnitService';
 import CreateEvaluationModal from './CreateEvaluationModal';
 
 interface GradeSheetViewProps {
@@ -64,6 +65,13 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
     enabled: !!selectedFormation,
   });
   const modules = useMemo(() => rawModules ?? [], [rawModules]);
+
+  // Teaching Units (UE) — to group matières by UE in the sidebar
+  const { data: teachingUnits = [] } = useQuery<TeachingUnit[]>({
+    queryKey: ['teaching-units-grade-sheet', selectedFormation],
+    queryFn: () => teachingUnitService.listForFormation(selectedFormation),
+    enabled: !!selectedFormation,
+  });
 
   // Periods
   const { data: rawPeriods } = useQuery({
@@ -128,12 +136,52 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
   });
   const allEvaluations = useMemo(() => rawAllEvaluations ?? [], [rawAllEvaluations]);
 
-  // Filtered modules by semester view
+  // Period-scoped modules: when a period has explicit period_modules rows,
+  // restrict the matières shown to those selected during period creation.
+  const { data: periodModuleIds = null } = useQuery<string[] | null>({
+    queryKey: ['period-module-ids', periodId],
+    queryFn: async () => {
+      if (!periodId) return null;
+      const { data } = await supabase
+        .from('period_modules')
+        .select('module_id')
+        .eq('period_id', periodId);
+      const ids = (data || []).map((r: any) => r.module_id);
+      return ids.length > 0 ? ids : null; // null = no explicit selection = show all
+    },
+    enabled: !!periodId,
+  });
+
+  // Filtered modules: first by period_modules link (if any), then by semester
   const filteredModules = useMemo(() => {
-    if (isExamBlancView) return modules;
-    if (!activeSemesterNums) return modules;
-    return modules.filter((m: any) => !m.semester || semesterMatchesFilter(m.semester, activeSemesterNums));
-  }, [modules, activeSemesterNums, isExamBlancView]);
+    let base = modules as any[];
+    if (periodModuleIds && periodModuleIds.length > 0) {
+      base = base.filter((m: any) => periodModuleIds.includes(m.id));
+    }
+    if (isExamBlancView) return base;
+    if (!activeSemesterNums) return base;
+    return base.filter((m: any) => !m.semester || semesterMatchesFilter(m.semester, activeSemesterNums));
+  }, [modules, activeSemesterNums, isExamBlancView, periodModuleIds]);
+
+  // Group filtered modules by UE for sidebar
+  const matieresByUE = useMemo(() => {
+    const map = new Map<string, any[]>();
+    for (const mod of filteredModules as any[]) {
+      const k = mod.teaching_unit_id || '_unassigned';
+      const arr = map.get(k) || [];
+      arr.push(mod);
+      map.set(k, arr);
+    }
+    // Ordered sections based on teachingUnits order; append unassigned at end
+    const sections: Array<{ ue: TeachingUnit | null; modules: any[] }> = [];
+    for (const ue of teachingUnits) {
+      const mods = map.get(ue.id) || [];
+      if (mods.length > 0) sections.push({ ue, modules: mods });
+    }
+    const unassigned = map.get('_unassigned') || [];
+    if (unassigned.length > 0) sections.push({ ue: null, modules: unassigned });
+    return sections;
+  }, [filteredModules, teachingUnits]);
 
   // Auto-select first module when filtered list changes
   useEffect(() => {
@@ -388,32 +436,53 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
 
           {/* Two-column layout : sidebar + table */}
           <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-4">
-            {/* LEFT — Modules sidebar */}
+            {/* LEFT — UE & Matières sidebar */}
             <aside className="bg-card rounded-2xl border border-border shadow-sm p-3 self-start" data-testid="modules-sidebar">
-              <h3 className="px-3 pt-1 pb-3 text-base font-bold text-primary">Matières</h3>
-              <nav className="flex flex-col gap-1">
-                {filteredModules.map((mod: any) => {
-                  const isActive = mod.id === selectedModuleId;
-                  return (
-                    <button
-                      key={mod.id}
-                      data-testid={`module-tab-${mod.id}`}
-                      onClick={() => setSelectedModuleId(mod.id)}
-                      className={`text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                        isActive
-                          ? 'bg-primary text-primary-foreground shadow-md'
-                          : 'text-foreground/80 hover:bg-muted'
-                      }`}
-                    >
-                      <div className="truncate">{mod.title}</div>
-                      {mod.coefficient > 1 && (
-                        <div className={`text-[10px] mt-0.5 font-normal ${isActive ? 'opacity-80' : 'text-muted-foreground'}`}>
-                          coef {mod.coefficient}
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
+              <h3 className="px-3 pt-1 pb-3 text-base font-bold text-primary flex items-center gap-2">
+                <Layers className="h-4 w-4" />
+                UE & Matières
+              </h3>
+              <nav className="flex flex-col gap-3" data-testid="ue-grouped-nav">
+                {matieresByUE.length === 0 && (
+                  <p className="text-xs text-muted-foreground italic px-3 py-2">Aucune matière disponible.</p>
+                )}
+                {matieresByUE.map(({ ue, modules: ueModules }) => (
+                  <div key={ue?.id || 'unassigned'} className="space-y-1" data-testid={`grade-ue-${ue?.id || 'unassigned'}`}>
+                    {/* UE header */}
+                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-primary/5 border border-primary/15">
+                      <BookOpen className="h-3 w-3 text-primary/80 shrink-0" />
+                      <span className="text-[11px] font-bold text-primary uppercase tracking-wide truncate">
+                        {ue ? ue.title : 'Non rattachées'}
+                      </span>
+                      {ue?.code && <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 ml-auto">{ue.code}</Badge>}
+                    </div>
+                    {/* Matières of this UE */}
+                    <div className="flex flex-col gap-1 pl-1">
+                      {ueModules.map((mod: any) => {
+                        const isActive = mod.id === selectedModuleId;
+                        return (
+                          <button
+                            key={mod.id}
+                            data-testid={`module-tab-${mod.id}`}
+                            onClick={() => setSelectedModuleId(mod.id)}
+                            className={`text-left px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
+                              isActive
+                                ? 'bg-primary text-primary-foreground shadow-md'
+                                : 'text-foreground/80 hover:bg-muted'
+                            }`}
+                          >
+                            <div className="truncate">{mod.title}</div>
+                            {mod.coefficient > 1 && (
+                              <div className={`text-[10px] mt-0.5 font-normal ${isActive ? 'opacity-80' : 'text-muted-foreground'}`}>
+                                coef {mod.coefficient}
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </nav>
             </aside>
 

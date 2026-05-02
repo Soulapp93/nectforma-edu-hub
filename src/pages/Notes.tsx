@@ -640,7 +640,7 @@ const Notes = () => {
                     </div>
                     <div className="flex items-center text-xs text-muted-foreground">
                       <BookOpen className="h-3.5 w-3.5 mr-1.5 text-muted-foreground/70 flex-shrink-0" />
-                      <span>{latest?.formation_modules?.length || 0} module{(latest?.formation_modules?.length || 0) > 1 ? 's' : ''}</span>
+                      <span>{latest?.formation_modules?.length || 0} matière{(latest?.formation_modules?.length || 0) > 1 ? 's' : ''}</span>
                     </div>
                   </div>
                   <div className="mt-3 pt-3 border-t border-border flex items-center justify-end text-xs text-primary font-medium group-hover:translate-x-1 transition-transform">
