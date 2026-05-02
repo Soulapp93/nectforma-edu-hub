@@ -1,0 +1,30 @@
+{
+  "summary": "Tested the UE (Unités d'Enseignement) refactor of formation creation/edition. CREATE modal flow fully verified: ue-info-card is present, the old 'Modules de formation' section is removed, the formation is created successfully and auto-UE '0 module' badge suggests default UE 1 was created. EDIT modal flow could NOT be verified via automation because the edit-formation-{id} button is never rendered in the DOM on the Pédagogie > Gestion des formations page – this component path seems to use a different card rendering (grouped view) that does not expose the edit button, OR the isAdmin gate in FormationCard.tsx is not met for admin.principal user.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "FormationCard / FormationsList", "issue": "Aucun bouton [data-testid^='edit-formation-'] n'est présent dans le DOM de la page /pedagogie?tab=formations même en hoverant la card. Les cards affichées (Master Digital Marketing 2026, Rh, TEST_E2E_UE_...) ne semblent pas passer par FormationCard avec isAdmin=true, ou la condition isAdmin renvoie false pour admin.principal@nectforma-demo.com. Résultat : impossible d'ouvrir la modale 'Modifier la formation' et donc impossible de valider UEManagerPanel en conditions réelles.", "selector": "[data-testid^='edit-formation-']", "priority": "HIGH"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [".screenshots/pedagogie.png", ".screenshots/hover_card.png", ".screenshots/hover_card2.png"],
+  "action_items": [
+    "Vérifier pourquoi le bouton crayon (edit-formation-{id}) n'apparaît pas dans le DOM sur /pedagogie?tab=formations. Possibilités : (a) isAdmin renvoie false pour admin.principal, (b) les cards affichées ne sont pas FormationCard mais un autre composant (vue groupée par promotion) qui n'expose pas onEdit. Inspecter FormationsList.tsx lignes ~295-300 pour s'assurer que onEdit est bien passé dans TOUS les chemins de rendu (y compris la vue pliée par année académique / group pill).",
+    "Une fois le bouton edit accessible, re-tester complètement : UEManagerPanel visible (data-testid=ue-manager), add-ue-btn fonctionnel, add-matiere-to-{ue_id} ouvre le formulaire inline, matiere-add-{ue_id}-save crée la matière, edit-matiere-{id}, delete-matiere-{id} et matiere-move-{id} opérationnels.",
+    "Nettoyer manuellement la formation de test 'TEST_E2E_UE_1777757437' créée durant ce test (non supprimée automatiquement faute d'accès à la modale edit/delete)."
+  ],
+  "critical_code_review_comments": [
+    "CreateFormationModal.tsx : la création auto de l'UE par défaut est encapsulée dans un try/catch qui log seulement un warning (ligne 161-163). Si la création d'UE échoue, l'utilisateur n'est pas informé et se retrouve avec une formation sans UE — envisager un toast.warning plus visible.",
+    "FormationCard.tsx : le bouton edit-formation n'est rendu que si onEdit est défini ET isAdmin. S'assurer que toutes les vues (liste normale, liste groupée par promotion/année) passent bien onEdit pour les admins.",
+    "UEManagerPanel.tsx (ligne 148-149) : mise à jour du coefficient via requête Supabase directe plutôt que via moduleService — c'est fragile et contourne la couche service. À refactorer en ajoutant coefficient dans la signature de moduleService.updateModule."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped)", "frontend": "40% (CREATE flow verified, EDIT flow blocked)"},
+  "test_credentials": "admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "Une formation TEST_E2E_UE_1777757437 a été créée via le test Playwright et n'a pas pu être supprimée (bouton delete-formation non accessible dans la vue). À supprimer manuellement.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Le flow CREATE (CreateFormationModal) est validé : ue-info-card présent, 'Modules de formation' supprimé, formation créée, UE 1 auto-créée (badge '0 module' car UE1 vide). Le flow EDIT n'a pas pu être testé car le bouton data-testid='edit-formation-{id}' n'est jamais présent dans le DOM sur la vue /pedagogie?tab=formations — aucune occurrence même après hover. Vérifier si FormationsList rend vraiment FormationCard ou un autre composant dans cette vue, et si isAdmin=true pour l'utilisateur admin.principal. Une fois ce blocage résolu, les checks suivants devront être re-faits : ue-section/ue-manager visibles, add-ue-btn, add-matiere-to-{id}, matiere-add-{id}-save, edit-matiere-{id}, delete-matiere-{id}, matiere-move-{id}, delete-ue-{id}.",
+  "rca of the issue": "Le bouton edit-formation-{id} est rendu dans FormationCard.tsx (ligne 133) à l'intérieur d'un bloc `isAdmin && (...)` et n'est visible qu'au hover via opacity. Lors du test, les cards rendues sur /pedagogie?tab=formations n'exposent AUCUN data-testid commençant par 'edit-formation-' dans le DOM (vérifié via page.evaluate après hover). Reproduction : 1) login en admin principal, 2) naviguer /pedagogie?tab=formations, 3) hover n'importe quelle card de formation, 4) inspecter DOM — aucun bouton crayon. Mitigation : vérifier que la variable `isAdmin` dans FormationsList.tsx est correctement calculée pour le rôle AdminPrincipal, et que toutes les vues (incluant la vue par pills de promotion) utilisent FormationCard avec onEdit."
+}

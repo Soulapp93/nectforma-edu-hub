@@ -129,6 +129,8 @@ const FormationCard: React.FC<FormationCardProps> = ({
                   <button
                     onClick={onEdit}
                     className="p-1.5 sm:p-2 text-muted-foreground hover:text-info hover:bg-info/10 rounded-lg transition-colors"
+                    title="Modifier la formation"
+                    data-testid={`edit-formation-${id}`}
                   >
                     <Edit className="h-4 w-4" />
                   </button>

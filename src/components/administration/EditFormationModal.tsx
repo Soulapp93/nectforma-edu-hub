@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, GraduationCap, Save, Plus, BookOpen } from 'lucide-react';
+import { X, GraduationCap, Save } from 'lucide-react';
 import ColorPalette from './ColorPalette';
-import ModuleForm, { ModuleFormData } from './ModuleForm';
-import { formationService, Formation } from '@/services/formationService';
-import { moduleService } from '@/services/moduleService';
+import UEManagerPanel from './UEManagerPanel';
+import { formationService } from '@/services/formationService';
 import { toast } from 'sonner';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -52,8 +51,6 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
     duration_years: 1,
   });
 
-  const [modules, setModules] = useState<ModuleFormData[]>([]);
-  const [existingModules, setExistingModules] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(false);
@@ -84,19 +81,6 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
         academic_year: (formation as any).academic_year || `${currentYear}-${currentYear + 1}`,
         duration_years: (formation as any).duration_years || 1,
       });
-
-      const formationModules = await moduleService.getFormationModules(formationId);
-      setExistingModules(formationModules || []);
-
-      const modulesData = formationModules.map((mod: any) => ({
-        title: mod.title,
-        description: mod.description || '',
-        instructorIds: mod.module_instructors?.map((mi: any) => mi.instructor_id) || [],
-        duration_hours: mod.duration_hours || 0,
-        subModules: [],
-        semester: mod.semester ?? undefined,
-      }));
-      setModules(modulesData);
     } catch (error) {
       console.error('Erreur lors du chargement de la formation:', error);
       setError('Erreur lors du chargement de la formation');
@@ -122,25 +106,6 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
     if (error) setError(null);
   };
 
-  const addModule = () => {
-    setModules(prev => [...prev, {
-      title: '',
-      description: '',
-      instructorIds: [],
-      duration_hours: 0,
-      subModules: [],
-      semester: undefined,
-    }]);
-  };
-
-  const updateModule = (index: number, moduleData: ModuleFormData) => {
-    setModules(prev => prev.map((module, i) => i === index ? moduleData : module));
-  };
-
-  const removeModule = (index: number) => {
-    setModules(prev => prev.filter((_, i) => i !== index));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formationId) return;
@@ -160,40 +125,7 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
         semesters_count: formData.duration_years * 2,
       } as any);
 
-      for (const existingModule of existingModules) {
-        const stillExists = modules.some((_, idx) => existingModules[idx]?.id === existingModule.id);
-        if (!stillExists) {
-          await moduleService.deleteModule(existingModule.id);
-        }
-      }
-
-      for (let i = 0; i < modules.length; i++) {
-        const module = modules[i];
-        if (module.title.trim()) {
-          const existingModule = existingModules[i];
-
-          if (existingModule) {
-            await moduleService.updateModule(existingModule.id, {
-              title: module.title,
-              description: module.description,
-              order_index: i,
-              duration_hours: module.duration_hours || 0,
-              semester: module.semester ?? null,
-            }, module.instructorIds);
-          } else {
-            await moduleService.createModule({
-              formation_id: formationId,
-              title: module.title,
-              description: module.description,
-              duration_hours: module.duration_hours || 0,
-              order_index: i,
-              semester: module.semester ?? null,
-            }, module.instructorIds);
-          }
-        }
-      }
-
-      toast.success('Formation et modules mis à jour avec succès');
+      toast.success('Formation mise à jour avec succès');
       onSuccess();
       onClose();
 
@@ -363,41 +295,8 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
               </div>
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
-                  Modules de formation ({modules.length})
-                </h3>
-                <button
-                  type="button"
-                  onClick={addModule}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center text-sm"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Ajouter un module
-                </button>
-              </div>
-
-              {modules.length === 0 ? (
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                  <BookOpen className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500">Aucun module ajouté</p>
-                  <p className="text-sm text-gray-400">Les modules peuvent être ajoutés maintenant ou plus tard</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {modules.map((module, index) => (
-                    <ModuleForm
-                      key={index}
-                      moduleIndex={index}
-                      initialData={module}
-                      onAdd={(moduleData) => updateModule(index, moduleData)}
-                      onRemove={() => removeModule(index)}
-                      semestersCount={formData.duration_years * 2}
-                    />
-                  ))}
-                </div>
-              )}  
+            <div data-testid="ue-section">
+              <UEManagerPanel formationId={formationId!} />
             </div>
 
             <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
@@ -415,7 +314,7 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
                 className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center"
               >
                 <Save className="h-4 w-4 mr-2" />
-                {loading ? 'Modification...' : 'Modifier la formation'}
+                {loading ? 'Modification...' : 'Enregistrer la formation'}
               </button>
             </div>
           </form>

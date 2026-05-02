@@ -1,13 +1,12 @@
 
 import React, { useState } from 'react';
-import { X, GraduationCap, Calendar, Plus, BookOpen, Clock } from 'lucide-react';
+import { X, GraduationCap, Calendar, Clock, Info } from 'lucide-react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import ModuleForm, { ModuleFormData } from './ModuleForm';
 import ColorPalette from './ColorPalette';
 import { formationService } from '@/services/formationService';
-import { moduleService } from '@/services/moduleService';
+import { teachingUnitService } from '@/services/teachingUnitService';
 import { establishmentService } from '@/services/establishmentService';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -63,7 +62,6 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
     formation_type: 'ecole_sup'
   });
 
-  const [modules, setModules] = useState<ModuleFormData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -83,24 +81,6 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
   const handleColorChange = (color: string) => {
     setFormData(prev => ({ ...prev, color }));
     if (error) setError(null);
-  };
-
-  const addModule = () => {
-    setModules(prev => [...prev, {
-      title: '',
-      description: '',
-      instructorIds: [],
-      duration_hours: 0,
-      subModules: []
-    }]);
-  };
-
-  const updateModule = (index: number, moduleData: ModuleFormData) => {
-    setModules(prev => prev.map((module, i) => i === index ? moduleData : module));
-  };
-
-  const removeModule = (index: number) => {
-    setModules(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -170,45 +150,16 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         });
       }
 
-      // Créer les modules et sous-modules
-      for (let i = 0; i < modules.length; i++) {
-        const module = modules[i];
-        if (module.title.trim()) {
-          const createdModule = await moduleService.createModule({
-            formation_id: formation.id,
-            title: module.title,
-            description: module.description,
-            duration_hours: module.duration_hours || 0,
-            coefficient: module.coefficient || 1,
-            order_index: i,
-            ...(module.semester ? { semester: module.semester } : {})
-          }, module.instructorIds);
-
-          // Create sub-modules
-          if (module.subModules && module.subModules.length > 0) {
-            console.log(`Création de ${module.subModules.length} sous-modules pour le module ${createdModule.id}`);
-            for (let j = 0; j < module.subModules.length; j++) {
-              const sub = module.subModules[j];
-              if (sub.title.trim()) {
-                try {
-                  console.log(`Création sous-module: ${sub.title} pour module_id: ${createdModule.id}`);
-                  await moduleService.createSubModule({
-                    module_id: createdModule.id,
-                    title: sub.title,
-                    description: sub.description || '',
-                    duration_hours: sub.duration_hours || 0,
-                    order_index: j,
-                    coefficient: sub.coefficient || 1,
-                    ...(sub.instructorId ? { instructor_id: sub.instructorId } : {}),
-                  });
-                  console.log(`Sous-module "${sub.title}" créé avec succès`);
-                } catch (subError) {
-                  console.error(`Erreur création sous-module "${sub.title}":`, subError);
-                }
-              }
-            }
-          }
-        }
+      // Créer une UE par défaut pour démarrer
+      try {
+        await teachingUnitService.create({
+          formation_id: formation.id,
+          title: 'UE 1',
+          code: 'UE1',
+          order_index: 0,
+        });
+      } catch (e) {
+        console.warn('Auto-création UE par défaut échouée:', e);
       }
 
       // Auto-create promotion with all linked resources (schedule, textbook)
@@ -243,7 +194,6 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         semesters_count: 2,
         formation_type: 'ecole_sup'
       });
-      setModules([]);
       
     } catch (error) {
       console.error('Erreur lors de la création de la formation:', error);
@@ -476,41 +426,15 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
             </div>
           </div>
 
-          {/* Modules */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground">
-                Modules de formation ({modules.length})
-              </h3>
-              <button
-                type="button"
-                onClick={addModule}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-xl flex items-center text-sm font-medium transition-all shadow-sm hover:shadow-md"
-              >
-                <Plus className="h-4 w-4 mr-1.5" />
-                Ajouter un module
-              </button>
+          {/* Info: UE & matières seront ajoutées après création */}
+          <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-4 flex gap-3" data-testid="ue-info-card">
+            <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-semibold text-foreground mb-1">Unités d'Enseignement (UE) & Matières</p>
+              <p className="text-muted-foreground">
+                Une UE par défaut sera créée. Après la création de la formation, ouvrez-la pour ajouter d'autres UE et y rattacher vos matières (avec coefficients, formateurs et durées).
+              </p>
             </div>
-
-            {modules.length === 0 ? (
-              <div className="border-2 border-dashed border-primary/30 rounded-xl p-8 text-center bg-primary/5">
-                <BookOpen className="h-10 w-10 text-primary/50 mx-auto mb-3" />
-                <p className="text-muted-foreground font-medium">Aucun module ajouté</p>
-                <p className="text-sm text-muted-foreground/70 mt-1">Les modules et sous-modules peuvent être ajoutés maintenant ou plus tard</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {modules.map((module, index) => (
-                  <ModuleForm
-                    key={index}
-                    moduleIndex={index}
-                    onAdd={(moduleData) => updateModule(index, moduleData)}
-                    onRemove={() => removeModule(index)}
-                    semestersCount={formData.duration_years * 2}
-                  />
-                ))}
-              </div>
-            )}  
           </div>
 
           <div className="flex justify-end space-x-3 pt-6 border-t border-border/50">
