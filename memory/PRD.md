@@ -3,6 +3,41 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
+## Session 60 (2026-05-03) — Phase 2 & 3 : Design noir & blanc des 3 bulletins
+
+**Demande user** : "je veux le même design blanc que mes maquettes, je ne veux pas d'autre couleur, je veux que tous les bulletins soient comme ça"
+
+**Réalisé (Phase 2 + 3)** :
+- 🆕 `SimpleBulletinTemplate.tsx` — **refonte complète** en noir & blanc minimaliste :
+  - Header noir sur blanc avec logo + nom établissement + titre **"RELEVÉ DE NOTES"**
+  - Table d'identité 3×3 bordure noire (NOM/FORMATION/NUMÉRO ÉTUDIANT, PRÉNOM/ANNÉE/NUMÉRO CE, DATE NAISSANCE/NIVEAU/NUMÉRO INE)
+  - Colonnes : **UNITÉ D'ENSEIGNEMENT/MATIÈRE | FORMATEUR | COEFFICIENT | MOYENNE (split MOYENNE DE L'ÉTUDIANT + MOYENNE DE LA PROMO) | APPRÉCIATION**
+  - Ligne UE grisée `UNITÉ D'ENSEIGNEMENT — [nom]` + matières + ligne sous-total "Moyenne UE1"
+  - Ligne finale **MOYENNE GÉNÉRALE | TOTAL COEFFICIENT | X | X/20 | X/20 | ADMIS**
+  - 3 blocs bas : ASSIDUITÉ | APPRÉCIATION GÉNÉRALE | DIRECTEUR DE L'ÉTABLISSEMENT
+  - Font : Times New Roman
+- ✏️ `BtsBlancBulletinTemplate.tsx` — palette noire & blanche :
+  - INK='#000', HEADER_BG='#e8e8e8' gris clair, TOTAL_BG='#d5d5d5'
+  - Colonnes **ÉPREUVES | NOTES | COEFFICIENT | POINTS | APPRÉCIATION**
+  - Suffixe `(écrit)` / `(oral)` en noir italique (plus de bleu/violet)
+  - Ligne TOTAL en gris avec **ADMIS / NON ADMIS**
+  - Label `APPRÉCIATION GÉNÉRALE` harmonisé en CAPS
+- ✏️ `CombinedBulletinRenderer.tsx` — palette noire & blanche :
+  - INK='#000', GOLD='#e8e8e8', OK=KO='#000', PERIOD_COLORS tous noirs
+  - Header blanc avec bordure noire (plus de navy strip) + titre "RELEVÉ DE NOTES — BULLETIN COMBINÉ"
+  - Badges Validé/Ajourné en bordure noire (plus de vert/rouge)
+- 🆕 `BulletinSharedHeader.tsx` — refait en B&W pur (header blanc, identité noire)
+
+**Validation** :
+- **Testing agent iteration_52** : **100% validé — 3/3 bulletins conformes aux maquettes**
+  - Test programmatique : **0 couleur interdite** détectée (vérification sur 11 codes couleur : #16a34a, #dc2626, #1d4ed8, #7c3aed, #dcfce7, #fee2e2, #15803d, #b91c1c, #1a2654, #c8a94e, #82b9d8)
+  - Palette confirmée : text `rgb(0,0,0)`/`rgb(85,85,85)`/`rgb(51,51,51)` ; backgrounds `transparent`/`rgb(232,232,232)`/`rgb(240,240,240)`/`rgb(250,250,250)` ; borders `rgb(0,0,0)`
+- Test manuel main agent : Screenshot Bernard Lucas Semestre 1 confirme rendu parfait correspondant à votre maquette PDF
+
+**Issues mineures non bloquantes** :
+- CORS compute-bulletin Edge Function (fallback client OK, déjà signalé iterations précédentes)
+- DialogContent missing DialogTitle a11y warning (hors scope)
+
 ## Session 59 (2026-05-03) — Phase 1 : BTS Blanc Écrit/Oral
 
 **Demande user (avec 2 PDF maquettes)** : Mettre à jour les relevés de notes selon 3 modèles créés :

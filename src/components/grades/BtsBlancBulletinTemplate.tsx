@@ -274,7 +274,7 @@ const BtsBlancBulletinTemplate: React.FC<Props> = ({
         {/* ─── RIGHT : appreciation + assiduity ─── */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ background: HEADER_BG, color: '#000', padding: '7px 12px', textAlign: 'center', borderBottom: `1px solid ${INK}` }}>
-            <strong style={{ fontSize: 12 }}>Appréciation générale</strong>
+            <strong style={{ fontSize: 12, letterSpacing: 0.5 }}>APPRÉCIATION GÉNÉRALE</strong>
           </div>
           <div style={{ flex: 1, minHeight: 120, padding: '10px 12px', fontSize: 11, fontStyle: 'italic', borderBottom: `1px solid ${INK}` }}>
             {generalAppreciation || '\u00A0'}
