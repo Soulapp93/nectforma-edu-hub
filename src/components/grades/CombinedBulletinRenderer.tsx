@@ -267,65 +267,68 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
     return <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: INK }} /></div>;
   }
 
-  // B&W: all period colors are black (no color coding)
+  void OK; void KO; void FONT;
+  const FONT_SANS = 'Arial, Helvetica, sans-serif';
+  const BORDER = '1px solid #000';
   const PERIOD_COLORS = [INK, INK, INK, INK];
+  const [firstName, ...lastNameParts] = (studentFullName || '').split(' ');
+  const lastName = lastNameParts.join(' ');
 
   return (
     <div
-      className="bg-white mx-auto"
       style={{
+        background: '#fff',
+        color: '#000',
+        fontFamily: FONT_SANS,
+        padding: '12mm',
         maxWidth: '210mm',
-        fontFamily: FONT,
-        color: INK,
-        border: `1px solid ${INK}`,
-        borderRadius: 14,
-        overflow: 'hidden',
+        margin: '0 auto',
       }}
       data-testid="combined-bulletin"
     >
-      {/* ════════════════════════════════════════════════════ */}
-      {/* HEADER : white with black borders (matches maquette) */}
-      {/* ════════════════════════════════════════════════════ */}
-      <div style={{ background: '#fff', color: '#000', padding: '14px 18px', borderBottom: '1px solid #000' }}>
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            {establishmentLogoUrl ? (
-              <img src={establishmentLogoUrl} alt="" style={{ height: 58, width: 58, objectFit: 'contain' }} crossOrigin="anonymous" />
-            ) : (
-              <div style={{ height: 58, width: 58, border: '1px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700 }}>
-                LOGO
+      {/* ═══ HEADER — identical to Simple + BTS Blanc ═══ */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0, marginBottom: 10, alignItems: 'center' }}>
+        <div style={{ fontSize: 10, textAlign: 'left' }}>
+          {establishmentLogoUrl ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <img src={establishmentLogoUrl} alt="" style={{ height: 36, objectFit: 'contain' }} crossOrigin="anonymous" />
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 10 }}>{establishmentName}</div>
+                {establishmentAddress && <div style={{ fontSize: 9 }}>{establishmentAddress}</div>}
               </div>
-            )}
-            <div>
-              <p style={{ fontSize: 14, fontWeight: 800, lineHeight: 1.1 }}>{establishmentName}</p>
-              <p style={{ fontSize: 10, marginTop: 2, color: '#333' }}>
-                Bulletin annuel · {academicYear}
-              </p>
             </div>
-          </div>
-
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: 16, fontWeight: 800, letterSpacing: 1 }}>RELEVÉ DE NOTES — BULLETIN COMBINÉ</p>
-            <p style={{ fontSize: 11, marginTop: 4, fontStyle: 'italic' }}>{finalLabel}</p>
-            <p style={{ fontSize: 9, marginTop: 2, color: '#555' }}>
-              {sourceResults.map((r) => r.period.name).join(' + ')}
-            </p>
-          </div>
+          ) : (
+            <span>LOGO , NOM ET ADRESSE DE L'ETABLISSEMENT</span>
+          )}
+        </div>
+        <div style={{ fontSize: 10, textAlign: 'center' }}>bulletin combiné</div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: 0.5 }}>RELEVE DE NOTES</div>
+          <div style={{ fontSize: 9, marginTop: 2 }}>( {finalLabel} )</div>
         </div>
       </div>
 
-      {/* STUDENT IDENTITY ROW (black & white) */}
-      <div className="grid grid-cols-5" style={{ background: '#fff', padding: '10px 18px', fontSize: 10.5, borderBottom: '1px solid #000' }}>
-        <IdCell label="NOM & PRÉNOMS" value={studentFullName} />
-        <IdCell label="MATRICULE" value={studentMatricule || '—'} />
-        <IdCell label="FORMATION" value={formationTitle} />
-        <IdCell label="NIVEAU" value={formationLevel || '—'} />
-        <IdCell label="ANNÉE" value={academicYear} />
+      {/* ═══ 2 IDENTITY BOXES ═══ */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 10, marginBottom: 10 }}>
+        <div style={{ border: BORDER, display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+          <div>
+            <IdBoxRow label="NOM ETUDIANT" value={(lastName || studentFullName || '').toUpperCase()} />
+            <IdBoxRow label="PRENOM ETUDIANT" value={firstName || ''} />
+            <IdBoxRow label="DATE DE NAISSANCE" value={studentDateOfBirth ? (new Date(studentDateOfBirth).toLocaleDateString('fr-FR')) : ''} last />
+          </div>
+          <div style={{ borderLeft: BORDER }}>
+            <IdBoxRow label="FORMATION" value={formationTitle || ''} />
+            <IdBoxRow label="ANNEE" value={academicYear || ''} last />
+          </div>
+        </div>
+        <div style={{ border: BORDER }}>
+          <IdBoxRow label="NUMERO ETUDIANT" value={studentMatricule || ''} />
+          <IdBoxRow label="NUMERO CE" value={''} />
+          <IdBoxRow label="NUMERO INE" value={''} last />
+        </div>
       </div>
 
-      {/* ════════════════════════════════════════════════════ */}
-      {/* PER-PERIOD COMPACT BLOCKS                             */}
-      {/* ════════════════════════════════════════════════════ */}
+      {/* ═══ BODY: PER-PERIOD TABLES (keeps existing aggregation logic) ═══ */}
       <div style={{ padding: '14px 18px' }}>
         {sourceResults.map((pr, idx) => {
           const headerColor = PERIOD_COLORS[idx % PERIOD_COLORS.length];
@@ -613,29 +616,29 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
             </div>
           )}
 
-          {/* Signatures */}
-          {signatories.length > 0 && (
-            <div
-              className="grid"
-              style={{
-                gridTemplateColumns: `repeat(${Math.min(signatories.length, 4)}, 1fr)`,
-                gap: 16,
-                padding: '14px 16px',
-                borderTop: `1px solid ${INK}22`,
-                background: '#fff',
-              }}
-            >
-              {signatories.slice(0, 4).map((s: any) => (
-                <div key={s.id} style={{ textAlign: 'center' }}>
-                  <p style={{ fontSize: 9, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>{s.role_label}</p>
-                  <div style={{ height: 40, borderBottom: `1px solid ${INK}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {s.signature_image && <img src={s.signature_image} alt="" style={{ maxHeight: 36, objectFit: 'contain' }} crossOrigin="anonymous" />}
-                  </div>
-                  {s.name && !s.is_stamp && <p style={{ fontSize: 10, fontWeight: 600, marginTop: 3 }}>{s.name}</p>}
-                </div>
-              ))}
+          {/* ═══ 3 BOTTOM BOXES (identical to Simple + BTS Blanc) ═══ */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1fr', border: BORDER, marginTop: 10 }}>
+            <div style={{ padding: 8, borderRight: BORDER, fontSize: 9 }}>
+              <div style={{ fontWeight: 700, fontSize: 10, marginBottom: 6 }}>ASSIDUITE</div>
+              <div style={{ marginBottom: 3 }}>ABSENCE JUSTIFIEES :</div>
+              <div style={{ marginBottom: 3 }}>ABSENCES INJUSTIFIEES :</div>
+              <div style={{ marginBottom: 3 }}>RETARDS JUSTIFIES :</div>
+              <div>RETARDS INJUSTIFIES :</div>
             </div>
-          )}
+            <div style={{ padding: 8, borderRight: BORDER, minHeight: 90 }}>
+              <div style={{ fontWeight: 700, fontSize: 10 }}>APPRECIATION GENERALE :</div>
+            </div>
+            <div style={{ padding: 8, textAlign: 'center' }}>
+              <div style={{ fontWeight: 700, fontSize: 10 }}>DIERECTEUR DE L'ETABLISSEMENT</div>
+              <div style={{ fontStyle: 'italic', fontSize: 8, marginTop: 3 }}>(nom, prenom, signature et<br />cachet de letablissement)</div>
+              {signatories.length > 0 && signatories[0].signature_image && (
+                <img src={signatories[0].signature_image} alt="" style={{ maxHeight: 36, maxWidth: '100%', objectFit: 'contain', marginTop: 6 }} crossOrigin="anonymous" />
+              )}
+              {signatories.length > 0 && signatories[0].name && !signatories[0].is_stamp && (
+                <div style={{ fontSize: 9, fontWeight: 600, marginTop: 4 }}>{signatories[0].name}</div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -643,6 +646,13 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
 };
 
 // ─── Helpers ──────────────────────────────────────────
+const IdBoxRow: React.FC<{ label: string; value: React.ReactNode; last?: boolean }> = ({ label, value, last }) => (
+  <div style={{ padding: '4px 6px', borderBottom: last ? 'none' : '1px solid #000', fontSize: 9 }}>
+    <div style={{ fontSize: 8, color: '#000' }}>{label}</div>
+    <div style={{ fontSize: 10, fontWeight: 600, minHeight: 12 }}>{value}</div>
+  </div>
+);
+
 const IdCell: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
   <div>
     <p style={{ fontSize: 9, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 2 }}>

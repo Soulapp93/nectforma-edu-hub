@@ -3,11 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { computeStudentPeriodBulletin } from '@/services/bulletinClientCalculator';
 import { getStudentAttendanceForRanges, type DateRange } from '@/services/periodAttendanceService';
-import BulletinSharedHeader from './BulletinSharedHeader';
 import type { ResolvedBulletinConfig } from '@/types/bulletinConfig';
 import type { EvaluationPeriod } from '@/services/gradesService';
 
-const fmt2 = (v: number | null): string => (v === null ? '0,00' : v.toFixed(2).replace('.', ','));
+const fmt2 = (v: number | null): string => (v === null ? '' : v.toFixed(2));
 
 interface Props {
   period: EvaluationPeriod;
@@ -23,19 +22,21 @@ interface Props {
   establishmentLogoUrl?: string | null;
   referenceNumber: string;
   signatories: any[];
-  /** Source periods if combined (used for assiduity ranges) */
-  sourcePeriods?: EvaluationPeriod[];
-  /** Admission threshold in TOTAL POINTS (default 220, like real BTS blanc) */
   totalAdmissionThreshold?: number;
+  studentDateOfBirth?: string | null;
+  studentNumber?: string | null;
+  studentNumeroCE?: string | null;
+  studentNumeroINE?: string | null;
+  establishmentAddress?: string | null;
 }
 
 /**
- * BTS Blanc bulletin template.
- *
- * Layout (matches the official spreadsheet template):
- *   • Left block:  Examen Blanc | Notes | C. | Points
- *   • Right block: Appréciation générale + ASSIDUITÉ box
- *   • Footer:      TOTAL (Admis si > ou = X) ___ <total>  |  ADMIS / NON ADMIS
+ * BTS Blanc bulletin — pixel-perfect reproduction of the user's PDF maquette.
+ * Same header/identity/footer layout as SimpleBulletinTemplate, but:
+ *   • Sub-title "BTS BLANC" under "RELEVE DE NOTES"
+ *   • Table columns: EPREUVES | NOTES | COEFFICIENT | POINTS | APPRECIATION
+ *   • Matière rows show "(ecrit)" or "oral" italic suffix
+ *   • Footer row: total / TOTAL COEFFICIENT / total des points / (empty) / DECISION
  */
 const BtsBlancBulletinTemplate: React.FC<Props> = ({
   period,
@@ -45,324 +46,247 @@ const BtsBlancBulletinTemplate: React.FC<Props> = ({
   studentMatricule,
   formationId,
   formationTitle,
-  formationLevel,
   academicYear,
   establishmentName,
   establishmentLogoUrl,
   referenceNumber,
   signatories,
-  sourcePeriods,
   totalAdmissionThreshold = 220,
+  studentDateOfBirth,
+  studentNumber,
+  studentNumeroCE,
+  studentNumeroINE,
+  establishmentAddress,
 }) => {
-  const INK = '#000';
-  const ROW_BG = '#ffffff';
-  const ROW_BG_ALT = '#fafafa';
-  const HEADER_BG = '#e8e8e8';
-  const TOTAL_BG = '#d5d5d5';
-  const FONT = '"Times New Roman", Georgia, serif';
-  const sections = config.layout_config.sections || {};
+  void referenceNumber; void config;
+  const [firstName, ...lastNameParts] = (studentFullName || '').split(' ');
+  const lastName = lastNameParts.join(' ');
 
-  // ─── Modules ────────────────────────────────────────────
-  // For BTS Blanc, load period_modules WITH exam_part (écrit/oral).
-  // Each module may appear twice (écrit + oral) with its own coefficient.
+  // Load period_modules with exam_part (écrit / oral)
   const { data: modules = [] } = useQuery({
     queryKey: ['bts-bulletin-modules', formationId, period.id],
     queryFn: async () => {
-      // 1) Try period_modules join with exam_part
       const { data: pm } = await supabase
         .from('period_modules')
         .select('module_id, coefficient, exam_part, formation_modules!inner(id, title, order_index)')
         .eq('period_id', period.id);
-
       if (pm && pm.length > 0) {
-        return pm
-          .map((row: any) => ({
-            id: row.formation_modules.id,
-            title: row.formation_modules.title,
-            order_index: row.formation_modules.order_index,
-            coefficient: row.coefficient || 1,
-            exam_part: row.exam_part || null, // 'ecrit' | 'oral' | null
-          }))
+        return pm.map((r: any) => ({ id: r.formation_modules.id, title: r.formation_modules.title, order_index: r.formation_modules.order_index, coefficient: r.coefficient || 1, exam_part: r.exam_part || null }))
           .sort((a, b) => {
-            // Écrit first, oral second, then by order_index
-            const partOrder = (p: string | null) => (p === 'ecrit' ? 0 : p === 'oral' ? 1 : 2);
-            const pa = partOrder(a.exam_part);
-            const pb = partOrder(b.exam_part);
-            if (pa !== pb) return pa - pb;
-            return (a.order_index || 0) - (b.order_index || 0);
+            const p = (x: string | null) => (x === 'ecrit' ? 0 : x === 'oral' ? 1 : 2);
+            const d = p(a.exam_part) - p(b.exam_part);
+            return d !== 0 ? d : (a.order_index || 0) - (b.order_index || 0);
           });
       }
-
-      // 2) Fallback to formation modules (no exam_part)
-      const { data } = await supabase
-        .from('formation_modules')
-        .select('id, title, coefficient, order_index')
-        .eq('formation_id', formationId)
-        .order('order_index');
+      const { data } = await supabase.from('formation_modules').select('id, title, coefficient, order_index').eq('formation_id', formationId).order('order_index');
       return ((data || []) as any[]).map((m) => ({ ...m, exam_part: null }));
     },
   });
 
-  // ─── Compute student bulletin ─────────────────────────
+  const { data: roster = [] } = useQuery({
+    queryKey: ['bts-bulletin-roster', formationId],
+    queryFn: async () => {
+      const { data } = await supabase.rpc('get_formation_students', { formation_id_param: formationId });
+      return (data || []) as any[];
+    },
+    enabled: !!formationId,
+  });
+
   const computedQ = useQuery({
-    queryKey: ['bts-bulletin-compute', period.id, studentId, modules.length, JSON.stringify(config.calculation_rules)],
+    queryKey: ['bts-bulletin-compute', period.id, studentId, modules.length, roster.length],
     queryFn: async () => {
       if (modules.length === 0) return null;
       const moduleIds = modules.map((m: any) => m.id);
-      let evalQ = supabase
-        .from('evaluations')
-        .select('id, module_id, period_id, evaluation_type, scale')
-        .in('module_id', moduleIds)
-        .eq('period_id', period.id);
-      const { data: evals } = await evalQ;
+      const { data: evals } = await supabase.from('evaluations').select('id, module_id, period_id, evaluation_type, scale').in('module_id', moduleIds).eq('period_id', period.id);
       const evalIds = (evals || []).map((e: any) => e.id);
-
+      const studentIds = roster.map((s: any) => s.user_id);
       let allGrades: any[] = [];
-      if (evalIds.length > 0) {
-        const { data } = await supabase
-          .from('grades')
-          .select('evaluation_id, student_id, value, is_absent, is_excused, is_dispensed, is_cheating')
-          .in('evaluation_id', evalIds)
-          .eq('student_id', studentId);
+      if (evalIds.length > 0 && studentIds.length > 0) {
+        const { data } = await supabase.from('grades').select('evaluation_id, student_id, value, is_absent, is_excused, is_dispensed, is_cheating').in('evaluation_id', evalIds).in('student_id', studentIds);
         allGrades = data || [];
       }
-
-      return computeStudentPeriodBulletin({
-        studentId,
-        config,
-        modules: modules as any,
-        evaluations: (evals || []) as any,
-        grades: allGrades as any,
-      });
+      return computeStudentPeriodBulletin({ studentId, config, modules: modules as any, evaluations: (evals || []) as any, grades: allGrades as any });
     },
     enabled: modules.length > 0,
   });
 
-  // ─── Attendance (current period + cumulative academic-year-to-date) ──
-  // "Retards ce semestre" = current period range
-  // "Retards au total"    = academic year up to end of current period
-  const periodAttQ = useQuery({
-    queryKey: ['bts-bulletin-att-period', period.id, studentId, sourcePeriods?.map((p) => p.id).join(',') || ''],
+  const attendanceQ = useQuery({
+    queryKey: ['bts-bulletin-attendance', period.id, studentId],
     queryFn: async () => {
       const ranges: DateRange[] = [];
-      if ((period as any).is_composite && sourcePeriods && sourcePeriods.length > 0) {
-        for (const sp of sourcePeriods) {
-          if (sp.start_date && sp.end_date) ranges.push({ start: sp.start_date, end: sp.end_date });
-        }
-      } else if (period.start_date && period.end_date) {
-        ranges.push({ start: period.start_date, end: period.end_date });
-      }
+      if (period.start_date && period.end_date) ranges.push({ start: period.start_date, end: period.end_date });
       return getStudentAttendanceForRanges(studentId, formationId, ranges);
     },
     enabled: !!studentId && !!formationId,
   });
 
-  const totalAttQ = useQuery({
-    queryKey: ['bts-bulletin-att-total', formationId, studentId, period.id],
-    queryFn: async () => {
-      // From start of academic year (Sept 1 of academic year start) to end of current period
-      const yearStartGuess = academicYear ? `${academicYear.split('-')[0]}-09-01` : null;
-      const end = period.end_date || new Date().toISOString().split('T')[0];
-      const start = yearStartGuess && yearStartGuess <= end ? yearStartGuess : end;
-      return getStudentAttendanceForRanges(studentId, formationId, [{ start, end }]);
-    },
-    enabled: !!studentId && !!formationId,
-  });
-
   const result = computedQ.data;
-  const periodAtt = periodAttQ.data;
-  const totalAtt = totalAttQ.data;
-
+  const attendance = attendanceQ.data;
   if (computedQ.isLoading || !result) {
-    return <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: INK }} /></div>;
+    return <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}><div style={{ width: 28, height: 28, border: '2px solid #000', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /></div>;
   }
 
-  // ─── Compute total POINTS = Σ (note × coefficient) ───
-  let totalPoints = 0;
-  for (const m of result.modules) {
-    if (m.module_average !== null && m.module_average !== undefined) {
-      totalPoints += m.module_average * (m.coefficient || 0);
+  // Totals
+  let totalNotes = 0, totalCoef = 0, totalPoints = 0;
+  for (const m of modules as any[]) {
+    const c = result.modules.find((x) => x.module_id === m.id);
+    const n = c?.module_average ?? null;
+    totalCoef += m.coefficient || 0;
+    if (n !== null) {
+      totalNotes += n;
+      totalPoints += n * (m.coefficient || 0);
     }
   }
   totalPoints = Math.round(totalPoints * 100) / 100;
-
   const admitted = totalPoints >= totalAdmissionThreshold;
 
-  // Title formatter: try to extract a leading "E1 - " / "E21 - " code from
-  // the module title. If none, just return the title as-is.
-  const formatTitle = (mod: any): string => mod.title || '';
-
-  // Mention text from config (overridden via template_id system templates)
-  const generalAppreciation = result.modules.length > 0
-    ? (result.modules.map((m) => m.appreciation).filter(Boolean).slice(0, 3).join(' • ') || '')
-    : '';
+  // ── Styles ────────────────────────────────────────────
+  const FONT = 'Arial, Helvetica, sans-serif';
+  const BORDER = '1px solid #000';
+  const GREY = '#E0E0E0';
+  const thCell: React.CSSProperties = { border: BORDER, padding: '6px 6px', fontSize: 10, fontWeight: 700, textAlign: 'center', background: GREY, textTransform: 'uppercase', color: '#000' };
+  const tdCell: React.CSSProperties = { border: BORDER, padding: '6px 6px', fontSize: 9, color: '#000', verticalAlign: 'top', minHeight: 24 };
 
   return (
-    <div
-      className="bg-white mx-auto"
-      style={{
-        maxWidth: '210mm',
-        fontFamily: FONT,
-        color: '#000',
-        border: `1px solid ${INK}`,
-        borderRadius: 14,
-        overflow: 'hidden',
-      }}
-      data-testid="bts-blanc-bulletin"
-    >
-      {/* Shared header (identical to Simple + Combined bulletins) */}
-      <BulletinSharedHeader
-        period={period}
-        config={config}
-        studentFullName={studentFullName}
-        studentMatricule={studentMatricule}
-        formationTitle={formationTitle}
-        formationLevel={formationLevel}
-        academicYear={academicYear}
-        establishmentName={establishmentName}
-        establishmentLogoUrl={establishmentLogoUrl}
-        referenceNumber={referenceNumber}
-      />
-
-      {/* MAIN GRID: left table + right appreciation+attendance */}
-      <div className="grid" style={{ gridTemplateColumns: '1.65fr 1fr', borderTop: `1px solid ${INK}` }}>
-        {/* ─── LEFT : EPREUVES table (matches user's BTS blanc model) ─── */}
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, borderRight: `1px solid ${INK}` }}>
-          <thead>
-            <tr style={{ background: HEADER_BG, color: '#000' }}>
-              <th style={th({ borderRight: `1px solid ${INK}`, textAlign: 'center' })}>ÉPREUVES</th>
-              <th style={th({ borderRight: `1px solid ${INK}`, width: 60, textAlign: 'center' })}>NOTES</th>
-              <th style={th({ borderRight: `1px solid ${INK}`, width: 70, textAlign: 'center' })}>COEFFICIENT</th>
-              <th style={th({ borderRight: `1px solid ${INK}`, width: 60, textAlign: 'center' })}>POINTS</th>
-              <th style={th({ width: 140, textAlign: 'center' })}>APPRÉCIATION</th>
-            </tr>
-          </thead>
-          <tbody>
-            {modules.length === 0 ? (
-              <tr><td colSpan={5} style={{ padding: 14, textAlign: 'center', fontStyle: 'italic', color: '#64748b' }}>Aucun module configuré.</td></tr>
-            ) : modules.map((mod: any, i: number) => {
-              const computed = result.modules.find((m) => m.module_id === mod.id);
-              const note = computed?.module_average ?? null;
-              const coef = mod.coefficient || 0;
-              const points = note !== null ? Math.round(note * coef * 100) / 100 : null;
-              const isHighlighted = i % 2 === 0;
-              const partLabel = mod.exam_part === 'ecrit' ? '(écrit)' : mod.exam_part === 'oral' ? '(oral)' : '';
-              return (
-                <tr key={`${mod.id}-${mod.exam_part || 'main'}`} style={{ background: isHighlighted ? ROW_BG : ROW_BG_ALT }} data-testid={`bts-row-${mod.exam_part || 'main'}-${mod.id}`}>
-                  <td style={td({ borderRight: `1px solid ${INK}`, fontSize: 11.5 })}>
-                    <span style={{ fontWeight: 600 }}>{formatTitle(mod)}</span>
-                    {partLabel && (
-                      <span style={{
-                        marginLeft: 6, fontSize: 10, fontStyle: 'italic',
-                        color: '#000',
-                        fontWeight: 700,
-                      }}>
-                        {partLabel}
-                      </span>
-                    )}
-                  </td>
-                  <td style={td({ borderRight: `1px solid ${INK}`, textAlign: 'center', fontWeight: 600 })}>{fmt2(note)}</td>
-                  <td style={td({ borderRight: `1px solid ${INK}`, textAlign: 'center', fontWeight: 700 })}>{coef || '—'}</td>
-                  <td style={td({ borderRight: `1px solid ${INK}`, textAlign: 'center', fontWeight: 700 })}>{fmt2(points)}</td>
-                  <td style={td({ fontSize: 10.5, fontStyle: 'italic', color: '#1e293b' })}>{computed?.appreciation || '—'}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-
-        {/* ─── RIGHT : appreciation + assiduity ─── */}
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ background: HEADER_BG, color: '#000', padding: '7px 12px', textAlign: 'center', borderBottom: `1px solid ${INK}` }}>
-            <strong style={{ fontSize: 12, letterSpacing: 0.5 }}>APPRÉCIATION GÉNÉRALE</strong>
-          </div>
-          <div style={{ flex: 1, minHeight: 120, padding: '10px 12px', fontSize: 11, fontStyle: 'italic', borderBottom: `1px solid ${INK}` }}>
-            {generalAppreciation || '\u00A0'}
-          </div>
-          <div
-            style={{ padding: '8px 12px', fontSize: 11, lineHeight: 1.55 }}
-            data-testid="attendance-strip"
-          >
-            <p style={{ fontWeight: 800, marginBottom: 4, textDecoration: 'underline' }}>ASSIDUITE :</p>
-            <p>- Retards ce semestre : <strong>{periodAtt ? periodAtt.retards : '...'}</strong></p>
-            <p>- Retards au total : <strong>{totalAtt ? totalAtt.retards : '...'}</strong></p>
-            <p>- Absences ce semestre : <strong>{periodAtt ? periodAtt.absences_injustifiees : '...'}</strong></p>
-            <p>- Absences au total : <strong>{totalAtt ? totalAtt.absences_injustifiees : '...'}</strong></p>
-            <p>- Absences restantes à rattraper : <strong>{periodAtt ? Math.max(0, periodAtt.absences_total - periodAtt.absences_injustifiees) : '...'}</strong></p>
-          </div>
-        </div>
-      </div>
-
-      {/* TOTAL ROW — black & white */}
-      <div className="grid" style={{ gridTemplateColumns: '1.65fr 1fr', borderTop: `1px solid ${INK}` }}>
-        <div style={{ background: TOTAL_BG, color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRight: `1px solid ${INK}` }}>
-          <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: 0.5 }}>
-            TOTAL (ADMIS SI ≥ {totalAdmissionThreshold})
-          </span>
-          <span style={{ fontSize: 14, fontWeight: 800, background: '#fff', color: '#000', padding: '3px 14px', border: `1px solid ${INK}` }}>
-            {fmt2(totalPoints)}
-          </span>
-        </div>
-        <div
-          style={{
-            background: TOTAL_BG,
-            color: '#000',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 14,
-            fontWeight: 800,
-            letterSpacing: 1.5,
-            padding: '8px 12px',
-          }}
-        >
-          {admitted ? 'ADMIS' : 'NON ADMIS'}
-        </div>
-      </div>
-
-      {/* Optional footer: signatures + legal notice */}
-      {sections.signatures !== false && signatories.length > 0 && (
-        <div
-          className="grid"
-          style={{
-            gridTemplateColumns: `repeat(${Math.min(signatories.length, 4)}, 1fr)`,
-            gap: 16, padding: '12px 16px', borderTop: `1px solid ${INK}22`,
-          }}
-        >
-          {signatories.slice(0, 4).map((s: any) => (
-            <div key={s.id} style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: 9, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.4 }}>{s.role_label}</p>
-              <div style={{ height: 36, borderBottom: `1px solid ${INK}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {s.signature_image && <img src={s.signature_image} alt="" style={{ maxHeight: 32, objectFit: 'contain' }} crossOrigin="anonymous" />}
+    <div style={{ background: '#fff', color: '#000', fontFamily: FONT, padding: '12mm', maxWidth: '210mm', margin: '0 auto' }} data-testid="bts-blanc-bulletin">
+      {/* HEADER */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, marginBottom: 10, alignItems: 'center' }}>
+        <div style={{ fontSize: 10, textAlign: 'left' }}>
+          {establishmentLogoUrl ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <img src={establishmentLogoUrl} alt="" style={{ height: 36, objectFit: 'contain' }} crossOrigin="anonymous" />
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 10 }}>{establishmentName}</div>
+                {establishmentAddress && <div style={{ fontSize: 9 }}>{establishmentAddress}</div>}
               </div>
-              {s.name && !s.is_stamp && <p style={{ fontSize: 10, fontWeight: 600, marginTop: 2 }}>{s.name}</p>}
             </div>
-          ))}
+          ) : (
+            <span>LOGO , NOM ET ADRESSE DE L'ETABLISSEMENT</span>
+          )}
         </div>
-      )}
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: 0.5 }}>RELEVE DE NOTES</div>
+          <div style={{ fontSize: 10, marginTop: 2 }}>BTS BLANC</div>
+        </div>
+      </div>
 
-      {sections.legal_notice !== false && (
-        <div style={{ padding: '5px 12px', textAlign: 'center', fontSize: 9, color: '#475569', borderTop: `1px solid ${INK}22` }}>
-          Document officiel — {establishmentName} — Réf {referenceNumber} —{' '}
-          {config.text_config.legal_notice || 'Bulletin BTS Blanc certifié authentique. Le total est admis si ≥ ' + totalAdmissionThreshold + ' points.'}
+      {/* 2 IDENTITY BOXES */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 10, marginBottom: 10 }}>
+        <div style={{ border: BORDER, display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+          <div>
+            <IdRow label="NOM ETUDIANT" value={(lastName || studentFullName || '').toUpperCase()} />
+            <IdRow label="PRENOM ETUDIANT" value={firstName || ''} />
+            <IdRow label="DATE DE NAISSANCE" value={studentDateOfBirth ? formatDate(studentDateOfBirth) : ''} last />
+          </div>
+          <div style={{ borderLeft: BORDER }}>
+            <IdRow label="FORMATION" value={formationTitle || ''} />
+            <IdRow label="ANNEE" value={academicYear || ''} last />
+          </div>
         </div>
-      )}
+        <div style={{ border: BORDER }}>
+          <IdRow label="NUMERO ETUDIANT" value={studentNumber || studentMatricule || ''} />
+          <IdRow label="NUMERO CE" value={studentNumeroCE || ''} />
+          <IdRow label="NUMERO INE" value={studentNumeroINE || ''} last />
+        </div>
+      </div>
+
+      {/* EPREUVES TABLE */}
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <colgroup>
+          <col style={{ width: '30%' }} />
+          <col style={{ width: '12%' }} />
+          <col style={{ width: '13%' }} />
+          <col style={{ width: '12%' }} />
+          <col style={{ width: '33%' }} />
+        </colgroup>
+        <thead>
+          <tr>
+            <th style={thCell}>EPREUVES</th>
+            <th style={thCell}>NOTES</th>
+            <th style={thCell}>COEFFICIENT</th>
+            <th style={thCell}>POINTS</th>
+            <th style={thCell}>APPRECIATION</th>
+          </tr>
+        </thead>
+        <tbody>
+          {modules.length === 0 ? (
+            <tr><td colSpan={5} style={{ ...tdCell, textAlign: 'center', fontStyle: 'italic', padding: 14 }}>Aucune épreuve configurée.</td></tr>
+          ) : modules.map((mod: any) => {
+            const computed = result.modules.find((m) => m.module_id === mod.id);
+            const note = computed?.module_average ?? null;
+            const coef = mod.coefficient || 0;
+            const points = note !== null ? Math.round(note * coef * 100) / 100 : null;
+            const partText = mod.exam_part === 'ecrit' ? '(ecrit)' : mod.exam_part === 'oral' ? 'oral' : '';
+            return (
+              <tr key={`${mod.id}-${mod.exam_part || 'main'}`} data-testid={`bts-row-${mod.exam_part || 'main'}-${mod.id}`}>
+                <td style={{ ...tdCell, textTransform: 'uppercase', fontWeight: 500 }}>
+                  {mod.title}
+                  {partText && <div style={{ fontSize: 7, fontStyle: 'italic', textTransform: 'lowercase', marginTop: 1 }}>{partText}</div>}
+                </td>
+                <td style={{ ...tdCell, textAlign: 'center', fontWeight: 600 }}>{fmt2(note)}</td>
+                <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700 }}>{coef || ''}</td>
+                <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700 }}>{fmt2(points)}</td>
+                <td style={{ ...tdCell, fontStyle: 'italic' }}>{computed?.appreciation || ''}</td>
+              </tr>
+            );
+          })}
+          {/* Footer totals row */}
+          <tr>
+            <th style={thCell}></th>
+            <th style={thCell}>total</th>
+            <th style={thCell}>TOTAL COEFFICIENT</th>
+            <th style={thCell}>total des points</th>
+            <th style={thCell}>DECISION (ADIMIS OU NON ADMIS)</th>
+          </tr>
+          <tr>
+            <td style={{ ...tdCell, height: 28 }}></td>
+            <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700 }}>{fmt2(totalNotes)}</td>
+            <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700 }}>{totalCoef || ''}</td>
+            <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700, fontSize: 11 }}>{fmt2(totalPoints)}</td>
+            <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700 }}>{admitted ? 'ADMIS' : 'NON ADMIS'}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* 3 BOTTOM BOXES */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1fr', border: BORDER, marginTop: 10 }}>
+        <div style={{ padding: 8, borderRight: BORDER, fontSize: 9 }}>
+          <div style={{ fontWeight: 700, fontSize: 10, marginBottom: 6 }}>ASSIDUITE</div>
+          <div style={{ marginBottom: 3 }}>ABSENCE JUSTIFIEES : {attendance ? (attendance.absences_total - attendance.absences_injustifiees) : ''}</div>
+          <div style={{ marginBottom: 3 }}>ABSENCES INJUSTIFIEES : {attendance ? attendance.absences_injustifiees : ''}</div>
+          <div style={{ marginBottom: 3 }}>RETARDS JUSTIFIES : 0</div>
+          <div>RETARDS INJUSTIFIES : {attendance ? attendance.retards : ''}</div>
+        </div>
+        <div style={{ padding: 8, borderRight: BORDER, minHeight: 90 }}>
+          <div style={{ fontWeight: 700, fontSize: 10 }}>APPRECIATION GENERALE :</div>
+        </div>
+        <div style={{ padding: 8, textAlign: 'center' }}>
+          <div style={{ fontWeight: 700, fontSize: 10 }}>DIERECTEUR DE L'ETABLISSEMENT</div>
+          <div style={{ fontStyle: 'italic', fontSize: 8, marginTop: 3 }}>(nom, prenom, signature et<br />cachet de letablissement)</div>
+          {signatories.length > 0 && signatories[0].signature_image && (
+            <img src={signatories[0].signature_image} alt="" style={{ maxHeight: 36, maxWidth: '100%', objectFit: 'contain', marginTop: 6 }} crossOrigin="anonymous" />
+          )}
+          {signatories.length > 0 && signatories[0].name && !signatories[0].is_stamp && (
+            <div style={{ fontSize: 9, fontWeight: 600, marginTop: 4 }}>{signatories[0].name}</div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
 
-const th = (extra: React.CSSProperties = {}): React.CSSProperties => ({
-  padding: '8px 6px',
-  fontSize: 12,
-  fontWeight: 700,
-  borderBottom: '2px solid #1f4e79',
-  ...extra,
-});
+const IdRow: React.FC<{ label: string; value: React.ReactNode; last?: boolean }> = ({ label, value, last }) => (
+  <div style={{ padding: '4px 6px', borderBottom: last ? 'none' : '1px solid #000', fontSize: 9 }}>
+    <div style={{ fontSize: 8, color: '#000' }}>{label}</div>
+    <div style={{ fontSize: 10, fontWeight: 600, minHeight: 12 }}>{value}</div>
+  </div>
+);
 
-const td = (extra: React.CSSProperties = {}): React.CSSProperties => ({
-  padding: '6px 8px',
-  borderBottom: '1px solid #94c2db',
-  ...extra,
-});
+const formatDate = (iso: string): string => {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString('fr-FR');
+  } catch { return iso; }
+};
 
 export default BtsBlancBulletinTemplate;

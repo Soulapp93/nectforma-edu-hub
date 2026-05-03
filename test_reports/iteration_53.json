@@ -1,0 +1,83 @@
+{
+  "summary": "Code review of the 3 bulletin templates (Simple, BTS Blanc, Combined) against the user's PDF maquette + B&W palette requirement. SimpleBulletinTemplate and BtsBlancBulletinTemplate match the maquette pixel-perfect (correct exact texts including typos ADIMIS/DIERECTEUR/COEFICIENT, sans-serif Arial/Helvetica, strict B&W palette). CombinedBulletinRenderer correctly reproduces ONLY the header (3-col grid), the 2 identity boxes, and the 3 bottom boxes (ASSIDUITE/APPRECIATION GENERALE/DIERECTEUR). HOWEVER the entire BODY of the combined bulletin (per-period subjects tables + Final Result card) still uses the legacy COLORED design with multiple non-B&W colors, violating the strict palette requirement.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "CombinedBulletinRenderer (body — per-period banners)",
+        "issue": "Period banner uses `background: '#f1f3f8'` (light blue/grey), `borderLeft: 5px solid headerColor`. Pill badge uses `background: headerColor, color: '#fff'`. Text colors `#475569`, `#64748b` (slate blue) are used for 'Poids :', '/20' opacity, and rank label. These violate the strict B&W palette (#000 / #fff / #E0E0E0).",
+        "selector": "[data-testid^='combined-source-bulletin-']",
+        "priority": "HIGH"
+      },
+      {
+        "component": "CombinedBulletinRenderer (subjects table)",
+        "issue": "Table thead has `background: headerColor, color: '#fff'` (still uses headerColor variable; PERIOD_COLORS array is set to all INK=#000 so currently renders as black bg + white text, which is OK B&W). BUT alternating rows use `background: '#fafafa'` (acceptable but specify #E0E0E0 per spec), UE subtotal row uses `background: ${GOLD}1a` where GOLD = '#e8e8e8' (light grey, mostly OK). UE header background `${INK}0d` is a near-black with low alpha which renders as very light grey (acceptable). Status pill 'Validé/Ajourné' OK. Status text '#64748b' (slate) violates palette.",
+        "selector": "[data-testid^='combined-ue-header-'], [data-testid^='combined-ue-subtotal-']",
+        "priority": "HIGH"
+      },
+      {
+        "component": "CombinedBulletinRenderer (period footer line)",
+        "issue": "Uses `borderTop: 1px dashed #cbd5e1` (slate blue), `color: '#64748b'` for 'Rang période :', and `pr.admitted === false ? KO : GOLD` where GOLD is '#e8e8e8' (light grey, would be invisible on white).",
+        "selector": "div with 'Rang période'",
+        "priority": "HIGH"
+      },
+      {
+        "component": "CombinedBulletinRenderer (Final Result card)",
+        "issue": "Uses `background: '#fbfbfd'` (off-white tinted blue), border `1.5px solid INK` with `borderRadius: 12` (rounded corners contradict austere maquette), pill chips with `background: '#f1f5f9'` (slate-blue tint), `color: '#64748b'` and `'#475569'` for breakdown text. Mention/decision colors fall back to GOLD='#e8e8e8' when null. The 4-stat block 'Moy. combinée / Mention / Règle / Décision finale' uses Tailwind `grid grid-cols-4` and `borderLeft: '1px solid #e2e8f0'` (slate). Stat label color '#64748b'. None of these exist in the maquette — the maquette only has the 3 bottom boxes (ASSIDUITE / APPRECIATION GENERALE / DIERECTEUR). The Final Result card and chip breakdown are EXTRA UI not part of the maquette and use forbidden colors.",
+        "selector": "[data-testid='combined-final-section']",
+        "priority": "HIGH"
+      },
+      {
+        "component": "CombinedBulletinRenderer (dead code / unused)",
+        "issue": "Constants GOLD, OK, KO, FONT (Times New Roman) are declared and used in body. `void OK; void KO; void FONT;` is added but the variables are still actively read (e.g., `color: pr.admitted === true ? OK : pr.admitted === false ? KO : GOLD`). Also `IdCell` helper is declared but unused (dead code).",
+        "selector": "n/a",
+        "priority": "MEDIUM"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Combined bulletin attendance",
+        "issue": "The 3 bottom boxes in CombinedBulletinRenderer display empty values for ABSENCE JUSTIFIEES / ABSENCES INJUSTIFIEES / RETARDS — there is NO useQuery loading attendance data via getStudentAttendanceForRanges (unlike SimpleBulletinTemplate which correctly aggregates over sourcePeriods). The bottom-left ASSIDUITE box will always render empty values for combined bulletins.",
+        "affected_selectors": ["[data-testid='combined-bulletin'] (assiduité section)"]
+      }
+    ],
+    "design_issues": [
+      {
+        "screen": "CombinedBulletinRenderer body",
+        "issues": [
+          "Strict B&W palette violated: #f1f3f8, #475569, #64748b, #cbd5e1, #fbfbfd, #f1f5f9, #e2e8f0, #fafafa colors still present in period banners, table accents, footer dashed line, and Final Result card.",
+          "Final Result card (rounded border + 4-stat grid + chips breakdown) is NOT part of the user's maquette — should be removed to match the maquette which only shows the table + 3 bottom boxes.",
+          "BTS Blanc header uses 2-column grid (no central 'BTS BLANC' title) per the request spec — confirmed correct, but visually differs from Simple/Combined which use 3-column grid. This is per user spec so OK.",
+          "Combined bulletin renders per-period sub-tables with columns Matière/CC/DS/Exam Final/Oral/Sout./Moy./Statut — these column headers are in mixed-case, NOT all uppercase, and don't match the Simple bulletin column headers (UNITE D'ENSEIGNEMENT/FORMATEUR/COEFFICIENT/MOYENNE/APPRECIATION). User spec for Combined says only the header + 2 identity boxes + 3 footer boxes must be identical to Simple — body is allowed to differ — but the colored styling is NOT acceptable."
+        ]
+      }
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "CombinedBulletinRenderer body: replace ALL non-B&W colors (#f1f3f8, #475569, #64748b, #cbd5e1, #fbfbfd, #f1f5f9, #e2e8f0, #fafafa, headerColor variants, GOLD '#e8e8e8') with strict palette (#000 text, #fff or #E0E0E0 backgrounds, #000 borders). No light blue, slate, off-white tints.",
+    "CombinedBulletinRenderer: remove the 'Résultat combiné' Final Result card section (rounded border, 4-stat grid, chip breakdown) — not present in the maquette. Replace with a simple grey footer header row similar to Simple bulletin's 'MOYENNE GENERALE | TOTAL COEFICIENT | MOYENNE GENERALE DE L'ETUDIANT | MOYENNE GENERALE DE LA PROMO | DECISION (ADIMIS OU NON ADMIS)' if a final summary is needed.",
+    "CombinedBulletinRenderer: remove `borderRadius: 12` and other rounded-corner styles from final card; the maquette uses 90° corners only.",
+    "CombinedBulletinRenderer: wire up attendance data via useQuery + getStudentAttendanceForRanges(studentId, formationId, sourcePeriods ranges) so the bottom-left ASSIDUITE box shows actual ABSENCE/RETARDS values (currently always empty).",
+    "CombinedBulletinRenderer: remove dead code — IdCell helper (unused), `void OK; void KO; void FONT;` lines, and the FONT='Times New Roman' constant which is no longer used.",
+    "CombinedBulletinRenderer: change period banner pill `background: headerColor; color: #fff` to a clean grey label (e.g., background #E0E0E0 + color #000) to match the maquette's grey banded headers.",
+    "CombinedBulletinRenderer: replace Tailwind `grid grid-cols-4`, `flex items-center justify-between`, `flex flex-wrap` classes with inline styles for consistency with Simple/BTS Blanc which use only inline CSS (also aids html2canvas/PDF export reliability)."
+  ],
+  "critical_code_review_comments": [
+    "SimpleBulletinTemplate.tsx (346 lines) and BtsBlancBulletinTemplate.tsx (293 lines) are both correctly implemented pixel-perfect to maquette: exact text strings (LOGO , NOM ET ADRESSE DE L'ETABLISSEMENT / bulletin semestre / RELEVE DE NOTES / TOTAL COEFICIENT / DECISION (ADIMIS OU NON ADMIS) / ASSIDUITE / ABSENCE JUSTIFIEES : / ABSENCES INJUSTIFIEES : / RETARDS JUSTIFIES : / RETARDS INJUSTIFIES : / APPRECIATION GENERALE : / DIERECTEUR DE L'ETABLISSEMENT / (nom, prenom, signature et cachet de letablissement)) all present including required typos. FONT='Arial, Helvetica, sans-serif'. Strict B&W (#000/#fff/#E0E0E0). data-testid attributes set correctly.",
+    "CombinedBulletinRenderer.tsx (690 lines) is too long (>700 threshold approached). Should be split into sub-components: HeaderBlock, IdentityBoxes, PeriodTable, FinalResultCard, BottomFooter — and the Header/Identity/Footer ones could be extracted to a shared module reused by all 3 bulletins (currently duplicated 3x = DRY violation, ~80 lines of identical code per file).",
+    "DRY violation: identical IdRow/IdBoxRow component declared 3 times (Simple line 331, BTS line 278, Combined line 649). Extract to /app/src/components/grades/BulletinSharedHeader.tsx (which already exists — import it instead).",
+    "DRY violation: identical 'header row + 2 identity boxes + 3 bottom boxes' JSX repeated in all 3 templates. Extract a <BulletinFrame title=... subtitle=... /> wrapper.",
+    "CombinedBulletinRenderer mixes Tailwind utility classes ('flex items-center justify-between', 'grid grid-cols-4') with inline styles inconsistently — keep one approach. Inline styles preferred for PDF/print fidelity (matches Simple/BTS).",
+    "CombinedBulletinRenderer has multiple unused variables: GOLD (used cosmetically with low alpha), OK, KO, FONT, IdCell. Lint should catch these.",
+    "Three useQuery hooks fetch the same roster + same modules across the 3 bulletins — recommend hoisting to a shared hook useFormationGradesContext(formationId, periodId)."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "n/a (skipped per request)", "frontend": "Simple=100%, BTS Blanc=100%, Combined=~40% (header+identity+footer-3-boxes correct, body uses forbidden colors and shows extra non-maquette elements)" },
+  "test_credentials": "admin.principal@nectforma-demo.com / NectDemo2026! (per review_request)",
+  "seed_data_creation": "",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Simple + BTS Blanc bulletins are pixel-perfect to maquette. Only CombinedBulletinRenderer body section (the per-period sub-tables and Final Result card between header and the 3 bottom boxes) still violates the B&W palette — that is the only remaining issue. After E1 fixes the Combined body, retest by navigating to /notes → 'Master Digital Marketing 2026' → Gérer les notes → Bulletin de notes tab → Voir bulletin for Bernard Lucas → 'Bulletin bts' period → assert no element has background/border/color matching slate-blue (#f1f3f8, #475569, #64748b, #cbd5e1, #fbfbfd, #f1f5f9, #e2e8f0). Also assert attendance numbers render in the ASSIDUITE box (currently empty).",
+  "rca of the issue": "Code review (no live UI run done due to scope) confirmed via direct inspection of /app/src/components/grades/CombinedBulletinRenderer.tsx (lines 332-617). Original combined renderer was a colorful multi-period dashboard. Recent refactor only replaced the outer header (lines 277-310), identity boxes (lines 311-329), and 3 bottom-footer boxes (lines 619-642) with B&W maquette-faithful versions, but left the entire middle body untouched — that body still uses the old slate/blue color palette and an extra 'Résultat combiné' card that doesn't exist in the user's PDF maquette. Mitigation: rewrite lines 332-617 of CombinedBulletinRenderer.tsx to use only #000/#fff/#E0E0E0, remove the rounded-corner Final Result card, and reuse the table styling from SimpleBulletinTemplate.tsx (lines 222-299)."
+}
