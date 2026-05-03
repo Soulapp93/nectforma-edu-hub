@@ -65,16 +65,15 @@ const BtsBlancBulletinTemplate: React.FC<Props> = ({
   const sections = config.layout_config.sections || {};
 
   // ─── Modules ────────────────────────────────────────────
-  // For BTS Blanc / Examen Blanc, prefer the per-period module list defined
-  // in `period_modules` (which carries the period-specific coefficients).
-  // Fall back to all formation modules.
+  // For BTS Blanc, load period_modules WITH exam_part (écrit/oral).
+  // Each module may appear twice (écrit + oral) with its own coefficient.
   const { data: modules = [] } = useQuery({
     queryKey: ['bts-bulletin-modules', formationId, period.id],
     queryFn: async () => {
-      // 1) Try period_modules join
+      // 1) Try period_modules join with exam_part
       const { data: pm } = await supabase
         .from('period_modules')
-        .select('module_id, coefficient, formation_modules!inner(id, title, order_index)')
+        .select('module_id, coefficient, exam_part, formation_modules!inner(id, title, order_index)')
         .eq('period_id', period.id);
 
       if (pm && pm.length > 0) {
@@ -84,17 +83,25 @@ const BtsBlancBulletinTemplate: React.FC<Props> = ({
             title: row.formation_modules.title,
             order_index: row.formation_modules.order_index,
             coefficient: row.coefficient || 1,
+            exam_part: row.exam_part || null, // 'ecrit' | 'oral' | null
           }))
-          .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+          .sort((a, b) => {
+            // Écrit first, oral second, then by order_index
+            const partOrder = (p: string | null) => (p === 'ecrit' ? 0 : p === 'oral' ? 1 : 2);
+            const pa = partOrder(a.exam_part);
+            const pb = partOrder(b.exam_part);
+            if (pa !== pb) return pa - pb;
+            return (a.order_index || 0) - (b.order_index || 0);
+          });
       }
 
-      // 2) Fallback to formation modules
+      // 2) Fallback to formation modules (no exam_part)
       const { data } = await supabase
         .from('formation_modules')
         .select('id, title, coefficient, order_index')
         .eq('formation_id', formationId)
         .order('order_index');
-      return (data || []) as any[];
+      return ((data || []) as any[]).map((m) => ({ ...m, exam_part: null }));
     },
   });
 
@@ -221,45 +228,45 @@ const BtsBlancBulletinTemplate: React.FC<Props> = ({
 
       {/* MAIN GRID: left table + right appreciation+attendance */}
       <div className="grid" style={{ gridTemplateColumns: '1.65fr 1fr', borderTop: `1px solid ${INK}` }}>
-        {/* ─── LEFT : modules table ─── */}
+        {/* ─── LEFT : EPREUVES table (matches user's BTS blanc model) ─── */}
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, borderRight: `1px solid ${INK}` }}>
           <thead>
             <tr style={{ background: HEADER_BG, color: '#000' }}>
-              <th style={th({ borderRight: `1px solid ${INK}`, textAlign: 'center' })}>Examen Blanc</th>
-              <th style={th({ borderRight: `1px solid ${INK}`, width: 60, textAlign: 'center' })}>Notes</th>
-              <th style={th({ borderRight: `1px solid ${INK}`, width: 40, textAlign: 'center' })}>C.</th>
-              <th style={th({ width: 60, textAlign: 'center' })}>Points</th>
+              <th style={th({ borderRight: `1px solid ${INK}`, textAlign: 'center' })}>ÉPREUVES</th>
+              <th style={th({ borderRight: `1px solid ${INK}`, width: 60, textAlign: 'center' })}>NOTES</th>
+              <th style={th({ borderRight: `1px solid ${INK}`, width: 70, textAlign: 'center' })}>COEFFICIENT</th>
+              <th style={th({ borderRight: `1px solid ${INK}`, width: 60, textAlign: 'center' })}>POINTS</th>
+              <th style={th({ width: 140, textAlign: 'center' })}>APPRÉCIATION</th>
             </tr>
           </thead>
           <tbody>
             {modules.length === 0 ? (
-              <tr><td colSpan={4} style={{ padding: 14, textAlign: 'center', fontStyle: 'italic', color: '#64748b' }}>Aucun module configuré.</td></tr>
+              <tr><td colSpan={5} style={{ padding: 14, textAlign: 'center', fontStyle: 'italic', color: '#64748b' }}>Aucun module configuré.</td></tr>
             ) : modules.map((mod: any, i: number) => {
               const computed = result.modules.find((m) => m.module_id === mod.id);
               const note = computed?.module_average ?? null;
               const coef = mod.coefficient || 0;
               const points = note !== null ? Math.round(note * coef * 100) / 100 : null;
               const isHighlighted = i % 2 === 0;
+              const partLabel = mod.exam_part === 'ecrit' ? '(écrit)' : mod.exam_part === 'oral' ? '(oral)' : '';
               return (
-                <tr key={mod.id} style={{ background: isHighlighted ? ROW_BG : ROW_BG_ALT }}>
+                <tr key={`${mod.id}-${mod.exam_part || 'main'}`} style={{ background: isHighlighted ? ROW_BG : ROW_BG_ALT }} data-testid={`bts-row-${mod.exam_part || 'main'}-${mod.id}`}>
                   <td style={td({ borderRight: `1px solid ${INK}`, fontSize: 11.5 })}>
-                    {(() => {
-                      const t = formatTitle(mod);
-                      const m = t.match(/^(E\d+)\s*-\s*(.*)$/);
-                      if (m) {
-                        const isMajor = ['E1', 'E5', 'E41'].includes(m[1]);
-                        return (
-                          <span>
-                            <strong>{m[1]}</strong> - {isMajor ? <strong>{m[2]}</strong> : m[2]}
-                          </span>
-                        );
-                      }
-                      return <span>{t}</span>;
-                    })()}
+                    <span style={{ fontWeight: 600 }}>{formatTitle(mod)}</span>
+                    {partLabel && (
+                      <span style={{
+                        marginLeft: 6, fontSize: 10, fontStyle: 'italic',
+                        color: mod.exam_part === 'ecrit' ? '#1e40af' : '#7e22ce',
+                        fontWeight: 700,
+                      }}>
+                        {partLabel}
+                      </span>
+                    )}
                   </td>
                   <td style={td({ borderRight: `1px solid ${INK}`, textAlign: 'center', fontWeight: 600 })}>{fmt2(note)}</td>
                   <td style={td({ borderRight: `1px solid ${INK}`, textAlign: 'center', fontWeight: 700 })}>{coef || '—'}</td>
-                  <td style={td({ textAlign: 'center', fontWeight: 700 })}>{fmt2(points)}</td>
+                  <td style={td({ borderRight: `1px solid ${INK}`, textAlign: 'center', fontWeight: 700 })}>{fmt2(points)}</td>
+                  <td style={td({ fontSize: 10.5, fontStyle: 'italic', color: '#1e293b' })}>{computed?.appreciation || '—'}</td>
                 </tr>
               );
             })}

@@ -3,6 +3,28 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
+## Session 59 (2026-05-03) — Phase 1 : BTS Blanc Écrit/Oral
+
+**Demande user (avec 2 PDF maquettes)** : Mettre à jour les relevés de notes selon 3 modèles créés :
+1. Relevé période simple (S1/S2) — disposition UE (fait session 58)
+2. Relevé BTS Blanc — **doit différencier Écrit vs Oral** dans la sélection des matières (NOUVEAU)
+3. Relevé combiné (fin d'année) — agrège CC + BTS Blanc selon le modèle user
+
+**Réalisé Phase 1 (BTS Blanc Écrit/Oral)** :
+- 🆕 Migration DB `20260502230000_period_modules_exam_part.sql` : colonne `exam_part text` (check 'ecrit'/'oral'), remplacement de la contrainte UNIQUE(period_id, module_id) par un index UNIQUE composite (period_id, module_id, COALESCE(exam_part, '__main__')) permettant 2 entrées par matière pour BTS Blanc.
+- ✏️ `CreatePeriodModal.tsx` : quand `periodType === 'bts_blanc'`, affiche 2 blocs distincts (data-testid='bts-part-block-ecrit' & 'bts-part-block-oral') chacun avec UE/matières cliquables indépendamment + input coef individuel. États séparés : `btsEcritIds`, `btsOralIds`, `btsEcritCoefs`, `btsOralCoefs`. Persistance via `period_modules` avec `exam_part` respectif.
+- ✏️ `BtsBlancBulletinTemplate.tsx` :
+  - Load `exam_part` depuis period_modules, tri Écrit→Oral
+  - Colonnes renommées au modèle user : **ÉPREUVES | NOTES | COEFFICIENT | POINTS | APPRÉCIATION** (ajout de la colonne Appréciation)
+  - Suffixe visuel `(écrit)` en bleu ou `(oral)` en violet après le nom de la matière
+  - data-testid='bts-row-{ecrit|oral}-{moduleId}' pour traçabilité
+
+**Validation Phase 1** : Test manuel main agent — BTS Blanc → modal affiche 2 sections Écrit/Oral avec UE Principale et ses 3 matières cliquables dans chacune. ✅
+
+**À venir (prochaines sessions)** :
+- **Phase 2** : `SimpleBulletinTemplate` — ajout colonne FORMATEUR, libellés en majuscules (FORMATEUR | COEFFICIENT | MOYENNE DE L'ÉTUDIANT | MOYENNE DE LA PROMO | APPRÉCIATION), footer "MOYENNE GÉNÉRALE | TOTAL COEFFICIENT | MOYENNE GÉNÉRALE DE L'ÉTUDIANT | MOYENNE GÉNÉRALE DE LA PROMO | DÉCISION".
+- **Phase 3** : `CombinedBulletinRenderer` — refonte complète pour matcher le modèle annuel (sections Semestre 1 + Semestre 2 + Contrôle continu + BTS Blanc, footer avec moyennes cumulées).
+
 ## Session 58 (2026-05-02) — Bulletins de notes groupés par UE
 
 **Demande user** : "mettre à jour le bulletin de notes — afficher les bulletins en mode UE, en respectant la disposition des colonnes actuelles : Coef. | Moy. indiv. | Moy. promo | Appréciation".
