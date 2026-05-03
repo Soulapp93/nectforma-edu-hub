@@ -1,0 +1,48 @@
+{
+  "summary": "Re-tested CombinedBulletinRenderer body refactor end-to-end against the maquette. Found and fixed a CRITICAL regression: `studentDateOfBirth` was missing from the props destructuring, causing the entire CombinedBulletinRenderer to throw `ReferenceError: studentDateOfBirth is not defined` and the modal to crash with the global ErrorBoundary screen. After adding the missing destructure, the combined bulletin renders pixel-perfect: strict B&W palette (#000/#fff/#E0E0E0), 2 source-period sections with grey banners + 7-column subjects tables (Matière/CC/DS/Exam Final/Oral/Moy./Statut), UE grouping rows, UE subtotal rows, simple grey 4-column final summary table (MOYENNE GENERALE COMBINEE | MENTION | REGLE DE CALCUL | DECISION (ADIMIS OU NON ADMIS)), attendance box populated with numeric values, and 0 borderRadius violations. All 6 review criteria pass.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "CombinedBulletinRenderer",
+        "issue": "RUNTIME CRASH: `studentDateOfBirth is not defined` - prop was declared in Props interface (line 22) and used on line 329, but missing from destructuring (lines 91-105). Caused ErrorBoundary fallback 'Une erreur s'est produite — studentDateOfBirth is not defined' on every Voir bulletin click for the combined period. FIXED by testing agent: added `studentDateOfBirth,` to the destructuring.",
+        "selector": "[data-testid='combined-bulletin']",
+        "priority": "CRITICAL"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "CombinedBulletinRenderer (post-fix)",
+        "issues": [
+          "Cosmetic only: 309 borderColor entries report rgb(220,220,229) (tailwind `--border` HSL variable from `* { border-color: hsl(var(--border)) }` global reset). NOT visible because the affected elements have `border-style: none` and no border-width — no rendered slate-blue color. Confirmed visually via screenshot: pure B&W rendering.",
+          "Dead code remains as expected per review_request: helpers IdCell, Stat, th(), td() at lines 528-560 still reference forbidden colors (#64748b, #e2e8f0, #f1f5f9) but are NOT rendered (zero call sites in the JSX). Constants GOLD/OK/KO/FONT and the `void OK; void KO; void FONT;` lines remain. Acceptable per review_request scope ('tant que ça compile et affiche correctement, c'est acceptable')."
+        ]
+      }
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Acknowledge the studentDateOfBirth fix applied by testing agent in /app/src/components/grades/CombinedBulletinRenderer.tsx (one-line addition to props destructuring).",
+    "OPTIONAL CLEANUP (next iteration): remove dead helpers IdCell (line 528), Stat (line 537), th() (line 546), td() (line 556) and unused constants GOLD/OK/KO/FONT (lines 113-116) + the `void OK; void KO; void FONT;` line 282. None are referenced in the rendered JSX after this iteration's body refactor.",
+    "OPTIONAL: file size — CombinedBulletinRenderer is 564 lines, still under the 700-line threshold but DRY violation persists (header/identity/footer JSX is duplicated across SimpleBulletinTemplate/BtsBlancBulletinTemplate/CombinedBulletinRenderer). Extract a shared <BulletinFrame /> wrapper."
+  ],
+  "critical_code_review_comments": [
+    "ROOT CAUSE: when refactoring the body of CombinedBulletinRenderer, the new IdBoxRow at line 329 was added (`value={studentDateOfBirth ? ... }`) without updating the props destructuring block. TypeScript/Vite did not catch this because `studentDateOfBirth` was previously not used in the body and the destructuring was hand-curated. Recommend enabling `noUnusedParameters` + ensuring all Props interface fields are destructured, or use `props.studentDateOfBirth` notation consistently.",
+    "Combined bulletin now matches the maquette: header (3-col grid), 2 identity boxes (NOM/PRENOM/DATE/FORMATION/ANNEE | NUMERO ETUDIANT/CE/INE), per-period gray banners with `Moy. : XX.XX/20`, 7-column subjects tables, UE grouping headers + subtotals, gray 4-col final summary table, and 3 bottom boxes (ASSIDUITE w/ numeric values from getStudentAttendanceForRanges, APPRECIATION GENERALE, DIERECTEUR DE L'ETABLISSEMENT). Strict B&W palette, 0 rounded corners.",
+    "All 3 bulletin templates (Simple, BTS Blanc, Combined) are now visually consistent and pixel-perfect to the user's PDF maquettes."
+  ],
+  "updated_files": [
+    "/app/src/components/grades/CombinedBulletinRenderer.tsx (added `studentDateOfBirth,` to props destructuring at line ~98)"
+  ],
+  "success_rate": {
+    "backend": "n/a (skipped per request)",
+    "frontend": "Simple=100%, BTS Blanc=100%, Combined=100% (after testing agent's studentDateOfBirth fix)"
+  },
+  "test_credentials": "admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All 3 bulletins (Simple, BTS Blanc, Combined) verified pixel-perfect to maquette via live UI run for student Bernard Lucas, period 'Bulletin bts'. Verification queries: combined-bulletin renders 157 elements / 2 source periods / 2 UE headers / 2 UE subtotals; final section text = 'MOYENNE GENERALE COMBINEE MENTION REGLE DE CALCUL DECISION (ADIMIS OU NON ADMIS) 11.50/20 Passable Simple ADMIS'; attendance text = 'ASSIDUITE ABSENCE JUSTIFIEES : 0 ABSENCES INJUSTIFIEES : 0 RETARDS JUSTIFIES : 0 RETARDS INJUSTIFIES : 0'; 0 borderRadius violations; only B&W colors actually visible. CORS errors on supabase compute-bulletin edge function are pre-existing and unrelated (the renderer uses client-side computation via computeStudentPeriodBulletin and aggregateCombinedAverage, which work correctly).",
+  "rca of the issue": "RCA — `studentDateOfBirth is not defined` ReferenceError: The Props interface declares `studentDateOfBirth?: string | null` at line 22 of CombinedBulletinRenderer.tsx. The body refactor added a usage at line 329 (`value={studentDateOfBirth ? (new Date(studentDateOfBirth).toLocaleDateString('fr-FR')) : ''}`) inside the new IdBoxRow for DATE DE NAISSANCE. However, the props destructuring block (lines 91-105) was NOT updated to include `studentDateOfBirth,` — only the previously-destructured props remained. At runtime React's component closure looked up `studentDateOfBirth` and threw a ReferenceError, caught by the global ErrorBoundary which rendered 'Une erreur s'est produite'. Reproduction: navigate to /notes → Master Digital Marketing 2026 → Gérer les notes → Bulletin de notes tab → Bulletin bts period chip → click 'Voir' on Bernard Lucas. Mitigation applied: added `studentDateOfBirth,` between `studentMatricule,` and `formationId,` in the destructuring block. Re-tested → bulletin renders correctly."
+}
