@@ -3,6 +3,30 @@
 ## Plateforme
 ERP Education - Gestion academique (React + Vite + TypeScript + Supabase)
 
+## Session 61 (2026-05-03) — Bulletins pixel-perfect maquettes user ✅
+
+**Demande user (avec 2 maquettes PDF re-partagées)** : "je veux que les relevés de notes soit EXACTEMENT comme mes maquettes, les entêtes et le pied du bulletin doit être exactement pareil quelque soit le relevé de notes. Reproduis les bulletins EXACTEMENT comme ma maquette sans rien changer, même pas une virgule, mêmes choses, mêmes designs, couleurs parfaitement comme j'ai fait"
+
+**Réalisé** — les 3 bulletins (Simple, BTS Blanc, Combined) sont maintenant **pixel-perfect** :
+- 🆕 **Police Arial/Helvetica sans-serif** (plus Times New Roman)
+- 🆕 **Header identique** : `LOGO , NOM ET ADRESSE DE L'ETABLISSEMENT` (gauche) | sous-titre central (`bulletin semestre` / `BTS BLANC` / `bulletin combiné`) | `RELEVE DE NOTES` + `( [période] )` (droite)
+- 🆕 **2 blocs identité séparés côte à côte** (gauche: NOM/PRENOM/DATE/FORMATION/ANNEE — droite: NUMERO ETUDIANT/CE/INE)
+- 🆕 **Footer identique sur les 3** : 3 blocs `ASSIDUITE | APPRECIATION GENERALE : | DIERECTEUR DE L'ETABLISSEMENT` (typo conservée), avec ABSENCE JUSTIFIEES, ABSENCES INJUSTIFIEES, RETARDS JUSTIFIES, RETARDS INJUSTIFIES
+- 🆕 **Textes exacts préservés** : `TOTAL COEFICIENT` (sans F), `DECISION (ADIMIS OU NON ADMIS)` (typo conservée), `DIERECTEUR DE L'ETABLISSEMENT` (typo conservée), `(nom, prenom, signature et cachet de letablissement)`
+- 🆕 **Corps SimpleBulletin** : colonnes `UNITE D'ENSEIGNEMENT N` | `FORMATEUR` | `COEFFICIENT` | `MOYENNE` (split ligne `MOYENNE DE L'ETUDIANT` + `MOYENNE DE LA PROMO`) | `APPRECIATION`. Ligne footer gris `MOYENNE GENERALE | TOTAL COEFICIENT | MOY. ETUDIANT | MOY. PROMO | DECISION`.
+- 🆕 **Corps BtsBlanc** : colonnes `EPREUVES | NOTES | COEFFICIENT | POINTS | APPRECIATION`. Suffixe `(ecrit)` ou `oral` italique 7pt.
+- 🆕 **Corps Combined** : banner gris par période + tableau 7 colonnes noir/blanc avec grouping UE + ligne sous-total UE. Final summary table gris 4 colonnes (MOYENNE GENERALE COMBINEE | MENTION | REGLE DE CALCUL | DECISION). Assiduité agrégée sur tous les sourcePeriods.
+- 🆕 **Palette ultra-stricte** : text `#000`, background `#fff` / `#E0E0E0`, borders `#000`. Aucune couleur autre, aucun border-radius, aucune pill/chip arrondie.
+
+**Correctif critique appliqué** : `studentDateOfBirth` manquant dans la destructuration props de `CombinedBulletinRenderer` causait un crash ErrorBoundary. Corrigé par testing agent.
+
+**Validation** :
+- **Testing agent iteration_53** : Simple=100%, BTS Blanc=100%
+- **Testing agent iteration_54** : Combined=100% (après fix studentDateOfBirth). **3/3 bulletins pixel-perfect conformes maquettes**
+- Test manuel main agent : screenshot Bernard Lucas Semestre 1 confirme pixel-perfect
+
+**Cleanup** : suppression du dead code (helpers IdCell/Stat/th/td, constants GOLD/OK/KO/FONT non utilisés) dans CombinedBulletinRenderer.
+
 ## Session 60 (2026-05-03) — Phase 2 & 3 : Design noir & blanc des 3 bulletins
 
 **Demande user** : "je veux le même design blanc que mes maquettes, je ne veux pas d'autre couleur, je veux que tous les bulletins soient comme ça"

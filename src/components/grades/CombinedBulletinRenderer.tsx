@@ -108,15 +108,9 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
     calculation_rule: 'simple_average',
   };
 
-  // Visual tokens (from combined period's own config)
-  // Black & white minimalist palette — matches user's maquettes.
+  // Visual tokens: strict B&W palette matching user's maquettes
   const INK = '#000';
-  const GOLD = '#e8e8e8';    // light grey for accent / header bands
-  const OK = '#000';          // no color coding in B&W
-  const KO = '#000';
-  const FONT = '"Times New Roman", Georgia, serif';
-  // (override config colors, always B&W)
-  const _unused_font_cfg = combinedConfig.design_config.font_family;
+  void combinedConfig.design_config;
 
   // ─── Load shared data ────────────────────────────────────
   const { data: modules = [] } = useQuery({
@@ -280,7 +274,7 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
     return <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: INK }} /></div>;
   }
 
-  void OK; void KO; void FONT;
+  void referenceNumber;
   const FONT_SANS = 'Arial, Helvetica, sans-serif';
   const BORDER = '1px solid #000';
   const PERIOD_COLORS = [INK, INK, INK, INK];
@@ -525,39 +519,5 @@ const IdBoxRow: React.FC<{ label: string; value: React.ReactNode; last?: boolean
     <div style={{ fontSize: 10, fontWeight: 600, minHeight: 12 }}>{value}</div>
   </div>
 );
-
-const IdCell: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
-  <div>
-    <p style={{ fontSize: 9, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 2 }}>
-      {label}
-    </p>
-    <p style={{ fontSize: 12, fontWeight: 700 }}>{value}</p>
-  </div>
-);
-
-const Stat: React.FC<{ label: string; value: React.ReactNode; divider?: boolean }> = ({ label, value, divider }) => (
-  <div style={{ textAlign: 'center', padding: '4px 8px', borderLeft: divider ? '1px solid #e2e8f0' : 'none' }}>
-    <p style={{ fontSize: 9, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>
-      {label}
-    </p>
-    <div>{value}</div>
-  </div>
-);
-
-const th = (extra: React.CSSProperties = {}): React.CSSProperties => ({
-  padding: '8px 8px',
-  fontSize: 10,
-  fontWeight: 700,
-  textAlign: 'center',
-  letterSpacing: 0.5,
-  textTransform: 'uppercase',
-  ...extra,
-});
-
-const td = (extra: React.CSSProperties = {}): React.CSSProperties => ({
-  padding: '6px 8px',
-  borderBottom: '1px solid #f1f5f9',
-  ...extra,
-});
 
 export default CombinedBulletinRenderer;
