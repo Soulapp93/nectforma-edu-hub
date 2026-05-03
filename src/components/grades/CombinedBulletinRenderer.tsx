@@ -110,13 +110,14 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
   };
 
   // Visual tokens (from combined period's own config)
-  const INK = combinedConfig.design_config.primary_color || '#1a2654';
-  const GOLD = combinedConfig.design_config.accent_color || '#c8a94e';
-  const OK = combinedConfig.design_config.success_color || '#16a34a';
-  const KO = combinedConfig.design_config.error_color || '#dc2626';
-  const FONT = combinedConfig.design_config.font_family
-    ? `"${combinedConfig.design_config.font_family}", Arial, sans-serif`
-    : '"Inter", "Helvetica Neue", Arial, sans-serif';
+  // Black & white minimalist palette — matches user's maquettes.
+  const INK = '#000';
+  const GOLD = '#e8e8e8';    // light grey for accent / header bands
+  const OK = '#000';          // no color coding in B&W
+  const KO = '#000';
+  const FONT = '"Times New Roman", Georgia, serif';
+  // (override config colors, always B&W)
+  const _unused_font_cfg = combinedConfig.design_config.font_family;
 
   // ─── Load shared data ────────────────────────────────────
   const { data: modules = [] } = useQuery({
@@ -266,8 +267,8 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
     return <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: INK }} /></div>;
   }
 
-  // Different colored table headers per period (cycle through 2 tones)
-  const PERIOD_COLORS = [INK, '#1d4ed8', '#7c3aed', '#0891b2'];
+  // B&W: all period colors are black (no color coding)
+  const PERIOD_COLORS = [INK, INK, INK, INK];
 
   return (
     <div
@@ -283,65 +284,43 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
       data-testid="combined-bulletin"
     >
       {/* ════════════════════════════════════════════════════ */}
-      {/* HEADER : navy + gold accent line                     */}
+      {/* HEADER : white with black borders (matches maquette) */}
       {/* ════════════════════════════════════════════════════ */}
-      <div style={{ background: INK, color: '#fff', padding: '14px 18px', position: 'relative' }}>
+      <div style={{ background: '#fff', color: '#000', padding: '14px 18px', borderBottom: '1px solid #000' }}>
         <div className="flex items-start justify-between gap-4">
-          {/* Left: logo + name */}
           <div className="flex items-center gap-3">
             {establishmentLogoUrl ? (
-              <img src={establishmentLogoUrl} alt="" style={{ height: 50, width: 50, borderRadius: 8, objectFit: 'contain', background: '#fff' }} crossOrigin="anonymous" />
+              <img src={establishmentLogoUrl} alt="" style={{ height: 58, width: 58, objectFit: 'contain' }} crossOrigin="anonymous" />
             ) : (
-              <div style={{ height: 50, width: 50, borderRadius: 8, background: GOLD, color: INK, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 800 }}>
-                {establishmentName.charAt(0).toUpperCase()}
+              <div style={{ height: 58, width: 58, border: '1px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700 }}>
+                LOGO
               </div>
             )}
             <div>
-              <p style={{ fontSize: 20, fontWeight: 800, lineHeight: 1.1 }}>{establishmentName}</p>
-              <p style={{ fontSize: 10, opacity: 0.85, marginTop: 2 }}>
-                Bulletin Annuel · {academicYear}
+              <p style={{ fontSize: 14, fontWeight: 800, lineHeight: 1.1 }}>{establishmentName}</p>
+              <p style={{ fontSize: 10, marginTop: 2, color: '#333' }}>
+                Bulletin annuel · {academicYear}
               </p>
             </div>
           </div>
 
-          {/* Right: gold pill BULLETIN COMBINÉ */}
           <div style={{ textAlign: 'right' }}>
-            <div
-              style={{
-                display: 'inline-block',
-                background: GOLD,
-                color: INK,
-                padding: '6px 14px',
-                borderRadius: 6,
-                fontSize: 13,
-                fontWeight: 800,
-                letterSpacing: 1.5,
-              }}
-            >
-              BULLETIN COMBINÉ
-            </div>
-            <p style={{ fontSize: 10, opacity: 0.85, marginTop: 4, fontStyle: 'italic' }}>
-              {finalLabel}
-            </p>
-            <p style={{ fontSize: 9, opacity: 0.7 }}>
+            <p style={{ fontSize: 16, fontWeight: 800, letterSpacing: 1 }}>RELEVÉ DE NOTES — BULLETIN COMBINÉ</p>
+            <p style={{ fontSize: 11, marginTop: 4, fontStyle: 'italic' }}>{finalLabel}</p>
+            <p style={{ fontSize: 9, marginTop: 2, color: '#555' }}>
               {sourceResults.map((r) => r.period.name).join(' + ')}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Gold accent line */}
-      <div style={{ height: 3, background: GOLD }} />
-
-      {/* ════════════════════════════════════════════════════ */}
-      {/* STUDENT IDENTITY ROW (5 cols)                         */}
-      {/* ════════════════════════════════════════════════════ */}
-      <div className="grid grid-cols-5" style={{ background: '#f5f6fa', padding: '12px 18px', fontSize: 11 }}>
-        <IdCell label="Nom & prénoms" value={studentFullName} />
-        <IdCell label="Matricule" value={studentMatricule || '—'} />
-        <IdCell label="Filière" value={formationTitle} />
-        <IdCell label="Niveau" value={formationLevel || '—'} />
-        <IdCell label="Année" value={academicYear} />
+      {/* STUDENT IDENTITY ROW (black & white) */}
+      <div className="grid grid-cols-5" style={{ background: '#fff', padding: '10px 18px', fontSize: 10.5, borderBottom: '1px solid #000' }}>
+        <IdCell label="NOM & PRÉNOMS" value={studentFullName} />
+        <IdCell label="MATRICULE" value={studentMatricule || '—'} />
+        <IdCell label="FORMATION" value={formationTitle} />
+        <IdCell label="NIVEAU" value={formationLevel || '—'} />
+        <IdCell label="ANNÉE" value={academicYear} />
       </div>
 
       {/* ════════════════════════════════════════════════════ */}
@@ -449,7 +428,7 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
                         totalCoef += r.coefficient;
                       }
                       const ueAvg = c > 0 ? Math.round((w / c) * 100) / 100 : null;
-                      const ueColor = ueAvg === null ? '#94a3b8' : ueAvg >= 14 ? OK : ueAvg >= admissionThreshold ? '#1d4ed8' : KO;
+                      const ueColor = '#000';
                       const key = ue?.id || '_unassigned';
                       return (
                         <React.Fragment key={key}>
@@ -475,21 +454,19 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
                           {/* Matières */}
                           {ueRows.map((row, i) => {
                             const validated = row.moy !== null && row.moy >= admissionThreshold && !row.eliminated;
-                            const moyColor = row.moy === null ? '#94a3b8' : row.moy >= 14 ? OK : row.moy >= 10 ? '#1d4ed8' : KO;
+                            const moyColor = '#000';
                             return (
-                              <tr key={row.moduleId} style={{ background: i % 2 === 0 ? '#fff' : '#f8fafc' }}>
+                              <tr key={row.moduleId} style={{ background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
                                 <td style={{ ...td(), fontWeight: 600, paddingLeft: 18 }}>{row.moduleTitle}</td>
-                                <td style={td({ textAlign: 'center', color: '#475569' })}>{row.cc !== null ? Math.round(row.cc) : '–'}</td>
-                                <td style={td({ textAlign: 'center', color: '#475569' })}>{row.ds !== null ? Math.round(row.ds) : '–'}</td>
-                                <td style={td({ textAlign: 'center', color: '#475569' })}>{row.exam !== null ? Math.round(row.exam) : '–'}</td>
-                                <td style={td({ textAlign: 'center', color: '#7c3aed' })}>{row.oral !== null ? Math.round(row.oral) : '–'}</td>
+                                <td style={td({ textAlign: 'center', color: '#000' })}>{row.cc !== null ? Math.round(row.cc) : '–'}</td>
+                                <td style={td({ textAlign: 'center', color: '#000' })}>{row.ds !== null ? Math.round(row.ds) : '–'}</td>
+                                <td style={td({ textAlign: 'center', color: '#000' })}>{row.exam !== null ? Math.round(row.exam) : '–'}</td>
+                                <td style={td({ textAlign: 'center', color: '#000' })}>{row.oral !== null ? Math.round(row.oral) : '–'}</td>
                                 <td style={{ ...td({ textAlign: 'center' }), fontWeight: 800, color: moyColor }}>{fmt(row.moy)}</td>
                                 <td style={td({ textAlign: 'center' })}>
                                   <span style={{
-                                    fontSize: 10, padding: '2px 8px', borderRadius: 999,
-                                    background: validated ? '#dcfce7' : row.moy === null ? '#f1f5f9' : '#fee2e2',
-                                    color: validated ? '#15803d' : row.moy === null ? '#64748b' : '#b91c1c',
-                                    fontWeight: 600,
+                                    fontSize: 10, padding: '2px 8px', borderRadius: 3, border: '1px solid #000',
+                                    background: '#fff', color: '#000', fontWeight: 600,
                                   }}>
                                     {validated ? 'Validé' : row.moy === null ? '—' : 'Ajourné'}
                                   </span>

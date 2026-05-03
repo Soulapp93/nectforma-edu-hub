@@ -54,14 +54,12 @@ const BtsBlancBulletinTemplate: React.FC<Props> = ({
   sourcePeriods,
   totalAdmissionThreshold = 220,
 }) => {
-  const INK = config.design_config.primary_color || '#1a2654';
-  const ROW_BG = '#cfe7f5';        // light cyan band like the screenshot
-  const ROW_BG_ALT = '#e6f3fa';
-  const HEADER_BG = '#82b9d8';      // medium blue header
-  const TOTAL_BG = '#5b9ec5';
-  const FONT = config.design_config.font_family
-    ? `"${config.design_config.font_family}", Arial, sans-serif`
-    : '"Times New Roman", Georgia, serif';
+  const INK = '#000';
+  const ROW_BG = '#ffffff';
+  const ROW_BG_ALT = '#fafafa';
+  const HEADER_BG = '#e8e8e8';
+  const TOTAL_BG = '#d5d5d5';
+  const FONT = '"Times New Roman", Georgia, serif';
   const sections = config.layout_config.sections || {};
 
   // ─── Modules ────────────────────────────────────────────
@@ -256,7 +254,7 @@ const BtsBlancBulletinTemplate: React.FC<Props> = ({
                     {partLabel && (
                       <span style={{
                         marginLeft: 6, fontSize: 10, fontStyle: 'italic',
-                        color: mod.exam_part === 'ecrit' ? '#1e40af' : '#7e22ce',
+                        color: '#000',
                         fontWeight: 700,
                       }}>
                         {partLabel}
@@ -295,24 +293,24 @@ const BtsBlancBulletinTemplate: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* TOTAL ROW */}
-      <div className="grid" style={{ gridTemplateColumns: '1.65fr 1fr', borderTop: `2px solid ${INK}` }}>
-        <div style={{ background: TOTAL_BG, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px' }}>
-          <span style={{ fontSize: 14, fontWeight: 800 }}>
-            TOTAL (Admis si &gt; ou = {totalAdmissionThreshold})
+      {/* TOTAL ROW — black & white */}
+      <div className="grid" style={{ gridTemplateColumns: '1.65fr 1fr', borderTop: `1px solid ${INK}` }}>
+        <div style={{ background: TOTAL_BG, color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRight: `1px solid ${INK}` }}>
+          <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: 0.5 }}>
+            TOTAL (ADMIS SI ≥ {totalAdmissionThreshold})
           </span>
-          <span style={{ fontSize: 16, fontWeight: 800, background: '#fff', color: '#000', padding: '3px 16px', borderRadius: 3 }}>
+          <span style={{ fontSize: 14, fontWeight: 800, background: '#fff', color: '#000', padding: '3px 14px', border: `1px solid ${INK}` }}>
             {fmt2(totalPoints)}
           </span>
         </div>
         <div
           style={{
-            background: INK,
-            color: '#fff',
+            background: TOTAL_BG,
+            color: '#000',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: 800,
             letterSpacing: 1.5,
             padding: '8px 12px',

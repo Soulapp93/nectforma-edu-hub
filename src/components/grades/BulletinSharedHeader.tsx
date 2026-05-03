@@ -13,17 +13,12 @@ interface Props {
   establishmentName: string;
   establishmentLogoUrl?: string | null;
   referenceNumber: string;
+  establishmentAddress?: string | null;
 }
 
 /**
- * Shared header used by Simple, Combined and BTS Blanc bulletins so that
- * all three templates have an identical visual identity (only the body
- * changes between them).
- *
- * Layout:
- *   • Navy strip with logo + establishment name (left) and gold pill + ref (right)
- *   • Gold accent line
- *   • 5-column identity strip (light grey)
+ * Shared header used by BTS Blanc and Combined bulletins.
+ * Black & white minimalist design matching user's maquettes.
  */
 const BulletinSharedHeader: React.FC<Props> = ({
   period,
@@ -36,92 +31,59 @@ const BulletinSharedHeader: React.FC<Props> = ({
   establishmentName,
   establishmentLogoUrl,
   referenceNumber,
+  establishmentAddress,
 }) => {
-  const INK = config.design_config.primary_color || '#1a2654';
-  const GOLD = config.design_config.accent_color || '#c8a94e';
-  const FONT = config.design_config.font_family
-    ? `"${config.design_config.font_family}", Arial, sans-serif`
-    : '"Inter", "Helvetica Neue", Arial, sans-serif';
-  const mainTitle = config.text_config.main_title || 'BULLETIN';
+  const FONT = '"Times New Roman", Georgia, serif';
+  const mainTitle = (config.text_config.main_title || 'RELEVÉ DE NOTES').toUpperCase();
+  const [firstName, ...lastNameParts] = (studentFullName || '').split(' ');
+  const lastName = lastNameParts.join(' ');
 
   return (
-    <div style={{ fontFamily: FONT, color: INK }}>
-      {/* Navy strip */}
-      <div style={{ background: INK, color: '#fff', padding: '14px 18px', position: 'relative', zIndex: 1 }}>
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            {establishmentLogoUrl ? (
-              <img
-                src={establishmentLogoUrl}
-                alt=""
-                style={{ height: 50, width: 50, borderRadius: 8, objectFit: 'contain', background: '#fff' }}
-                crossOrigin="anonymous"
-              />
-            ) : (
-              <div
-                style={{
-                  height: 50, width: 50, borderRadius: 8, background: GOLD, color: INK,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 22, fontWeight: 800,
-                }}
-              >
-                {establishmentName.charAt(0).toUpperCase()}
-              </div>
-            )}
-            <div>
-              <p style={{ fontSize: 20, fontWeight: 800, lineHeight: 1.1 }}>{establishmentName}</p>
-              <p style={{ fontSize: 10, opacity: 0.85, marginTop: 2 }}>
-                {period.name} · {academicYear}
-              </p>
-            </div>
+    <div style={{ fontFamily: FONT, color: '#000', background: '#fff' }}>
+      {/* TOP STRIP */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 14, padding: '10px 12mm', borderBottom: '1px solid #000' }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          {establishmentLogoUrl ? (
+            <img src={establishmentLogoUrl} alt="" style={{ width: 58, height: 58, objectFit: 'contain' }} crossOrigin="anonymous" />
+          ) : (
+            <div style={{ width: 58, height: 58, border: '1px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, padding: 4, textAlign: 'center', lineHeight: 1.1 }}>LOGO</div>
+          )}
+          <div style={{ fontSize: 10 }}>
+            <p style={{ fontWeight: 700, fontSize: 12, marginBottom: 2 }}>{establishmentName}</p>
+            {establishmentAddress && <p style={{ color: '#333' }}>{establishmentAddress}</p>}
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div
-              style={{
-                display: 'inline-block',
-                background: GOLD, color: INK,
-                padding: '6px 14px', borderRadius: 6,
-                fontSize: 13, fontWeight: 800, letterSpacing: 1.5,
-              }}
-            >
-              {mainTitle.toUpperCase()}
-            </div>
-            <p style={{ fontSize: 10, opacity: 0.85, marginTop: 4, fontStyle: 'italic' }}>{period.name}</p>
-            <p style={{ fontSize: 9, opacity: 0.7 }}>Réf : {referenceNumber}</p>
-          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <p style={{ fontSize: 16, fontWeight: 800, letterSpacing: 1 }}>{mainTitle}</p>
+          <p style={{ fontSize: 11, marginTop: 4, fontStyle: 'italic' }}>{period.name}</p>
+          <p style={{ fontSize: 9, marginTop: 4, color: '#555' }}>Réf : {referenceNumber}</p>
         </div>
       </div>
 
-      {/* Gold accent */}
-      <div style={{ height: 3, background: GOLD, position: 'relative', zIndex: 1 }} />
-
-      {/* Identity strip */}
-      <div
-        className="grid grid-cols-5"
-        style={{ background: '#f5f6fa', padding: '12px 18px', fontSize: 11, position: 'relative', zIndex: 1 }}
-      >
-        <IdCell label="Nom & prénoms" value={studentFullName} />
-        <IdCell label="Matricule" value={studentMatricule || '—'} />
-        <IdCell label="Filière" value={formationTitle} />
-        <IdCell label="Niveau" value={formationLevel || '—'} />
-        <IdCell label="Année" value={academicYear} />
-      </div>
+      {/* IDENTITY TABLE */}
+      <table style={{ width: 'calc(100% - 24mm)', borderCollapse: 'collapse', fontSize: 10.5, border: '1px solid #000', margin: '10px 12mm' }}>
+        <tbody>
+          <tr>
+            <IdCell label="NOM ÉTUDIANT" value={(lastName || studentFullName).toUpperCase()} />
+            <IdCell label="FORMATION" value={formationTitle} />
+            <IdCell label="NUMÉRO ÉTUDIANT" value={studentMatricule || '—'} last />
+          </tr>
+          <tr>
+            <IdCell label="PRÉNOM ÉTUDIANT" value={firstName || '—'} />
+            <IdCell label="ANNÉE" value={academicYear} />
+            <IdCell label="NIVEAU" value={formationLevel || '—'} last />
+          </tr>
+        </tbody>
+      </table>
     </div>
   );
 };
 
-const IdCell: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
-  <div>
-    <p
-      style={{
-        fontSize: 9, fontWeight: 700, color: '#64748b',
-        textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 2,
-      }}
-    >
-      {label}
-    </p>
-    <p style={{ fontSize: 12, fontWeight: 700 }}>{value}</p>
-  </div>
+const IdCell: React.FC<{ label: string; value: React.ReactNode; last?: boolean }> = ({ label, value, last }) => (
+  <td style={{ padding: '5px 8px', borderRight: last ? 'none' : '1px solid #000', borderBottom: '1px solid #000', verticalAlign: 'top', width: '33%' }}>
+    <p style={{ fontSize: 8, fontWeight: 700, letterSpacing: 0.5, color: '#333' }}>{label}</p>
+    <p style={{ fontSize: 10.5, fontWeight: 600, marginTop: 1 }}>{value}</p>
+  </td>
 );
 
 export default BulletinSharedHeader;
