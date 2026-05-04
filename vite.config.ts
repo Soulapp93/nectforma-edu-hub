@@ -7,7 +7,7 @@ import { VitePWA } from "vite-plugin-pwa";
 export default defineConfig(({ mode: _mode }) => ({
   base: process.env.GITHUB_PAGES ? '/NECTFORMA-PROJET-APP/' : '/',
   server: {
-    host: "::",
+    host: "0.0.0.0",
     port: 8080,
     allowedHosts: true,
   },
