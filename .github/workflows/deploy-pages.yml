@@ -31,8 +31,8 @@ jobs:
       - name: Build for GitHub Pages
         env:
           GITHUB_PAGES: '1'
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SUPABASE_URL: 'https://dlitdjbmqpsdmhrbluak.supabase.co'
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
         run: npm run build
 
       - name: Create SPA 404 fallback
