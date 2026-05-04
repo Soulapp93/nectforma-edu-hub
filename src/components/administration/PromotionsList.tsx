@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Search, Users, Calendar, BookText, CalendarClock, ClipboardCheck,
@@ -58,7 +59,7 @@ const PromotionsList: React.FC = () => {
       const data = await promotionService.getPromotions(establishment.id);
       setPromotions(data);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       toast.error('Erreur lors du chargement des promotions');
     } finally {
       setLoading(false);

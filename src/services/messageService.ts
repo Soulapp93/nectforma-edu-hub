@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
-
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 // Type helper for database operations on non-typed tables
 const db = supabase as any;
 
@@ -90,7 +91,7 @@ export const messageService = {
               .upload(fileName, file);
 
             if (uploadError) {
-              console.error('File upload error:', uploadError);
+              logger.error('File upload error:', uploadError);
               throw uploadError;
             }
 
@@ -126,7 +127,7 @@ export const messageService = {
       });
 
       if (error) {
-        console.error('Edge function error:', error);
+        logger.error('Edge function error:', error);
         throw new Error(error.message || 'Erreur lors de l\'envoi du message');
       }
 
@@ -139,12 +140,12 @@ export const messageService = {
       const isScheduled = !!messageData.scheduledFor;
       if (!messageData.is_draft && !isScheduled) {
         // Notify recipients (fire and forget)
-        this.notifyMessageRecipients(data.message, messageData.recipients).catch(console.error);
+        this.notifyMessageRecipients(data.message, messageData.recipients).catch((e) => logger.error(e));
       }
 
       return data.message as Message;
     } catch (error) {
-      console.error('Erreur lors de la création du message:', error);
+      logger.error('Erreur lors de la création du message:', error);
       throw error;
     }
   },
@@ -180,7 +181,7 @@ export const messageService = {
 
       await Promise.all(attachmentPromises);
     } catch (error) {
-      console.error('Erreur lors du téléchargement des pièces jointes:', error);
+      logger.error('Erreur lors du téléchargement des pièces jointes:', error);
       throw error;
     }
   },
@@ -200,7 +201,7 @@ export const messageService = {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde des pièces jointes:', error);
+      logger.error('Erreur lors de la sauvegarde des pièces jointes:', error);
       throw error;
     }
   },
@@ -215,7 +216,7 @@ export const messageService = {
       if (error) throw error;
       return (data || []) as Message[];
     } catch (error) {
-      console.error('Erreur lors de la récupération des messages:', error);
+      logger.error('Erreur lors de la récupération des messages:', error);
       throw error;
     }
   },
@@ -231,7 +232,7 @@ export const messageService = {
       if (error) throw error;
       return data as Message | null;
     } catch (error) {
-      console.error('Erreur lors de la récupération du message:', error);
+      logger.error('Erreur lors de la récupération du message:', error);
       throw error;
     }
   },
@@ -252,7 +253,7 @@ export const messageService = {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Erreur lors du marquage comme lu:', error);
+      logger.error('Erreur lors du marquage comme lu:', error);
       throw error;
     }
   },
@@ -290,7 +291,7 @@ export const messageService = {
         }
       }
     } catch (error) {
-      console.error('Error sending message notifications:', error);
+      logger.error('Error sending message notifications:', error);
     }
   },
 
@@ -317,7 +318,7 @@ export const messageService = {
       if (error) throw error;
       return newStatus;
     } catch (error) {
-      console.error('Erreur lors du toggle favoris:', error);
+      logger.error('Erreur lors du toggle favoris:', error);
       throw error;
     }
   },
@@ -345,7 +346,7 @@ export const messageService = {
       if (error) throw error;
       return newStatus;
     } catch (error) {
-      console.error('Erreur lors de l\'archivage:', error);
+      logger.error('Erreur lors de l\'archivage:', error);
       throw error;
     }
   },
@@ -366,7 +367,7 @@ export const messageService = {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
+      logger.error('Erreur lors de la suppression:', error);
       throw error;
     }
   },
@@ -387,7 +388,7 @@ export const messageService = {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Erreur lors de la restauration:', error);
+      logger.error('Erreur lors de la restauration:', error);
       throw error;
     }
   },
@@ -405,7 +406,7 @@ export const messageService = {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Erreur lors de la suppression définitive:', error);
+      logger.error('Erreur lors de la suppression définitive:', error);
       throw error;
     }
   },
@@ -426,7 +427,7 @@ export const messageService = {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
+      logger.error('Erreur lors de la suppression:', error);
       throw error;
     }
   },
@@ -447,7 +448,7 @@ export const messageService = {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Erreur lors de la restauration:', error);
+      logger.error('Erreur lors de la restauration:', error);
       throw error;
     }
   },
@@ -478,7 +479,7 @@ export const messageService = {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Erreur lors de la suppression définitive:', error);
+      logger.error('Erreur lors de la suppression définitive:', error);
       throw error;
     }
   },
@@ -498,7 +499,7 @@ export const messageService = {
       if (error) throw error;
       return data as MessageRecipient | null;
     } catch (error) {
-      console.error('Erreur:', error);
+      logger.error('Erreur:', error);
       return null;
     }
   },
@@ -558,7 +559,7 @@ export const messageService = {
 
       return newMessage as Message;
     } catch (error) {
-      console.error('Erreur lors du transfert:', error);
+      logger.error('Erreur lors du transfert:', error);
       throw error;
     }
   },
@@ -589,7 +590,7 @@ export const messageService = {
         recipientInfo: recipientMap.get(msg.id) as MessageRecipient | undefined
       })) as (Message & { recipientInfo?: MessageRecipient })[];
     } catch (error) {
-      console.error('Erreur:', error);
+      logger.error('Erreur:', error);
       throw error;
     }
   }

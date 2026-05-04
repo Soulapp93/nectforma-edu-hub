@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
-
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 export interface Establishment {
   id: string;
   name: string;
@@ -44,7 +45,7 @@ export const establishmentService = {
       .single();
 
     if (error) {
-      console.error('Erreur lors de la récupération de l\'établissement:', error);
+      logger.error('Erreur lors de la récupération de l\'établissement:', error);
       return null;
     }
 
@@ -60,7 +61,7 @@ export const establishmentService = {
       .single();
 
     if (error) {
-      console.error('Erreur lors de la mise à jour de l\'établissement:', error);
+      logger.error('Erreur lors de la mise à jour de l\'établissement:', error);
       throw error;
     }
 

@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,7 +37,7 @@ const TextBookCard: React.FC<TextBookCardProps> = ({ textBook, onUpdate }) => {
         const entriesData = await textBookService.getTextBookEntries(textBook.id);
         setEntries((entriesData as TextBookEntry[]) || []);
       } catch (error) {
-        console.error('Erreur lors du chargement des entrées:', error);
+        logger.error('Erreur lors du chargement des entrées:', error);
       }
     };
 
@@ -62,7 +63,7 @@ const TextBookCard: React.FC<TextBookCardProps> = ({ textBook, onUpdate }) => {
         description: "Le cahier de texte a été exporté en PDF.",
       });
     } catch (error) {
-      console.error('Erreur lors de l\'export PDF:', error);
+      logger.error('Erreur lors de l\'export PDF:', error);
       toast({
         title: "Erreur",
         description: "Impossible d'exporter le cahier de texte.",
@@ -83,7 +84,7 @@ const TextBookCard: React.FC<TextBookCardProps> = ({ textBook, onUpdate }) => {
       });
       onUpdate();
     } catch (error) {
-      console.error('Erreur lors de l\'archivage:', error);
+      logger.error('Erreur lors de l\'archivage:', error);
       toast({
         title: "Erreur",
         description: "Impossible d'archiver le cahier de texte.",

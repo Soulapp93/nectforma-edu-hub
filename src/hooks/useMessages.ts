@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { messageService, Message, MessageRecipient } from '@/services/messageService';
 import { supabase } from '@/integrations/supabase/client';
-
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 export interface MessageWithRecipientInfo extends Message {
   recipientInfo?: MessageRecipient;
 }
@@ -60,7 +61,7 @@ export const useMessages = () => {
         .subscribe();
       channelRef.current = channel;
     } catch (err) {
-      console.warn('Messages realtime subscription failed (non-critical):', err);
+      logger.warn('Messages realtime subscription failed (non-critical):', err);
     }
 
     return () => {
@@ -81,7 +82,7 @@ export const useMessages = () => {
           : m
       ));
     } catch (err) {
-      console.error('Error marking as read:', err);
+      logger.error('Error marking as read:', err);
     }
   };
 

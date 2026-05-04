@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   X, Download, ExternalLink, Maximize2, Minimize2, ZoomIn, ZoomOut, 
@@ -192,7 +193,7 @@ const TrueFullscreenViewer: React.FC<TrueFullscreenViewerProps> = ({
         setLoadProgress(100);
       })
       .catch((e) => {
-        console.error('File probe failed:', e);
+        logger.error('File probe failed:', e);
         setLoading(false);
         setError(true);
         toast.error('Impossible de charger le fichier.');
@@ -230,7 +231,7 @@ const TrueFullscreenViewer: React.FC<TrueFullscreenViewerProps> = ({
         await document.exitFullscreen();
       }
     } catch (err) {
-      console.error('Fullscreen error:', err);
+      logger.error('Fullscreen error:', err);
       toast.error('Erreur mode plein écran');
     }
   };
@@ -241,7 +242,7 @@ const TrueFullscreenViewer: React.FC<TrueFullscreenViewerProps> = ({
         await document.exitFullscreen();
       }
     } catch (err) {
-      console.error('Exit fullscreen error:', err);
+      logger.error('Exit fullscreen error:', err);
     }
   };
 
@@ -334,7 +335,7 @@ const TrueFullscreenViewer: React.FC<TrueFullscreenViewerProps> = ({
             setError(false);
           }}
           onLoadError={(e) => {
-            console.error('PDF load error:', e);
+            logger.error('PDF load error:', e);
             setLoading(false);
             setError(true);
           }}

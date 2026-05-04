@@ -3,7 +3,8 @@ import { ScheduleSlot } from './scheduleService';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addDays, addMonths, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { isAutonomieSlot } from '@/utils/slotDisplay';
-
+import { isAutonomieSlot } from '@/utils/slotDisplay';
+import { logger } from '@/utils/logger';
 interface PrintOptions {
   viewMode: 'day' | 'week' | 'month' | 'list';
   dateRange: {
@@ -61,7 +62,7 @@ const loadImageAsBase64 = async (url: string): Promise<string | null> => {
       reader.readAsDataURL(blob);
     });
   } catch (error) {
-    console.error('Error loading image:', error);
+    logger.error('Error loading image:', error);
     return null;
   }
 };
@@ -122,7 +123,7 @@ export const exportScheduleToPDFAdvanced = async (
         pdf.addImage(logoBase64, 'PNG', margin, 3, 22, 22);
         logoEndX = margin + 25;
       } catch (e) {
-        console.error('Error adding logo to PDF:', e);
+        logger.error('Error adding logo to PDF:', e);
       }
     }
     

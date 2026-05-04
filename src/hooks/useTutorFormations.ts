@@ -66,7 +66,7 @@ export const useTutorFormations = () => {
       };
 
       if (rpcError) {
-        console.error('Erreur get_tutor_apprentice_formations:', rpcError);
+        logger.error('Erreur get_tutor_apprentice_formations:', rpcError);
         setError(rpcError.message);
         setFormations([]);
         setLoading(false);
@@ -103,7 +103,7 @@ export const useTutorFormations = () => {
         setApprenticeId(data[0].student_id);
       }
     } catch (err) {
-      console.error('Erreur useTutorFormations:', err);
+      logger.error('Erreur useTutorFormations:', err);
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
       setFormations([]);
     } finally {

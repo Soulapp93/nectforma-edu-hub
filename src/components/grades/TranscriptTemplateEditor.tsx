@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import DOMPurify from 'dompurify';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -240,7 +241,7 @@ const TranscriptTemplateEditor: React.FC<Props> = ({ open, onOpenChange, formati
       html += `<p style="font-size:9px;color:#666;text-align:center;margin-top:8px;">${footerConfig.customText}</p>`;
     }
     html += `</div>`;
-    return html;
+    return DOMPurify.sanitize(html, { ADD_ATTR: ['style', 'colspan', 'rowspan', 'id'] });
   }, [columnsConfig, headerConfig, footerConfig, styleConfig, modules]);
 
   return (

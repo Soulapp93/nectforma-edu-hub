@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -115,7 +116,7 @@ const TextBookDetail: React.FC = () => {
       setEntries((entriesData as any) || []);
 
     } catch (error) {
-      console.error('Erreur lors du chargement:', error);
+      logger.error('Erreur lors du chargement:', error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les données du cahier de texte.",
@@ -132,13 +133,13 @@ const TextBookDetail: React.FC = () => {
 
   const handleAddEntry = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('DEBUG: handleAddEntry appelé');
-    console.log('DEBUG: Form data:', newEntry);
-    console.log('DEBUG: textBookId:', textBookId);
-    console.log('DEBUG: userId:', userId);
+    logger.log('DEBUG: handleAddEntry appelé');
+    logger.log('DEBUG: Form data:', newEntry);
+    logger.log('DEBUG: textBookId:', textBookId);
+    logger.log('DEBUG: userId:', userId);
     
     if (!textBookId || !newEntry.date || !newEntry.start_time || !newEntry.end_time || !newEntry.module_id) {
-      console.log('DEBUG: Validation échouée - champs manquants');
+      logger.log('DEBUG: Validation échouée - champs manquants');
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs obligatoires.",
@@ -148,9 +149,9 @@ const TextBookDetail: React.FC = () => {
     }
 
     const selectedModule = modules.find(m => m.id === newEntry.module_id);
-    console.log('DEBUG: Module sélectionné:', selectedModule);
+    logger.log('DEBUG: Module sélectionné:', selectedModule);
     if (!selectedModule) {
-      console.log('DEBUG: Module non trouvé');
+      logger.log('DEBUG: Module non trouvé');
       toast({
         title: "Erreur",
         description: "Module sélectionné non valide.",
@@ -160,11 +161,11 @@ const TextBookDetail: React.FC = () => {
     }
 
     setIsSubmitting(true);
-    console.log('DEBUG: Début de la soumission');
+    logger.log('DEBUG: Début de la soumission');
     
     try {
       // Create entry first
-      console.log('DEBUG: Données à envoyer:', {
+      logger.log('DEBUG: Données à envoyer:', {
         text_book_id: textBookId,
         date: newEntry.date,
         start_time: newEntry.start_time,
@@ -184,22 +185,22 @@ const TextBookDetail: React.FC = () => {
         instructor_id: userId || undefined,
       });
 
-      console.log('DEBUG: Entrée créée:', newEntryData);
+      logger.log('DEBUG: Entrée créée:', newEntryData);
 
       // Upload files if any
       if (uploadedFiles.length > 0) {
-        console.log('DEBUG: Upload de', uploadedFiles.length, 'fichiers');
+        logger.log('DEBUG: Upload de', uploadedFiles.length, 'fichiers');
         await textBookService.uploadEntryFiles(newEntryData.id, uploadedFiles);
       }
 
-      console.log('DEBUG: Succès - affichage du toast');
+      logger.log('DEBUG: Succès - affichage du toast');
       toast({
         title: "Succès",
         description: "L'entrée a été ajoutée avec succès.",
       });
 
       // Reset form and close modal
-      console.log('DEBUG: Réinitialisation du formulaire');
+      logger.log('DEBUG: Réinitialisation du formulaire');
       setNewEntry({
         date: '',
         start_time: '',
@@ -211,10 +212,10 @@ const TextBookDetail: React.FC = () => {
       setIsAddEntryModalOpen(false);
       
       // Refresh entries
-      console.log('DEBUG: Actualisation des données');
+      logger.log('DEBUG: Actualisation des données');
       fetchTextBookData();
     } catch (error) {
-      console.error('DEBUG: Erreur lors de l\'ajout:', error);
+      logger.error('DEBUG: Erreur lors de l\'ajout:', error);
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de l'ajout de l'entrée.",
@@ -222,7 +223,7 @@ const TextBookDetail: React.FC = () => {
       });
     } finally {
       setIsSubmitting(false);
-      console.log('DEBUG: Fin de la soumission');
+      logger.log('DEBUG: Fin de la soumission');
     }
   };
 
@@ -284,7 +285,7 @@ const TextBookDetail: React.FC = () => {
       // Refresh entries
       fetchTextBookData();
     } catch (error) {
-      console.error('Erreur:', error);
+      logger.error('Erreur:', error);
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de la modification de l'entrée.",
@@ -312,7 +313,7 @@ const TextBookDetail: React.FC = () => {
       // Refresh entries
       fetchTextBookData();
     } catch (error) {
-      console.error('Erreur:', error);
+      logger.error('Erreur:', error);
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de la suppression de l'entrée.",

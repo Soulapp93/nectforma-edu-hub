@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -75,7 +76,7 @@ const QRAttendanceScannerModal: React.FC<QRAttendanceScannerModalProps> = ({
           setUserSignature(null);
         }
       } catch (error) {
-        console.error('Error loading user data:', error);
+        logger.error('Error loading user data:', error);
       }
     };
 
@@ -134,7 +135,7 @@ const QRAttendanceScannerModal: React.FC<QRAttendanceScannerModalProps> = ({
       await scannerRef.current.start();
       setHasPermission(true);
     } catch (error) {
-      console.error('Camera error:', error);
+      logger.error('Camera error:', error);
       setHasPermission(false);
       toast.error('Impossible d\'accéder à la caméra');
     }
@@ -296,7 +297,7 @@ const QRAttendanceScannerModal: React.FC<QRAttendanceScannerModalProps> = ({
 
       if (signatureError) throw signatureError;
 
-      console.log('Présence validée pour:', sessionInfo.sheetId);
+      logger.log('Présence validée pour:', sessionInfo.sheetId);
       toast.success('Présence validée avec succès !');
       onClose();
     } catch (error: any) {

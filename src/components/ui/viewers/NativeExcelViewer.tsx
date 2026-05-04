@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import DOMPurify from 'dompurify';
 import { Loader2, FileSpreadsheet, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import * as XLSX from 'xlsx';
@@ -63,7 +64,7 @@ const NativeExcelViewer: React.FC<NativeExcelViewerProps> = ({
     const ws = workbook.Sheets[sheetNames[activeSheet]];
     // Use sheet_to_html which preserves merges, basic structure
     let html = XLSX.utils.sheet_to_html(ws, { id: 'excel-table', editable: false });
-    return html;
+    return DOMPurify.sanitize(html, { ADD_TAGS: ['table', 'thead', 'tbody', 'tr', 'td', 'th', 'col', 'colgroup'], ADD_ATTR: ['id', 'colspan', 'rowspan', 'style'] });
   }, [workbook, activeSheet, sheetNames]);
 
   // Sheet info for status bar

@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState } from 'react';
 import { Mail, Send, MessageSquare, ExternalLink, Paperclip, X, Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -112,7 +113,7 @@ const SendMessageModal: React.FC<SendMessageModalProps> = ({
       resetForm();
       onClose();
     } catch (error: any) {
-      console.error('Error sending message:', error);
+      logger.error('Error sending message:', error);
       toast.error('Erreur lors de l\'envoi du message');
     } finally {
       setLoading(false);

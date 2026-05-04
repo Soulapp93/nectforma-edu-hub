@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -214,7 +215,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
         .order('order_index');
       if (error) {
         // eslint-disable-next-line no-console
-        console.error('[TranscriptsPanel] modules query failed:', error.message);
+        logger.error('[TranscriptsPanel] modules query failed:', error.message);
         return [];
       }
       return data || [];

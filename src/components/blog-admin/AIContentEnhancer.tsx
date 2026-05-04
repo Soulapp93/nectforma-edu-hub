@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import DOMPurify from 'dompurify';
 import { 
   Wand2, Loader2, Languages, Share2, Shrink, Expand,
   Sparkles, FileText, Copy, Check
@@ -246,7 +247,7 @@ export const AIContentEnhancer: React.FC<AIContentEnhancerProps> = ({
 
                   <div 
                     className="prose prose-sm max-w-none max-h-64 overflow-y-auto border rounded-lg p-4 bg-muted/30"
-                    dangerouslySetInnerHTML={{ __html: rewriteResult.rewritten_content.slice(0, 2000) + '...' }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(rewriteResult.rewritten_content.slice(0, 2000) + '...') }}
                   />
 
                   <Button onClick={() => onApplyContent(rewriteResult.rewritten_content)}>

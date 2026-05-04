@@ -8,10 +8,42 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
+const TRANSIENT_PATTERNS = [
+  'Load failed', 'Failed to fetch', 'Network request failed', 'NetworkError',
+  'net::ERR_', 'ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND', 'socket hang up',
+  'timeout', 'aborted', 'Request timeout', 'Connection refused', 'Connection reset',
+];
+
+function isTransient(msg: string): boolean {
+  return TRANSIENT_PATTERNS.some(p => msg.toLowerCase().includes(p.toLowerCase()));
+}
+
+async function fetchWithRetry(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const maxRetries = 3;
+  const baseDelay = 500;
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const res = await fetch(input, init);
+      return res;
+    } catch (err) {
+      lastError = err;
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!isTransient(msg) || attempt === maxRetries) throw err;
+      await new Promise(r => setTimeout(r, Math.min(baseDelay * 2 ** attempt + Math.random() * 100, 5000)));
+    }
+  }
+  throw lastError;
+}
+
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-  }
+  },
+  global: {
+    fetch: fetchWithRetry,
+  },
 });

@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { logger } from '@/utils/logger';
+import React, { useEffect, useCallback, useMemo } from 'react';
+import { useScheduleManagementState } from '@/hooks/useScheduleManagementState';
 import {
   Calendar,
   Clock,
@@ -74,35 +76,30 @@ const ScheduleManagement = () => {
   const { schedules, loading, refetch } = useSchedules();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  
-  // Hierarchical navigation state
-  const [hierarchicalView, setHierarchicalView] = useState<'selector' | 'schedule'>('selector');
-  const [allFormations, setAllFormations] = useState<any[]>([]);
-  const [formationsLoading, setFormationsLoading] = useState(true);
-  const [selectedPromotionFormation, setSelectedPromotionFormation] = useState<any | null>(null);
 
-  // États principaux
-  
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<ViewMode>('week');
-  const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null);
-  const [slots, setSlots] = useState<ScheduleSlot[]>([]);
-  const [slotsLoading, setSlotsLoading] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  
-  const [isWeekNavigationOpen, setIsWeekNavigationOpen] = useState(true);
-  
-  // États pour les modales
-  const [isAddSlotModalOpen, setIsAddSlotModalOpen] = useState(false);
-  const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
-  const [isEditSlotModalOpen, setIsEditSlotModalOpen] = useState(false);
-  const [isExcelImportModalOpen, setIsExcelImportModalOpen] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string } | null>(null);
-  const [slotToEdit, setSlotToEdit] = useState<ScheduleSlot | null>(null);
-  const [draggedSlot, setDraggedSlot] = useState<ScheduleSlot | null>(null);
-  const [dragOverDay, setDragOverDay] = useState<string | null>(null);
-  const [detailsEvent, setDetailsEvent] = useState<ScheduleEvent | null>(null);
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const {
+    hierarchicalView, setHierarchicalView,
+    allFormations, setAllFormations,
+    formationsLoading, setFormationsLoading,
+    selectedPromotionFormation, setSelectedPromotionFormation,
+    selectedDate, setSelectedDate,
+    viewMode, setViewMode,
+    selectedSchedule, setSelectedSchedule,
+    slots, setSlots,
+    slotsLoading, setSlotsLoading,
+    isEditMode, setIsEditMode,
+    isWeekNavigationOpen, setIsWeekNavigationOpen,
+    isAddSlotModalOpen, openAddSlot, closeAddSlot,
+    isAddEventModalOpen, setIsAddEventModalOpen,
+    isEditSlotModalOpen, openEditSlot, closeEditSlot,
+    isExcelImportModalOpen, setIsExcelImportModalOpen,
+    selectedSlot,
+    slotToEdit,
+    draggedSlot, setDraggedSlot,
+    dragOverDay, setDragOverDay,
+    detailsEvent,
+    isDetailsModalOpen, openDetails, closeDetails,
+  } = useScheduleManagementState();
 
   // Fetch formations for hierarchical nav
   useEffect(() => {
@@ -112,7 +109,7 @@ const ScheduleManagement = () => {
         const data = await formationService.getFormations();
         setAllFormations(data || []);
       } catch (e) {
-        console.error('Error fetching formations:', e);
+        logger.error('Error fetching formations:', e);
       } finally {
         setFormationsLoading(false);
       }
@@ -158,7 +155,7 @@ const ScheduleManagement = () => {
           setViewMode('week');
           toast.success('Emploi du temps créé automatiquement');
         } catch (e) {
-          console.error('Auto-création EDT échouée:', e);
+          logger.error('Auto-création EDT échouée:', e);
         }
       };
       autoCreate();
@@ -171,9 +168,8 @@ const ScheduleManagement = () => {
       toast.error('Veuillez sélectionner un emploi du temps pour ajouter des créneaux');
       return;
     }
-    setSelectedSlot(null);
-    setTimeout(() => setIsAddSlotModalOpen(true), 0);
-  }, [selectedSchedule?.id]);
+    openAddSlot({ date: '', time: '' });
+  }, [selectedSchedule?.id, openAddSlot]);
 
   const handleOpenAddEventModal = useCallback(() => {
     if (!selectedSchedule?.id) {
@@ -184,7 +180,7 @@ const ScheduleManagement = () => {
   }, [selectedSchedule?.id]);
 
   const handleOpenExcelImportModal = useCallback(() => {
-    console.log('Ouverture modale Import Excel', { selectedSchedule: selectedSchedule?.id });
+    logger.log('Ouverture modale Import Excel', { selectedSchedule: selectedSchedule?.id });
     if (!selectedSchedule?.id) {
       toast.error('Veuillez sélectionner un emploi du temps pour importer des données');
       return;
@@ -225,9 +221,8 @@ const ScheduleManagement = () => {
   // Handler pour ouvrir le modal de détails
   const handleSlotClick = useCallback((slot: ScheduleSlot) => {
     const event = convertSlotToEvent(slot);
-    setDetailsEvent(event);
-    setIsDetailsModalOpen(true);
-  }, [convertSlotToEvent]);
+    openDetails(event);
+  }, [convertSlotToEvent, openDetails]);
 
   const handleAddSlot = useCallback((date: Date, time: string) => {
     if (!selectedSchedule?.id) {
@@ -238,9 +233,8 @@ const ScheduleManagement = () => {
       date: formatDate(date),
       time
     };
-    setSelectedSlot(newSlot);
-    setTimeout(() => setIsAddSlotModalOpen(true), 0);
-  }, [selectedSchedule?.id]);
+    openAddSlot(newSlot);
+  }, [selectedSchedule?.id, openAddSlot]);
 
   const formatDate = (date: Date) => {
     return date.toISOString().split('T')[0];
@@ -264,7 +258,7 @@ const ScheduleManagement = () => {
       const slotsData = await scheduleService.getScheduleSlots(selectedSchedule.id);
       setSlots(slotsData || []);
     } catch (error) {
-      console.error('Erreur lors du chargement des créneaux:', error);
+      logger.error('Erreur lors du chargement des créneaux:', error);
       toast.error('Erreur lors du chargement des créneaux');
       setSlots([]);
     } finally {
@@ -314,8 +308,7 @@ const ScheduleManagement = () => {
 
   const handleEditSlot = (slot: ScheduleSlot) => {
     if (selectedSchedule?.id) {
-      setSlotToEdit(slot);
-      setIsEditSlotModalOpen(true);
+      openEditSlot(slot);
     } else {
       toast.error('Erreur: Aucun emploi du temps sélectionné');
     }
@@ -323,15 +316,13 @@ const ScheduleManagement = () => {
 
   const handleSlotAdded = () => {
     fetchScheduleSlots();
-    setIsAddSlotModalOpen(false);
-    setSelectedSlot(null);
+    closeAddSlot();
     toast.success('Créneau ajouté avec succès');
   };
 
   const handleSlotEdited = () => {
     fetchScheduleSlots();
-    setIsEditSlotModalOpen(false);
-    setSlotToEdit(null);
+    closeEditSlot();
     toast.success('Créneau modifié avec succès');
   };
 
@@ -443,14 +434,14 @@ const ScheduleManagement = () => {
       return;
     }
     
-    console.log('Bouton "Publier" cliqué', { selectedSchedule: selectedSchedule.id });
+    logger.log('Bouton "Publier" cliqué', { selectedSchedule: selectedSchedule.id });
     
     try {
       await scheduleService.updateSchedule(selectedSchedule.id, { updated_at: new Date().toISOString() });
       toast.success("Emploi du temps publié avec succès");
       refetch();
     } catch (error) {
-      console.error('Erreur publication:', error);
+      logger.error('Erreur publication:', error);
       toast.error("Erreur lors de la publication");
     }
   };
@@ -474,7 +465,7 @@ const ScheduleManagement = () => {
       setIsEditMode(false);
       refetch();
     } catch (error) {
-      console.error('Erreur sauvegarde:', error);
+      logger.error('Erreur sauvegarde:', error);
       toast.error("Erreur lors de l'enregistrement des modifications");
     }
   };
@@ -1130,7 +1121,7 @@ const ScheduleManagement = () => {
       {/* Modals */}
       <AddSlotModal
         isOpen={isAddSlotModalOpen}
-        onClose={() => setIsAddSlotModalOpen(false)}
+        onClose={closeAddSlot}
         onSuccess={handleSlotAdded}
         scheduleId={selectedSchedule?.id || ''}
         formationId={selectedSchedule?.formation_id || ''}
@@ -1144,13 +1135,14 @@ const ScheduleManagement = () => {
           fetchScheduleSlots();
           setIsAddEventModalOpen(false);
         }}
+
         scheduleId={selectedSchedule?.id || ''}
         defaultDate={selectedSlot?.date}
       />
 
       <EditSlotModal
         isOpen={isEditSlotModalOpen}
-        onClose={() => setIsEditSlotModalOpen(false)}
+        onClose={closeEditSlot}
         onSuccess={handleSlotEdited}
         formationId={selectedSchedule?.formation_id || ''}
         slot={slotToEdit}
@@ -1167,7 +1159,7 @@ const ScheduleManagement = () => {
       <EventDetailsModal
         event={detailsEvent}
         isOpen={isDetailsModalOpen}
-        onClose={() => setIsDetailsModalOpen(false)}
+        onClose={closeDetails}
         onEdit={isEditMode ? (event) => {
           const slot = slots.find(s => s.id === event.id);
           if (slot) {

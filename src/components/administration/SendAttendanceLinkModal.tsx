@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -128,7 +129,7 @@ const SendAttendanceLinkModal: React.FC<SendAttendanceLinkModalProps> = ({
       if (error) throw error;
       setFormations(data || []);
     } catch (error) {
-      console.error('Error loading formations:', error);
+      logger.error('Error loading formations:', error);
       toast.error('Erreur lors du chargement des formations');
     } finally {
       setLoading(false);
@@ -177,7 +178,7 @@ const SendAttendanceLinkModal: React.FC<SendAttendanceLinkModalProps> = ({
       setGroupedSlots(grouped);
       setSelectedSlots([]);
     } catch (error) {
-      console.error('Error loading slots:', error);
+      logger.error('Error loading slots:', error);
       toast.error('Erreur lors du chargement des créneaux');
     } finally {
       setLoading(false);
@@ -212,7 +213,7 @@ const SendAttendanceLinkModal: React.FC<SendAttendanceLinkModalProps> = ({
           .maybeSingle();
 
         if (checkError && checkError.code !== 'PGRST116') {
-          console.error('Error checking existing sheet:', checkError);
+          logger.error('Error checking existing sheet:', checkError);
           continue;
         }
 
@@ -256,7 +257,7 @@ const SendAttendanceLinkModal: React.FC<SendAttendanceLinkModalProps> = ({
             .single();
 
           if (createError) {
-            console.error('Error creating sheet:', createError);
+            logger.error('Error creating sheet:', createError);
             continue;
           }
 
@@ -273,7 +274,7 @@ const SendAttendanceLinkModal: React.FC<SendAttendanceLinkModalProps> = ({
           .eq('users.role', 'Étudiant');
 
         if (studentsError) {
-          console.error('Error fetching students:', studentsError);
+          logger.error('Error fetching students:', studentsError);
           continue;
         }
 
@@ -292,7 +293,7 @@ const SendAttendanceLinkModal: React.FC<SendAttendanceLinkModalProps> = ({
       onSuccess();
       onClose();
     } catch (error: any) {
-      console.error('Error sending links:', error);
+      logger.error('Error sending links:', error);
       toast.error('Erreur lors de l\'envoi des liens');
     } finally {
       setSending(false);

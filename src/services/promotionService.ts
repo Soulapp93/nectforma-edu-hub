@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
-
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 export interface Promotion {
   id: string;
   establishment_id: string;
@@ -78,7 +79,7 @@ export const promotionService = {
         title: `Emploi du temps - ${params.formationTitle} ${params.academicYear}`,
       });
     } catch (e) {
-      console.warn('Auto-création emploi du temps échouée:', e);
+      logger.warn('Auto-création emploi du temps échouée:', e);
     }
 
     // 3. Create text book linked to promotion
@@ -90,7 +91,7 @@ export const promotionService = {
         academic_year: params.academicYear,
       });
     } catch (e) {
-      console.warn('Auto-création cahier de texte échouée:', e);
+      logger.warn('Auto-création cahier de texte échouée:', e);
     }
 
     return promotion as Promotion;

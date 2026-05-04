@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { X, User, Calendar, FileText, CheckCircle, Clock, Edit, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -41,7 +42,7 @@ const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProps> = ({
       const data = await assignmentService.getAssignmentSubmissions(assignment.id);
       setSubmissions(data || []);
     } catch (error) {
-      console.error('Erreur lors du chargement des soumissions:', error);
+      logger.error('Erreur lors du chargement des soumissions:', error);
     } finally {
       setLoading(false);
     }
@@ -57,7 +58,7 @@ const AssignmentSubmissionsModal: React.FC<AssignmentSubmissionsModalProps> = ({
         await assignmentService.publishCorrections(assignment.id);
         fetchSubmissions();
       } catch (error) {
-        console.error('Erreur lors de la publication:', error);
+        logger.error('Erreur lors de la publication:', error);
       }
     }
   };

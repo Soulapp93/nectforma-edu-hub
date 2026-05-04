@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -52,7 +53,7 @@ const LinkedInCallback = () => {
       setStatus('success');
       toast.success(`LinkedIn connecté : ${data.account_name || 'Page LinkedIn'}`);
     } catch (err: any) {
-      console.error('LinkedIn callback error:', err);
+      logger.error('LinkedIn callback error:', err);
       setStatus('error');
       setErrorMessage(err.message || 'Failed to connect LinkedIn');
     }

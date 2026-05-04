@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Download, Maximize2, Minimize2, Volume2, VolumeX, Play, Pause, ExternalLink } from 'lucide-react';
 import { Button } from '../button';
@@ -82,7 +83,7 @@ const EnhancedMediaViewer: React.FC<EnhancedMediaViewerProps> = ({
         await exitFullscreen();
       }
     } catch (err) {
-      console.error('Fullscreen error:', err);
+      logger.error('Fullscreen error:', err);
       toast.error('Erreur mode plein écran');
     }
   };
@@ -109,7 +110,7 @@ const EnhancedMediaViewer: React.FC<EnhancedMediaViewerProps> = ({
       window.URL.revokeObjectURL(url);
       toast.success('Téléchargement démarré');
     } catch (error) {
-      console.error('Erreur de téléchargement:', error);
+      logger.error('Erreur de téléchargement:', error);
       toast.error('Impossible de télécharger le fichier');
     }
   };
@@ -132,7 +133,7 @@ const EnhancedMediaViewer: React.FC<EnhancedMediaViewerProps> = ({
       toast.success('Fichier ouvert dans un nouvel onglet');
       setTimeout(() => window.URL.revokeObjectURL(url), 60000);
     } catch (error) {
-      console.error('Erreur d\'ouverture:', error);
+      logger.error('Erreur d\'ouverture:', error);
       toast.error('Impossible d\'ouvrir le fichier');
     }
   };

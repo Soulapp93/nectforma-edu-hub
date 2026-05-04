@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { WorkspaceDocument } from '@/services/workspaceService';
 import { quizService, Quiz, QuizQuestion, QuizSession } from '@/services/quizService';
@@ -173,7 +174,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
         setLoading(false);
       } catch (err: any) {
         toast.error('Erreur création quiz');
-        console.error(err);
+        logger.error(err);
         setLoading(false);
       }
       return;
@@ -189,7 +190,7 @@ const WorkspaceQuizEditor: React.FC<Props> = ({ document, onSave, onClose }) => 
       setQuestions(qs);
       setSessions(ss);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       toast.error('Erreur chargement quiz');
     } finally {
       setLoading(false);

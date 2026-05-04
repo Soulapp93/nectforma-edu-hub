@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Users, UserX, Check, Send, ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -63,7 +64,7 @@ const LinkAttendanceSetup: React.FC<LinkAttendanceSetupProps> = ({
 
       setStudents(normalizedStudents);
     } catch (error) {
-      console.error('Error loading students:', error);
+      logger.error('Error loading students:', error);
       toast.error('Erreur lors du chargement des étudiants');
     } finally {
       setLoading(false);
@@ -189,7 +190,7 @@ const LinkAttendanceSetup: React.FC<LinkAttendanceSetupProps> = ({
       toast.success(`${presentStudents.length} lien(s) d'émargement envoyé(s) avec succès !`);
       onLinksGenerated();
     } catch (error: any) {
-      console.error('Error sending links:', error);
+      logger.error('Error sending links:', error);
       toast.error(`Erreur lors de l'envoi des liens: ${error.message}`);
     } finally {
       setSending(false);

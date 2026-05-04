@@ -44,10 +44,10 @@ export function useSuperAdmin() {
         ]);
 
       if (isSuperAdminError) {
-        console.error('Error checking is_super_admin:', isSuperAdminError);
+        logger.error('Error checking is_super_admin:', isSuperAdminError);
       }
       if (canManageBlogError) {
-        console.error('Error checking can_manage_blog:', canManageBlogError);
+        logger.error('Error checking can_manage_blog:', canManageBlogError);
       }
 
       const superAdmin = !!isSA;
@@ -61,7 +61,7 @@ export function useSuperAdmin() {
       // `platformRoles` devient non critique pour l'UI ; on le garde vide pour éviter les faux positifs.
       setPlatformRoles(superAdmin ? [{ role: 'super_admin' }] : []);
     } catch (error) {
-      console.error('Error in checkPlatformRoles:', error);
+      logger.error('Error in checkPlatformRoles:', error);
     } finally {
       setLoading(false);
     }

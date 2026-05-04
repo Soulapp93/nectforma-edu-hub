@@ -40,7 +40,7 @@ export const useUserWithRelations = () => {
 
           if (!mounted.current) return;
 
-          if (tutorError) console.error('Erreur tutor data:', tutorError);
+          if (tutorError) logger.error('Erreur tutor data:', tutorError);
 
           if (tutorData) {
             setUserInfo({
@@ -91,7 +91,7 @@ export const useUserWithRelations = () => {
         if (!mounted.current) return;
 
         if (userDataError) {
-          console.error('Erreur récupération infos utilisateur:', userDataError);
+          logger.error('Erreur récupération infos utilisateur:', userDataError);
           setUserInfo(null);
           setError('Erreur de chargement du profil');
         } else {
@@ -125,7 +125,7 @@ export const useUserWithRelations = () => {
           }
         }
       } catch (err) {
-        console.error('Erreur relations:', err);
+        logger.error('Erreur relations:', err);
         if (mounted.current) setError('Erreur de chargement des données');
       } finally {
         if (mounted.current) setLoading(false);

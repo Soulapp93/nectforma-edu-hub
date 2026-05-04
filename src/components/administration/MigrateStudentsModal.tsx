@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { X, ArrowRight, Users, Search, Check } from 'lucide-react';
 import { formationService } from '@/services/formationService';
@@ -36,7 +37,7 @@ const MigrateStudentsModal: React.FC<MigrateStudentsModalProps> = ({
       const data = await formationService.getFormationStudents(fromFormationId);
       setStudents(data);
     } catch (error) {
-      console.error('Erreur:', error);
+      logger.error('Erreur:', error);
     } finally {
       setLoadingStudents(false);
     }
@@ -72,7 +73,7 @@ const MigrateStudentsModal: React.FC<MigrateStudentsModalProps> = ({
       onSuccess();
       onClose();
     } catch (error) {
-      console.error('Erreur:', error);
+      logger.error('Erreur:', error);
       toast.error('Erreur lors de la migration');
     } finally {
       setLoading(false);

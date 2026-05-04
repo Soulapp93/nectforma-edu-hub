@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState } from 'react';
 import { 
   Lightbulb, Loader2, Calendar, TrendingUp, Target, 
@@ -37,7 +38,7 @@ export const AITopicPlanner: React.FC<AITopicPlannerProps> = ({
       setSuggestions(result);
       toast.success('Suggestions générées !');
     } catch (error) {
-      console.error('Topic suggestion error:', error);
+      logger.error('Topic suggestion error:', error);
       toast.error(error instanceof Error ? error.message : 'Erreur lors de la génération');
     } finally {
       setIsGenerating(false);

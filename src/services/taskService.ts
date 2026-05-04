@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
-
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 export interface ModuleTask {
   id: string;
   module_id: string;
@@ -46,7 +47,7 @@ export const taskService = {
           data.priority
         );
       } catch (e) {
-        console.warn('Task notification failed (non-blocking):', e);
+        logger.warn('Task notification failed (non-blocking):', e);
       }
     })();
 

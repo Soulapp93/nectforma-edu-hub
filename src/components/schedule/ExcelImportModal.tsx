@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useRef } from 'react';
 import {
   Dialog,
@@ -117,7 +118,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
 
       setPreviewData(parsedData);
     } catch (err) {
-      console.error('Erreur lors de l\'import Excel:', err);
+      logger.error('Erreur lors de l\'import Excel:', err);
       setError(err instanceof Error ? err.message : 'Erreur lors de la lecture du fichier Excel');
     } finally {
       setLoading(false);

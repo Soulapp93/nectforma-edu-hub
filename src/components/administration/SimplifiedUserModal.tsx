@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, User, Mail, Building, Users, UserCheck, Phone, MapPin, FileText, ArrowLeft, Calendar, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -219,7 +220,7 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
               const userFormationIds = await loadUserFormations(user.id);
               setSelectedFormations(userFormationIds);
             } catch (error) {
-              console.error('Erreur lors du chargement des formations utilisateur:', error);
+              logger.error('Erreur lors du chargement des formations utilisateur:', error);
               setSelectedFormations([]);
             }
           } else {
@@ -265,7 +266,7 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
                 resetTutorData();
               }
             } catch (error) {
-              console.error('Erreur lors du chargement du tuteur:', error);
+              logger.error('Erreur lors du chargement du tuteur:', error);
               resetTutorData();
             }
           } else {
@@ -319,7 +320,7 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
       const data = await formationService.getFormations();
       setFormations(data || []);
     } catch (error) {
-      console.error('Erreur lors du chargement des formations:', error);
+      logger.error('Erreur lors du chargement des formations:', error);
     } finally {
       setLoadingFormations(false);
     }
@@ -385,7 +386,7 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
       } : undefined;
 
       // Créer / mettre à jour l'utilisateur
-      console.log('[SimplifiedUserModal] Appel onSave avec tutorInfo:', tutorInfo ? 'OUI' : 'NON');
+      logger.log('[SimplifiedUserModal] Appel onSave avec tutorInfo:', tutorInfo ? 'OUI' : 'NON');
       const newUser = await onSave({
         first_name: formData.first_name,
         last_name: formData.last_name,
@@ -420,7 +421,7 @@ const SimplifiedUserModal: React.FC<SimplifiedUserModalProps> = ({
       
       onClose();
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
+      logger.error('Erreur lors de la sauvegarde:', error);
       toast.error(error instanceof Error ? error.message : 'Erreur lors de la sauvegarde');
     } finally {
       setLoading(false);

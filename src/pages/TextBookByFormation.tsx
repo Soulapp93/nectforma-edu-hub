@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -42,7 +43,7 @@ const TextBookByFormation: React.FC = () => {
           navigate(`/formations/${formationId}`);
         }
       } catch (error) {
-        console.error('Erreur lors de la vérification du cahier de texte:', error);
+        logger.error('Erreur lors de la vérification du cahier de texte:', error);
         toast({
           title: "Erreur",
           description: "Impossible de vérifier l'existence du cahier de texte.",

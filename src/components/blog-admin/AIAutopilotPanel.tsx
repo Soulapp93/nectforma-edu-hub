@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -75,7 +76,7 @@ export const AIAutopilotPanel = ({ onContentGenerated }: { onContentGenerated?: 
         setTopicsInput(data.settings.autopilot_topics.join(', '));
       }
     } catch (e) {
-      console.error('Error loading autopilot status:', e);
+      logger.error('Error loading autopilot status:', e);
     } finally {
       setLoading(false);
     }
@@ -111,7 +112,7 @@ export const AIAutopilotPanel = ({ onContentGenerated }: { onContentGenerated?: 
       }
       await loadStatus();
     } catch (e) {
-      console.error('Run error:', e);
+      logger.error('Run error:', e);
       toast.error('Erreur lors de l\'exécution');
     } finally {
       setRunning(false);

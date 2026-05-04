@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, X, FileText, Image as ImageIcon, File, Reply, Trash2, MoreVertical, Download, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -90,17 +91,17 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
       
       // Upload all attachments sequentially to avoid race conditions
       if (prevFiles.length > 0) {
-        console.log('📎 Uploading', prevFiles.length, 'files for message', createdMessageId);
+        logger.log('📎 Uploading', prevFiles.length, 'files for message', createdMessageId);
         const uploadedAttachments = [];
         
         for (const file of prevFiles) {
           try {
-            console.log('📎 Uploading file:', file.name, 'size:', file.size);
+            logger.log('📎 Uploading file:', file.name, 'size:', file.size);
             const attachment = await chatService.uploadAttachment(message.id, file);
-            console.log('✅ File uploaded:', attachment);
+            logger.log('✅ File uploaded:', attachment);
             uploadedAttachments.push(attachment);
           } catch (uploadError) {
-            console.error('❌ Failed to upload file:', file.name, uploadError);
+            logger.error('❌ Failed to upload file:', file.name, uploadError);
             toast({
               title: "Erreur d'upload",
               description: `Impossible d'uploader ${file.name}`,
@@ -123,7 +124,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
         description: prevFiles.length > 0 ? `${prevFiles.length} fichier(s) joint(s)` : undefined,
       });
     } catch (error) {
-      console.error('Error sending message:', error);
+      logger.error('Error sending message:', error);
 
       // If it failed before creating the message, restore the composer state
       if (!createdMessageId) {
@@ -199,7 +200,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ groupId, groupName }) => {
         description: fileName,
       });
     } catch (error) {
-      console.error('Error downloading file:', error);
+      logger.error('Error downloading file:', error);
       toast({
         title: "Erreur",
         description: "Impossible de télécharger le fichier",

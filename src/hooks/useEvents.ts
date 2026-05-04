@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { eventService, CreateEventData } from '@/services/eventService';
 import { toast } from 'sonner';
-
+import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
 export const useEvents = () => {
   return useQuery({
     queryKey: ['events'],
@@ -37,23 +38,23 @@ export const useUpdateEvent = () => {
 
   return useMutation({
     mutationFn: ({ eventId, eventData }: { eventId: string; eventData: Partial<CreateEventData> }) => {
-      console.log('useUpdateEvent - Calling updateEvent with:', { eventId, eventData });
+      logger.log('useUpdateEvent - Calling updateEvent with:', { eventId, eventData });
       return eventService.updateEvent(eventId, eventData);
     },
     onSuccess: (updatedEvent, { eventId }) => {
-      console.log('useUpdateEvent - Update successful, updated event:', updatedEvent);
+      logger.log('useUpdateEvent - Update successful, updated event:', updatedEvent);
       // Invalider toutes les queries des événements
       queryClient.invalidateQueries({ queryKey: ['events'] });
       queryClient.invalidateQueries({ queryKey: ['event', eventId] });
       
       // Forcer la mise à jour du cache avec les nouvelles données
       queryClient.setQueryData(['events'], (oldData: any) => {
-        console.log('useUpdateEvent - Updating cache with old data:', oldData);
+        logger.log('useUpdateEvent - Updating cache with old data:', oldData);
         if (!oldData) return oldData;
         const newData = oldData.map((event: any) => 
           event.id === eventId ? updatedEvent : event
         );
-        console.log('useUpdateEvent - New cache data:', newData);
+        logger.log('useUpdateEvent - New cache data:', newData);
         return newData;
       });
       
@@ -62,7 +63,7 @@ export const useUpdateEvent = () => {
       toast.success('Événement mis à jour avec succès');
     },
     onError: (error: Error) => {
-      console.error('useUpdateEvent - Error:', error);
+      logger.error('useUpdateEvent - Error:', error);
       toast.error(error.message || 'Erreur lors de la mise à jour de l\'événement');
     },
   });

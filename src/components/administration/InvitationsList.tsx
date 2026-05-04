@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import { useState, useEffect } from 'react';
 import { invitationService, Invitation } from '@/services/invitationService';
 import { Button } from '@/components/ui/button';
@@ -45,7 +46,7 @@ export default function InvitationsList() {
       const data = await invitationService.getInvitations();
       setInvitations(data);
     } catch (error) {
-      console.error('Error fetching invitations:', error);
+      logger.error('Error fetching invitations:', error);
     } finally {
       setLoading(false);
     }

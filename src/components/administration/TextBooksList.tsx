@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, BookText, Grid, List, Download, Archive, BookOpen } from 'lucide-react';
@@ -36,7 +37,7 @@ const TextBooksList: React.FC = () => {
       setTextBooks(textBooksData || []);
       setFormations(formationsData || []);
     } catch (error) {
-      console.error('Erreur lors du chargement des données:', error);
+      logger.error('Erreur lors du chargement des données:', error);
       toast({ title: "Erreur", description: "Impossible de charger les données.", variant: "destructive" });
     } finally {
       setLoading(false);
@@ -61,7 +62,7 @@ const TextBooksList: React.FC = () => {
       const allTextBooks = textBooks.filter(tb => tb.formation_id === formation.id);
       setPromotionTextBooks(allTextBooks);
     } catch (error) {
-      console.error('Erreur:', error);
+      logger.error('Erreur:', error);
     } finally {
       setPromotionLoading(false);
     }

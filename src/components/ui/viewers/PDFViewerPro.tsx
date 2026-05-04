@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Loader2, AlertTriangle, ExternalLink } from 'lucide-react';
 import { Document, Page, pdfjs } from 'react-pdf';
@@ -63,7 +64,7 @@ const PDFViewerPro: React.FC<PDFViewerProProps> = ({
   }, [onPagesLoaded]);
 
   const handleReactPdfError = useCallback((error: Error) => {
-    console.error('react-pdf error:', error);
+    logger.error('react-pdf error:', error);
     if (!hasTriedFallback) {
       setHasTriedFallback(true);
       setStrategy('google-viewer');

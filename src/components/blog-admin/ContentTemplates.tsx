@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState } from 'react';
 import {
   Layout, Image, Type, Square, Circle, Triangle,
@@ -248,7 +249,7 @@ export const ContentTemplates: React.FC<ContentTemplatesProps> = ({
         toast.success('Image générée !');
       }
     } catch (error) {
-      console.error('Generation error:', error);
+      logger.error('Generation error:', error);
       // Fallback with demo content
       if (type === 'carousel') {
         const demoSlides = [

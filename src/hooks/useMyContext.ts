@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { rpcWithRetry } from '@/lib/supabaseRetry';
-
+import { rpcWithRetry } from '@/lib/supabaseRetry';
+import { logger } from '@/utils/logger';
 export interface UserContext {
   id: string;
   email: string;
@@ -96,13 +97,13 @@ export const useMyContext = () => {
           maxRetries: 3,
           baseDelayMs: 500,
           onRetry: (attempt, err) => {
-            console.warn(`Retry attempt ${attempt} for get_my_context:`, err.message);
+            logger.warn(`Retry attempt ${attempt} for get_my_context:`, err.message);
           }
         }
       );
 
       if (rpcError) {
-        console.error('Erreur get_my_context:', rpcError);
+        logger.error('Erreur get_my_context:', rpcError);
         setError('Erreur de chargement du contexte');
         setLoading(false);
         return;
@@ -112,7 +113,7 @@ export const useMyContext = () => {
       const ctx = contextData as unknown as ContextResponse | null;
 
       if (!ctx || ctx.error) {
-        console.error('Contexte invalide:', ctx);
+        logger.error('Contexte invalide:', ctx);
         setError(ctx?.error || 'Contexte non disponible');
         setLoading(false);
         return;
@@ -129,7 +130,7 @@ export const useMyContext = () => {
       setData(parsed);
       setError(null);
     } catch (err) {
-      console.error('Erreur useMyContext après retries:', err);
+      logger.error('Erreur useMyContext après retries:', err);
       setError(err instanceof Error ? err.message : 'Erreur de connexion');
     } finally {
       setLoading(false);
@@ -176,7 +177,7 @@ export const useMyContext = () => {
         .subscribe();
       channelRef.current = channel;
     } catch (err) {
-      console.warn('Realtime subscription setup failed (non-critical):', err);
+      logger.warn('Realtime subscription setup failed (non-critical):', err);
     }
 
     // Écouter les changements d'authentification

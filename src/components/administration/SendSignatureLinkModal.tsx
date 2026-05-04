@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -102,7 +103,7 @@ const SendSignatureLinkModal: React.FC<SendSignatureLinkModalProps> = ({
       
       setStudents(studentData);
     } catch (error) {
-      console.error('Error loading students:', error);
+      logger.error('Error loading students:', error);
       toast.error('Erreur lors du chargement des étudiants');
     } finally {
       setLoadingStudents(false);
@@ -135,7 +136,7 @@ const SendSignatureLinkModal: React.FC<SendSignatureLinkModalProps> = ({
       toast.success(`Lien envoyé à ${studentIds.length} étudiants via la messagerie interne`);
       onSuccess();
     } catch (error: any) {
-      console.error('Error generating and sending link:', error);
+      logger.error('Error generating and sending link:', error);
       toast.error(error.message || 'Erreur lors de l\'envoi du lien');
     } finally {
       setLoading(false);
@@ -170,7 +171,7 @@ const SendSignatureLinkModal: React.FC<SendSignatureLinkModalProps> = ({
         toast.success('Envoi fallback terminé');
       }
     } catch (error: any) {
-      console.error('Error fallback sending link:', error);
+      logger.error('Error fallback sending link:', error);
       toast.error(error.message || "Erreur lors de l'envoi (fallback)");
     } finally {
       setLoading(false);

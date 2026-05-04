@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { rpcWithRetry } from '@/lib/supabaseRetry';
@@ -60,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!mounted.current) return;
 
       if (isSuperAdminError) {
-        console.error('Erreur is_super_admin:', isSuperAdminError);
+        logger.error('Erreur is_super_admin:', isSuperAdminError);
       }
 
       const superAdmin = !!isSA;
@@ -74,7 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         rpcWithRetry(() => supabase.rpc('get_current_user_role'), {
           maxRetries: 3,
           baseDelayMs: 500,
-          onRetry: (attempt, err) => console.warn(`Retry ${attempt} get_current_user_role:`, err.message),
+          onRetry: (attempt, err) => logger.warn(`Retry ${attempt} get_current_user_role:`, err.message),
         }),
         8000,
         'get_current_user_role'
@@ -83,14 +84,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!mounted.current) return;
 
       if (rpcError) {
-        console.error('Erreur get_current_user_role:', rpcError);
+        logger.error('Erreur get_current_user_role:', rpcError);
         setState(prev => ({ ...prev, userId: uid, userRole: null, isSuperAdmin: false, error: 'Erreur de chargement du rôle' }));
         return;
       }
 
       setState(prev => ({ ...prev, userId: uid, userRole: (data as string) ?? null, isSuperAdmin: false, error: null }));
     } catch (err) {
-      console.error('Erreur fetchUserRole:', err);
+      logger.error('Erreur fetchUserRole:', err);
       if (mounted.current) {
         setState(prev => ({ ...prev, userId: uid, userRole: null, isSuperAdmin: false, error: 'Erreur de connexion' }));
       }
@@ -118,7 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!mounted.current) return;
 
         if (sessionError) {
-          console.error('Erreur de session:', sessionError);
+          logger.error('Erreur de session:', sessionError);
           setState(prev => ({ ...prev, error: 'Erreur de session', loading: false }));
           return;
         }
@@ -129,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setState(prev => ({ ...prev, userId: null, userRole: null, isSuperAdmin: false }));
         }
       } catch (err) {
-        console.error('Erreur initializeAuth:', err);
+        logger.error('Erreur initializeAuth:', err);
         if (mounted.current) {
           setState(prev => ({ ...prev, userId: null, userRole: null, isSuperAdmin: false, error: 'Erreur de connexion' }));
         }

@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { retryQuery } from '@/lib/supabaseRetry';
 
@@ -86,7 +87,7 @@ const RETRY_OPTIONS = {
   maxRetries: 3,
   baseDelayMs: 500,
   onRetry: (attempt: number, err: Error) => {
-    console.warn(`Retry attempt ${attempt} for schedule service:`, err.message);
+    logger.warn(`Retry attempt ${attempt} for schedule service:`, err.message);
   }
 };
 
@@ -219,7 +220,7 @@ export const scheduleService = {
           slot.start_time,
           slot.end_time,
           instructorName
-        ).catch(console.error);
+        ).catch((e) => logger.error(e));
       });
     }
 
@@ -256,7 +257,7 @@ export const scheduleService = {
     if (formationId && moduleName && date && startTime) {
       import('./notificationService').then(({ notificationService }) => {
         notificationService.notifyScheduleSlotCancelled(formationId, moduleName, date, startTime)
-          .catch(console.error);
+          .catch((e) => logger.error(e));
       });
     }
   },

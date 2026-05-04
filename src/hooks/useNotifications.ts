@@ -40,7 +40,7 @@ export const useNotifications = () => {
       const unread = data?.filter(n => !n.is_read).length || 0;
       setUnreadCount(unread);
     } catch (error) {
-      console.error('Erreur lors du chargement des notifications:', error);
+      logger.error('Erreur lors du chargement des notifications:', error);
     } finally {
       setLoading(false);
     }
@@ -61,7 +61,7 @@ export const useNotifications = () => {
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
-      console.error('Erreur lors du marquage de la notification:', error);
+      logger.error('Erreur lors du marquage de la notification:', error);
     }
   }, []);
 
@@ -82,7 +82,7 @@ export const useNotifications = () => {
       setUnreadCount(0);
       toast.success('Toutes les notifications ont été marquées comme lues');
     } catch (error) {
-      console.error('Erreur lors du marquage des notifications:', error);
+      logger.error('Erreur lors du marquage des notifications:', error);
     }
   }, [userId]);
 
@@ -104,7 +104,7 @@ export const useNotifications = () => {
         return prev.filter(n => n.id !== notificationId);
       });
     } catch (error) {
-      console.error('Erreur lors de la suppression de la notification:', error);
+      logger.error('Erreur lors de la suppression de la notification:', error);
       throw error;
     }
   }, []);
@@ -164,7 +164,7 @@ export const useNotifications = () => {
         })
         .subscribe();
     } catch (err) {
-      console.warn('Notifications realtime subscription failed (non-critical):', err);
+      logger.warn('Notifications realtime subscription failed (non-critical):', err);
     }
 
     return () => {

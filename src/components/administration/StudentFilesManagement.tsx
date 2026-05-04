@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { FolderOpen, Upload, Eye, CheckCircle, Trash2, FileText, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -72,7 +73,7 @@ const StudentFilesManagement: React.FC = () => {
       if (error) throw error;
       setStudents(data || []);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       toast.error('Erreur lors du chargement des étudiants');
     }
   };
@@ -84,7 +85,7 @@ const StudentFilesManagement: React.FC = () => {
       const docs = await studentDocumentService.getByStudent(selectedStudent.user_id);
       setDocuments(docs);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       toast.error('Erreur lors du chargement des documents');
     } finally {
       setLoading(false);
@@ -126,7 +127,7 @@ const StudentFilesManagement: React.FC = () => {
       resetUploadForm();
       loadDocuments();
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       toast.error('Erreur lors de l\'upload');
     } finally {
       setUploading(false);

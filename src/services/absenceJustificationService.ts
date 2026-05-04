@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
-
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 export interface AbsenceJustification {
   id: string;
   signature_id: string;
@@ -57,7 +58,7 @@ export const absenceJustificationService = {
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('Error uploading justification:', error);
+      logger.error('Error uploading justification:', error);
       throw error;
     }
   },
@@ -74,7 +75,7 @@ export const absenceJustificationService = {
       if (error) throw error;
       return (data || []) as unknown as AbsenceJustification[];
     } catch (error) {
-      console.error('Error fetching user justifications:', error);
+      logger.error('Error fetching user justifications:', error);
       throw error;
     }
   },
@@ -91,7 +92,7 @@ export const absenceJustificationService = {
       if (error) throw error;
       return (data || []) as unknown as AbsenceJustification[];
     } catch (error) {
-      console.error('Error fetching pending justifications:', error);
+      logger.error('Error fetching pending justifications:', error);
       throw error;
     }
   },
@@ -107,7 +108,7 @@ export const absenceJustificationService = {
       if (error) throw error;
       return count || 0;
     } catch (error) {
-      console.error('Error counting pending justifications:', error);
+      logger.error('Error counting pending justifications:', error);
       return 0;
     }
   },
@@ -145,7 +146,7 @@ export const absenceJustificationService = {
 
       return data;
     } catch (error) {
-      console.error('Error reviewing justification:', error);
+      logger.error('Error reviewing justification:', error);
       throw error;
     }
   },
@@ -187,7 +188,7 @@ export const absenceJustificationService = {
         justification: justification as unknown as AbsenceJustification | null
       };
     } catch (error) {
-      console.error('Error fetching absence details:', error);
+      logger.error('Error fetching absence details:', error);
       throw error;
     }
   },
@@ -204,7 +205,7 @@ export const absenceJustificationService = {
       if (error) throw error;
       return data as unknown as { id: string; status: string } | null;
     } catch (error) {
-      console.error('Error checking justification:', error);
+      logger.error('Error checking justification:', error);
       return null;
     }
   }

@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { X, Mail, Phone, User, MapPin, Calendar, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -105,7 +106,7 @@ const EnhancedUserModal: React.FC<EnhancedUserModalProps> = ({
       });
       onClose();
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
+      logger.error('Erreur lors de la sauvegarde:', error);
     } finally {
       setLoading(false);
     }

@@ -22,43 +22,49 @@ export const useUserTutors = () => {
     try {
       setLoading(true);
       setError(null);
-      
-      // Fetch tutor-student assignments
-      const { data: assignments, error: assignmentError } = await supabase
+
+      // Single JOIN query instead of N+1 loop
+      const { data, error: fetchError } = await supabase
         .from('tutor_student_assignments')
-        .select('*')
+        .select(`
+          tutor_id,
+          student_id,
+          is_active,
+          tutors!tutor_student_assignments_tutor_id_fkey (
+            first_name,
+            last_name,
+            email,
+            company_name,
+            position
+          )
+        `)
         .eq('is_active', true);
 
-      if (assignmentError) throw assignmentError;
-      if (!assignments) {
+      if (fetchError) throw fetchError;
+      if (!data) {
         setUserTutors({});
         return;
       }
 
-      // Fetch tutor details for each assignment
       const tutorsByStudent: Record<string, UserTutor[]> = {};
+      const seen = new Set<string>();
 
-      for (const assignment of assignments) {
-        // Fetch tutor info
-        const { data: tutor } = await supabase
-          .from('tutors')
-          .select('first_name, last_name, email, company_name, position')
-          .eq('id', assignment.tutor_id)
-          .single();
-
+      for (const row of data) {
+        const tutor = row.tutors as { first_name: string; last_name: string; email: string; company_name: string | null; position: string | null } | null;
         if (!tutor) continue;
 
-        if (!tutorsByStudent[assignment.student_id]) {
-          tutorsByStudent[assignment.student_id] = [];
-        }
+        const key = `${row.student_id}-${row.tutor_id}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
 
-        tutorsByStudent[assignment.student_id].push({
-          tutor_id: assignment.tutor_id,
+        if (!tutorsByStudent[row.student_id]) tutorsByStudent[row.student_id] = [];
+        tutorsByStudent[row.student_id].push({
+          tutor_id: row.tutor_id,
           tutor_first_name: tutor.first_name,
           tutor_last_name: tutor.last_name,
           tutor_email: tutor.email,
           company_name: tutor.company_name || '',
-          position: tutor.position || undefined
+          position: tutor.position || undefined,
         });
       }
 
@@ -83,6 +89,6 @@ export const useUserTutors = () => {
     loading,
     error,
     getUserTutors,
-    refetch: fetchUserTutors
+    refetch: fetchUserTutors,
   };
 };

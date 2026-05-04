@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { QrCode, Hash, Users, Clock, RefreshCw, Eye, EyeOff, Wifi, Calendar, MapPin, Timer } from 'lucide-react';
 import QRCode from 'qrcode';
@@ -58,7 +59,7 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
         .eq('user_type', 'student');
       setSignedCount(signatures?.length || 0);
     } catch (error) {
-      console.error('Error loading real stats:', error);
+      logger.error('Error loading real stats:', error);
     }
   };
 
@@ -113,7 +114,7 @@ const QRCodeDisplayModal: React.FC<QRCodeDisplayModalProps> = ({
       setTimeRemaining(30 * 60);
       toast.success('Nouveau code QR généré !');
     } catch (error: any) {
-      console.error('Error generating QR code:', error);
+      logger.error('Error generating QR code:', error);
       toast.error('Erreur lors de la génération du code QR');
     } finally {
       setIsRegenerating(false);

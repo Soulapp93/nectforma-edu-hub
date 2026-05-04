@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Plus, Grid3x3, List, GraduationCap, Copy, ArrowRightLeft, Calendar, ChevronRight, ArrowLeft, Clock, BookOpen } from 'lucide-react';
@@ -51,7 +52,7 @@ const FormationsList: React.FC = () => {
       
       setFormations(formationsWithParticipants);
     } catch (error) {
-      console.error('Erreur lors du chargement des formations:', error);
+      logger.error('Erreur lors du chargement des formations:', error);
       toast.error('Erreur lors du chargement des formations');
     } finally {
       setLoading(false);
@@ -112,7 +113,7 @@ const FormationsList: React.FC = () => {
         toast.success('Formation supprimée avec succès');
         fetchFormations();
       } catch (error) {
-        console.error('Erreur lors de la suppression:', error);
+        logger.error('Erreur lors de la suppression:', error);
         toast.error('Erreur lors de la suppression');
       }
     }

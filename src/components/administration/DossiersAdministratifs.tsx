@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Users, GraduationCap, Search, ArrowLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -32,7 +33,7 @@ const DossiersAdministratifs: React.FC = () => {
       setStudents(s);
       setFormateurs(f);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     } finally {
       setLoading(false);
     }

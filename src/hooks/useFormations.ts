@@ -14,7 +14,7 @@ export const useFormations = () => {
       const data = await formationService.getFormations();
       setFormations(data || []);
     } catch (err) {
-      console.error('Erreur useFormations:', err);
+      logger.error('Erreur useFormations:', err);
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement des formations');
     } finally {
       setLoading(false);

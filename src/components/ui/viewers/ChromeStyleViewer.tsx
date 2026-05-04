@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, useRef } from 'react';
 import { X, ZoomIn, ZoomOut, Download, Maximize2, Minimize2, RotateCw, Menu, ChevronLeft, ChevronRight, Printer, ExternalLink, Loader2, FileWarning, Play, Pause, Volume2, VolumeX } from 'lucide-react';
 import { Document, Page, pdfjs } from 'react-pdf';
@@ -126,7 +127,7 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
   };
 
   const onDocumentLoadError = (error: Error) => {
-    console.error('Erreur de chargement du PDF:', error);
+    logger.error('Erreur de chargement du PDF:', error);
     setError('Impossible de charger le document PDF');
     setLoading(false);
     toast.error('Erreur lors du chargement du document');
@@ -194,7 +195,7 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
         await exitFullscreen();
       }
     } catch (err) {
-      console.error('Erreur fullscreen:', err);
+      logger.error('Erreur fullscreen:', err);
       toast.error('Impossible de passer en plein écran');
     }
   };
@@ -213,7 +214,7 @@ const ChromeStyleViewer: React.FC<ChromeStyleViewerProps> = ({
         await doc.msExitFullscreen();
       }
     } catch (err) {
-      console.error('Erreur sortie fullscreen:', err);
+      logger.error('Erreur sortie fullscreen:', err);
     }
   };
 

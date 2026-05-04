@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Plus, FileText, Eye, Trash2, Download, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,7 +26,7 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
       const data = await moduleDocumentService.getModuleDocuments(moduleId);
       setDocuments(data || []);
     } catch (error) {
-      console.error('Erreur lors du chargement des documents:', error);
+      logger.error('Erreur lors du chargement des documents:', error);
       toast.error('Erreur lors du chargement des documents');
     } finally {
       setLoading(false);
@@ -55,7 +56,7 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
         fetchDocuments();
         toast.success('Document supprimé avec succès');
       } catch (error) {
-        console.error('Erreur lors de la suppression:', error);
+        logger.error('Erreur lors de la suppression:', error);
         toast.error('Erreur lors de la suppression');
       }
     }
@@ -78,7 +79,7 @@ const ModuleDocumentsTab: React.FC<ModuleDocumentsTabProps> = ({ moduleId }) => 
       document.body.removeChild(link);
       toast.success('Téléchargement démarré');
     } catch (error) {
-      console.error('Erreur lors du téléchargement:', error);
+      logger.error('Erreur lors du téléchargement:', error);
       toast.error('Erreur lors du téléchargement');
     }
   };

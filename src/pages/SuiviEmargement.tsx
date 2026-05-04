@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, MapPin, User, CheckCircle, XCircle, AlertCircle, Filter, Search, ClipboardCheck, CalendarIcon, Timer, FileText, Upload } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -82,7 +83,7 @@ const SuiviEmargement = () => {
           table: 'attendance_signatures'
         },
         () => {
-          console.log('[SuiviEmargement] Changement détecté, rechargement...');
+          logger.log('[SuiviEmargement] Changement détecté, rechargement...');
           loadAttendanceHistory();
         }
       )
@@ -105,7 +106,7 @@ const SuiviEmargement = () => {
       
       if (userRole === 'Tuteur') {
         // Pour les tuteurs, on récupère les données de l'apprenti
-        console.log('[SuiviEmargement] Tuteur détecté, recherche de l\'apprenti...');
+        logger.log('[SuiviEmargement] Tuteur détecté, recherche de l\'apprenti...');
         const { data: studentAssignment, error: studentError } = await supabase
           .from('tutor_student_assignments')
           .select(`
@@ -121,12 +122,12 @@ const SuiviEmargement = () => {
           .maybeSingle();
         
         if (studentError) {
-          console.error('[SuiviEmargement] Erreur lors de la recherche de l\'apprenti:', studentError);
+          logger.error('[SuiviEmargement] Erreur lors de la recherche de l\'apprenti:', studentError);
         }
         
         if (studentAssignment && studentAssignment.student_id) {
           const student = studentAssignment.users as any;
-          console.log('[SuiviEmargement] Apprenti trouvé:', studentAssignment.student_id, student);
+          logger.log('[SuiviEmargement] Apprenti trouvé:', studentAssignment.student_id, student);
           targetUserId = studentAssignment.student_id;
           targetUserRole = 'Étudiant';
           setStudentInfo({
@@ -135,7 +136,7 @@ const SuiviEmargement = () => {
           });
           setNoStudentAssigned(false);
         } else {
-          console.log('[SuiviEmargement] Aucun apprenti assigné à ce tuteur');
+          logger.log('[SuiviEmargement] Aucun apprenti assigné à ce tuteur');
           setNoStudentAssigned(true);
           setStudentInfo(null);
           setLoading(false);
@@ -259,7 +260,7 @@ const SuiviEmargement = () => {
       
       setAttendanceRecords(records);
     } catch (error) {
-      console.error('Erreur lors du chargement de l\'historique:', error);
+      logger.error('Erreur lors du chargement de l\'historique:', error);
     } finally {
       setLoading(false);
     }

@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -205,7 +206,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
       setOpen(false);
       onOpenChange?.(false);
     } catch (error) {
-      console.error('Error creating schedule slot:', error);
+      logger.error('Error creating schedule slot:', error);
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de la création du cours.",

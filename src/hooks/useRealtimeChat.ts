@@ -1,4 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useCurrentUser } from './useCurrentUser';
 import { useToast } from './use-toast';
 
 export interface ChatMessage {
@@ -12,65 +14,87 @@ export interface ChatMessage {
 }
 
 export const useRealtimeChat = (classId: string) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      user_id: 'instructor_1',
-      virtual_class_id: classId,
-      content: 'Bonjour à tous, nous commençons dans 2 minutes',
-      created_at: new Date().toISOString(),
-      sender_name: 'Formateur Prof',
-      is_instructor: true
-    },
-    {
-      id: '2',
-      user_id: 'student_1',
-      virtual_class_id: classId,
-      content: 'Merci, nous sommes prêts',
-      created_at: new Date().toISOString(),
-      sender_name: 'Marie Dupont',
-      is_instructor: false
-    }
-  ]);
-  const [isConnected] = useState(true);
-  const [isLoading] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const { userId } = useCurrentUser();
   const { toast } = useToast();
 
-  // Send a new message (mock implementation)
+  const fetchMessages = useCallback(async () => {
+    if (!classId) return;
+    try {
+      setIsLoading(true);
+      const { data, error } = await (supabase as any)
+        .from('virtual_class_messages')
+        .select('*')
+        .eq('virtual_class_id', classId)
+        .order('created_at', { ascending: true })
+        .limit(200);
+
+      if (error) throw error;
+      setMessages(data || []);
+    } catch {
+      // Table may not exist yet — start with empty messages
+      setMessages([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [classId]);
+
+  useEffect(() => {
+    if (!classId) return;
+    fetchMessages();
+
+    const ch = supabase
+      .channel(`virtual-class-chat-${classId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'virtual_class_messages', filter: `virtual_class_id=eq.${classId}` },
+        (payload) => {
+          setMessages((prev) => [...prev, payload.new as ChatMessage]);
+        }
+      )
+      .subscribe((status) => {
+        setIsConnected(status === 'SUBSCRIBED');
+      });
+
+    channelRef.current = ch;
+
+    return () => {
+      supabase.removeChannel(ch);
+      channelRef.current = null;
+      setIsConnected(false);
+    };
+  }, [classId, fetchMessages]);
+
   const sendMessage = useCallback(async (messageText: string) => {
-    if (!messageText.trim()) return;
+    if (!messageText.trim() || !userId || !classId) return;
 
     try {
-      const newMessage: ChatMessage = {
-        id: Date.now().toString(),
-        user_id: 'current_user',
-        virtual_class_id: classId,
-        content: messageText.trim(),
-        created_at: new Date().toISOString(),
-        sender_name: 'Vous',
-        is_instructor: false
-      };
+      const { error } = await (supabase as any)
+        .from('virtual_class_messages')
+        .insert({
+          user_id: userId,
+          virtual_class_id: classId,
+          content: messageText.trim(),
+        });
 
-      setMessages(prev => [...prev, newMessage]);
-    } catch (error) {
-      console.error('Error sending message:', error);
+      if (error) throw error;
+    } catch {
       toast({
-        title: "Erreur",
+        title: 'Erreur',
         description: "Impossible d'envoyer le message",
-        variant: "destructive",
+        variant: 'destructive',
       });
     }
-  }, [classId, toast]);
-
-  const refetchMessages = useCallback(() => {
-    // Mock implementation - messages are already loaded
-  }, []);
+  }, [classId, userId, toast]);
 
   return {
     messages,
     isConnected,
     isLoading,
     sendMessage,
-    refetchMessages
+    refetchMessages: fetchMessages,
   };
 };

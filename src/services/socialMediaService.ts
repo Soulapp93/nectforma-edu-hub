@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
-
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 export type SocialPlatform = 'linkedin' | 'twitter' | 'facebook' | 'instagram' | 'tiktok' | 'youtube' | 'threads' | 'pinterest';
 
 export type SocialPostStatus = 'draft' | 'scheduled' | 'publishing' | 'published' | 'failed' | 'cancelled';
@@ -97,7 +98,7 @@ export async function getConnections(): Promise<SocialConnection[]> {
     .order('platform');
 
   if (error) {
-    console.error('Error fetching connections:', error);
+    logger.error('Error fetching connections:', error);
     return [];
   }
 
@@ -112,7 +113,7 @@ export async function saveConnection(connection: Partial<SocialConnection>): Pro
     .single();
 
   if (error) {
-    console.error('Error saving connection:', error);
+    logger.error('Error saving connection:', error);
     throw error;
   }
 
@@ -130,7 +131,7 @@ export async function disconnectPlatform(platform: SocialPlatform): Promise<void
     .eq('platform', platform);
 
   if (error) {
-    console.error('Error disconnecting platform:', error);
+    logger.error('Error disconnecting platform:', error);
     throw error;
   }
 }
@@ -162,7 +163,7 @@ export async function getSocialPosts(filters?: {
   const { data, error } = await query;
 
   if (error) {
-    console.error('Error fetching social posts:', error);
+    logger.error('Error fetching social posts:', error);
     return [];
   }
 
@@ -177,7 +178,7 @@ export async function createSocialPost(post: Partial<SocialPost>): Promise<Socia
     .single();
 
   if (error) {
-    console.error('Error creating social post:', error);
+    logger.error('Error creating social post:', error);
     throw error;
   }
 
@@ -193,7 +194,7 @@ export async function updateSocialPost(id: string, updates: Partial<SocialPost>)
     .single();
 
   if (error) {
-    console.error('Error updating social post:', error);
+    logger.error('Error updating social post:', error);
     throw error;
   }
 
@@ -207,7 +208,7 @@ export async function deleteSocialPost(id: string): Promise<void> {
     .eq('id', id);
 
   if (error) {
-    console.error('Error deleting social post:', error);
+    logger.error('Error deleting social post:', error);
     throw error;
   }
 }
@@ -231,7 +232,7 @@ export async function generateCaptions(
   });
 
   if (error) {
-    console.error('Error generating captions:', error);
+    logger.error('Error generating captions:', error);
     throw error;
   }
 
@@ -263,7 +264,7 @@ export async function schedulePost(
   });
 
   if (error) {
-    console.error('Error scheduling post:', error);
+    logger.error('Error scheduling post:', error);
     throw error;
   }
 
@@ -284,7 +285,7 @@ export async function publishPost(postId: string): Promise<{
   });
 
   if (error) {
-    console.error('Error publishing post:', error);
+    logger.error('Error publishing post:', error);
     throw error;
   }
 
@@ -309,7 +310,7 @@ export async function suggestBestTime(
   });
 
   if (error) {
-    console.error('Error suggesting best time:', error);
+    logger.error('Error suggesting best time:', error);
     throw error;
   }
 
@@ -330,7 +331,7 @@ export async function testConnection(platform: SocialPlatform): Promise<{
   });
 
   if (error) {
-    console.error('Error testing connection:', error);
+    logger.error('Error testing connection:', error);
     throw error;
   }
 
@@ -350,7 +351,7 @@ export async function generateSocialImage(
   });
 
   if (error) {
-    console.error('Error generating image:', error);
+    logger.error('Error generating image:', error);
     throw error;
   }
 
@@ -371,7 +372,7 @@ export async function getPostAnalytics(postId: string): Promise<SocialAnalytics 
     .single();
 
   if (error) {
-    console.error('Error fetching analytics:', error);
+    logger.error('Error fetching analytics:', error);
     return null;
   }
 
@@ -441,7 +442,7 @@ export async function getPublishingSettings(): Promise<PublishingSettings | null
     .single();
 
   if (error) {
-    console.error('Error fetching settings:', error);
+    logger.error('Error fetching settings:', error);
     return null;
   }
 
@@ -459,7 +460,7 @@ export async function updatePublishingSettings(settings: Partial<PublishingSetti
       .eq('id', existing.id);
 
     if (error) {
-      console.error('Error updating settings:', error);
+      logger.error('Error updating settings:', error);
       throw error;
     }
   } else {
@@ -468,7 +469,7 @@ export async function updatePublishingSettings(settings: Partial<PublishingSetti
       .insert(settings);
 
     if (error) {
-      console.error('Error creating settings:', error);
+      logger.error('Error creating settings:', error);
       throw error;
     }
   }
@@ -501,7 +502,7 @@ export async function getPublicationLogs(postId?: string, limit = 50): Promise<{
   const { data, error } = await query;
 
   if (error) {
-    console.error('Error fetching logs:', error);
+    logger.error('Error fetching logs:', error);
     return [];
   }
 

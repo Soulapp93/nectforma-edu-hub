@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, MapPin, Users, FileText, CheckCircle, QrCode, Link2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -65,7 +66,7 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
           if (error) throw error;
           setTodaysSchedules(scheduleSlots || []);
         } catch (error) {
-          console.error('Erreur chargement emploi du temps:', error);
+          logger.error('Erreur chargement emploi du temps:', error);
           toast.error('Erreur lors du chargement des cours');
         } finally {
           setLoading(false);
@@ -166,7 +167,7 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
         setShowLinkSetup(true);
       }
     } catch (error: any) {
-      console.error('Erreur lors de la création:', error);
+      logger.error('Erreur lors de la création:', error);
       toast.error(`Erreur: ${error.message}`);
       setSessionMode(null);
     } finally {
@@ -188,7 +189,7 @@ const CreateAttendanceSessionModal: React.FC<CreateAttendanceSessionModalProps> 
           <QRAttendanceManager
             attendanceSheet={attendanceSessionData}
             instructorId={attendanceSessionData.instructor_id || userId || ''}
-            onUpdate={() => console.log('Session updated')}
+            onUpdate={() => logger.log('Session updated')}
           />
           <div className="flex justify-end pt-4 border-t">
             <Button onClick={onClose}>Fermer</Button>

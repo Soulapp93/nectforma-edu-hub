@@ -1,7 +1,8 @@
 import { useEffect, useCallback, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useMyContext } from './useMyContext';
-
+import { useMyContext } from './useMyContext';
+import { logger } from '@/utils/logger';
 export interface EstablishmentTheme {
   primary: string | null;
   secondary: string | null;
@@ -133,7 +134,7 @@ export const useEstablishmentTheme = () => {
         .single();
 
       if (error) {
-        console.error('Error fetching theme:', error);
+        logger.error('Error fetching theme:', error);
         setLoading(false);
         return;
       }
@@ -148,7 +149,7 @@ export const useEstablishmentTheme = () => {
       setTheme(t);
       applyThemeToDOM(t);
     } catch (err) {
-      console.error('Error in useEstablishmentTheme:', err);
+      logger.error('Error in useEstablishmentTheme:', err);
     } finally {
       setLoading(false);
     }
@@ -175,7 +176,7 @@ export const useEstablishmentTheme = () => {
         }, () => fetchTheme())
         .subscribe();
     } catch (err) {
-      console.warn('Theme realtime subscription failed (non-critical):', err);
+      logger.warn('Theme realtime subscription failed (non-critical):', err);
     }
 
     return () => {

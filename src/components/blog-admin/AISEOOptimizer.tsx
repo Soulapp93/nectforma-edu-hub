@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState } from 'react';
 import { 
   Target, Loader2, AlertTriangle, CheckCircle2, 
@@ -49,7 +50,7 @@ export const AISEOOptimizer: React.FC<AISEOOptimizerProps> = ({
       setAnalysis(result);
       toast.success('Analyse SEO terminée');
     } catch (error) {
-      console.error('SEO analysis error:', error);
+      logger.error('SEO analysis error:', error);
       toast.error(error instanceof Error ? error.message : 'Erreur lors de l\'analyse');
     } finally {
       setIsAnalyzing(false);

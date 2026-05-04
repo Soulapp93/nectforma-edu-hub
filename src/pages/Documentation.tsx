@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useMemo, useRef, useState } from 'react';
 import { Book, Users, GraduationCap, UserCheck, Briefcase, ChevronRight, Download, FileText, Calendar, MessageSquare, ClipboardCheck, Settings, Building, BookOpen, Clock, CheckCircle, ArrowRight, Play, Shield, Mail, Bell, User, LogIn, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -192,7 +193,7 @@ const Documentation = () => {
       await exportPdfBySections(exportOrientation);
       toast.success('PDF téléchargé !');
     } catch (error) {
-      console.error('Erreur export PDF:', error);
+      logger.error('Erreur export PDF:', error);
       toast.error("Impossible de générer le PDF sur cet appareil. Essayez depuis un ordinateur.");
     } finally {
       setIsExporting(false);

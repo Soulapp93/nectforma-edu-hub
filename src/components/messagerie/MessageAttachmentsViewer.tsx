@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { FileText, Download, Eye, File, Image, Film, Music, Archive, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -69,7 +70,7 @@ const MessageAttachmentsViewer: React.FC<MessageAttachmentsViewerProps> = ({ mes
         if (error) throw error;
         if (!cancelled) setAttachments((data || []) as Attachment[]);
       } catch (e) {
-        console.error('Erreur chargement pièces jointes:', e);
+        logger.error('Erreur chargement pièces jointes:', e);
         if (!cancelled) setAttachments([]);
       } finally {
         if (!cancelled) setLoading(false);

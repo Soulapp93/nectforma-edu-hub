@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, Clock, FileText, Users } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -47,7 +48,7 @@ const AttendanceSigningModal: React.FC<AttendanceSigningModalProps> = ({
           .maybeSingle() as any;
 
         if (error) {
-          console.error('Error loading saved signature:', error);
+          logger.error('Error loading saved signature:', error);
           return;
         }
 
@@ -55,7 +56,7 @@ const AttendanceSigningModal: React.FC<AttendanceSigningModalProps> = ({
           setSavedSignature(data.signature_data);
         }
       } catch (error) {
-        console.error('Error loading saved signature:', error);
+        logger.error('Error loading saved signature:', error);
       }
     };
 
@@ -82,7 +83,7 @@ const AttendanceSigningModal: React.FC<AttendanceSigningModalProps> = ({
       onSigned();
       onClose();
     } catch (error: any) {
-      console.error('Error signing attendance:', error);
+      logger.error('Error signing attendance:', error);
       toast.error(error.message || 'Erreur lors de la signature');
     } finally {
       setSigning(false);

@@ -2,7 +2,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { getAppBaseUrl } from '@/lib/appBaseUrl';
 import { retryQuery } from '@/lib/supabaseRetry';
-
+import { retryQuery } from '@/lib/supabaseRetry';
+import { logger } from '@/utils/logger';
 export interface User {
   id: string;
   first_name: string;
@@ -58,7 +59,7 @@ async function sendNativeInvitation(
   establishmentId: string
 ): Promise<{ success: boolean; user_id?: string; error?: string }> {
   try {
-    console.log(`Envoi invitation native Supabase à ${email}...`);
+    logger.log(`Envoi invitation native Supabase à ${email}...`);
     
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -81,19 +82,19 @@ async function sendNativeInvitation(
     });
 
     if (error) {
-      console.error('Erreur invitation native:', error);
+      logger.error('Erreur invitation native:', error);
       return { success: false, error: error.message };
     }
     
     if (data?.error) {
-      console.error('Erreur API invitation:', data.error);
+      logger.error('Erreur API invitation:', data.error);
       return { success: false, error: data.error };
     }
 
-    console.log('✅ Invitation native envoyée:', data);
+    logger.log('✅ Invitation native envoyée:', data);
     return { success: true, user_id: data.user_id };
   } catch (error: any) {
-    console.error('Erreur lors de l\'invitation native:', error);
+    logger.error('Erreur lors de l\'invitation native:', error);
     return { success: false, error: error.message };
   }
 }
@@ -110,17 +111,17 @@ async function inviteTutorNative(
   studentId?: string
 ): Promise<{ success: boolean; tutor_id?: string; error?: string; warning?: string }> {
   try {
-    console.log(`[inviteTutorNative] 📧 Début invitation tuteur: ${email} pour étudiant: ${studentId || 'non spécifié'}`);
-    console.log(`[inviteTutorNative] Données: ${JSON.stringify({ email, firstName, lastName, companyName, position, establishmentId })}`);
+    logger.log(`[inviteTutorNative] 📧 Début invitation tuteur: ${email} pour étudiant: ${studentId || 'non spécifié'}`);
+    logger.log(`[inviteTutorNative] Données: ${JSON.stringify({ email, firstName, lastName, companyName, position, establishmentId })}`);
     
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.access_token) {
-      console.error('[inviteTutorNative] ❌ Pas de session active');
+      logger.error('[inviteTutorNative] ❌ Pas de session active');
       return { success: false, error: 'Session non trouvée - veuillez vous reconnecter' };
     }
     
-    console.log('[inviteTutorNative] ✅ Session trouvée, appel Edge Function...');
+    logger.log('[inviteTutorNative] ✅ Session trouvée, appel Edge Function...');
     
     const { data, error } = await supabase.functions.invoke('invite-tutor-native', {
       headers: {
@@ -139,28 +140,28 @@ async function inviteTutorNative(
       }
     });
 
-    console.log('[inviteTutorNative] Réponse Edge Function:', JSON.stringify(data), 'Erreur:', error);
+    logger.log('[inviteTutorNative] Réponse Edge Function:', JSON.stringify(data), 'Erreur:', error);
 
     if (error) {
-      console.error('[inviteTutorNative] ❌ Erreur invocation:', error);
+      logger.error('[inviteTutorNative] ❌ Erreur invocation:', error);
       return { success: false, error: error.message };
     }
     
     if (data?.error) {
-      console.error('[inviteTutorNative] ❌ Erreur API:', data.error);
+      logger.error('[inviteTutorNative] ❌ Erreur API:', data.error);
       return { success: false, error: data.error };
     }
 
     // Vérifier si il y a un warning (email envoyé mais avec problème potentiel)
     if (data?.warning) {
-      console.warn('[inviteTutorNative] ⚠️ Warning:', data.warning);
+      logger.warn('[inviteTutorNative] ⚠️ Warning:', data.warning);
       return { success: true, tutor_id: data.tutor_id, warning: data.warning };
     }
 
-    console.log('[inviteTutorNative] ✅ Succès! Tuteur ID:', data.tutor_id, 'Email ID:', data.email_id);
+    logger.log('[inviteTutorNative] ✅ Succès! Tuteur ID:', data.tutor_id, 'Email ID:', data.email_id);
     return { success: true, tutor_id: data.tutor_id };
   } catch (error: any) {
-    console.error('[inviteTutorNative] ❌ Exception:', error);
+    logger.error('[inviteTutorNative] ❌ Exception:', error);
     return { success: false, error: error.message };
   }
 }
@@ -168,12 +169,12 @@ async function inviteTutorNative(
 // Legacy: send activation email (fallback for existing users)
 async function sendLegacyActivationEmail(user: User, establishmentId: string): Promise<void> {
   try {
-    console.log(`Sending legacy activation email to ${user.email}...`);
+    logger.log(`Sending legacy activation email to ${user.email}...`);
     
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.access_token) {
-      console.error('No session found - cannot send activation email');
+      logger.error('No session found - cannot send activation email');
       return;
     }
     
@@ -192,18 +193,18 @@ async function sendLegacyActivationEmail(user: User, establishmentId: string): P
     });
 
     if (error) {
-      console.error('Error sending activation email:', error);
+      logger.error('Error sending activation email:', error);
       throw error;
     }
     
     if (data?.error) {
-      console.error('Activation email API error:', data.error);
+      logger.error('Activation email API error:', data.error);
       throw new Error(data.error);
     }
 
-    console.log('Legacy activation email sent successfully:', data);
+    logger.log('Legacy activation email sent successfully:', data);
   } catch (error) {
-    console.error('Failed to send activation email:', error);
+    logger.error('Failed to send activation email:', error);
   }
 }
 
@@ -211,7 +212,7 @@ const RETRY_OPTIONS = {
   maxRetries: 3,
   baseDelayMs: 500,
   onRetry: (attempt: number, err: Error) => {
-    console.warn(`Retry attempt ${attempt} for user service:`, err.message);
+    logger.warn(`Retry attempt ${attempt} for user service:`, err.message);
   }
 };
 
@@ -269,7 +270,7 @@ export const userService = {
           .upsert(assignments, { onConflict: 'user_id,formation_id', ignoreDuplicates: true } as any);
 
         if (upsertError) {
-          console.error('Erreur lors de l\'assignation des formations (utilisateur existant):', upsertError);
+          logger.error('Erreur lors de l\'assignation des formations (utilisateur existant):', upsertError);
           throw upsertError;
         }
       }
@@ -327,8 +328,8 @@ export const userService = {
 
     // Handle tutor data for students - Use invite-tutor-native Edge Function
     if (tutorData && userData.role === 'Étudiant') {
-      console.log('[createUser] 👤 Données tuteur détectées, lancement invitation...');
-      console.log('[createUser] tutorData:', JSON.stringify(tutorData));
+      logger.log('[createUser] 👤 Données tuteur détectées, lancement invitation...');
+      logger.log('[createUser] tutorData:', JSON.stringify(tutorData));
       
       const tutorResult = await inviteTutorNative(
         tutorData.email,
@@ -342,18 +343,18 @@ export const userService = {
       );
       
       if (!tutorResult.success) {
-        console.error('[createUser] ❌ Échec invitation tuteur:', tutorResult.error);
+        logger.error('[createUser] ❌ Échec invitation tuteur:', tutorResult.error);
         // On ne bloque pas la création de l'étudiant, mais on stocke l'erreur pour l'afficher
         (newUser as any)._tutorInviteError = tutorResult.error;
       } else {
-        console.log('[createUser] ✅ Tuteur invité et assigné:', tutorResult.tutor_id);
+        logger.log('[createUser] ✅ Tuteur invité et assigné:', tutorResult.tutor_id);
         if (tutorResult.warning) {
-          console.warn('[createUser] ⚠️ Warning tuteur:', tutorResult.warning);
+          logger.warn('[createUser] ⚠️ Warning tuteur:', tutorResult.warning);
           (newUser as any)._tutorInviteWarning = tutorResult.warning;
         }
       }
     } else {
-      console.log('[createUser] Pas de tutorData ou rôle non étudiant, skip invitation tuteur');
+      logger.log('[createUser] Pas de tutorData ou rôle non étudiant, skip invitation tuteur');
     }
 
     return newUser as User;
@@ -394,8 +395,8 @@ export const userService = {
 
     // Handle tutor data for students - Use invite-tutor-native Edge Function
     if (tutorData && data.role === 'Étudiant') {
-      console.log('[updateUser] 👤 Données tuteur détectées, lancement invitation...');
-      console.log('[updateUser] tutorData:', JSON.stringify(tutorData));
+      logger.log('[updateUser] 👤 Données tuteur détectées, lancement invitation...');
+      logger.log('[updateUser] tutorData:', JSON.stringify(tutorData));
       
       const establishmentId = await getCurrentUserEstablishmentId();
       
@@ -411,16 +412,16 @@ export const userService = {
       );
       
       if (!tutorResult.success) {
-        console.error('[updateUser] ❌ Échec invitation tuteur:', tutorResult.error);
+        logger.error('[updateUser] ❌ Échec invitation tuteur:', tutorResult.error);
         (data as any)._tutorInviteError = tutorResult.error;
       } else {
-        console.log('[updateUser] ✅ Tuteur invité/mis à jour:', tutorResult.tutor_id);
+        logger.log('[updateUser] ✅ Tuteur invité/mis à jour:', tutorResult.tutor_id);
         if (tutorResult.warning) {
           (data as any)._tutorInviteWarning = tutorResult.warning;
         }
       }
     } else {
-      console.log('[updateUser] Pas de tutorData ou rôle non étudiant, skip invitation tuteur');
+      logger.log('[updateUser] Pas de tutorData ou rôle non étudiant, skip invitation tuteur');
     }
 
     return data as User;
@@ -433,7 +434,7 @@ export const userService = {
       .eq('user_id', userId);
 
     if (error) {
-      console.error('Erreur lors de la récupération des formations:', error);
+      logger.error('Erreur lors de la récupération des formations:', error);
       return [];
     }
 
@@ -499,7 +500,7 @@ export const userService = {
           if (formationId) {
             formationIds.push(formationId);
           } else {
-            console.warn(`Formation non trouvée: "${name}"`);
+            logger.warn(`Formation non trouvée: "${name}"`);
           }
         }
 
@@ -541,7 +542,7 @@ export const userService = {
         const created = await this.createUser(cleanUserData, formationIds);
         results.push(created);
       } catch (error) {
-        console.error(`Erreur création utilisateur ${userData.email}:`, error);
+        logger.error(`Erreur création utilisateur ${userData.email}:`, error);
       }
     }
 
@@ -577,6 +578,6 @@ export const userService = {
       throw new Error(data.error);
     }
 
-    console.log('✅ Invitation renvoyée via Supabase Auth natif');
+    logger.log('✅ Invitation renvoyée via Supabase Auth natif');
   }
 };

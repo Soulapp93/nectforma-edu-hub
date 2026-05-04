@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar, Clock, Users, CheckCircle2, XCircle, Edit3, FileText, Eye, ArrowLeft, ChevronRight, PenTool, Download, Send, Link, Video, FilePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -70,7 +71,7 @@ const AttendanceManagement = () => {
           table: 'attendance_signatures'
         },
         (payload) => {
-          console.log('Nouvelle signature détectée:', payload);
+          logger.log('Nouvelle signature détectée:', payload);
           // Rafraîchir les données
           fetchData();
           if (selectedFormationId) {
@@ -87,11 +88,11 @@ const AttendanceManagement = () => {
 
   const loadAdminSignature = async () => {
     if (!userId) {
-      console.log('Pas d\'userId pour charger la signature');
+      logger.log('Pas d\'userId pour charger la signature');
       return;
     }
     
-    console.log('Chargement signature admin pour userId:', userId);
+    logger.log('Chargement signature admin pour userId:', userId);
     
     try {
       const { data, error } = await supabase
@@ -103,22 +104,22 @@ const AttendanceManagement = () => {
         .maybeSingle();
 
       if (error) {
-        console.error('Error loading admin signature:', error);
+        logger.error('Error loading admin signature:', error);
         setAdminSignature(null);
         return;
       }
 
-      console.log('Données signature récupérées:', data);
+      logger.log('Données signature récupérées:', data);
 
       if (data && data.signature_data && data.signature_data.trim() !== '') {
         setAdminSignature(data.signature_data);
-        console.log('Signature admin chargée avec succès, longueur:', data.signature_data.length);
+        logger.log('Signature admin chargée avec succès, longueur:', data.signature_data.length);
       } else {
         setAdminSignature(null);
-        console.log('Aucune signature valide trouvée');
+        logger.log('Aucune signature valide trouvée');
       }
     } catch (error) {
-      console.error('Error loading admin signature:', error);  
+      logger.error('Error loading admin signature:', error);  
       setAdminSignature(null);
     }
   };
@@ -205,13 +206,13 @@ const AttendanceManagement = () => {
       return;
     }
 
-    console.log('Début validation, vérification signature admin...');
-    console.log('Signature admin disponible dans state:', !!adminSignature);
-    console.log('Valeur de la signature dans state:', adminSignature ? adminSignature.substring(0, 50) + '...' : 'null');
+    logger.log('Début validation, vérification signature admin...');
+    logger.log('Signature admin disponible dans state:', !!adminSignature);
+    logger.log('Valeur de la signature dans state:', adminSignature ? adminSignature.substring(0, 50) + '...' : 'null');
     
     try {
       // Recharger la signature depuis la base pour s'assurer d'avoir la plus récente
-      console.log('Rechargement de la signature depuis la base...');
+      logger.log('Rechargement de la signature depuis la base...');
       await loadAdminSignature();
       
       // Attendre un petit délai pour s'assurer que le state est mis à jour
@@ -226,12 +227,12 @@ const AttendanceManagement = () => {
         .limit(1)
         .maybeSingle();
       
-      console.log('Signature trouvée en base:', !!signatureData?.signature_data);
+      logger.log('Signature trouvée en base:', !!signatureData?.signature_data);
       
       const currentSignature = signatureData?.signature_data || adminSignature;
       
       if (currentSignature && currentSignature.trim() !== '') {
-        console.log('Validation avec signature existante, longueur:', currentSignature.length);
+        logger.log('Validation avec signature existante, longueur:', currentSignature.length);
         await attendanceService.validateAttendanceSheet(sheet.id, userId, currentSignature);
         toast.success('Feuille d\'émargement validée avec la signature enregistrée');
         
@@ -242,12 +243,12 @@ const AttendanceManagement = () => {
         }
       } else {
         // Aucune signature trouvée, ouvrir le modal pour signature manuelle
-        console.log('Aucune signature trouvée, ouverture du modal');
+        logger.log('Aucune signature trouvée, ouverture du modal');
         setSelectedSheet(sheet);
         setShowValidationModal(true);
       }
     } catch (error) {
-      console.error('Error validating attendance sheet:', error);
+      logger.error('Error validating attendance sheet:', error);
       toast.error('Erreur lors de la validation');
     }
   };
@@ -273,13 +274,13 @@ const AttendanceManagement = () => {
 
   const handleSaveAdminSignature = async (signatureData: string) => {
     if (!userId) {
-      console.error('Pas d\'userId pour sauvegarder la signature');
+      logger.error('Pas d\'userId pour sauvegarder la signature');
       return;
     }
     
     try {
       if (signatureData && signatureData.trim() !== '') {
-        console.log('Sauvegarde signature admin, userId:', userId, 'longueur:', signatureData.length);
+        logger.log('Sauvegarde signature admin, userId:', userId, 'longueur:', signatureData.length);
         
         // Sauvegarder dans la base de données
         const { data, error } = await supabase
@@ -293,22 +294,22 @@ const AttendanceManagement = () => {
           .select();
 
         if (error) {
-          console.error('Error saving admin signature:', error);
+          logger.error('Error saving admin signature:', error);
           toast.error(`Erreur lors de la sauvegarde de la signature: ${error.message}`);
           throw error;
         }
 
-        console.log('Signature sauvegardée en base:', data);
+        logger.log('Signature sauvegardée en base:', data);
         
         // Mettre à jour immédiatement le state local
         setAdminSignature(signatureData);
-        console.log('État signature mis à jour localement, longueur:', signatureData.length);
+        logger.log('État signature mis à jour localement, longueur:', signatureData.length);
         
         toast.success('Signature administrative sauvegardée');
         
         // Vérifier la sauvegarde en rechargeant depuis la base
         setTimeout(async () => {
-          console.log('Vérification de la signature sauvegardée...');
+          logger.log('Vérification de la signature sauvegardée...');
           try {
             const { data: verifyData, error: verifyError } = await supabase
               .from('user_signatures')
@@ -317,22 +318,22 @@ const AttendanceManagement = () => {
               .single();
             
             if (verifyError) {
-              console.error('Erreur lors de la vérification:', verifyError);
+              logger.error('Erreur lors de la vérification:', verifyError);
             } else {
-              console.log('Vérification OK - signature trouvée en base, longueur:', verifyData.signature_data?.length);
+              logger.log('Vérification OK - signature trouvée en base, longueur:', verifyData.signature_data?.length);
               // Synchroniser le state avec la base si nécessaire
               if (verifyData.signature_data !== adminSignature) {
-                console.log('Synchronisation du state avec la base...');
+                logger.log('Synchronisation du state avec la base...');
                 setAdminSignature(verifyData.signature_data);
               }
             }
           } catch (error) {
-            console.error('Erreur de vérification:', error);
+            logger.error('Erreur de vérification:', error);
           }
         }, 500);
         
       } else {
-        console.log('Suppression signature admin');
+        logger.log('Suppression signature admin');
         
         // Supprimer de la base de données
         const { error } = await supabase
@@ -341,17 +342,17 @@ const AttendanceManagement = () => {
           .eq('user_id', userId);
 
         if (error) {
-          console.error('Error deleting admin signature:', error);
+          logger.error('Error deleting admin signature:', error);
           toast.error('Erreur lors de la suppression de la signature');
           return;
         }
 
         setAdminSignature(null);
         toast.success('Signature administrative supprimée');
-        console.log('Signature admin supprimée avec succès');
+        logger.log('Signature admin supprimée avec succès');
       }
     } catch (error) {
-      console.error('Error managing admin signature:', error);
+      logger.error('Error managing admin signature:', error);
       toast.error('Erreur lors de la gestion de la signature');
     }
   };
@@ -361,7 +362,7 @@ const AttendanceManagement = () => {
       await pdfExportService.exportAttendanceSheetSimple(sheet);
       toast.success('Feuille d\'émargement téléchargée');
     } catch (error) {
-      console.error('Error downloading PDF:', error);
+      logger.error('Error downloading PDF:', error);
       toast.error('Erreur lors du téléchargement');
     }
   };
@@ -371,7 +372,7 @@ const AttendanceManagement = () => {
       await pdfExportService.exportBlankAttendanceSheet(sheet);
       toast.success('Feuille d\'émargement vierge téléchargée');
     } catch (error) {
-      console.error('Error downloading blank PDF:', error);
+      logger.error('Error downloading blank PDF:', error);
       toast.error('Erreur lors du téléchargement');
     }
   };

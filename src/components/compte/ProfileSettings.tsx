@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -68,7 +69,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
             .maybeSingle();
 
           if (error && error.code !== 'PGRST116') {
-            console.error('Erreur lors du chargement de la signature:', error);
+            logger.error('Erreur lors du chargement de la signature:', error);
             return;
           }
 
@@ -76,7 +77,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
             setCurrentSignature(data.signature_data);
           }
         } catch (error) {
-          console.error('Erreur lors du chargement de la signature:', error);
+          logger.error('Erreur lors du chargement de la signature:', error);
         } finally {
           setLoadingSignature(false);
         }
@@ -150,7 +151,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
         });
 
       if (error) {
-        console.error('Erreur lors de la sauvegarde de la signature:', error);
+        logger.error('Erreur lors de la sauvegarde de la signature:', error);
         throw error;
       }
 
@@ -158,7 +159,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
       setCurrentSignature(signatureData);
       setShowSignatureModal(false);
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde de la signature:', error);
+      logger.error('Erreur lors de la sauvegarde de la signature:', error);
       throw error;
     }
   };

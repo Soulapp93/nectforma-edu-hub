@@ -86,7 +86,7 @@ export const useTutorSchedules = () => {
         setSchedules([]);
       }
     } catch (err) {
-      console.error('fetchTutorSchedules - Error:', err);
+      logger.error('fetchTutorSchedules - Error:', err);
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement des emplois du temps');
     } finally {
       setLoading(false);
@@ -117,7 +117,7 @@ export const useTutorSchedules = () => {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'schedules' }, () => fetchTutorSchedules())
         .subscribe();
     } catch (err) {
-      console.warn('Tutor schedules realtime subscription failed (non-critical):', err);
+      logger.warn('Tutor schedules realtime subscription failed (non-critical):', err);
     }
 
     return () => {

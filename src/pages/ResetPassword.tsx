@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Lock, Eye, EyeOff, CheckCircle, Loader2, XCircle, Shield, ArrowLeft } from 'lucide-react';
@@ -80,7 +81,7 @@ const ResetPassword = () => {
       setError("Lien de réinitialisation invalide ou expiré. Veuillez demander un nouveau lien.");
       setLoading(false);
     } catch (err: any) {
-      console.error("Error checking reset flow:", err);
+      logger.error("Error checking reset flow:", err);
       setError("Erreur lors de la vérification du lien.");
       setLoading(false);
     }
@@ -162,7 +163,7 @@ const ResetPassword = () => {
         setTimeout(() => navigate('/dashboard'), 2000);
       }
     } catch (err: any) {
-      console.error("Reset password error:", err);
+      logger.error("Reset password error:", err);
       setError('Erreur lors de la mise à jour du mot de passe. Veuillez réessayer.');
     } finally {
       setSubmitting(false);

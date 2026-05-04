@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
@@ -91,11 +92,11 @@ const Sidebar = () => {
         const ext = file.name.split('.').pop();
         const path = `support/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
         const { error } = await supabase.storage.from('avatars').upload(path, file);
-        if (error) { console.error(error); continue; }
+        if (error) { logger.error(error); continue; }
         const { data } = supabase.storage.from('avatars').getPublicUrl(path);
         setSupportFiles(prev => [...prev, { name: file.name, url: data.publicUrl, type: file.type }]);
       }
-    } catch (err) { console.error(err); }
+    } catch (err) { logger.error(err); }
     finally { setUploadingFile(false); if (fileInputRef.current) fileInputRef.current.value = ''; }
   };
 
@@ -162,7 +163,7 @@ const Sidebar = () => {
       setSupportFiles([]);
       setTimeout(() => { setSupportSent(false); setShowSupport(false); }, 2000);
     } catch (e) {
-      console.error(e);
+      logger.error(e);
     } finally {
       setSendingSupport(false);
     }

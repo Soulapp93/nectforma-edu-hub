@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState } from 'react';
 import { Download, X, Maximize2, Minimize2, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -35,7 +36,7 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({ fileUrl, fileName, onClose })
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Erreur de téléchargement:', error);
+      logger.error('Erreur de téléchargement:', error);
     }
   };
 

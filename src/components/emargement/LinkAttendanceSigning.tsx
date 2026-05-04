@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, Loader2, Calendar, Clock, BookOpen, AlertTriangle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -82,7 +83,7 @@ const LinkAttendanceSigning: React.FC<LinkAttendanceSigningProps> = ({
         setSavedSignature((userSig as any).signature_data);
       }
     } catch (err: any) {
-      console.error('Error validating link token:', err);
+      logger.error('Error validating link token:', err);
       setError(err.message || 'Erreur de validation');
     } finally {
       setLoading(false);
@@ -154,7 +155,7 @@ const LinkAttendanceSigning: React.FC<LinkAttendanceSigningProps> = ({
       toast.success('Émargement signé avec succès !');
       onSigned?.();
     } catch (err: any) {
-      console.error('Error signing:', err);
+      logger.error('Error signing:', err);
       toast.error(`Erreur lors de la signature: ${err.message}`);
     } finally {
       setSigning(false);

@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Archive, Search, Calendar, GraduationCap, ChevronRight, BookText, ClipboardCheck, CalendarDays, Award, FolderOpen, Users, Eye, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -53,7 +54,7 @@ const ArchivesManagement: React.FC = () => {
       const data = await archiveService.getArchives(establishment.id);
       setArchives(data);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     } finally {
       setLoading(false);
     }
@@ -76,7 +77,7 @@ const ArchivesManagement: React.FC = () => {
       const data = await archiveService.getSnapshots(archive.id);
       setSnapshots(data);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     }
   };
 
@@ -105,7 +106,7 @@ const ArchivesManagement: React.FC = () => {
       setShowArchiveModal(false);
       loadArchives();
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       toast.error('Erreur lors de l\'archivage');
     } finally {
       setArchiving(false);

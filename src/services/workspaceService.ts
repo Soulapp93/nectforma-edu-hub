@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
-
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 const db = supabase as any;
 
 export interface WorkspaceFolder {
@@ -59,7 +60,7 @@ export const workspaceService = {
     }
     const { data, error } = await db.from('workspace_folders').insert(cleanFolder).select().single();
     if (error) {
-      console.error('Supabase createFolder error:', error);
+      logger.error('Supabase createFolder error:', error);
       throw error;
     }
     return data as WorkspaceFolder;
@@ -121,7 +122,7 @@ export const workspaceService = {
     }
     const { data, error } = await db.from('workspace_documents').insert(cleanDoc).select().single();
     if (error) {
-      console.error('Supabase createDocument error:', error);
+      logger.error('Supabase createDocument error:', error);
       throw error;
     }
     return data as WorkspaceDocument;

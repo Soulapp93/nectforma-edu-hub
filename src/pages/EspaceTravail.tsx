@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { workspaceService, WorkspaceDocument, WorkspaceFolder } from '@/services/workspaceService';
@@ -80,7 +81,7 @@ const EspaceTravail = () => {
       setDocuments(docsData);
       setSharedDocuments(sharedData);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       toast.error('Erreur lors du chargement');
     } finally {
       setLoading(false);
@@ -107,7 +108,7 @@ const EspaceTravail = () => {
       setEditingDoc(doc);
       toast.success('Document créé');
     } catch (err: any) {
-      console.error('Create document error:', err);
+      logger.error('Create document error:', err);
       toast.error(`Erreur: ${err?.message || 'Erreur inconnue'}`);
     }
   };
@@ -166,7 +167,7 @@ const EspaceTravail = () => {
       setEditingDoc(doc);
       toast.success(`"${docTitle}" importé avec succès`);
     } catch (err: any) {
-      console.error('Import error:', err);
+      logger.error('Import error:', err);
       toast.error(`Erreur d'import: ${err?.message || 'Erreur inconnue'}`);
     } finally {
       setImporting(false);

@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -226,7 +227,7 @@ const JuryDeliberation: React.FC<Props> = ({ formationId, periodId }) => {
       } as any);
       queryClient.invalidateQueries({ queryKey: ['pv-audit-log', formationId, localPeriodId] });
     } catch (e) {
-      console.error('Audit log error:', e);
+      logger.error('Audit log error:', e);
     }
   };
 

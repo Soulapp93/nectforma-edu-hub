@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { ClipboardList, FileText, Calendar, Award, Paperclip, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -150,7 +151,7 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
             });
             uploadedCount++;
           } catch (fileErr) {
-            console.error('Erreur upload fichier:', file.name, fileErr);
+            logger.error('Erreur upload fichier:', file.name, fileErr);
             failedCount++;
           }
         }
@@ -165,7 +166,7 @@ const CreateAssignmentModal: React.FC<CreateAssignmentModalProps> = ({
       onSuccess();
       onClose();
     } catch (error: any) {
-      console.error('Erreur lors de la sauvegarde:', error);
+      logger.error('Erreur lors de la sauvegarde:', error);
       toast.error(error?.message || (editAssignment ? "Erreur lors de la modification" : "Erreur lors de la création"));
     } finally {
       setLoading(false);

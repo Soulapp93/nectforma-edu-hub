@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, useCallback } from 'react';
 import DOMPurify from 'dompurify';
 import { useNavigate } from 'react-router-dom';
@@ -241,7 +242,7 @@ const AIPostEditor = ({
       if (savedId && !postId) setPostId(savedId);
       setLastSaved(new Date());
     } catch (e) {
-      console.error('Auto-save failed:', e);
+      logger.error('Auto-save failed:', e);
     }
   }, [formData, selectedTags, onSave, postId]);
 
@@ -305,7 +306,7 @@ const AIPostEditor = ({
       }
       onClose();
     } catch (error) {
-      console.error('Error saving post:', error);
+      logger.error('Error saving post:', error);
       toast.error("Erreur lors de l'enregistrement");
     } finally {
       setSaving(false);
@@ -371,7 +372,7 @@ const AIPostEditor = ({
         }
       }
     } catch (coverErr) {
-      console.error('Cover image generation failed:', coverErr);
+      logger.error('Cover image generation failed:', coverErr);
     }
 
     try {
@@ -381,7 +382,7 @@ const AIPostEditor = ({
       setLastSaved(new Date());
       toast.success('Article généré et sauvegardé automatiquement !');
     } catch (e) {
-      console.error('Auto-save after generation failed:', e);
+      logger.error('Auto-save after generation failed:', e);
       toast.info('Article importé. Pensez à l\'enregistrer.');
     }
   };
@@ -862,7 +863,7 @@ const BlogAdmin = () => {
         try {
           await publishPost(post.id);
         } catch (e) {
-          console.error(`Failed to auto-publish: ${post.title}`, e);
+          logger.error(`Failed to auto-publish: ${post.title}`, e);
         }
       }
       if (toPublish.length > 0) {
@@ -887,7 +888,7 @@ const BlogAdmin = () => {
       setTags(tagsData);
       setStats(statsData);
     } catch (error) {
-      console.error('Error loading data:', error);
+      logger.error('Error loading data:', error);
       toast.error('Erreur lors du chargement des données');
     } finally {
       setLoading(false);

@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -25,7 +26,7 @@ const QuizQRCodeModal: React.FC<Props> = ({ open, onOpenChange, pinCode }) => {
         margin: 2,
         color: { dark: '#1a1a2e', light: '#ffffff' },
         errorCorrectionLevel: 'H',
-      }).then(setQrDataUrl).catch(console.error);
+      }).then(setQrDataUrl).catch((e) => logger.error(e));
     }
   }, [open, pinCode, joinUrl]);
 

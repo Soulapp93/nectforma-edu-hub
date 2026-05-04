@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { attendanceService, AttendanceSheet, AttendanceSignature } from '@/services/attendanceService';
 import { supabase } from '@/integrations/supabase/client';
-
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 export const useAttendance = () => {
   const [attendanceSheets, setAttendanceSheets] = useState<AttendanceSheet[]>([]);
   const [loading, setLoading] = useState(false);
@@ -31,7 +32,7 @@ export const useAttendance = () => {
       
       if (error) throw error;
       
-      console.log('Attendance sheets generated:', data);
+      logger.log('Attendance sheets generated:', data);
       
       // Recharger les feuilles d'émargement
       await fetchAttendanceSheets();

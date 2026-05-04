@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -45,7 +46,7 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
       if (!isOpen || !attendanceSheet) return;
 
       try {
-        console.log('Loading additional info for attendance sheet:', attendanceSheet.schedule_slot_id);
+        logger.log('Loading additional info for attendance sheet:', attendanceSheet.schedule_slot_id);
         
         // Récupérer les informations du module via schedule_slot
         if (attendanceSheet.schedule_slot_id) {
@@ -58,14 +59,14 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
             .eq('id', attendanceSheet.schedule_slot_id)
             .single();
 
-          console.log('Schedule slot data:', { slotData, slotError });
+          logger.log('Schedule slot data:', { slotData, slotError });
 
           if (slotData?.formation_modules) {
-            console.log('Module found:', slotData.formation_modules);
+            logger.log('Module found:', slotData.formation_modules);
             setModuleInfo(slotData.formation_modules as { title: string });
           } else {
             // Fallback: utiliser le titre de la feuille d'émargement
-            console.log('No module found, using attendance sheet title as fallback');
+            logger.log('No module found, using attendance sheet title as fallback');
             setModuleInfo({ title: attendanceSheet.title || 'Module non spécifié' });
           }
         } else {
@@ -81,7 +82,7 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
             .eq('id', attendanceSheet.instructor_id)
             .single();
 
-          console.log('Instructor data:', { instructorData, instructorError });
+          logger.log('Instructor data:', { instructorData, instructorError });
 
           if (instructorData) {
             setInstructorInfo(instructorData);
@@ -99,16 +100,16 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
             .limit(1)
             .maybeSingle();
 
-          console.log('Signature data:', { signatureData, signatureError });
+          logger.log('Signature data:', { signatureData, signatureError });
 
           if (signatureData?.signature_data) {
             setSavedSignature(signatureData.signature_data);
-            console.log('Signature enregistrée chargée pour le formateur');
+            logger.log('Signature enregistrée chargée pour le formateur');
           }
           setLoadingSignature(false);
         }
       } catch (error) {
-        console.error('Error loading additional info:', error);
+        logger.error('Error loading additional info:', error);
         // En cas d'erreur, utiliser le titre de la feuille d'émargement comme fallback
         setModuleInfo({ title: attendanceSheet.title || 'Module non spécifié' });
         setLoadingSignature(false);
@@ -118,7 +119,7 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
     loadAdditionalInfo();
   }, [isOpen, attendanceSheet, effectiveInstructorId]);
 
-  console.log('InstructorSigningModal component loaded', { 
+  logger.log('InstructorSigningModal component loaded', { 
     userId, 
     instructorId, 
     effectiveInstructorId,
@@ -140,14 +141,14 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
     try {
       setSigning(true);
       
-      console.log('Attempting to sign with ID:', effectiveInstructorId);
+      logger.log('Attempting to sign with ID:', effectiveInstructorId);
       
       if (!effectiveInstructorId || effectiveInstructorId.trim() === '') {
         throw new Error('ID formateur manquant - utilisateur non connecté');
       }
       
       // Signer la feuille d'émargement en tant que formateur
-      console.log('Calling attendanceService.signAttendanceSheet with:', {
+      logger.log('Calling attendanceService.signAttendanceSheet with:', {
         attendanceSheetId: attendanceSheet.id,
         userId: effectiveInstructorId,
         userType: 'instructor',
@@ -175,7 +176,7 @@ const InstructorSigningModal: React.FC<InstructorSigningModalProps> = ({
       onSigned();
       onClose();
     } catch (error: any) {
-      console.error('Error signing attendance:', error);
+      logger.error('Error signing attendance:', error);
       toast.error(error.message || 'Erreur lors de la signature');
     } finally {
       setSigning(false);

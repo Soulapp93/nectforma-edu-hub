@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Cookie, X } from 'lucide-react';
@@ -30,7 +31,7 @@ const CookieConsent: React.FC = () => {
     // Si analytics accepté et GA configuré, on pourrait activer GA ici
     if (choice === 'accepted') {
       // Google Analytics sera activé si VITE_GA_MEASUREMENT_ID est configuré
-      console.log('Cookies analytiques acceptés');
+      logger.log('Cookies analytiques acceptés');
     }
   };
 

@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -101,7 +102,7 @@ const ConnectDialog = ({ platform, onClose, onConnect }: ConnectDialogProps) => 
       await onConnect(platform, credentials);
       onClose();
     } catch (error) {
-      console.error('Connection error:', error);
+      logger.error('Connection error:', error);
       toast.error('Erreur lors de la connexion');
     } finally {
       setConnecting(false);
@@ -210,7 +211,7 @@ export const SocialMediaSettings = () => {
       setConnections(conns);
       setSettings(setts);
     } catch (error) {
-      console.error('Error loading data:', error);
+      logger.error('Error loading data:', error);
       toast.error('Erreur lors du chargement');
     } finally {
       setLoading(false);
@@ -228,7 +229,7 @@ export const SocialMediaSettings = () => {
       toast.success(`${PLATFORM_INFO[platform].name} connecté !`);
       await loadData();
     } catch (error) {
-      console.error('Error connecting:', error);
+      logger.error('Error connecting:', error);
       toast.error('Erreur lors de la connexion');
       throw error;
     }
@@ -242,7 +243,7 @@ export const SocialMediaSettings = () => {
       toast.success(`${PLATFORM_INFO[platform].name} déconnecté`);
       await loadData();
     } catch (error) {
-      console.error('Error disconnecting:', error);
+      logger.error('Error disconnecting:', error);
       toast.error('Erreur lors de la déconnexion');
     }
   };
@@ -271,7 +272,7 @@ export const SocialMediaSettings = () => {
       setSettings(prev => prev ? { ...prev, [key]: value } : null);
       toast.success('Paramètres mis à jour');
     } catch (error) {
-      console.error('Error updating settings:', error);
+      logger.error('Error updating settings:', error);
       toast.error('Erreur lors de la mise à jour');
     }
   };

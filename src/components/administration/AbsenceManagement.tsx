@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -82,7 +83,7 @@ const AbsenceManagement: React.FC = () => {
 
       setJustifications(enriched);
     } catch (error) {
-      console.error('Error loading justifications:', error);
+      logger.error('Error loading justifications:', error);
       toast.error('Erreur lors du chargement des justificatifs');
     } finally {
       setLoading(false);

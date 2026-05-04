@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { 
   X, Download, Maximize2, Minimize2, Copy, 
@@ -69,7 +70,7 @@ const TextViewer: React.FC<TextViewerProps> = ({
         setContent(text);
         setLoading(false);
       } catch (err) {
-        console.error('Error fetching text file:', err);
+        logger.error('Error fetching text file:', err);
         setError(true);
         setLoading(false);
         toast.error('Impossible de charger le fichier');
@@ -146,7 +147,7 @@ const TextViewer: React.FC<TextViewerProps> = ({
         await exitFullscreen();
       }
     } catch (err) {
-      console.error('Fullscreen error:', err);
+      logger.error('Fullscreen error:', err);
     }
   };
 

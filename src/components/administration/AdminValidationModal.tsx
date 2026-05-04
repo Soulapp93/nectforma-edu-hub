@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -45,20 +46,20 @@ const AdminValidationModal: React.FC<AdminValidationModalProps> = ({
           .maybeSingle();
 
         if (error) {
-          console.error('Error loading admin signature:', error);
+          logger.error('Error loading admin signature:', error);
           setLoadingSignature(false);
           return;
         }
 
         if (data?.signature_data) {
           setSavedSignature(data.signature_data);
-          console.log('Signature administrateur chargée avec succès, longueur:', data.signature_data.length);
+          logger.log('Signature administrateur chargée avec succès, longueur:', data.signature_data.length);
         } else {
-          console.log('Aucune signature sauvegardée trouvée pour cet administrateur');
+          logger.log('Aucune signature sauvegardée trouvée pour cet administrateur');
           setSavedSignature(null);
         }
       } catch (error) {
-        console.error('Error loading admin signature:', error);
+        logger.error('Error loading admin signature:', error);
         setSavedSignature(null);
       } finally {
         setLoadingSignature(false);

@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -195,7 +196,7 @@ const ExcelImportModal = ({ isOpen, onClose, onSuccess, scheduleId, formationId 
           setInstructors(userData);
         }
       } catch (error) {
-        console.error('Erreur chargement données formation:', error);
+        logger.error('Erreur chargement données formation:', error);
       }
     };
 
@@ -381,7 +382,7 @@ const ExcelImportModal = ({ isOpen, onClose, onSuccess, scheduleId, formationId 
       }
 
     } catch (error) {
-      console.error('Erreur parsing Excel:', error);
+      logger.error('Erreur parsing Excel:', error);
       setParseError('Erreur lors de la lecture du fichier Excel. Vérifiez que le fichier est valide.');
     }
   };
@@ -417,7 +418,7 @@ const ExcelImportModal = ({ isOpen, onClose, onSuccess, scheduleId, formationId 
           });
           successCount++;
         } catch (error) {
-          console.error('Erreur import slot:', slot, error);
+          logger.error('Erreur import slot:', slot, error);
           errorCount++;
         }
       }
@@ -433,7 +434,7 @@ const ExcelImportModal = ({ isOpen, onClose, onSuccess, scheduleId, formationId 
       }
 
     } catch (error) {
-      console.error('Erreur import:', error);
+      logger.error('Erreur import:', error);
       toast.error('Erreur lors de l\'import');
     } finally {
       setLoading(false);

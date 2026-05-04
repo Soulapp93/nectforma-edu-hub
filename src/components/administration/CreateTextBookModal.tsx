@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -60,7 +61,7 @@ const CreateTextBookModal: React.FC<CreateTextBookModalProps> = ({
       onSuccess();
       onClose();
     } catch (error) {
-      console.error('Erreur:', error);
+      logger.error('Erreur:', error);
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de la création du cahier de texte.",

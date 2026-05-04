@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -111,7 +112,7 @@ const MissingTextBookEntriesModal: React.FC<MissingTextBookEntriesModalProps> = 
 
       setMissingEntries(missing);
     } catch (error) {
-      console.error('Erreur lors du chargement des entrées manquantes:', error);
+      logger.error('Erreur lors du chargement des entrées manquantes:', error);
       toast.error('Erreur lors du chargement des données');
     } finally {
       setLoading(false);
@@ -171,7 +172,7 @@ L'administration`;
           }
         });
       } catch (msgError) {
-        console.error('Erreur lors de l\'envoi du message interne:', msgError);
+        logger.error('Erreur lors de l\'envoi du message interne:', msgError);
         // Continue même si le message interne échoue
       }
 
@@ -210,13 +211,13 @@ L'administration`;
           });
         }
       } catch (emailError) {
-        console.error('Erreur lors de l\'envoi de l\'email:', emailError);
+        logger.error('Erreur lors de l\'envoi de l\'email:', emailError);
         // Continue même si l'email échoue
       }
 
       toast.success(`Rappel envoyé à ${entry.instructor_name} (notification, message et email)`);
     } catch (error) {
-      console.error('Erreur lors de l\'envoi du rappel:', error);
+      logger.error('Erreur lors de l\'envoi du rappel:', error);
       toast.error('Erreur lors de l\'envoi du rappel');
     } finally {
       setSendingReminder(null);

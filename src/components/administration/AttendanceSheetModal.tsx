@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { X, Users, Calendar, Clock, FileText, Download, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -49,7 +50,7 @@ const AttendanceSheetModal: React.FC<AttendanceSheetModalProps> = ({
           .single();
 
         if (error || !data) {
-          console.error('Erreur chargement feuille détaillée, utilisation des données existantes', error);
+          logger.error('Erreur chargement feuille détaillée, utilisation des données existantes', error);
           setSheet(attendanceSheet);
           return;
         }
@@ -64,7 +65,7 @@ const AttendanceSheetModal: React.FC<AttendanceSheetModalProps> = ({
 
         setSheet(normalizedSheet);
       } catch (err) {
-        console.error('Erreur chargement feuille détaillée:', err);
+        logger.error('Erreur chargement feuille détaillée:', err);
         setSheet(attendanceSheet);
       }
     };
@@ -84,7 +85,7 @@ const AttendanceSheetModal: React.FC<AttendanceSheetModalProps> = ({
       toast.success('Statut mis à jour avec succès');
       onUpdate();
     } catch (error) {
-      console.error('Error updating status:', error);
+      logger.error('Error updating status:', error);
       toast.error('Erreur lors de la mise à jour du statut');
     } finally {
       setLoading(false);
@@ -96,7 +97,7 @@ const AttendanceSheetModal: React.FC<AttendanceSheetModalProps> = ({
       await pdfExportService.exportAttendanceSheetSimple(sheet);
       toast.success('Feuille d\'émargement exportée en PDF');
     } catch (error) {
-      console.error('Error exporting PDF:', error);
+      logger.error('Error exporting PDF:', error);
       toast.error('Erreur lors de l\'export PDF');
     }
   };
@@ -108,7 +109,7 @@ const AttendanceSheetModal: React.FC<AttendanceSheetModalProps> = ({
       toast.success('Feuille d\'émargement validée et fermée');
       onUpdate();
     } catch (error) {
-      console.error('Error validating sheet:', error);
+      logger.error('Error validating sheet:', error);
       toast.error('Erreur lors de la validation');
     }
   };

@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -57,7 +58,7 @@ const AddJustificationModal: React.FC<AddJustificationModalProps> = ({
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error('Error uploading justification:', error);
+      logger.error('Error uploading justification:', error);
       toast.error('Erreur lors de l\'envoi du justificatif');
     } finally {
       setLoading(false);

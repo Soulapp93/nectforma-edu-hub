@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useRef, useCallback } from 'react';
 import DOMPurify from 'dompurify';
 import {
@@ -180,11 +181,11 @@ export const EnhancedArticleEditor: React.FC<EnhancedArticleEditorProps> = ({
         setImagePrompt('');
         setShowImageGenerator(false);
       } else {
-        console.warn('No valid image URL in response:', typeof imageUrl, imageUrl?.substring?.(0, 50));
+        logger.warn('No valid image URL in response:', typeof imageUrl, imageUrl?.substring?.(0, 50));
         toast.error('L\'image n\'a pas pu être générée. Réessayez.');
       }
     } catch (error) {
-      console.error('Image generation error:', error);
+      logger.error('Image generation error:', error);
       toast.error('Erreur lors de la génération de l\'image. Réessayez.');
     } finally {
       setIsGeneratingImage(false);

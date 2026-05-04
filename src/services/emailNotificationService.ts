@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
-
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 // Types pour les notifications email
 export type EmailNotificationType = 
   | 'message_received'
@@ -134,14 +135,14 @@ export const emailNotificationService = {
       });
 
       if (error) {
-        console.error('Erreur envoi email:', error);
+        logger.error('Erreur envoi email:', error);
         return { success: false, error: error.message };
       }
 
-      console.log('Email envoyé avec succès:', response);
+      logger.log('Email envoyé avec succès:', response);
       return { success: true };
     } catch (error) {
-      console.error('Erreur emailNotificationService:', error);
+      logger.error('Erreur emailNotificationService:', error);
       return { success: false, error: error instanceof Error ? error.message : 'Erreur inconnue' };
     }
   },
@@ -560,13 +561,13 @@ export const emailNotificationService = {
       });
 
       if (error) {
-        console.error('Erreur envoi email signature:', error);
+        logger.error('Erreur envoi email signature:', error);
         return { success: false, error: error.message };
       }
 
       return { success: true };
     } catch (error) {
-      console.error('Erreur emailNotificationService (signature):', error);
+      logger.error('Erreur emailNotificationService (signature):', error);
       return { success: false, error: error instanceof Error ? error.message : 'Erreur inconnue' };
     }
   },
@@ -608,7 +609,7 @@ export const emailNotificationService = {
 
       return null;
     } catch (error) {
-      console.error('Erreur récupération info utilisateur:', error);
+      logger.error('Erreur récupération info utilisateur:', error);
       return null;
     }
   },

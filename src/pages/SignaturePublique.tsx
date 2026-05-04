@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { attendanceService } from '@/services/attendanceService';
@@ -63,12 +64,12 @@ const SignaturePublique = () => {
       setCurrentUser(userData);
 
       // 3. Valider le token - avec logs pour debug
-      console.log('[SignaturePublique] Validating token:', token);
+      logger.log('[SignaturePublique] Validating token:', token);
       const validationData = await attendanceService.validateSignatureToken(token!);
-      console.log('[SignaturePublique] Validation result:', validationData);
+      logger.log('[SignaturePublique] Validation result:', validationData);
       
       if (!validationData) {
-        console.log('[SignaturePublique] No validation data returned');
+        logger.log('[SignaturePublique] No validation data returned');
         setTokenValid(false);
         setTokenError('Token invalide ou non trouvé');
         setLoading(false);
@@ -76,7 +77,7 @@ const SignaturePublique = () => {
       }
       
       if (!validationData.is_valid) {
-        console.log('[SignaturePublique] Token invalid:', validationData.error_message);
+        logger.log('[SignaturePublique] Token invalid:', validationData.error_message);
         setTokenValid(false);
         setTokenError(validationData.error_message || 'Token invalide');
         setLoading(false);
@@ -133,7 +134,7 @@ const SignaturePublique = () => {
       }
 
     } catch (error) {
-      console.error('Error loading data:', error);
+      logger.error('Error loading data:', error);
       toast.error('Erreur lors du chargement des données');
     } finally {
       setLoading(false);
@@ -156,7 +157,7 @@ const SignaturePublique = () => {
       toast.success('Présence validée avec votre signature enregistrée');
       setHasAlreadySigned(true);
     } catch (error: any) {
-      console.error('Error signing:', error);
+      logger.error('Error signing:', error);
       toast.error(error.message || 'Erreur lors de la signature');
     } finally {
       setSigning(false);
@@ -194,7 +195,7 @@ const SignaturePublique = () => {
       setHasAlreadySigned(true);
       setShowSignature(false);
     } catch (error: any) {
-      console.error('Error signing:', error);
+      logger.error('Error signing:', error);
       toast.error(error.message || 'Erreur lors de la signature');
     } finally {
       setSigning(false);

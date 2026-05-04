@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState } from 'react';
 import { CheckCircle, FileText, PenTool, Users, Calendar, Clock } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -40,7 +41,7 @@ const AdminAttendanceValidation: React.FC<AdminAttendanceValidationProps> = ({
       toast.success('Feuille d\'émargement validée avec succès !');
       onClose();
     } catch (error: any) {
-      console.error('Error validating attendance:', error);
+      logger.error('Error validating attendance:', error);
       toast.error(error.message || 'Erreur lors de la validation');
     } finally {
       setValidating(false);

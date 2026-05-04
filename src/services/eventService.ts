@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-
+import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 export interface Event {
   id: string;
   establishment_id: string;
@@ -51,7 +52,7 @@ export const eventService = {
       .order('start_date', { ascending: true });
 
     if (error) {
-      console.error('Error fetching events:', error);
+      logger.error('Error fetching events:', error);
       throw error;
     }
 
@@ -66,7 +67,7 @@ export const eventService = {
       .single();
 
     if (error) {
-      console.error('Error fetching event:', error);
+      logger.error('Error fetching event:', error);
       throw error;
     }
 
@@ -102,7 +103,7 @@ export const eventService = {
       .single();
 
     if (error) {
-      console.error('Error creating event:', error);
+      logger.error('Error creating event:', error);
       throw error;
     }
 
@@ -121,7 +122,7 @@ export const eventService = {
       .single();
 
     if (error) {
-      console.error('Error updating event:', error);
+      logger.error('Error updating event:', error);
       throw error;
     }
 
@@ -141,7 +142,7 @@ export const eventService = {
       .eq('id', eventId);
 
     if (error) {
-      console.error('Error deleting event:', error);
+      logger.error('Error deleting event:', error);
       throw error;
     }
   },
@@ -175,7 +176,7 @@ export const eventService = {
       .single();
 
     if (error) {
-      console.error('Error registering for event:', error);
+      logger.error('Error registering for event:', error);
       throw error;
     }
 
@@ -195,7 +196,7 @@ export const eventService = {
       .eq('user_id', session.user.id);
 
     if (error) {
-      console.error('Error unregistering from event:', error);
+      logger.error('Error unregistering from event:', error);
       throw error;
     }
   },
@@ -214,7 +215,7 @@ export const eventService = {
       .eq('event_id', eventId);
 
     if (error) {
-      console.error('Error fetching event registrations:', error);
+      logger.error('Error fetching event registrations:', error);
       return [];
     }
 

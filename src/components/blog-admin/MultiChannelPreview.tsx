@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -227,7 +228,7 @@ export const MultiChannelPreview: React.FC<MultiChannelPreviewProps> = ({
         setActiveChannel(data.posts[0].platform);
       }
     } catch (e) {
-      console.error('Error loading social posts:', e);
+      logger.error('Error loading social posts:', e);
     } finally {
       setLoading(false);
     }

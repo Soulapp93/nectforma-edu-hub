@@ -21,7 +21,7 @@ const RETRY_OPTIONS = {
   maxRetries: 3,
   baseDelayMs: 500,
   onRetry: (attempt: number, err: Error) => {
-    console.warn(`Retry attempt ${attempt} for useUserFormations:`, err.message);
+    logger.warn(`Retry attempt ${attempt} for useUserFormations:`, err.message);
   }
 };
 
@@ -57,7 +57,7 @@ export const useUserFormations = () => {
       );
       
       if (queryError) {
-        console.error('Erreur useUserFormations:', queryError);
+        logger.error('Erreur useUserFormations:', queryError);
         setError(queryError.message);
         setUserFormations([]);
         return;
@@ -66,7 +66,7 @@ export const useUserFormations = () => {
       setUserFormations(data || []);
       setError(null);
     } catch (err) {
-      console.error('Erreur inattendue useUserFormations:', err);
+      logger.error('Erreur inattendue useUserFormations:', err);
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement des formations');
     } finally {
       setLoading(false);

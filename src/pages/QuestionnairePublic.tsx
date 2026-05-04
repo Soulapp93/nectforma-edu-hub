@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { questionnaireService, Questionnaire, QuestionnaireQuestion } from '@/services/questionnaireService';
@@ -121,7 +122,7 @@ const QuestionnairePublic = () => {
       setSubmitted(true);
       toast.success('Réponse envoyée !');
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       toast.error('Erreur lors de l\'envoi');
     } finally { setSubmitting(false); }
   };

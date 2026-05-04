@@ -27,13 +27,13 @@ const RETRY_OPTIONS = {
   maxRetries: 3,
   baseDelayMs: 500,
   onRetry: (attempt: number, err: Error) => {
-    console.warn(`Retry attempt ${attempt} for formation service:`, err.message);
+    logger.warn(`Retry attempt ${attempt} for formation service:`, err.message);
   }
 };
 
 export const formationService = {
   async createFormation(formationData: Omit<Formation, 'id' | 'created_at' | 'updated_at'>) {
-    console.log('Création de formation avec les données:', formationData);
+    logger.log('Création de formation avec les données:', formationData);
     
     const { data, error } = await supabase
       .from('formations')
@@ -42,16 +42,16 @@ export const formationService = {
       .single();
 
     if (error) {
-      console.error('Erreur lors de la création de la formation:', error);
+      logger.error('Erreur lors de la création de la formation:', error);
       throw new Error(`Erreur lors de la création de la formation: ${error.message}`);
     }
 
-    console.log('Formation créée avec succès:', data);
+    logger.log('Formation créée avec succès:', data);
     return data;
   },
 
   async getFormations() {
-    console.log('Récupération des formations...');
+    logger.log('Récupération des formations...');
     
     const { data, error } = await retryQuery(
       () => supabase
@@ -71,11 +71,11 @@ export const formationService = {
     );
 
     if (error) {
-      console.error('Erreur lors de la récupération des formations:', error);
+      logger.error('Erreur lors de la récupération des formations:', error);
       throw new Error(`Erreur lors de la récupération des formations: ${error.message}`);
     }
 
-    console.log('Formations récupérées:', data);
+    logger.log('Formations récupérées:', data);
     return data;
   },
 
@@ -84,7 +84,7 @@ export const formationService = {
   },
 
   async getFormationById(id: string) {
-    console.log('Récupération de la formation par ID:', id);
+    logger.log('Récupération de la formation par ID:', id);
     
     const { data, error } = await retryQuery(
       () => supabase
@@ -106,16 +106,16 @@ export const formationService = {
     );
 
     if (error) {
-      console.error('Erreur lors de la récupération de la formation:', error);
+      logger.error('Erreur lors de la récupération de la formation:', error);
       throw new Error(`Erreur lors de la récupération de la formation: ${error.message}`);
     }
 
-    console.log('Formation récupérée:', data);
+    logger.log('Formation récupérée:', data);
     return data;
   },
 
   async updateFormation(id: string, formationData: Partial<Formation>) {
-    console.log('Mise à jour de la formation:', id, formationData);
+    logger.log('Mise à jour de la formation:', id, formationData);
     
     const { data, error } = await supabase
       .from('formations')
@@ -125,16 +125,16 @@ export const formationService = {
       .single();
 
     if (error) {
-      console.error('Erreur lors de la mise à jour de la formation:', error);
+      logger.error('Erreur lors de la mise à jour de la formation:', error);
       throw new Error(`Erreur lors de la mise à jour de la formation: ${error.message}`);
     }
 
-    console.log('Formation mise à jour avec succès:', data);
+    logger.log('Formation mise à jour avec succès:', data);
     return data;
   },
 
   async deleteFormation(id: string) {
-    console.log('Suppression de la formation:', id);
+    logger.log('Suppression de la formation:', id);
     
     try {
       const { error: modulesError } = await supabase
@@ -143,7 +143,7 @@ export const formationService = {
         .eq('formation_id', id);
 
       if (modulesError) {
-        console.error('Erreur lors de la suppression des modules:', modulesError);
+        logger.error('Erreur lors de la suppression des modules:', modulesError);
         throw new Error(`Erreur lors de la suppression des modules: ${modulesError.message}`);
       }
 
@@ -153,21 +153,21 @@ export const formationService = {
         .eq('id', id);
 
       if (formationError) {
-        console.error('Erreur lors de la suppression de la formation:', formationError);
+        logger.error('Erreur lors de la suppression de la formation:', formationError);
         throw new Error(`Erreur lors de la suppression de la formation: ${formationError.message}`);
       }
 
-      console.log('Formation supprimée avec succès');
+      logger.log('Formation supprimée avec succès');
       return true;
 
     } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
+      logger.error('Erreur lors de la suppression:', error);
       throw error;
     }
   },
 
   async duplicateFormationForNewYear(formationId: string, newAcademicYear: string, newStartDate: string, newEndDate: string) {
-    console.log('Duplication de la formation pour nouvelle année:', formationId, newAcademicYear);
+    logger.log('Duplication de la formation pour nouvelle année:', formationId, newAcademicYear);
     
     // Get original formation
     const original = await this.getFormationById(formationId);
@@ -226,7 +226,7 @@ export const formationService = {
         title: `Cahier de texte - ${newFormation.title} ${newAcademicYear}`,
       });
     } catch (e) {
-      console.warn('Auto-création cahier de texte échouée:', e);
+      logger.warn('Auto-création cahier de texte échouée:', e);
     }
 
     try {
@@ -236,14 +236,14 @@ export const formationService = {
         title: `Emploi du temps - ${newFormation.title} ${newAcademicYear}`,
       });
     } catch (e) {
-      console.warn('Auto-création emploi du temps échouée:', e);
+      logger.warn('Auto-création emploi du temps échouée:', e);
     }
 
     return newFormation;
   },
 
   async migrateStudents(studentIds: string[], fromFormationId: string, toFormationId: string) {
-    console.log('Migration des étudiants:', studentIds, 'de', fromFormationId, 'vers', toFormationId);
+    logger.log('Migration des étudiants:', studentIds, 'de', fromFormationId, 'vers', toFormationId);
     
     // Remove from old formation
     for (const studentId of studentIds) {
@@ -254,7 +254,7 @@ export const formationService = {
         .eq('formation_id', fromFormationId);
 
       if (deleteError) {
-        console.error('Erreur suppression assignation:', deleteError);
+        logger.error('Erreur suppression assignation:', deleteError);
         throw deleteError;
       }
     }
@@ -270,16 +270,16 @@ export const formationService = {
       .insert(assignments);
 
     if (insertError) {
-      console.error('Erreur insertion assignation:', insertError);
+      logger.error('Erreur insertion assignation:', insertError);
       throw insertError;
     }
 
-    console.log('Migration réussie');
+    logger.log('Migration réussie');
     return true;
   },
 
   async getFormationParticipantsCount(formationId: string): Promise<number> {
-    console.log('Récupération du nombre de participants pour la formation:', formationId);
+    logger.log('Récupération du nombre de participants pour la formation:', formationId);
     
     const { data, error } = await rpcWithRetry(
       () => supabase.rpc('get_formation_students', {
@@ -289,7 +289,7 @@ export const formationService = {
     );
 
     if (error) {
-      console.error('Erreur lors de la récupération des participants:', error);
+      logger.error('Erreur lors de la récupération des participants:', error);
       return 0;
     }
 
@@ -302,7 +302,7 @@ export const formationService = {
     });
 
     if (error) {
-      console.error('Erreur:', error);
+      logger.error('Erreur:', error);
       return [];
     }
 
@@ -310,7 +310,7 @@ export const formationService = {
   },
 
   async getFormationInstructors(formationId: string): Promise<{ id: string; first_name: string; last_name: string }[]> {
-    console.log('Récupération des formateurs pour la formation:', formationId);
+    logger.log('Récupération des formateurs pour la formation:', formationId);
     
     const { data: modules, error: modulesError } = await supabase
       .from('formation_modules')
@@ -318,7 +318,7 @@ export const formationService = {
       .eq('formation_id', formationId);
 
     if (modulesError) {
-      console.error('Erreur lors de la récupération des modules:', modulesError);
+      logger.error('Erreur lors de la récupération des modules:', modulesError);
       return [];
     }
 
@@ -334,7 +334,7 @@ export const formationService = {
       .in('module_id', moduleIds);
 
     if (assignError) {
-      console.error('Erreur lors de la récupération des assignations:', assignError);
+      logger.error('Erreur lors de la récupération des assignations:', assignError);
       return [];
     }
 
@@ -350,11 +350,11 @@ export const formationService = {
       .in('id', uniqueInstructorIds);
 
     if (usersError) {
-      console.error('Erreur lors de la récupération des utilisateurs:', usersError);
+      logger.error('Erreur lors de la récupération des utilisateurs:', usersError);
       return [];
     }
 
-    console.log('Formateurs récupérés via modules:', instructors);
+    logger.log('Formateurs récupérés via modules:', instructors);
     return instructors || [];
   }
 };

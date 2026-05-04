@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { 
   Dialog, 
@@ -49,7 +50,7 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({ assignmen
         if (error) throw error;
         setFiles(data || []);
       } catch (error) {
-        console.error('Erreur lors du chargement des fichiers:', error);
+        logger.error('Erreur lors du chargement des fichiers:', error);
       } finally {
         setLoadingFiles(false);
       }
@@ -83,7 +84,7 @@ const AssignmentDetailModal: React.FC<AssignmentDetailModalProps> = ({ assignmen
     try {
       window.open(file.file_url, '_blank');
     } catch (error) {
-      console.error('Erreur lors du téléchargement:', error);
+      logger.error('Erreur lors du téléchargement:', error);
     }
   };
 

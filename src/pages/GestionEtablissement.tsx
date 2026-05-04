@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Building2, BookOpen } from 'lucide-react';
 import EstablishmentSettings from '../components/compte/EstablishmentSettings';
@@ -94,7 +95,7 @@ const GestionEtablissement = () => {
           }
         }
       } catch (error) {
-        console.error('Erreur lors du chargement des données:', error);
+        logger.error('Erreur lors du chargement des données:', error);
         toast.error('Erreur lors du chargement des données');
       } finally {
         setLoading(false);
@@ -124,7 +125,7 @@ const GestionEtablissement = () => {
           .upload(fileName, file, { upsert: true });
 
         if (uploadError) {
-          console.error('Upload error:', uploadError);
+          logger.error('Upload error:', uploadError);
           toast.error('Erreur lors de l\'upload du logo');
           return;
         }
@@ -146,7 +147,7 @@ const GestionEtablissement = () => {
         
         toast.success('Logo mis à jour avec succès');
       } catch (error) {
-        console.error('Erreur upload logo:', error);
+        logger.error('Erreur upload logo:', error);
         toast.error('Erreur lors de l\'upload du logo');
       }
     }
@@ -184,7 +185,7 @@ const GestionEtablissement = () => {
       
       toast.success('Informations sauvegardées avec succès');
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
+      logger.error('Erreur lors de la sauvegarde:', error);
       toast.error('Erreur lors de la sauvegarde des informations');
     }
   };

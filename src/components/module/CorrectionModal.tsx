@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { X, Download, File, Eye, Award, MessageSquare, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -50,7 +51,7 @@ const CorrectionModal: React.FC<CorrectionModalProps> = ({
         const files = await assignmentService.getSubmissionFiles(submission.id);
         setSubmissionFiles(files || []);
       } catch (error) {
-        console.error('Erreur lors du chargement des fichiers:', error);
+        logger.error('Erreur lors du chargement des fichiers:', error);
       }
     };
 
@@ -92,7 +93,7 @@ const CorrectionModal: React.FC<CorrectionModalProps> = ({
       onSuccess();
       onClose();
     } catch (error) {
-      console.error('Erreur lors de la correction:', error);
+      logger.error('Erreur lors de la correction:', error);
       toast.error('Erreur lors de la sauvegarde de la correction');
     } finally {
       setLoading(false);
@@ -116,7 +117,7 @@ const CorrectionModal: React.FC<CorrectionModalProps> = ({
       
       toast.success('Fichier téléchargé avec succès');
     } catch (error) {
-      console.error('Erreur lors du téléchargement:', error);
+      logger.error('Erreur lors du téléchargement:', error);
       toast.error('Erreur lors du téléchargement du fichier');
     }
   };

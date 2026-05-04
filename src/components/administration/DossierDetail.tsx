@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, User, BookOpen, FileText, Clock, Edit2, Save, X, Upload, Trash2, Download, ExternalLink, FileDown, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -68,7 +69,7 @@ export const DossierDetail: React.FC<Props> = ({ user, establishmentId, onBack }
       const ctrs = await dossierService.getUserContracts(user.id);
       setContracts(ctrs);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     } finally {
       setLoading(false);
     }

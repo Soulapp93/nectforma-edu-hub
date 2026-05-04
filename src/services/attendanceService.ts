@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
-
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 export interface AttendanceSheet {
   id: string;
   schedule_slot_id: string;
@@ -122,7 +123,7 @@ export const attendanceService = {
 
       return [];
     } catch (error) {
-      console.error('Error generating attendance sheets:', error);
+      logger.error('Error generating attendance sheets:', error);
       throw error;
     }
   },
@@ -143,7 +144,7 @@ export const attendanceService = {
       if (error) throw error;
       return (data as any) || [];
     } catch (error) {
-      console.error('Error fetching attendance sheets:', error);
+      logger.error('Error fetching attendance sheets:', error);
       throw error;
     }
   },
@@ -169,7 +170,7 @@ export const attendanceService = {
       if (error) throw error;
       return (data as any) || [];
     } catch (error) {
-      console.error('Error fetching attendance sheets by formation:', error);
+      logger.error('Error fetching attendance sheets by formation:', error);
       throw error;
     }
   },
@@ -204,7 +205,7 @@ export const attendanceService = {
           query = query.in('formation_id', formationIds);
         } else {
           // Pour les tests, si pas de formations assignées, retourner toutes les feuilles
-          console.log('No formations assigned to user, returning all sheets for testing');
+          logger.log('No formations assigned to user, returning all sheets for testing');
         }
       }
 
@@ -213,7 +214,7 @@ export const attendanceService = {
       if (error) throw error;
       return (data as any) || [];
     } catch (error) {
-      console.error('Error fetching today attendance for user:', error);
+      logger.error('Error fetching today attendance for user:', error);
       throw error;
     }
   },
@@ -256,7 +257,7 @@ export const attendanceService = {
       if (error) throw error;
       return (data as any) || [];
     } catch (error) {
-      console.error('Error fetching attendance history for user:', error);
+      logger.error('Error fetching attendance history for user:', error);
       throw error;
     }
   },
@@ -293,7 +294,7 @@ export const attendanceService = {
 
       // Sauvegarder la signature dans user_signatures pour réutilisation (formateur et admin)
       if (signatureData && signatureData.trim() !== '' && userType === 'instructor') {
-        console.log('Sauvegarde signature formateur dans user_signatures');
+        logger.log('Sauvegarde signature formateur dans user_signatures');
         const { error: userSigError } = await supabase
           .from('user_signatures')
           .upsert({
@@ -304,9 +305,9 @@ export const attendanceService = {
           });
 
         if (userSigError) {
-          console.error('Erreur sauvegarde signature formateur dans user_signatures:', userSigError);
+          logger.error('Erreur sauvegarde signature formateur dans user_signatures:', userSigError);
         } else {
-          console.log('Signature formateur sauvegardée avec succès');
+          logger.log('Signature formateur sauvegardée avec succès');
         }
       }
 
@@ -319,7 +320,7 @@ export const attendanceService = {
 
       return data;
     } catch (error) {
-      console.error('Error signing attendance sheet:', error);
+      logger.error('Error signing attendance sheet:', error);
       throw error;
     }
   },
@@ -337,7 +338,7 @@ export const attendanceService = {
       if (error && error.code !== 'PGRST116') throw error;
       return !!data;
     } catch (error) {
-      console.error('Error checking if user has signed:', error);
+      logger.error('Error checking if user has signed:', error);
       return false;
     }
   },
@@ -355,7 +356,7 @@ export const attendanceService = {
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('Error updating attendance sheet status:', error);
+      logger.error('Error updating attendance sheet status:', error);
       throw error;
     }
   },
@@ -372,7 +373,7 @@ export const attendanceService = {
       if (error) throw error;
       return data?.is_open_for_signing || false;
     } catch (error) {
-      console.error('Error checking attendance open status:', error);
+      logger.error('Error checking attendance open status:', error);
       return false;
     }
   },
@@ -396,7 +397,7 @@ export const attendanceService = {
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('Error marking student absent:', error);
+      logger.error('Error marking student absent:', error);
       throw error;
     }
   },
@@ -417,7 +418,7 @@ export const attendanceService = {
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('Error updating absence reason:', error);
+      logger.error('Error updating absence reason:', error);
       throw error;
     }
   },
@@ -425,7 +426,7 @@ export const attendanceService = {
   // Valider et signer une feuille d'émargement par l'administration
   async validateAttendanceSheet(attendanceSheetId: string, adminUserId: string, signatureData?: string) {
     try {
-      console.log('Service: Début validation avec signature:', !!signatureData);
+      logger.log('Service: Début validation avec signature:', !!signatureData);
       
       const { data, error } = await supabase
         .from('attendance_sheets')
@@ -442,7 +443,7 @@ export const attendanceService = {
 
       // Ajouter la signature administrative si fournie
       if (signatureData && signatureData.trim() !== '') {
-        console.log('Service: Ajout signature administrative, longueur:', signatureData.length);
+        logger.log('Service: Ajout signature administrative, longueur:', signatureData.length);
         
         // Sauvegarder dans user_signatures pour réutilisation future
         const { error: userSigError } = await supabase
@@ -455,14 +456,14 @@ export const attendanceService = {
           });
 
         if (userSigError) {
-          console.error('Erreur sauvegarde signature administrative dans user_signatures:', userSigError);
+          logger.error('Erreur sauvegarde signature administrative dans user_signatures:', userSigError);
         }
       }
 
-      console.log('Service: Validation terminée avec succès');
+      logger.log('Service: Validation terminée avec succès');
       return data;
     } catch (error) {
-      console.error('Error validating attendance sheet:', error);
+      logger.error('Error validating attendance sheet:', error);
       throw error;
     }
   },
@@ -484,7 +485,7 @@ export const attendanceService = {
       if (error) throw error;
       return (data as any) || [];
     } catch (error) {
-      console.error('Error fetching pending validation sheets:', error);
+      logger.error('Error fetching pending validation sheets:', error);
       throw error;
     }
   },
@@ -504,7 +505,7 @@ export const attendanceService = {
 
       return { token, expiresAt: expiresAt.toISOString() };
     } catch (error) {
-      console.error('Error generating signature token:', error);
+      logger.error('Error generating signature token:', error);
       throw error;
     }
   },
@@ -522,7 +523,7 @@ export const attendanceService = {
       }
       return null;
     } catch (error) {
-      console.error('Error validating signature token:', error);
+      logger.error('Error validating signature token:', error);
       throw error;
     }
   },
@@ -546,11 +547,11 @@ export const attendanceService = {
       });
 
       if (error) {
-        console.error('[attendanceService.sendSignatureLink] Edge function error:', error);
+        logger.error('[attendanceService.sendSignatureLink] Edge function error:', error);
         throw new Error(error.message || "Erreur lors de l'envoi du lien");
       }
 
-      console.log('[attendanceService.sendSignatureLink] Success:', data);
+      logger.log('[attendanceService.sendSignatureLink] Success:', data);
 
       // Envoyer également les emails
       const { emailNotificationService } = await import('./emailNotificationService');
@@ -579,12 +580,12 @@ export const attendanceService = {
               sheet.date,
               sheet.start_time,
               sheet.end_time
-            ).catch(console.error); // Fire and forget
+            ).catch((e) => logger.error(e)); // Fire and forget
           }
         }
       }
     } catch (error) {
-      console.error('Error sending signature link:', error);
+      logger.error('Error sending signature link:', error);
       throw error;
     }
   },
@@ -606,7 +607,7 @@ export const attendanceService = {
     });
 
     if (error) {
-      console.error('[attendanceService.sendSignatureLinkFallback] Edge function error:', error);
+      logger.error('[attendanceService.sendSignatureLinkFallback] Edge function error:', error);
       throw new Error(error.message || "Erreur lors de l'envoi (fallback)");
     }
 
@@ -685,12 +686,12 @@ export const attendanceService = {
               sheet.date,
               sheet.start_time,
               sheet.end_time
-            ).catch(console.error); // Fire and forget
+            ).catch((e) => logger.error(e)); // Fire and forget
           }
         }
       }
     } catch (error) {
-      console.error('Error opening attendance for signing:', error);
+      logger.error('Error opening attendance for signing:', error);
       throw error;
     }
   },
@@ -712,7 +713,7 @@ export const attendanceService = {
       if (error) throw error;
       return data as any;
     } catch (error) {
-      console.error('Error fetching attendance sheet by token:', error);
+      logger.error('Error fetching attendance sheet by token:', error);
       throw error;
     }
   },
@@ -837,7 +838,7 @@ export const attendanceService = {
         }
       }
     } catch (error) {
-      console.error('Error toggling student presence:', error);
+      logger.error('Error toggling student presence:', error);
       throw error;
     }
   },

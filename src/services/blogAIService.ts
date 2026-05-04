@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-
+import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/utils/logger';
 // ============================================
 // BLOG AI SERVICE
 // Nectforma AI-Powered Blog Content System
@@ -168,7 +169,7 @@ async function callBlogAI<T>(action: string, payload: object): Promise<T> {
   });
 
   if (error) {
-    console.error('Blog AI error:', error);
+    logger.error('Blog AI error:', error);
     throw new Error(error.message || 'Erreur du service AI');
   }
 

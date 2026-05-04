@@ -48,7 +48,7 @@ export const pdfExportService = {
 
       pdf.save(filename);
     } catch (error) {
-      console.error('Error exporting PDF:', error);
+      logger.error('Error exporting PDF:', error);
       throw new Error('Erreur lors de l\'export PDF');
     }
   },
@@ -182,10 +182,10 @@ export const pdfExportService = {
          if (!signaturesError && signaturesData) {
            signatures = signaturesData as any[];
          } else if (signaturesError) {
-           console.error('Error loading signatures for PDF export:', signaturesError);
+           logger.error('Error loading signatures for PDF export:', signaturesError);
          }
        } catch (e) {
-         console.error('Unexpected error loading signatures for PDF export:', e);
+         logger.error('Unexpected error loading signatures for PDF export:', e);
        }
 
       // Create a map of signatures by user_id
@@ -245,7 +245,7 @@ export const pdfExportService = {
             logoHeight = 30;
           }
         } catch (e) {
-          console.error('Error loading establishment logo:', e);
+          logger.error('Error loading establishment logo:', e);
         }
       }
       
@@ -432,7 +432,7 @@ export const pdfExportService = {
               'FAST'
             );
           } catch (e) {
-            console.error('Error adding instructor signature:', e);
+            logger.error('Error adding instructor signature:', e);
           }
         } else {
           pdf.setFontSize(9);
@@ -471,7 +471,7 @@ export const pdfExportService = {
             'FAST'
           );
         } catch (e) {
-          console.error('Error adding admin signature:', e);
+          logger.error('Error adding admin signature:', e);
         }
       } else {
         pdf.setFontSize(9);
@@ -498,7 +498,7 @@ export const pdfExportService = {
       
       pdf.save(filename);
     } catch (error) {
-      console.error('Error exporting PDF:', error);
+      logger.error('Error exporting PDF:', error);
       throw new Error('Erreur lors de l\'export PDF');
     }
   },
@@ -585,7 +585,7 @@ export const pdfExportService = {
                 pdf.addImage(logoData, 'PNG', margin, margin, 22, 22);
               }
             } catch (e) {
-              console.error('Error loading logo:', e);
+              logger.error('Error loading logo:', e);
             }
           }
           
@@ -939,7 +939,7 @@ export const pdfExportService = {
       
       pdf.save(filename);
     } catch (error) {
-      console.error('Error exporting text book PDF:', error);
+      logger.error('Error exporting text book PDF:', error);
       throw new Error('Erreur lors de l\'export PDF du cahier de texte');
     }
   },
@@ -1006,7 +1006,7 @@ export const pdfExportService = {
             pdf.addImage(logoData, 'PNG', margin, 7, 22, 22);
           }
         } catch (e) {
-          console.error('Error loading logo:', e);
+          logger.error('Error loading logo:', e);
         }
       }
 
@@ -1114,7 +1114,7 @@ export const pdfExportService = {
       const filename = `correction-${assignmentTitle.replace(/\s+/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
       pdf.save(filename);
     } catch (error) {
-      console.error('Error exporting correction sheet PDF:', error);
+      logger.error('Error exporting correction sheet PDF:', error);
       throw new Error("Erreur lors de l'export de la feuille de correction");
     }
   },
@@ -1218,7 +1218,7 @@ export const pdfExportService = {
             pdf.addImage(logoData, 'PNG', margin, 7, 22, 22);
           }
         } catch (e) {
-          console.error('Error loading logo:', e);
+          logger.error('Error loading logo:', e);
         }
       }
 
@@ -1357,7 +1357,7 @@ export const pdfExportService = {
       const filename = `emargement-vierge-${format(new Date(attendanceSheet.date), 'yyyy-MM-dd')}-${attendanceSheet.formations?.title?.replace(/\s+/g, '-') || 'formation'}.pdf`;
       pdf.save(filename);
     } catch (error) {
-      console.error('Error exporting blank attendance sheet PDF:', error);
+      logger.error('Error exporting blank attendance sheet PDF:', error);
       throw new Error("Erreur lors de l'export de la feuille d'émargement vierge");
     }
   }

@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
-
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 export interface Assignment {
   id: string;
   module_id: string;
@@ -302,13 +303,13 @@ export const assignmentService = {
                 assignment.title,
                 module.title,
                 assignment.due_date || undefined
-              ).catch(console.error); // Fire and forget
+              ).catch((e) => logger.error(e)); // Fire and forget
             }
           }
         }
       }
     } catch (error) {
-      console.error('Error sending assignment publication notifications:', error);
+      logger.error('Error sending assignment publication notifications:', error);
     }
   },
 
@@ -372,12 +373,12 @@ export const assignmentService = {
               (assignment as Assignment).title,
               grade !== undefined && grade !== null ? grade : undefined,
               (assignment as Assignment).max_points || 20
-            ).catch(console.error); // Fire and forget
+            ).catch((e) => logger.error(e)); // Fire and forget
           }
         }
       }
     } catch (error) {
-      console.error('Error sending correction notifications:', error);
+      logger.error('Error sending correction notifications:', error);
     }
   }
 };

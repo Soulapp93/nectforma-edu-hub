@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Edit, CheckCircle, Clock, FileText, Eye, FolderOpen, ChevronDown, ChevronRight, Award, BookOpen, Download, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -103,7 +104,7 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
         setExpandedAssignments(new Set(result.map(r => r.assignment.id)));
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des corrections:', error);
+      logger.error('Erreur lors du chargement des corrections:', error);
       toast.error('Erreur lors du chargement des corrections');
     } finally {
       setLoading(false);
@@ -194,7 +195,7 @@ const ModuleCorrectionsTab: React.FC<ModuleCorrectionsTabProps> = ({ moduleId })
 
       toast.success('Feuille de correction téléchargée');
     } catch (error) {
-      console.error('Error generating correction sheet:', error);
+      logger.error('Error generating correction sheet:', error);
       toast.error('Erreur lors de la génération de la feuille de correction');
     } finally {
       setGeneratingPdf(null);

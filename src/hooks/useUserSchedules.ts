@@ -3,7 +3,8 @@ import { scheduleService, ScheduleSlot } from '@/services/scheduleService';
 import { useCurrentUser } from './useCurrentUser';
 import { useUserFormations } from './useUserFormations';
 import { supabase } from '@/integrations/supabase/client';
-
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 export const useUserSchedules = () => {
   const [schedules, setSchedules] = useState<ScheduleSlot[]>([]);
   const [loading, setLoading] = useState(false);
@@ -46,7 +47,7 @@ export const useUserSchedules = () => {
 
       setSchedules(data || []);
     } catch (err) {
-      console.error('fetchSchedules - Error:', err);
+      logger.error('fetchSchedules - Error:', err);
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement des emplois du temps');
     } finally {
       setLoading(false);
@@ -77,7 +78,7 @@ export const useUserSchedules = () => {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'schedules' }, () => fetchSchedules())
         .subscribe();
     } catch (err) {
-      console.warn('User schedules realtime subscription failed (non-critical):', err);
+      logger.warn('User schedules realtime subscription failed (non-critical):', err);
     }
 
     return () => {

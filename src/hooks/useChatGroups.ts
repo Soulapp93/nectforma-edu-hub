@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { chatService, ChatGroup, ChatMessage } from '@/services/chatService';
 import { useToast } from './use-toast';
-
+import { useToast } from './use-toast';
+import { logger } from '@/utils/logger';
 export const useChatGroups = () => {
   const [groups, setGroups] = useState<ChatGroup[]>([]);
   const [loading, setLoading] = useState(false);
@@ -10,15 +11,15 @@ export const useChatGroups = () => {
 
   const fetchGroups = async () => {
     try {
-      console.log('🔄 Fetching chat groups...');
+      logger.log('🔄 Fetching chat groups...');
       setLoading(true);
       setError(null);
       const data = await chatService.getUserGroups();
-      console.log('✅ Chat groups fetched:', data.length, 'groups');
+      logger.log('✅ Chat groups fetched:', data.length, 'groups');
       setGroups(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur lors du chargement des groupes';
-      console.error('❌ Error fetching chat groups:', err);
+      logger.error('❌ Error fetching chat groups:', err);
       setError(message);
       toast({
         title: "Erreur",
@@ -105,7 +106,7 @@ export const useChatMessages = (groupId: string | null) => {
       // Mark as read
       await chatService.updateLastRead(groupId);
     } catch (err) {
-      console.error('Error loading messages:', err);
+      logger.error('Error loading messages:', err);
       toast({
         title: "Erreur",
         description: "Impossible de charger les messages",
@@ -151,7 +152,7 @@ export const useChatMessages = (groupId: string | null) => {
     try {
       await chatService.sendMessage(groupId, content, messageType);
     } catch (err) {
-      console.error('Error sending message:', err);
+      logger.error('Error sending message:', err);
       toast({
         title: "Erreur",
         description: "Impossible d'envoyer le message",
@@ -172,7 +173,7 @@ export const useChatMessages = (groupId: string | null) => {
         description: "Message supprimé",
       });
     } catch (err) {
-      console.error('Error deleting message:', err);
+      logger.error('Error deleting message:', err);
       toast({
         title: "Erreur",
         description: err instanceof Error ? err.message : "Impossible de supprimer le message",

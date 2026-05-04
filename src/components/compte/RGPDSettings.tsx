@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -91,7 +92,7 @@ const RGPDSettings: React.FC = () => {
 
       toast.success('Vos données ont été exportées avec succès');
     } catch (error) {
-      console.error('Erreur export données:', error);
+      logger.error('Erreur export données:', error);
       toast.error('Erreur lors de l\'export de vos données');
     } finally {
       setIsExporting(false);
@@ -144,7 +145,7 @@ const RGPDSettings: React.FC = () => {
         window.location.href = '/';
       }, 2000);
     } catch (error) {
-      console.error('Erreur suppression compte:', error);
+      logger.error('Erreur suppression compte:', error);
       toast.error('Erreur lors de la suppression du compte. Contactez le support.');
     } finally {
       setIsDeleting(false);

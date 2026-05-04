@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Search, Users, Check, X, PenTool, ArrowLeft } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -101,7 +102,7 @@ const StudentAttendancePortal: React.FC<StudentAttendancePortalProps> = ({
         }
       }
 
-      console.log('Portal - Étudiants trouvés:', enrolledStudents.length);
+      logger.log('Portal - Étudiants trouvés:', enrolledStudents.length);
 
       // Récupérer les signatures existantes
       const { data: signatures, error: signaturesError } = await supabase
@@ -127,7 +128,7 @@ const StudentAttendancePortal: React.FC<StudentAttendancePortalProps> = ({
       setStudents(studentsWithSignature);
       setFilteredStudents(studentsWithSignature);
     } catch (error) {
-      console.error('Error loading data:', error);
+      logger.error('Error loading data:', error);
       toast.error('Erreur lors du chargement des données');
     } finally {
       setLoading(false);
@@ -224,7 +225,7 @@ const StudentAttendancePortal: React.FC<StudentAttendancePortalProps> = ({
       setShowSignature(false);
       setSelectedStudent(null);
     } catch (error: any) {
-      console.error('Error signing attendance:', error);
+      logger.error('Error signing attendance:', error);
       toast.error(error.message || 'Erreur lors de la signature');
     } finally {
       setSigning(false);

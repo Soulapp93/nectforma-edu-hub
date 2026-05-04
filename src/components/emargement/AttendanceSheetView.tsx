@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Users, FileText, Download, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,7 +54,7 @@ const AttendanceSheetView: React.FC<AttendanceSheetViewProps> = ({
           filter: `attendance_sheet_id=eq.${attendanceSheet.id}`
         },
         async () => {
-          console.log('Real-time signature update received');
+          logger.log('Real-time signature update received');
           await loadSignatures();
         }
       )

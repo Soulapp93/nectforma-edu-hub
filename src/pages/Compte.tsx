@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, Suspense } from 'react';
 import { UserCircle, Shield, Palette, CreditCard } from 'lucide-react';
 import ProfileSettings from '../components/compte/ProfileSettings';
@@ -51,7 +52,7 @@ const Compte = () => {
         const { data, error } = await supabase.rpc('get_my_profile');
 
         if (error) {
-          console.error('Erreur get_my_profile:', error);
+          logger.error('Erreur get_my_profile:', error);
           toast.error('Erreur lors du chargement du profil');
           setIsLoadingProfile(false);
           return;
@@ -60,7 +61,7 @@ const Compte = () => {
         const userData = data as unknown as ProfileApiResponse;
 
         if (userData?.error) {
-          console.error('Erreur dans les données profil:', userData.error);
+          logger.error('Erreur dans les données profil:', userData.error);
           toast.error('Erreur lors du chargement du profil');
           setIsLoadingProfile(false);
           return;
@@ -76,7 +77,7 @@ const Compte = () => {
           });
         }
       } catch (error) {
-        console.error('Erreur lors du chargement des données utilisateur:', error);
+        logger.error('Erreur lors du chargement des données utilisateur:', error);
         toast.error('Erreur lors du chargement du profil');
       } finally {
         setIsLoadingProfile(false);
@@ -122,7 +123,7 @@ const Compte = () => {
         setProfileData(prev => ({ ...prev, profilePhotoUrl: uploadedUrl }));
         toast.success('Photo de profil mise à jour avec succès');
       } catch (error) {
-        console.error('Erreur lors du téléchargement de la photo:', error);
+        logger.error('Erreur lors du téléchargement de la photo:', error);
         toast.error('Erreur lors du téléchargement de la photo');
       } finally {
         setIsUploadingPhoto(false);
@@ -153,7 +154,7 @@ const Compte = () => {
       setProfileData(prev => ({ ...prev, profilePhotoUrl: undefined }));
       toast.success('Photo de profil supprimée');
     } catch (error) {
-      console.error('Erreur lors de la suppression de la photo:', error);
+      logger.error('Erreur lors de la suppression de la photo:', error);
       toast.error('Erreur lors de la suppression de la photo');
     } finally {
       setIsDeletingPhoto(false);
@@ -202,7 +203,7 @@ const Compte = () => {
       
       toast.success('Profil sauvegardé avec succès');
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde du profil:', error);
+      logger.error('Erreur lors de la sauvegarde du profil:', error);
       toast.error('Erreur lors de la sauvegarde du profil');
     }
   };

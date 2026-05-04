@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
-
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 // Type helper for database operations on non-typed tables
 const db = supabase as any;
 
@@ -72,7 +73,7 @@ export const notificationService = {
       if (error) throw error;
       return { success: true };
     } catch (error) {
-      console.error('Erreur lors de l\'envoi de la notification:', error);
+      logger.error('Erreur lors de l\'envoi de la notification:', error);
       throw error;
     }
   },
@@ -108,7 +109,7 @@ export const notificationService = {
       if (error) throw error;
       return { success: true, notified_users: notifications.length };
     } catch (error) {
-      console.error('Erreur lors de l\'envoi des notifications:', error);
+      logger.error('Erreur lors de l\'envoi des notifications:', error);
       throw error;
     }
   },
@@ -141,7 +142,7 @@ export const notificationService = {
         formation_id: formationId
       });
     } catch (error) {
-      console.error('Erreur lors de l\'envoi des notifications:', error);
+      logger.error('Erreur lors de l\'envoi des notifications:', error);
       throw error;
     }
   },
@@ -170,7 +171,7 @@ export const notificationService = {
       const instructorIds = instructors.map(i => i.id);
       return this.notifyUsers(instructorIds, title, message, type, metadata);
     } catch (error) {
-      console.error('Erreur lors de l\'envoi des notifications aux formateurs:', error);
+      logger.error('Erreur lors de l\'envoi des notifications aux formateurs:', error);
       throw error;
     }
   },
@@ -199,7 +200,7 @@ export const notificationService = {
       const adminIds = admins.map(a => a.id);
       return this.notifyUsers(adminIds, title, message, type, metadata);
     } catch (error) {
-      console.error('Erreur lors de l\'envoi des notifications aux admins:', error);
+      logger.error('Erreur lors de l\'envoi des notifications aux admins:', error);
       throw error;
     }
   },
@@ -384,12 +385,12 @@ export const notificationService = {
           },
         });
       } catch (e) {
-        console.warn('Email notification (task) failed:', e);
+        logger.warn('Email notification (task) failed:', e);
       }
 
       return { success: true, notified_users: studentIds.length };
     } catch (error) {
-      console.error('Erreur notifyTaskCreated:', error);
+      logger.error('Erreur notifyTaskCreated:', error);
       // Do not throw - we do not want to block the task creation if the notification fails
       return { success: false, error };
     }
@@ -644,7 +645,7 @@ export const notificationService = {
         event_id: eventId 
       });
     } catch (error) {
-      console.error('Erreur lors de l\'envoi des notifications d\'événement:', error);
+      logger.error('Erreur lors de l\'envoi des notifications d\'événement:', error);
       throw error;
     }
   },
@@ -730,7 +731,7 @@ export const notificationService = {
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('Erreur lors de la récupération des notifications:', error);
+      logger.error('Erreur lors de la récupération des notifications:', error);
       throw error;
     }
   },
@@ -745,7 +746,7 @@ export const notificationService = {
       if (error) throw error;
       return { success: true };
     } catch (error) {
-      console.error('Erreur lors du marquage de la notification:', error);
+      logger.error('Erreur lors du marquage de la notification:', error);
       throw error;
     }
   },
@@ -761,7 +762,7 @@ export const notificationService = {
       if (error) throw error;
       return { success: true };
     } catch (error) {
-      console.error('Erreur lors du marquage des notifications:', error);
+      logger.error('Erreur lors du marquage des notifications:', error);
       throw error;
     }
   },
@@ -776,7 +777,7 @@ export const notificationService = {
       if (error) throw error;
       return { success: true };
     } catch (error) {
-      console.error('Erreur lors de la suppression de la notification:', error);
+      logger.error('Erreur lors de la suppression de la notification:', error);
       throw error;
     }
   },
@@ -792,7 +793,7 @@ export const notificationService = {
       if (error) throw error;
       return { success: true };
     } catch (error) {
-      console.error('Erreur lors de la suppression des notifications lues:', error);
+      logger.error('Erreur lors de la suppression des notifications lues:', error);
       throw error;
     }
   },
@@ -808,7 +809,7 @@ export const notificationService = {
       if (error) throw error;
       return count || 0;
     } catch (error) {
-      console.error('Erreur lors du comptage des notifications:', error);
+      logger.error('Erreur lors du comptage des notifications:', error);
       return 0;
     }
   }

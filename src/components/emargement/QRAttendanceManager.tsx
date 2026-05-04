@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useEffect, useRef, useState } from 'react';
 import { QrCode, Users, Send, CheckCircle, ArrowRight, PenTool, Calendar, Clock, MapPin, BookOpen, Wifi, Shield, FileText, UserX, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -98,7 +99,7 @@ const QRAttendanceManager: React.FC<QRAttendanceManagerProps> = ({
 
       setStats({ totalStudents, signedStudents, instructorSigned, canSendToAdmin });
     } catch (error) {
-      console.error('Error loading attendance stats:', error);
+      logger.error('Error loading attendance stats:', error);
     }
   };
 

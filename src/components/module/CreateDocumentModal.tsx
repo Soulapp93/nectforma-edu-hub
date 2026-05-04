@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -86,7 +87,7 @@ const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
       setFormData({ title: '', description: '', document_type: 'support' });
       setSelectedFiles([]);
     } catch (error: any) {
-      console.error('Error saving document:', error);
+      logger.error('Error saving document:', error);
       setError(error.message || (editDocument ? 'Erreur lors de la modification du document' : 'Erreur lors de la création du document'));
     } finally {
       setLoading(false);

@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { X, Edit, Download, CheckCircle2, CheckCircle, XCircle, Clock, Building, UserX, ToggleLeft, ToggleRight, PenTool, Timer, FileText } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -142,7 +143,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
         }
       }
 
-      console.log('Étudiants inscrits (modal admin, après filtrage):', enrolledStudents.length, 'Formateur exclu:', instructorIdToExclude);
+      logger.log('Étudiants inscrits (modal admin, après filtrage):', enrolledStudents.length, 'Formateur exclu:', instructorIdToExclude);
 
       // Récupérer uniquement les signatures d'étudiants (user_type = 'student')
       const studentSignatures = signatures?.filter((sig: any) => sig.user_type === 'student') || [];
@@ -162,23 +163,23 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
       setStudents(mappedStudents);
       
       // Charger les signatures existantes si disponibles
-      console.log('Signatures récupérées:', signatures);
-      console.log('instructor_id de la feuille:', attendanceSheet.instructor_id);
-      console.log('validated_by de la feuille:', attendanceSheet.validated_by);
+      logger.log('Signatures récupérées:', signatures);
+      logger.log('instructor_id de la feuille:', attendanceSheet.instructor_id);
+      logger.log('validated_by de la feuille:', attendanceSheet.validated_by);
       
       // Signature du formateur: prendre la première signature de type "instructor",
       // même si instructor_id n'est pas renseigné sur la feuille
       const instructorSigRecord = signatures?.find((sig: any) => sig.user_type === 'instructor');
       const instrSig = instructorSigRecord?.signature_data;
       
-      console.log('Signature formateur trouvée:', !!instrSig);
-      console.log('ID formateur (attendance_sheet.instructor_id):', attendanceSheet.instructor_id);
+      logger.log('Signature formateur trouvée:', !!instrSig);
+      logger.log('ID formateur (attendance_sheet.instructor_id):', attendanceSheet.instructor_id);
 
       // Variable pour savoir si on a déjà récupéré le nom du formateur
       let instructorNameFetched = false;
 
       if (instrSig) {
-        console.log('Utilisation de la signature formateur persistée');
+        logger.log('Utilisation de la signature formateur persistée');
         setInstructorSignature(instrSig);
         // Récupérer le nom du formateur séparément
         if (instructorSigRecord?.user_id) {
@@ -209,7 +210,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
       // Charger la signature administrative depuis user_signatures si possible
       const adminId = attendanceSheet.validated_by || userId;
       if (adminId) {
-        console.log('Chargement signature admin pour utilisateur:', adminId);
+        logger.log('Chargement signature admin pour utilisateur:', adminId);
         const { data: adminSigData, error: adminSigError } = await supabase
           .from('user_signatures')
           .select('signature_data')
@@ -219,12 +220,12 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
           .maybeSingle();
 
         if (adminSigError) {
-          console.error('Erreur récupération signature admin:', adminSigError);
+          logger.error('Erreur récupération signature admin:', adminSigError);
         } else if (adminSigData && adminSigData.signature_data) {
-          console.log('Signature admin trouvée dans user_signatures');
+          logger.log('Signature admin trouvée dans user_signatures');
           setAdminSignature(adminSigData.signature_data);
         } else {
-          console.log('Aucune signature admin trouvée dans user_signatures');
+          logger.log('Aucune signature admin trouvée dans user_signatures');
           setAdminSignature('');
         }
       }
@@ -259,7 +260,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
       setIsInstructorAbsentLocal(sheetRefresh?.instructor_absent === true);
 
     } catch (error) {
-      console.error('Error loading attendance data:', error);
+      logger.error('Error loading attendance data:', error);
     } finally {
       setLoading(false);
     }
@@ -282,7 +283,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
           filter: `attendance_sheet_id=eq.${attendanceSheet.id}`
         },
         () => {
-          console.log('Real-time update detected in modal');
+          logger.log('Real-time update detected in modal');
           loadAttendanceData();
         }
       )
@@ -295,7 +296,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
           filter: `id=eq.${attendanceSheet.id}`
         },
         () => {
-          console.log('Attendance sheet updated');
+          logger.log('Attendance sheet updated');
           loadAttendanceData();
         }
       )
@@ -321,7 +322,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
           await attendanceService.sendSignatureLink(attendanceSheet.id, [studentId]);
           toast.success('Lien de signature envoyé à l\'étudiant');
         } catch (linkError) {
-          console.error('Error sending signature link:', linkError);
+          logger.error('Error sending signature link:', linkError);
           toast.warning('Étudiant marqué présent mais le lien de signature n\'a pas pu être envoyé');
         }
       } else {
@@ -331,7 +332,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
       await loadAttendanceData();
       onUpdate();
     } catch (error) {
-      console.error('Error toggling presence:', error);
+      logger.error('Error toggling presence:', error);
       toast.error('Erreur lors du changement de statut');
     } finally {
       setTogglingStudentId(null);
@@ -339,7 +340,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
   };
 
   const handleStudentStatusChange = (studentId: string, present: boolean, absenceReason?: string) => {
-    console.log('Update student status:', { studentId, present, absenceReason });
+    logger.log('Update student status:', { studentId, present, absenceReason });
   };
 
   const handleExportPDF = async () => {
@@ -347,7 +348,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
       await pdfExportService.exportAttendanceSheetSimple(attendanceSheet);
       toast.success("Feuille d'émargement exportée en PDF");
     } catch (error) {
-      console.error('Error exporting PDF:', error);
+      logger.error('Error exporting PDF:', error);
       toast.error("Erreur lors de l'export PDF");
     }
   };
@@ -356,7 +357,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
     try {
       await onValidateSheet(attendanceSheet);
     } catch (error) {
-      console.error('Error validating attendance sheet from modal:', error);
+      logger.error('Error validating attendance sheet from modal:', error);
       // Le parent gère déjà les toasts, on évite le doublon ici
     }
   };
@@ -545,7 +546,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
                                       : s
                                   ));
                                 } catch (err) {
-                                  console.error('Error updating delay:', err);
+                                  logger.error('Error updating delay:', err);
                                 }
                               }}
                               className="w-16 h-8 text-center text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-primary/50 focus:border-primary"
@@ -869,7 +870,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
               // la même logique que le bouton "Valider" de la liste
               await onValidateSheet(attendanceSheet);
             } catch (error) {
-              console.error('Error validating from AdminValidationModal in modal:', error);
+              logger.error('Error validating from AdminValidationModal in modal:', error);
             }
           }}
         />
@@ -901,7 +902,7 @@ const EnhancedAttendanceSheetModal: React.FC<EnhancedAttendanceSheetModalProps> 
                   : s
               ));
             } catch (err) {
-              console.error('Error saving reason:', err);
+              logger.error('Error saving reason:', err);
               throw err;
             }
           }}

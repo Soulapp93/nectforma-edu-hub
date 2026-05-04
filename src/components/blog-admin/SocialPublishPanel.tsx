@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import {
   Send, Clock, Sparkles, RefreshCw, Check, AlertCircle,
@@ -85,7 +86,7 @@ export const SocialPublishPanel = ({
         .map(c => c.platform);
       setSelectedPlatforms(connected.slice(0, 3)); // Default to first 3 connected
     } catch (error) {
-      console.error('Error loading data:', error);
+      logger.error('Error loading data:', error);
     }
   };
 
@@ -108,7 +109,7 @@ export const SocialPublishPanel = ({
       setEditedCaptions(captions);
       toast.success('Contenus générés avec succès !');
     } catch (error) {
-      console.error('Error generating captions:', error);
+      logger.error('Error generating captions:', error);
       toast.error('Erreur lors de la génération');
     } finally {
       setGenerating(false);
@@ -151,7 +152,7 @@ export const SocialPublishPanel = ({
       const result = await suggestBestTime(platform);
       setBestTimes(prev => ({ ...prev, [platform]: result.best_times }));
     } catch (error) {
-      console.error('Error suggesting best time:', error);
+      logger.error('Error suggesting best time:', error);
     }
   };
 
@@ -246,7 +247,7 @@ export const SocialPublishPanel = ({
         );
         successCount++;
       } catch (error) {
-        console.error(`Error scheduling ${platform}:`, error);
+        logger.error(`Error scheduling ${platform}:`, error);
       }
     }
 

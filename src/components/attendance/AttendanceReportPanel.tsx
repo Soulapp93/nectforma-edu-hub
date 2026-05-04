@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useMemo, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -254,7 +255,7 @@ const AttendanceReportPanel: React.FC = () => {
       doc.save(fileName);
       toast.success('Rapport PDF genere avec succes');
     } catch (err: any) {
-      console.error(err);
+      logger.error(err);
       toast.error('Erreur lors de la generation du PDF');
     } finally {
       setGenerating(false);

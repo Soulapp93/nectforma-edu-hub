@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { quizService, Quiz, QuizQuestion, QuizSession, QuizParticipant, QuizAnswer } from '@/services/quizService';
 import { QuizThemeProvider, QUIZ_THEMES } from './QuizThemeProvider';
@@ -69,7 +70,7 @@ const QuizGameOrchestrator: React.FC<Props> = ({ sessionId, isHost, onExit }) =>
           setPhase('podium');
         }
       } catch (err) {
-        console.error(err);
+        logger.error(err);
         toast.error('Erreur chargement session');
       }
     };
@@ -236,7 +237,7 @@ const QuizGameOrchestrator: React.FC<Props> = ({ sessionId, isHost, onExit }) =>
         total_answered: prev.total_answered + 1,
       } : null);
     } catch (err) {
-      console.error('Error submitting answer:', err);
+      logger.error('Error submitting answer:', err);
     }
   }, [myParticipant, session, quiz, questions, currentQuestionIndex]);
 

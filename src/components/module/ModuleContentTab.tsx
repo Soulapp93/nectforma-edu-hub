@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Plus, FileText, Eye, Edit, Trash2, Download, Link as LinkIcon, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,7 +30,7 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
       const data = await moduleContentService.getModuleContents(moduleId);
       setContents(data || []);
     } catch (error) {
-      console.error('Erreur lors du chargement du contenu:', error);
+      logger.error('Erreur lors du chargement du contenu:', error);
       toast.error('Erreur lors du chargement du contenu');
     } finally {
       setLoading(false);
@@ -59,7 +60,7 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
         fetchContents();
         toast.success('Contenu supprimé avec succès');
       } catch (error) {
-        console.error('Erreur lors de la suppression:', error);
+        logger.error('Erreur lors de la suppression:', error);
         toast.error('Erreur lors de la suppression');
       }
     }
@@ -81,7 +82,7 @@ const ModuleContentTab: React.FC<ModuleContentTabProps> = ({ moduleId }) => {
       document.body.removeChild(link);
       toast.success('Téléchargement démarré');
     } catch (error) {
-      console.error('Erreur lors du téléchargement:', error);
+      logger.error('Erreur lors du téléchargement:', error);
       toast.error('Erreur lors du téléchargement');
     }
   };

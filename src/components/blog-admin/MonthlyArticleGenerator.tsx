@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState } from 'react';
 import {
   Sparkles, Calendar, Loader2, Check, Clock, ChevronRight,
@@ -119,7 +120,7 @@ export const MonthlyArticleGenerator: React.FC<MonthlyArticleGeneratorProps> = (
         }
       }
     } catch (error) {
-      console.error('Plan generation error:', error);
+      logger.error('Plan generation error:', error);
       toast.error('Erreur lors de la génération du plan');
     } finally {
       setGenerating(false);
@@ -176,7 +177,7 @@ export const MonthlyArticleGenerator: React.FC<MonthlyArticleGeneratorProps> = (
           idx === i ? { ...p, status: 'scheduled', postId: post.id, title: article.title } : p
         ));
       } catch (error) {
-        console.error(`Error generating article ${i + 1}:`, error);
+        logger.error(`Error generating article ${i + 1}:`, error);
         setPlan(prev => prev.map((p, idx) =>
           idx === i ? { ...p, status: 'error', error: 'Échec de la génération' } : p
         ));

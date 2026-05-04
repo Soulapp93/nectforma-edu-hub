@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { scheduleService, Schedule } from '@/services/scheduleService';
 import { supabase } from '@/integrations/supabase/client';
-
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 export const useSchedules = () => {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(false);
@@ -40,7 +41,7 @@ export const useSchedules = () => {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'schedule_slots' }, () => fetchSchedules())
         .subscribe();
     } catch (err) {
-      console.warn('Schedules realtime subscription failed (non-critical):', err);
+      logger.warn('Schedules realtime subscription failed (non-critical):', err);
     }
 
     return () => {

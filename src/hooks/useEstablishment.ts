@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentUser } from './useCurrentUser';
-
+import { useCurrentUser } from './useCurrentUser';
+import { logger } from '@/utils/logger';
 interface Establishment {
   id: string;
   name: string;
@@ -64,7 +65,7 @@ export const useEstablishment = () => {
         .single();
 
       if (establishmentError) {
-        console.error('Error fetching establishment:', establishmentError);
+        logger.error('Error fetching establishment:', establishmentError);
         setLoading(false);
         return;
       }
@@ -76,7 +77,7 @@ export const useEstablishment = () => {
 
       setEstablishment(establishmentData);
     } catch (error) {
-      console.error('Error in useEstablishment:', error);
+      logger.error('Error in useEstablishment:', error);
     } finally {
       setLoading(false);
     }

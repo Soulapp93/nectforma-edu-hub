@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -203,7 +204,7 @@ const Blog = () => {
       setPosts(filteredPosts);
       setCategories(categoriesData);
     } catch (error) {
-      console.error('Error loading blog data:', error);
+      logger.error('Error loading blog data:', error);
     } finally {
       setLoading(false);
     }

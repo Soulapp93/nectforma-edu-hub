@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
-
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 export interface Invitation {
   id: string;
   email: string;
@@ -63,7 +64,7 @@ export const invitationService = {
 
       return { success: true };
     } catch (error: any) {
-      console.error('Error sending invitation:', error);
+      logger.error('Error sending invitation:', error);
       return { success: false, error: error.message };
     }
   },

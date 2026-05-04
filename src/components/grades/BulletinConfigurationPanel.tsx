@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -1084,7 +1085,7 @@ const SignatoriesManager: React.FC<{ establishmentId: string }> = ({ establishme
       } else {
         toast.error('Erreur sauvegarde : ' + msg);
       }
-      console.error('[Signatory save error]', e);
+      logger.error('[Signatory save error]', e);
     },
   });
 

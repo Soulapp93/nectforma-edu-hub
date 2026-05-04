@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -587,7 +588,7 @@ export const SocialContentGallery = () => {
         window.location.href = data.auth_url;
       }
     } catch (err: any) {
-      console.error('LinkedIn connect error:', err);
+      logger.error('LinkedIn connect error:', err);
       toast.error('Erreur lors de la connexion LinkedIn');
       setConnectingLinkedin(false);
     }
@@ -611,7 +612,7 @@ export const SocialContentGallery = () => {
           toast.info(`Publication sur ${network} : bientôt disponible`);
         }
       } catch (err: any) {
-        console.error(`Publish to ${network} error:`, err);
+        logger.error(`Publish to ${network} error:`, err);
         toast.error(`Erreur publication ${network}: ${err.message}`);
       }
     }
@@ -646,7 +647,7 @@ export const SocialContentGallery = () => {
       if (error) throw error;
       setPosts((data || []) as SocialPost[]);
     } catch (e) {
-      console.error('Error loading social posts:', e);
+      logger.error('Error loading social posts:', e);
       toast.error('Erreur de chargement des contenus sociaux');
     } finally {
       setLoading(false);

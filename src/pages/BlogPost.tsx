@@ -1,4 +1,6 @@
+import { logger } from '@/utils/logger';
 import React, { useEffect, useState, useRef } from 'react';
+import DOMPurify from 'dompurify';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -171,7 +173,7 @@ const BlogPostPage = () => {
       trackPageView(data.id);
       startTime.current = Date.now();
     } catch (error) {
-      console.error('Error loading post:', error);
+      logger.error('Error loading post:', error);
       navigate('/blog', { replace: true });
     } finally {
       setLoading(false);
@@ -180,10 +182,11 @@ const BlogPostPage = () => {
 
   const processContent = (html: string) => {
     let headingIndex = 0;
-    return html.replace(/<(h[23])([^>]*)>/gi, (match, tag, attrs) => {
+    const withIds = html.replace(/<(h[23])([^>]*)>/gi, (match, tag, attrs) => {
       const id = `heading-${headingIndex++}`;
       return `<${tag}${attrs} id="${id}">`;
     });
+    return DOMPurify.sanitize(withIds, { ADD_ATTR: ['id', 'target', 'rel'] });
   };
 
   if (loading) {

@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useEffect, useState } from 'react';
 import { X, User, Mail, Phone, Building, Calendar, FileText, GraduationCap, Briefcase, Users, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -72,7 +73,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({ isOpen, onClose, user
           setTutorInfo(null);
         }
       } catch (err) {
-        console.error('Erreur lors du chargement du tuteur:', err);
+        logger.error('Erreur lors du chargement du tuteur:', err);
         setTutorInfo(null);
       } finally {
         setLoadingTutor(false);

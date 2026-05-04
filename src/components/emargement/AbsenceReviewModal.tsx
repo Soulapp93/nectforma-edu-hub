@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -44,7 +45,7 @@ const AbsenceReviewModal: React.FC<AbsenceReviewModalProps> = ({
       const data = await absenceJustificationService.getAbsenceDetails(signatureId);
       setDetails(data);
     } catch (error) {
-      console.error('Error loading absence details:', error);
+      logger.error('Error loading absence details:', error);
       toast.error('Erreur lors du chargement des détails');
     } finally {
       setLoading(false);
@@ -73,7 +74,7 @@ const AbsenceReviewModal: React.FC<AbsenceReviewModalProps> = ({
           'attendance'
         );
       } catch (notifError) {
-        console.error('Error sending notification:', notifError);
+        logger.error('Error sending notification:', notifError);
       }
 
       toast.success(`Justificatif ${statusText} avec succès`);
@@ -81,7 +82,7 @@ const AbsenceReviewModal: React.FC<AbsenceReviewModalProps> = ({
       onReviewed?.();
       onClose();
     } catch (error) {
-      console.error('Error reviewing justification:', error);
+      logger.error('Error reviewing justification:', error);
       toast.error('Erreur lors du traitement');
     } finally {
       setSubmitting(false);

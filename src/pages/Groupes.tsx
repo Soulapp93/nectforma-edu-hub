@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, Users as UsersIcon } from 'lucide-react';
 import { useChatGroups } from '@/hooks/useChatGroups';
@@ -16,12 +17,12 @@ const Groupes = () => {
     .filter(g => g.group_type === 'establishment')
     .sort((a, b) => (b.member_count || 0) - (a.member_count || 0))[0] || null;
 
-  console.log('📍 Groupes page - loading:', loading, 'groups:', groups.length, 'establishment group:', establishmentGroup);
+  logger.log('📍 Groupes page - loading:', loading, 'groups:', groups.length, 'establishment group:', establishmentGroup);
 
   // Sélectionner automatiquement le groupe établissement quand il est disponible
   useEffect(() => {
     if (establishmentGroup && !loading) {
-      console.log('✅ Establishment group found:', establishmentGroup);
+      logger.log('✅ Establishment group found:', establishmentGroup);
     }
   }, [establishmentGroup, loading]);
 

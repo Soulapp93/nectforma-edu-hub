@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useEffect, useState } from "react";
 import { AlertCircle, FileText, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,7 +53,7 @@ const SubmitAssignmentModal: React.FC<SubmitAssignmentModalProps> = ({
           setHasExistingSubmission(true);
         }
       } catch (error) {
-        console.error('Erreur vérification soumission:', error);
+        logger.error('Erreur vérification soumission:', error);
       }
     };
 
@@ -99,7 +100,7 @@ const SubmitAssignmentModal: React.FC<SubmitAssignmentModalProps> = ({
               file_size: file.size
             });
           } catch (fileError) {
-            console.error('Erreur upload fichier:', fileError);
+            logger.error('Erreur upload fichier:', fileError);
             toast.error(`Erreur lors de l'upload de ${file.name}`);
           }
         }
@@ -109,7 +110,7 @@ const SubmitAssignmentModal: React.FC<SubmitAssignmentModalProps> = ({
       onSuccess();
       onClose();
     } catch (error: any) {
-      console.error('Erreur lors de la soumission:', error);
+      logger.error('Erreur lors de la soumission:', error);
       
       if (error.message?.includes('duplicate') || error.code === '23505') {
         toast.error('Vous avez déjà rendu ce devoir');

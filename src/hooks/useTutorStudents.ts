@@ -14,18 +14,6 @@ export interface TutorStudent {
   formation_level?: string;
 }
 
-interface TutorStudentViewRow {
-  id: string;
-  tutor_id: string;
-  student_id: string;
-  is_active: boolean;
-  assigned_at: string;
-  student_first_name: string;
-  student_last_name: string;
-  student_email: string;
-  student_photo: string | null;
-}
-
 export const useTutorStudents = () => {
   const [tutorStudents, setTutorStudents] = useState<Record<string, TutorStudent[]>>({});
   const [loading, setLoading] = useState(false);
@@ -35,49 +23,47 @@ export const useTutorStudents = () => {
     try {
       setLoading(true);
       setError(null);
-      
-      // Use RPC or direct query on tutor_student_assignments + users join
-      const { data: assignments, error: assignmentError } = await supabase
+
+      // Single JOIN query instead of N+1 loop
+      const { data, error: fetchError } = await supabase
         .from('tutor_student_assignments')
-        .select('*')
+        .select(`
+          tutor_id,
+          student_id,
+          is_active,
+          users!tutor_student_assignments_student_id_fkey (
+            first_name,
+            last_name,
+            email
+          )
+        `)
         .eq('is_active', true);
 
-      if (assignmentError) throw assignmentError;
-      if (!assignments) {
+      if (fetchError) throw fetchError;
+      if (!data) {
         setTutorStudents({});
         return;
       }
 
-      // Fetch student details for each assignment
       const studentsByTutor: Record<string, TutorStudent[]> = {};
+      const seen = new Set<string>();
 
-      for (const assignment of assignments) {
-        const { data: student } = await supabase
-          .from('users')
-          .select('first_name, last_name, email')
-          .eq('id', assignment.student_id)
-          .single();
+      for (const row of data) {
+        const user = row.users as { first_name: string; last_name: string; email: string } | null;
+        if (!user) continue;
 
-        if (!student) continue;
+        const key = `${row.tutor_id}-${row.student_id}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
 
-        if (!studentsByTutor[assignment.tutor_id]) {
-          studentsByTutor[assignment.tutor_id] = [];
-        }
-
-        // Avoid duplicates
-        const exists = studentsByTutor[assignment.tutor_id].some(
-          s => s.student_id === assignment.student_id
-        );
-
-        if (!exists) {
-          studentsByTutor[assignment.tutor_id].push({
-            student_id: assignment.student_id,
-            student_first_name: student.first_name,
-            student_last_name: student.last_name,
-            student_email: student.email,
-            is_active: assignment.is_active
-          });
-        }
+        if (!studentsByTutor[row.tutor_id]) studentsByTutor[row.tutor_id] = [];
+        studentsByTutor[row.tutor_id].push({
+          student_id: row.student_id,
+          student_first_name: user.first_name,
+          student_last_name: user.last_name,
+          student_email: user.email,
+          is_active: row.is_active,
+        });
       }
 
       setTutorStudents(studentsByTutor);
@@ -101,6 +87,6 @@ export const useTutorStudents = () => {
     loading,
     error,
     getTutorStudents,
-    refetch: fetchTutorStudents
+    refetch: fetchTutorStudents,
   };
 };

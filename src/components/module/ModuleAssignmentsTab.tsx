@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Plus, FileText, Users, Calendar, Edit, Trash2, Upload, Eye, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -78,7 +79,7 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
         setStudentSubmissions(submissionsMap);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des devoirs:', error);
+      logger.error('Erreur lors du chargement des devoirs:', error);
       toast.error('Erreur lors du chargement des devoirs');
     } finally {
       setLoading(false);
@@ -117,7 +118,7 @@ const ModuleAssignmentsTab: React.FC<ModuleAssignmentsTabProps> = ({ moduleId })
         fetchAssignments();
         toast.success('Évaluation supprimée');
       } catch (error) {
-        console.error('Erreur lors de la suppression:', error);
+        logger.error('Erreur lors de la suppression:', error);
         toast.error('Erreur lors de la suppression');
       }
     }

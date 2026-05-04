@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { moduleContentService, ModuleContent } from '@/services/moduleContentService';
@@ -92,11 +93,11 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
     setError(null);
 
     try {
-      console.log('Saving content with:', { formData, files: selectedFiles, editMode: !!editContent });
+      logger.log('Saving content with:', { formData, files: selectedFiles, editMode: !!editContent });
 
       if (formData.content_type === 'devoir' || formData.content_type === 'evaluation') {
         if (!editContent) {
-          console.log('Creating assignment:', formData);
+          logger.log('Creating assignment:', formData);
           const assignment = await assignmentService.createAssignment({
             title: formData.title,
             description: formData.description,
@@ -119,7 +120,7 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
               });
             }
           }
-          console.log('Assignment created successfully:', assignment);
+          logger.log('Assignment created successfully:', assignment);
         }
       } else if (formData.content_type === 'lien') {
         if (editContent) {
@@ -131,9 +132,9 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
             file_name: formData.title
           };
 
-          console.log('Updating link in database:', contentData);
+          logger.log('Updating link in database:', contentData);
           await moduleContentService.updateContent(editContent.id, contentData);
-          console.log('Link updated successfully');
+          logger.log('Link updated successfully');
         } else {
           const contentData = {
             title: formData.title,
@@ -144,9 +145,9 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
             file_name: formData.title
           };
 
-          console.log('Creating link in database:', contentData);
+          logger.log('Creating link in database:', contentData);
           await moduleContentService.createContent(contentData);
-          console.log('Link created successfully');
+          logger.log('Link created successfully');
         }
       } else {
         if (formData.content_type === 'document') {
@@ -155,10 +156,10 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
             let fileName = editContent.file_name;
 
             if (selectedFiles.length > 0) {
-              console.log('Uploading new file:', selectedFiles[0]);
+              logger.log('Uploading new file:', selectedFiles[0]);
               fileUrl = await fileUploadService.uploadFile(selectedFiles[0]);
               fileName = selectedFiles[0].name;
-              console.log('New file uploaded, URL:', fileUrl);
+              logger.log('New file uploaded, URL:', fileUrl);
             }
 
             const documentData = {
@@ -169,18 +170,18 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
               file_name: fileName
             };
 
-            console.log('Updating document in database:', documentData);
+            logger.log('Updating document in database:', documentData);
             await moduleDocumentService.updateDocument(editContent.id, documentData);
-            console.log('Document updated successfully');
+            logger.log('Document updated successfully');
           } else {
             let fileUrl = null;
             let fileName = null;
 
             if (selectedFiles.length > 0) {
-              console.log('Uploading file:', selectedFiles[0]);
+              logger.log('Uploading file:', selectedFiles[0]);
               fileUrl = await fileUploadService.uploadFile(selectedFiles[0]);
               fileName = selectedFiles[0].name;
-              console.log('File uploaded, URL:', fileUrl);
+              logger.log('File uploaded, URL:', fileUrl);
             }
 
             const documentData = {
@@ -192,9 +193,9 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
               file_name: fileName
             };
 
-            console.log('Creating document in database:', documentData);
+            logger.log('Creating document in database:', documentData);
             await moduleDocumentService.createDocument(documentData);
-            console.log('Document created successfully');
+            logger.log('Document created successfully');
           }
         } else {
           if (editContent) {
@@ -202,10 +203,10 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
             let fileName = editContent.file_name;
 
             if (selectedFiles.length > 0) {
-              console.log('Uploading new file:', selectedFiles[0]);
+              logger.log('Uploading new file:', selectedFiles[0]);
               fileUrl = await fileUploadService.uploadFile(selectedFiles[0]);
               fileName = selectedFiles[0].name;
-              console.log('New file uploaded, URL:', fileUrl);
+              logger.log('New file uploaded, URL:', fileUrl);
             }
 
             const contentData = {
@@ -216,18 +217,18 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
               file_name: fileName
             };
 
-            console.log('Updating content in database:', contentData);
+            logger.log('Updating content in database:', contentData);
             await moduleContentService.updateContent(editContent.id, contentData);
-            console.log('Content updated successfully');
+            logger.log('Content updated successfully');
           } else {
             let fileUrl = null;
             let fileName = null;
 
             if (selectedFiles.length > 0) {
-              console.log('Uploading file:', selectedFiles[0]);
+              logger.log('Uploading file:', selectedFiles[0]);
               fileUrl = await fileUploadService.uploadFile(selectedFiles[0]);
               fileName = selectedFiles[0].name;
-              console.log('File uploaded, URL:', fileUrl);
+              logger.log('File uploaded, URL:', fileUrl);
             }
 
             const contentData = {
@@ -239,9 +240,9 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
               file_name: fileName
             };
 
-            console.log('Creating content in database:', contentData);
+            logger.log('Creating content in database:', contentData);
             await moduleContentService.createContent(contentData);
-            console.log('Content created successfully');
+            logger.log('Content created successfully');
           }
         }
       }
@@ -258,7 +259,7 @@ const CreateContentModal: React.FC<CreateContentModalProps> = ({
       });
       setSelectedFiles([]);
     } catch (error: any) {
-      console.error('Error saving content:', error);
+      logger.error('Error saving content:', error);
       setError(error.message || (editContent ? 'Erreur lors de la modification du contenu' : 'Erreur lors de la création du contenu'));
     } finally {
       setLoading(false);

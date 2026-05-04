@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Palette, RotateCcw, Check, Pipette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -220,7 +221,7 @@ const ThemeCustomization: React.FC = () => {
       await saveTheme(localTheme);
       toast.success('Thème mis à jour avec succès ! Les changements sont appliqués pour tous les utilisateurs.');
     } catch (error) {
-      console.error('Error saving theme:', error);
+      logger.error('Error saving theme:', error);
       toast.error('Erreur lors de la sauvegarde du thème');
     } finally {
       setSaving(false);

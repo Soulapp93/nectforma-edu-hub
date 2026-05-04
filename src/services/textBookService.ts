@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
-
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 export interface TextBook {
   id: string;
   formation_id: string;
@@ -50,7 +51,7 @@ export interface TextBookEntryFile {
 
 export const textBookService = {
   async createTextBook(data: { formation_id: string; title: string; description?: string; created_by?: string }) {
-    console.log('Création de cahier de texte:', data);
+    logger.log('Création de cahier de texte:', data);
     
     const { data: textBook, error } = await supabase
       .from('text_books')
@@ -70,16 +71,16 @@ export const textBookService = {
       .single();
 
     if (error) {
-      console.error('Erreur lors de la création du cahier de texte:', error);
+      logger.error('Erreur lors de la création du cahier de texte:', error);
       throw new Error(`Erreur lors de la création du cahier de texte: ${error.message}`);
     }
 
-    console.log('Cahier de texte créé:', textBook);
+    logger.log('Cahier de texte créé:', textBook);
     return textBook;
   },
 
   async getTextBooks() {
-    console.log('Récupération des cahiers de texte...');
+    logger.log('Récupération des cahiers de texte...');
     
     const { data, error } = await supabase
       .from('text_books')
@@ -93,16 +94,16 @@ export const textBookService = {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Erreur lors de la récupération des cahiers de texte:', error);
+      logger.error('Erreur lors de la récupération des cahiers de texte:', error);
       throw new Error(`Erreur lors de la récupération des cahiers de texte: ${error.message}`);
     }
 
-    console.log('Cahiers de texte récupérés:', data);
+    logger.log('Cahiers de texte récupérés:', data);
     return data;
   },
 
   async getTextBookByFormationId(formationId: string) {
-    console.log('Récupération du cahier de texte pour la formation:', formationId);
+    logger.log('Récupération du cahier de texte pour la formation:', formationId);
     
     const { data, error } = await supabase
       .from('text_books')
@@ -117,16 +118,16 @@ export const textBookService = {
       .single();
 
     if (error) {
-      console.error('Erreur lors de la récupération du cahier de texte:', error);
+      logger.error('Erreur lors de la récupération du cahier de texte:', error);
       throw new Error(`Erreur lors de la récupération du cahier de texte: ${error.message}`);
     }
 
-    console.log('Cahier de texte récupéré:', data);
+    logger.log('Cahier de texte récupéré:', data);
     return data;
   },
 
   async getTextBookEntries(textBookId: string) {
-    console.log('Récupération des entrées du cahier de texte:', textBookId);
+    logger.log('Récupération des entrées du cahier de texte:', textBookId);
     
     const { data, error } = await supabase
       .from('text_book_entries')
@@ -135,7 +136,7 @@ export const textBookService = {
       .order('date', { ascending: false });
 
     if (error) {
-      console.error('Erreur lors de la récupération des entrées:', error);
+      logger.error('Erreur lors de la récupération des entrées:', error);
       throw new Error(`Erreur lors de la récupération des entrées: ${error.message}`);
     }
 
@@ -157,7 +158,7 @@ export const textBookService = {
       return { ...entry, files, instructor };
     }));
 
-    console.log('Entrées récupérées avec fichiers et formateurs:', entriesWithData);
+    logger.log('Entrées récupérées avec fichiers et formateurs:', entriesWithData);
     return entriesWithData;
   },
 
@@ -174,7 +175,7 @@ export const textBookService = {
     subject_matter?: string;
     instructor_id?: string;
   }) {
-    console.log('Création d\'entrée de cahier de texte:', data);
+    logger.log('Création d\'entrée de cahier de texte:', data);
     
     const { data: entry, error } = await (supabase
       .from('text_book_entries') as any)
@@ -195,11 +196,11 @@ export const textBookService = {
       .single();
 
     if (error) {
-      console.error('Erreur lors de la création de l\'entrée:', error);
+      logger.error('Erreur lors de la création de l\'entrée:', error);
       throw new Error(`Erreur lors de la création de l'entrée: ${error.message}`);
     }
 
-    console.log('Entrée créée:', entry);
+    logger.log('Entrée créée:', entry);
     return entry;
   },
 
@@ -214,7 +215,7 @@ export const textBookService = {
     subject_matter?: string;
     instructor_id?: string;
   }>) {
-    console.log('Modification d\'entrée de cahier de texte:', entryId, data);
+    logger.log('Modification d\'entrée de cahier de texte:', entryId, data);
     
     const { data: entry, error } = await (supabase
       .from('text_book_entries') as any)
@@ -224,23 +225,23 @@ export const textBookService = {
       .single();
 
     if (error) {
-      console.error('Erreur lors de la modification de l\'entrée:', error);
+      logger.error('Erreur lors de la modification de l\'entrée:', error);
       throw new Error(`Erreur lors de la modification de l'entrée: ${error.message}`);
     }
 
-    console.log('Entrée modifiée:', entry);
+    logger.log('Entrée modifiée:', entry);
     return entry;
   },
 
   async uploadEntryFiles(entryId: string, files: File[]): Promise<TextBookEntryFile[]> {
-    console.log('Upload de fichiers pour l\'entrée:', entryId, 'Nombre de fichiers:', files.length);
+    logger.log('Upload de fichiers pour l\'entrée:', entryId, 'Nombre de fichiers:', files.length);
     const uploadedFiles: TextBookEntryFile[] = [];
 
     for (const file of files) {
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}-${file.name}`;
       const filePath = `text-book-entries/${entryId}/${fileName}`;
 
-      console.log('Upload du fichier:', file.name, 'vers:', filePath);
+      logger.log('Upload du fichier:', file.name, 'vers:', filePath);
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('module-files')
@@ -251,17 +252,17 @@ export const textBookService = {
         });
 
       if (uploadError) {
-        console.error('Erreur upload fichier:', uploadError);
+        logger.error('Erreur upload fichier:', uploadError);
         continue;
       }
 
-      console.log('Fichier uploadé avec succès:', uploadData);
+      logger.log('Fichier uploadé avec succès:', uploadData);
 
       const { data: { publicUrl } } = supabase.storage
         .from('module-files')
         .getPublicUrl(filePath);
 
-      console.log('URL publique:', publicUrl);
+      logger.log('URL publique:', publicUrl);
 
       const { data: fileData, error: insertError } = await (supabase
         .from('text_book_entry_files') as any)
@@ -275,19 +276,19 @@ export const textBookService = {
         .single();
 
       if (insertError) {
-        console.error('Erreur insertion fichier en BDD:', insertError);
+        logger.error('Erreur insertion fichier en BDD:', insertError);
       } else if (fileData) {
-        console.log('Fichier enregistré en BDD:', fileData);
+        logger.log('Fichier enregistré en BDD:', fileData);
         uploadedFiles.push(fileData);
       }
     }
 
-    console.log('Total fichiers uploadés:', uploadedFiles.length);
+    logger.log('Total fichiers uploadés:', uploadedFiles.length);
     return uploadedFiles;
   },
 
   async deleteEntryFile(fileId: string): Promise<void> {
-    console.log('Suppression du fichier:', fileId);
+    logger.log('Suppression du fichier:', fileId);
     
     const { error } = await (supabase
       .from('text_book_entry_files') as any)
@@ -295,7 +296,7 @@ export const textBookService = {
       .eq('id', fileId);
 
     if (error) {
-      console.error('Erreur lors de la suppression du fichier:', error);
+      logger.error('Erreur lors de la suppression du fichier:', error);
       throw new Error(`Erreur lors de la suppression du fichier: ${error.message}`);
     }
   },
@@ -307,7 +308,7 @@ export const textBookService = {
       .eq('entry_id', entryId);
 
     if (error) {
-      console.error('Erreur lors de la récupération des fichiers:', error);
+      logger.error('Erreur lors de la récupération des fichiers:', error);
       return [];
     }
 
@@ -315,7 +316,7 @@ export const textBookService = {
   },
 
   async deleteTextBookEntry(entryId: string) {
-    console.log('Suppression d\'entrée de cahier de texte:', entryId);
+    logger.log('Suppression d\'entrée de cahier de texte:', entryId);
     
     const { error } = await supabase
       .from('text_book_entries')
@@ -323,15 +324,15 @@ export const textBookService = {
       .eq('id', entryId);
 
     if (error) {
-      console.error('Erreur lors de la suppression de l\'entrée:', error);
+      logger.error('Erreur lors de la suppression de l\'entrée:', error);
       throw new Error(`Erreur lors de la suppression de l'entrée: ${error.message}`);
     }
 
-    console.log('Entrée supprimée avec succès');
+    logger.log('Entrée supprimée avec succès');
   },
 
   async archiveTextBook(textBookId: string) {
-    console.log('Archivage du cahier de texte:', textBookId);
+    logger.log('Archivage du cahier de texte:', textBookId);
     
     // Pour l'instant, nous simulons l'archivage
     // En production, vous devriez ajouter un champ status ou archived dans la table
@@ -341,10 +342,10 @@ export const textBookService = {
       .eq('id', textBookId);
 
     if (error) {
-      console.error('Erreur lors de l\'archivage:', error);
+      logger.error('Erreur lors de l\'archivage:', error);
       throw new Error(`Erreur lors de l'archivage: ${error.message}`);
     }
 
-    console.log('Cahier de texte archivé avec succès');
+    logger.log('Cahier de texte archivé avec succès');
   }
 };

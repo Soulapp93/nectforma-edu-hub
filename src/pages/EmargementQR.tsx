@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, QrCode, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,7 +26,7 @@ const EmargementQR = () => {
       const data = await attendanceService.getTodaysAttendanceForUser(userId, userRole);
       setAttendanceSheets(data);
     } catch (error) {
-      console.error('Error fetching attendance:', error);
+      logger.error('Error fetching attendance:', error);
       setAttendanceSheets([]);
     } finally {
       setLoading(false);

@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState } from 'react';
 import { 
   Calendar, 
@@ -94,7 +95,7 @@ export const ModernScheduleView: React.FC<ModernScheduleViewProps> = ({
         description: "Emploi du temps exporté en PDF",
       });
     } catch (error) {
-      console.error('Erreur lors de l\'exportation:', error);
+      logger.error('Erreur lors de l\'exportation:', error);
       toast({
         title: "Erreur",
         description: "Erreur lors de l'exportation du PDF",

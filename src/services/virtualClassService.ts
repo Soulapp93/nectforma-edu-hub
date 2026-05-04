@@ -1,7 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { notificationService } from './notificationService';
 import { emailNotificationService } from './emailNotificationService';
-
+import { emailNotificationService } from './emailNotificationService';
+import { logger } from '@/utils/logger';
 export interface VirtualClass {
   id: string;
   establishment_id: string;
@@ -61,7 +62,7 @@ export const virtualClassService = {
       .maybeSingle();
 
     if (error) {
-      console.error('Error fetching zoom connection:', error);
+      logger.error('Error fetching zoom connection:', error);
       return null;
     }
     return data as ZoomConnection | null;
@@ -222,7 +223,7 @@ export const virtualClassService = {
             .single();
           if (updated) {
             // Send notifications after successful Zoom sync
-            this._sendVirtualClassNotifications(updated as VirtualClass, params.establishment_id, params.formation_id, params.instructor_id).catch(console.error);
+            this._sendVirtualClassNotifications(updated as VirtualClass, params.establishment_id, params.formation_id, params.instructor_id).catch((e) => logger.error(e));
             return updated as VirtualClass;
           }
         }
@@ -235,7 +236,7 @@ export const virtualClassService = {
     }
 
     // Send notifications even without Zoom (no join_url)
-    this._sendVirtualClassNotifications(vc as VirtualClass, params.establishment_id, params.formation_id, params.instructor_id).catch(console.error);
+    this._sendVirtualClassNotifications(vc as VirtualClass, params.establishment_id, params.formation_id, params.instructor_id).catch((e) => logger.error(e));
 
     return vc as VirtualClass;
   },
@@ -309,7 +310,7 @@ export const virtualClassService = {
             vc.join_url || undefined,
             vc.password || undefined,
             instructorName
-          ).catch(console.error);
+          ).catch((e) => logger.error(e));
         }
       }
 
@@ -354,7 +355,7 @@ export const virtualClassService = {
       });
 
     } catch (err) {
-      console.error('Error sending virtual class notifications:', err);
+      logger.error('Error sending virtual class notifications:', err);
     }
   },
 
@@ -399,7 +400,7 @@ export const virtualClassService = {
           headers: { Authorization: `Bearer ${session?.access_token}` },
         });
       } catch (err: any) {
-        console.error('Zoom sync error:', err);
+        logger.error('Zoom sync error:', err);
       }
     }
 
@@ -420,7 +421,7 @@ export const virtualClassService = {
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
     } catch (err) {
-      console.error('Zoom delete error:', err);
+      logger.error('Zoom delete error:', err);
     }
 
     const { error } = await supabase

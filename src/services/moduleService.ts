@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
-
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 // Type helper for database operations on non-typed tables
 const db = supabase as any;
 
@@ -57,7 +58,7 @@ export const moduleService = {
           .eq('module_id', mod.id);
 
         if (assignError) {
-          console.warn('Erreur récupération formateurs module:', assignError);
+          logger.warn('Erreur récupération formateurs module:', assignError);
           return { ...mod, instructors: [], module_instructors: [] };
         }
 
@@ -108,7 +109,7 @@ export const moduleService = {
         .insert(assignments);
 
       if (assignmentError) {
-        console.error('Erreur assignation formateurs:', assignmentError);
+        logger.error('Erreur assignation formateurs:', assignmentError);
         throw assignmentError;
       }
     }
@@ -140,7 +141,7 @@ export const moduleService = {
       .eq('module_id', moduleId);
 
     if (deleteError) {
-      console.error('Erreur suppression anciennes assignations:', deleteError);
+      logger.error('Erreur suppression anciennes assignations:', deleteError);
       throw deleteError;
     }
 
@@ -155,7 +156,7 @@ export const moduleService = {
         .insert(assignments);
 
       if (insertError) {
-        console.error('Erreur insertion nouvelles assignations:', insertError);
+        logger.error('Erreur insertion nouvelles assignations:', insertError);
         throw insertError;
       }
     }
@@ -169,7 +170,7 @@ export const moduleService = {
       .eq('module_id', moduleId);
 
     if (subModError) {
-      console.warn('Erreur suppression sous-modules:', subModError);
+      logger.warn('Erreur suppression sous-modules:', subModError);
     }
 
     const { error: deleteAssignError } = await db
@@ -178,7 +179,7 @@ export const moduleService = {
       .eq('module_id', moduleId);
 
     if (deleteAssignError) {
-      console.warn('Erreur suppression assignations:', deleteAssignError);
+      logger.warn('Erreur suppression assignations:', deleteAssignError);
     }
 
     const { error } = await supabase
@@ -198,7 +199,7 @@ export const moduleService = {
       .order('order_index');
 
     if (error) {
-      console.error('Erreur récupération sous-modules:', error);
+      logger.error('Erreur récupération sous-modules:', error);
       return [];
     }
     return data || [];

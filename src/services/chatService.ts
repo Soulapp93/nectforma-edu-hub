@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
-
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 // Use type assertion for tables not yet in generated types
 const db = supabase as any;
 
@@ -436,6 +437,6 @@ export const chatService = {
   // Update last read (stub - no last_read_at column in chat_group_members)
   async updateLastRead(groupId: string): Promise<void> {
     // This is a placeholder - the column doesn't exist yet
-    console.log('updateLastRead called for group:', groupId);
+    logger.log('updateLastRead called for group:', groupId);
   }
 };

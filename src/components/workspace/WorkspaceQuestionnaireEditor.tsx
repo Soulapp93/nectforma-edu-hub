@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, useCallback } from 'react';
 import { WorkspaceDocument } from '@/services/workspaceService';
 import { questionnaireService, Questionnaire, QuestionnaireQuestion, QuestionnaireOption, QuestionnaireSection } from '@/services/questionnaireService';
@@ -120,7 +121,7 @@ const WorkspaceQuestionnaireEditor: React.FC<Props> = ({ document: doc, onSave, 
           }
         }
       } catch (err: any) {
-        console.error(err);
+        logger.error(err);
         toast.error('Erreur de chargement');
       } finally {
         setLoading(false);
@@ -256,7 +257,7 @@ const WorkspaceQuestionnaireEditor: React.FC<Props> = ({ document: doc, onSave, 
       setAiAnalysis(data?.analysis || 'Aucune analyse disponible');
     } catch (err: any) {
       toast.error('Erreur d\'analyse IA');
-      console.error(err);
+      logger.error(err);
     } finally { setLoadingAI(false); }
   };
 

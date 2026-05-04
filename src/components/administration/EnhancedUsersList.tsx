@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useMemo, useState } from 'react';
 import { Plus, Search, Upload, Download, Edit, Trash2, X, ChevronDown, KeyRound, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -192,7 +193,7 @@ const EnhancedUsersList: React.FC = () => {
 
       toast.success(`Lien d'activation envoyé à ${email}`);
     } catch (activationError: any) {
-      console.error("Erreur lors de l'envoi du lien d'activation:", activationError);
+      logger.error("Erreur lors de l'envoi du lien d'activation:", activationError);
       toast.error(
         activationError?.message || "Impossible d'envoyer le lien d'activation. Veuillez réessayer."
       );
@@ -277,7 +278,7 @@ const EnhancedUsersList: React.FC = () => {
 
       toast.success(`Lien de réinitialisation envoyé à ${email}`);
     } catch (error: any) {
-      console.error("Erreur lors de l'envoi du lien:", error);
+      logger.error("Erreur lors de l'envoi du lien:", error);
 
       // Also check in catch block for 409/non-activated scenario
       const notActivatedPayload = await (async () => {

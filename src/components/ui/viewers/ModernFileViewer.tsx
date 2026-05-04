@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Maximize2, Minimize2, Download, ExternalLink, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '../button';
@@ -93,7 +94,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
         await exitFullscreen();
       }
     } catch (err) {
-      console.error('Erreur fullscreen:', err);
+      logger.error('Erreur fullscreen:', err);
       toast.error('Impossible de passer en plein écran');
     }
   };
@@ -112,7 +113,7 @@ const ModernFileViewer: React.FC<ModernFileViewerProps> = ({
         await doc.msExitFullscreen();
       }
     } catch (err) {
-      console.error('Erreur sortie fullscreen:', err);
+      logger.error('Erreur sortie fullscreen:', err);
     }
   };
 

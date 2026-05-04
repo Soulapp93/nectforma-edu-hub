@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { 
   X, Download, Maximize2, Minimize2, 
@@ -101,7 +102,7 @@ const ArchiveViewer: React.FC<ArchiveViewerProps> = ({
         setFolderCount(folders);
         setLoading(false);
       } catch (err) {
-        console.error('Error loading archive:', err);
+        logger.error('Error loading archive:', err);
         setError(true);
         setLoading(false);
         toast.error('Impossible de charger l\'archive');
@@ -141,7 +142,7 @@ const ArchiveViewer: React.FC<ArchiveViewerProps> = ({
         await exitFullscreen();
       }
     } catch (err) {
-      console.error('Fullscreen error:', err);
+      logger.error('Fullscreen error:', err);
     }
   };
 

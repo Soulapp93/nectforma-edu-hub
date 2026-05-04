@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useRef, useState } from 'react';
 import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
@@ -196,7 +197,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         success = execCommand('redo');
         break;
       default:
-        console.warn(`Format "${format}" not supported`);
+        logger.warn(`Format "${format}" not supported`);
     }
 
     // Force update if command was successful

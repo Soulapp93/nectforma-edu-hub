@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   X, ZoomIn, ZoomOut, Download, Maximize2, Minimize2, RotateCw, 
@@ -240,7 +241,7 @@ const AdvancedPDFViewer: React.FC<AdvancedPDFViewerProps> = ({
   };
 
   const onDocumentLoadError = (error: Error) => {
-    console.error('PDF load error:', error);
+    logger.error('PDF load error:', error);
     setError("Impossible de charger le document PDF. Essayez d'ouvrir dans un nouvel onglet.");
     setLoading(false);
     toast.error('Erreur lors du chargement du document');
@@ -267,7 +268,7 @@ const AdvancedPDFViewer: React.FC<AdvancedPDFViewerProps> = ({
         await exitFullscreen();
       }
     } catch (err) {
-      console.error('Fullscreen error:', err);
+      logger.error('Fullscreen error:', err);
       toast.error('Erreur mode plein écran');
     }
   };

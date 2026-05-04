@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
@@ -97,7 +98,7 @@ export default function Activation() {
         }
       }
     } catch (err: any) {
-      console.error("Erreur activation:", err);
+      logger.error("Erreur activation:", err);
       setError("Erreur lors de la validation du lien d'activation");
     } finally {
       setLoading(false);
@@ -113,14 +114,14 @@ export default function Activation() {
       });
 
       if (sessionError || !session?.user) {
-        console.error("Session error:", sessionError);
+        logger.error("Session error:", sessionError);
         setError("Session invalide ou expirée");
         return;
       }
 
       await fetchUserDetails(session.user.id, session.user.email);
     } catch (err: any) {
-      console.error("Native flow error:", err);
+      logger.error("Native flow error:", err);
       setError("Erreur lors de la récupération de la session");
     }
   };

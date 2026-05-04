@@ -1,10 +1,11 @@
 
 import { supabase } from '@/integrations/supabase/client';
-
+import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 export const fileUploadService = {
   async uploadFile(file: File, bucket: string = 'module-files', userId?: string): Promise<string> {
     try {
-      console.log('Uploading file:', file.name, 'to bucket:', bucket);
+      logger.log('Uploading file:', file.name, 'to bucket:', bucket);
       
       const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       let fileName: string;
@@ -25,11 +26,11 @@ export const fileUploadService = {
         });
 
       if (error) {
-        console.error('Upload error:', error);
+        logger.error('Upload error:', error);
         throw new Error(`Erreur de téléchargement: ${error.message}`);
       }
       
-      console.log('File uploaded successfully:', data);
+      logger.log('File uploaded successfully:', data);
       
       const { data: { publicUrl } } = supabase.storage
         .from(bucket)
@@ -38,10 +39,10 @@ export const fileUploadService = {
       // Ajouter un timestamp pour éviter le cache du navigateur
       const urlWithCacheBust = `${publicUrl}?t=${Date.now()}`;
       
-      console.log('Public URL:', urlWithCacheBust);
+      logger.log('Public URL:', urlWithCacheBust);
       return urlWithCacheBust;
     } catch (error) {
-      console.error('File upload service error:', error);
+      logger.error('File upload service error:', error);
       throw error;
     }
   },
@@ -54,11 +55,11 @@ export const fileUploadService = {
         .remove([fileName]);
 
       if (error) {
-        console.error('Delete error:', error);
+        logger.error('Delete error:', error);
         throw new Error(`Erreur de suppression: ${error.message}`);
       }
     } catch (error) {
-      console.error('File delete service error:', error);
+      logger.error('File delete service error:', error);
       throw error;
     }
   },

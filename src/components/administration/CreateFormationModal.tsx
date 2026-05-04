@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 
 import React, { useState } from 'react';
 import { X, GraduationCap, Calendar, Plus, BookOpen, Clock } from 'lucide-react';
@@ -186,12 +187,12 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
 
           // Create sub-modules
           if (module.subModules && module.subModules.length > 0) {
-            console.log(`Création de ${module.subModules.length} sous-modules pour le module ${createdModule.id}`);
+            logger.log(`Création de ${module.subModules.length} sous-modules pour le module ${createdModule.id}`);
             for (let j = 0; j < module.subModules.length; j++) {
               const sub = module.subModules[j];
               if (sub.title.trim()) {
                 try {
-                  console.log(`Création sous-module: ${sub.title} pour module_id: ${createdModule.id}`);
+                  logger.log(`Création sous-module: ${sub.title} pour module_id: ${createdModule.id}`);
                   await moduleService.createSubModule({
                     module_id: createdModule.id,
                     title: sub.title,
@@ -201,9 +202,9 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                     coefficient: sub.coefficient || 1,
                     ...(sub.instructorId ? { instructor_id: sub.instructorId } : {}),
                   });
-                  console.log(`Sous-module "${sub.title}" créé avec succès`);
+                  logger.log(`Sous-module "${sub.title}" créé avec succès`);
                 } catch (subError) {
-                  console.error(`Erreur création sous-module "${sub.title}":`, subError);
+                  logger.error(`Erreur création sous-module "${sub.title}":`, subError);
                 }
               }
             }
@@ -223,7 +224,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
           endDate: formationData.end_date,
         });
       } catch (e) {
-        console.warn('Auto-création promotion avec ressources échouée:', e);
+        logger.warn('Auto-création promotion avec ressources échouée:', e);
       }
 
       onSuccess();
@@ -246,7 +247,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
       setModules([]);
       
     } catch (error) {
-      console.error('Erreur lors de la création de la formation:', error);
+      logger.error('Erreur lors de la création de la formation:', error);
       setError(error instanceof Error ? error.message : 'Erreur lors de la création de la formation');
     } finally {
       setLoading(false);

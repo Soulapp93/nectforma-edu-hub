@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { X, Download, ExternalLink, RefreshCw, AlertCircle, Eye, Maximize2, Presentation, ChevronLeft, ChevronRight, Share2 } from 'lucide-react';
 import { Button } from '../button';
@@ -99,7 +100,7 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
   const handleIframeError = () => {
     setIsLoading(false);
     setLoadError(true);
-    console.error(`Erreur de chargement avec ${currentViewer.name}`);
+    logger.error(`Erreur de chargement avec ${currentViewer.name}`);
   };
 
   const handleRetry = () => {
@@ -139,7 +140,7 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
       window.URL.revokeObjectURL(url);
       toast.success('Téléchargement démarré');
     } catch (error) {
-      console.error('Erreur de téléchargement:', error);
+      logger.error('Erreur de téléchargement:', error);
       toast.error('Impossible de télécharger le fichier');
     }
   };
@@ -165,7 +166,7 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
       }
     } catch (error) {
       if ((error as Error).name !== 'AbortError') {
-        console.error('Erreur de partage:', error);
+        logger.error('Erreur de partage:', error);
         // Fallback: copier le lien
         try {
           await navigator.clipboard.writeText(fileUrl);
@@ -200,7 +201,7 @@ const UniversalFileViewer: React.FC<UniversalFileViewerProps> = ({
       // Nettoyer l'URL après un délai pour permettre au navigateur de charger
       setTimeout(() => window.URL.revokeObjectURL(url), 60000);
     } catch (error) {
-      console.error('Erreur d\'ouverture:', error);
+      logger.error('Erreur d\'ouverture:', error);
       toast.error('Impossible d\'ouvrir le fichier - Essayez de le télécharger');
     }
   };

@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, Users, CheckCircle2, FileText, ClipboardCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -36,7 +37,7 @@ const Emargement = () => {
       const data = await attendanceService.getTodaysAttendanceForUser(userId, userRole);
       setAttendanceSheets(data);
     } catch (error) {
-      console.error('Error fetching attendance:', error);
+      logger.error('Error fetching attendance:', error);
       toast.error('Erreur lors du chargement des émargements');
       setAttendanceSheets([]);
     } finally {

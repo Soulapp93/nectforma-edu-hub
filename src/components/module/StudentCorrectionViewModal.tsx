@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { FileText, CheckCircle, Download, Eye, Calendar, User, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -34,7 +35,7 @@ const StudentCorrectionViewModal: React.FC<StudentCorrectionViewModalProps> = ({
         const files = await assignmentService.getSubmissionFiles(submission.id);
         setSubmissionFiles(files || []);
       } catch (error) {
-        console.error('Erreur lors du chargement des fichiers:', error);
+        logger.error('Erreur lors du chargement des fichiers:', error);
       } finally {
         setLoading(false);
       }

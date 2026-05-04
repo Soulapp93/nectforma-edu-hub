@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -102,7 +103,7 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
           .maybeSingle();
 
         if (adminSigError) {
-          console.error('Erreur récupération signature admin:', adminSigError);
+          logger.error('Erreur récupération signature admin:', adminSigError);
         } else if (adminSigData && adminSigData.signature_data) {
           adminSig = adminSigData.signature_data;
         }
@@ -158,7 +159,7 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
         }
       }
 
-      console.log('Étudiants inscrits trouvés (après filtrage strict):', enrolledStudents.length, 'Formateur exclu:', instructorIdToExclude);
+      logger.log('Étudiants inscrits trouvés (après filtrage strict):', enrolledStudents.length, 'Formateur exclu:', instructorIdToExclude);
 
       // Récupérer uniquement les signatures d'étudiants (user_type = 'student')
       const studentSignatures = signatures?.filter((sig: any) => sig.user_type === 'student') || [];
@@ -177,7 +178,7 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
 
       setStudents(mappedStudents);
     } catch (error) {
-      console.error('Error loading attendance data:', error);
+      logger.error('Error loading attendance data:', error);
     } finally {
       setLoading(false);
     }
@@ -221,7 +222,7 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
     // Créer un channel unique pour cette feuille avec un timestamp pour éviter les conflits
     const channelName = `sheet_realtime_${attendanceSheetId}_${Date.now()}`;
 
-    console.log('📡 Setting up realtime channel:', channelName);
+    logger.log('📡 Setting up realtime channel:', channelName);
 
     // S'abonner aux changements de signatures - SANS filtre pour contourner les problèmes RLS
     const channel = supabase
@@ -234,7 +235,7 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
           table: 'attendance_signatures'
         },
         (payload) => {
-          console.log('🔄 Signature INSERT detected:', payload);
+          logger.log('🔄 Signature INSERT detected:', payload);
           // Vérifier si c'est pour notre feuille
           if (payload.new && (payload.new as any).attendance_sheet_id === attendanceSheetId) {
             scheduleRefresh();
@@ -249,7 +250,7 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
           table: 'attendance_signatures'
         },
         (payload) => {
-          console.log('🔄 Signature UPDATE detected:', payload);
+          logger.log('🔄 Signature UPDATE detected:', payload);
           if (payload.new && (payload.new as any).attendance_sheet_id === attendanceSheetId) {
             scheduleRefresh();
           }
@@ -263,7 +264,7 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
           table: 'attendance_sheets'
         },
         (payload) => {
-          console.log('🔄 Attendance sheet UPDATE detected:', payload);
+          logger.log('🔄 Attendance sheet UPDATE detected:', payload);
           if (payload.new && (payload.new as any).id === attendanceSheetId) {
             // Ne recharger que si changement utile (réduit fortement les rafraîchissements)
             const next = payload.new as any;
@@ -285,19 +286,19 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
         }
       )
       .subscribe((status, err) => {
-        console.log('📡 Realtime subscription status:', status, err);
+        logger.log('📡 Realtime subscription status:', status, err);
         setIsRealtimeConnected(status === 'SUBSCRIBED');
       });
 
     // Polling de secours toutes les 2 minutes (fallback si Realtime échoue)
     const FALLBACK_POLLING_MS = 120_000;
     const pollingInterval = window.setInterval(() => {
-      console.log('🔄 Polling fallback refresh (2min)...');
+      logger.log('🔄 Polling fallback refresh (2min)...');
       scheduleRefresh();
     }, FALLBACK_POLLING_MS);
 
     return () => {
-      console.log('🔌 Cleaning up realtime channel:', channelName);
+      logger.log('🔌 Cleaning up realtime channel:', channelName);
       supabase.removeChannel(channel);
       window.clearInterval(pollingInterval);
       if (refreshTimerRef.current) {
@@ -320,7 +321,7 @@ const GeneratedAttendanceSheet: React.FC<GeneratedAttendanceSheetProps> = ({
   };
 
   const handleDownload = () => {
-    console.log('Téléchargement de la feuille d\'émargement...');
+    logger.log('Téléchargement de la feuille d\'émargement...');
   };
 
   const getStatusInfo = (student: Student) => {

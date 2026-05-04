@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -82,7 +83,7 @@ const BlankAttendanceSlotModal: React.FC<BlankAttendanceSlotModalProps> = ({
       if (slotsError) throw slotsError;
       setSlots((slotsData || []) as ScheduleSlot[]);
     } catch (error) {
-      console.error('Error fetching slots:', error);
+      logger.error('Error fetching slots:', error);
       toast.error('Erreur lors du chargement des créneaux');
     } finally {
       setLoadingSlots(false);
@@ -116,7 +117,7 @@ const BlankAttendanceSlotModal: React.FC<BlankAttendanceSlotModalProps> = ({
       await pdfExportService.exportBlankAttendanceSheet(fakeSheet);
       toast.success('Feuille d\'émargement vierge générée');
     } catch (error) {
-      console.error('Error generating blank PDF:', error);
+      logger.error('Error generating blank PDF:', error);
       toast.error('Erreur lors de la génération');
     } finally {
       setGeneratingPdf(null);

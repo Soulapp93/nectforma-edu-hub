@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, Download, Play, Pause, Volume2, VolumeX, 
@@ -69,7 +70,7 @@ const AudioViewer: React.FC<AudioViewerProps> = ({
           analyserRef.current.connect(audioContext.destination);
         }
       } catch (err) {
-        console.log('Audio visualizer not supported');
+        logger.log('Audio visualizer not supported');
       }
     };
 
@@ -241,7 +242,7 @@ const AudioViewer: React.FC<AudioViewerProps> = ({
         await exitFullscreen();
       }
     } catch (err) {
-      console.error('Fullscreen error:', err);
+      logger.error('Fullscreen error:', err);
     }
   };
 

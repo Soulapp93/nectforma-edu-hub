@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -1101,7 +1102,7 @@ const Index = () => {
                     form.reset();
                   }
                 } catch (error) {
-                  console.error('Newsletter subscription error:', error);
+                  logger.error('Newsletter subscription error:', error);
                   toast.error("Erreur lors de l'inscription. Veuillez réessayer.");
                 }
               }}
@@ -1211,7 +1212,7 @@ const Index = () => {
                     throw new Error(result.error || "Erreur lors de l'envoi");
                   }
                 } catch (error) {
-                  console.error('Error sending contact form:', error);
+                  logger.error('Error sending contact form:', error);
                   toast.error("Erreur lors de l'envoi du message. Veuillez réessayer.");
                 } finally {
                   setIsSubmitting(false);

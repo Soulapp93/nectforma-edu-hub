@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState } from 'react';
 import { QrCode, Hash, Calendar, Clock, MapPin, Users, CheckCircle2, AlertCircle, Video } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,13 +30,13 @@ const QRAttendanceCard: React.FC<QRAttendanceCardProps> = ({
   const [showQRDisplay, setShowQRDisplay] = useState(false);
 
   const handleQRCodeScanned = (qrData: string) => {
-    console.log('QR Code scanned:', qrData);
+    logger.log('QR Code scanned:', qrData);
     toast.success('Émargement effectué avec succès !');
     // Ici on traiterait les données du QR code
   };
 
   const handleCodeSubmitted = (code: string) => {
-    console.log('Code submitted:', code);
+    logger.log('Code submitted:', code);
     // Ici on traiterait le code numérique
   };
 

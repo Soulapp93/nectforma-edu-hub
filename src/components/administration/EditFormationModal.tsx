@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState, useEffect } from 'react';
 import { X, GraduationCap, Save, Plus, BookOpen } from 'lucide-react';
 import ColorPalette from './ColorPalette';
@@ -98,7 +99,7 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
       }));
       setModules(modulesData);
     } catch (error) {
-      console.error('Erreur lors du chargement de la formation:', error);
+      logger.error('Erreur lors du chargement de la formation:', error);
       setError('Erreur lors du chargement de la formation');
     } finally {
       setInitialLoading(false);
@@ -198,7 +199,7 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
       onClose();
 
     } catch (error) {
-      console.error('Erreur lors de la modification de la formation:', error);
+      logger.error('Erreur lors de la modification de la formation:', error);
       setError(error instanceof Error ? error.message : 'Erreur lors de la modification de la formation');
     } finally {
       setLoading(false);

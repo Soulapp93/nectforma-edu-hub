@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -200,7 +201,7 @@ const CreateEstablishment = () => {
       }
 
     } catch (error: any) {
-      console.error('Error creating establishment:', error);
+      logger.error('Error creating establishment:', error);
       const msg = error?.message || '';
       if (msg.includes('Trop de tentatives') || msg.includes('rate') || msg.includes('too many')) {
         toast.error('Trop de tentatives de création. Veuillez réessayer dans quelques minutes.');
