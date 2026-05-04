@@ -5,8 +5,9 @@ import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode: _mode }) => ({
+  base: process.env.GITHUB_PAGES ? '/NECTFORMA-PROJET-APP/' : '/',
   server: {
-    host: "::",
+    host: "0.0.0.0",
     port: 8080,
     allowedHosts: true,
   },
@@ -63,7 +64,6 @@ export default defineConfig(({ mode: _mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-    // Force single React instance — fixes "createContext is not a function" errors
     dedupe: ['react', 'react-dom', 'react-router-dom'],
   },
   optimizeDeps: {
@@ -84,7 +84,6 @@ export default defineConfig(({ mode: _mode }) => ({
     chunkSizeWarningLimit: 2000,
     rollupOptions: {
       output: {
-        // Use object form (more stable than function) — puts React + its CJS deps together
         manualChunks: {
           'vendor-react': [
             'react',
