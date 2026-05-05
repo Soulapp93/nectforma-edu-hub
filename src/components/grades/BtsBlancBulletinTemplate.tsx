@@ -127,13 +127,12 @@ const BtsBlancBulletinTemplate: React.FC<Props> = ({
   }
 
   // Totals
-  let totalNotes = 0, totalCoef = 0, totalPoints = 0;
+  let totalCoef = 0, totalPoints = 0;
   for (const m of modules as any[]) {
     const c = result.modules.find((x) => x.module_id === m.id);
     const n = c?.module_average ?? null;
     totalCoef += m.coefficient || 0;
     if (n !== null) {
-      totalNotes += n;
       totalPoints += n * (m.coefficient || 0);
     }
   }
@@ -229,20 +228,12 @@ const BtsBlancBulletinTemplate: React.FC<Props> = ({
               </tr>
             );
           })}
-          {/* Footer totals row */}
+          {/* Footer single row: TOTAL label spans EPREUVES+NOTES | totalCoef | totalPoints | DECISION */}
           <tr>
-            <th style={{ ...thCell, textAlign: 'right', paddingRight: 10 }}>TOTAL</th>
-            <th style={thCell}>NOTES</th>
-            <th style={thCell}>TOTAL COEFFICIENT</th>
-            <th style={thCell}>TOTAL DES POINTS</th>
-            <th style={thCell}>DECISION</th>
-          </tr>
-          <tr>
-            <td style={{ ...tdCell, height: 28, fontWeight: 700, textAlign: 'right', paddingRight: 10 }}>—</td>
-            <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700 }}>{fmt2(totalNotes)}</td>
-            <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700 }}>{totalCoef || ''}</td>
-            <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700, fontSize: 11 }}>{fmt2(totalPoints)}</td>
-            <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700 }}>{admitted ? 'ADMIS' : 'NON ADMIS'}</td>
+            <th style={thCell} colSpan={2}>TOTAL</th>
+            <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700, background: '#fff' }}>{totalCoef || ''}</td>
+            <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700, fontSize: 11, background: '#fff' }}>{fmt2(totalPoints)}</td>
+            <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700, background: '#fff' }}>{admitted ? 'ADMIS' : 'NON ADMIS'}</td>
           </tr>
         </tbody>
       </table>

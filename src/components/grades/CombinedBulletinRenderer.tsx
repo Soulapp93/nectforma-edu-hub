@@ -461,21 +461,16 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
         })}
       </div>
 
-      {/* ═══ FINAL SUMMARY FOOTER ROW (same structure as Simple bulletin) ═══ */}
+      {/* ═══ FINAL SUMMARY FOOTER ROW (same single-row structure as Simple bulletin) ═══ */}
       <div style={{ padding: '0' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: FONT_SANS }} data-testid="combined-final-section">
           <tbody>
             <tr>
-              <th style={{ border: '1px solid #000', padding: '6px', background: '#E0E0E0', color: '#000', fontSize: 10, fontWeight: 700, textAlign: 'center', textTransform: 'uppercase' }}>MOYENNE GENERALE COMBINEE</th>
-              <th style={{ border: '1px solid #000', padding: '6px', background: '#E0E0E0', color: '#000', fontSize: 10, fontWeight: 700, textAlign: 'center', textTransform: 'uppercase' }}>MENTION</th>
-              <th style={{ border: '1px solid #000', padding: '6px', background: '#E0E0E0', color: '#000', fontSize: 10, fontWeight: 700, textAlign: 'center', textTransform: 'uppercase' }}>REGLE DE CALCUL</th>
-              <th style={{ border: '1px solid #000', padding: '6px', background: '#E0E0E0', color: '#000', fontSize: 10, fontWeight: 700, textAlign: 'center', textTransform: 'uppercase' }}>DECISION</th>
-            </tr>
-            <tr>
-              <td style={{ border: '1px solid #000', padding: '8px 6px', fontSize: 14, color: '#000', textAlign: 'center', fontWeight: 700 }}>{fmt(combinedAverage)}/20</td>
-              <td style={{ border: '1px solid #000', padding: '8px 6px', fontSize: 11, color: '#000', textAlign: 'center', fontWeight: 600 }}>{combinedMention || ''}</td>
-              <td style={{ border: '1px solid #000', padding: '8px 6px', fontSize: 10, color: '#000', textAlign: 'center' }}>{ruleLabel[compositeConfig.calculation_rule] || compositeConfig.calculation_rule}</td>
-              <td style={{ border: '1px solid #000', padding: '8px 6px', fontSize: 11, color: '#000', textAlign: 'center', fontWeight: 700 }}>
+              <th style={{ border: '1px solid #000', padding: '6px', background: '#E0E0E0', color: '#000', fontSize: 10, fontWeight: 700, textAlign: 'center', textTransform: 'uppercase' }} colSpan={2}>MOYENNE GENERALE COMBINEE</th>
+              <td style={{ border: '1px solid #000', padding: '8px 6px', fontSize: 14, color: '#000', textAlign: 'center', fontWeight: 700, background: '#fff' }}>{fmt(combinedAverage)}/20</td>
+              <td style={{ border: '1px solid #000', padding: '8px 6px', fontSize: 11, color: '#000', textAlign: 'center', fontWeight: 600, background: '#fff' }}>{combinedMention || ''}</td>
+              <td style={{ border: '1px solid #000', padding: '8px 6px', fontSize: 10, color: '#000', textAlign: 'center', background: '#fff' }}>{ruleLabel[compositeConfig.calculation_rule] || compositeConfig.calculation_rule}</td>
+              <td style={{ border: '1px solid #000', padding: '8px 6px', fontSize: 11, color: '#000', textAlign: 'center', fontWeight: 700, background: '#fff' }}>
                 {combinedAdmitted === true ? 'ADMIS' : combinedAdmitted === false ? 'NON ADMIS' : combinedDecisionLabel}
               </td>
             </tr>
