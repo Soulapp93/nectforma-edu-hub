@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useTheme } from 'next-themes';
 import NectformaLogo from './NectformaLogo';
 import { 
   X, 
@@ -41,6 +42,8 @@ interface NavItem {
 }
 
 const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({ isOpen, onClose }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const { userRole } = useCurrentUser();
   const { user: myUser, relation: myRelation, establishment: myEstablishment, role: contextRole } = useMyContext();
   const { establishment } = useEstablishment();
@@ -169,33 +172,33 @@ const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({ isOpen, onClose }) 
         {/* Header */}
         <div className="relative z-10 px-4 pt-safe-top pb-3">
           <div className="flex items-center justify-between pt-4">
-            <NectformaLogo variant="light" size="md" />
+            <NectformaLogo variant={isDark ? 'light' : 'gradient'} size="md" />
             <button
               onClick={onClose}
               data-testid="mobile-menu-close"
-              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all"
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 transition-all"
             >
-              <X className="w-5 h-5 text-white/80" />
+              <X className="w-5 h-5 text-slate-600 dark:text-white/80" />
             </button>
           </div>
           
           {/* Establishment */}
           {establishment && (
-            <div className="flex items-center gap-2.5 mt-3 p-2.5 rounded-xl bg-white/[0.08] border border-white/10">
+            <div className="flex items-center gap-2.5 mt-3 p-2.5 rounded-xl bg-slate-50 border border-slate-200 dark:bg-white/[0.08] dark:border-white/10">
               {establishment.logo_url ? (
-                <img 
-                  src={establishment.logo_url} 
+                <img
+                  src={establishment.logo_url}
                   alt={establishment.name}
-                  className="w-8 h-8 rounded-lg object-cover ring-1 ring-white/20"
+                  className="w-8 h-8 rounded-lg object-cover ring-1 ring-slate-200 dark:ring-white/20"
                 />
               ) : (
-                <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center">
-                  <Building2 className="w-4 h-4 text-white/70" />
+                <div className="w-8 h-8 bg-slate-100 dark:bg-white/10 rounded-lg flex items-center justify-center">
+                  <Building2 className="w-4 h-4 text-slate-500 dark:text-white/70" />
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-white truncate uppercase tracking-wider">{establishment.name}</p>
-                <p className="text-[10px] text-white/50">{establishment.type || 'Organisme de formation'}</p>
+                <p className="text-xs font-bold text-slate-900 dark:text-white truncate uppercase tracking-wider">{establishment.name}</p>
+                <p className="text-[10px] text-slate-500 dark:text-white/50">{establishment.type || 'Organisme de formation'}</p>
               </div>
             </div>
           )}
@@ -203,33 +206,33 @@ const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({ isOpen, onClose }) 
 
         {/* User Card */}
         <div className="relative z-10 px-4 pb-3">
-          <div className="p-3 rounded-xl bg-white/10 border border-white/5">
+          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 dark:bg-white/10 dark:border-white/5">
             <div className="flex items-center gap-3">
-              <Avatar className="w-10 h-10 ring-2 ring-white/20">
+              <Avatar className="w-10 h-10 ring-2 ring-slate-200 dark:ring-white/20">
                 <AvatarImage src={userDisplayInfo.profilePhotoUrl || ''} alt={userDisplayInfo.name} />
-                <AvatarFallback className="bg-white/20 text-white text-xs font-semibold">
+                <AvatarFallback className="bg-slate-100 text-slate-700 dark:bg-white/20 dark:text-white text-xs font-semibold">
                   {userDisplayInfo.initials}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-white truncate">{userDisplayInfo.name}</p>
-                <p className="text-[11px] text-white/60 font-medium">{userDisplayInfo.role}</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{userDisplayInfo.name}</p>
+                <p className="text-[11px] text-slate-500 dark:text-white/60 font-medium">{userDisplayInfo.role}</p>
               </div>
             </div>
             {userDisplayInfo.relationInfo && (
-              <div className="mt-2 p-2 rounded-lg bg-white/5 border border-white/10">
+              <div className="mt-2 p-2 rounded-lg bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10">
                 {userDisplayInfo.relationInfo.type === 'tutor' ? (
                   <div>
-                    <p className="text-[10px] text-white/70 font-medium">Mon tuteur</p>
-                    <p className="text-[11px] text-white font-medium truncate">{userDisplayInfo.relationInfo.name}</p>
+                    <p className="text-[10px] text-slate-500 dark:text-white/70 font-medium">Mon tuteur</p>
+                    <p className="text-[11px] text-slate-900 dark:text-white font-medium truncate">{userDisplayInfo.relationInfo.name}</p>
                     {userDisplayInfo.relationInfo.company && (
-                      <p className="text-[10px] text-white/50 truncate">{userDisplayInfo.relationInfo.company}</p>
+                      <p className="text-[10px] text-slate-400 dark:text-white/50 truncate">{userDisplayInfo.relationInfo.company}</p>
                     )}
                   </div>
                 ) : (
                   <div>
-                    <p className="text-[10px] text-white/70 font-medium">Mon apprenti</p>
-                    <p className="text-[11px] text-white font-medium truncate">{userDisplayInfo.relationInfo.name}</p>
+                    <p className="text-[10px] text-slate-500 dark:text-white/70 font-medium">Mon apprenti</p>
+                    <p className="text-[11px] text-slate-900 dark:text-white font-medium truncate">{userDisplayInfo.relationInfo.name}</p>
                   </div>
                 )}
               </div>
@@ -264,7 +267,7 @@ const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({ isOpen, onClose }) 
                   active:scale-[0.97]
                   ${isActive
                     ? 'nect-glass'
-                    : 'text-white/80 hover:bg-white/[0.08] active:bg-white/15'
+                    : 'text-slate-600 hover:bg-slate-100 active:bg-slate-200 dark:text-white/80 dark:hover:bg-white/[0.08] dark:active:bg-white/15'
                   }
                 `}
               >
@@ -281,11 +284,11 @@ const MobileDrawerMenu: React.FC<MobileDrawerMenuProps> = ({ isOpen, onClose }) 
         </nav>
 
         {/* Footer */}
-        <div className="relative z-10 p-4 border-t border-white/10 pb-safe-bottom">
+        <div className="relative z-10 p-4 border-t border-slate-200 dark:border-white/10 pb-safe-bottom">
           <button
             onClick={handleLogout}
             data-testid="mobile-logout"
-            className="w-full flex items-center justify-center gap-2.5 px-4 py-3.5 bg-white/10 text-white rounded-xl hover:bg-white/20 active:bg-white/25 transition-colors font-semibold text-[14px]"
+            className="w-full flex items-center justify-center gap-2.5 px-4 py-3.5 bg-slate-100 text-slate-900 hover:bg-slate-200 active:bg-slate-300 dark:bg-white/10 dark:text-white dark:hover:bg-white/20 dark:active:bg-white/25 rounded-xl transition-colors font-semibold text-[14px]"
           >
             <LogOut className="h-5 w-5" />
             <span>Se déconnecter</span>
