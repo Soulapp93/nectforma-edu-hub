@@ -163,7 +163,6 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
   if (unassigned.length > 0) ueSections.push({ ue: null, rows: unassigned, number: ueCounter + 1 });
 
   const totalCoef = result.rows.reduce((s, r) => s + r.coefficient, 0);
-  const periodTitle = (period.name || '').toLowerCase();
 
   // ── Styles ────────────────────────────────────────────
   const FONT = 'Arial, Helvetica, sans-serif';
@@ -178,22 +177,20 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
       {/* ═══ HEADER ROW ═══ */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0, marginBottom: 10, alignItems: 'center' }}>
         <div style={{ fontSize: 10, textAlign: 'left' }}>
-          {establishmentLogoUrl ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {establishmentLogoUrl && (
               <img src={establishmentLogoUrl} alt="" style={{ height: 36, objectFit: 'contain' }} crossOrigin="anonymous" />
-              <div>
-                <div style={{ fontWeight: 600, fontSize: 10 }}>{establishmentName}</div>
-                {establishmentAddress && <div style={{ fontSize: 9 }}>{establishmentAddress}</div>}
-              </div>
+            )}
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 11 }}>{establishmentName}</div>
+              {establishmentAddress && <div style={{ fontSize: 9, marginTop: 2 }}>{establishmentAddress}</div>}
             </div>
-          ) : (
-            <span>LOGO , NOM ET ADRESSE DE L'ETABLISSEMENT</span>
-          )}
+          </div>
         </div>
-        <div style={{ fontSize: 10, textAlign: 'center' }}>bulletin semestre</div>
+        <div style={{ fontSize: 11, textAlign: 'center', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{period.name}</div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: 0.5, color: '#000' }}>RELEVE DE NOTES</div>
-          <div style={{ fontSize: 9, marginTop: 2 }}>{periodTitle ? `( ${periodTitle} )` : '( semestre 1, 2 par exemple )'}</div>
+          <div style={{ fontSize: 9, marginTop: 2 }}>Année académique {academicYear}</div>
         </div>
       </div>
 
@@ -244,18 +241,22 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
             const key = ue?.id || '_unassigned';
             return (
               <React.Fragment key={key}>
-                {/* UE header row — first cell grey with UNITE D'ENSEIGNEMENT N, other cells are normal column headers */}
+                {/* UE header row — first cell grey with UNITE D'ENSEIGNEMENT N, then column headers */}
                 <tr data-testid={`bulletin-ue-header-${key}`}>
-                  <th style={{ ...thCell, textAlign: 'left', paddingLeft: 8 }}>
+                  <th style={{ ...thCell, textAlign: 'left', paddingLeft: 8 }} rowSpan={2}>
                     UNITE D'ENSEIGNEMENT {number}
                     {ue?.title ? <div style={{ fontSize: 8, fontWeight: 400, marginTop: 2, textTransform: 'none' }}>{ue.title}</div> : null}
                   </th>
-                  <th style={thCell}>FORMATEUR</th>
-                  <th style={thCell}>COEFFICIENT</th>
+                  <th style={thCell} rowSpan={2}>FORMATEUR</th>
+                  <th style={thCell} rowSpan={2}>COEFFICIENT</th>
                   <th style={thCell} colSpan={2}>MOYENNE</th>
-                  <th style={thCell}>APPRECIATION</th>
+                  <th style={thCell} rowSpan={2}>APPRECIATION</th>
                 </tr>
-                {/* Matières rows - MOYENNE cell is split into "MOYENNE DE L'ETUDIANT" + "MOYENNE DE LA PROMO" */}
+                <tr>
+                  <th style={{ ...thCell, fontSize: 8.5 }}>MOYENNE DE L'ETUDIANT</th>
+                  <th style={{ ...thCell, fontSize: 8.5 }}>MOYENNE DE LA PROMO</th>
+                </tr>
+                {/* Matières rows: only values, no labels in cells */}
                 {rows.map((row) => {
                   const instructors = instructorsByModuleId?.get(row.moduleId) || [];
                   return (
@@ -263,14 +264,8 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
                       <td style={{ ...tdCell, textTransform: 'uppercase', fontWeight: 500 }}>{row.moduleTitle}</td>
                       <td style={{ ...tdCell, textAlign: 'center' }}>{instructors.length > 0 ? instructors.join(', ') : ''}</td>
                       <td style={{ ...tdCell, textAlign: 'center' }}>{row.coefficient}</td>
-                      <td style={{ ...tdCell, textAlign: 'center' }}>
-                        <div style={{ fontSize: 7, color: '#000', fontStyle: 'italic' }}>MOYENNE DE L'ETUDIANT</div>
-                        <div style={{ fontSize: 11, fontWeight: 700, marginTop: 2 }}>{fmt(row.individualAverage)}</div>
-                      </td>
-                      <td style={{ ...tdCell, textAlign: 'center' }}>
-                        <div style={{ fontSize: 7, color: '#000', fontStyle: 'italic' }}>MOYENNE DE LA PROMO</div>
-                        <div style={{ fontSize: 11, fontWeight: 500, marginTop: 2 }}>{fmt(row.classAverage)}</div>
-                      </td>
+                      <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700, fontSize: 11 }}>{fmt(row.individualAverage)}</td>
+                      <td style={{ ...tdCell, textAlign: 'center', fontWeight: 500, fontSize: 11 }}>{fmt(row.classAverage)}</td>
                       <td style={{ ...tdCell, fontStyle: 'italic' }}>{row.appreciation || ''}</td>
                     </tr>
                   );
@@ -278,20 +273,13 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
               </React.Fragment>
             );
           })}
-          {/* Footer grey header row: MOYENNE GENERALE | TOTAL COEFICIENT | MOYENNE GENERALE DE L'ETUDIANT | MOYENNE GENERALE DE LA PROMO | DECISION */}
+          {/* Footer single row: MOYENNE GENERALE label | totalCoef | moy étudiant | moy promo | ADMIS */}
           <tr>
             <th style={thCell}>MOYENNE GENERALE</th>
-            <th style={thCell} colSpan={2}>TOTAL COEFICIENT</th>
-            <th style={thCell}>MOYENNE GENERALE DE L'ETUDIANT</th>
-            <th style={thCell}>MOYENNE GENERALE DE LA PROMO</th>
-            <th style={thCell}>DECISION (ADIMIS OU NON ADMIS)</th>
-          </tr>
-          <tr>
-            <td style={{ ...tdCell, height: 28 }}></td>
-            <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700 }} colSpan={2}>{totalCoef}</td>
-            <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700, fontSize: 12 }}>{fmt(result.general_average)}</td>
-            <td style={{ ...tdCell, textAlign: 'center', fontWeight: 500, fontSize: 11 }}>{fmt(result.class_general_average)}</td>
-            <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700 }}>
+            <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700, background: '#fff' }} colSpan={2}>{totalCoef}</td>
+            <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700, fontSize: 12, background: '#fff' }}>{fmt(result.general_average)}</td>
+            <td style={{ ...tdCell, textAlign: 'center', fontWeight: 500, fontSize: 11, background: '#fff' }}>{fmt(result.class_general_average)}</td>
+            <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700, background: '#fff' }}>
               {result.admitted === true ? 'ADMIS' : result.admitted === false ? 'NON ADMIS' : ''}
             </td>
           </tr>

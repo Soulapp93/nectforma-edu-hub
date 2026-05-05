@@ -296,22 +296,20 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
       {/* ═══ HEADER — identical to Simple + BTS Blanc ═══ */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0, marginBottom: 10, alignItems: 'center' }}>
         <div style={{ fontSize: 10, textAlign: 'left' }}>
-          {establishmentLogoUrl ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {establishmentLogoUrl && (
               <img src={establishmentLogoUrl} alt="" style={{ height: 36, objectFit: 'contain' }} crossOrigin="anonymous" />
-              <div>
-                <div style={{ fontWeight: 600, fontSize: 10 }}>{establishmentName}</div>
-                {establishmentAddress && <div style={{ fontSize: 9 }}>{establishmentAddress}</div>}
-              </div>
+            )}
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 11 }}>{establishmentName}</div>
+              {establishmentAddress && <div style={{ fontSize: 9, marginTop: 2 }}>{establishmentAddress}</div>}
             </div>
-          ) : (
-            <span>LOGO , NOM ET ADRESSE DE L'ETABLISSEMENT</span>
-          )}
+          </div>
         </div>
-        <div style={{ fontSize: 10, textAlign: 'center' }}>bulletin combiné</div>
+        <div style={{ fontSize: 11, textAlign: 'center', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{combinedPeriod.name}</div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: 0.5 }}>RELEVE DE NOTES</div>
-          <div style={{ fontSize: 9, marginTop: 2 }}>( {finalLabel} )</div>
+          <div style={{ fontSize: 9, marginTop: 2 }}>Année académique {academicYear}</div>
         </div>
       </div>
 
@@ -471,7 +469,7 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
               <th style={{ border: '1px solid #000', padding: '6px', background: '#E0E0E0', color: '#000', fontSize: 10, fontWeight: 700, textAlign: 'center', textTransform: 'uppercase' }}>MOYENNE GENERALE COMBINEE</th>
               <th style={{ border: '1px solid #000', padding: '6px', background: '#E0E0E0', color: '#000', fontSize: 10, fontWeight: 700, textAlign: 'center', textTransform: 'uppercase' }}>MENTION</th>
               <th style={{ border: '1px solid #000', padding: '6px', background: '#E0E0E0', color: '#000', fontSize: 10, fontWeight: 700, textAlign: 'center', textTransform: 'uppercase' }}>REGLE DE CALCUL</th>
-              <th style={{ border: '1px solid #000', padding: '6px', background: '#E0E0E0', color: '#000', fontSize: 10, fontWeight: 700, textAlign: 'center', textTransform: 'uppercase' }}>DECISION (ADIMIS OU NON ADMIS)</th>
+              <th style={{ border: '1px solid #000', padding: '6px', background: '#E0E0E0', color: '#000', fontSize: 10, fontWeight: 700, textAlign: 'center', textTransform: 'uppercase' }}>DECISION</th>
             </tr>
             <tr>
               <td style={{ border: '1px solid #000', padding: '8px 6px', fontSize: 14, color: '#000', textAlign: 'center', fontWeight: 700 }}>{fmt(combinedAverage)}/20</td>

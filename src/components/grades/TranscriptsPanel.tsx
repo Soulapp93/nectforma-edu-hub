@@ -109,7 +109,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   const { data: formations = [] } = useQuery({
     queryKey: ['formations-for-transcripts'],
     queryFn: async () => {
-      const { data } = await supabase.from('formations').select('id, title, level, start_date, end_date, duration_years, semesters_count, formation_type').order('title');
+      const { data } = await supabase.from('formations').select('id, title, level, start_date, end_date, duration_years, semesters_count, formation_type, academic_year').order('title');
       return data || [];
     },
     enabled: mode === 'admin' && !propFormationId,
@@ -125,6 +125,21 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
       return (data || []).map((d: any) => d.formations).filter(Boolean);
     },
     enabled: mode === 'student' && !!studentId,
+  });
+
+  // Always load full data for the currently-selected formation (whether prop or internal)
+  const { data: selectedFormationFull } = useQuery({
+    queryKey: ['formation-full', selectedFormation],
+    queryFn: async () => {
+      if (!selectedFormation) return null;
+      const { data } = await supabase
+        .from('formations')
+        .select('id, title, level, start_date, end_date, duration_years, semesters_count, formation_type, academic_year')
+        .eq('id', selectedFormation)
+        .single();
+      return data;
+    },
+    enabled: !!selectedFormation,
   });
 
   const availableFormations = mode === 'admin' ? formations : studentFormations;
@@ -271,7 +286,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
       if (ids.length === 0) return [];
       const { data } = await supabase
         .from('users')
-        .select('id, date_of_birth, student_number')
+        .select('id, date_of_birth, student_number, numero_ce, numero_ine')
         .in('id', ids);
       return data || [];
     },
@@ -279,9 +294,14 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   });
 
   const studentExtrasById = useMemo(() => {
-    const map = new Map<string, { dob: string | null; matricule: string | null }>();
+    const map = new Map<string, { dob: string | null; matricule: string | null; numeroCE: string | null; numeroINE: string | null }>();
     (studentExtras as any[]).forEach((u: any) => {
-      map.set(u.id, { dob: u.date_of_birth || null, matricule: u.student_number || null });
+      map.set(u.id, {
+        dob: u.date_of_birth || null,
+        matricule: u.student_number || null,
+        numeroCE: u.numero_ce || null,
+        numeroINE: u.numero_ine || null,
+      });
     });
     return map;
   }, [studentExtras]);
@@ -747,7 +767,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   }, [students, modules, evaluations, allGrades, gradingRules, ccEvaluations, examEvaluations, examBlancEvaluations]);
 
   const currentBulletin = currentStudentIndex !== null ? (bulletins[currentStudentIndex] || null) : null;
-  const selectedFormationData = availableFormations.find((f: any) => f.id === selectedFormation);
+  const selectedFormationData = selectedFormationFull || availableFormations.find((f: any) => f.id === selectedFormation);
 
   // Composite period rendering — fully removed. Each period is independent
   // and renders the standard OfficialBulletinTemplate.
@@ -1073,9 +1093,10 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
 
             // Student first/last name split
             const nameParts = currentBulletin.studentName.split(' ');
-            const academicYear = selectedFormationData?.start_date && selectedFormationData?.end_date
-              ? `${format(new Date(selectedFormationData.start_date), 'yyyy')}-${format(new Date(selectedFormationData.end_date), 'yyyy')}`
-              : '';
+            const academicYear = (selectedFormationData as any)?.academic_year
+              || (selectedFormationData?.start_date && selectedFormationData?.end_date
+                ? `${format(new Date(selectedFormationData.start_date), 'yyyy')}-${format(new Date(selectedFormationData.end_date), 'yyyy')}`
+                : '');
             const refNumber = `${String((currentStudentIndex ?? 0) + 1).padStart(4, '0')}/S${semesterView.replace('s', '') || '1'}/${format(new Date(), 'yyyy')}`;
 
             return (
@@ -1234,10 +1255,14 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                           academicYear={academicYear}
                           establishmentName={establishment?.name || ''}
                           establishmentLogoUrl={establishment?.logo_url}
+                          establishmentAddress={(establishment as any)?.address}
                           referenceNumber={refNumber}
                           signatories={signatories as any}
-                          sourcePeriods={combinedSourcePeriods as any}
                           totalAdmissionThreshold={Number(((currentPeriod as any)?.composite_config as any)?.total_admission_threshold) || 220}
+                          studentDateOfBirth={studentExtra?.dob}
+                          studentNumber={studentExtra?.matricule}
+                          studentNumeroCE={studentExtra?.numeroCE}
+                          studentNumeroINE={studentExtra?.numeroINE}
                         />
                       ) : (
                         <SimpleBulletinTemplate
@@ -1252,10 +1277,15 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
                           academicYear={academicYear}
                           establishmentName={establishment?.name || ''}
                           establishmentLogoUrl={establishment?.logo_url}
+                          establishmentAddress={(establishment as any)?.address}
                           referenceNumber={refNumber}
                           signatories={signatories as any}
                           instructorsByModuleId={instructorsByModuleId}
                           sourcePeriods={combinedSourcePeriods as any}
+                          studentDateOfBirth={studentExtrasById.get(currentBulletin.studentId)?.dob}
+                          studentNumber={studentExtrasById.get(currentBulletin.studentId)?.matricule}
+                          studentNumeroCE={studentExtrasById.get(currentBulletin.studentId)?.numeroCE}
+                          studentNumeroINE={studentExtrasById.get(currentBulletin.studentId)?.numeroINE}
                         />
                       )
                     );

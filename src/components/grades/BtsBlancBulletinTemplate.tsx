@@ -150,23 +150,22 @@ const BtsBlancBulletinTemplate: React.FC<Props> = ({
   return (
     <div style={{ background: '#fff', color: '#000', fontFamily: FONT, padding: '12mm', maxWidth: '210mm', margin: '0 auto' }} data-testid="bts-blanc-bulletin">
       {/* HEADER */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, marginBottom: 10, alignItems: 'center' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0, marginBottom: 10, alignItems: 'center' }}>
         <div style={{ fontSize: 10, textAlign: 'left' }}>
-          {establishmentLogoUrl ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {establishmentLogoUrl && (
               <img src={establishmentLogoUrl} alt="" style={{ height: 36, objectFit: 'contain' }} crossOrigin="anonymous" />
-              <div>
-                <div style={{ fontWeight: 600, fontSize: 10 }}>{establishmentName}</div>
-                {establishmentAddress && <div style={{ fontSize: 9 }}>{establishmentAddress}</div>}
-              </div>
+            )}
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 11 }}>{establishmentName}</div>
+              {establishmentAddress && <div style={{ fontSize: 9, marginTop: 2 }}>{establishmentAddress}</div>}
             </div>
-          ) : (
-            <span>LOGO , NOM ET ADRESSE DE L'ETABLISSEMENT</span>
-          )}
+          </div>
         </div>
+        <div style={{ fontSize: 11, textAlign: 'center', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{period.name}</div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: 0.5 }}>RELEVE DE NOTES</div>
-          <div style={{ fontSize: 10, marginTop: 2 }}>BTS BLANC</div>
+          <div style={{ fontSize: 9, marginTop: 2 }}>Année académique {academicYear}</div>
         </div>
       </div>
 
@@ -232,14 +231,14 @@ const BtsBlancBulletinTemplate: React.FC<Props> = ({
           })}
           {/* Footer totals row */}
           <tr>
-            <th style={thCell}></th>
-            <th style={thCell}>total</th>
+            <th style={{ ...thCell, textAlign: 'right', paddingRight: 10 }}>TOTAL</th>
+            <th style={thCell}>NOTES</th>
             <th style={thCell}>TOTAL COEFFICIENT</th>
-            <th style={thCell}>total des points</th>
-            <th style={thCell}>DECISION (ADIMIS OU NON ADMIS)</th>
+            <th style={thCell}>TOTAL DES POINTS</th>
+            <th style={thCell}>DECISION</th>
           </tr>
           <tr>
-            <td style={{ ...tdCell, height: 28 }}></td>
+            <td style={{ ...tdCell, height: 28, fontWeight: 700, textAlign: 'right', paddingRight: 10 }}>—</td>
             <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700 }}>{fmt2(totalNotes)}</td>
             <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700 }}>{totalCoef || ''}</td>
             <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700, fontSize: 11 }}>{fmt2(totalPoints)}</td>
