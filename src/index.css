@@ -3,82 +3,80 @@
 @tailwind components;
 @tailwind utilities;
 
-/* NECTFORMA Design System - PCA PREAD Inspired Theme */
+/* NECTFORMA Design System */
 
 @layer base {
+  /* ── LIGHT MODE (default) ─────────────────────────────────────── */
   :root {
-    --background: 230 25% 97%;
-    --foreground: 240 20% 15%;
+    /* Backgrounds — pure white content area */
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 20% 15%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 20% 15%;
+    --popover-foreground: 222 47% 11%;
 
-    /* Deep Navy-Indigo Primary - PCA PREAD exact */
+    /* Primary — keep Nectforma navy brand */
     --primary: 240 60% 20%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 230 20% 95%;
+    --secondary: 214 32% 95%;
     --secondary-foreground: 240 60% 20%;
 
-    --muted: 230 15% 93%;
-    --muted-foreground: 230 10% 45%;
+    --muted: 214 32% 95%;
+    --muted-foreground: 215 16% 47%;
 
-    /* Sky Blue Accent */
-    --accent: 250 60% 25%;
+    --accent: 240 60% 20%;
     --accent-foreground: 0 0% 100%;
 
-    /* Golden Yellow for active states - PCA PREAD exact */
     --golden: 45 100% 50%;
     --golden-foreground: 240 60% 15%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 230 15% 88%;
-    --input: 230 15% 92%;
+    --border: 214 32% 90%;
+    --input: 214 32% 94%;
     --ring: 240 60% 20%;
 
     --radius: 0.75rem;
 
-    /* Status Colors */
-    --success: 142 76% 42%;
+    /* Status */
+    --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
     --success-muted: 142 76% 95%;
-    
     --warning: 38 92% 50%;
     --warning-foreground: 38 92% 10%;
     --warning-muted: 38 92% 95%;
-    
     --info: 217 91% 60%;
     --info-foreground: 0 0% 100%;
     --info-muted: 217 91% 95%;
 
-    /* Theme colors - PCA PREAD */
+    /* Nectforma brand */
     --nect-primary-from: 240 60% 20%;
     --nect-primary-to: 250 60% 25%;
-    --nect-primary-light: 230 30% 95%;
+    --nect-primary-light: 214 32% 95%;
     --nect-primary-dark: 240 60% 14%;
-    
     --nect-sidebar-bg: 240 60% 12%;
     --nect-sidebar-dark: 245 55% 8%;
     --nect-card-bg: 0 0% 100%;
-    --nect-card-border: 230 15% 88%;
-    
+    --nect-card-border: 214 32% 90%;
+
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(240 60% 20%), hsl(250 60% 25%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(230 15% 98%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(210 20% 98%));
     --gradient-hero: linear-gradient(135deg, hsl(240 60% 20%), hsl(250 60% 25%));
-    --gradient-soft: linear-gradient(135deg, hsl(230 25% 97%), hsl(230 20% 95%));
-    
-    /* Professional shadows */
-    --shadow-sm: 0 1px 3px rgba(20, 20, 60, 0.06);
-    --shadow-md: 0 4px 16px rgba(20, 20, 60, 0.10);
-    --shadow-lg: 0 12px 32px rgba(20, 20, 60, 0.14);
-    --shadow-xl: 0 24px 48px rgba(20, 20, 60, 0.18);
+    --gradient-soft: linear-gradient(135deg, hsl(210 20% 98%), hsl(214 32% 96%));
 
+    /* Crisp shadows for white surfaces */
+    --shadow-sm: 0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
+    --shadow-md: 0 4px 16px rgba(15,23,42,0.08), 0 2px 4px rgba(15,23,42,0.04);
+    --shadow-lg: 0 12px 32px rgba(15,23,42,0.10), 0 4px 8px rgba(15,23,42,0.06);
+    --shadow-xl: 0 24px 48px rgba(15,23,42,0.12), 0 8px 16px rgba(15,23,42,0.08);
+
+    /* Sidebar stays dark in light mode */
     --sidebar-background: 240 60% 12%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 45 100% 50%;
@@ -89,6 +87,7 @@
     --sidebar-ring: 240 60% 20%;
   }
 
+  /* ── DARK MODE — current Nectforma design, unchanged ──────────── */
   .dark {
     --background: 240 20% 6%;
     --foreground: 230 10% 92%;
@@ -124,11 +123,9 @@
     --success: 142 60% 48%;
     --success-foreground: 0 0% 100%;
     --success-muted: 142 30% 14%;
-
     --warning: 38 80% 52%;
     --warning-foreground: 38 80% 10%;
     --warning-muted: 38 40% 14%;
-
     --info: 217 80% 62%;
     --info-foreground: 0 0% 100%;
     --info-muted: 217 40% 14%;
@@ -137,7 +134,6 @@
     --nect-primary-to: 250 60% 50%;
     --nect-primary-light: 230 50% 16%;
     --nect-primary-dark: 240 60% 65%;
-
     --nect-sidebar-bg: 240 60% 10%;
     --nect-sidebar-dark: 245 55% 6%;
     --nect-card-bg: 240 18% 10%;
@@ -148,10 +144,10 @@
     --gradient-hero: linear-gradient(135deg, hsl(240 60% 55%), hsl(250 60% 50%));
     --gradient-soft: linear-gradient(135deg, hsl(240 20% 10%), hsl(240 15% 8%));
 
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
-    --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.6);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.5);
+    --shadow-xl: 0 24px 48px rgba(0,0,0,0.6);
 
     --sidebar-background: 240 60% 10%;
     --sidebar-foreground: 0 0% 100%;
@@ -159,7 +155,7 @@
     --sidebar-primary-foreground: 240 60% 12%;
     --sidebar-accent: 45 90% 55%;
     --sidebar-accent-foreground: 240 60% 12%;
-    --sidebar-border: 0 0% 100%;
+    --sidebar-border: 240 40% 20%;
     --sidebar-ring: 240 60% 55%;
   }
 }
@@ -328,45 +324,52 @@ body:has(.fullscreen-container) {
 
 @layer components {
   /* Sidebar Premium Gradient - Deep Navy with purple undertones */
+  /* ── Sidebar gradient — always dark navy (both modes) ── */
   .nect-gradient {
-    background: linear-gradient(180deg, 
-      hsl(245 58% 16%) 0%, 
+    background: linear-gradient(180deg,
+      hsl(245 58% 16%) 0%,
       hsl(242 60% 13%) 25%,
       hsl(240 62% 11%) 50%,
       hsl(248 55% 14%) 75%,
       hsl(245 58% 12%) 100%
     );
   }
-  
-  /* Sidebar glow overlay - vivid purple/violet glow matching PCA PREAD */
+
+  /* ── Top header bar — dark mode default ── */
+  .nect-topbar {
+    background: linear-gradient(90deg, hsl(245 58% 16%), hsl(240 62% 11%));
+  }
+  /* light mode override (no .dark class on html) */
+  html:not(.dark) .nect-topbar {
+    background: hsl(0 0% 100%);
+    border-bottom: 1px solid hsl(214 32% 90%);
+    box-shadow: 0 1px 3px rgba(15,23,42,0.06);
+  }
+
+  /* ── Sidebar glow (dark mode only) ── */
   .sidebar-glow {
     position: relative;
   }
-  
   .sidebar-glow::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: 0; left: 0; right: 0;
     height: 350px;
-    background: radial-gradient(ellipse at 50% -10%, rgba(120, 60, 230, 0.35) 0%, rgba(90, 50, 200, 0.15) 40%, transparent 75%);
+    background: radial-gradient(ellipse at 50% -10%, rgba(120,60,230,0.35) 0%, rgba(90,50,200,0.15) 40%, transparent 75%);
     pointer-events: none;
     z-index: 0;
   }
-
-  /* Bottom glow effect - vivid purple */
+  html:not(.dark) .sidebar-glow::before { display: none; }
   .sidebar-glow::after {
     content: '';
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    bottom: 0; left: 0; right: 0;
     height: 250px;
-    background: radial-gradient(ellipse at 50% 110%, rgba(110, 50, 230, 0.30) 0%, rgba(80, 40, 200, 0.12) 40%, transparent 75%);
+    background: radial-gradient(ellipse at 50% 110%, rgba(110,50,230,0.30) 0%, rgba(80,40,200,0.12) 40%, transparent 75%);
     pointer-events: none;
     z-index: 0;
   }
+  html:not(.dark) .sidebar-glow::after { display: none; }
   
   /* Active menu item - Golden yellow pill */
   .nect-glass {
