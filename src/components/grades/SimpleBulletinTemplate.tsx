@@ -273,10 +273,10 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
               </React.Fragment>
             );
           })}
-          {/* Footer single row: MOYENNE GENERALE label | totalCoef | moy étudiant | moy promo | ADMIS */}
+          {/* Footer single row: MOYENNE GENERALE label spans UE+FORMATEUR | totalCoef under COEFFICIENT | moy étudiant | moy promo | ADMIS */}
           <tr>
-            <th style={thCell}>MOYENNE GENERALE</th>
-            <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700, background: '#fff' }} colSpan={2}>{totalCoef}</td>
+            <th style={thCell} colSpan={2}>MOYENNE GENERALE</th>
+            <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700, background: '#fff' }}>{totalCoef}</td>
             <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700, fontSize: 12, background: '#fff' }}>{fmt(result.general_average)}</td>
             <td style={{ ...tdCell, textAlign: 'center', fontWeight: 500, fontSize: 11, background: '#fff' }}>{fmt(result.class_general_average)}</td>
             <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700, background: '#fff' }}>
