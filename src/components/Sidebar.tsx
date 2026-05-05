@@ -1,7 +1,6 @@
 import { logger } from '@/utils/logger';
 import React, { useState, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { useTheme } from 'next-themes';
 import {
   LayoutDashboard, 
   GraduationCap,
@@ -59,8 +58,6 @@ interface NavItem {
 const Sidebar = () => {
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === 'collapsed';
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
   const { userRole } = useCurrentUser();
   const { user: myUser, establishment: myEstablishment, role: contextRole } = useMyContext();
   const { establishment } = useEstablishment();
@@ -291,7 +288,7 @@ const Sidebar = () => {
           relative
           ${isActive
             ? 'nect-glass font-bold'
-            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-white/80 dark:hover:bg-white/[0.08] dark:hover:text-white'
+            : 'text-white/80 hover:bg-white/[0.08] hover:text-white'
           }
         `}
         title={collapsed ? item.name : undefined}
@@ -321,24 +318,24 @@ const Sidebar = () => {
       <SidebarHeader className="relative z-10 px-4 pt-5 pb-3">
         <div className="flex flex-col gap-3">
           <div className={`flex items-center ${collapsed ? 'justify-center' : 'justify-between'}`}>
-            <NectformaLogo variant={isDark ? 'light' : 'gradient'} size={collapsed ? 'sm' : 'md'} showIcon={true} />
+            <NectformaLogo variant="light" size={collapsed ? 'sm' : 'md'} showIcon={true} />
             {!collapsed && (
               <button
                 onClick={toggleSidebar}
-                className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 transition-all duration-200"
+                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all duration-200"
                 title="Réduire le menu"
               >
-                <PanelLeftClose className="w-4 h-4 text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white transition-colors" />
+                <PanelLeftClose className="w-4 h-4 text-white/70 hover:text-white transition-colors" />
               </button>
             )}
           </div>
           {collapsed && (
             <button
               onClick={toggleSidebar}
-              className="mx-auto p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 transition-all duration-200"
+              className="mx-auto p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all duration-200"
               title="Ouvrir le menu"
             >
-              <PanelLeft className="w-4 h-4 text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white transition-colors" />
+              <PanelLeft className="w-4 h-4 text-white/70 hover:text-white transition-colors" />
             </button>
           )}
         </div>
@@ -346,28 +343,28 @@ const Sidebar = () => {
 
       <SidebarContent className="relative z-10 px-3">
         {/* Establishment Card */}
-        <div className={`mb-4 p-3 rounded-2xl bg-slate-50 border border-slate-200 dark:bg-white/[0.08] dark:border-white/10 ${collapsed ? 'flex justify-center' : ''}`}>
+        <div className={`mb-4 p-3 rounded-2xl bg-white/[0.08] border border-white/10 ${collapsed ? 'flex justify-center' : ''}`}>
           <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
             <div className="relative flex-shrink-0">
               {establishmentLogoUrl ? (
-                <Avatar className="w-11 h-11 ring-2 ring-slate-200 dark:ring-white/20">
+                <Avatar className="w-11 h-11 ring-2 ring-white/20">
                   <AvatarImage src={establishmentLogoUrl} alt={establishmentName} />
-                  <AvatarFallback className="bg-slate-100 text-slate-700 dark:bg-white/15 dark:text-white text-xs font-semibold">
+                  <AvatarFallback className="bg-white/15 text-white text-xs font-semibold">
                     {establishmentName?.[0]?.toUpperCase() || 'E'}
                   </AvatarFallback>
                 </Avatar>
               ) : (
-                <div className="w-11 h-11 rounded-full bg-slate-100 dark:bg-white/15 flex items-center justify-center ring-2 ring-slate-200 dark:ring-white/20">
-                  <Building2 className="w-6 h-6 text-slate-500 dark:text-white/80" />
+                <div className="w-11 h-11 rounded-full bg-white/15 flex items-center justify-center ring-2 ring-white/20">
+                  <Building2 className="w-6 h-6 text-white/80" />
                 </div>
               )}
             </div>
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold text-slate-900 dark:text-white truncate leading-tight uppercase tracking-wider">
+                <p className="text-[13px] font-bold text-white truncate leading-tight uppercase tracking-wider">
                   {establishmentName || 'Établissement'}
                 </p>
-                <p className="text-[11px] text-slate-500 dark:text-white/50 font-medium mt-0.5">
+                <p className="text-[11px] text-white/50 font-medium mt-0.5">
                   {establishment?.type || 'Plateforme éducative'}
                 </p>
               </div>
@@ -382,7 +379,7 @@ const Sidebar = () => {
 
         {/* Support Card */}
         {!collapsed && (
-          <div className="mt-6 p-4 rounded-2xl bg-slate-50 border border-slate-200 dark:bg-white/[0.08] dark:border-white/10" data-testid="support-card">
+          <div className="mt-6 p-4 rounded-2xl bg-white/[0.08] border border-white/10" data-testid="support-card">
             {showSupport ? (
               <div className="space-y-2.5">
                 {supportSent ? (
@@ -390,21 +387,21 @@ const Sidebar = () => {
                     <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-2">
                       <Send className="w-5 h-5 text-emerald-400" />
                     </div>
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white">Demande envoyee !</p>
-                    <p className="text-[11px] text-slate-500 dark:text-white/50">Notre equipe vous repondra rapidement.</p>
+                    <p className="text-sm font-semibold text-white">Demande envoyee !</p>
+                    <p className="text-[11px] text-white/50">Notre equipe vous repondra rapidement.</p>
                   </div>
                 ) : (
                   <>
                     <div className="flex items-center justify-between">
-                      <p className="text-[13px] font-bold text-slate-900 dark:text-white">Contacter le support</p>
-                      <button onClick={() => { setShowSupport(false); setSupportFiles([]); }} className="text-slate-400 hover:text-slate-700 dark:text-white/40 dark:hover:text-white text-xs">Fermer</button>
+                      <p className="text-[13px] font-bold text-white">Contacter le support</p>
+                      <button onClick={() => { setShowSupport(false); setSupportFiles([]); }} className="text-white/40 hover:text-white text-xs">Fermer</button>
                     </div>
                     <input
                       type="text"
                       value={supportSubject}
                       onChange={e => setSupportSubject(e.target.value)}
                       placeholder="Sujet de votre demande..."
-                      className="w-full px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 dark:bg-white/10 dark:border-white/10 dark:text-white dark:placeholder:text-white/30 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                      className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder:text-white/30 text-xs focus:outline-none focus:ring-1 focus:ring-golden"
                       data-testid="support-subject-input"
                     />
                     <div className="relative">
@@ -413,7 +410,7 @@ const Sidebar = () => {
                         onChange={e => setSupportMessage(e.target.value)}
                         placeholder="Decrivez votre probleme ou question..."
                         rows={3}
-                        className="w-full px-3 py-2 pr-16 rounded-lg bg-white border border-slate-200 text-slate-900 placeholder:text-slate-400 dark:bg-white/10 dark:border-white/10 dark:text-white dark:placeholder:text-white/30 text-xs focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                        className="w-full px-3 py-2 pr-16 rounded-lg bg-white/10 border border-white/10 text-white placeholder:text-white/30 text-xs focus:outline-none focus:ring-1 focus:ring-golden resize-none"
                         data-testid="support-message-input"
                       />
                       {/* Voice + File buttons inside textarea */}
@@ -421,7 +418,7 @@ const Sidebar = () => {
                         <button
                           type="button"
                           onClick={toggleVoiceRecording}
-                          className={`p-1.5 rounded-lg transition-colors ${isRecording ? 'bg-red-500/30 text-red-500 animate-pulse' : 'bg-slate-100 text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:bg-white/10 dark:text-white/50 dark:hover:text-white/80 dark:hover:bg-white/20'}`}
+                          className={`p-1.5 rounded-lg transition-colors ${isRecording ? 'bg-red-500/30 text-red-400 animate-pulse' : 'bg-white/10 text-white/50 hover:text-white/80 hover:bg-white/20'}`}
                           title={isRecording ? 'Arreter l\'enregistrement' : 'Saisie vocale'}
                           data-testid="support-voice-btn"
                         >
@@ -430,7 +427,7 @@ const Sidebar = () => {
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:bg-white/10 dark:text-white/50 dark:hover:text-white/80 dark:hover:bg-white/20 transition-colors"
+                          className="p-1.5 rounded-lg bg-white/10 text-white/50 hover:text-white/80 hover:bg-white/20 transition-colors"
                           title="Joindre un fichier"
                           data-testid="support-attach-btn"
                         >
@@ -450,10 +447,10 @@ const Sidebar = () => {
                     {supportFiles.length > 0 && (
                       <div className="space-y-1" data-testid="support-files-list">
                         {supportFiles.map((f, idx) => (
-                          <div key={idx} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-slate-100 border border-slate-200 dark:bg-white/5 dark:border-white/10">
-                            {f.type.startsWith('image/') ? <ImageIcon className="w-3 h-3 text-blue-500 shrink-0" /> : <FileText className="w-3 h-3 text-amber-500 shrink-0" />}
-                            <span className="text-[10px] text-slate-700 dark:text-white/70 truncate flex-1">{f.name}</span>
-                            <button onClick={() => removeFile(idx)} className="text-slate-400 hover:text-red-500 dark:text-white/30 dark:hover:text-red-400 shrink-0"><X className="w-3 h-3" /></button>
+                          <div key={idx} className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/5 border border-white/10">
+                            {f.type.startsWith('image/') ? <ImageIcon className="w-3 h-3 text-blue-400 shrink-0" /> : <FileText className="w-3 h-3 text-amber-400 shrink-0" />}
+                            <span className="text-[10px] text-white/70 truncate flex-1">{f.name}</span>
+                            <button onClick={() => removeFile(idx)} className="text-white/30 hover:text-red-400 shrink-0"><X className="w-3 h-3" /></button>
                           </div>
                         ))}
                       </div>
@@ -461,7 +458,7 @@ const Sidebar = () => {
                     <button
                       onClick={handleSendSupport}
                       disabled={!supportSubject.trim() || !supportMessage.trim() || sendingSupport}
-                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-primary text-primary-foreground dark:bg-golden dark:text-golden-foreground text-[13px] font-bold hover:bg-primary/90 dark:hover:bg-golden/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-golden text-golden-foreground text-[13px] font-bold hover:bg-golden/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       data-testid="support-send-btn"
                     >
                       {sendingSupport ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
@@ -473,24 +470,24 @@ const Sidebar = () => {
             ) : (
               <>
                 <div className="flex items-center gap-2.5 mb-3">
-                  <div className="w-9 h-9 rounded-full bg-primary/15 dark:bg-golden/20 flex items-center justify-center">
-                    <HelpCircle className="w-5 h-5 text-primary dark:text-golden" />
+                  <div className="w-9 h-9 rounded-full bg-golden/20 flex items-center justify-center">
+                    <HelpCircle className="w-5 h-5 text-golden" />
                   </div>
                   <div>
-                    <p className="text-[14px] font-bold text-slate-900 dark:text-white">Support</p>
-                    <p className="text-[11px] text-slate-500 dark:text-white/50">Contactez le support</p>
+                    <p className="text-[14px] font-bold text-white">Support</p>
+                    <p className="text-[11px] text-white/50">Contactez le support</p>
                   </div>
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowSupport(true)}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-primary text-primary-foreground dark:bg-golden dark:text-golden-foreground text-[13px] font-bold hover:bg-primary/90 dark:hover:bg-golden/90 transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-golden text-golden-foreground text-[13px] font-bold hover:bg-golden/90 transition-colors"
                     data-testid="support-open-btn"
                   >
                     <HelpCircle className="w-4 h-4" />
                     Aide
                   </button>
-                  <NavLink to="/support" className="relative p-2.5 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-white/10 dark:text-white/70 dark:hover:bg-white/20 transition-colors" title="Mes tickets" data-testid="support-tickets-link">
+                  <NavLink to="/support" className="relative p-2.5 rounded-xl bg-white/10 text-white/70 hover:bg-white/20 transition-colors" title="Mes tickets" data-testid="support-tickets-link">
                     <MessageSquare className="w-5 h-5" />
                     {liveCounters.support > 0 && (
                       <span
@@ -508,17 +505,17 @@ const Sidebar = () => {
         )}
       </SidebarContent>
 
-      <SidebarFooter className="relative z-10 p-3 border-t border-slate-200 dark:border-white/[0.08]">
-        <button
+      <SidebarFooter className="relative z-10 p-3 border-t border-white/[0.08]">
+        <button 
           onClick={handleLogout}
           data-testid="logout-button"
           className={`
-            flex items-center ${collapsed ? 'justify-center' : 'gap-3'}
-            w-full px-3 py-2.5
-            text-[14px] font-medium
-            text-slate-600 dark:text-white/70
-            rounded-xl
-            hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-white/[0.08] dark:hover:text-white
+            flex items-center ${collapsed ? 'justify-center' : 'gap-3'} 
+            w-full px-3 py-2.5 
+            text-[14px] font-medium 
+            text-white/70 
+            rounded-xl 
+            hover:bg-white/[0.08] hover:text-white 
             transition-all duration-200
           `}
           title={collapsed ? "Déconnexion" : undefined}

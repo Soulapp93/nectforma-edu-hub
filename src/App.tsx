@@ -323,7 +323,7 @@ const AppContent = () => {
       <div className="flex min-h-svh flex-1 flex-col min-w-0 nect-gradient">
         <MobileHeader />
         <TopHeaderBar />
-        <main className="flex-1 overflow-auto bg-background rounded-tl-2xl">
+        <main className="flex-1 overflow-auto bg-[hsl(230_25%_97%)] rounded-tl-2xl">
           <Suspense fallback={<LoadingFallback />}>
             <Routes>
               <Route path="/dashboard" element={<ProtectedRoute><AdminRoute><Dashboard /></AdminRoute></ProtectedRoute>} />
@@ -369,7 +369,7 @@ const AppContent = () => {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange forcedTheme="light">
         <QueryClientProvider client={queryClient}>
           <Router>
             <AuthProvider>
