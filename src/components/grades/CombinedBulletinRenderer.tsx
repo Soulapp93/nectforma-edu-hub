@@ -102,6 +102,7 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
   academicYear,
   establishmentName,
   establishmentLogoUrl,
+  establishmentAddress,
   signatories,
 }) => {
   const compositeConfig: CombinedPeriodConfig = (combinedPeriod.composite_config as any) || {
@@ -274,7 +275,7 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
     return <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: INK }} /></div>;
   }
 
-  void referenceNumber;
+  void formationLevel;
   const FONT_SANS = 'Arial, Helvetica, sans-serif';
   const BORDER = '1px solid #000';
   const PERIOD_COLORS = [INK, INK, INK, INK];
