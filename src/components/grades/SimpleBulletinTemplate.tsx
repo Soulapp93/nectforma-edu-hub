@@ -32,14 +32,13 @@ interface Props {
 }
 
 /**
- * Simple period bulletin — pixel-perfect reproduction of the user's PDF maquette.
+ * Simple period bulletin — flat matières layout (no UE grouping).
  * Layout:
  *   Top strip: [LOGO , NOM ET ADRESSE DE L'ETABLISSEMENT]   [bulletin semestre]   [RELEVE DE NOTES / TITRE]
- *   2 identity boxes side-by-side: [NOM/PRENOM/DATE DE NAISSANCE  +  FORMATION/ANNEE] | [NUMERO ETUDIANT/CE/INE]
+ *   2 identity boxes side-by-side: [NOM/PRENOM/DATE NAISSANCE  +  FORMATION/ANNEE] | [NUMERO ETUDIANT/CE/INE]
  *   Table with columns:
- *     UNITE D'ENSEIGNEMENT 1 | FORMATEUR | COEFFICIENT | MOYENNE (→ MOY ETUDIANT + MOY PROMO per row) | APPRECIATION
- *     Next UE below (UNITE D'ENSEIGNEMENT 2) in same structure
- *   Bottom row header (grey): MOYENNE GENERALE / TOTAL COEFICIENT / MOYENNE GENERALE DE L'ETUDIANT / MOYENNE GENERALE DE LA PROMO / DECISION (ADIMIS OU NON ADMIS)
+ *     MATIERES | FORMATEUR | COEFFICIENT | MOYENNE (→ MOY ETUDIANT + MOY PROMO per row) | APPRECIATION
+ *   Footer single row: [MOYENNE GENERALE label spans 2 cols] [totalCoef] [moy étudiant] [moy promo] [DECISION]
  *   3 boxes: ASSIDUITE | APPRECIATION GENERALE | DIERECTEUR DE L'ETABLISSEMENT
  */
 const SimpleBulletinTemplate: React.FC<Props> = ({

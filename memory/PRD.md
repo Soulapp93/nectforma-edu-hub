@@ -5,9 +5,9 @@
 
 ## Core Product Requirements
 - Strict data isolation per evaluation period
-- Hierarchical curriculum: Formations → Unités d'Enseignement (UE) → Matières (formation_modules)
-- Configurable transcripts (Simple, Combined, BTS Blanc) grouped by UE, matching French standards
-- BTS Blanc periods distinguish "Écrit" / "Oral" subjects
+- Curriculum: Formations → Matières (modules plats, sans couche UE)
+- Configurable transcripts (Simple, Combined, BTS Blanc) listant les modules à plat
+- BTS Blanc periods distinguish "Écrit" / "Oral" subjects (via period_modules.exam_part)
 - Strict adherence to user's minimalist Black & White PDF mockups for all transcripts
 - Dynamic data: real establishment, student numbers, logos populated from DB
 
@@ -20,29 +20,38 @@ French (toujours répondre en français)
 - Auth: Supabase Auth
 
 ## Key DB Schema
-- `teaching_units`: {id, formation_id, title, coefficient, order_index}
-- `formation_modules`: {id, teaching_unit_id, formation_id, title, coefficient}
+- `formation_modules`: {id, formation_id, title, coefficient, order_index, semester}
 - `period_modules`: {id, period_id, module_id, coefficient, exam_part}
+- `teaching_units`: existe encore en DB (dormante après rollback UE → modules plats)
 
 ## Implemented (CHANGELOG)
 
-### 2026-02 - Bulletins finalization
-- ✅ Architecture UE déployée partout (Formations, Notes, Bulletins)
+### 2026-02 - Rollback UE → Modules plats
+- ✅ Suppression de la couche UE dans toute l'UI (DB conservée dormante)
+- ✅ Nouveau composant `MatieresPanel` pour la gestion plate des matières
+- ✅ `CreateFormationModal` : retrait création UE par défaut, info card "Matières"
+- ✅ `EditFormationModal` : utilise `MatieresPanel` (CRUD matières plat)
+- ✅ `FormationDetail` : liste de matières linéaire (Accordion direct, sans UE header)
+- ✅ `CreatePeriodModal` : sélection plate de modules
+- ✅ `GradeSheetView` : sidebar plate avec liste de matières
+- ✅ `SimpleBulletinTemplate` : colonne "MATIERES", suppression des sections UE
+- ✅ `CombinedBulletinRenderer` : suppression des sections UE intermédiaires + fix `referenceNumber is not defined`
+- ✅ `BtsBlancBulletinTemplate` : inchangé (n'utilisait pas UE)
+
+### 2026-02 - Bulletins finalization (avant rollback)
 - ✅ 3 templates bulletins (Simple, BTS Blanc, Combined) en N&B minimaliste pixel-perfect
 - ✅ Données dynamiques (logos, établissement, student numbers/CE/INE) intégrées
 - ✅ BTS Blanc : catégories Écrit/Oral via `period_modules.exam_part`
-- ✅ Footer Simple : `MOYENNE GENERALE` étendu sur 2 cols (UE+FORMATEUR), totalCoef en cellule encadrée
-- ✅ Footer BTS Blanc : ligne unique `TOTAL` (span 2) + `totalCoef` + `totalPoints` + `DECISION` (suppression "TOTAL NOTES")
-- ✅ Footer Combiné : ligne unique `MOYENNE GENERALE COMBINEE` (span 2) + valeurs encadrées (avg, mention, règle, décision)
+- ✅ Footer Simple : `MOYENNE GENERALE` étendu sur 2 cols, totalCoef en cellule encadrée
+- ✅ Footer BTS Blanc : ligne unique `TOTAL` (span 2) + `totalCoef` + `totalPoints` + `DECISION`
+- ✅ Footer Combiné : ligne unique `MOYENNE GENERALE COMBINEE` (span 2) + valeurs encadrées
 
 ## Backlog / ROADMAP
-
-### P0 — In progress
-*(Aucun en cours)*
 
 ### P1 — Next
 - Upload/personnalisation des signatures (Sprint E config)
 - Vérifier policies RLS (`20260429120000_secure_rls_drop_legacy_allow_all.sql`)
+- Drop éventuel de la table `teaching_units` (P2 — actuellement dormante)
 
 ### P2 — Future
 - Pont bulletin → diplôme (auto-génération si "admis")
@@ -50,17 +59,19 @@ French (toujours répondre en français)
 - Support PWA offline pour saisie de notes
 - Corriger pattern N+1 dans `attendanceService.ts`
 - Warning ESBuild `optimizeDeps` sur `StudentCardView.tsx:136:16`
+- Cleanup composants UE dormants (`UEManagerPanel.tsx`, options `group_by_teaching_unit` dans `BulletinConfigModal`, UI UE dans `GradingSettingsPanel`)
 
 ## Key Files
+- `/app/src/components/administration/MatieresPanel.tsx` (nouveau)
+- `/app/src/components/administration/CreateFormationModal.tsx`
+- `/app/src/components/administration/EditFormationModal.tsx`
+- `/app/src/pages/FormationDetail.tsx`
+- `/app/src/components/grades/CreatePeriodModal.tsx`
+- `/app/src/components/grades/GradeSheetView.tsx`
 - `/app/src/components/grades/SimpleBulletinTemplate.tsx`
 - `/app/src/components/grades/BtsBlancBulletinTemplate.tsx`
 - `/app/src/components/grades/CombinedBulletinRenderer.tsx`
 - `/app/src/components/grades/TranscriptsPanel.tsx`
-- `/app/src/components/grades/CreatePeriodModal.tsx`
-- `/app/src/components/grades/GradeSheetView.tsx`
-- `/app/src/pages/FormationDetail.tsx`
-- `/app/src/components/administration/EditFormationModal.tsx`
-- `/app/src/components/administration/CreateFormationModal.tsx`
 
 ## Test Credentials
 Cf. `/app/memory/test_credentials.md`
