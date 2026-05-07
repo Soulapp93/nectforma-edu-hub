@@ -77,6 +77,8 @@ interface PeriodResult {
     exam: number | null;
     oral: number | null;
     moy: number | null;
+    classAverage: number | null;
+    appreciation: string | null;
     eliminated: boolean;
   }>;
   general_average: number | null;
@@ -103,6 +105,7 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
   establishmentLogoUrl,
   establishmentAddress,
   signatories,
+  instructorsByModuleId,
 }) => {
   const compositeConfig: CombinedPeriodConfig = (combinedPeriod.composite_config as any) || {
     calculation_rule: 'simple_average',
@@ -174,13 +177,23 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
           studentId, config: cfg, modules: modules as any, evaluations: (evals || []) as any, grades: allGrades as any,
         });
 
-        // Compute all students for rank
-        const allAvgs: Array<{ studentId: string; avg: number | null }> = roster.map((s: any) => ({
+        // Compute all students for rank + class averages per module
+        const allBulletins = roster.map((s: any) => ({
           studentId: s.user_id,
-          avg: computeStudentPeriodBulletin({
+          bulletin: computeStudentPeriodBulletin({
             studentId: s.user_id, config: cfg, modules: modules as any, evaluations: (evals || []) as any, grades: allGrades as any,
-          }).general_average,
+          }),
         }));
+        const classAvgByModule = new Map<string, number | null>();
+        for (const mod of modules as any[]) {
+          const vals: number[] = [];
+          for (const o of allBulletins) {
+            const mm = o.bulletin.modules.find((m) => m.module_id === mod.id);
+            if (mm?.module_average !== null && mm?.module_average !== undefined) vals.push(mm.module_average);
+          }
+          classAvgByModule.set(mod.id, vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 100) / 100 : null);
+        }
+        const allAvgs = allBulletins.map((o) => ({ studentId: o.studentId, avg: o.bulletin.general_average }));
         const sorted = allAvgs.filter((x) => x.avg !== null).sort((a, b) => (b.avg || 0) - (a.avg || 0));
         const rankIdx = sorted.findIndex((x) => x.studentId === studentId);
         const rank = rankIdx >= 0 ? rankIdx + 1 : null;
@@ -197,6 +210,8 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
             exam: colValue(m.type_averages, 'exam'),
             oral: colValue(m.type_averages, 'oral'),
             moy: m.module_average,
+            classAverage: classAvgByModule.get(m.module_id) ?? null,
+            appreciation: m.appreciation,
             eliminated: m.eliminated,
           })),
           general_average: computed.general_average,
@@ -214,10 +229,31 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
 
   const sourceResults = sourceResultsQ.data || [];
 
-  // ─── Aggregate combined average ──────────────────────────
+  // Flat list of all module-period rows (S1 modules then S2 modules in order)
+  const allRows = sourceResults.flatMap((pr) => pr.rows.map((r) => ({ ...r, periodId: pr.period.id, periodName: pr.period.name })));
+
+  // Combined general average = weighted average of ALL module rows by coefficient
+  const combinedAverageFromModules = (() => {
+    let w = 0, c = 0;
+    for (const r of allRows) {
+      if (r.moy !== null) { w += r.moy * r.coefficient; c += r.coefficient; }
+    }
+    return c > 0 ? Math.round((w / c) * 100) / 100 : null;
+  })();
+  // Combined class average = weighted average of class averages by coefficient
+  const combinedClassAverage = (() => {
+    let w = 0, c = 0;
+    for (const r of allRows) {
+      if (r.classAverage !== null) { w += r.classAverage * r.coefficient; c += r.coefficient; }
+    }
+    return c > 0 ? Math.round((w / c) * 100) / 100 : null;
+  })();
+  const combinedTotalCoef = allRows.reduce((s, r) => s + r.coefficient, 0);
+
+  // ─── Aggregate combined average (legacy, kept for mention/decision compat) ─
   const perPeriodAvg: Record<string, number | null> = {};
   for (const r of sourceResults) perPeriodAvg[r.period.id] = r.general_average;
-  const combinedAverage = aggregateCombinedAverage(perPeriodAvg, compositeConfig);
+  const combinedAverage = combinedAverageFromModules ?? aggregateCombinedAverage(perPeriodAvg, compositeConfig);
 
   // Attendance aggregated over ALL source period date ranges
   const attendanceQ = useQuery({
@@ -240,23 +276,7 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
     combinedAdmitted === null ? (combinedConfig.decision_rules?.pending_label || 'EN COURS')
     : combinedAdmitted ? (combinedConfig.decision_rules?.admitted_label || 'ADMIS(E)')
     : (combinedConfig.decision_rules?.not_admitted_label || 'NON ADMIS(E)');
-  const combinedMention = pickMention(combinedConfig, combinedAverage);
-
-  const ruleLabel: Record<string, string> = {
-    simple_average: 'Simple',
-    weighted_average: 'Pondérée',
-    weighted_by_coefficient: 'Par coefficient',
-  };
-
-  // For weighted display: each period's contribution
-  const weights = compositeConfig.weights || {};
-  const totalWeight = sourceResults.reduce((s, r) => s + (weights[r.period.id] ?? 1), 0) || 1;
-
-  const finalLabel =
-    compositeConfig.custom_label
-    || combinedConfig.text_config.main_title
-    || combinedPeriod.name;
-
+  void pickMention; void compositeConfig.custom_label; void combinedConfig.text_config;
   if (sourceResultsQ.isLoading) {
     return <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: INK }} /></div>;
   }
@@ -264,7 +284,6 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
   void formationLevel;
   const FONT_SANS = 'Arial, Helvetica, sans-serif';
   const BORDER = '1px solid #000';
-  const PERIOD_COLORS = [INK, INK, INK, INK];
   const [firstName, ...lastNameParts] = (studentFullName || '').split(' ');
   const lastName = lastNameParts.join(' ');
 
@@ -320,94 +339,56 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* ═══ BODY: PER-PERIOD TABLES (keeps existing aggregation logic) ═══ */}
-      <div style={{ padding: '14px 18px' }}>
-        {sourceResults.map((pr, idx) => {
-          const headerColor = PERIOD_COLORS[idx % PERIOD_COLORS.length];
-          const w = weights[pr.period.id] ?? 1;
-          const weightPct =
-            compositeConfig.calculation_rule === 'weighted_average'
-              ? Math.round((w / totalWeight) * 100)
-              : compositeConfig.calculation_rule === 'simple_average'
-                ? Math.round((1 / sourceResults.length) * 100)
-                : null;
-
-          return (
-            <div key={pr.period.id} style={{ marginBottom: idx === sourceResults.length - 1 ? 14 : 18 }} data-testid={`combined-source-bulletin-${idx}`}>
-              {/* Period banner — B&W grey */}
-              <div style={{
-                background: '#E0E0E0',
-                padding: '6px 10px',
-                border: '1px solid #000',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                fontSize: 11,
-              }}>
-                <span style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                  {pr.period.name}
-                  {weightPct !== null && <span style={{ fontWeight: 400, marginLeft: 10 }}>— Poids : {weightPct}%</span>}
-                </span>
-                <span style={{ fontWeight: 700 }}>
-                  Moy. : {fmt(pr.general_average)}/20
-                </span>
-              </div>
-
-              {/* Subjects table — B&W strict */}
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10, fontFamily: FONT_SANS, marginTop: -1 }}>
-                <thead>
-                  <tr>
-                    <th style={{ border: '1px solid #000', padding: '6px', background: '#E0E0E0', color: '#000', fontSize: 10, fontWeight: 700, textAlign: 'center', textTransform: 'uppercase', width: '32%' }}>Matière</th>
-                    <th style={{ border: '1px solid #000', padding: '6px', background: '#E0E0E0', color: '#000', fontSize: 10, fontWeight: 700, textAlign: 'center', textTransform: 'uppercase', width: '10%' }}>CC</th>
-                    <th style={{ border: '1px solid #000', padding: '6px', background: '#E0E0E0', color: '#000', fontSize: 10, fontWeight: 700, textAlign: 'center', textTransform: 'uppercase', width: '10%' }}>DS</th>
-                    <th style={{ border: '1px solid #000', padding: '6px', background: '#E0E0E0', color: '#000', fontSize: 10, fontWeight: 700, textAlign: 'center', textTransform: 'uppercase', width: '14%' }}>Exam Final</th>
-                    <th style={{ border: '1px solid #000', padding: '6px', background: '#E0E0E0', color: '#000', fontSize: 10, fontWeight: 700, textAlign: 'center', textTransform: 'uppercase', width: '12%' }}>Oral</th>
-                    <th style={{ border: '1px solid #000', padding: '6px', background: '#E0E0E0', color: '#000', fontSize: 10, fontWeight: 700, textAlign: 'center', textTransform: 'uppercase', width: '10%' }}>Moy.</th>
-                    <th style={{ border: '1px solid #000', padding: '6px', background: '#E0E0E0', color: '#000', fontSize: 10, fontWeight: 700, textAlign: 'center', textTransform: 'uppercase', width: '12%' }}>Statut</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pr.rows.length === 0 ? (
-                    <tr><td colSpan={7} style={{ border: '1px solid #000', padding: 14, textAlign: 'center', fontStyle: 'italic', color: '#000', background: '#fff' }}>Aucune donnée saisie pour cette période.</td></tr>
-                  ) : pr.rows.map((row) => {
-                    const validated = row.moy !== null && row.moy >= admissionThreshold && !row.eliminated;
-                    return (
-                      <tr key={row.moduleId}>
-                        <td style={{ border: '1px solid #000', padding: '5px 6px', fontSize: 10, color: '#000', fontWeight: 500, textTransform: 'uppercase' }}>{row.moduleTitle}</td>
-                        <td style={{ border: '1px solid #000', padding: '5px 6px', fontSize: 10, color: '#000', textAlign: 'center' }}>{row.cc !== null ? Math.round(row.cc) : ''}</td>
-                        <td style={{ border: '1px solid #000', padding: '5px 6px', fontSize: 10, color: '#000', textAlign: 'center' }}>{row.ds !== null ? Math.round(row.ds) : ''}</td>
-                        <td style={{ border: '1px solid #000', padding: '5px 6px', fontSize: 10, color: '#000', textAlign: 'center' }}>{row.exam !== null ? Math.round(row.exam) : ''}</td>
-                        <td style={{ border: '1px solid #000', padding: '5px 6px', fontSize: 10, color: '#000', textAlign: 'center' }}>{row.oral !== null ? Math.round(row.oral) : ''}</td>
-                        <td style={{ border: '1px solid #000', padding: '5px 6px', fontSize: 11, color: '#000', textAlign: 'center', fontWeight: 700 }}>{fmt(row.moy)}</td>
-                        <td style={{ border: '1px solid #000', padding: '5px 6px', fontSize: 9, color: '#000', textAlign: 'center' }}>
-                          {validated ? 'Validé' : row.moy === null ? '' : 'Ajourné'}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* ═══ FINAL SUMMARY FOOTER ROW (same single-row structure as Simple bulletin) ═══ */}
-      <div style={{ padding: '0' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: FONT_SANS }} data-testid="combined-final-section">
-          <tbody>
-            <tr>
-              <th style={{ border: '1px solid #000', padding: '6px', background: '#E0E0E0', color: '#000', fontSize: 10, fontWeight: 700, textAlign: 'center', textTransform: 'uppercase' }} colSpan={2}>MOYENNE GENERALE COMBINEE</th>
-              <td style={{ border: '1px solid #000', padding: '8px 6px', fontSize: 14, color: '#000', textAlign: 'center', fontWeight: 700, background: '#fff' }}>{fmt(combinedAverage)}/20</td>
-              <td style={{ border: '1px solid #000', padding: '8px 6px', fontSize: 11, color: '#000', textAlign: 'center', fontWeight: 600, background: '#fff' }}>{combinedMention || ''}</td>
-              <td style={{ border: '1px solid #000', padding: '8px 6px', fontSize: 10, color: '#000', textAlign: 'center', background: '#fff' }}>{ruleLabel[compositeConfig.calculation_rule] || compositeConfig.calculation_rule}</td>
-              <td style={{ border: '1px solid #000', padding: '8px 6px', fontSize: 11, color: '#000', textAlign: 'center', fontWeight: 700, background: '#fff' }}>
-                {combinedAdmitted === true ? 'ADMIS' : combinedAdmitted === false ? 'NON ADMIS' : combinedDecisionLabel}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      {/* ═══ BODY: SINGLE COMBINED TABLE — Simple bulletin layout ═══ */}
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: FONT_SANS }} data-testid="combined-flat-table">
+        <colgroup>
+          <col style={{ width: '24%' }} />
+          <col style={{ width: '14%' }} />
+          <col style={{ width: '10%' }} />
+          <col style={{ width: '11%' }} />
+          <col style={{ width: '11%' }} />
+          <col style={{ width: '30%' }} />
+        </colgroup>
+        <tbody>
+          {/* Header row: column titles */}
+          <tr>
+            <th style={{ border: BORDER, padding: '6px 6px', fontSize: 10, fontWeight: 700, textAlign: 'left', paddingLeft: 8, background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }} rowSpan={2}>MATIERES</th>
+            <th style={{ border: BORDER, padding: '6px 6px', fontSize: 10, fontWeight: 700, textAlign: 'center', background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }} rowSpan={2}>FORMATEUR</th>
+            <th style={{ border: BORDER, padding: '6px 6px', fontSize: 10, fontWeight: 700, textAlign: 'center', background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }} rowSpan={2}>COEFFICIENT</th>
+            <th style={{ border: BORDER, padding: '6px 6px', fontSize: 10, fontWeight: 700, textAlign: 'center', background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }} colSpan={2}>MOYENNE</th>
+            <th style={{ border: BORDER, padding: '6px 6px', fontSize: 10, fontWeight: 700, textAlign: 'center', background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }} rowSpan={2}>APPRECIATION</th>
+          </tr>
+          <tr>
+            <th style={{ border: BORDER, padding: '6px 6px', fontSize: 8.5, fontWeight: 700, textAlign: 'center', background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }}>MOYENNE DE L'ETUDIANT</th>
+            <th style={{ border: BORDER, padding: '6px 6px', fontSize: 8.5, fontWeight: 700, textAlign: 'center', background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }}>MOYENNE DE LA PROMO</th>
+          </tr>
+          {allRows.length === 0 ? (
+            <tr><td colSpan={6} style={{ border: BORDER, padding: 14, textAlign: 'center', fontStyle: 'italic', color: '#000', background: '#fff' }}>Aucune donnée saisie pour les périodes sélectionnées.</td></tr>
+          ) : allRows.map((row, idx) => {
+            const ins = instructorsByModuleId?.get(row.moduleId) || [];
+            return (
+              <tr key={`${row.periodId}-${row.moduleId}-${idx}`} data-testid={`combined-row-${row.periodId}-${row.moduleId}`}>
+                <td style={{ border: BORDER, padding: '5px 6px', fontSize: 10, color: '#000', fontWeight: 500, textTransform: 'uppercase', verticalAlign: 'top' }}>{row.moduleTitle}</td>
+                <td style={{ border: BORDER, padding: '5px 6px', fontSize: 9, color: '#000', textAlign: 'center', verticalAlign: 'top' }}>{ins.length > 0 ? ins.join(', ') : ''}</td>
+                <td style={{ border: BORDER, padding: '5px 6px', fontSize: 9, color: '#000', textAlign: 'center', verticalAlign: 'top' }}>{row.coefficient}</td>
+                <td style={{ border: BORDER, padding: '5px 6px', fontSize: 11, color: '#000', textAlign: 'center', fontWeight: 700, verticalAlign: 'top' }}>{fmt(row.moy)}</td>
+                <td style={{ border: BORDER, padding: '5px 6px', fontSize: 11, color: '#000', textAlign: 'center', fontWeight: 500, verticalAlign: 'top' }}>{fmt(row.classAverage)}</td>
+                <td style={{ border: BORDER, padding: '5px 6px', fontSize: 9, color: '#000', fontStyle: 'italic', verticalAlign: 'top' }}>{row.appreciation || ''}</td>
+              </tr>
+            );
+          })}
+          {/* Footer single row: MOYENNE GENERALE label spans MATIERES+FORMATEUR | totalCoef under COEFFICIENT | moy étudiant | moy promo | DECISION */}
+          <tr>
+            <th style={{ border: BORDER, padding: '6px 6px', fontSize: 10, fontWeight: 700, textAlign: 'center', background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }} colSpan={2}>MOYENNE GENERALE</th>
+            <td style={{ border: BORDER, padding: '6px 6px', fontSize: 9, textAlign: 'center', fontWeight: 700, background: '#fff', color: '#000' }}>{combinedTotalCoef}</td>
+            <td style={{ border: BORDER, padding: '6px 6px', fontSize: 12, textAlign: 'center', fontWeight: 700, background: '#fff', color: '#000' }}>{fmt(combinedAverage)}</td>
+            <td style={{ border: BORDER, padding: '6px 6px', fontSize: 11, textAlign: 'center', fontWeight: 500, background: '#fff', color: '#000' }}>{fmt(combinedClassAverage)}</td>
+            <td style={{ border: BORDER, padding: '6px 6px', fontSize: 11, textAlign: 'center', fontWeight: 700, background: '#fff', color: '#000' }}>
+              {combinedAdmitted === true ? 'ADMIS' : combinedAdmitted === false ? 'NON ADMIS' : combinedDecisionLabel}
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
       {/* ═══ 3 BOTTOM BOXES (identical to Simple + BTS Blanc) ═══ */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1fr', border: BORDER, marginTop: 10 }}>

@@ -1,0 +1,32 @@
+{
+  "summary": "Frontend test of CombinedBulletinRenderer single-flat-table refactor on Master Digital Marketing 2026 / period 'Bulletin bts' (composite of Semestre 1 + BTS Blanc), student Bernard Lucas. ALL acceptance criteria pass. The bulletin renders ONE single table (data-testid='combined-flat-table' present, wrapper data-testid='combined-bulletin' present) with the correct Simple-style column structure: MATIERES | FORMATEUR | COEFFICIENT | MOYENNE (split into MOYENNE DE L'ETUDIANT and MOYENNE DE LA PROMO) | APPRECIATION. The old per-period block testid 'combined-source-bulletin-*' is fully removed (0 occurrences in DOM and source). The body lists the 6 module rows from both source periods in source order: SEO/DIGITAL/REFER (Semestre 1) then SEO/DIGITAL/REFER (BTS Blanc), each tagged with data-testid='combined-row-{periodId}-{moduleId}'. Footer single row reads: 'MOYENNE GENERALE' (label spans MATIERES+FORMATEUR cols) | total coef = 6 | moy étudiant = 11.50 | moy promo = 12.25 | DECISION = ADMIS — confirming the new weighted-by-coefficient combined average across ALL modules of all periods. No runtime errors ('is not defined', undefined property, ReferenceError) thrown during render.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "CombinedBulletinRenderer footer (3 bottom boxes)", "issues": ["Typo in directeur header label: 'DIERECTEUR DE L'ETABLISSEMENT' should be 'DIRECTEUR DE L'ETABLISSEMENT' (CombinedBulletinRenderer.tsx:406)", "Typo in italic helper line below: '(nom, prenom, signature et cachet de letablissement)' should be '(nom, prénom, signature et cachet de l'établissement)' — missing apostrophe in 'l'établissement' (CombinedBulletinRenderer.tsx:407). Same typos exist in SimpleBulletinTemplate / BTS Blanc by visual parity, but only the combined renderer was modified in this iteration."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "OPTIONAL polish: fix the two French typos in CombinedBulletinRenderer.tsx lines 406-407 ('DIERECTEUR' → 'DIRECTEUR' ; '(nom, prenom, signature et cachet de letablissement)' → proper accents/apostrophes).",
+    "PRE-EXISTING (NOT a blocker, unrelated to this change): Edge Function compute-bulletin returns CORS / 404 / 400 from origin https://audit-complete-12.preview.emergentagent.com (used by Saisie/Calcul flow via bulletinComputeService). The CombinedBulletinRenderer correctly bypasses this — it computes locally with computeStudentPeriodBulletin — but the same period rendered via the Calcul & Validation tab will still fail. Recommend whitelisting the preview origin on the Supabase Edge Function CORS or fall back to client-side compute everywhere."
+  ],
+  "critical_code_review_comments": [
+    "CombinedBulletinRenderer.tsx:343 — data-testid='combined-flat-table' correctly added; entire table is a single <table>. ✓",
+    "CombinedBulletinRenderer.tsx — no occurrence of 'combined-source-bulletin' anywhere in the file (the only repo match is in BulletinConfigModal.tsx as a React-Query KEY string, not a DOM testid; not a regression). ✓",
+    "CombinedBulletinRenderer.tsx:236-242 — combined general average is computed as Σ(moy_module × coef_module) / Σ coef_module across ALL rows of ALL source periods (matches the new spec 'moyenne pondérée par coefficient de TOUS les modules'). ✓",
+    "CombinedBulletinRenderer.tsx:244-250 — combined class average uses the same weighted formula on classAverage; PeriodResult.rows now correctly carries classAverage and appreciation per module. ✓",
+    "CombinedBulletinRenderer.tsx:355-364 — header rowSpan/colSpan layout matches Simple bulletin (MATIERES rowSpan=2, MOYENNE colSpan=2 with two child columns). ✓",
+    "CombinedBulletinRenderer.tsx:381-389 — footer single row: MOYENNE GENERALE label colSpan=2 across MATIERES+FORMATEUR, total coef under COEFFICIENT, moy étudiant/promo split, DECISION cell. Matches the requested layout. ✓",
+    "MINOR: typo 'DIERECTEUR' (line 406) and missing accents/apostrophe in helper text (line 407). Cosmetic only."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "n/a (frontend only)", "frontend": "100% (7/7 acceptance criteria verified live on the BTS combined period of MDM 2026)" },
+  "test_credentials": "admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "None. Used the existing composite period 'Bulletin bts' (composite of 'Semestre 1' + 'BTS Blanc') already seeded on Master Digital Marketing 2026; student Bernard Lucas already had grades giving moy 11.50 (promo 12.25) → ADMIS.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Login admin.principal@nectforma-demo.com / NectDemo2026!. Composite period to test is 'Bulletin bts' on Master Digital Marketing 2026 (NOT 'BTS Blanc' — that one is a regular bts_blanc-type single period). Path: /notes → click card 'Master Digital Marketing 2026' → 'Gérer les notes' → tab 'Bulletin de notes' → click chip 'Bulletin bts' → click 'Voir' on Bernard Lucas → modal opens with the new single combined-flat-table. Bernard Lucas has graded data only on Semestre 1 (S1 modules show real values, BTS Blanc modules show '—'); use him for any visual regression. The compute-bulletin Edge Function CORS error in console is pre-existing and only affects the Calcul & Validation tab, not the bulletin renderer."
+}
