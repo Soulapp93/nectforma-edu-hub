@@ -230,28 +230,49 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
 
   const sourceResults = sourceResultsQ.data || [];
 
-  // Flat list of all module-period rows (S1 modules then S2 modules in order)
-  const allRows = sourceResults.flatMap((pr) => pr.rows.map((r) => ({ ...r, periodId: pr.period.id, periodName: pr.period.name })));
+  // Split sources by type — BTS Blanc periods are rendered in a SEPARATE block (no global combined moyenne)
+  const matieresResults = sourceResults.filter((pr) => pr.period.period_type !== 'bts_blanc');
+  const btsBlancResults = sourceResults.filter((pr) => pr.period.period_type === 'bts_blanc');
+  const hasBtsBlanc = btsBlancResults.length > 0;
+  const hasMatieres = matieresResults.length > 0;
+  const isDualBlockMode = hasBtsBlanc && hasMatieres;
 
-  // Combined general average = weighted average of ALL module rows by coefficient
-  const combinedAverageFromModules = (() => {
+  // Block 1 — Matières (non-BTS-Blanc) rows
+  const matieresRows = matieresResults.flatMap((pr) =>
+    pr.rows.map((r) => ({ ...r, periodId: pr.period.id, periodName: pr.period.name }))
+  );
+  const matieresTotalCoef = matieresRows.reduce((s, r) => s + r.coefficient, 0);
+  const matieresAvg = (() => {
     let w = 0, c = 0;
-    for (const r of allRows) {
-      if (r.moy !== null) { w += r.moy * r.coefficient; c += r.coefficient; }
-    }
+    for (const r of matieresRows) if (r.moy !== null) { w += r.moy * r.coefficient; c += r.coefficient; }
     return c > 0 ? Math.round((w / c) * 100) / 100 : null;
   })();
-  // Combined class average = weighted average of class averages by coefficient
-  const combinedClassAverage = (() => {
+  const matieresClassAvg = (() => {
     let w = 0, c = 0;
-    for (const r of allRows) {
-      if (r.classAverage !== null) { w += r.classAverage * r.coefficient; c += r.coefficient; }
-    }
+    for (const r of matieresRows) if (r.classAverage !== null) { w += r.classAverage * r.coefficient; c += r.coefficient; }
     return c > 0 ? Math.round((w / c) * 100) / 100 : null;
   })();
-  const combinedTotalCoef = allRows.reduce((s, r) => s + r.coefficient, 0);
 
-  // ─── Aggregate combined average (legacy, kept for mention/decision compat) ─
+  // Block 2 — BTS Blanc rows (épreuves)
+  const btsBlancRows = btsBlancResults.flatMap((pr) =>
+    pr.rows.map((r) => ({ ...r, periodId: pr.period.id, periodName: pr.period.name }))
+  );
+  const btsTotalCoef = btsBlancRows.reduce((s, r) => s + r.coefficient, 0);
+  const btsTotalPoints = (() => {
+    let p = 0;
+    for (const r of btsBlancRows) if (r.moy !== null) p += r.moy * r.coefficient;
+    return Math.round(p * 100) / 100;
+  })();
+  const btsMoyenne = btsTotalCoef > 0 ? Math.round((btsTotalPoints / btsTotalCoef) * 100) / 100 : null;
+  // BTS validation in France: 220 points threshold (= moyenne 10/20 with coef total of 22)
+  const BTS_THRESHOLD_POINTS = 220;
+  const btsAdmitted: boolean | null = btsBlancRows.length === 0 ? null : (btsTotalPoints >= BTS_THRESHOLD_POINTS);
+
+  // Legacy single-flat-table aggregation (when NO BTS Blanc source)
+  const allRows = matieresRows; // same as matieresRows when no BTS Blanc
+  const combinedTotalCoef = matieresTotalCoef;
+  const combinedClassAverage = matieresClassAvg;
+  const combinedAverageFromModules = matieresAvg;
   const perPeriodAvg: Record<string, number | null> = {};
   for (const r of sourceResults) perPeriodAvg[r.period.id] = r.general_average;
   const combinedAverage = combinedAverageFromModules ?? aggregateCombinedAverage(perPeriodAvg, compositeConfig);
@@ -330,7 +351,106 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* ═══ BODY: SINGLE COMBINED TABLE — Simple bulletin layout ═══ */}
+      {/* ═══ BODY ═══ */}
+      {isDualBlockMode || (hasBtsBlanc && !hasMatieres) ? (
+        <>
+          {/* BLOCK 1 — Matières (only when there are non-BTS-Blanc sources) */}
+          {hasMatieres && (
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: FONT_SANS, marginBottom: 8 }} data-testid="combined-matieres-table">
+              <colgroup>
+                <col style={{ width: '24%' }} /><col style={{ width: '14%' }} /><col style={{ width: '10%' }} /><col style={{ width: '11%' }} /><col style={{ width: '11%' }} /><col style={{ width: '30%' }} />
+              </colgroup>
+              <tbody>
+                <tr>
+                  <th colSpan={6} style={{ border: BORDER, background: '#000', color: '#fff', padding: '5px 6px', fontSize: 10, fontWeight: 700, textAlign: 'center', letterSpacing: 0.5 }}>MOYENNES DES MATIERES</th>
+                </tr>
+                <tr>
+                  <th style={{ border: BORDER, padding: '6px 6px', fontSize: 10, fontWeight: 700, textAlign: 'left', paddingLeft: 8, background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }} rowSpan={2}>MATIERES</th>
+                  <th style={{ border: BORDER, padding: '6px 6px', fontSize: 10, fontWeight: 700, textAlign: 'center', background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }} rowSpan={2}>FORMATEUR</th>
+                  <th style={{ border: BORDER, padding: '6px 6px', fontSize: 10, fontWeight: 700, textAlign: 'center', background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }} rowSpan={2}>COEFFICIENT</th>
+                  <th style={{ border: BORDER, padding: '6px 6px', fontSize: 10, fontWeight: 700, textAlign: 'center', background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }} colSpan={2}>MOYENNE</th>
+                  <th style={{ border: BORDER, padding: '6px 6px', fontSize: 10, fontWeight: 700, textAlign: 'center', background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }} rowSpan={2}>APPRECIATION</th>
+                </tr>
+                <tr>
+                  <th style={{ border: BORDER, padding: '6px 6px', fontSize: 8.5, fontWeight: 700, textAlign: 'center', background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }}>MOYENNE DE L'ETUDIANT</th>
+                  <th style={{ border: BORDER, padding: '6px 6px', fontSize: 8.5, fontWeight: 700, textAlign: 'center', background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }}>MOYENNE DE LA PROMO</th>
+                </tr>
+                {matieresRows.length === 0 ? (
+                  <tr><td colSpan={6} style={{ border: BORDER, padding: 14, textAlign: 'center', fontStyle: 'italic', color: '#000', background: '#fff' }}>Aucune donnée saisie.</td></tr>
+                ) : matieresRows.map((row, idx) => {
+                  const ins = instructorsByModuleId?.get(row.moduleId) || [];
+                  return (
+                    <tr key={`m-${row.periodId}-${row.moduleId}-${idx}`} data-testid={`combined-matieres-row-${row.moduleId}`}>
+                      <td style={{ border: BORDER, padding: '5px 6px', fontSize: 10, color: '#000', fontWeight: 500, textTransform: 'uppercase', verticalAlign: 'top' }}>{row.moduleTitle}</td>
+                      <td style={{ border: BORDER, padding: '5px 6px', fontSize: 9, color: '#000', textAlign: 'center', verticalAlign: 'top' }}>{ins.length > 0 ? ins.join(', ') : ''}</td>
+                      <td style={{ border: BORDER, padding: '5px 6px', fontSize: 9, color: '#000', textAlign: 'center', verticalAlign: 'top' }}>{row.coefficient}</td>
+                      <td style={{ border: BORDER, padding: '5px 6px', fontSize: 11, color: '#000', textAlign: 'center', fontWeight: 700, verticalAlign: 'top' }}>{fmt(row.moy)}</td>
+                      <td style={{ border: BORDER, padding: '5px 6px', fontSize: 11, color: '#000', textAlign: 'center', fontWeight: 500, verticalAlign: 'top' }}>{fmt(row.classAverage)}</td>
+                      <td style={{ border: BORDER, padding: '5px 6px', fontSize: 9, color: '#000', fontStyle: 'italic', verticalAlign: 'top' }}>{row.appreciation || ''}</td>
+                    </tr>
+                  );
+                })}
+                {/* Footer matières */}
+                <tr>
+                  <th style={{ border: BORDER, padding: '6px 6px', fontSize: 10, fontWeight: 700, textAlign: 'center', background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }} colSpan={2}>MOYENNE GENERALE</th>
+                  <td style={{ border: BORDER, padding: '6px 6px', fontSize: 9, textAlign: 'center', fontWeight: 700, background: '#fff', color: '#000' }}>{matieresTotalCoef}</td>
+                  <td style={{ border: BORDER, padding: '6px 6px', fontSize: 12, textAlign: 'center', fontWeight: 700, background: '#fff', color: '#000' }}>{fmt(matieresAvg)}</td>
+                  <td style={{ border: BORDER, padding: '6px 6px', fontSize: 11, textAlign: 'center', fontWeight: 500, background: '#fff', color: '#000' }}>{fmt(matieresClassAvg)}</td>
+                  <td style={{ border: BORDER, padding: '6px 6px', fontSize: 9, background: '#fff', color: '#000', fontStyle: 'italic' }}></td>
+                </tr>
+              </tbody>
+            </table>
+          )}
+
+          {/* BLOCK 2 — BTS Blanc */}
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: FONT_SANS }} data-testid="combined-bts-blanc-table">
+            <colgroup>
+              <col style={{ width: '34%' }} /><col style={{ width: '12%' }} /><col style={{ width: '12%' }} /><col style={{ width: '14%' }} /><col style={{ width: '28%' }} />
+            </colgroup>
+            <tbody>
+              <tr>
+                <th colSpan={5} style={{ border: BORDER, background: '#000', color: '#fff', padding: '5px 6px', fontSize: 10, fontWeight: 700, textAlign: 'center', letterSpacing: 0.5 }}>BTS BLANC</th>
+              </tr>
+              <tr>
+                <th style={{ border: BORDER, padding: '6px 6px', fontSize: 10, fontWeight: 700, textAlign: 'left', paddingLeft: 8, background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }}>EPREUVES</th>
+                <th style={{ border: BORDER, padding: '6px 6px', fontSize: 10, fontWeight: 700, textAlign: 'center', background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }}>NOTES</th>
+                <th style={{ border: BORDER, padding: '6px 6px', fontSize: 10, fontWeight: 700, textAlign: 'center', background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }}>COEFFICIENT</th>
+                <th style={{ border: BORDER, padding: '6px 6px', fontSize: 10, fontWeight: 700, textAlign: 'center', background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }}>TOTAL DES POINTS</th>
+                <th style={{ border: BORDER, padding: '6px 6px', fontSize: 10, fontWeight: 700, textAlign: 'center', background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }}>APPRECIATION</th>
+              </tr>
+              {btsBlancRows.length === 0 ? (
+                <tr><td colSpan={5} style={{ border: BORDER, padding: 14, textAlign: 'center', fontStyle: 'italic', color: '#000', background: '#fff' }}>Aucune donnée saisie.</td></tr>
+              ) : btsBlancRows.map((row, idx) => {
+                const points = row.moy !== null ? Math.round(row.moy * row.coefficient * 100) / 100 : null;
+                return (
+                  <tr key={`b-${row.periodId}-${row.moduleId}-${idx}`} data-testid={`combined-bts-row-${row.moduleId}`}>
+                    <td style={{ border: BORDER, padding: '5px 6px', fontSize: 10, color: '#000', fontWeight: 500, textTransform: 'uppercase', verticalAlign: 'top' }}>{row.moduleTitle}</td>
+                    <td style={{ border: BORDER, padding: '5px 6px', fontSize: 11, color: '#000', textAlign: 'center', fontWeight: 700, verticalAlign: 'top' }}>{fmt(row.moy)}</td>
+                    <td style={{ border: BORDER, padding: '5px 6px', fontSize: 9, color: '#000', textAlign: 'center', verticalAlign: 'top' }}>{row.coefficient}</td>
+                    <td style={{ border: BORDER, padding: '5px 6px', fontSize: 11, color: '#000', textAlign: 'center', fontWeight: 700, verticalAlign: 'top' }}>{fmt(points)}</td>
+                    <td style={{ border: BORDER, padding: '5px 6px', fontSize: 9, color: '#000', fontStyle: 'italic', verticalAlign: 'top' }}>{row.appreciation || ''}</td>
+                  </tr>
+                );
+              })}
+              {/* Footer BTS Blanc: TOTAL spans EPREUVES+NOTES | totalCoef | totalPoints | MOYENNE + DECISION */}
+              <tr>
+                <th style={{ border: BORDER, padding: '6px 6px', fontSize: 10, fontWeight: 700, textAlign: 'center', background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }} colSpan={2}>TOTAL</th>
+                <td style={{ border: BORDER, padding: '6px 6px', fontSize: 9, textAlign: 'center', fontWeight: 700, background: '#fff', color: '#000' }}>{btsTotalCoef || ''}</td>
+                <td style={{ border: BORDER, padding: '6px 6px', fontSize: 11, textAlign: 'center', fontWeight: 700, background: '#fff', color: '#000' }}>{fmt(btsTotalPoints)}</td>
+                <td style={{ border: BORDER, padding: '6px 6px', fontSize: 9, background: '#fff', color: '#000', fontStyle: 'italic' }}></td>
+              </tr>
+              <tr>
+                <th style={{ border: BORDER, padding: '6px 6px', fontSize: 10, fontWeight: 700, textAlign: 'center', background: '#E0E0E0', textTransform: 'uppercase', color: '#000' }} colSpan={2}>MOYENNE</th>
+                <td colSpan={2} style={{ border: BORDER, padding: '6px 6px', fontSize: 12, textAlign: 'center', fontWeight: 700, background: '#fff', color: '#000' }}>{fmt(btsMoyenne)}</td>
+                <td style={{ border: BORDER, padding: '6px 6px', fontSize: 10, textAlign: 'center', fontWeight: 700, background: '#fff', color: '#000' }}>
+                  {btsAdmitted === true ? 'ADMIS' : btsAdmitted === false ? 'NON ADMIS' : ''}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </>
+      ) : (
+      /* ═══ SINGLE COMBINED TABLE — Simple bulletin layout (no BTS Blanc among sources) ═══ */
       <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: FONT_SANS }} data-testid="combined-flat-table">
         <colgroup>
           <col style={{ width: '24%' }} />
@@ -380,6 +500,7 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
           </tr>
         </tbody>
       </table>
+      )}
 
       {/* ═══ 3 BOTTOM BOXES (identical to Simple + BTS Blanc) ═══ */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1fr', border: BORDER, marginTop: 10 }}>

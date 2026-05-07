@@ -1,0 +1,31 @@
+{
+  "summary": "Frontend-only test of CombinedBulletinRenderer DUAL-BLOCK mode for Bernard Lucas on combined period 'Bulletin bts' (Semestre 1 + BTS Blanc). All requested checks PASSED: (1) data-testid combined-matieres-table = 1, combined-bts-blanc-table = 1, combined-flat-table = 0 (correctly hidden); (2) Block 1 'MOYENNES DES MATIERES' renders header in black, 6 columns (MATIERES | FORMATEUR | COEFFICIENT | MOYENNE etudiant + promo | APPRECIATION) with the 3 modules SEO/DIGITAL/REFER and footer 'MOYENNE GENERALE' showing totalCoef=3, étudiant=11.50, promo=12.25; (3) Block 2 'BTS BLANC' renders header in black, 5 columns (EPREUVES | NOTES | COEFFICIENT | TOTAL DES POINTS | APPRECIATION). Bernard Lucas has no BTS Blanc grades, so notes/points show — and the structure remains intact (per spec); (4) Footer 2 lignes : 'TOTAL' colspan=2 + totalCoef=3 + totalPoints=0 ; 'MOYENNE' colspan=2 + valeur=0 (=0/3) + 'NON ADMIS' (since 0 < 220 threshold). The decision logic and points computation are correct. No runtime errors in the renderer. Pre-existing CORS/404 on edge function compute-bulletin (fallback client-side works) — not reported per task instructions.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Bulletin dialog (any combined bulletin)", "issues": ["Radix-UI accessibility warning: 'DialogContent requires a DialogTitle for the component to be accessible for screen reader users'. Pre-existing in BulletinTemplateRenderer dialog wrapper, not introduced by this change."]},
+      {"screen": "CombinedBulletinRenderer footer signatures box", "issues": ["Typo in label: 'DIERECTEUR DE L'ETABLISSEMENT' should be 'DIRECTEUR DE L'ETABLISSEMENT' (line 518). Same typo also exists for 'cachet de letablissement' (missing apostrophe). Pre-existing in template."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "(Optional, low-prio) Fix typo 'DIERECTEUR' → 'DIRECTEUR' and 'letablissement' → \"l'etablissement\" in CombinedBulletinRenderer.tsx line 518-519 (also present in Simple/BtsBlanc templates likely).",
+    "(Optional, low-prio) Wrap the bulletin Dialog with VisuallyHidden DialogTitle for accessibility — pre-existing across all bulletin templates."
+  ],
+  "critical_code_review_comments": [
+    "DUAL-BLOCK logic in CombinedBulletinRenderer.tsx is correctly implemented: split by period_type==='bts_blanc' produces matieresResults vs btsBlancResults; isDualBlockMode=hasMatieres && hasBtsBlanc; render branches: (dual || bts-only) → 2 tables (matieres optional + bts_blanc), else → flat-table.",
+    "BTS validation threshold of 220 points is correctly applied (BTS_THRESHOLD_POINTS const). totalPoints = sum(moy * coefficient), btsMoyenne = totalPoints/totalCoef rounded 2 decimals.",
+    "Edge case: when btsBlancRows is empty, btsAdmitted=null and the decision cell renders '' (no ADMIS/NON ADMIS shown). Note: with all rows present but no grades (Bernard Lucas case), totalPoints=0 → 'NON ADMIS' is shown — consistent with spec.",
+    "File size of CombinedBulletinRenderer.tsx is 541 lines — within healthy threshold but flat-table branch and dual-block branch have ~80% duplicated styling for headers; could be extracted into helpers for DRY but not blocking."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (frontend-only)", "frontend": "100%"},
+  "test_credentials": "admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "None — used existing 'Bulletin bts' combined period from previous iterations (testid period-pill-bd8b2ac9-9508-4b44-9395-af0177ec0889).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "DUAL-BLOCK rendering verified on Bernard Lucas (user_id 3068aa4c-d9c1-4ba0-9ec9-bd304fad0e5c) with combined period 'Bulletin bts'. The non-regression test (combined period without BTS Blanc → flat-table) was NOT executed as no such combined period exists in seed data (the only other combined period 'TEST_Annuel_S1_Bulletinbts' contains BTS Blanc transitively). Main agent could create such a period for full coverage if desired. Pre-existing CORS/404 on Supabase edge function 'compute-bulletin' continues — client-side fallback in CombinedBulletinRenderer still computes correctly.",
+  "rca of the issue": "N/A — feature works as specified."
+}
