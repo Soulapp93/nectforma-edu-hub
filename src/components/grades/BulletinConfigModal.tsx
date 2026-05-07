@@ -27,6 +27,8 @@ import {
   type MentionConfig,
 } from '@/types/bulletinConfig';
 import { Sparkles, Trash2, Plus, Target, Calculator, LayoutGrid, Palette, Type, Signature as SignatureIcon, FileStack, ArrowLeft, Wand2 } from 'lucide-react';
+import BulletinPreview from './BulletinPreview';
+const BulletinLayoutEditor = React.lazy(() => import('./BulletinLayoutEditor'));
 
 interface Props {
   isOpen: boolean;
@@ -69,7 +71,7 @@ const BulletinConfigModal: React.FC<Props> = ({ isOpen, onClose, periodId, perio
   const queryClient = useQueryClient();
   const [cfg, setCfg] = useState<ResolvedBulletinConfig>(DEFAULT_CONFIG);
   // Active section in the new hub navigation. 'hub' = grid of 5 cards (default landing)
-  type ActiveSection = 'hub' | 'rules' | 'structure' | 'design' | 'signatures' | 'templates';
+  type ActiveSection = 'hub' | 'rules' | 'structure' | 'design' | 'signatures' | 'templates' | 'visual-editor';
   const [section, setSection] = useState<ActiveSection>('hub');
 
   // Load config + templates on open
@@ -178,6 +180,7 @@ const BulletinConfigModal: React.FC<Props> = ({ isOpen, onClose, periodId, perio
               {section === 'design' && 'Design'}
               {section === 'signatures' && 'Signatures'}
               {section === 'templates' && 'Templates'}
+              {section === 'visual-editor' && 'Éditeur visuel du bulletin'}
             </span>
             {periodName && <Badge variant="outline">{periodName}</Badge>}
             {formationTitle && <Badge variant="secondary" className="text-xs">{formationTitle}</Badge>}
@@ -189,69 +192,139 @@ const BulletinConfigModal: React.FC<Props> = ({ isOpen, onClose, periodId, perio
           )}
         </DialogHeader>
 
-        {/* ===== HUB (5 cards landing) ===== */}
+        {/* ===== HUB (5 cards landing + live preview) ===== */}
         {section === 'hub' && (
           <div className="flex-1 overflow-y-auto px-6 py-5" data-testid="config-hub">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <ConfigCard
-                icon={<Calculator className="h-7 w-7" />}
-                title="Règles de calculs"
-                description="Définissez les règles de calcul des moyennes, coefficients, UE, blocs et décisions."
-                accent="bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
-                onClick={() => setSection('rules')}
-                testId="config-card-rules"
-              />
-              <ConfigCard
-                icon={<LayoutGrid className="h-7 w-7" />}
-                title="Structure"
-                description="Organisez la structure du bulletin : matières, colonnes et leur ordre d'affichage."
-                accent="bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300"
-                onClick={() => setSection('structure')}
-                testId="config-card-structure"
-              />
-              <ConfigCard
-                icon={<Palette className="h-7 w-7" />}
-                title="Design"
-                description="Personnalisez l'apparence : couleurs, typographies, styles et mises en page."
-                accent="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
-                onClick={() => setSection('design')}
-                testId="config-card-design"
-              />
-              <ConfigCard
-                icon={<SignatureIcon className="h-7 w-7" />}
-                title="Signatures"
-                description="Ajoutez et positionnez les signatures, cachets et noms sur vos bulletins."
-                accent="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
-                onClick={() => setSection('signatures')}
-                testId="config-card-signatures"
-              />
-              <ConfigCard
-                icon={<FileStack className="h-7 w-7" />}
-                title="Templates"
-                description="Créez, gérez et réutilisez vos modèles de bulletins selon les différentes périodes."
-                accent="bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
-                onClick={() => setSection('templates')}
-                testId="config-card-templates"
-              />
-            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+              {/* LEFT — 5 cards + visual editor CTA */}
+              <div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <ConfigCard
+                    icon={<Calculator className="h-7 w-7" />}
+                    title="Règles de calculs"
+                    description="Définissez les règles de calcul des moyennes, coefficients, UE, blocs et décisions."
+                    accent="bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+                    onClick={() => setSection('rules')}
+                    testId="config-card-rules"
+                  />
+                  <ConfigCard
+                    icon={<LayoutGrid className="h-7 w-7" />}
+                    title="Structure"
+                    description="Organisez la structure du bulletin : matières, colonnes et leur ordre d'affichage."
+                    accent="bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300"
+                    onClick={() => setSection('structure')}
+                    testId="config-card-structure"
+                  />
+                  <ConfigCard
+                    icon={<Palette className="h-7 w-7" />}
+                    title="Design"
+                    description="Personnalisez l'apparence : couleurs, typographies, styles et mises en page."
+                    accent="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                    onClick={() => setSection('design')}
+                    testId="config-card-design"
+                  />
+                  <ConfigCard
+                    icon={<SignatureIcon className="h-7 w-7" />}
+                    title="Signatures"
+                    description="Ajoutez et positionnez les signatures, cachets et noms sur vos bulletins."
+                    accent="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+                    onClick={() => setSection('signatures')}
+                    testId="config-card-signatures"
+                  />
+                  <ConfigCard
+                    icon={<FileStack className="h-7 w-7" />}
+                    title="Templates"
+                    description="Créez, gérez et réutilisez vos modèles de bulletins selon les différentes périodes."
+                    accent="bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
+                    onClick={() => setSection('templates')}
+                    testId="config-card-templates"
+                  />
+                </div>
 
-            {/* Visual editor CTA (Phase 3 placeholder) */}
-            <div className="mt-5 rounded-2xl border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-5" data-testid="visual-editor-cta">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                  <Wand2 className="h-6 w-6" />
+                {/* Visual editor CTA — now opens BulletinLayoutEditor */}
+                <div className="mt-4 rounded-2xl border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-5" data-testid="visual-editor-cta">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                      <Wand2 className="h-6 w-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-foreground">Éditeur visuel du bulletin</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Modifiez chaque élément librement : déplacez, redimensionnez, personnalisez le texte, les couleurs et les images.
+                      </p>
+                    </div>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => setSection('visual-editor' as any)}
+                      className="shrink-0"
+                      data-testid="open-visual-editor-btn"
+                    >
+                      <Wand2 className="h-3.5 w-3.5 mr-1" /> Ouvrir l'éditeur
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-foreground">Éditeur visuel du bulletin</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Modifiez votre bulletin en toute liberté grâce à notre éditeur visuel intuitif. Déplacez, personnalisez et ajoutez des éléments en quelques clics.
-                  </p>
+              </div>
+
+              {/* RIGHT — Live preview (reflects current cfg state) */}
+              <div className="hidden lg:block sticky top-0 self-start">
+                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                  <Sparkles className="h-3 w-3" /> Aperçu live
                 </div>
-                <Button variant="default" size="sm" disabled className="shrink-0" data-testid="open-visual-editor-btn">
-                  Bientôt disponible
-                </Button>
+                <BulletinPreview config={cfg} periodName={periodName} formationTitle={formationTitle} />
+                <p className="text-[10px] text-muted-foreground mt-2 italic text-center">
+                  Mise à jour en temps réel selon vos modifications
+                </p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ===== VISUAL EDITOR SECTION (Phase 3) ===== */}
+        {section === 'visual-editor' && (
+          <div className="flex-1 overflow-y-auto px-2 py-2" data-testid="visual-editor-section">
+            <React.Suspense fallback={<div className="flex justify-center py-12 text-muted-foreground">Chargement de l'éditeur…</div>}>
+              <BulletinLayoutEditor
+                headerElements={(cfg.layout_config as any)?.layout_elements?.header || []}
+                bodyElements={(cfg.layout_config as any)?.layout_elements?.body || []}
+                footerElements={(cfg.layout_config as any)?.layout_elements?.footer || []}
+                tableColumns={(cfg.layout_config as any)?.table_columns_v2 || []}
+                tableStyle={(cfg.layout_config as any)?.table_style_v2 || {
+                  headerBg: cfg.design_config?.table_header_bg || '#1e40af',
+                  headerTextColor: cfg.design_config?.table_header_color || '#ffffff',
+                  rowBg: '#ffffff',
+                  rowAltBg: '#f8fafc',
+                  rowTextColor: '#1a1a2e',
+                  borderColor: '#cbd5e1',
+                  borderRadius: 8,
+                  fontSize: 11,
+                  rowHeight: 28,
+                }}
+                onChange={(header, body, footer) => {
+                  setCfg({
+                    ...cfg,
+                    layout_config: {
+                      ...cfg.layout_config,
+                      layout_elements: { header, body, footer },
+                    } as any,
+                  });
+                }}
+                onTableColumnsChange={(cols) => {
+                  setCfg({
+                    ...cfg,
+                    layout_config: { ...cfg.layout_config, table_columns_v2: cols } as any,
+                  });
+                }}
+                onTableStyleChange={(style) => {
+                  setCfg({
+                    ...cfg,
+                    layout_config: { ...cfg.layout_config, table_style_v2: style } as any,
+                  });
+                }}
+                primaryColor={cfg.design_config?.primary_color}
+                accentColor={cfg.design_config?.accent_color}
+              />
+            </React.Suspense>
           </div>
         )}
 
@@ -291,7 +364,7 @@ const BulletinConfigModal: React.FC<Props> = ({ isOpen, onClose, periodId, perio
         )}
 
         {/* ===== EXISTING TABBED CONTENT (rules / structure / design / signatures) ===== */}
-        {section !== 'hub' && section !== 'templates' && (
+        {section !== 'hub' && section !== 'templates' && section !== 'visual-editor' && (
           <>
             {/* Templates shortcut */}
             <div className="flex items-center gap-2 border-b px-6 py-2 bg-muted/40 overflow-x-auto" data-testid="templates-shortcut">
@@ -457,6 +530,65 @@ const BulletinConfigModal: React.FC<Props> = ({ isOpen, onClose, periodId, perio
                       value={cfg.calculation_rules.rounding_decimals ?? 2}
                       onChange={(e) => setCfg({ ...cfg, calculation_rules: { ...cfg.calculation_rules, rounding_decimals: Number(e.target.value) } })}
                     />
+                  </div>
+                </div>
+
+                {/* ===== Phase 4 — Règles avancées ===== */}
+                <div className="border-t pt-4 mt-4 space-y-3" data-testid="advanced-rules-section">
+                  <Label className="text-sm font-semibold flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-primary" /> Règles avancées
+                  </Label>
+
+                  <div className="flex items-center justify-between border rounded p-3" data-testid="rule-ue-eliminatoire">
+                    <div>
+                      <Label>UE éliminatoire</Label>
+                      <p className="text-xs text-muted-foreground mt-1">Une UE non validée bloque l'admission, même si la moyenne générale est ≥ 10</p>
+                    </div>
+                    <Switch
+                      checked={!!(cfg.calculation_rules as any).ue_eliminatoire}
+                      onCheckedChange={(c) => setCfg({ ...cfg, calculation_rules: { ...cfg.calculation_rules, ue_eliminatoire: c } as any })}
+                      data-testid="rule-ue-eliminatoire-switch"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between border rounded p-3" data-testid="rule-bloc-validation">
+                    <div>
+                      <Label>Validation par bloc de compétences</Label>
+                      <p className="text-xs text-muted-foreground mt-1">Chaque bloc doit être validé indépendamment (≥ 10) — pas de compensation entre blocs</p>
+                    </div>
+                    <Switch
+                      checked={!!(cfg.calculation_rules as any).bloc_validation_required}
+                      onCheckedChange={(c) => setCfg({ ...cfg, calculation_rules: { ...cfg.calculation_rules, bloc_validation_required: c } as any })}
+                      data-testid="rule-bloc-validation-switch"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Seuil de points (validation BTS)</Label>
+                      <Input
+                        type="number"
+                        value={(cfg.calculation_rules as any).total_points_threshold ?? 220}
+                        onChange={(e) => setCfg({ ...cfg, calculation_rules: { ...cfg.calculation_rules, total_points_threshold: Number(e.target.value) } as any })}
+                        placeholder="220"
+                        data-testid="rule-points-threshold"
+                      />
+                      <p className="text-[10px] text-muted-foreground mt-1">Référence française BTS : 220 pts = moyenne 10/20</p>
+                    </div>
+                    <div>
+                      <Label>Méthode de décision finale</Label>
+                      <Select
+                        value={(cfg.calculation_rules as any).decision_method || 'moyenne'}
+                        onValueChange={(v) => setCfg({ ...cfg, calculation_rules: { ...cfg.calculation_rules, decision_method: v } as any })}
+                      >
+                        <SelectTrigger data-testid="rule-decision-method"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="moyenne">Sur la moyenne (≥ seuil)</SelectItem>
+                          <SelectItem value="points">Sur le total des points</SelectItem>
+                          <SelectItem value="hybrid">Moyenne + UE/blocs validés</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
               </TabsContent>
@@ -891,7 +1023,7 @@ const BulletinConfigModal: React.FC<Props> = ({ isOpen, onClose, periodId, perio
         )}
 
         {/* Footer Save bar — hidden on hub & templates landing */}
-        {section !== 'hub' && section !== 'templates' && (
+        {(section === 'rules' || section === 'structure' || section === 'design' || section === 'signatures' || section === 'visual-editor') && (
           <div className="flex justify-end gap-2 px-6 py-3 border-t shrink-0">
             <Button variant="outline" onClick={onClose}>Annuler</Button>
             <Button
