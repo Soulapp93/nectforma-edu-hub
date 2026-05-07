@@ -18,6 +18,7 @@ import { textBookService, TextBook, TextBookEntry } from '@/services/textBookSer
 import { moduleService, FormationModule } from '@/services/moduleService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useEstablishment } from '@/hooks/useEstablishment';
+import SmartBackButton from '@/components/common/SmartBackButton';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -377,12 +378,12 @@ const TextBookDetail: React.FC = () => {
     if (from === 'formations' && formationId) {
       return {
         path: `/formations/${formationId}`,
-        label: 'Retour à la formation'
+        label: 'Retour'
       };
     }
     return {
       path: '/administration?tab=textbooks',
-      label: 'Retour à l\'administration'
+      label: 'Retour'
     };
   };
 
@@ -392,10 +393,7 @@ const TextBookDetail: React.FC = () => {
     return (
       <div className="text-center py-8">
         <h2 className="text-xl font-semibold mb-4">Cahier de texte non trouvé</h2>
-        <Button onClick={() => navigate(backNav.path)}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          {backNav.label}
-        </Button>
+        <SmartBackButton fallback={backNav.path} variant="outline" testId="textbook-not-found-back" />
       </div>
     );
   }
@@ -405,14 +403,7 @@ const TextBookDetail: React.FC = () => {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <Button
-            variant="outline"
-            onClick={() => navigate(backNav.path)}
-            className="mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            {backNav.label}
-          </Button>
+          <SmartBackButton fallback={backNav.path} variant="outline" className="mb-4" testId="textbook-detail-back" />
           
           {canEdit && (
             <Button onClick={() => setIsAddEntryModalOpen(true)}>

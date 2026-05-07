@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Clock, Users, Edit, FileText, GraduationCap, BookText, UsersRound, FolderOpen, ClipboardCheck, Layers } from 'lucide-react';
+import { BookOpen, Clock, Users, Edit, FileText, GraduationCap, BookText, UsersRound, FolderOpen, ClipboardCheck, Layers } from 'lucide-react';
 import { formationService, Formation } from '@/services/formationService';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,7 @@ import ModuleGroupsTab from '@/components/module/ModuleGroupsTab';
 import ModuleTasksTab from '@/components/module/ModuleTasksTab';
 import CreateAttendanceSessionModal from '@/components/emargement/CreateAttendanceSessionModal';
 import FormationParticipantsModal from '@/components/administration/FormationParticipantsModal';
+import SmartBackButton from '@/components/common/SmartBackButton';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { semesterMatchesFilter, getSemesterBadgeLabel } from '@/utils/semesterUtils';
 
@@ -76,6 +77,11 @@ const FormationDetail = () => {
   }, [formation?.formation_modules, semesterFilter]);
 
   // No UE grouping anymore - flat module list
+  // Smart back: respect history when present, fallback based on entry context
+  const fallbackPath = (userRole === 'Admin' || userRole === 'AdminPrincipal') && from === 'administration'
+    ? '/administration?tab=formations'
+    : '/formations';
+
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center">
@@ -85,23 +91,13 @@ const FormationDetail = () => {
   }
 
   // Get appropriate back navigation based on user role
-  const getBackNavigation = () => {
-    const isAdmin = userRole === 'Admin' || userRole === 'AdminPrincipal';
-    if (from === 'administration' && isAdmin) {
-      return { path: '/administration?tab=formations', label: 'Retour à l\'administration' };
-    }
-    return { path: '/formations', label: 'Retour aux formations' };
-  };
-
-  const backNav = getBackNavigation();
+  // (kept only for fallback path computation; SmartBackButton handles the actual back navigation)
 
   if (error || !formation) {
     return (
       <div className="p-8">
         <div className="text-destructive">Erreur: {error || 'Formation non trouvée'}</div>
-        <Button onClick={() => navigate(backNav.path)} className="mt-4">
-          {backNav.label}
-        </Button>
+        <SmartBackButton fallback={fallbackPath} variant="default" className="mt-4" testId="formation-error-back" />
       </div>
     );
   }
@@ -112,14 +108,12 @@ const FormationDetail = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Back Button */}
       <div className="bg-card/80 backdrop-blur-md border-b border-primary/10 px-8 py-4 shadow-sm">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate(backNav.path)}
-          className="flex items-center text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          {backNav.label}
-        </Button>
+        <SmartBackButton
+          fallback={fallbackPath}
+          variant="ghost"
+          className="text-muted-foreground hover:text-foreground transition-colors"
+          testId="formation-detail-back"
+        />
       </div>
 
       {/* Header Section with Formation Color */}
