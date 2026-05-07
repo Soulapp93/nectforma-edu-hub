@@ -124,6 +124,34 @@ export async function getCombinedSourcePeriods(combinedPeriodId: string): Promis
 }
 
 /**
+ * Recursively resolve a combined period to its leaf (non-composite) source periods.
+ * Handles nested combined-of-combined cases (e.g. "Annuel" = "S1+S2 combined" + "BTS Blanc").
+ * Cycles are detected via a visited Set; deduplication preserves first-occurrence order.
+ */
+export async function getCombinedLeafSourcePeriods(combinedPeriodId: string): Promise<EvaluationPeriod[]> {
+  const visited = new Set<string>();
+  const result: EvaluationPeriod[] = [];
+  const seenIds = new Set<string>();
+
+  const walk = async (periodId: string) => {
+    if (visited.has(periodId)) return;
+    visited.add(periodId);
+    const sources = await getCombinedSourcePeriods(periodId);
+    for (const sp of sources) {
+      if ((sp as any).is_composite === true) {
+        await walk(sp.id);
+      } else if (!seenIds.has(sp.id)) {
+        seenIds.add(sp.id);
+        result.push(sp);
+      }
+    }
+  };
+
+  await walk(combinedPeriodId);
+  return result;
+}
+
+/**
  * Aggregate per-period general averages into a single combined average,
  * according to the calculation_rule of the combined period.
  *

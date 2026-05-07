@@ -83,13 +83,14 @@ const CreateCombinedPeriodModal: React.FC<Props> = ({
     }
   }, [isOpen, editingPeriod]);
 
-  // Eligible periods: all non-composite periods of the same formation
+  // Eligible periods: ALL periods of the same formation (including composites),
+  // excluding the current period itself when editing (to prevent self-reference cycles)
   const eligible = useMemo(
     () =>
       availablePeriods
-        .filter((p) => !p.is_composite)
+        .filter((p) => p.id !== editingPeriod?.id)
         .sort((a, b) => (a as any).order_index - (b as any).order_index),
-    [availablePeriods],
+    [availablePeriods, editingPeriod?.id],
   );
 
   const togglePeriod = (id: string) => {
@@ -184,7 +185,7 @@ const CreateCombinedPeriodModal: React.FC<Props> = ({
           <div>
             <Label className="mb-2 block">Périodes à combiner * (au moins 2)</Label>
             <p className="text-xs text-muted-foreground mb-2">
-              Cochez les périodes existantes à empiler dans le bulletin combiné. L'ordre suit l'ordre des périodes (S1 puis S2…).
+              Cochez les périodes à empiler dans le bulletin combiné. Les périodes simples ET combinées sont acceptées (ex: combiner S1+S2 avec un BTS Blanc, ou deux bulletins combinés entre eux).
             </p>
             {eligible.length === 0 ? (
               <p className="text-xs italic text-muted-foreground border rounded p-3">
@@ -194,6 +195,7 @@ const CreateCombinedPeriodModal: React.FC<Props> = ({
               <div className="border rounded p-2 space-y-1.5 max-h-60 overflow-y-auto">
                 {eligible.map((p) => {
                   const checked = selectedPeriodIds.includes(p.id);
+                  const isComposite = (p as any).is_composite === true;
                   return (
                     <div
                       key={p.id}
@@ -213,6 +215,9 @@ const CreateCombinedPeriodModal: React.FC<Props> = ({
                       <div className="flex-1 flex items-center gap-2">
                         <span className="text-sm font-medium">{p.name}</span>
                         <Badge variant="outline" className="text-[10px]">{p.period_type}</Badge>
+                        {isComposite && (
+                          <Badge variant="secondary" className="text-[10px] bg-amber-100 text-amber-800 border-amber-200">Combinée</Badge>
+                        )}
                       </div>
                       {calculationRule === 'weighted_average' && checked && (
                         <Input

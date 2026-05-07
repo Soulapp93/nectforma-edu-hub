@@ -40,7 +40,7 @@ import OfficialBulletinTemplate, { type OfficialBulletinData, type BulletinModul
 import SimpleBulletinTemplate from './SimpleBulletinTemplate';
 import BtsBlancBulletinTemplate from './BtsBlancBulletinTemplate';
 import CombinedBulletinRenderer from './CombinedBulletinRenderer';
-import { getCombinedSourcePeriods } from '@/services/combinedPeriodService';
+import { getCombinedLeafSourcePeriods } from '@/services/combinedPeriodService';
 import { resolveConfigForPeriod, pickAppreciationForGrade, pickMentionForAverage, pickDecisionForAverage } from '@/services/bulletinConfigService';
 import { computeBulletins, type ComputeBulletinResponse } from '@/services/bulletinComputeService';
 import { DEFAULT_CONFIG } from '@/types/bulletinConfig';
@@ -199,7 +199,7 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
   // Load source periods for the combined view
   const { data: combinedSourcePeriods = [] } = useQuery({
     queryKey: ['combined-source-periods', periodId],
-    queryFn: () => getCombinedSourcePeriods(periodId!),
+    queryFn: () => getCombinedLeafSourcePeriods(periodId!),
     enabled: !!periodId && isCombinedPeriod,
   });
 
