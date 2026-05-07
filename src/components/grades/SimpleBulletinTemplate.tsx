@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { computeStudentPeriodBulletin } from '@/services/bulletinClientCalculator';
 import { getStudentAttendanceForRanges, type DateRange } from '@/services/periodAttendanceService';
-import { teachingUnitService, type TeachingUnit } from '@/services/teachingUnitService';
 import type { ResolvedBulletinConfig } from '@/types/bulletinConfig';
 import type { EvaluationPeriod } from '@/services/gradesService';
 
@@ -66,21 +65,15 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
   establishmentAddress,
 }) => {
   void referenceNumber; void formationLevel; void config;
-  const admissionThreshold = 10;
   const [firstName, ...lastNameParts] = (studentFullName || '').split(' ');
   const lastName = lastNameParts.join(' ');
 
   const { data: modules = [] } = useQuery({
     queryKey: ['simple-bulletin-modules', formationId],
     queryFn: async () => {
-      const { data } = await supabase.from('formation_modules').select('id, title, coefficient, order_index, teaching_unit_id').eq('formation_id', formationId).order('order_index');
+      const { data } = await supabase.from('formation_modules').select('id, title, coefficient, order_index').eq('formation_id', formationId).order('order_index');
       return (data || []) as any[];
     },
-  });
-  const { data: teachingUnits = [] } = useQuery<TeachingUnit[]>({
-    queryKey: ['simple-bulletin-ues', formationId],
-    queryFn: () => teachingUnitService.listForFormation(formationId),
-    enabled: !!formationId,
   });
   const { data: roster = [] } = useQuery({
     queryKey: ['simple-bulletin-roster', formationId],
@@ -143,25 +136,7 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
     return <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}><div style={{ width: 28, height: 28, border: '2px solid #000', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /></div>;
   }
 
-  // Group rows by UE
-  const moduleToUEId = new Map<string, string | null>();
-  for (const mod of modules as any[]) moduleToUEId.set(mod.id, mod.teaching_unit_id || null);
-  const rowsByUE = new Map<string, typeof result.rows>();
-  for (const row of result.rows) {
-    const k = moduleToUEId.get(row.moduleId) || '_unassigned';
-    const arr = rowsByUE.get(k) || [];
-    arr.push(row);
-    rowsByUE.set(k, arr);
-  }
-  const ueSections: Array<{ ue: TeachingUnit | null; rows: typeof result.rows; number: number }> = [];
-  let ueCounter = 0;
-  for (const ue of teachingUnits) {
-    const rs = rowsByUE.get(ue.id);
-    if (rs && rs.length > 0) { ueCounter += 1; ueSections.push({ ue, rows: rs, number: ueCounter }); }
-  }
-  const unassigned = rowsByUE.get('_unassigned') || [];
-  if (unassigned.length > 0) ueSections.push({ ue: null, rows: unassigned, number: ueCounter + 1 });
-
+  // Flat module list — no UE grouping
   const totalCoef = result.rows.reduce((s, r) => s + r.coefficient, 0);
 
   // ── Styles ────────────────────────────────────────────
@@ -227,53 +202,34 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
           <col style={{ width: '30%' }} />
         </colgroup>
         <tbody>
-          {ueSections.length === 0 ? (
+          {/* Header row: column titles */}
+          <tr>
+            <th style={{ ...thCell, textAlign: 'left', paddingLeft: 8 }} rowSpan={2}>MATIERES</th>
+            <th style={thCell} rowSpan={2}>FORMATEUR</th>
+            <th style={thCell} rowSpan={2}>COEFFICIENT</th>
+            <th style={thCell} colSpan={2}>MOYENNE</th>
+            <th style={thCell} rowSpan={2}>APPRECIATION</th>
+          </tr>
+          <tr>
+            <th style={{ ...thCell, fontSize: 8.5 }}>MOYENNE DE L'ETUDIANT</th>
+            <th style={{ ...thCell, fontSize: 8.5 }}>MOYENNE DE LA PROMO</th>
+          </tr>
+          {result.rows.length === 0 ? (
             <tr><td colSpan={6} style={{ ...tdCell, textAlign: 'center', fontStyle: 'italic', padding: 14 }}>Aucune donnée saisie pour cette période.</td></tr>
-          ) : ueSections.map(({ ue, rows, number }) => {
-            // UE weighted averages
-            let w = 0, c = 0, wp = 0, cp = 0;
-            for (const r of rows) {
-              if (r.individualAverage !== null) { w += r.individualAverage * r.coefficient; c += r.coefficient; }
-              if (r.classAverage !== null) { wp += r.classAverage * r.coefficient; cp += r.coefficient; }
-            }
-            const ueAvg = c > 0 ? Math.round((w / c) * 100) / 100 : null;
-            const ueAvgPromo = cp > 0 ? Math.round((wp / cp) * 100) / 100 : null;
-            const key = ue?.id || '_unassigned';
+          ) : result.rows.map((row) => {
+            const instructors = instructorsByModuleId?.get(row.moduleId) || [];
             return (
-              <React.Fragment key={key}>
-                {/* UE header row — first cell grey with UNITE D'ENSEIGNEMENT N, then column headers */}
-                <tr data-testid={`bulletin-ue-header-${key}`}>
-                  <th style={{ ...thCell, textAlign: 'left', paddingLeft: 8 }} rowSpan={2}>
-                    UNITE D'ENSEIGNEMENT {number}
-                    {ue?.title ? <div style={{ fontSize: 8, fontWeight: 400, marginTop: 2, textTransform: 'none' }}>{ue.title}</div> : null}
-                  </th>
-                  <th style={thCell} rowSpan={2}>FORMATEUR</th>
-                  <th style={thCell} rowSpan={2}>COEFFICIENT</th>
-                  <th style={thCell} colSpan={2}>MOYENNE</th>
-                  <th style={thCell} rowSpan={2}>APPRECIATION</th>
-                </tr>
-                <tr>
-                  <th style={{ ...thCell, fontSize: 8.5 }}>MOYENNE DE L'ETUDIANT</th>
-                  <th style={{ ...thCell, fontSize: 8.5 }}>MOYENNE DE LA PROMO</th>
-                </tr>
-                {/* Matières rows: only values, no labels in cells */}
-                {rows.map((row) => {
-                  const instructors = instructorsByModuleId?.get(row.moduleId) || [];
-                  return (
-                    <tr key={row.moduleId} data-testid={`bulletin-row-${row.moduleId}`}>
-                      <td style={{ ...tdCell, textTransform: 'uppercase', fontWeight: 500 }}>{row.moduleTitle}</td>
-                      <td style={{ ...tdCell, textAlign: 'center' }}>{instructors.length > 0 ? instructors.join(', ') : ''}</td>
-                      <td style={{ ...tdCell, textAlign: 'center' }}>{row.coefficient}</td>
-                      <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700, fontSize: 11 }}>{fmt(row.individualAverage)}</td>
-                      <td style={{ ...tdCell, textAlign: 'center', fontWeight: 500, fontSize: 11 }}>{fmt(row.classAverage)}</td>
-                      <td style={{ ...tdCell, fontStyle: 'italic' }}>{row.appreciation || ''}</td>
-                    </tr>
-                  );
-                })}
-              </React.Fragment>
+              <tr key={row.moduleId} data-testid={`bulletin-row-${row.moduleId}`}>
+                <td style={{ ...tdCell, textTransform: 'uppercase', fontWeight: 500 }}>{row.moduleTitle}</td>
+                <td style={{ ...tdCell, textAlign: 'center' }}>{instructors.length > 0 ? instructors.join(', ') : ''}</td>
+                <td style={{ ...tdCell, textAlign: 'center' }}>{row.coefficient}</td>
+                <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700, fontSize: 11 }}>{fmt(row.individualAverage)}</td>
+                <td style={{ ...tdCell, textAlign: 'center', fontWeight: 500, fontSize: 11 }}>{fmt(row.classAverage)}</td>
+                <td style={{ ...tdCell, fontStyle: 'italic' }}>{row.appreciation || ''}</td>
+              </tr>
             );
           })}
-          {/* Footer single row: MOYENNE GENERALE label spans UE+FORMATEUR | totalCoef under COEFFICIENT | moy étudiant | moy promo | ADMIS */}
+          {/* Footer single row: MOYENNE GENERALE label spans MATIERES+FORMATEUR | totalCoef under COEFFICIENT | moy étudiant | moy promo | ADMIS */}
           <tr>
             <th style={thCell} colSpan={2}>MOYENNE GENERALE</th>
             <td style={{ ...tdCell, textAlign: 'center', fontWeight: 700, background: '#fff' }}>{totalCoef}</td>

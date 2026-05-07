@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Clock, Users, Eye, Edit, FileText, GraduationCap, BookText, UsersRound, FolderOpen, ClipboardCheck, Layers } from 'lucide-react';
+import { ArrowLeft, BookOpen, Clock, Users, Edit, FileText, GraduationCap, BookText, UsersRound, FolderOpen, ClipboardCheck, Layers } from 'lucide-react';
 import { formationService, Formation } from '@/services/formationService';
-import { teachingUnitService, type TeachingUnit } from '@/services/teachingUnitService';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -29,7 +28,6 @@ const FormationDetail = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [formation, setFormation] = useState<Formation | null>(null);
-  const [teachingUnits, setTeachingUnits] = useState<TeachingUnit[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
@@ -47,14 +45,12 @@ const FormationDetail = () => {
       
       try {
         setLoading(true);
-        const [formationData, instructorsData, uesData] = await Promise.all([
+        const [formationData, instructorsData] = await Promise.all([
           formationService.getFormationById(formationId),
           formationService.getFormationInstructors(formationId),
-          teachingUnitService.listForFormation(formationId),
         ]);
         setFormation(formationData);
         setInstructors(instructorsData);
-        setTeachingUnits(uesData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
       } finally {
@@ -79,26 +75,7 @@ const FormationDetail = () => {
     );
   }, [formation?.formation_modules, semesterFilter]);
 
-  // Group modules by Teaching Unit (UE)
-  const groupedByUE = useMemo(() => {
-    const map = new Map<string, any[]>();
-    for (const mod of filteredModules) {
-      const k = (mod as any).teaching_unit_id || '_unassigned';
-      const arr = map.get(k) || [];
-      arr.push(mod);
-      map.set(k, arr);
-    }
-    // Build ordered list: known UEs first (sorted by order_index), then "Non rattachées" if any
-    const sections: Array<{ ue: TeachingUnit | null; modules: any[] }> = [];
-    for (const ue of teachingUnits) {
-      const mods = map.get(ue.id) || [];
-      if (mods.length > 0) sections.push({ ue, modules: mods });
-    }
-    const unassigned = map.get('_unassigned') || [];
-    if (unassigned.length > 0) sections.push({ ue: null, modules: unassigned });
-    return sections;
-  }, [filteredModules, teachingUnits]);
-
+  // No UE grouping anymore - flat module list
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center">
@@ -201,16 +178,16 @@ const FormationDetail = () => {
         </div>
       </div>
 
-      {/* UE & Matières Section */}
+      {/* Matières Section */}
       <div className="px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8">
         <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-lg border border-primary/10">
           <div className="p-4 sm:p-6 border-b border-primary/10">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <Layers className="h-5 w-5 text-primary" />
-                <h2 className="text-lg sm:text-xl font-bold text-foreground">Unités d'enseignement & matières</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-foreground">Matières</h2>
                 <Badge variant="outline" className="text-[10px]">
-                  {teachingUnits.length} UE · {filteredModules.length} matière{filteredModules.length > 1 ? 's' : ''}
+                  {filteredModules.length} matière{filteredModules.length > 1 ? 's' : ''}
                 </Badge>
               </div>
               {hasSemesters && (
@@ -265,197 +242,160 @@ const FormationDetail = () => {
             </div>
           </div>
           
-          <div className="p-4 sm:p-6 space-y-6">
-            {groupedByUE.length > 0 ? (
-              groupedByUE.map(({ ue, modules }) => (
-                <section
-                  key={ue?.id || 'unassigned'}
-                  className="rounded-2xl border-2 border-primary/15 bg-gradient-to-br from-primary/5 via-card to-card overflow-hidden shadow-sm"
-                  data-testid={`ue-section-${ue?.id || 'unassigned'}`}
-                >
-                  {/* UE Header */}
-                  <div
-                    className="px-5 sm:px-6 py-4 border-b-2 border-primary/15 flex items-center gap-3 flex-wrap"
-                    style={ue ? { background: `linear-gradient(90deg, ${formationColor}1a, transparent)` } : undefined}
-                  >
-                    <div
-                      className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-md flex-shrink-0"
-                      style={{ background: `linear-gradient(135deg, ${formationColor}, ${formationColor}cc)` }}
-                    >
-                      {ue?.code || 'UE'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-base sm:text-lg font-bold text-foreground">
-                        {ue ? ue.title : 'Matières non rattachées à une UE'}
-                      </h3>
-                      <div className="flex items-center gap-2 flex-wrap mt-0.5">
-                        <span className="text-xs text-muted-foreground">
-                          {modules.length} matière{modules.length > 1 ? 's' : ''}
-                        </span>
-                        {ue?.credits != null && (
-                          <Badge variant="secondary" className="text-[10px]">{ue.credits} ECTS</Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Matières as accordions */}
-                  <div className="p-3 sm:p-4">
-                    <Accordion type="multiple" className="space-y-2.5">
-                      {modules.map((module: any) => (
-                        <AccordionItem key={module.id} value={`module-${module.id}`} className="border border-primary/10 rounded-xl bg-card shadow-sm overflow-hidden">
-                          <AccordionTrigger className="px-4 sm:px-5 py-3.5 sm:py-4 hover:bg-muted/30 rounded-xl [&[data-state=open]]:rounded-b-none transition-colors">
-                            <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 w-full">
-                              <div 
-                                className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-white font-semibold flex-shrink-0 shadow-md"
-                                style={{ 
-                                  background: `linear-gradient(135deg, ${formationColor}, ${formationColor}dd)`,
+          <div className="p-4 sm:p-6">
+            {filteredModules.length > 0 ? (
+              <Accordion type="multiple" className="space-y-2.5">
+                {filteredModules.map((module: any) => (
+                  <AccordionItem key={module.id} value={`module-${module.id}`} className="border border-primary/10 rounded-xl bg-card shadow-sm overflow-hidden">
+                    <AccordionTrigger className="px-4 sm:px-5 py-3.5 sm:py-4 hover:bg-muted/30 rounded-xl [&[data-state=open]]:rounded-b-none transition-colors">
+                      <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 w-full">
+                        <div 
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-white font-semibold flex-shrink-0 shadow-md"
+                          style={{ 
+                            background: `linear-gradient(135deg, ${formationColor}, ${formationColor}dd)`,
+                          }}
+                        >
+                          <BookOpen className="h-5 w-5 sm:h-6 sm:w-6" />
+                        </div>
+                        <div className="text-left flex-1 min-w-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-2">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className="font-semibold text-foreground text-sm sm:text-base break-words">{module.title}</h4>
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0">coef {module.coefficient || 1}</Badge>
+                                {(module as any).semester && (
+                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{getSemesterBadgeLabel((module as any).semester)}</Badge>
+                                )}
+                              </div>
+                              <div className="flex flex-wrap items-center text-xs sm:text-sm text-muted-foreground mt-1 gap-2 sm:gap-3">
+                                {instructors.length > 0 && (
+                                  <span className="flex items-center text-primary font-medium">
+                                    Formateur: {instructors.map(i => `${i.first_name} ${i.last_name}`).join(', ')}
+                                  </span>
+                                )}
+                                <span className="flex items-center bg-muted/50 px-2 py-0.5 rounded-full">
+                                  <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-primary" />
+                                  <span>{module.duration_hours}h</span>
+                                </span>
+                              </div>
+                            </div>
+                            {(userRole === 'Formateur' || userRole === 'Admin' || userRole === 'AdminPrincipal') && (
+                              <span
+                                role="button"
+                                tabIndex={0}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  setShowAttendanceModal(true);
                                 }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    setShowAttendanceModal(true);
+                                  }
+                                }}
+                                className="inline-flex items-center justify-center mt-2 sm:mt-0 sm:ml-4 shrink-0 text-xs sm:text-sm w-full sm:w-auto border border-primary/30 hover:bg-primary/5 hover:border-primary/50 rounded-md px-3 py-2 cursor-pointer transition-colors"
                               >
-                                <BookOpen className="h-5 w-5 sm:h-6 sm:w-6" />
-                              </div>
-                              <div className="text-left flex-1 min-w-0">
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-2">
-                                  <div className="min-w-0">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      <h4 className="font-semibold text-foreground text-sm sm:text-base break-words">{module.title}</h4>
-                                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">coef {module.coefficient || 1}</Badge>
-                                      {(module as any).semester && (
-                                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{getSemesterBadgeLabel((module as any).semester)}</Badge>
-                                      )}
-                                    </div>
-                                    <div className="flex flex-wrap items-center text-xs sm:text-sm text-muted-foreground mt-1 gap-2 sm:gap-3">
-                                      {instructors.length > 0 && (
-                                        <span className="flex items-center text-primary font-medium">
-                                          Formateur: {instructors.map(i => `${i.first_name} ${i.last_name}`).join(', ')}
-                                        </span>
-                                      )}
-                                      <span className="flex items-center bg-muted/50 px-2 py-0.5 rounded-full">
-                                        <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-primary" />
-                                        <span>{module.duration_hours}h</span>
-                                      </span>
-                                    </div>
-                                  </div>
-                                  {(userRole === 'Formateur' || userRole === 'Admin' || userRole === 'AdminPrincipal') && (
-                                    <span
-                                      role="button"
-                                      tabIndex={0}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        e.preventDefault();
-                                        setShowAttendanceModal(true);
-                                      }}
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Enter' || e.key === ' ') {
-                                          e.stopPropagation();
-                                          e.preventDefault();
-                                          setShowAttendanceModal(true);
-                                        }
-                                      }}
-                                      className="inline-flex items-center justify-center mt-2 sm:mt-0 sm:ml-4 shrink-0 text-xs sm:text-sm w-full sm:w-auto border border-primary/30 hover:bg-primary/5 hover:border-primary/50 rounded-md px-3 py-2 cursor-pointer transition-colors"
-                                    >
-                                      <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                                      <span className="hidden sm:inline">Créer une session d'émargement</span>
-                                      <span className="sm:hidden">Émargement</span>
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </AccordionTrigger>
-                          <AccordionContent className="px-0 pb-0">
-                            <div className="border-t border-primary/10 bg-gradient-to-b from-muted/20 to-transparent">
-                              <Tabs defaultValue="content" className="w-full">
-                                <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3 !bg-transparent !p-4 !h-auto !rounded-none !border-0 !shadow-none">
-                                  <TabsTrigger
-                                    value="content"
-                                    className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
-                                    data-testid="tab-content"
-                                  >
-                                    <BookOpen className="h-4 w-4 sm:mr-2" />
-                                    <span className="hidden sm:inline">Support de cours</span>
-                                    <span className="sm:hidden">Support</span>
-                                  </TabsTrigger>
-                                  <TabsTrigger
-                                    value="documents"
-                                    className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
-                                    data-testid="tab-documents"
-                                  >
-                                    <FolderOpen className="h-4 w-4 sm:mr-2" />
-                                    <span className="hidden sm:inline">Ressources péd.</span>
-                                    <span className="sm:hidden">Ressources</span>
-                                  </TabsTrigger>
-                                  <TabsTrigger
-                                    value="tasks"
-                                    className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
-                                    data-testid="tab-tasks"
-                                  >
-                                    <ClipboardCheck className="h-4 w-4 sm:mr-2" />
-                                    <span className="hidden sm:inline">Travail à faire</span>
-                                    <span className="sm:hidden">Travail</span>
-                                  </TabsTrigger>
-                                  <TabsTrigger
-                                    value="assignments"
-                                    className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
-                                    data-testid="tab-assignments"
-                                  >
-                                    <FileText className="h-4 w-4 sm:mr-2" />
-                                    <span className="hidden sm:inline">Évaluations</span>
-                                    <span className="sm:hidden">Éval.</span>
-                                  </TabsTrigger>
-                                  <TabsTrigger
-                                    value="corrections"
-                                    className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
-                                    data-testid="tab-corrections"
-                                  >
-                                    <Edit className="h-4 w-4 sm:mr-2" />
-                                    <span className="hidden sm:inline">Correction éval.</span>
-                                    <span className="sm:hidden">Corr.</span>
-                                  </TabsTrigger>
-                                  <TabsTrigger
-                                    value="groups"
-                                    className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
-                                    data-testid="tab-groups"
-                                  >
-                                    <UsersRound className="h-4 w-4 sm:mr-2" />
-                                    Groupes
-                                  </TabsTrigger>
-                                </TabsList>
-                                
-                                <div className="p-4 sm:p-5 bg-card/30">
-                                  <TabsContent value="content" className="mt-0">
-                                    <ModuleContentTab moduleId={module.id} />
-                                  </TabsContent>
+                                <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                <span className="hidden sm:inline">Créer une session d'émargement</span>
+                                <span className="sm:hidden">Émargement</span>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-0 pb-0">
+                      <div className="border-t border-primary/10 bg-gradient-to-b from-muted/20 to-transparent">
+                        <Tabs defaultValue="content" className="w-full">
+                          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3 !bg-transparent !p-4 !h-auto !rounded-none !border-0 !shadow-none">
+                            <TabsTrigger
+                              value="content"
+                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
+                              data-testid="tab-content"
+                            >
+                              <BookOpen className="h-4 w-4 sm:mr-2" />
+                              <span className="hidden sm:inline">Support de cours</span>
+                              <span className="sm:hidden">Support</span>
+                            </TabsTrigger>
+                            <TabsTrigger
+                              value="documents"
+                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
+                              data-testid="tab-documents"
+                            >
+                              <FolderOpen className="h-4 w-4 sm:mr-2" />
+                              <span className="hidden sm:inline">Ressources péd.</span>
+                              <span className="sm:hidden">Ressources</span>
+                            </TabsTrigger>
+                            <TabsTrigger
+                              value="tasks"
+                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
+                              data-testid="tab-tasks"
+                            >
+                              <ClipboardCheck className="h-4 w-4 sm:mr-2" />
+                              <span className="hidden sm:inline">Travail à faire</span>
+                              <span className="sm:hidden">Travail</span>
+                            </TabsTrigger>
+                            <TabsTrigger
+                              value="assignments"
+                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
+                              data-testid="tab-assignments"
+                            >
+                              <FileText className="h-4 w-4 sm:mr-2" />
+                              <span className="hidden sm:inline">Évaluations</span>
+                              <span className="sm:hidden">Éval.</span>
+                            </TabsTrigger>
+                            <TabsTrigger
+                              value="corrections"
+                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
+                              data-testid="tab-corrections"
+                            >
+                              <Edit className="h-4 w-4 sm:mr-2" />
+                              <span className="hidden sm:inline">Correction éval.</span>
+                              <span className="sm:hidden">Corr.</span>
+                            </TabsTrigger>
+                            <TabsTrigger
+                              value="groups"
+                              className="!rounded-full !border-2 !border-primary/30 !bg-card !text-primary shadow-sm hover:bg-primary/5 hover:!border-primary/50 data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary data-[state=active]:shadow-lg px-3 py-2.5 text-xs sm:text-sm font-medium transition-all"
+                              data-testid="tab-groups"
+                            >
+                              <UsersRound className="h-4 w-4 sm:mr-2" />
+                              Groupes
+                            </TabsTrigger>
+                          </TabsList>
+                          
+                          <div className="p-4 sm:p-5 bg-card/30">
+                            <TabsContent value="content" className="mt-0">
+                              <ModuleContentTab moduleId={module.id} />
+                            </TabsContent>
 
-                                  <TabsContent value="documents" className="mt-0">
-                                    <ModuleDocumentsTab moduleId={module.id} />
-                                  </TabsContent>
+                            <TabsContent value="documents" className="mt-0">
+                              <ModuleDocumentsTab moduleId={module.id} />
+                            </TabsContent>
 
-                                  <TabsContent value="tasks" className="mt-0">
-                                    <ModuleTasksTab moduleId={module.id} />
-                                  </TabsContent>
+                            <TabsContent value="tasks" className="mt-0">
+                              <ModuleTasksTab moduleId={module.id} />
+                            </TabsContent>
 
-                                  <TabsContent value="assignments" className="mt-0">
-                                    <ModuleAssignmentsTab moduleId={module.id} />
-                                  </TabsContent>
-                                  
-                                  <TabsContent value="corrections" className="mt-0">
-                                    <ModuleCorrectionsTab moduleId={module.id} />
-                                  </TabsContent>
+                            <TabsContent value="assignments" className="mt-0">
+                              <ModuleAssignmentsTab moduleId={module.id} />
+                            </TabsContent>
+                            
+                            <TabsContent value="corrections" className="mt-0">
+                              <ModuleCorrectionsTab moduleId={module.id} />
+                            </TabsContent>
 
-                                  <TabsContent value="groups" className="mt-0">
-                                    <ModuleGroupsTab moduleId={module.id} formationId={formation?.id || ''} />
-                                  </TabsContent>
-                                </div>
-                              </Tabs>
-                            </div>
-                          </AccordionContent>
-                        </AccordionItem>
-                      ))}
-                    </Accordion>
-                  </div>
-                </section>
-              ))
+                            <TabsContent value="groups" className="mt-0">
+                              <ModuleGroupsTab moduleId={module.id} formationId={formation?.id || ''} />
+                            </TabsContent>
+                          </div>
+                        </Tabs>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             ) : (
               <div className="text-center py-12">
                 <div className="inline-block p-6 rounded-2xl bg-muted/30 mb-4">
@@ -465,7 +405,7 @@ const FormationDetail = () => {
                 <p className="text-muted-foreground">
                   {semesterFilter !== 'all' 
                     ? `Aucune matière assignée au semestre ${semesterFilter.replace('s', 'S')}.`
-                    : "Cette formation n'a pas encore de matières — créez d'abord une UE et ajoutez-y des matières."}
+                    : "Cette formation n'a pas encore de matières — modifiez la formation pour en ajouter."}
                 </p>
               </div>
             )}

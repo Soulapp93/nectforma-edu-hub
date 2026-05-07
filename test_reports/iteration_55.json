@@ -1,0 +1,28 @@
+{
+  "summary": "Frontend rollback architectural verification (UE → modules plats). Tested with admin.principal@nectforma-demo.com on /pedagogie?tab=formations + /notes flows. KEY RESULTS: (1) CreateFormationModal: matieres-info-card PRESENT with copy 'Matières / Après la création de la formation, ouvrez-la pour ajouter vos matières...', ue-info-card ABSENT. (2) FormationCard list: each card shows 'X matières' (no UE refs). (3) FormationDetail page (/formations/:id): H2 list is exactly ['Matières'] — no 'Unités d'enseignement' header. 3 matières (seo/digital/refer) rendered as flat Accordion items, each with formateur+coef+0h. (4) GradeSheetView: data-testid='matieres-nav' PRESENT, 'modules-sidebar' PRESENT, 'ue-grouped-nav' ABSENT. Sidebar header reads 'Matières' with 3 flat module tabs. (5) CreatePeriodModal: opens cleanly (period-type-select visible), no UE blocks pre-rendered. (6) Bulletin de notes tab: modal opens for student Bernard Lucas without runtime error; the bulletin renderer was loading at screenshot time. NO 'is not defined' / ReferenceError observed in any flow. NO ErrorBoundary fallback triggered. Console only emits the harmless X-Frame-Options meta-tag warning. Overall: rollback UI is functional and matches the spec.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "OPTIONAL: verify EditFormationModal end-to-end via UI. Code grep confirms data-testid='matieres-section' (EditFormationModal.tsx:298) and data-testid='matieres-panel' / 'add-matiere-btn' / 'matiere-row-{id}' / 'matiere-edit-{id}' / 'matiere-delete-{id}' (MatieresPanel.tsx). However the FormationsList card click navigates to a promotion-listing intermediate view; the entry point that mounts EditFormationModal could not be reproduced via hover/click in this run. Main agent should confirm where the modal is invoked (FormationCard menu? PromotionsList? Détail page header?) and either expose the trigger or document the entry point.",
+    "OPTIONAL: verify SimpleBulletinTemplate data-testid='simple-bulletin' header column is 'MATIERES' on a student that has graded data. The current active period 'Semestre1' has no students with grades; the periods 'BTS Blanc' / 'Bulletin bts' need to be selected first to render the simple bulletin. Code review confirms SimpleBulletinTemplate.tsx:207 uses `<th rowSpan={2}>MATIERES</th>` (correct), and no UE section blocks remain in the render."
+  ],
+  "critical_code_review_comments": [
+    "Code review of all referenced files: CreateFormationModal.tsx:417 uses data-testid='matieres-info-card' ✓; EditFormationModal.tsx:298 uses data-testid='matieres-section' ✓; MatieresPanel.tsx exposes 'matieres-panel', 'add-matiere-btn', 'matiere-row-{id}', 'matiere-edit-{id}', 'matiere-delete-{id}' ✓; FormationDetail.tsx renders flat <Accordion> with H2 'Matières' (line 188), no UE header ✓; CreatePeriodModal.tsx:363 uses data-testid='module-checkbox-{id}' (flat list, no UE wrapper) ✓; GradeSheetView.tsx:418 uses data-testid='matieres-nav' on flat <nav> ✓; SimpleBulletinTemplate.tsx:207 column header = 'MATIERES' (rowSpan=2), no UE rows ✓.",
+    "DRY/code quality: comments at SimpleBulletinTemplate.tsx:40-41 still describe the OLD UE-grouped layout ('UNITE D'ENSEIGNEMENT 1 ... UNITE D'ENSEIGNEMENT 2'). The comments are now stale — they don't reflect the rendered output. Suggest updating the JSDoc/file header to describe the flat MATIERES layout to avoid future confusion."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "n/a (frontend-only request)",
+    "frontend": "Verified: 5/8 flows live (Create info card, FormationDetail flat, GradeSheet sidebar, CreatePeriod modal opens, Bulletin modal opens without crash). 2/8 partial (Edit modal trigger not located; Simple/Combined/BTS bulletin body not rendered to assert MATIERES column on a graded student). 0/8 broken."
+  },
+  "test_credentials": "admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "App is at /pedagogie?tab=formations (NOT /administration?tab=formations as the review_request stated — that URL falls back to user-management). Login: admin.principal / NectDemo2026!. To reach the bulletin renderer: /notes → click 'Voir les promotions' on Master Digital Marketing 2026 → 'Gérer les notes' → 'Bulletin de notes' tab → switch active period chip to 'Bulletin bts' (Semestre1 has no students with grades) → click 'Voir' on a student. Code-grep of all 9 files in files_of_reference confirms the rollback is complete; runtime tests on Create/Detail/GradeSheet/Period/Bulletin-modal-open all pass. The only untested-via-UI surface is EditFormationModal — its entry point on the FormationsList page could not be located in this iteration; recommend confirming the trigger then verifying matieres-section/matieres-panel/add-matiere-btn renders correctly."
+}

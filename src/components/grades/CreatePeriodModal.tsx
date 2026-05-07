@@ -10,8 +10,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { createEvaluationPeriod, updateEvaluationPeriod, type EvaluationPeriod } from '@/services/gradesService';
 import { supabase } from '@/integrations/supabase/client';
-import { teachingUnitService } from '@/services/teachingUnitService';
-import { BookOpen, Search, Layers, ChevronDown, ChevronRight } from 'lucide-react';
+import { BookOpen, Search, Layers } from 'lucide-react';
 
 const PERIOD_OPTIONS = [
   { value: 'semestre', label: 'Semestre', needsModules: true },
@@ -121,7 +120,7 @@ const CreatePeriodModal: React.FC<Props> = ({
     queryFn: async () => {
       const { data } = await supabase
         .from('formation_modules')
-        .select('id, title, semester, coefficient, teaching_unit_id')
+        .select('id, title, semester, coefficient')
         .eq('formation_id', formationId)
         .order('order_index', { ascending: true });
       return data || [];
@@ -129,30 +128,11 @@ const CreatePeriodModal: React.FC<Props> = ({
     enabled: !!formationId && isOpen,
   });
 
-  // Fetch UEs for this formation
-  const { data: teachingUnits = [] } = useQuery({
-    queryKey: ['teaching-units', formationId],
-    queryFn: () => teachingUnitService.listForFormation(formationId),
-    enabled: !!formationId && isOpen,
-  });
-
-  // Group modules by UE
-  const modulesByUE = useMemo(() => {
-    const map = new Map<string, any[]>();
-    for (const mod of allModules as any[]) {
-      const k = mod.teaching_unit_id || '_unassigned';
-      const arr = map.get(k) || [];
-      arr.push(mod);
-      map.set(k, arr);
-    }
-    return map;
-  }, [allModules]);
-
-  // UE expansion state (default: all open)
-  const [collapsedUEs, setCollapsedUEs] = useState<Record<string, boolean>>({});
-  const toggleUECollapsed = (ueId: string) => setCollapsedUEs((p) => ({ ...p, [ueId]: !p[ueId] }));
-
-  // (Note: selection helpers now operate at UE level via selectByUE — see below)
+  // Filter modules by search
+  const visibleModules = useMemo(() =>
+    (allModules as any[]).filter((m) => !moduleSearch || m.title.toLowerCase().includes(moduleSearch.toLowerCase())),
+    [allModules, moduleSearch]
+  );
 
   const computedName = useMemo(() => {
     if (name) return name;
@@ -182,31 +162,6 @@ const CreatePeriodModal: React.FC<Props> = ({
     setExamCoefficients(coeffs);
   };
   const deselectAll = () => { setSelectedModuleIds([]); setExamCoefficients({}); };
-
-  const selectByUE = (ueId: string) => {
-    const ueModIds = (modulesByUE.get(ueId) || []).map((m: any) => m.id);
-    const allSelected = ueModIds.every((id) => selectedModuleIds.includes(id));
-    if (allSelected) {
-      // Deselect all matières of this UE
-      setSelectedModuleIds((prev) => prev.filter((id) => !ueModIds.includes(id)));
-      setExamCoefficients((c) => {
-        const n = { ...c };
-        ueModIds.forEach((id) => delete n[id]);
-        return n;
-      });
-    } else {
-      // Select all matières of this UE
-      setSelectedModuleIds((prev) => [...new Set([...prev, ...ueModIds])]);
-      setExamCoefficients((c) => {
-        const n = { ...c };
-        ueModIds.forEach((id) => {
-          const mod = allModules.find((m: any) => m.id === id);
-          if (!(id in n)) n[id] = mod?.coefficient || 1;
-        });
-        return n;
-      });
-    }
-  };
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -370,13 +325,13 @@ const CreatePeriodModal: React.FC<Props> = ({
             </div>
           </div>
 
-          {/* Module selection grouped by UE */}
+          {/* Module selection (flat list) */}
           {needsModuleSelection && allModules.length > 0 && (
             <div className="space-y-3 border-t pt-3">
               <div className="flex items-center justify-between">
                 <Label className="flex items-center gap-2">
                   <Layers className="h-4 w-4 text-primary" />
-                  Unités d'enseignement & matières concernées
+                  Matières concernées
                 </Label>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary" className="text-xs">{selectedModuleIds.length}/{allModules.length}</Badge>
@@ -397,90 +352,51 @@ const CreatePeriodModal: React.FC<Props> = ({
                 />
               </div>
 
-              {/* Modules grouped by UE */}
-              <div className="max-h-[320px] overflow-y-auto space-y-2 border rounded-lg p-2 bg-muted/20">
-                {[...teachingUnits, null].map((ue) => {
-                  const ueKey = ue?.id || '_unassigned';
-                  const ueModules = modulesByUE.get(ueKey) || [];
-                  const visibleModules = ueModules.filter((m: any) =>
-                    !moduleSearch || m.title.toLowerCase().includes(moduleSearch.toLowerCase())
-                  );
-                  if (visibleModules.length === 0) return null;
-                  const allUESelected = visibleModules.every((m: any) => selectedModuleIds.includes(m.id));
-                  const someUESelected = visibleModules.some((m: any) => selectedModuleIds.includes(m.id));
-                  const isCollapsed = collapsedUEs[ueKey] === true;
-                  return (
-                    <div key={ueKey} className="border border-border/60 rounded-md bg-background overflow-hidden" data-testid={`period-ue-block-${ueKey}`}>
-                      {/* UE header */}
-                      <div
-                        className="flex items-center gap-2 px-2.5 py-2 bg-primary/5 border-b border-border/50 cursor-pointer hover:bg-primary/10 transition-colors"
-                        onClick={() => toggleUECollapsed(ueKey)}
-                      >
-                        {isCollapsed ? <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
-                        <Checkbox
-                          checked={allUESelected ? true : someUESelected ? 'indeterminate' as any : false}
-                          onCheckedChange={(e) => { e as any; selectByUE(ueKey); }}
+              {/* Flat modules list */}
+              <div className="max-h-[320px] overflow-y-auto space-y-0.5 border rounded-lg p-2 bg-muted/20">
+                {visibleModules.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic px-2 py-3 text-center">Aucune matière trouvée.</p>
+                ) : visibleModules.map((m: any) => (
+                  <div
+                    key={m.id}
+                    className="flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-muted/50 transition-colors bg-background"
+                    data-testid={`module-checkbox-${m.id}`}
+                  >
+                    <Checkbox
+                      checked={selectedModuleIds.includes(m.id)}
+                      onCheckedChange={() => toggleModule(m.id)}
+                    />
+                    <BookOpen className="h-3.5 w-3.5 text-primary/70 shrink-0" />
+                    <span className="text-sm flex-1">{m.title}</span>
+                    <span className="text-[10px] text-muted-foreground shrink-0">coef {m.coefficient || 1}</span>
+                    {selectedModuleIds.includes(m.id) && (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <label className="text-[10px] text-amber-600 font-medium">Coeff période:</label>
+                        <input
+                          type="number"
+                          min="0.5"
+                          step="0.5"
+                          value={examCoefficients[m.id] || 1}
+                          onChange={(e) => setExamCoefficients(prev => ({ ...prev, [m.id]: Number(e.target.value) || 1 }))}
+                          className="w-14 px-1.5 py-0.5 text-xs border border-amber-300 rounded bg-amber-50 text-amber-800 focus:outline-none focus:ring-1 focus:ring-amber-400"
+                          data-testid={`exam-coeff-${m.id}`}
                           onClick={(e) => e.stopPropagation()}
-                          data-testid={`period-ue-checkbox-${ueKey}`}
                         />
-                        <BookOpen className="h-3.5 w-3.5 text-primary" />
-                        <span className="text-xs font-bold text-foreground">
-                          {ue ? ue.title : 'Matières non rattachées'}
-                        </span>
-                        {ue?.code && <Badge variant="outline" className="text-[10px]">{ue.code}</Badge>}
-                        <Badge variant="secondary" className="text-[10px] ml-auto">
-                          {visibleModules.filter((m: any) => selectedModuleIds.includes(m.id)).length}/{visibleModules.length}
-                        </Badge>
                       </div>
-
-                      {/* Matières list */}
-                      {!isCollapsed && (
-                        <div className="space-y-0.5 p-1">
-                          {visibleModules.map((m: any) => (
-                            <div
-                              key={m.id}
-                              className="flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-muted/50 transition-colors"
-                              data-testid={`module-checkbox-${m.id}`}
-                            >
-                              <Checkbox
-                                checked={selectedModuleIds.includes(m.id)}
-                                onCheckedChange={() => toggleModule(m.id)}
-                              />
-                              <span className="text-sm flex-1">{m.title}</span>
-                              <span className="text-[10px] text-muted-foreground shrink-0">coef {m.coefficient || 1}</span>
-                              {selectedModuleIds.includes(m.id) && (
-                                <div className="flex items-center gap-1 shrink-0">
-                                  <label className="text-[10px] text-amber-600 font-medium">Coeff période:</label>
-                                  <input
-                                    type="number"
-                                    min="0.5"
-                                    step="0.5"
-                                    value={examCoefficients[m.id] || 1}
-                                    onChange={(e) => setExamCoefficients(prev => ({ ...prev, [m.id]: Number(e.target.value) || 1 }))}
-                                    className="w-14 px-1.5 py-0.5 text-xs border border-amber-300 rounded bg-amber-50 text-amber-800 focus:outline-none focus:ring-1 focus:ring-amber-400"
-                                    data-testid={`exam-coeff-${m.id}`}
-                                    onClick={(e) => e.stopPropagation()}
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                    )}
+                  </div>
+                ))}
               </div>
 
               {selectedModuleIds.length === 0 && (
                 <p className="text-xs text-amber-600 flex items-center gap-1">
-                  Sélectionnez au moins une matière (ou une UE entière) pour cette période
+                  Sélectionnez au moins une matière pour cette période
                 </p>
               )}
             </div>
           )}
 
-          {/* BTS Blanc — Écrit + Oral dual selection */}
+          {/* BTS Blanc — Écrit + Oral dual selection (flat) */}
           {needsBtsPartSelection && allModules.length > 0 && (
             <div className="space-y-3 border-t pt-3" data-testid="bts-part-selection">
               <Label className="flex items-center gap-2">
@@ -506,49 +422,34 @@ const CreatePeriodModal: React.FC<Props> = ({
                         {ids.length} matière{ids.length > 1 ? 's' : ''}
                       </span>
                     </div>
-                    <div className="p-2 max-h-[220px] overflow-y-auto space-y-2">
-                      {[...teachingUnits, null].map((ue) => {
-                        const ueKey = ue?.id || '_unassigned';
-                        const ueModules = (modulesByUE.get(ueKey) || []).filter((m: any) =>
-                          !moduleSearch || m.title.toLowerCase().includes(moduleSearch.toLowerCase())
-                        );
-                        if (ueModules.length === 0) return null;
-                        return (
-                          <div key={ueKey} className="rounded border border-border/60 bg-background overflow-hidden">
-                            <div className="px-2 py-1 bg-primary/5 border-b border-border/40 text-[10px] font-bold text-primary uppercase tracking-wide flex items-center gap-1.5">
-                              <BookOpen className="h-3 w-3" />
-                              {ue ? ue.title : 'Non rattachées'}
-                              {ue?.code && <span className="text-[9px] opacity-70">· {ue.code}</span>}
+                    <div className="p-2 max-h-[220px] overflow-y-auto space-y-0.5">
+                      {visibleModules.length === 0 ? (
+                        <p className="text-xs text-muted-foreground italic px-2 py-2 text-center">Aucune matière.</p>
+                      ) : visibleModules.map((m: any) => (
+                        <div key={m.id} className="flex items-center gap-2 px-2 py-1 rounded hover:bg-muted/40 bg-background" data-testid={`bts-mod-${part}-${m.id}`}>
+                          <Checkbox
+                            checked={ids.includes(m.id)}
+                            onCheckedChange={() => toggleBtsModule(m.id, part)}
+                          />
+                          <BookOpen className="h-3 w-3 text-primary/70 shrink-0" />
+                          <span className="text-xs flex-1 truncate">{m.title}</span>
+                          {ids.includes(m.id) && (
+                            <div className="flex items-center gap-1 shrink-0">
+                              <label className="text-[10px] text-muted-foreground">Coef:</label>
+                              <input
+                                type="number"
+                                min="0.5"
+                                step="0.5"
+                                value={coefs[m.id] || 1}
+                                onChange={(e) => setCoefs(prev => ({ ...prev, [m.id]: Number(e.target.value) || 1 }))}
+                                className="w-12 px-1 py-0.5 text-xs border rounded"
+                                data-testid={`bts-coef-${part}-${m.id}`}
+                                onClick={(e) => e.stopPropagation()}
+                              />
                             </div>
-                            <div className="p-1 space-y-0.5">
-                              {ueModules.map((m: any) => (
-                                <div key={m.id} className="flex items-center gap-2 px-2 py-1 rounded hover:bg-muted/40" data-testid={`bts-mod-${part}-${m.id}`}>
-                                  <Checkbox
-                                    checked={ids.includes(m.id)}
-                                    onCheckedChange={() => toggleBtsModule(m.id, part)}
-                                  />
-                                  <span className="text-xs flex-1 truncate">{m.title}</span>
-                                  {ids.includes(m.id) && (
-                                    <div className="flex items-center gap-1 shrink-0">
-                                      <label className="text-[10px] text-muted-foreground">Coef:</label>
-                                      <input
-                                        type="number"
-                                        min="0.5"
-                                        step="0.5"
-                                        value={coefs[m.id] || 1}
-                                        onChange={(e) => setCoefs(prev => ({ ...prev, [m.id]: Number(e.target.value) || 1 }))}
-                                        className="w-12 px-1 py-0.5 text-xs border rounded"
-                                        data-testid={`bts-coef-${part}-${m.id}`}
-                                        onClick={(e) => e.stopPropagation()}
-                                      />
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })}
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 );

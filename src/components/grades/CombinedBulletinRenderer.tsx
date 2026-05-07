@@ -7,7 +7,6 @@ import {
   pickMention,
 } from '@/services/bulletinClientCalculator';
 import { aggregateCombinedAverage, type CombinedPeriodConfig } from '@/services/combinedPeriodService';
-import { teachingUnitService, type TeachingUnit } from '@/services/teachingUnitService';
 import { getStudentAttendanceForRanges, type DateRange } from '@/services/periodAttendanceService';
 import { DEFAULT_CONFIG, type ResolvedBulletinConfig } from '@/types/bulletinConfig';
 import type { EvaluationPeriod } from '@/services/gradesService';
@@ -119,25 +118,12 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
     queryFn: async () => {
       const { data } = await supabase
         .from('formation_modules')
-        .select('id, title, coefficient, order_index, teaching_unit_id, semester, credits')
+        .select('id, title, coefficient, order_index, semester, credits')
         .eq('formation_id', formationId)
         .order('order_index');
       return (data || []) as any[];
     },
   });
-
-  // ─── Load UEs (for grouping in subjects table) ───────────
-  const { data: teachingUnits = [] } = useQuery<TeachingUnit[]>({
-    queryKey: ['combined-bulletin-ues', formationId],
-    queryFn: () => teachingUnitService.listForFormation(formationId),
-    enabled: !!formationId,
-  });
-
-  const moduleToUE = React.useMemo(() => {
-    const m = new Map<string, string | null>();
-    for (const mod of modules as any[]) m.set(mod.id, mod.teaching_unit_id || null);
-    return m;
-  }, [modules]);
 
   // Total students for rank
   const { data: roster = [] } = useQuery({
@@ -383,78 +369,22 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
                 <tbody>
                   {pr.rows.length === 0 ? (
                     <tr><td colSpan={7} style={{ border: '1px solid #000', padding: 14, textAlign: 'center', fontStyle: 'italic', color: '#000', background: '#fff' }}>Aucune donnée saisie pour cette période.</td></tr>
-                  ) : (() => {
-                    const sections: Array<{ ue: TeachingUnit | null; rows: typeof pr.rows }> = [];
-                    const map = new Map<string, typeof pr.rows>();
-                    for (const r of pr.rows) {
-                      const k = moduleToUE.get(r.moduleId) || '_unassigned';
-                      const arr = map.get(k) || [];
-                      arr.push(r);
-                      map.set(k, arr);
-                    }
-                    for (const ue of teachingUnits) {
-                      const rs = map.get(ue.id);
-                      if (rs && rs.length > 0) sections.push({ ue, rows: rs });
-                    }
-                    const un = map.get('_unassigned') || [];
-                    if (un.length > 0) sections.push({ ue: null, rows: un });
-
-                    return sections.map(({ ue, rows: ueRows }, ueIdx) => {
-                      let w = 0, c = 0;
-                      let totalCoef = 0;
-                      for (const r of ueRows) {
-                        if (r.moy !== null) { w += r.moy * r.coefficient; c += r.coefficient; }
-                        totalCoef += r.coefficient;
-                      }
-                      const ueAvg = c > 0 ? Math.round((w / c) * 100) / 100 : null;
-                      const key = ue?.id || '_unassigned';
-                      return (
-                        <React.Fragment key={key}>
-                          <tr data-testid={`combined-ue-header-${pr.period.id}-${key}`}>
-                            <td colSpan={7} style={{
-                              border: '1px solid #000',
-                              background: '#E0E0E0',
-                              padding: '5px 8px',
-                              fontSize: 9.5,
-                              fontWeight: 700,
-                              color: '#000',
-                              textTransform: 'uppercase',
-                              letterSpacing: 0.5,
-                            }}>
-                              UNITE D'ENSEIGNEMENT {ueIdx + 1}{ue?.title ? ` — ${ue.title.toUpperCase()}` : ''}
-                            </td>
-                          </tr>
-                          {ueRows.map((row) => {
-                            const validated = row.moy !== null && row.moy >= admissionThreshold && !row.eliminated;
-                            return (
-                              <tr key={row.moduleId}>
-                                <td style={{ border: '1px solid #000', padding: '5px 6px', fontSize: 10, color: '#000', fontWeight: 500, textTransform: 'uppercase' }}>{row.moduleTitle}</td>
-                                <td style={{ border: '1px solid #000', padding: '5px 6px', fontSize: 10, color: '#000', textAlign: 'center' }}>{row.cc !== null ? Math.round(row.cc) : ''}</td>
-                                <td style={{ border: '1px solid #000', padding: '5px 6px', fontSize: 10, color: '#000', textAlign: 'center' }}>{row.ds !== null ? Math.round(row.ds) : ''}</td>
-                                <td style={{ border: '1px solid #000', padding: '5px 6px', fontSize: 10, color: '#000', textAlign: 'center' }}>{row.exam !== null ? Math.round(row.exam) : ''}</td>
-                                <td style={{ border: '1px solid #000', padding: '5px 6px', fontSize: 10, color: '#000', textAlign: 'center' }}>{row.oral !== null ? Math.round(row.oral) : ''}</td>
-                                <td style={{ border: '1px solid #000', padding: '5px 6px', fontSize: 11, color: '#000', textAlign: 'center', fontWeight: 700 }}>{fmt(row.moy)}</td>
-                                <td style={{ border: '1px solid #000', padding: '5px 6px', fontSize: 9, color: '#000', textAlign: 'center' }}>
-                                  {validated ? 'Validé' : row.moy === null ? '' : 'Ajourné'}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                          <tr data-testid={`combined-ue-subtotal-${pr.period.id}-${key}`}>
-                            <td colSpan={5} style={{ border: '1px solid #000', background: '#fff', padding: '5px 8px', fontSize: 9.5, fontWeight: 700, color: '#000', textAlign: 'right', textTransform: 'uppercase' }}>
-                              Moyenne {ue?.code ? `${ue.code} ` : ''}(coef. {totalCoef})
-                            </td>
-                            <td style={{ border: '1px solid #000', background: '#fff', padding: '5px 6px', fontSize: 11, fontWeight: 700, color: '#000', textAlign: 'center' }}>
-                              {fmt(ueAvg)}
-                            </td>
-                            <td style={{ border: '1px solid #000', background: '#fff', padding: '5px 6px', fontSize: 9, color: '#000', textAlign: 'center', fontStyle: 'italic' }}>
-                              {ueAvg === null ? '' : ueAvg >= admissionThreshold ? 'UE validée' : 'UE non validée'}
-                            </td>
-                          </tr>
-                        </React.Fragment>
-                      );
-                    });
-                  })()}
+                  ) : pr.rows.map((row) => {
+                    const validated = row.moy !== null && row.moy >= admissionThreshold && !row.eliminated;
+                    return (
+                      <tr key={row.moduleId}>
+                        <td style={{ border: '1px solid #000', padding: '5px 6px', fontSize: 10, color: '#000', fontWeight: 500, textTransform: 'uppercase' }}>{row.moduleTitle}</td>
+                        <td style={{ border: '1px solid #000', padding: '5px 6px', fontSize: 10, color: '#000', textAlign: 'center' }}>{row.cc !== null ? Math.round(row.cc) : ''}</td>
+                        <td style={{ border: '1px solid #000', padding: '5px 6px', fontSize: 10, color: '#000', textAlign: 'center' }}>{row.ds !== null ? Math.round(row.ds) : ''}</td>
+                        <td style={{ border: '1px solid #000', padding: '5px 6px', fontSize: 10, color: '#000', textAlign: 'center' }}>{row.exam !== null ? Math.round(row.exam) : ''}</td>
+                        <td style={{ border: '1px solid #000', padding: '5px 6px', fontSize: 10, color: '#000', textAlign: 'center' }}>{row.oral !== null ? Math.round(row.oral) : ''}</td>
+                        <td style={{ border: '1px solid #000', padding: '5px 6px', fontSize: 11, color: '#000', textAlign: 'center', fontWeight: 700 }}>{fmt(row.moy)}</td>
+                        <td style={{ border: '1px solid #000', padding: '5px 6px', fontSize: 9, color: '#000', textAlign: 'center' }}>
+                          {validated ? 'Validé' : row.moy === null ? '' : 'Ajourné'}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

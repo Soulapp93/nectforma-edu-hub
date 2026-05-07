@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, GraduationCap, Save } from 'lucide-react';
 import ColorPalette from './ColorPalette';
-import UEManagerPanel from './UEManagerPanel';
+import MatieresPanel from './MatieresPanel';
 import { formationService } from '@/services/formationService';
 import { toast } from 'sonner';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -295,8 +295,8 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
               </div>
             </div>
 
-            <div data-testid="ue-section">
-              <UEManagerPanel formationId={formationId!} />
+            <div data-testid="matieres-section">
+              <MatieresPanel formationId={formationId!} />
             </div>
 
             <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">

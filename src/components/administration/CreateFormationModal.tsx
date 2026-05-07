@@ -6,7 +6,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import ColorPalette from './ColorPalette';
 import { formationService } from '@/services/formationService';
-import { teachingUnitService } from '@/services/teachingUnitService';
 import { establishmentService } from '@/services/establishmentService';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -148,18 +147,6 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
           end_date: periodEnd.toISOString().split('T')[0],
           order_index: s - 1,
         });
-      }
-
-      // Créer une UE par défaut pour démarrer
-      try {
-        await teachingUnitService.create({
-          formation_id: formation.id,
-          title: 'UE 1',
-          code: 'UE1',
-          order_index: 0,
-        });
-      } catch (e) {
-        console.warn('Auto-création UE par défaut échouée:', e);
       }
 
       // Auto-create promotion with all linked resources (schedule, textbook)
@@ -426,13 +413,13 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
             </div>
           </div>
 
-          {/* Info: UE & matières seront ajoutées après création */}
-          <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-4 flex gap-3" data-testid="ue-info-card">
+          {/* Info: Matières seront ajoutées après création */}
+          <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-4 flex gap-3" data-testid="matieres-info-card">
             <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
             <div className="text-sm">
-              <p className="font-semibold text-foreground mb-1">Unités d'Enseignement (UE) & Matières</p>
+              <p className="font-semibold text-foreground mb-1">Matières</p>
               <p className="text-muted-foreground">
-                Une UE par défaut sera créée. Après la création de la formation, ouvrez-la pour ajouter d'autres UE et y rattacher vos matières (avec coefficients, formateurs et durées).
+                Après la création de la formation, ouvrez-la pour ajouter vos matières (avec coefficients, formateurs et durées).
               </p>
             </div>
           </div>
