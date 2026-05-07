@@ -26,7 +26,7 @@ import {
   type SignatoryConfig,
   type MentionConfig,
 } from '@/types/bulletinConfig';
-import { Sparkles, Trash2, Plus, Target, Calculator, LayoutGrid, Palette, Type, Signature as SignatureIcon } from 'lucide-react';
+import { Sparkles, Trash2, Plus, Target, Calculator, LayoutGrid, Palette, Type, Signature as SignatureIcon, FileStack, ArrowLeft, Wand2 } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -68,6 +68,9 @@ const FONTS = ['Times New Roman', 'Arial', 'Garamond', 'Montserrat', 'Helvetica'
 const BulletinConfigModal: React.FC<Props> = ({ isOpen, onClose, periodId, periodName, formationTitle }) => {
   const queryClient = useQueryClient();
   const [cfg, setCfg] = useState<ResolvedBulletinConfig>(DEFAULT_CONFIG);
+  // Active section in the new hub navigation. 'hub' = grid of 5 cards (default landing)
+  type ActiveSection = 'hub' | 'rules' | 'structure' | 'design' | 'signatures' | 'templates';
+  const [section, setSection] = useState<ActiveSection>('hub');
 
   // Load config + templates on open
   const { data: loadedCfg, isLoading } = useQuery({
@@ -85,6 +88,11 @@ const BulletinConfigModal: React.FC<Props> = ({ isOpen, onClose, periodId, perio
   useEffect(() => {
     if (loadedCfg) setCfg(loadedCfg);
   }, [loadedCfg]);
+
+  // Reset to hub each time the modal opens
+  useEffect(() => {
+    if (isOpen) setSection('hub');
+  }, [isOpen]);
 
   // Save mutation
   const saveMutation = useMutation({
@@ -147,48 +155,190 @@ const BulletinConfigModal: React.FC<Props> = ({ isOpen, onClose, periodId, perio
   return (
     <Dialog open={isOpen} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
-        className="max-w-4xl max-h-[92vh] overflow-hidden flex flex-col"
+        className="max-w-5xl max-h-[92vh] overflow-hidden flex flex-col p-0"
         data-testid="bulletin-config-modal"
       >
-        <DialogHeader className="shrink-0">
-          <DialogTitle className="flex items-center gap-2">
+        <DialogHeader className="shrink-0 px-6 pt-5 pb-3 border-b">
+          <DialogTitle className="flex items-center gap-3" data-testid="config-modal-title">
+            {section !== 'hub' && (
+              <button
+                onClick={() => setSection('hub')}
+                className="rounded-lg p-1 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Retour"
+                data-testid="config-back-btn"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+            )}
             <Sparkles className="h-5 w-5 text-primary" />
-            Configuration du bulletin
+            <span>
+              {section === 'hub' && 'Configuration'}
+              {section === 'rules' && 'Règles de calculs'}
+              {section === 'structure' && 'Structure'}
+              {section === 'design' && 'Design'}
+              {section === 'signatures' && 'Signatures'}
+              {section === 'templates' && 'Templates'}
+            </span>
             {periodName && <Badge variant="outline">{periodName}</Badge>}
             {formationTitle && <Badge variant="secondary" className="text-xs">{formationTitle}</Badge>}
           </DialogTitle>
+          {section === 'hub' && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Personnalisez entièrement vos bulletins de notes — chaque période garde sa propre configuration.
+            </p>
+          )}
         </DialogHeader>
 
-        {/* Templates shortcut */}
-        <div className="flex items-center gap-2 border rounded-lg p-2 bg-muted/40">
-          <span className="text-xs text-muted-foreground">Appliquer un template :</span>
-          {templates.map((t: any) => (
-            <Button
-              key={t.id}
-              size="sm"
-              variant="outline"
-              onClick={() => applyTemplate(t.id)}
-              data-testid={`apply-template-${t.id}`}
-            >
-              {t.name.split(' —')[0]}
-            </Button>
-          ))}
-        </div>
+        {/* ===== HUB (5 cards landing) ===== */}
+        {section === 'hub' && (
+          <div className="flex-1 overflow-y-auto px-6 py-5" data-testid="config-hub">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <ConfigCard
+                icon={<Calculator className="h-7 w-7" />}
+                title="Règles de calculs"
+                description="Définissez les règles de calcul des moyennes, coefficients, UE, blocs et décisions."
+                accent="bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300"
+                onClick={() => setSection('rules')}
+                testId="config-card-rules"
+              />
+              <ConfigCard
+                icon={<LayoutGrid className="h-7 w-7" />}
+                title="Structure"
+                description="Organisez la structure du bulletin : matières, colonnes et leur ordre d'affichage."
+                accent="bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300"
+                onClick={() => setSection('structure')}
+                testId="config-card-structure"
+              />
+              <ConfigCard
+                icon={<Palette className="h-7 w-7" />}
+                title="Design"
+                description="Personnalisez l'apparence : couleurs, typographies, styles et mises en page."
+                accent="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                onClick={() => setSection('design')}
+                testId="config-card-design"
+              />
+              <ConfigCard
+                icon={<SignatureIcon className="h-7 w-7" />}
+                title="Signatures"
+                description="Ajoutez et positionnez les signatures, cachets et noms sur vos bulletins."
+                accent="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+                onClick={() => setSection('signatures')}
+                testId="config-card-signatures"
+              />
+              <ConfigCard
+                icon={<FileStack className="h-7 w-7" />}
+                title="Templates"
+                description="Créez, gérez et réutilisez vos modèles de bulletins selon les différentes périodes."
+                accent="bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"
+                onClick={() => setSection('templates')}
+                testId="config-card-templates"
+              />
+            </div>
 
-        {isLoading ? (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">Chargement...</div>
-        ) : (
-          <Tabs defaultValue="sources" className="flex-1 overflow-hidden flex flex-col">
-            <TabsList className="grid grid-cols-6 shrink-0">
-              <TabsTrigger value="sources" data-testid="tab-sources"><Target className="h-3.5 w-3.5 mr-1" /> Sources</TabsTrigger>
-              <TabsTrigger value="calc" data-testid="tab-calc"><Calculator className="h-3.5 w-3.5 mr-1" /> Calculs</TabsTrigger>
-              <TabsTrigger value="layout" data-testid="tab-layout"><LayoutGrid className="h-3.5 w-3.5 mr-1" /> Structure</TabsTrigger>
-              <TabsTrigger value="design" data-testid="tab-design"><Palette className="h-3.5 w-3.5 mr-1" /> Design</TabsTrigger>
-              <TabsTrigger value="text" data-testid="tab-text"><Type className="h-3.5 w-3.5 mr-1" /> Textes</TabsTrigger>
-              <TabsTrigger value="sign" data-testid="tab-sign"><SignatureIcon className="h-3.5 w-3.5 mr-1" /> Signatures</TabsTrigger>
-            </TabsList>
+            {/* Visual editor CTA (Phase 3 placeholder) */}
+            <div className="mt-5 rounded-2xl border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-5" data-testid="visual-editor-cta">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                  <Wand2 className="h-6 w-6" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground">Éditeur visuel du bulletin</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Modifiez votre bulletin en toute liberté grâce à notre éditeur visuel intuitif. Déplacez, personnalisez et ajoutez des éléments en quelques clics.
+                  </p>
+                </div>
+                <Button variant="default" size="sm" disabled className="shrink-0" data-testid="open-visual-editor-btn">
+                  Bientôt disponible
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
-            <div className="flex-1 overflow-y-auto mt-4 pr-2">
+        {/* ===== TEMPLATES SECTION ===== */}
+        {section === 'templates' && (
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4" data-testid="templates-section">
+            <p className="text-sm text-muted-foreground">
+              Choisissez un template pour cette période, ou repartez d'un modèle système. Chaque période garde sa propre configuration.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {templates.map((t: any) => (
+                <div key={t.id} className="border rounded-xl p-4 hover:border-primary/40 hover:shadow-sm transition-all" data-testid={`template-card-${t.id}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-foreground truncate">{t.name.split(' —')[0]}</h4>
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{t.description || 'Modèle système prêt à l\'emploi.'}</p>
+                    </div>
+                    <Badge variant="outline" className="shrink-0 text-[10px]">Système</Badge>
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <Button size="sm" variant="default" onClick={() => applyTemplate(t.id)} className="flex-1" data-testid={`template-apply-${t.id}`}>
+                      Appliquer
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              {templates.length === 0 && (
+                <p className="text-sm italic text-muted-foreground col-span-2 text-center py-8 border-2 border-dashed rounded-xl">
+                  Aucun template système disponible.
+                </p>
+              )}
+            </div>
+            <div className="rounded-xl border-2 border-dashed border-primary/20 bg-primary/5 p-4 text-sm text-muted-foreground">
+              <strong className="text-foreground">À venir :</strong> sauvegarder votre configuration actuelle comme template personnalisé, dupliquer, versionner et lier à plusieurs périodes.
+            </div>
+          </div>
+        )}
+
+        {/* ===== EXISTING TABBED CONTENT (rules / structure / design / signatures) ===== */}
+        {section !== 'hub' && section !== 'templates' && (
+          <>
+            {/* Templates shortcut */}
+            <div className="flex items-center gap-2 border-b px-6 py-2 bg-muted/40 overflow-x-auto" data-testid="templates-shortcut">
+              <span className="text-xs text-muted-foreground shrink-0">Appliquer un template :</span>
+              {templates.map((t: any) => (
+                <Button
+                  key={t.id}
+                  size="sm"
+                  variant="outline"
+                  onClick={() => applyTemplate(t.id)}
+                  data-testid={`apply-template-${t.id}`}
+                  className="shrink-0"
+                >
+                  {t.name.split(' —')[0]}
+                </Button>
+              ))}
+            </div>
+
+            {isLoading ? (
+              <div className="flex-1 flex items-center justify-center text-muted-foreground">Chargement...</div>
+            ) : (
+              <Tabs
+                key={`tabs-${section}`}
+                defaultValue={
+                  section === 'rules' ? 'sources'
+                  : section === 'structure' ? 'layout'
+                  : section === 'design' ? 'design'
+                  : section === 'signatures' ? 'sign'
+                  : 'sources'
+                }
+                className="flex-1 overflow-hidden flex flex-col"
+              >
+                {/* Sub-tabs for rules (sources + calc) and design (design + text) */}
+                {section === 'rules' && (
+                  <TabsList className="grid grid-cols-2 shrink-0 mx-6 mt-3" data-testid="rules-subtabs">
+                    <TabsTrigger value="sources" data-testid="tab-sources"><Target className="h-3.5 w-3.5 mr-1" /> Sources</TabsTrigger>
+                    <TabsTrigger value="calc" data-testid="tab-calc"><Calculator className="h-3.5 w-3.5 mr-1" /> Calculs</TabsTrigger>
+                  </TabsList>
+                )}
+                {section === 'design' && (
+                  <TabsList className="grid grid-cols-2 shrink-0 mx-6 mt-3" data-testid="design-subtabs">
+                    <TabsTrigger value="design" data-testid="tab-design"><Palette className="h-3.5 w-3.5 mr-1" /> Apparence</TabsTrigger>
+                    <TabsTrigger value="text" data-testid="tab-text"><Type className="h-3.5 w-3.5 mr-1" /> Textes</TabsTrigger>
+                  </TabsList>
+                )}
+
+            <div className="flex-1 overflow-y-auto mt-4 px-6">
               {/* ===== 1. SOURCES & COMBINAISONS ===== */}
               <TabsContent value="sources" className="space-y-4">
                 <p className="text-xs text-muted-foreground">
@@ -736,24 +886,67 @@ const BulletinConfigModal: React.FC<Props> = ({ isOpen, onClose, periodId, perio
               </TabsContent>
             </div>
           </Tabs>
+            )}
+          </>
         )}
 
-        <div className="flex justify-end gap-2 pt-3 border-t shrink-0">
-          <Button variant="outline" onClick={onClose}>Annuler</Button>
-          <Button
-            onClick={() => saveMutation.mutate()}
-            disabled={saveMutation.isPending}
-            data-testid="bulletin-config-save"
-          >
-            {saveMutation.isPending ? 'Enregistrement...' : 'Enregistrer pour cette période'}
-          </Button>
-        </div>
+        {/* Footer Save bar — hidden on hub & templates landing */}
+        {section !== 'hub' && section !== 'templates' && (
+          <div className="flex justify-end gap-2 px-6 py-3 border-t shrink-0">
+            <Button variant="outline" onClick={onClose}>Annuler</Button>
+            <Button
+              onClick={() => saveMutation.mutate()}
+              disabled={saveMutation.isPending}
+              data-testid="bulletin-config-save"
+            >
+              {saveMutation.isPending ? 'Enregistrement...' : 'Enregistrer pour cette période'}
+            </Button>
+          </div>
+        )}
+        {section === 'hub' && (
+          <div className="flex justify-end gap-2 px-6 py-3 border-t shrink-0">
+            <Button variant="outline" onClick={onClose} data-testid="config-hub-close">Fermer</Button>
+          </div>
+        )}
+        {section === 'templates' && (
+          <div className="flex justify-between gap-2 px-6 py-3 border-t shrink-0">
+            <Button variant="ghost" onClick={() => setSection('hub')}>
+              <ArrowLeft className="h-4 w-4 mr-1" /> Retour
+            </Button>
+            <Button variant="outline" onClick={onClose}>Fermer</Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
 };
 
 // ─── Sub-components ───────────────────────────────────────────
+
+const ConfigCard: React.FC<{
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  accent: string;
+  onClick: () => void;
+  testId: string;
+}> = ({ icon, title, description, accent, onClick, testId }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="text-left rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-md transition-all p-5 flex flex-col gap-3 group"
+    data-testid={testId}
+  >
+    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${accent}`}>
+      {icon}
+    </div>
+    <div className="flex-1">
+      <h3 className="font-semibold text-foreground text-base">{title}</h3>
+      <p className="text-xs text-muted-foreground mt-1 line-clamp-3">{description}</p>
+    </div>
+    <span className="text-sm font-medium text-primary group-hover:underline">Configurer →</span>
+  </button>
+);
 
 const ColorField: React.FC<{ label: string; value?: string; onChange: (v: string) => void }> = ({ label, value, onChange }) => (
   <div>

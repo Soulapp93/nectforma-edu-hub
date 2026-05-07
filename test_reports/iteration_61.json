@@ -1,0 +1,32 @@
+{
+  "summary": "Frontend-only test of the BulletinConfigModal hub refactor (Phase 1+2). ALL 10 acceptance criteria PASS. Login admin → /notes → Master Digital Marketing 2026 → 'Gérer les notes' → Configuration tab opens the BulletinConfigModal which now lands on the hub view (data-testid='config-hub' present, count=1). The 5 ConfigCards are all rendered with correct testids: config-card-rules / config-card-structure / config-card-design / config-card-signatures / config-card-templates (each count=1). The Visual Editor CTA card is present (data-testid='visual-editor-cta', count=1) with the disabled 'Bientôt disponible' button (data-testid='open-visual-editor-btn', is_disabled=True, text='Bientôt disponible'). The Save button (data-testid='bulletin-config-save') is correctly HIDDEN on the hub (count=0). DialogTitle (data-testid='config-modal-title') reads 'Configuration' on the hub with period='Semestre 1' badge and formation='Master Digital Marketing 2026' badge. Clicking 'Règles de calculs' navigates to the rules section: title='Règles de calculs', data-testid='rules-subtabs' present with both Sources (tab-sources) + Calculs (tab-calc) sub-triggers, the back button (data-testid='config-back-btn') and Save button are visible. Clicking back returns to the hub (config-hub count=1 again). Each of the 4 other cards opens its proper section with the corresponding DialogTitle: 'Structure'/'Design'/'Signatures'/'Templates'. Design section additionally shows data-testid='design-subtabs' (Apparence + Textes). Templates section: 1 template-card-{id} with its template-apply-{id} button rendered; the Save button is correctly HIDDEN here (count=0) per spec. Non-regression test: opened Règles, the Save button is enabled, clicking it triggered the saveMutation → success toast 'Configuration enregistrée pour cette période' was visible, modal closed (onClose). No runtime / JS errors during the entire navigation between hub and all 5 sections (only the pre-existing X-Frame-Options meta warning per iter 55-60, ignored as instructed).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "NONE BLOCKING. Phase 1+2 hub refactor of BulletinConfigModal validated end-to-end and ready for Phase 3 (Visual Editor)."
+  ],
+  "critical_code_review_comments": [
+    "BulletinConfigModal.tsx state model is clean: type ActiveSection = 'hub'|'rules'|'structure'|'design'|'signatures'|'templates'; default 'hub' on each open via useEffect on isOpen. Reset is correct. ✓",
+    "DialogTitle correctly conditions the back button (only when section!=='hub') and the section label string. data-testid='config-modal-title' wraps the entire title row including badges, so the captured text concatenates 'Configuration'+periodName+formationTitle — works for the test contains() assertion but a span around just the section label could allow more precise testing if needed. Non-blocking.",
+    "Footer rendering: 3 mutually-exclusive footers (hub → 'Fermer'; templates → 'Retour'+'Fermer'; edit sections → 'Annuler'+'Enregistrer pour cette période'). Save button (data-testid='bulletin-config-save') is correctly hidden on hub & templates as per spec. ✓",
+    "Templates section has its own grid (data-testid='templates-section') of system templates with template-card-{id} + template-apply-{id}. The 'templates-shortcut' bar is also still rendered above each edit section (Rules/Structure/Design/Signatures) for quick template application without leaving — nice UX continuity.",
+    "File size of BulletinConfigModal.tsx is 1005 lines — exceeds the 700-line healthy threshold. Recommend splitting into per-section sub-components (RulesSection / StructureSection / DesignSection / SignaturesSection / TemplatesSection / HubSection / ConfigCard) to ease maintenance and Phase 3 visual editor integration. Non-blocking but worth scheduling.",
+    "ConfigCard sub-component is internally defined (likely at the bottom of the file) — fine for now; would benefit from extraction when the file is split.",
+    "applyTemplate spreads DEFAULT_CONFIG then template fields; sections object is merged via shallow spread for both layout_config and layout_config.sections — correct deep handling for the 1 nested object that needed it. ✓",
+    "saveMutation invalidates 6 query keys on success including computed-bulletins, evaluations-transcripts, combined-source-bulletins/results — ensures bulletin views refetch with new config. ✓",
+    "Pre-existing (not regression): Supabase Edge Function compute-bulletin still returns CORS/404, fallback client-side aggregation continues to work — explicitly out of scope for this iteration."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (frontend only)", "frontend": "100% — 10/10 acceptance criteria validated"},
+  "test_credentials": "admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "None — used existing demo Master Digital Marketing 2026 / Semestre 1 period. The non-regression save did persist a Configuration row for periodId=Semestre 1 of this formation — recommend cleanup if it pollutes demo data, but it is the same operation a user would perform organically.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Phase 1+2 hub refactor of BulletinConfigModal is fully wired and validated. Entry path: login admin → /notes → click 'Master Digital Marketing 2026' card → click 'Gérer les notes' link on the promotion card → the sidebar tab 'Configuration' (adminOnly) triggers setShowConfigModal(true) via the useEffect on activeTab==='config' (Notes.tsx line 74-79). Modal lands on hub with 5 ConfigCards + Visual Editor CTA. Save button visibility rule is `section !== 'hub' && section !== 'templates'`. For Phase 3, the Visual Editor button is wired (data-testid='open-visual-editor-btn') but disabled with label 'Bientôt disponible' — main agent will need to remove the `disabled` attr and wire an onClick when implementing the editor. The file BulletinConfigModal.tsx is now 1005 lines and is a good candidate for splitting before Phase 3 lands.",
+  "rca of the issue": "N/A — feature works as specified."
+}
