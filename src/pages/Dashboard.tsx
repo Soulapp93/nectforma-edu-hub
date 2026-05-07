@@ -78,7 +78,16 @@ const Dashboard = () => {
       icon: AlertCircle,
       description: 'Feuilles à valider',
       clickable: true,
-      onClick: () => navigate('/suivi-emargement-admin?tab=attendance'),
+      onClick: () => {
+        // Deep-link to the specific formation's sheets when only ONE formation has pending sheets.
+        // If several formations have pending sheets, fallback to the global selector view.
+        const ids = stats.pendingAttendanceFormationIds;
+        if (ids.length === 1) {
+          navigate(`/suivi-emargement-admin?tab=attendance&formationId=${ids[0]}`);
+        } else {
+          navigate('/suivi-emargement-admin?tab=attendance');
+        }
+      },
       color: 'navy',
     },
     {

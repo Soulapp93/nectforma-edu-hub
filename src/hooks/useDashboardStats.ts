@@ -21,6 +21,8 @@ export interface DashboardStats {
   attendanceRate: number;
   textBookMissingEntries: number;
   pendingAttendanceSheets: number;
+  /** Distinct formation_ids that have pending attendance sheets — used by Dashboard to deep-link */
+  pendingAttendanceFormationIds: string[];
   pendingJustifications: number;
   riskStudents: StudentRisk[];
   excellentStudents: StudentRisk[];
@@ -39,6 +41,7 @@ export const useDashboardStats = (selectedFormationId?: string, timePeriod: stri
     attendanceRate: 0,
     textBookMissingEntries: 0,
     pendingAttendanceSheets: 0,
+    pendingAttendanceFormationIds: [],
     pendingJustifications: 0,
     riskStudents: [],
     excellentStudents: [],
@@ -223,14 +226,17 @@ export const useDashboardStats = (selectedFormationId?: string, timePeriod: stri
       // Feuilles d'émargement à traiter
       let pendingQuery = supabase
         .from('attendance_sheets')
-        .select('id', { count: 'exact', head: true })
+        .select('id, formation_id', { count: 'exact' })
         .eq('status', 'En attente de validation');
 
       if (selectedFormationId) {
         pendingQuery = pendingQuery.eq('formation_id', selectedFormationId);
       }
 
-      const { count: pendingAttendanceSheets } = await pendingQuery;
+      const { data: pendingRows, count: pendingAttendanceSheets } = await pendingQuery;
+      const pendingAttendanceFormationIds: string[] = Array.from(
+        new Set((pendingRows || []).map((r: any) => r.formation_id).filter(Boolean))
+      );
 
       // Justificatifs en attente
       const { count: pendingJustifications } = await supabase
@@ -371,6 +377,7 @@ export const useDashboardStats = (selectedFormationId?: string, timePeriod: stri
         attendanceRate,
         textBookMissingEntries,
         pendingAttendanceSheets: pendingAttendanceSheets || 0,
+        pendingAttendanceFormationIds,
         pendingJustifications: pendingJustifications || 0,
         riskStudents,
         excellentStudents,
