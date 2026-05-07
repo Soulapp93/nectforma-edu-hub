@@ -147,7 +147,7 @@ const SimpleBulletinTemplate: React.FC<Props> = ({
   const tdCell: React.CSSProperties = { border: BORDER, padding: '6px 6px', fontSize: 9, color: '#000', verticalAlign: 'top', minHeight: 24 };
 
   return (
-    <div style={{ background: '#fff', color: '#000', fontFamily: FONT, padding: '12mm', maxWidth: '210mm', margin: '0 auto' }} data-testid="simple-bulletin">
+    <div style={{ background: '#fff', color: '#000', fontFamily: FONT, padding: '10mm', width: '210mm', height: '297mm', boxSizing: 'border-box', margin: '0 auto', overflow: 'hidden', display: 'flex', flexDirection: 'column' }} data-testid="simple-bulletin">
       {/* ═══ HEADER ROW ═══ */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0, marginBottom: 10, alignItems: 'center' }}>
         <div style={{ fontSize: 10, textAlign: 'left' }}>

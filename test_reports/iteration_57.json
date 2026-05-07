@@ -1,0 +1,34 @@
+{
+  "summary": "Frontend-only test of the 'tenir sur UNE seule page A4' refactor for all 3 bulletin types on Master Digital Marketing 2026, student Bernard Lucas. ALL acceptance criteria pass. The 3 templates now expose a wrapper with exact A4 dimensions verified live via get_attribute('style'): SimpleBulletinTemplate [data-testid='simple-bulletin'], BtsBlancBulletinTemplate [data-testid='bts-blanc-bulletin'], CombinedBulletinRenderer [data-testid='combined-bulletin'] all carry width: 210mm; height: 297mm; padding: 10mm; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; margin: 0 auto. Bounding boxes measured at 793.69 x 1122.52 px (= 210mm x 297mm at 96 DPI). Visually, the header (Nectforma Demo + centered title + RELEVE DE NOTES), identity block (nom/prénom/formation/année/numéros), notes table and the 3 bottom boxes (Assiduité / Appréciation Générale / Directeur) are fully rendered inside the A4 frame with NO visible content truncation. handlePrint in TranscriptsPanel.tsx (lines 775-825) correctly opens a new window with injected stylesheet containing '@page { size: A4 portrait; margin: 0; }' AND forces [data-testid='simple-bulletin'|'bts-blanc-bulletin'|'combined-bulletin'] to 210mm x 297mm with !important, page-break-after:always and page-break-inside:avoid. No new runtime error was introduced (no 'is not defined' / ReferenceError / render crash); the only errors in the console are pre-existing CORS/404/400 from the Supabase Edge Function compute-bulletin (already documented in iter 55/56, gracefully handled by client-side fallback computeStudentPeriodBulletin).",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "All 3 bulletins (directeur box)", "issues": ["Pre-existing typos: 'DIERECTEUR DE L'ETABLISSEMENT' (should be DIRECTEUR) and '(nom, prenom, signature et cachet de letablissement)' (missing apostrophes/accents). Already flagged in iteration_56, not addressed in this iteration. Cosmetic only."]},
+      {"screen": "BulletinDialog (all 3 bulletins)", "issues": ["Pre-existing accessibility warning: 'DialogContent requires a DialogTitle' for screen readers. Not a blocker but should be wrapped in VisuallyHidden."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "NONE BLOCKING. The A4 single-page requirement is fully satisfied on screen (wrappers are exactly 210x297mm with padding 10mm, overflow hidden) and the print handler injects the correct @page A4 portrait rule + forced wrapper dimensions.",
+    "OPTIONAL polish (carried from iter 56): fix French typos 'DIERECTEUR' → 'DIRECTEUR' and '(nom, prenom, signature et cachet de letablissement)' → '(nom, prénom, signature et cachet de l'établissement)' in SimpleBulletinTemplate / BtsBlancBulletinTemplate / CombinedBulletinRenderer.",
+    "PRE-EXISTING (unrelated to this change): Supabase Edge Function compute-bulletin returns CORS/404/400 from preview origin; fallback client compute works. Whitelist the preview origin on the Edge Function when convenient."
+  ],
+  "critical_code_review_comments": [
+    "SimpleBulletinTemplate.tsx:150 — wrapper inline style correctly sets width:210mm, height:297mm, padding:10mm, boxSizing:border-box, overflow:hidden, display:flex, flexDirection:column. ✓",
+    "BtsBlancBulletinTemplate.tsx:150 — same inline style applied consistently. ✓",
+    "CombinedBulletinRenderer.tsx:293-305 — same inline style applied consistently. ✓",
+    "TranscriptsPanel.tsx:784 — @page { size: A4 portrait; margin: 0; } correctly emitted in the printed document head. ✓",
+    "TranscriptsPanel.tsx:802-815 — [data-testid='simple-bulletin'|'bts-blanc-bulletin'|'combined-bulletin'] forced to width/height 210mm/297mm with !important, plus max-width/max-height 210mm/297mm, padding:10mm, margin:0, box-sizing:border-box, overflow:hidden, page-break-after:always, page-break-inside:avoid — this guarantees the bulletin fits exactly one A4 page in the generated PDF. ✓",
+    "handlePrint uses win.document.write + setTimeout(win.print, 300). This is acceptable; the stylesheet is inlined so popup-blocked scenarios still keep the correct markup in the opened window. ✓",
+    "With overflow:hidden + fixed height, a student with an unusually long module list (e.g. >8 rows) could theoretically get clipped. For Bernard Lucas on all 3 tested periods (3, 3, and 6 rows) no clipping is observed. Consider adding a dev-time warning if children overflow; low priority."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "n/a (frontend only)", "frontend": "100% (6/6 acceptance criteria verified: wrapper style correct on all 3 bulletin types, no visible truncation on all 3, no runtime errors, Imprimer button present on all 3, handlePrint source contains '@page { size: A4 portrait; margin: 0 }' and forced wrapper dimensions)" },
+  "test_credentials": "admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "None. Used existing data on Master Digital Marketing 2026 (periods: Semestre 1, BTS Blanc, Bulletin bts) and student Bernard Lucas.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "A4 single-page requirement now fully implemented for Simple / BTS Blanc / Combined bulletins. Wrappers carry width:210mm; height:297mm; padding:10mm; overflow:hidden inline; handlePrint in /app/src/components/grades/TranscriptsPanel.tsx injects '@page { size: A4 portrait; margin: 0 }' + !important A4 rules for the 3 testids. Bernard Lucas on BTS Blanc uses a different template layout (epreuves/points, NON ADMIS) and does NOT have a data-testid='attendance-strip' element, but the footer (ASSIDUITE / APPRECIATION / DIRECTEUR boxes) is fully present and visible. If future student has >8 module rows, monitor for clipping due to overflow:hidden."
+}

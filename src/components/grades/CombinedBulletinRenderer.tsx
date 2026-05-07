@@ -293,9 +293,14 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
         background: '#fff',
         color: '#000',
         fontFamily: FONT_SANS,
-        padding: '12mm',
-        maxWidth: '210mm',
+        padding: '10mm',
+        width: '210mm',
+        height: '297mm',
+        boxSizing: 'border-box',
         margin: '0 auto',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
       }}
       data-testid="combined-bulletin"
     >

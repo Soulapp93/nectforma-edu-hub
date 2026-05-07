@@ -781,7 +781,9 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
     win.document.write(`
       <html><head><title>Bulletin - ${currentBulletin?.studentName}</title>
       <style>
-        body { font-family: '${tplStyle.fontFamily}', Arial, sans-serif; padding: 20px; color: #1a1a1a; font-size: 12px; }
+        @page { size: A4 portrait; margin: 0; }
+        html, body { margin: 0; padding: 0; background: #fff; }
+        body { font-family: '${tplStyle.fontFamily}', Arial, sans-serif; color: #1a1a1a; font-size: 12px; }
         .bulletin-header { text-align: center; margin-bottom: 15px; }
         .bulletin-header h1 { font-size: 16px; color: ${pc}; margin: 5px 0; }
         .bulletin-header h2 { font-size: 13px; margin: 3px 0; }
@@ -796,7 +798,24 @@ const TranscriptsPanel: React.FC<Props> = ({ mode, studentId, formationId: propF
         .decision { text-align: center; padding: 10px; font-weight: bold; font-size: 14px; margin-top: 10px; border: 2px solid; }
         .decision.admis { border-color: #16a34a; color: #16a34a; background: #f0fdf4; }
         .decision.non-admis { border-color: #dc2626; color: #dc2626; background: #fef2f2; }
-        @media print { body { padding: 10px; } }
+        /* Force the bulletin wrapper to fit one A4 page exactly */
+        [data-testid="simple-bulletin"],
+        [data-testid="bts-blanc-bulletin"],
+        [data-testid="combined-bulletin"] {
+          width: 210mm !important;
+          height: 297mm !important;
+          max-width: 210mm !important;
+          max-height: 297mm !important;
+          padding: 10mm !important;
+          margin: 0 !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+          page-break-after: always;
+          page-break-inside: avoid;
+        }
+        @media print {
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
       </style></head><body>
       ${content.innerHTML}
       </body></html>
