@@ -256,7 +256,7 @@ const BulletinConfigModal: React.FC<Props> = ({ isOpen, onClose, periodId, perio
                     <Button
                       variant="default"
                       size="sm"
-                      onClick={() => setSection('visual-editor' as any)}
+                      onClick={() => setSection('visual-editor')}
                       className="shrink-0"
                       data-testid="open-visual-editor-btn"
                     >
@@ -545,8 +545,8 @@ const BulletinConfigModal: React.FC<Props> = ({ isOpen, onClose, periodId, perio
                       <p className="text-xs text-muted-foreground mt-1">Une UE non validée bloque l'admission, même si la moyenne générale est ≥ 10</p>
                     </div>
                     <Switch
-                      checked={!!(cfg.calculation_rules as any).ue_eliminatoire}
-                      onCheckedChange={(c) => setCfg({ ...cfg, calculation_rules: { ...cfg.calculation_rules, ue_eliminatoire: c } as any })}
+                      checked={!!cfg.calculation_rules.ue_eliminatoire}
+                      onCheckedChange={(c) => setCfg({ ...cfg, calculation_rules: { ...cfg.calculation_rules, ue_eliminatoire: c } })}
                       data-testid="rule-ue-eliminatoire-switch"
                     />
                   </div>
@@ -557,8 +557,8 @@ const BulletinConfigModal: React.FC<Props> = ({ isOpen, onClose, periodId, perio
                       <p className="text-xs text-muted-foreground mt-1">Chaque bloc doit être validé indépendamment (≥ 10) — pas de compensation entre blocs</p>
                     </div>
                     <Switch
-                      checked={!!(cfg.calculation_rules as any).bloc_validation_required}
-                      onCheckedChange={(c) => setCfg({ ...cfg, calculation_rules: { ...cfg.calculation_rules, bloc_validation_required: c } as any })}
+                      checked={!!cfg.calculation_rules.bloc_validation_required}
+                      onCheckedChange={(c) => setCfg({ ...cfg, calculation_rules: { ...cfg.calculation_rules, bloc_validation_required: c } })}
                       data-testid="rule-bloc-validation-switch"
                     />
                   </div>
@@ -568,8 +568,8 @@ const BulletinConfigModal: React.FC<Props> = ({ isOpen, onClose, periodId, perio
                       <Label>Seuil de points (validation BTS)</Label>
                       <Input
                         type="number"
-                        value={(cfg.calculation_rules as any).total_points_threshold ?? 220}
-                        onChange={(e) => setCfg({ ...cfg, calculation_rules: { ...cfg.calculation_rules, total_points_threshold: Number(e.target.value) } as any })}
+                        value={cfg.calculation_rules.total_points_threshold ?? 220}
+                        onChange={(e) => setCfg({ ...cfg, calculation_rules: { ...cfg.calculation_rules, total_points_threshold: Number(e.target.value) } })}
                         placeholder="220"
                         data-testid="rule-points-threshold"
                       />
@@ -578,8 +578,8 @@ const BulletinConfigModal: React.FC<Props> = ({ isOpen, onClose, periodId, perio
                     <div>
                       <Label>Méthode de décision finale</Label>
                       <Select
-                        value={(cfg.calculation_rules as any).decision_method || 'moyenne'}
-                        onValueChange={(v) => setCfg({ ...cfg, calculation_rules: { ...cfg.calculation_rules, decision_method: v } as any })}
+                        value={cfg.calculation_rules.decision_method || 'moyenne'}
+                        onValueChange={(v) => setCfg({ ...cfg, calculation_rules: { ...cfg.calculation_rules, decision_method: v as 'moyenne' | 'points' | 'hybrid' } })}
                       >
                         <SelectTrigger data-testid="rule-decision-method"><SelectValue /></SelectTrigger>
                         <SelectContent>

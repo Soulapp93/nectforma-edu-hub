@@ -64,6 +64,11 @@ export interface CalculationRules {
   eliminatory_note_threshold?: number | null;
   scale?: number;
   rounding_decimals?: number;
+  // Phase 4 — Advanced rules
+  ue_eliminatoire?: boolean;
+  bloc_validation_required?: boolean;
+  total_points_threshold?: number;
+  decision_method?: 'moyenne' | 'points' | 'hybrid';
 }
 
 // ─── 3. Layout ───────────────────────────────────────────────────
