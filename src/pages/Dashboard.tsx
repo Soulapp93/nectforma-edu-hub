@@ -78,7 +78,7 @@ const Dashboard = () => {
       icon: AlertCircle,
       description: 'Feuilles à valider',
       clickable: true,
-      onClick: () => navigate('/administration?tab=attendance'),
+      onClick: () => navigate('/suivi-emargement-admin?tab=attendance'),
       color: 'navy',
     },
     {
@@ -87,7 +87,7 @@ const Dashboard = () => {
       icon: FileWarning,
       description: 'Justificatifs à traiter',
       clickable: true,
-      onClick: () => navigate('/administration?tab=absences'),
+      onClick: () => navigate('/suivi-emargement-admin?tab=absences'),
       color: 'red',
     }
   ];
