@@ -1,4 +1,5 @@
 import React from 'react';
+import A4FitWrapper from './A4FitWrapper';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { resolveConfigForPeriod } from '@/services/bulletinConfigService';
@@ -288,22 +289,7 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
   const lastName = lastNameParts.join(' ');
 
   return (
-    <div
-      style={{
-        background: '#fff',
-        color: '#000',
-        fontFamily: FONT_SANS,
-        padding: '10mm',
-        width: '210mm',
-        height: '297mm',
-        boxSizing: 'border-box',
-        margin: '0 auto',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-      data-testid="combined-bulletin"
-    >
+    <A4FitWrapper testId="combined-bulletin" fontFamily={FONT_SANS}>
       {/* ═══ HEADER — identical to Simple + BTS Blanc ═══ */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0, marginBottom: 10, alignItems: 'center' }}>
         <div style={{ fontSize: 10, textAlign: 'left' }}>
@@ -418,7 +404,7 @@ const CombinedBulletinRenderer: React.FC<Props> = ({
           )}
         </div>
       </div>
-    </div>
+    </A4FitWrapper>
   );
 };
 

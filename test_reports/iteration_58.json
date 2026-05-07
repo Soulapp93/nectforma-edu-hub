@@ -1,0 +1,36 @@
+{
+  "summary": "Frontend-only validation of the new A4FitWrapper auto-shrink mechanism for the 3 bulletin templates (Simple / BTS Blanc / Combiné) on Master Digital Marketing 2026, student Bernard Lucas. ALL acceptance criteria pass. The A4FitWrapper.tsx module exists at /app/src/components/grades/A4FitWrapper.tsx with a `export default A4FitWrapper`. The 3 templates correctly import it: SimpleBulletinTemplate.tsx (line 2), BtsBlancBulletinTemplate.tsx (line 2), CombinedBulletinRenderer.tsx (line 2). For all 3 periods (Semestre 1 → simple-bulletin, BTS Blanc → bts-blanc-bulletin, Bulletin bts → combined-bulletin) the outer wrapper is measured live at width=793.688px / height=1122.52px / padding=37.7953px / overflow=hidden — exact A4 portrait at 96 DPI (210mm × 297mm with 10mm padding). The data-a4-scale attribute is present on every wrapper and contains a numeric value '1.000' for Bernard Lucas, which is the EXPECTED value per the main-agent context note (3, 6 and 3 modules respectively → innerScrollHeight 496/445/576 px, well below the 1047 px / 277 mm threshold, so no scaling kicks in). The inner div correctly carries width:190mm / transform:none when scale=1. NO ResizeObserver loop error was observed in the console across all 3 dialogs (the 2-pass measurement strategy is stable). NO runtime error was introduced ('is not defined', ReferenceError, pageerror are all absent). Visually, all 3 bulletins render entirely inside the A4 frame (header + identity block + notes/épreuves table + Assiduité/Appréciation/Directeur boxes) with no clipping at the bottom. The only console errors are pre-existing and unrelated: (1) Radix UI 'DialogContent requires a DialogTitle' a11y warning (already flagged in iter 56/57), (2) Supabase Edge Function compute-bulletin CORS/404/400 (already flagged in iter 55-57; client-side fallback works). Overflow case (scale<1) could not be reproduced because no seeded student has >12 modules — this is documented and acceptable as the agent context explicitly stated.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "BulletinDialog (all 3 bulletins)", "issues": ["Pre-existing a11y warning: 'DialogContent requires a DialogTitle' for screen readers — wrap title in VisuallyHidden. NOT a blocker, NOT a regression of this iteration."]},
+      {"screen": "All 3 bulletins (directeur box)", "issues": ["Pre-existing French typos still present: 'DIERECTEUR DE L'ETABLISSEMENT' (should be DIRECTEUR), '(nom, prenom, signature et cachet de letablissement)' (missing accents/apostrophes). Cosmetic, carried from iter 56/57."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "NONE BLOCKING. The auto-shrink A4FitWrapper is correctly wired on the 3 templates, exposes data-a4-scale (numeric, 1.000 for Bernard Lucas as expected), wrappers have exact 210×297mm dimensions with overflow:hidden, no ResizeObserver loop, no runtime error. ✓",
+    "If you want to actively verify the scale<1 path in QA, seed a test student with >12 modules on a single period (or temporarily lower TARGET_H_MM to force overflow). Not required for shipping.",
+    "OPTIONAL polish (carried over): fix typos 'DIERECTEUR' → 'DIRECTEUR' and the missing accents in the directeur sub-label across SimpleBulletinTemplate / BtsBlancBulletinTemplate / CombinedBulletinRenderer.",
+    "OPTIONAL a11y polish (carried over): add a VisuallyHidden DialogTitle inside BulletinDialog to silence the Radix UI warning."
+  ],
+  "critical_code_review_comments": [
+    "A4FitWrapper.tsx — clean, correct logic: useLayoutEffect runs measureAndScale on mount/children change; ResizeObserver re-runs on resize; image load listeners re-run after async logo loads. Inner width compensation (CONTENT_W_MM / scale) preserves visual fill at any scale. MIN_SCALE=0.4 floor prevents illegible 11pt+ output. ✓",
+    "A4FitWrapper.tsx:38-50 — measureAndScale uses a 2-pass strategy: pass 1 measures at natural width, pass 2 re-measures at the compensated width and tightens the scale if needed. The if-guard `if (h2 > TARGET_H_PX) s = TARGET_H_PX / h2;` means scale is only ever decreased between passes — this guarantees no oscillation and avoids the classic ResizeObserver loop. Confirmed empirically: 0 RO loop errors observed across 3 dialogs. ✓",
+    "A4FitWrapper.tsx:34-51 — minor: measureAndScale mutates el.style.transform/width directly before calling setState. This is intentional (immediate measurement) but could surprise React DevTools users; consider a comment. Non-blocking.",
+    "A4FitWrapper.tsx:88 — data-a4-scale={scale.toFixed(3)} exposed correctly on outer wrapper for testing. Verified live: '1.000' on all 3 bulletins for Bernard Lucas. ✓",
+    "All 3 templates correctly import from './A4FitWrapper' (relative path, default import). ✓",
+    "Edge case to monitor (low priority): with `overflow: hidden` and MIN_SCALE=0.4, content larger than ~2.5× A4 height would still be clipped after scaling to 0.4. For real bulletins this would require >25 modules — extremely unlikely. Consider adding a dev-time console.warn when computed scale === MIN_SCALE.",
+    "useLayoutEffect dependency array contains [children] only — eslint-disable-next-line is justified. ✓",
+    "ResizeObserver is created/disconnected correctly in cleanup; image load listeners are removed on unmount. No leak. ✓"
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "n/a (frontend only)", "frontend": "100% (8/8 acceptance criteria verified live: A4FitWrapper.tsx exists with default export ✓, 3 templates import from './A4FitWrapper' ✓, wrappers width=210mm height=297mm padding=10mm overflow=hidden on all 3 ✓, data-a4-scale present and numeric on all 3 ✓ (value=1.000 expected for Bernard Lucas), content fully visible no clipping on all 3 ✓, no 'is not defined' / ReferenceError ✓, no ResizeObserver loop ✓, no other runtime errors introduced ✓)" },
+  "test_credentials": "admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "None. Used existing data: formation Master Digital Marketing 2026, periods Semestre 1 + BTS Blanc + Bulletin bts (combined), student Bernard Lucas.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "A4FitWrapper auto-shrink is now wired on all 3 bulletin templates. Outer wrapper carries data-testid='simple-bulletin'|'bts-blanc-bulletin'|'combined-bulletin' AND data-a4-scale='X.XXX'. For Bernard Lucas the scale stays at 1.000 (innerScrollHeight 445-576 px << 1047 px target). To exercise the scale<1 branch, seed a student with >12 modules on a single period or push 8+ rows on the BTS Blanc 'épreuves' table. The 2-pass measurement is stable: 0 ResizeObserver loop errors observed during 3 consecutive dialog open/close cycles. Pre-existing unrelated console errors (Radix DialogTitle warning, Supabase compute-bulletin CORS) are NOT a regression of this iteration."
+}
