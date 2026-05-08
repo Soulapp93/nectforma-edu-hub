@@ -51,7 +51,7 @@ import { ScheduleManagementCalendar } from './ScheduleManagementCalendar';
 import { LoadingState } from '@/components/ui/loading-state';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useSchedules } from '@/hooks/useSchedules';
-import { scheduleService, Schedule, ScheduleSlot } from '@/services/scheduleService';
+import { scheduleService, Schedule, ScheduleSlot, EVENT_TYPE_META } from '@/services/scheduleService';
 import AddSlotModal from '@/components/administration/AddSlotModal';
 import AddEventModal from '@/components/administration/AddEventModal';
 import EditSlotModal from '@/components/administration/EditSlotModal';
@@ -644,22 +644,32 @@ const ScheduleManagement = () => {
 
        const slotsAsEvents = daySlots.map(slot => {
          const autonomie = isAutonomieSlot(slot);
+         const isEvtSlot = slot.slot_kind === 'event';
+         const evtLabel = isEvtSlot ? (slot.event_label || 'Événement') : null;
          return {
            id: slot.id,
-           title: autonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non défini'),
+           title: isEvtSlot
+             ? (slot.title || evtLabel || 'Événement')
+             : autonomie
+               ? 'AUTONOMIE'
+               : (slot.formation_modules?.title || 'Module non défini'),
            date: new Date(slot.date),
            startTime: slot.start_time.substring(0, 5),
            endTime: slot.end_time.substring(0, 5),
-           instructor: autonomie
+           instructor: (isEvtSlot || autonomie)
              ? ''
              : (slot.users?.first_name && slot.users?.last_name
                ? `${slot.users.first_name} ${slot.users.last_name}`
                : 'Instructeur non défini'),
-           room: autonomie ? '' : (slot.room || 'Salle non définie'),
+           room: (isEvtSlot || autonomie) ? '' : (slot.room || 'Salle non définie'),
            formation: selectedSchedule?.formations?.title || 'Formation',
-           color: slot.color || '#3B82F6',
+           color: isEvtSlot
+             ? (slot.color || EVENT_TYPE_META[slot.event_type as keyof typeof EVENT_TYPE_META]?.color || '#7C3AED')
+             : (slot.color || '#3B82F6'),
            description: slot.notes || '',
            sessionType: autonomie ? 'autonomie' : slot.session_type,
+           isEvent: isEvtSlot,
+           eventTypeLabel: evtLabel || undefined,
          };
        });
 
