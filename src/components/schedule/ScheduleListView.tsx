@@ -87,9 +87,13 @@ export const ScheduleListView: React.FC<Props> = ({
                           </div>
                         </div>
                         <div>
-                          <div className="bg-white/20 text-white border-white/30 rounded px-2 py-1 text-xs font-medium inline-block">
-                            {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
-                          </div>
+                          {isEventSlot(slot) ? (
+                            <span className="text-sm text-white/70"> </span>
+                          ) : (
+                            <div className="bg-white/20 text-white border-white/30 rounded px-2 py-1 text-xs font-medium inline-block">
+                              {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
+                            </div>
+                          )}
                         </div>
                         <div>
                           <div className="font-medium text-white text-sm">
