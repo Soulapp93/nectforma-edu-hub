@@ -39,7 +39,8 @@ const MissingTextBookEntriesModal: React.FC<MissingTextBookEntriesModalProps> = 
     try {
       const now = new Date();
       
-      // Récupérer les créneaux passés
+      // Récupérer les créneaux passés (les événements — Congés, Jour férié, Examen, etc. — sont exclus
+      //   car ils ne donnent pas lieu à une entrée de cahier de texte)
       let slotsQuery = supabase
         .from('schedule_slots')
         .select(`
@@ -49,6 +50,7 @@ const MissingTextBookEntriesModal: React.FC<MissingTextBookEntriesModalProps> = 
           end_time,
           instructor_id,
           room,
+          event_type,
           formation_modules!schedule_slots_module_id_fkey(
             title
           ),
@@ -63,6 +65,7 @@ const MissingTextBookEntriesModal: React.FC<MissingTextBookEntriesModalProps> = 
           )
         `)
         .lt('date', now.toISOString().split('T')[0])
+        .is('event_type', null)
         .order('date', { ascending: false });
 
       if (selectedFormationId) {

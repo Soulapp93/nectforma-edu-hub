@@ -154,8 +154,10 @@ export const MonthView: React.FC<MonthViewProps> = ({
 
                     {/* Événements */}
                     <div className="flex-1 space-y-1 overflow-hidden">
-                       {dayEvents.slice(0, 3).map((event, index) => {
+                       {dayEvents.slice(0, 3).map((event) => {
                          const isAutonomie = event.sessionType === 'autonomie';
+                         const isEvt = !!event.isEvent;
+                         const displayTitle = isEvt ? (event.eventTypeLabel || event.title) : (isAutonomie ? 'AUTONOMIE' : event.title);
                          return (
                            <div
                             key={event.id}
@@ -163,7 +165,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
                             style={{ 
                               backgroundColor: event.color || '#3B82F6'
                             }}
-                           title={`${isAutonomie ? 'AUTONOMIE' : event.title} - ${event.startTime.substring(0, 5)}`}
+                           title={isEvt ? displayTitle : `${displayTitle} - ${event.startTime.substring(0, 5)}`}
                            onClick={(e) => {
                              e.stopPropagation();
                              onEventClick?.(event);
@@ -171,22 +173,24 @@ export const MonthView: React.FC<MonthViewProps> = ({
                          >
                            <div className="space-y-0.5">
                               <div className="font-bold text-white text-[11px] leading-tight">
-                                {isAutonomie ? 'AUTONOMIE' : event.title}
+                                {displayTitle}
                               </div>
-                              
-                               <div className="flex items-center text-[9px] text-white/90">
-                                 <Clock className="h-2.5 w-2.5 mr-1 text-white/80" />
-                                 <span>{event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}</span>
-                               </div>
-                              
-                              {!isAutonomie && event.room && (
+
+                               {!isEvt && (
+                                 <div className="flex items-center text-[9px] text-white/90">
+                                   <Clock className="h-2.5 w-2.5 mr-1 text-white/80" />
+                                   <span>{event.startTime.substring(0, 5)} - {event.endTime.substring(0, 5)}</span>
+                                 </div>
+                               )}
+
+                              {!isEvt && !isAutonomie && event.room && (
                                 <div className="flex items-center text-[9px] text-white/90">
                                   <MapPin className="h-2.5 w-2.5 mr-1 text-white/80" />
                                   <span>{event.room}</span>
                                 </div>
                               )}
                               
-                              {!isAutonomie && event.instructor && (
+                              {!isEvt && !isAutonomie && event.instructor && (
                                 <div className="flex items-center text-[9px] text-white/90">
                                   <User className="h-2.5 w-2.5 mr-1 text-white/80" />
                                   <span>{event.instructor}</span>

@@ -174,20 +174,22 @@ export const DayView: React.FC<DayViewProps> = ({ selectedDate, events, onEventC
               >
                 <div className="h-full p-2.5 flex flex-col text-white">
                   <h4 className="font-bold text-sm leading-tight">
-                    {auto ? 'AUTONOMIE' : event.title}
+                    {event.isEvent ? (event.eventTypeLabel || event.title) : (auto ? 'AUTONOMIE' : event.title)}
                   </h4>
                   <div className="mt-1 space-y-0.5 text-xs text-white/90">
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3 flex-shrink-0" />
-                      {fmtTime(event.startTime)} - {fmtTime(event.endTime)}
-                    </span>
-                    {!auto && event.room && (
+                    {!event.isEvent && (
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3 flex-shrink-0" />
+                        {fmtTime(event.startTime)} - {fmtTime(event.endTime)}
+                      </span>
+                    )}
+                    {!event.isEvent && !auto && event.room && (
                       <span className="flex items-center gap-1">
                         <MapPin className="h-3 w-3 flex-shrink-0" />
                         <span className="truncate">{event.room}</span>
                       </span>
                     )}
-                    {!auto && event.instructor && (
+                    {!event.isEvent && !auto && event.instructor && (
                       <span className="flex items-center gap-1">
                         <User className="h-3 w-3 flex-shrink-0" />
                         <span className="truncate">{event.instructor}</span>

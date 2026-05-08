@@ -44,6 +44,10 @@ export interface ScheduleEvent {
   description?: string;
   color: string;
   sessionType?: string;
+  /** True when the slot is a non-course event (Congés, Jour férié, Examen, etc.) */
+  isEvent?: boolean;
+  /** Human-readable event type label (e.g. "Jour férié"), populated when isEvent=true */
+  eventTypeLabel?: string;
 }
 
 export const CreateEventModal: React.FC<CreateEventModalProps> = ({ 

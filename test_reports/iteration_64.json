@@ -1,0 +1,45 @@
+{
+  "summary": "Frontend-only validation of the uniform Event-vs-Course display refactor in the Emploi du temps + Cahier de texte filter. Login → /emploi-temps (route is /emploi-temps, NOT /emploi-du-temps as previously noted), formation 'Master Digital Marketing 2026' contains a single 'Établissement fermé' event on Friday 8 May 2026 — perfect fixture to validate the event rendering rules. PASS on Semaine, Mois (calendar grid) and Dashboard cahier de texte filter (code-review confirmed). FAIL on Liste view: the Horaire column still renders '00:00 - 23:59' for events even though instructor/room cells are correctly emptied. Code review of all touched files confirms the helpers + the .is('event_type', null) filters in useDashboardStats.ts (line 207) and MissingTextBookEntriesModal.tsx (line 68). No runtime errors introduced.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "ScheduleListView.tsx (lines 89-93)",
+        "issue": "Pour les événements, la colonne 'Horaire' affiche encore '00:00 - 23:59' (le pill `bg-white/20 ... rounded`). Selon la spécification utilisateur ('on ne doit PAS afficher : formateur, salle, horaire, module — seulement le type d'événement et son titre'), ce créneau horaire doit être masqué/vide pour les événements (event_type non null). Les colonnes Formateur (l.100-108) et Salle (l.110-115) sont correctement vidées via isEventSlot(slot), mais le bloc Horaire ne possède pas de garde équivalente.",
+        "selector": "ScheduleListView row → second <div> (Horaire pill)",
+        "priority": "MEDIUM"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Dans /app/src/components/schedule/ScheduleListView.tsx lignes 89-93, wrapper le pill Horaire dans une garde `{!isEventSlot(slot) && ( ... )}` (ou `{(!isEventSlot(slot) && !isAutonomieSlot(slot)) && ( ... )}` selon le comportement souhaité pour Autonomie) afin de masquer '00:00 - 23:59' sur les événements, en cohérence avec les colonnes Formateur (l.100) et Salle (l.110) déjà conditionnées."
+  ],
+  "critical_code_review_comments": [
+    "utils/slotDisplay.ts: helpers isEventSlot/getEventLabel/getEventColor implémentés correctement — basés sur slot.event_type + EVENT_TYPE_META. ✓",
+    "pages/EmploiTemps.tsx (lines 105-135): convertToEvents propage isEvent + eventTypeLabel + masque instructor/room/title pour les events. ✓ Le titre fallback (l.113-117) garde slot.title custom optionnel puis eventLabel — conforme spec.",
+    "ScheduleMonthView.tsx (l.95-110, 149-180): mapping + rendu des events avec eventTypeLabel uniquement, sans Clock/MapPin/User. ✓",
+    "MonthView.tsx (l.159-160): displayTitle correctement basé sur isEvt. ✓",
+    "DayView.tsx (l.177-192): event.isEvent gère l'affichage sans Clock/MapPin/User. ✓",
+    "ScheduleViewCalendar.tsx (l.20-21, 86, 101): module.isEvent + eventTypeLabel correctement étendus dans le type ScheduleDay et utilisés dans le rendu. ✓",
+    "TimelineView.tsx, MasonryView.tsx, KanbanView.tsx, DashboardView.tsx: chacun calcule isEvent = !!getEventLabel(slot) puis masque instructor/room/Clock conditionnellement. ✓",
+    "ScheduleListView.tsx (l.89-93): BUG — l'horaire est rendu inconditionnellement même pour les events. Les colonnes formateur/salle sont bien vidées (l.100-115). À corriger.",
+    "useDashboardStats.ts (l.198-207): filtre `.is('event_type', null)` correctement appliqué sur la query schedule_slots du compteur 'Entrées non effectuées'. ✓",
+    "MissingTextBookEntriesModal.tsx (l.44-69): même filtre `.is('event_type', null)` appliqué sur la liste détaillée. ✓",
+    "CreateEventModal.tsx (interface ScheduleEvent étendue avec isEvent + eventTypeLabel): non vérifiée fonctionnellement (création d'event non testée), mais le typage est cohérent avec les usages downstream.",
+    "Aucune erreur runtime ni warning notable dans la console pendant la navigation Semaine → Mois → Liste sur la formation Master Digital Marketing 2026."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "n/a (frontend only)",
+    "frontend": "~85% — 5/6 vues conformes (Semaine ✓, Mois ✓, Liste partiel ✗ horaire visible, Dashboard counter ✓ via code-review, Day/Timeline/Masonry/Kanban/DashboardView ✓ via code-review). 1 bug UI à corriger (horaire en vue Liste)."
+  },
+  "test_credentials": "admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "Aucune. La formation 'Master Digital Marketing 2026' contient déjà l'event 'Établissement fermé' du vendredi 8 mai 2026 utilisé pour la validation visuelle.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "La route exacte est /emploi-temps (PAS /emploi-du-temps comme indiqué dans l'agent_to_agent_context_note de l'iter précédente — corriger la note). La formation 'Master Digital Marketing 2026' a un event 'Établissement fermé' le vendredi 8 mai 2026 (semaine S19), idéal pour valider tout changement futur sur les events. Le seul bug restant est dans ScheduleListView.tsx lignes 89-93 (horaire '00:00 - 23:59' affiché pour les events alors qu'il devrait être masqué). Les autres vues (Semaine, Mois grid) ont été validées visuellement: l'event ne montre que son label de type ('Établissement fermé') + sous-titre custom ('fermé'), sans Clock/MapPin/User. Le filtre cahier de texte (.is('event_type', null)) est en place dans useDashboardStats.ts:207 et MissingTextBookEntriesModal.tsx:68 — code review PASS, validation runtime du modal non réalisée car le clic sur la carte 'Cahiers de texte' n'a pas ouvert de modal dans cette session (peut nécessiter un sélecteur plus précis ou un bouton 'voir détails' dédié). Pour le compteur 'Entrées non effectuées' = 1 affiché : ne pas conclure trop vite — la BD contient probablement aussi des cours passés non documentés ; le filtre event_type IS NULL est bien appliqué donc l'event 'Établissement fermé' n'est PAS compté dans ce 1.",
+  "rca of the issue": "ScheduleListView.tsx a été partiellement migré vers la nouvelle UX events: les colonnes Formateur (lignes 100-108) et Salle (lignes 110-115) ont reçu une garde `isEventSlot(slot) || isAutonomieSlot(slot)` qui vide la cellule, mais la colonne Horaire (lignes 89-93) a été oubliée et affiche toujours `slot.start_time.slice(0,5) - slot.end_time.slice(0,5)` qui rend '00:00 - 23:59' pour les events full-day. Mitigation : ajouter la même garde autour du wrapper div de l'horaire, ou conditionner uniquement le pill interne, en suivant le pattern déjà en place lignes 100-115."
+}

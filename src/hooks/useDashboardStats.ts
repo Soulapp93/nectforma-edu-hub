@@ -192,14 +192,19 @@ export const useDashboardStats = (selectedFormationId?: string, timePeriod: stri
       }
 
       // Entrées de cahier de textes manquantes (estimation basée sur les créneaux sans entrées)
+      // ⚠ Les "événements" (Congés, Jour férié, Examen, Autonomie, etc.) sont EXCLUS car
+      //    ils ne donnent pas lieu à une entrée de cahier de texte — seuls les créneaux
+      //    de formation (cours) doivent être comptabilisés.
       let textBookQuery = supabase
         .from('schedule_slots')
         .select(`
           id,
           date,
+          event_type,
           schedules!inner(formation_id)
         `)
-        .lt('date', now.toISOString().split('T')[0]);
+        .lt('date', now.toISOString().split('T')[0])
+        .is('event_type', null);
 
       if (selectedFormationId) {
         textBookQuery = textBookQuery

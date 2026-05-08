@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Clock, MapPin, User, Calendar } from 'lucide-react';
 import { ScheduleSlot } from '@/services/scheduleService';
+import { getEventLabel } from '@/utils/slotDisplay';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -85,6 +86,8 @@ export const KanbanView: React.FC<KanbanViewProps> = ({ schedules, selectedDate 
                   ) : (
                     daySlots.map((slot) => {
                       const isAutonomie = slot.session_type === 'autonomie';
+                      const eventLabel = getEventLabel(slot);
+                      const isEvent = !!eventLabel;
                       return (
                         <div
                           key={slot.id}
@@ -102,20 +105,22 @@ export const KanbanView: React.FC<KanbanViewProps> = ({ schedules, selectedDate 
 
                           {/* Course title */}
                           <h4 className="text-white font-bold text-sm mb-2 line-clamp-2">
-                            {isAutonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non défini')}
+                            {isEvent ? eventLabel : (isAutonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non défini'))}
                           </h4>
 
                           {/* Time */}
-                          <div className="flex items-center text-white/70 text-xs mb-2">
-                            <Clock className="h-3 w-3 mr-1" />
-                            <span>{formatTime(slot.start_time)} - {formatTime(slot.end_time)}</span>
-                          </div>
+                          {!isEvent && (
+                            <div className="flex items-center text-white/70 text-xs mb-2">
+                              <Clock className="h-3 w-3 mr-1" />
+                              <span>{formatTime(slot.start_time)} - {formatTime(slot.end_time)}</span>
+                            </div>
+                          )}
 
                           {/* Expanded details */}
                           {expandedCard === slot.id && (
                             <div className="mt-3 pt-3 border-t border-white/20 animate-fade-in">
                               <div className="space-y-2">
-                                {!isAutonomie && (
+                                {!isAutonomie && !isEvent && (
                                   <>
                                     <div className="flex items-center text-white/70 text-xs">
                                       <MapPin className="h-3 w-3 mr-1" />
@@ -141,7 +146,7 @@ export const KanbanView: React.FC<KanbanViewProps> = ({ schedules, selectedDate 
                           )}
 
                           {/* Minimized indicators */}
-                          {expandedCard !== slot.id && !isAutonomie && (
+                          {expandedCard !== slot.id && !isAutonomie && !isEvent && (
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-1">
                                 <div className="w-1 h-1 bg-white/50 rounded-full"></div>

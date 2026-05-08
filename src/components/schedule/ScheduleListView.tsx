@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScheduleSlot } from '@/services/scheduleService';
-import { isAutonomieSlot } from '@/utils/slotDisplay';
+import { isAutonomieSlot, isEventSlot, getEventLabel } from '@/utils/slotDisplay';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -93,12 +93,12 @@ export const ScheduleListView: React.FC<Props> = ({
                         </div>
                         <div>
                           <div className="font-medium text-white text-sm">
-                            {isAutonomieSlot(slot) ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non defini')}
+                            {getEventLabel(slot) || (isAutonomieSlot(slot) ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non defini'))}
                           </div>
                           {slot.notes && <div className="text-xs text-white/80 mt-1">{slot.notes}</div>}
                         </div>
                         <div>
-                          {isAutonomieSlot(slot) ? (
+                          {isEventSlot(slot) || isAutonomieSlot(slot) ? (
                             <span className="text-sm text-white/70"> </span>
                           ) : (
                             <span className="text-sm text-white">
@@ -108,7 +108,7 @@ export const ScheduleListView: React.FC<Props> = ({
                           )}
                         </div>
                         <div>
-                          {isAutonomieSlot(slot) ? (
+                          {isEventSlot(slot) || isAutonomieSlot(slot) ? (
                             <span className="text-sm text-white/70"> </span>
                           ) : (
                             <span className="text-sm text-white">{slot.room || 'Non definie'}</span>
@@ -136,9 +136,11 @@ export const ScheduleListView: React.FC<Props> = ({
                     </TooltipTrigger>
                     <TooltipContent side="right" className="max-w-xs">
                       <div className="space-y-1">
-                        <p className="font-semibold">{isAutonomieSlot(slot) ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non defini')}</p>
-                        <p className="text-xs">{slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}</p>
-                        {!isAutonomieSlot(slot) && (
+                        <p className="font-semibold">{getEventLabel(slot) || (isAutonomieSlot(slot) ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non defini'))}</p>
+                        {!isEventSlot(slot) && (
+                          <p className="text-xs">{slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}</p>
+                        )}
+                        {!isEventSlot(slot) && !isAutonomieSlot(slot) && (
                           <>
                             <p className="text-xs">{slot.users?.first_name} {slot.users?.last_name}</p>
                             <p className="text-xs">Salle: {slot.room}</p>

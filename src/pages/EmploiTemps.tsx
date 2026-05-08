@@ -16,6 +16,7 @@ import { WeekNavigator } from '@/components/schedule/WeekNavigator';
 import WeekNavigation from '@/components/ui/week-navigation';
 import { useUserSchedules } from '@/hooks/useUserSchedules';
 import { useTutorSchedules } from '@/hooks/useTutorSchedules';
+import { getEventLabel, getEventColor } from '@/utils/slotDisplay';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useUserFormations } from '@/hooks/useUserFormations';
 import { useFormations } from '@/hooks/useFormations';
@@ -105,19 +106,31 @@ const EmploiTemps = () => {
     return scheduleSlots.map(slot => {
       const formation = slot.schedules?.formations;
       const isAutonomie = slot.session_type === 'autonomie';
+      const eventLabel = getEventLabel(slot);
+      const isEvent = !!eventLabel;
       return {
         id: slot.id,
-        title: isAutonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Cours'),
+        title: isEvent
+          ? (slot.title || eventLabel || 'Événement')
+          : isAutonomie
+            ? 'AUTONOMIE'
+            : (slot.formation_modules?.title || 'Cours'),
         date: new Date(slot.date),
         startTime: slot.start_time,
         endTime: slot.end_time,
-        instructor: slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Non assigné',
-        room: slot.room || 'Salle non définie',
+        instructor: isEvent
+          ? ''
+          : (slot.users ? `${slot.users.first_name} ${slot.users.last_name}` : 'Non assigné'),
+        room: isEvent ? '' : (slot.room || 'Salle non définie'),
         formation: formation?.title || 'Formation non définie',
-        color: slot.color || formation?.color || '#6B7280',
-        description: slot.notes || `Cours de ${slot.formation_modules?.title || 'formation'}`,
+        color: getEventColor(slot) || slot.color || formation?.color || '#6B7280',
+        description: isEvent
+          ? (slot.notes || eventLabel || '')
+          : (slot.notes || `Cours de ${slot.formation_modules?.title || 'formation'}`),
         formationId: slot.schedules?.formation_id,
-        sessionType: slot.session_type
+        sessionType: slot.session_type,
+        isEvent,
+        eventTypeLabel: eventLabel || undefined,
       };
     });
   };
@@ -297,6 +310,8 @@ const EmploiTemps = () => {
         formation: event.formation,
         sessionType: event.sessionType,
         notes: event.description,
+        isEvent: event.isEvent,
+        eventTypeLabel: event.eventTypeLabel,
       })),
     };
   });

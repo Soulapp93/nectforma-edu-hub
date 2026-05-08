@@ -17,6 +17,8 @@ interface ScheduleDay {
     formation?: string;
     sessionType?: string;
     notes?: string;
+    isEvent?: boolean;
+    eventTypeLabel?: string;
   }>;
 }
 
@@ -81,6 +83,7 @@ export const ScheduleViewCalendar: React.FC<ScheduleViewCalendarProps> = ({
                     e.room === module.room
                   );
                   const isAutonomie = module.sessionType === 'autonomie';
+                  const isEvt = !!module.isEvent;
                   
                   return (
                     <div
@@ -93,40 +96,42 @@ export const ScheduleViewCalendar: React.FC<ScheduleViewCalendarProps> = ({
                         if (fullEvent) onEventClick(fullEvent);
                       }}
                     >
-                      {/* Titre du module */}
+                      {/* Titre du module / type d'événement */}
                       <h4 className="font-bold text-white text-sm sm:text-base group-hover:text-white/90 transition-colors line-clamp-2 mb-2">
-                        {module.title}
+                        {isEvt ? (module.eventTypeLabel || module.title) : module.title}
                       </h4>
                       
                       <div className="space-y-1">
-                        {/* Formation - uniquement pour les formateurs et pas autonomie */}
-                        {showFormationName && fullEvent?.formation && !isAutonomie && (
+                        {/* Formation - uniquement pour les formateurs et pas autonomie ni événement */}
+                        {showFormationName && fullEvent?.formation && !isAutonomie && !isEvt && (
                           <div className="flex items-center text-[10px] sm:text-xs text-white/90">
                             <GraduationCap className="h-3 w-3 mr-1 flex-shrink-0" />
                             <span className="truncate">{fullEvent.formation}</span>
                           </div>
                         )}
-                        {/* Horaire */}
-                        <div className="flex items-center text-[10px] sm:text-xs text-white/90">
-                          <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
-                          <span className="truncate">{module.time}</span>
-                        </div>
-                        {/* Salle - masquée pour autonomie */}
-                        {!isAutonomie && (
+                        {/* Horaire - masqué pour événement */}
+                        {!isEvt && (
+                          <div className="flex items-center text-[10px] sm:text-xs text-white/90">
+                            <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
+                            <span className="truncate">{module.time}</span>
+                          </div>
+                        )}
+                        {/* Salle - masquée pour autonomie et événement */}
+                        {!isAutonomie && !isEvt && (
                           <div className="flex items-center text-[10px] sm:text-xs text-white/90">
                             <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
                             <span className="truncate">{module.room}</span>
                           </div>
                         )}
-                        {/* Formateur - masqué pour autonomie */}
-                        {!isAutonomie && (
+                        {/* Formateur - masqué pour autonomie et événement */}
+                        {!isAutonomie && !isEvt && (
                           <div className="flex items-center text-[10px] sm:text-xs text-white/90">
                             <User className="h-3 w-3 mr-1 flex-shrink-0" />
                             <span className="truncate">{module.instructor}</span>
                           </div>
                         )}
                         {/* Notes - affichées pour autonomie */}
-                        {isAutonomie && module.notes && (
+                        {(isAutonomie || isEvt) && module.notes && (
                           <p className="text-[10px] sm:text-xs text-white/80 italic truncate">
                             {module.notes}
                           </p>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, MapPin, User, Search, Filter, Bell, TrendingUp } from 'lucide-react';
 import { ScheduleSlot } from '@/services/scheduleService';
+import { getEventLabel } from '@/utils/slotDisplay';
 import { format, addDays, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -229,6 +230,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               ) : (
                 filteredSchedules.map((slot, index) => {
                   const isAutonomie = slot.session_type === 'autonomie';
+                  const eventLabel = getEventLabel(slot);
+                  const isEvent = !!eventLabel;
                   return (
                     <div 
                       key={slot.id}
@@ -244,23 +247,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         <div className="flex-1">
                           <div className="flex items-center mb-2">
                             <h3 className="text-lg font-bold text-white">
-                              {isAutonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non défini')}
+                              {isEvent ? eventLabel : (isAutonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non défini'))}
                             </h3>
                           </div>
                           
-                          {!isAutonomie && (
+                          {!isAutonomie && !isEvent && (
                             <p className="text-white/80 text-sm mb-4">
                               Formation
                             </p>
                           )}
 
-                          <div className={`grid grid-cols-1 ${isAutonomie ? '' : 'md:grid-cols-3'} gap-4`}>
-                            <div className="flex items-center text-sm text-white/90">
-                              <Clock className="h-4 w-4 mr-2" />
-                              <span>{formatTime(slot.start_time)} - {formatTime(slot.end_time)}</span>
-                            </div>
+                          <div className={`grid grid-cols-1 ${isAutonomie || isEvent ? '' : 'md:grid-cols-3'} gap-4`}>
+                            {!isEvent && (
+                              <div className="flex items-center text-sm text-white/90">
+                                <Clock className="h-4 w-4 mr-2" />
+                                <span>{formatTime(slot.start_time)} - {formatTime(slot.end_time)}</span>
+                              </div>
+                            )}
                             
-                            {!isAutonomie && (
+                            {!isAutonomie && !isEvent && (
                               <>
                                 <div className="flex items-center text-sm text-white/90">
                                   <MapPin className="h-4 w-4 mr-2" />

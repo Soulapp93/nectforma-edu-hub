@@ -1,8 +1,42 @@
 // Centralise l'affichage des créneaux pour uniformiser UI + PDF
 
-import type { ScheduleSlot } from '@/services/scheduleService';
+import type { ScheduleSlot, EventType } from '@/services/scheduleService';
+import { EVENT_TYPE_META } from '@/services/scheduleService';
 
 export const isAutonomieSession = (sessionType?: string | null) => sessionType === 'autonomie';
+
+/**
+ * A schedule slot is an "event" (not a regular course) when it carries an `event_type`.
+ * Events: Congés, Établissement fermé, Jour férié, Portes ouvertes, Autonomie,
+ * Examen blanc, Examen final, Partiels, Rattrapage, Autre.
+ *
+ * Events should NOT show instructor / room / module — they only need to display
+ * their type label (and date range).
+ */
+export const isEventSlot = (slot?: Pick<ScheduleSlot, 'event_type'> | null): boolean => {
+  if (!slot) return false;
+  return Boolean(slot.event_type);
+};
+
+/**
+ * Returns the human-readable label for an event slot, or null if the slot is a regular course.
+ * Uses EVENT_TYPE_META to ensure consistency across all calendar views.
+ */
+export const getEventLabel = (slot?: Pick<ScheduleSlot, 'event_type'> | null): string | null => {
+  if (!isEventSlot(slot)) return null;
+  const type = slot!.event_type as EventType;
+  return EVENT_TYPE_META[type]?.label || 'Événement';
+};
+
+/**
+ * Returns the colour to use for the slot card.
+ * For events: uses the EVENT_TYPE_META colour; for courses: caller decides.
+ */
+export const getEventColor = (slot?: Pick<ScheduleSlot, 'event_type'> | null): string | null => {
+  if (!isEventSlot(slot)) return null;
+  const type = slot!.event_type as EventType;
+  return EVENT_TYPE_META[type]?.color || '#64748B';
+};
 
 /**
  * Détection robuste du créneau "autonomie".

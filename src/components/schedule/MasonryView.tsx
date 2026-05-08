@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Clock, MapPin, User, Calendar, Book, Maximize2, Minimize2 } from 'lucide-react';
 import { ScheduleSlot } from '@/services/scheduleService';
+import { getEventLabel } from '@/utils/slotDisplay';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -98,6 +99,8 @@ export const MasonryView: React.FC<MasonryViewProps> = ({ schedules, selectedDat
               const dayName = format(slotDate, 'EEEE', { locale: fr });
               const isToday = slotDate.toDateString() === new Date().toDateString();
               const isAutonomie = slot.session_type === 'autonomie';
+              const eventLabel = getEventLabel(slot);
+              const isEvent = !!eventLabel;
               
               return (
                 <div 
@@ -125,7 +128,7 @@ export const MasonryView: React.FC<MasonryViewProps> = ({ schedules, selectedDat
                           </span>
                         </div>
                         <h3 className="text-lg font-bold text-foreground leading-tight">
-                          {isAutonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non défini')}
+                          {isEvent ? eventLabel : (isAutonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non défini'))}
                         </h3>
                       </div>
                       <button className="text-muted-foreground hover:text-foreground transition-colors">
@@ -134,17 +137,19 @@ export const MasonryView: React.FC<MasonryViewProps> = ({ schedules, selectedDat
                     </div>
 
                     {/* Time badge */}
-                    <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mb-4"
-                         style={{ 
-                           backgroundColor: `${slot.color || '#8B5CF6'}20`,
-                           color: slot.color || '#8B5CF6'
-                         }}>
-                      <Clock className="h-3 w-3 mr-1" />
-                      {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
-                    </div>
+                    {!isEvent && (
+                      <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mb-4"
+                           style={{ 
+                             backgroundColor: `${slot.color || '#8B5CF6'}20`,
+                             color: slot.color || '#8B5CF6'
+                           }}>
+                        <Clock className="h-3 w-3 mr-1" />
+                        {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                      </div>
+                    )}
 
-                    {/* Basic info - masqué pour autonomie */}
-                    {!isAutonomie && (
+                    {/* Basic info - masqué pour autonomie ET événements */}
+                    {!isAutonomie && !isEvent && (
                       <div className="space-y-2 mb-4">
                         <div className="flex items-center text-sm text-muted-foreground">
                           <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
@@ -170,8 +175,8 @@ export const MasonryView: React.FC<MasonryViewProps> = ({ schedules, selectedDat
                     {/* Expanded content */}
                     {isExpanded && (
                       <div className="space-y-4 animate-fade-in">
-                        {/* Formation info - masqué pour autonomie */}
-                        {!isAutonomie && (
+                        {/* Formation info - masqué pour autonomie ET événements */}
+                        {!isAutonomie && !isEvent && (
                           <>
                             <div className="p-3 bg-muted/20 rounded-lg">
                               <p className="text-sm font-medium text-foreground mb-1">Formation</p>

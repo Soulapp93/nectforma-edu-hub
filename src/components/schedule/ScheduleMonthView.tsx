@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ScheduleSlot } from '@/services/scheduleService';
-import { isAutonomieSlot } from '@/utils/slotDisplay';
+import { isAutonomieSlot, getEventLabel, getEventColor } from '@/utils/slotDisplay';
 import { isSameMonth, isSameDay, isToday, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -93,16 +93,21 @@ export const ScheduleMonthView: React.FC<Props> = ({
               const isTodayDate = isToday(date);
 
               const slotsAsEvents = daySlots.map(slot => {
+                const eventLabel = getEventLabel(slot);
+                const eventColor = getEventColor(slot);
+                const isEvent = !!eventLabel;
                 const autonomie = isAutonomieSlot(slot);
                 return {
                   id: slot.id,
-                  title: autonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non defini'),
+                  title: isEvent ? (slot.title || eventLabel) : (autonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non defini')),
                   startTime: slot.start_time.substring(0, 5),
                   endTime: slot.end_time.substring(0, 5),
-                  instructor: autonomie ? '' : (slot.users?.first_name && slot.users?.last_name ? `${slot.users.first_name} ${slot.users.last_name}` : 'Instructeur non defini'),
-                  room: autonomie ? '' : (slot.room || 'Salle non definie'),
-                  color: slot.color || '#3B82F6',
+                  instructor: isEvent || autonomie ? '' : (slot.users?.first_name && slot.users?.last_name ? `${slot.users.first_name} ${slot.users.last_name}` : 'Instructeur non defini'),
+                  room: isEvent || autonomie ? '' : (slot.room || 'Salle non definie'),
+                  color: isEvent ? (eventColor || slot.color || '#64748B') : (slot.color || '#3B82F6'),
                   sessionType: autonomie ? 'autonomie' : slot.session_type,
+                  isEvent,
+                  eventTypeLabel: eventLabel,
                 };
               });
 
@@ -141,18 +146,20 @@ export const ScheduleMonthView: React.FC<Props> = ({
                                 >
                                   <div className="space-y-0.5">
                                     <div className="font-bold text-white text-[11px] leading-tight">
-                                      {event.sessionType === 'autonomie' ? 'AUTONOMIE' : event.title}
+                                      {event.isEvent ? event.eventTypeLabel : (event.sessionType === 'autonomie' ? 'AUTONOMIE' : event.title)}
                                     </div>
-                                    <div className="flex items-center text-[9px] text-white/90">
-                                      <Clock className="h-2.5 w-2.5 mr-1 text-white/80" />
-                                      <span>{formatTimeRange(event.startTime, event.endTime)}</span>
-                                    </div>
-                                    {event.sessionType !== 'autonomie' && event.room && (
+                                    {!event.isEvent && (
+                                      <div className="flex items-center text-[9px] text-white/90">
+                                        <Clock className="h-2.5 w-2.5 mr-1 text-white/80" />
+                                        <span>{formatTimeRange(event.startTime, event.endTime)}</span>
+                                      </div>
+                                    )}
+                                    {!event.isEvent && event.sessionType !== 'autonomie' && event.room && (
                                       <div className="flex items-center text-[9px] text-white/90">
                                         <MapPin className="h-2.5 w-2.5 mr-1 text-white/80" /><span>{event.room}</span>
                                       </div>
                                     )}
-                                    {event.sessionType !== 'autonomie' && event.instructor && (
+                                    {!event.isEvent && event.sessionType !== 'autonomie' && event.instructor && (
                                       <div className="flex items-center text-[9px] text-white/90">
                                         <User className="h-2.5 w-2.5 mr-1 text-white/80" /><span>{event.instructor}</span>
                                       </div>
@@ -162,10 +169,17 @@ export const ScheduleMonthView: React.FC<Props> = ({
                               </TooltipTrigger>
                               <TooltipContent side="right" className="max-w-xs">
                                 <div className="space-y-1">
-                                  <p className="font-semibold">{event.title}</p>
-                                  <p className="text-xs">{event.startTime} - {event.endTime}</p>
-                                  <p className="text-xs">{event.instructor}</p>
-                                  <p className="text-xs">Salle: {event.room}</p>
+                                  <p className="font-semibold">{event.isEvent ? event.eventTypeLabel : event.title}</p>
+                                  {event.isEvent && event.title && event.title !== event.eventTypeLabel && (
+                                    <p className="text-xs">{event.title}</p>
+                                  )}
+                                  {!event.isEvent && (
+                                    <>
+                                      <p className="text-xs">{event.startTime} - {event.endTime}</p>
+                                      {event.instructor && <p className="text-xs">{event.instructor}</p>}
+                                      {event.room && <p className="text-xs">Salle: {event.room}</p>}
+                                    </>
+                                  )}
                                 </div>
                               </TooltipContent>
                             </Tooltip>

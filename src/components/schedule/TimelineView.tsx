@@ -1,6 +1,7 @@
 import React from 'react';
 import { Clock, MapPin, User, Book } from 'lucide-react';
 import { ScheduleSlot } from '@/services/scheduleService';
+import { getEventLabel, getEventColor } from '@/utils/slotDisplay';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -67,6 +68,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ schedules, selectedD
             <div className="space-y-6">
               {daySchedules.map((slot, index) => {
                 const isAutonomie = slot.session_type === 'autonomie';
+                const eventLabel = getEventLabel(slot);
+                const isEvent = !!eventLabel;
                 return (
                   <div 
                     key={slot.id} 
@@ -81,9 +84,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ schedules, selectedD
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <h3 className="text-xl font-bold text-white mb-1">
-                            {isAutonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non défini')}
+                            {isEvent ? eventLabel : (isAutonomie ? 'AUTONOMIE' : (slot.formation_modules?.title || 'Module non défini'))}
                           </h3>
-                          {!isAutonomie && (
+                          {!isAutonomie && !isEvent && (
                             <p className="text-white/70 text-sm">
                               Formation
                             </p>
@@ -91,19 +94,21 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ schedules, selectedD
                         </div>
                         <div 
                           className="w-4 h-4 rounded-full animate-pulse-glow"
-                          style={{ backgroundColor: slot.color || '#8B5CF6' }}
+                          style={{ backgroundColor: getEventColor(slot) || slot.color || '#8B5CF6' }}
                         ></div>
                       </div>
 
-                      <div className={`grid grid-cols-1 ${isAutonomie ? '' : 'md:grid-cols-3'} gap-4 mb-4`}>
-                        <div className="flex items-center text-white/80">
-                          <Clock className="h-4 w-4 mr-2" />
-                          <span className="text-sm font-medium">
-                            {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
-                          </span>
-                        </div>
-                        
-                        {!isAutonomie && (
+                      <div className={`grid grid-cols-1 ${isAutonomie || isEvent ? '' : 'md:grid-cols-3'} gap-4 mb-4`}>
+                        {!isEvent && (
+                          <div className="flex items-center text-white/80">
+                            <Clock className="h-4 w-4 mr-2" />
+                            <span className="text-sm font-medium">
+                              {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                            </span>
+                          </div>
+                        )}
+
+                        {!isAutonomie && !isEvent && (
                           <>
                             <div className="flex items-center text-white/80">
                               <MapPin className="h-4 w-4 mr-2" />
@@ -120,7 +125,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ schedules, selectedD
                         )}
                       </div>
 
-                      {!isAutonomie && (
+                      {!isAutonomie && !isEvent && (
                         <div className="flex items-start text-white/70">
                           <Book className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
                           <p className="text-sm">Module de formation</p>
