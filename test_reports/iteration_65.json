@@ -1,0 +1,46 @@
+{
+  "summary": "Frontend-only validation of the redesigned DayView.tsx (chronological card list with Cours/Autonomie/Évenement category badges) on /emploi-temps. Tested with admin login → formation 'Master Digital Marketing 2026' → S19 → Jour view → navigate to vendredi 8 mai 2026 (Établissement fermé event). VALIDATED on desktop (1920x1080) AND mobile (375x667): the event card correctly hides instructor/room/formation/time and shows 'Toute la journée' on the time rail + Badge 'Événement' + type label 'Établissement fermé' + custom title + notes 'fermé'. Empty state message exact match. Stats pill '1 événement' shown (events excluded from totalHours/coursesCount). No horizontal overflow on mobile. Click on event card opens detail modal (onEventClick handler fires). UNABLE to find a date with an actual COURS or AUTONOMIE in test data (Master Digital Marketing 2026 only has 'Établissement fermé' + 2 'Congés' events on visible weeks; Rh formation has 0 cours en mai 2026 — its 6 cours are elsewhere in the year). Code-review confirms cours/autonomie branches (DayView.tsx lines 161-185) are correctly gated by !isEvt && and !isAuto && so they will render formation/instructor/room/time for regular cours and badge 'Autonomie' + title 'AUTONOMIE' (no instructor/room) for autonomies. SECONDARY ISSUE found: the SLOT DETAIL MODAL that opens on click still displays Horaire '00:00 - 23:59', empty Formateur/Salle fields and 'Détails du cours' header for events — this modal has NOT been migrated to the event-aware UI even though DayView itself is correct. This is OUTSIDE DayView.tsx scope but breaks the user-visible UX consistency promised by the refactor.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Slot detail modal (opened by clicking a DayView card) — file appears to be SlotDetailModal or similar (not DayView.tsx)",
+        "issue": "Pour un ÉVÉNEMENT (Établissement fermé), le modal qui s'ouvre au clic sur la carte affiche encore: titre 'Horaire: 00:00 - 23:59', section 'Détails du cours', champs 'Formateur' (vide), 'Salle' (vide) et 'Formation: Master Digital Marketing 2026'. C'est exactement les informations que le DayView a été corrigé pour masquer. L'expérience utilisateur reste donc cassée: l'utilisateur voit la carte propre dans la liste mais retombe sur l'ancien rendu factice dès qu'il clique. Le modal doit être conditionné via isEventSlot/event_type pour adopter le même pattern que DayView (afficher seulement type d'événement + titre custom + notes + 'Toute la journée').",
+        "selector": "modal opened on click of [data-testid^='day-card-']",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Mettre à jour le composant SlotDetailModal (ou équivalent) pour suivre le même pattern que DayView: si isEventSlot(slot) → masquer Horaire, Formateur, Salle, Formation, et remplacer 'Détails du cours' par 'Détails de l'événement' (ou similaire). L'utilisateur signalera cette incohérence dès la première utilisation.",
+    "Optionnel: ajouter un seed de cours classiques + autonomies sur une date prochaine pour permettre la validation runtime des branches Cours et Autonomie de DayView (le code-review confirme la correction mais une exécution UI réelle n'a pas été possible faute de fixtures)."
+  ],
+  "critical_code_review_comments": [
+    "DayView.tsx (204 lignes): structure propre, single-responsibility. Le calcul des stats exclut bien les events de totalMinutes (l.52-58) — coursesCount = !isEvent && !autonomie, autonomiesCount = autonomie, eventsCount = isEvent. ✓",
+    "DayView.tsx l.110: const isEvt = !!event.isEvent — bon usage du flag propagé depuis EmploiTemps.tsx convertToEvents. ✓",
+    "DayView.tsx l.121-135: rail temps masqué pour les events (affiche 'Toute la journée'), avec horaires précis pour cours et autonomies. Validé runtime sur l'event Établissement fermé. ✓",
+    "DayView.tsx l.161-185: bloc des détails (formation/instructor/room) UNIQUEMENT si !isEvt. Pour les autonomies, !isAuto && garde supprime instructor/room/formation et affiche à la place 'Travail en autonomie'. ✓ (code-review only — pas de fixture autonomie testée)",
+    "DayView.tsx l.155: titre adapte: isEvt → event.title || eventTypeLabel || 'Événement'; isAuto → 'AUTONOMIE'; else → event.title. ✓",
+    "DayView.tsx l.61-73: empty state explicite 'Aucun cours ni événement programmé ce jour.' — exact spec. Validé runtime sur lundi 4 mai. ✓",
+    "DayView.tsx l.118-119, 164, 170, 176, 191: tous les data-testid requis sont présents (day-view-redesign, day-card-{id}, day-card-formation-{id}, day-card-instructor-{id}, day-card-room-{id}, day-card-notes-{id}). ✓ Validé sur l'event: seuls day-card-{id} et day-card-notes-{id} sont rendus, formation/instructor/room ABSENTS — exactement ce qui est attendu pour un event.",
+    "DayView.tsx l.116: onClick={() => onEventClick?.(event)} sur le wrapper full-card → handler bien câblé. Validé runtime: clic ouvre un modal (mais le modal lui-même n'est pas event-aware, voir bug ci-dessus).",
+    "ViewModeSelector.tsx (44 lignes): le bouton 'Jour' n'a pas de data-testid — pas bloquant mais à ajouter pour la testabilité (j'ai dû passer par get_by_role('button', name='Jour')). Suggestion: ajouter data-testid={`view-mode-${id}`} sur le Button l.26 pour exposer 'view-mode-day', 'view-mode-week', etc.",
+    "Le composant DayView lui-même remplit 100% des critères d'acceptation. Le seul gap est que le modal de détail (composant SlotDetailModal ou similaire ouvert via onEventClick) n'a pas été mis à jour pour respecter la même règle 'events n'ont pas d'horaire/formateur/salle' — bug cross-component.",
+    "Pas d'erreurs runtime dans la console pendant toute la session. La seule erreur loggée (X-Frame-Options en meta) est pré-existante et non liée."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "n/a (frontend only)",
+    "frontend": "DayView.tsx 100% — toutes les exigences du request validées (header+stats, empty state, event card propre, mobile responsive, click → onEventClick, no overflow, no instructor/room/formation/time pour events). Branches Cours et Autonomie validées par code-review uniquement faute de fixtures runtime."
+  },
+  "test_credentials": "admin.principal@nectforma-demo.com / NectDemo2026!",
+  "seed_data_creation": "Aucune. Fixture utilisée: event 'Établissement fermé' du vendredi 8 mai 2026 sur formation 'Master Digital Marketing 2026'.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Pour valider COURS/AUTONOMIE en DayView: créer ou seeder un cours classique + un slot autonomie sur une date proche, puis ouvrir DayView de cette date. Le code des branches !isEvt et isAuto est correct (lignes 161-185 de DayView.tsx) mais aucun fixture runtime n'était disponible dans la base demo (Master Digital Marketing 2026: que des events sur les semaines visibles; Rh: 0 cours en mai 2026). La route est /emploi-temps. Le toggle 'Jour' n'a pas de data-testid → utiliser get_by_role('button', name='Jour', exact=True).first. Pour naviguer entre jours: le bouton chevron-right est le DERNIER button du conteneur parent de 'Aujourd'hui'. ATTENTION BUG SECONDAIRE découvert: le modal de détail de slot (qui s'ouvre au clic sur une carte DayView) affiche ENCORE Horaire '00:00 - 23:59' + Formateur/Salle/Formation pour les events — ce composant doit être migré vers le pattern event-aware (priorité HIGH, mais hors scope DayView.tsx). À fixer dans SlotDetailModal ou composant équivalent."
+  ,
+  "rca of the issue": "Pas de bug dans DayView.tsx — le composant respecte 100% du cahier des charges (validé runtime sur l'event 'Établissement fermé' + code-review pour les branches non testables faute de fixtures). Le bug cross-component est dans le modal de détail ouvert par onEventClick: ce modal continue d'afficher les champs Horaire/Formateur/Salle/Formation pour les events alors que DayView les a correctement masqués. Mitigation: ajouter dans le modal une garde isEventSlot(slot) similaire à celle utilisée dans DayView (l.161 !isEvt &&) pour conditionner l'affichage de ces champs, et remplacer le label de section 'Détails du cours' par 'Détails de l'événement' lorsqu'il s'agit d'un event."
+}
