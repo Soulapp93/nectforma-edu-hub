@@ -46,6 +46,12 @@ French (toujours répondre en français)
 - ✅ Footer BTS Blanc : ligne unique `TOTAL` (span 2) + `totalCoef` + `totalPoints` + `DECISION`
 - ✅ Footer Combiné : ligne unique `MOYENNE GENERALE COMBINEE` (span 2) + valeurs encadrées
 
+### 2026-02-08 - DayView redesign + Modal event-aware
+- ✅ Refonte complète de `DayView.tsx` (header stats, cartes catégorisées Cours/Autonomie/Événement)
+- ✅ Événements affichent "Toute la journée" (rail temps), badge dédié, plus de Formateur/Salle/Formation factices
+- ✅ `EventDetailsModal` rendu compatible avec les 2 conventions (slotKind + isEvent flag) — masque correctement Formateur/Salle/Formation pour events et affiche "Toute la journée"
+- ✅ Affichage du label de type d'événement (ex: "ÉTABLISSEMENT FERMÉ") dans le modal
+
 ## Backlog / ROADMAP
 
 ### P1 — Next

@@ -35,6 +35,9 @@ export interface ScheduleEvent {
   isCancelled?: boolean;
   cancellationReason?: string | null;
   allDay?: boolean;
+  // Compatibility fields used by some converters (EmploiTemps.tsx)
+  isEvent?: boolean;
+  eventTypeLabel?: string;
 }
 
 interface EventDetailsModalProps {
@@ -59,8 +62,19 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
   if (!event) return null;
 
   const formatTime = (time: string) => time.split(':').slice(0, 2).join(':');
-  const isEvent = event.slotKind === 'event';
+  // Robust event detection: accept both naming conventions used across the codebase
+  // (slotKind === 'event' from ScheduleManagement, isEvent flag from EmploiTemps).
+  const isEvent =
+    event.slotKind === 'event' ||
+    !!event.isEvent ||
+    !!event.eventTypeLabel ||
+    !!event.eventLabel;
   const isCancelled = !!event.isCancelled;
+  // An event is shown as "all day" if explicitly flagged, or when its times cover the whole day.
+  const startHM = formatTime(event.startTime);
+  const endHM = formatTime(event.endTime);
+  const isAllDay = !!event.allDay || (isEvent && startHM === '00:00' && endHM === '23:59');
+  const displayedEventLabel = event.eventLabel || event.eventTypeLabel || null;
 
   const handleCancelConfirm = async () => {
     if (!cancelReason.trim()) return;
@@ -120,6 +134,15 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
             </div>
           )}
 
+          {/* Event type label (shown only for events, below the title) */}
+          {isEvent && displayedEventLabel && (
+            <div className="-mt-2">
+              <p className="text-xs uppercase tracking-wide font-semibold text-amber-700">
+                {displayedEventLabel}
+              </p>
+            </div>
+          )}
+
           {/* Date et heure */}
           <div className="bg-muted/30 rounded-lg p-4 space-y-3">
             <div className="flex items-center gap-3">
@@ -141,9 +164,7 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
               <div>
                 <p className="text-xs text-muted-foreground font-medium">Horaire</p>
                 <p className="text-sm font-medium">
-                  {event.allDay
-                    ? 'Journée entière'
-                    : `${formatTime(event.startTime)} - ${formatTime(event.endTime)}`}
+                  {isAllDay ? 'Toute la journée' : `${startHM} - ${endHM}`}
                 </p>
               </div>
             </div>
