@@ -7,37 +7,42 @@ export interface Promotion {
   name: string;
   academic_year_start: number;
   academic_year_end: number;
+  start_date?: string | null;
+  end_date?: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
   // Joined
-  formations?: { title: string; level: string; color: string; start_date: string; end_date: string };
+  formations?: { title: string; level: string; color: string; start_date: string; end_date: string; duration?: number; duration_years?: number; formation_type?: string };
   student_count?: number;
   schedule_id?: string;
   text_book_id?: string;
+  module_count?: number;
 }
 
 export const promotionService = {
   async getPromotions(establishmentId: string): Promise<Promotion[]> {
     const { data, error } = await supabase
       .from('promotions')
-      .select('*, formations(title, level, color, start_date, end_date)')
+      .select('*, formations(title, level, color, start_date, end_date, duration, duration_years, formation_type)')
       .eq('establishment_id', establishmentId)
       .order('created_at', { ascending: false });
     if (error) throw error;
 
-    // Enrich with student count, schedule_id, text_book_id
+    // Enrich with student count, schedule_id, text_book_id, module count
     const enriched = await Promise.all((data || []).map(async (p: any) => {
-      const [studentsRes, scheduleRes, textBookRes] = await Promise.all([
+      const [studentsRes, scheduleRes, textBookRes, modulesRes] = await Promise.all([
         supabase.from('user_formation_assignments').select('user_id', { count: 'exact', head: true }).eq('formation_id', p.formation_id),
         supabase.from('schedules').select('id').eq('promotion_id', p.id).limit(1).maybeSingle(),
         supabase.from('text_books').select('id').eq('promotion_id', p.id).limit(1).maybeSingle(),
+        supabase.from('formation_modules').select('id', { count: 'exact', head: true }).eq('formation_id', p.formation_id),
       ]);
       return {
         ...p,
         student_count: studentsRes.count || 0,
         schedule_id: scheduleRes.data?.id || null,
         text_book_id: textBookRes.data?.id || null,
+        module_count: modulesRes.count || 0,
       } as Promotion;
     }));
 
@@ -63,8 +68,10 @@ export const promotionService = {
         name: `${params.formationTitle} ${params.academicYear}`,
         academic_year_start: yearStart || new Date().getFullYear(),
         academic_year_end: yearEnd || new Date().getFullYear() + 1,
+        start_date: params.startDate || null,
+        end_date: params.endDate || null,
         is_active: true,
-      })
+      } as any)
       .select()
       .single();
 

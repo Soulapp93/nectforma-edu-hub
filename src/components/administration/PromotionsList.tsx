@@ -296,6 +296,7 @@ const PromotionsList: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {promos.map(p => (
               <PromotionCard key={p.id} promotion={p} color={selectedFormation.color}
+                formationTitle={selectedFormation.title}
                 onToggle={() => handleToggleActive(p)} onDelete={() => handleDelete(p)}
                 onDuplicate={() => setCreatePromoModal({ open: true, duplicateFrom: p })}
                 onParticipants={() => goToParticipants(p.formation_id, selectedFormation.title)} onTextBook={() => goToTextBook(p.formation_id)}
@@ -421,20 +422,22 @@ const PromotionsList: React.FC = () => {
 
 // === PROMOTION CARD (Grid view) ===
 const PromotionCard: React.FC<{
-  promotion: Promotion; color: string;
+  promotion: Promotion; color: string; formationTitle: string;
   onToggle: () => void; onDelete: () => void; onDuplicate: () => void;
   onParticipants: () => void; onTextBook: () => void; onSchedule: () => void;
   onEmargement: () => void; onNotes: () => void;
-}> = ({ promotion: p, color, onToggle, onDelete, onDuplicate, onParticipants, onTextBook, onSchedule, onEmargement, onNotes }) => (
+}> = ({ promotion: p, color, formationTitle, onToggle, onDelete, onDuplicate, onParticipants, onTextBook, onSchedule, onEmargement, onNotes }) => {
+  const fmtDate = (d?: string | null) => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
+  return (
   <Card className="overflow-hidden hover:shadow-md transition-shadow" data-testid={`promotion-card-${p.id}`}>
     <div className="h-1" style={{ backgroundColor: color }} />
     <CardContent className="p-4 space-y-3">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="min-w-0">
-          <h3 className="font-semibold text-sm truncate">{p.name}</h3>
+          <h3 className="font-semibold text-sm truncate" title={formationTitle}>{formationTitle}</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {p.academic_year_start}-{p.academic_year_end}
+            Promotion {p.academic_year_start}-{p.academic_year_end}
           </p>
         </div>
         <Badge variant={p.is_active ? 'default' : 'secondary'} className="shrink-0 text-[10px]">
@@ -442,10 +445,16 @@ const PromotionCard: React.FC<{
         </Badge>
       </div>
 
-      {/* Stats */}
-      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {p.student_count || 0} etudiant{(p.student_count || 0) > 1 ? 's' : ''}</span>
-        <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> {p.academic_year_start}-{p.academic_year_end}</span>
+      {/* Stats — Dates de début/fin de la promotion + nb modules + étudiants */}
+      <div className="space-y-1.5 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5">
+          <Calendar className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
+          <span>Du <strong className="text-foreground">{fmtDate(p.start_date)}</strong> au <strong className="text-foreground">{fmtDate(p.end_date)}</strong></span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1"><BookText className="h-3.5 w-3.5 text-muted-foreground/70" /> {p.module_count || 0} module{(p.module_count || 0) > 1 ? 's' : ''}</span>
+          <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5 text-muted-foreground/70" /> {p.student_count || 0} etudiant{(p.student_count || 0) > 1 ? 's' : ''}</span>
+        </div>
       </div>
 
       {/* Shortcut buttons */}
@@ -472,7 +481,8 @@ const PromotionCard: React.FC<{
       </div>
     </CardContent>
   </Card>
-);
+  );
+};
 
 // === PROMOTION ROW (List view) ===
 const PromotionRow: React.FC<{

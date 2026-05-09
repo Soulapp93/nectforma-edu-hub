@@ -363,16 +363,30 @@ const FormationsList: React.FC = () => {
                       <div className="space-y-1.5 sm:space-y-2">
                         <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
                           <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-muted-foreground/70 flex-shrink-0" />
-                          <span className="truncate">Du {new Date(latest?.start_date).toLocaleDateString('fr-FR')} au {new Date(latest?.end_date).toLocaleDateString('fr-FR')}</span>
+                          <span>
+                            {latest?.duration_years
+                              ? `${latest.duration_years} an${latest.duration_years > 1 ? 's' : ''}`
+                              : 'Durée non renseignée'}
+                          </span>
                         </div>
                         <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
                           <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-muted-foreground/70 flex-shrink-0" />
-                          <span>{latest?.duration}h de formation</span>
+                          <span>{latest?.duration || 0}h de formation</span>
                         </div>
-                        <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
-                          <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-muted-foreground/70 flex-shrink-0" />
-                          <span>{latest?.formation_modules?.length || 0} matière{(latest?.formation_modules?.length || 0) > 1 ? 's' : ''}</span>
-                        </div>
+                        {latest?.formation_type && (
+                          <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+                            <GraduationCap className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-muted-foreground/70 flex-shrink-0" />
+                            <span>
+                              {{
+                                presentiel: 'Présentiel',
+                                foad: 'FOAD',
+                                en_ligne: 'En ligne',
+                                ecole_sup: 'École supérieure',
+                                centre_formation: 'Centre de formation',
+                              }[latest.formation_type as string] || latest.formation_type}
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <div className="mt-3 pt-3 border-t border-border flex items-center justify-end text-xs text-primary font-medium group-hover:translate-x-1 transition-transform">
                         Voir les promotions <ChevronRight className="h-3.5 w-3.5 ml-1" />

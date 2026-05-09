@@ -167,6 +167,27 @@ const FormationDetail = () => {
                 <BookText className="h-4 w-4 mr-2 flex-shrink-0" />
                 <span className="whitespace-nowrap">Cahier de texte</span>
               </Button>
+              {/* Référentiel — visible par tous (admin / formateur / étudiant / tuteur) */}
+              {(formation as any).referentiel_pdf_url ? (
+                <Button
+                  variant="secondary"
+                  onClick={() => window.open((formation as any).referentiel_pdf_url, '_blank', 'noopener,noreferrer')}
+                  className="bg-white/20 border-white/30 text-white hover:bg-white/30 text-xs sm:text-sm w-full sm:w-auto justify-center"
+                  data-testid="formation-detail-referentiel-btn"
+                >
+                  <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
+                  <span className="whitespace-nowrap">Référentiel</span>
+                </Button>
+              ) : (
+                <span
+                  className="inline-flex items-center justify-center rounded-md bg-white/10 border border-white/20 text-white/70 text-xs sm:text-sm px-3 py-1.5 w-full sm:w-auto cursor-not-allowed select-none"
+                  title="Le référentiel n'a pas encore été ajouté par l'administration"
+                  data-testid="formation-detail-referentiel-empty"
+                >
+                  <FileText className="h-4 w-4 mr-2 flex-shrink-0 opacity-70" />
+                  <span className="whitespace-nowrap">Référentiel non disponible</span>
+                </span>
+              )}
             </div>
           </div>
         </div>
