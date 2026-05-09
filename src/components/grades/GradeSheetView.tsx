@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Save, Plus, AlertCircle, BookOpen, GraduationCap, Printer, Lock } from 'lucide-react';
+import { Save, Plus, AlertCircle, BookOpen, GraduationCap, Printer, Lock, Send, EyeOff, CheckCircle2 } from 'lucide-react';
 import { EVALUATION_TYPES } from '@/services/gradesService';
 import { semesterMatchesFilter } from '@/utils/semesterUtils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -16,6 +16,8 @@ import {
   getGradesByEvaluation,
   upsertGrades,
   getEvaluationPeriods,
+  publishEvaluations,
+  unpublishEvaluations,
   type Evaluation,
   type Grade,
 } from '@/services/gradesService';
@@ -303,6 +305,41 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
     onError: (e: any) => toast.error(e.message || 'Erreur lors de l\'enregistrement'),
   });
 
+  /**
+   * Publish / unpublish grades of the currently selected module to students.
+   * Once published, students see the grades in their "Mes notes" tab
+   * (StudentGradesView filters on evaluations.is_published === true).
+   */
+  const publishMutation = useMutation({
+    mutationFn: async () => {
+      const group = moduleEvalGroups.get(selectedModuleId);
+      if (!group) return;
+      const evalIds = [...group.cc, ...group.exam].map(e => e.id);
+      await publishEvaluations(evalIds);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['evaluations-sheet-all'] });
+      queryClient.invalidateQueries({ queryKey: ['student-grades'] });
+      toast.success('Notes publiées : les étudiants peuvent maintenant les consulter dans « Mes notes ».');
+    },
+    onError: (e: any) => toast.error(e.message || 'Erreur lors de la publication'),
+  });
+
+  const unpublishMutation = useMutation({
+    mutationFn: async () => {
+      const group = moduleEvalGroups.get(selectedModuleId);
+      if (!group) return;
+      const evalIds = [...group.cc, ...group.exam].map(e => e.id);
+      await unpublishEvaluations(evalIds);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['evaluations-sheet-all'] });
+      queryClient.invalidateQueries({ queryKey: ['student-grades'] });
+      toast.success('Notes dépubliées : elles ne sont plus visibles par les étudiants.');
+    },
+    onError: (e: any) => toast.error(e.message || 'Erreur lors de la dépublication'),
+  });
+
   const handlePrint = () => {
     const content = printRef.current;
     if (!content) return;
@@ -576,21 +613,89 @@ const GradeSheetView: React.FC<GradeSheetViewProps> = ({ mode, formationId, peri
                         </table>
                       </div>
 
-                      {/* Save action */}
-                      <div className="flex justify-end mt-6 print:hidden">
-                        <Button
-                          onClick={() => saveMutation.mutate()}
-                          disabled={!isDirty || saveMutation.isPending || isPeriodLocked}
-                          className="gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-5 rounded-xl shadow-md disabled:opacity-50"
-                          data-testid="save-grades-btn"
-                        >
-                          <Save className="h-4 w-4" />
-                          {isPeriodLocked
-                            ? 'PV validé (verrouillé)'
-                            : saveMutation.isPending
-                            ? 'Enregistrement...'
-                            : 'Enregistrer'}
-                        </Button>
+                      {/* Save / Publish actions */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 mt-6 print:hidden">
+                        {/* Publication status pill */}
+                        <div className="flex items-center gap-2">
+                          {selectedEvals.length > 0 && (() => {
+                            const allPublished = selectedEvals.every(ev => ev.is_published);
+                            const anyPublished = selectedEvals.some(ev => ev.is_published);
+                            return (
+                              <span
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
+                                  allPublished
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/30'
+                                    : anyPublished
+                                    ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30'
+                                    : 'bg-muted text-muted-foreground border-border'
+                                }`}
+                                data-testid="publish-status-pill"
+                              >
+                                {allPublished ? (
+                                  <>
+                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                    Publiées (visibles par les étudiants)
+                                  </>
+                                ) : anyPublished ? (
+                                  <>
+                                    <AlertCircle className="h-3.5 w-3.5" />
+                                    Publication partielle
+                                  </>
+                                ) : (
+                                  <>
+                                    <EyeOff className="h-3.5 w-3.5" />
+                                    Brouillon — non visible par les étudiants
+                                  </>
+                                )}
+                              </span>
+                            );
+                          })()}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Button
+                            onClick={() => saveMutation.mutate()}
+                            disabled={!isDirty || saveMutation.isPending || isPeriodLocked}
+                            className="gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-5 rounded-xl shadow-md disabled:opacity-50"
+                            data-testid="save-grades-btn"
+                          >
+                            <Save className="h-4 w-4" />
+                            {isPeriodLocked
+                              ? 'PV validé (verrouillé)'
+                              : saveMutation.isPending
+                              ? 'Enregistrement...'
+                              : 'Enregistrer'}
+                          </Button>
+
+                          {/* Publish button — visible for both formateur and admin */}
+                          {selectedEvals.length > 0 && !isPeriodLocked && (() => {
+                            const allPublished = selectedEvals.every(ev => ev.is_published);
+                            return allPublished ? (
+                              <Button
+                                onClick={() => unpublishMutation.mutate()}
+                                disabled={unpublishMutation.isPending || isDirty}
+                                variant="outline"
+                                className="gap-2 px-5 py-5 rounded-xl border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-500/40 dark:text-amber-300 dark:hover:bg-amber-500/10"
+                                data-testid="unpublish-grades-btn"
+                                title={isDirty ? 'Enregistrez avant de dépublier' : 'Retirer la publication'}
+                              >
+                                <EyeOff className="h-4 w-4" />
+                                {unpublishMutation.isPending ? 'Dépublication...' : 'Dépublier'}
+                              </Button>
+                            ) : (
+                              <Button
+                                onClick={() => publishMutation.mutate()}
+                                disabled={publishMutation.isPending || isDirty}
+                                className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-5 rounded-xl shadow-md disabled:opacity-50"
+                                data-testid="publish-grades-btn"
+                                title={isDirty ? 'Enregistrez avant de publier' : 'Rendre les notes visibles aux étudiants'}
+                              >
+                                <Send className="h-4 w-4" />
+                                {publishMutation.isPending ? 'Publication...' : 'Publier les notes'}
+                              </Button>
+                            );
+                          })()}
+                        </div>
                       </div>
                     </>
                   )}

@@ -358,6 +358,32 @@ export const upsertGrade = async (grade: Partial<Grade>): Promise<Grade> => {
   return data as unknown as Grade;
 };
 
+/**
+ * Publish a list of evaluations — sets is_published = true and status = 'publie'.
+ * Once published, the underlying grades become visible to students in their
+ * "Mes notes" view (StudentGradesView filters on evaluations.is_published).
+ */
+export const publishEvaluations = async (evaluationIds: string[]): Promise<void> => {
+  if (!evaluationIds || evaluationIds.length === 0) return;
+  const { error } = await supabase
+    .from('evaluations')
+    .update({ is_published: true, status: 'publie' } as any)
+    .in('id', evaluationIds);
+  if (error) throw error;
+};
+
+/**
+ * Reverse of publishEvaluations — hide grades from students again.
+ */
+export const unpublishEvaluations = async (evaluationIds: string[]): Promise<void> => {
+  if (!evaluationIds || evaluationIds.length === 0) return;
+  const { error } = await supabase
+    .from('evaluations')
+    .update({ is_published: false, status: 'brouillon' } as any)
+    .in('id', evaluationIds);
+  if (error) throw error;
+};
+
 export const upsertGrades = async (grades: Partial<Grade>[]): Promise<Grade[]> => {
   const { data, error } = await supabase
     .from('grades')

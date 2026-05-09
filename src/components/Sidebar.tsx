@@ -234,7 +234,11 @@ const Sidebar = () => {
   // ─── Navigation Formateur / Étudiant ───
   const limitedNav: NavItem[] = [
     { name: 'Formations', href: '/formations', icon: GraduationCap },
-    { name: 'Notes', href: '/notes', icon: Award },
+    {
+      name: userRole === 'Formateur' ? 'Saisie des notes' : 'Notes et relevés',
+      href: '/notes',
+      icon: Award,
+    },
     { name: 'Classes virtuelles', href: '/classes-virtuelles', icon: Video },
     { name: 'Suivi émargement', href: '/suivi-emargement', icon: ClipboardCheck },
     { name: 'Emploi du temps', href: '/emploi-temps', icon: CalendarClock },

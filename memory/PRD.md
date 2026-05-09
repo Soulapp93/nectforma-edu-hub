@@ -51,6 +51,18 @@ French (toujours répondre en français)
 - ✅ Événements affichent "Toute la journée" (rail temps), badge dédié, plus de Formateur/Salle/Formation factices
 - ✅ `EventDetailsModal` rendu compatible avec les 2 conventions (slotKind + isEvent flag) — masque correctement Formateur/Salle/Formation pour events et affiche "Toute la journée"
 - ✅ Affichage du label de type d'événement (ex: "ÉTABLISSEMENT FERMÉ") dans le modal
+- ✅ Fix mapping `ScheduleManagement.tsx::renderDayView()` (n'utilisait pas `slot.slot_kind === 'event'` → tous les events affichaient instructor/room factices)
+- ✅ Refonte timeline finale : événements en cartes pleine largeur colorées (sans rail d'heures), cours dans une timeline avec heures adaptatives (basées sur les heures réelles, pas de range fixe 8-19)
+
+### 2026-02-09 - Publication des notes Formateur → Étudiant
+- ✅ Sidebar : "Notes" → "Saisie des notes" pour Formateur, "Notes et relevés" pour Étudiant
+- ✅ Notes.tsx : Formateur restreint aux onglets "Saisie des notes" + "Calcul & Validation" (Jury, Bulletin, Config réservés admin)
+- ✅ Bouton "Publier les notes" dans GradeSheetView : set `evaluations.is_published = true` pour les évaluations du module sélectionné
+- ✅ Bouton "Dépublier" (réversible) pour retirer la visibilité côté étudiant
+- ✅ Pill de statut : "Publiées (visibles par les étudiants)" / "Publication partielle" / "Brouillon — non visible par les étudiants"
+- ✅ `StudentGradesView` filtrait déjà sur `is_published = true` (ligne 28) → boucle complète opérationnelle
+- ✅ `getStudentTranscripts` filtre déjà sur `is_published = true` → publication des relevés via TranscriptsPanel admin déjà fonctionnelle
+- ✅ Service : `publishEvaluations(ids[])` et `unpublishEvaluations(ids[])` ajoutés à gradesService.ts
 
 ## Backlog / ROADMAP
 

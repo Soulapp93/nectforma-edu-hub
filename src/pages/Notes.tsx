@@ -51,8 +51,8 @@ const getLevelColor = (level?: string) => {
 const SIDEBAR_TABS = [
   { value: 'saisie', label: 'Saisie des notes', icon: FileSpreadsheet, description: 'CC · DS · Examen Final · Oral / Soutenance' },
   { value: 'calcul', label: 'Calcul & Validation', icon: Calculator, description: 'Moyennes, rangs et récapitulatif par filière' },
-  { value: 'jury', label: 'Jury & Délibération', icon: Scale, description: 'Décisions officielles et procès-verbal' },
-  { value: 'bulletin', label: 'Bulletin de notes', icon: ScrollText, description: 'Bulletins individuels par étudiant' },
+  { value: 'jury', label: 'Jury & Délibération', icon: Scale, description: 'Décisions officielles et procès-verbal', adminOnly: true },
+  { value: 'bulletin', label: 'Bulletin de notes', icon: ScrollText, description: 'Bulletins individuels par étudiant', adminOnly: true },
   { value: 'config', label: 'Configuration', icon: Settings, description: 'Règles, design, signatures du bulletin', adminOnly: true },
 ];
 
@@ -77,6 +77,13 @@ const Notes = () => {
       setActiveTab('bulletin');
     }
   }, [activeTab]);
+
+  // Formateur is restricted to "saisie" + "calcul" only — fall back to saisie if needed
+  useEffect(() => {
+    if (isFormateur && !['saisie', 'calcul'].includes(activeTab)) {
+      setActiveTab('saisie');
+    }
+  }, [isFormateur, activeTab]);
   const [showCreatePeriod, setShowCreatePeriod] = useState(false);
   const [showCreateCombined, setShowCreateCombined] = useState(false);
   const [editingCombinedPeriod, setEditingCombinedPeriod] = useState<any>(null);
@@ -206,7 +213,7 @@ const Notes = () => {
   if (isStudent) {
     return (
       <div className="p-4 md:p-6 space-y-6 pb-20 md:pb-6">
-        <PageHeader title="Mes notes" description="Consultez vos résultats et téléchargez vos relevés de notes" icon={GraduationCap} />
+        <PageHeader title="Notes et relevés" description="Consultez vos résultats et téléchargez vos relevés de notes" icon={GraduationCap} />
         <Tabs defaultValue="notes" className="space-y-4">
           <TabsList className="grid grid-cols-2 w-full max-w-md">
             <TabsTrigger value="notes" className="flex items-center gap-2"><ClipboardList className="h-4 w-4" />Mes notes</TabsTrigger>
