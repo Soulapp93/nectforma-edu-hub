@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, GraduationCap, Save } from 'lucide-react';
+import { X, GraduationCap, Save, FileUp, FileText, Eye, Loader2, Trash2 } from 'lucide-react';
 import ColorPalette from './ColorPalette';
 import MatieresPanel from './MatieresPanel';
 import { formationService } from '@/services/formationService';
+import { fileUploadService } from '@/services/fileUploadService';
 import { toast } from 'sonner';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -29,6 +30,8 @@ interface EditFormationData {
   duration: number;
   academic_year: string;
   duration_years: number;
+  formation_type: string;
+  referentiel_pdf_url: string;
 }
 
 const EditFormationModal: React.FC<EditFormationModalProps> = ({ 
@@ -49,6 +52,8 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
     duration: 0,
     academic_year: `${currentYear}-${currentYear + 1}`,
     duration_years: 1,
+    formation_type: 'presentiel',
+    referentiel_pdf_url: '',
   });
 
   const [loading, setLoading] = useState(false);
@@ -80,6 +85,8 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
         duration: formation.duration,
         academic_year: (formation as any).academic_year || `${currentYear}-${currentYear + 1}`,
         duration_years: (formation as any).duration_years || 1,
+        formation_type: (formation as any).formation_type || 'presentiel',
+        referentiel_pdf_url: (formation as any).referentiel_pdf_url || '',
       });
     } catch (error) {
       console.error('Erreur lors du chargement de la formation:', error);
@@ -256,6 +263,28 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
                   </Select>
                 </div>
 
+                <div className="md:col-span-2 space-y-2">
+                  <Label>Type de formation</Label>
+                  <Select value={formData.formation_type} onValueChange={(value) => setFormData(prev => ({ ...prev, formation_type: value }))}>
+                    <SelectTrigger data-testid="edit-formation-type-select">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="presentiel">Présentiel</SelectItem>
+                      <SelectItem value="foad">FOAD</SelectItem>
+                      <SelectItem value="en_ligne">En ligne</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="md:col-span-2 space-y-2">
+                  <Label>Référentiel de formation (PDF)</Label>
+                  <ReferentielPdfField
+                    value={formData.referentiel_pdf_url}
+                    onChange={(url) => setFormData(prev => ({ ...prev, referentiel_pdf_url: url }))}
+                  />
+                </div>
+
                 <div className="space-y-2">
                   <Label>Date de début</Label>
                   <DatePicker
@@ -325,3 +354,102 @@ const EditFormationModal: React.FC<EditFormationModalProps> = ({
 };
 
 export default EditFormationModal;
+
+// ─── Sub-component: Référentiel PDF upload/view/delete ──────────────────
+const ReferentielPdfField: React.FC<{ value: string; onChange: (url: string) => void }> = ({ value, onChange }) => {
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = React.useState(false);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf') {
+      toast.error('Seuls les fichiers PDF sont acceptés');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Le fichier dépasse 10 Mo');
+      return;
+    }
+    try {
+      setUploading(true);
+      const url = await fileUploadService.uploadFile(file, 'module-files');
+      onChange(url);
+      toast.success('Référentiel PDF mis à jour');
+    } catch (err: any) {
+      toast.error(err?.message || 'Erreur lors du téléchargement');
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  };
+
+  if (!value) {
+    return (
+      <div className="flex items-center gap-3">
+        <input
+          ref={inputRef}
+          type="file"
+          accept="application/pdf"
+          onChange={handleUpload}
+          className="hidden"
+          data-testid="edit-formation-referentiel-input"
+        />
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed border-primary/40 text-sm font-medium text-primary hover:bg-primary/10 transition-all disabled:opacity-60"
+          data-testid="edit-formation-referentiel-upload-btn"
+        >
+          {uploading ? (
+            <><Loader2 className="h-4 w-4 animate-spin" /> Téléchargement...</>
+          ) : (
+            <><FileUp className="h-4 w-4" /> Importer un PDF</>
+          )}
+        </button>
+        <span className="text-xs text-muted-foreground">Max 10 Mo</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 p-2.5 rounded-lg border-2 border-primary/20 bg-primary/5">
+      <FileText className="h-5 w-5 text-primary shrink-0" />
+      <span className="text-sm flex-1 truncate">{fileUploadService.getFileName(value)}</span>
+      <a
+        href={value}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90"
+        data-testid="edit-formation-referentiel-view-btn"
+      >
+        <Eye className="h-3.5 w-3.5" /> Voir
+      </a>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="application/pdf"
+        onChange={handleUpload}
+        className="hidden"
+      />
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium border border-border text-foreground hover:bg-muted/50"
+        title="Remplacer"
+      >
+        <FileUp className="h-3.5 w-3.5" /> {uploading ? '...' : 'Remplacer'}
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange('')}
+        className="inline-flex items-center justify-center h-8 w-8 rounded-md text-destructive hover:bg-destructive/10"
+        title="Retirer le PDF"
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+    </div>
+  );
+};

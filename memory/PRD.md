@@ -54,16 +54,19 @@ French (toujours répondre en français)
 - ✅ Fix mapping `ScheduleManagement.tsx::renderDayView()` (n'utilisait pas `slot.slot_kind === 'event'` → tous les events affichaient instructor/room factices)
 - ✅ Refonte timeline finale : événements en cartes pleine largeur colorées (sans rail d'heures), cours dans une timeline avec heures adaptatives (basées sur les heures réelles, pas de range fixe 8-19)
 
-### 2026-02-09 - Refonte Formation/Promotion (Phase 1 + 2)
+### 2026-02-09 - Refonte Formation/Promotion (Phase 1 + 2 + 3)
 - ✅ DB : ajout colonne `formations.referentiel_pdf_url`
 - ✅ Phase 1 : refonte complète de `CreateFormationModal` — Titre + Durée (années + heures) + Niveau + Type formation (présentiel/FOAD/en ligne) + Référentiel PDF upload via Supabase Storage (bucket `module-files`) + Bouton "Voir" pour visualiser le PDF
 - ✅ Phase 1 : SUPPRESSION de la création auto de promotion lors de la création de formation (séparation des concerns) — un panneau "Prochaines étapes" guide l'admin vers création modules + promotion
-- ✅ Phase 1 : modules conservés via `MatieresPanel` existant (Titre, Coefficient, Durée en heures, Formateurs)
+- ✅ Phase 1+ : **Section "Modules" intégrée à la création** — bouton "Ajouter un module", chaque ligne avec Titre + Coefficient + Durée (h) + Formateurs (puces multi-sélection) + bouton supprimer. Création séquentielle après le insert formation.
 - ✅ Phase 2 : nouveau composant `CreatePromotionModal` (modes création OU duplication) — Année début/fin + Date début/fin avec dates auto-suggérées (1er sept → 30 juin)
 - ✅ Phase 2 : bouton "Nouvelle promotion" dans la vue détail formation de la liste des promotions
-- ✅ Phase 2 : bouton "Dupliquer" sur chaque carte/ligne de promotion (préfille +1 année)
+- ✅ Phase 2 : bouton "Dupliquer" sur chaque carte/ligne de promotion (préfille +1 année, dates +1 année cohérentes)
 - ✅ Phase 2 : `FormationInfoPanel` affiché dans la vue détail — Niveau, Durée (années + heures), Type, Modules count, Bouton "Voir le PDF" du référentiel
 - ✅ Phase 2 : empty state "Aucune promotion pour cette formation" avec CTA
+- ✅ Phase 3 : **Migration backfill** `20260509130000_backfill_legacy_promotions.sql` — pour chaque formation legacy sans row promotion, crée la promotion + emploi du temps + cahier de texte. Lie aussi les schedules/text_books orphelins. Vérifié : 5/5 formations ont désormais leur promotion.
+- ✅ Phase 3 : `EditFormationModal` enrichi — édition de `formation_type` (Présentiel/FOAD/En ligne) + sous-composant `ReferentielPdfField` pour upload/voir/remplacer/retirer le PDF référentiel
+- ✅ Phase 3 : `moduleService.createModule` patché pour supporter le `coefficient` à la création (auparavant uniquement à l'update)
 - ✅ Sidebar : "Notes" → "Saisie des notes" pour Formateur, "Notes et relevés" pour Étudiant
 - ✅ Notes.tsx : Formateur restreint aux onglets "Saisie des notes" + "Calcul & Validation" (Jury, Bulletin, Config réservés admin)
 - ✅ Bouton "Publier les notes" dans GradeSheetView : set `evaluations.is_published = true` pour les évaluations du module sélectionné

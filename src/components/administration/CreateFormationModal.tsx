@@ -1,11 +1,13 @@
 
 import React, { useState, useRef } from 'react';
-import { X, GraduationCap, Clock, Info, FileUp, FileText, Eye, Loader2, Trash2 } from 'lucide-react';
+import { X, GraduationCap, Clock, Info, FileUp, FileText, Eye, Loader2, Trash2, Plus, BookOpen, Users } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ColorPalette from './ColorPalette';
 import { formationService } from '@/services/formationService';
 import { fileUploadService } from '@/services/fileUploadService';
 import { establishmentService } from '@/services/establishmentService';
+import { moduleService } from '@/services/moduleService';
+import { useInstructors } from '@/hooks/useInstructors';
 import { toast } from 'sonner';
 
 interface CreateFormationModalProps {
@@ -25,6 +27,20 @@ interface FormationFormData {
   formation_type: string; // 'presentiel' | 'foad' | 'en_ligne'
   referentiel_pdf_url: string;
 }
+
+interface ModuleDraft {
+  title: string;
+  coefficient: number;
+  duration_hours: number;
+  instructorIds: string[];
+}
+
+const newModuleDraft = (): ModuleDraft => ({
+  title: '',
+  coefficient: 1,
+  duration_hours: 0,
+  instructorIds: [],
+});
 
 const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
   isOpen,
@@ -46,6 +62,28 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
   const [uploadingPdf, setUploadingPdf] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Modules drafted while creating the formation — saved after the formation insert.
+  const [modules, setModules] = useState<ModuleDraft[]>([]);
+  const { instructors } = useInstructors();
+
+  const addModule = () => setModules(prev => [...prev, newModuleDraft()]);
+  const removeModule = (idx: number) => setModules(prev => prev.filter((_, i) => i !== idx));
+  const updateModule = (idx: number, patch: Partial<ModuleDraft>) =>
+    setModules(prev => prev.map((m, i) => (i === idx ? { ...m, ...patch } : m)));
+  const toggleInstructor = (idx: number, instructorId: string) =>
+    setModules(prev =>
+      prev.map((m, i) => {
+        if (i !== idx) return m;
+        const has = m.instructorIds.includes(instructorId);
+        return {
+          ...m,
+          instructorIds: has
+            ? m.instructorIds.filter(id => id !== instructorId)
+            : [...m.instructorIds, instructorId],
+        };
+      })
+    );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -127,9 +165,41 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         referentiel_pdf_url: formData.referentiel_pdf_url || null,
       };
 
-      await formationService.createFormation(formationData as any);
+      const createdFormation = await formationService.createFormation(formationData as any);
 
-      toast.success('Formation créée. Vous pouvez maintenant ajouter des modules et créer une promotion.');
+      // Create modules drafted in the same form (sequentially to preserve order)
+      const validModules = modules.filter(m => m.title.trim());
+      if (validModules.length > 0) {
+        let moduleErrors = 0;
+        for (let i = 0; i < validModules.length; i++) {
+          const m = validModules[i];
+          try {
+            await moduleService.createModule(
+              {
+                formation_id: (createdFormation as any).id,
+                title: m.title.trim(),
+                description: '',
+                duration_hours: m.duration_hours || 0,
+                order_index: i,
+                semester: null,
+                coefficient: m.coefficient || 1,
+              } as any,
+              m.instructorIds || []
+            );
+          } catch (mErr) {
+            console.error('Erreur création module', m.title, mErr);
+            moduleErrors++;
+          }
+        }
+        if (moduleErrors > 0) {
+          toast.warning(`Formation créée. ${validModules.length - moduleErrors}/${validModules.length} modules créés (${moduleErrors} en erreur).`);
+        } else {
+          toast.success(`Formation créée avec ses ${validModules.length} module${validModules.length > 1 ? 's' : ''}.`);
+        }
+      } else {
+        toast.success('Formation créée. Vous pouvez maintenant ajouter des modules et créer une promotion.');
+      }
+
       onSuccess();
       onClose();
 
@@ -144,6 +214,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
         formation_type: 'presentiel',
         referentiel_pdf_url: '',
       });
+      setModules([]);
     } catch (err: any) {
       console.error('Erreur lors de la création de la formation:', err);
       setError(err?.message || 'Erreur lors de la création de la formation');
@@ -354,13 +425,132 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
             </div>
           </div>
 
+          {/* MODULES SECTION */}
+          <div className="bg-muted/30 rounded-xl p-5 border-2 border-primary/10 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-primary" />
+                Modules
+                {modules.length > 0 && (
+                  <span className="text-xs font-normal text-muted-foreground">({modules.length})</span>
+                )}
+              </h3>
+              <button
+                type="button"
+                onClick={addModule}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                data-testid="add-module-btn"
+              >
+                <Plus className="h-4 w-4" /> Ajouter un module
+              </button>
+            </div>
+
+            {modules.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic px-1">
+                Aucun module. Ajoutez les modules dès maintenant ou plus tard depuis la fiche formation.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {modules.map((m, idx) => (
+                  <div
+                    key={idx}
+                    className="rounded-lg border-2 border-primary/15 bg-background p-3 space-y-3"
+                    data-testid={`module-draft-${idx}`}
+                  >
+                    <div className="flex items-start gap-2">
+                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary text-xs font-bold shrink-0">
+                        {idx + 1}
+                      </span>
+                      <div className="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-2">
+                        <input
+                          type="text"
+                          value={m.title}
+                          placeholder="Titre du module *"
+                          onChange={(e) => updateModule(idx, { title: e.target.value })}
+                          className="sm:col-span-6 px-3 py-2 rounded-md border-2 border-primary/25 bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
+                          data-testid={`module-title-${idx}`}
+                        />
+                        <input
+                          type="number"
+                          step="0.5"
+                          min={0}
+                          value={m.coefficient}
+                          placeholder="Coef."
+                          onChange={(e) => updateModule(idx, { coefficient: parseFloat(e.target.value) || 0 })}
+                          className="sm:col-span-3 px-3 py-2 rounded-md border-2 border-primary/25 bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
+                          data-testid={`module-coef-${idx}`}
+                          title="Coefficient"
+                        />
+                        <input
+                          type="number"
+                          min={0}
+                          value={m.duration_hours}
+                          placeholder="Heures"
+                          onChange={(e) => updateModule(idx, { duration_hours: parseInt(e.target.value) || 0 })}
+                          className="sm:col-span-3 px-3 py-2 rounded-md border-2 border-primary/25 bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
+                          data-testid={`module-hours-${idx}`}
+                          title="Durée en heures"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeModule(idx)}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-md text-destructive hover:bg-destructive/10 shrink-0"
+                        data-testid={`module-remove-${idx}`}
+                        title="Supprimer ce module"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    {/* Formateurs multi-select */}
+                    <div className="pl-9">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="text-xs font-medium text-muted-foreground">
+                          Formateurs ({m.instructorIds.length})
+                        </span>
+                      </div>
+                      {(instructors || []).length === 0 ? (
+                        <p className="text-xs italic text-muted-foreground/70">
+                          Aucun formateur disponible. Créez-en depuis Administration → Comptes.
+                        </p>
+                      ) : (
+                        <div className="flex flex-wrap gap-1.5">
+                          {(instructors || []).map((inst: any) => {
+                            const checked = m.instructorIds.includes(inst.id);
+                            return (
+                              <button
+                                type="button"
+                                key={inst.id}
+                                onClick={() => toggleInstructor(idx, inst.id)}
+                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border-2 transition-all ${
+                                  checked
+                                    ? 'bg-primary/10 border-primary text-primary'
+                                    : 'border-border bg-background text-muted-foreground hover:border-primary/40'
+                                }`}
+                                data-testid={`module-instructor-${idx}-${inst.id}`}
+                              >
+                                {inst.first_name} {inst.last_name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Info: prochaines étapes */}
           <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-4 flex gap-3" data-testid="formation-next-steps-info">
             <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
             <div className="text-sm">
               <p className="font-semibold text-foreground mb-1">Prochaines étapes</p>
               <p className="text-muted-foreground">
-                Après la création, ouvrez la formation pour ajouter ses <strong>modules</strong> (avec coefficients, formateurs, durées) puis créez une <strong>promotion</strong> (année académique, dates).
+                Après la création, ouvrez la formation pour gérer ses modules et créez une <strong>promotion</strong> (année académique, dates).
               </p>
             </div>
           </div>

@@ -82,16 +82,20 @@ export const moduleService = {
   },
 
   async createModule(moduleData: Omit<FormationModule, 'id'>, instructorIds: string[]) {
+    const insertPayload: any = {
+      formation_id: moduleData.formation_id,
+      title: moduleData.title,
+      description: moduleData.description,
+      duration_hours: moduleData.duration_hours,
+      order_index: moduleData.order_index,
+      semester: moduleData.semester ?? null,
+    };
+    if (moduleData.coefficient != null) {
+      insertPayload.coefficient = moduleData.coefficient;
+    }
     const { data: module, error: moduleError } = await supabase
       .from('formation_modules')
-      .insert({
-        formation_id: moduleData.formation_id,
-        title: moduleData.title,
-        description: moduleData.description,
-        duration_hours: moduleData.duration_hours,
-        order_index: moduleData.order_index,
-        semester: moduleData.semester ?? null,
-      })
+      .insert(insertPayload)
       .select()
       .single();
 
