@@ -63,6 +63,10 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
   const [selectedProgramName, setSelectedProgramName] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  // Formateur and Étudiant see the promotions directly (their assigned ones), no need to
+  // group by program first — they only have access to a small subset relevant to them.
+  const isFlatView = userRole === 'Formateur' || userRole === 'Étudiant';
+
   const { formations, loading, error, refetch } = useFormations();
 
   const levels = ['BAC+1', 'BAC+2', 'BAC+3', 'BAC+4', 'BAC+5'];
@@ -91,6 +95,11 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
 
   const programNames = useMemo(() => Object.keys(formationGroups).sort(), [formationGroups]);
 
+  // Flat list of all matching promotions (used by Formateur / Étudiant view)
+  const flatFormations = useMemo(() => {
+    return Object.values(formationGroups).flat();
+  }, [formationGroups]);
+
   const selectedGroupFormations = useMemo(() => {
     if (!selectedProgramName) return [];
     return formationGroups[selectedProgramName] || [];
@@ -105,6 +114,119 @@ const FormationsContent = ({ userRole }: { userRole: string | null }) => {
 
   if (error) {
     return <div className="p-8"><ErrorState title="Erreur de chargement" message={error} onRetry={refetch} isNetworkError={isNetworkError} /></div>;
+  }
+
+  // ─── FLAT VIEW (Formateur / Étudiant) — promotions directes, sans groupement ───
+  if (isFlatView) {
+    return (
+      <div className="min-h-screen">
+        <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border shadow-sm">
+          <div className="w-full px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
+                <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
+                  {userRole === 'Formateur' ? 'Mes promotions' : 'Mes formations'}
+                </h1>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  {flatFormations.length} promotion{flatFormations.length > 1 ? 's' : ''} {userRole === 'Formateur' ? 'auxquelles vous enseignez' : 'auxquelles vous êtes inscrit'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+          {/* Search + filters (compact) */}
+          {flatFormations.length > 4 && (
+            <div className="bg-card rounded-2xl shadow-lg border-2 border-primary/20 p-4 sm:p-5">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Rechercher une promotion..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-11 pr-4 py-2.5 text-sm border-2 border-primary/30 rounded-xl bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  />
+                </div>
+                <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                  <SelectTrigger className="w-full sm:w-[180px] border-2 border-primary/30 rounded-xl">
+                    <SelectValue placeholder="Tous les niveaux" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les niveaux</SelectItem>
+                    {levels.map(level => <SelectItem key={level} value={level}>{level}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          {flatFormations.length === 0 ? (
+            <EmptyState
+              icon={GraduationCap}
+              title={userRole === 'Formateur' ? 'Aucune promotion' : 'Aucune formation'}
+              description={userRole === 'Formateur'
+                ? "Vous n'êtes assigné à aucune promotion pour le moment."
+                : "Vous n'êtes inscrit à aucune formation pour le moment."}
+            />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+              {flatFormations.map((formation) => (
+                <Card
+                  key={formation.id}
+                  onClick={() => navigate(`/formations/${formation.id}`)}
+                  className="hover:shadow-lg hover:border-primary/40 transition-all duration-200 overflow-hidden border-2 border-primary/15 cursor-pointer group"
+                  data-testid={`promotion-card-${formation.id}`}
+                >
+                  <div className="h-1.5" style={{ backgroundColor: formation.color || '#8B5CF6' }} />
+                  <CardContent className="p-4 pb-3">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      {(formation as any).academic_year && (
+                        <Badge className="bg-primary text-primary-foreground text-xs px-2.5 py-0.5">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          {(formation as any).academic_year}
+                        </Badge>
+                      )}
+                      <span className={`px-2.5 py-0.5 text-[11px] font-semibold rounded-md ${getLevelColor(formation.level)}`}>
+                        {formation.level}
+                      </span>
+                    </div>
+
+                    <h3 className="text-base font-bold text-foreground mb-3 line-clamp-2">{formation.title}</h3>
+
+                    <div className="space-y-1.5 text-[13px] text-muted-foreground mb-3">
+                      {formation.start_date && formation.end_date && (
+                        <div className="flex items-center">
+                          <Calendar className="h-3.5 w-3.5 mr-2 flex-shrink-0 text-muted-foreground/70" />
+                          Du {new Date(formation.start_date).toLocaleDateString('fr-FR')} au {new Date(formation.end_date).toLocaleDateString('fr-FR')}
+                        </div>
+                      )}
+                      <div className="flex items-center">
+                        <Clock className="h-3.5 w-3.5 mr-2 flex-shrink-0 text-muted-foreground/70" />
+                        {formation.duration || 0}h de formation
+                      </div>
+                      <div className="flex items-center">
+                        <BookOpen className="h-3.5 w-3.5 mr-2 flex-shrink-0 text-muted-foreground/70" />
+                        {formation.formation_modules?.length || 0} module{(formation.formation_modules?.length || 0) > 1 ? 's' : ''}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-border flex items-center justify-end text-xs text-primary font-medium group-hover:translate-x-1 transition-transform">
+                      Accéder <ChevronRight className="h-3.5 w-3.5 ml-1" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
   }
 
   // Promotions view for a selected program
