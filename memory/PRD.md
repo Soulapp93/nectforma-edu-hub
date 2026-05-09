@@ -26,6 +26,20 @@ French (toujours répondre en français)
 
 ## Implemented (CHANGELOG)
 
+### 2026-02-09 - Refactor BulletinConfigModal (1136 → 243 lignes orchestrateur + 9 fichiers modulaires)
+- ✅ `BulletinConfigModal.tsx` réduit de 1136 → 243 lignes (orchestrateur uniquement)
+- ✅ Nouveau dossier `/src/components/grades/bulletin-config/` :
+  - `HubSection.tsx` (103 l) — 5 cards landing + Aperçu live + CTA Éditeur visuel
+  - `RulesSection.tsx` (205 l) — Sources + Calculs + Règles avancées (Phase 4)
+  - `StructureSection.tsx` (156 l) — Sections, colonnes drag&drop, group_by_UE
+  - `DesignSection.tsx` (265 l) — Apparence + Textes + Mentions
+  - `SignaturesSection.tsx` (56 l) — Signataires + Cachet
+  - `TemplatesSection.tsx` (42 l) — Liste des templates système
+  - `VisualEditorSection.tsx` (56 l) — Wrapper lazy de BulletinLayoutEditor
+  - `primitives.tsx` (85 l) — ConfigCard, ColorField, AppreciationRangeRow, MentionRow, SignatoryRow
+  - `constants.ts` (30 l) — SECTIONS, COLUMNS, FONTS
+- ✅ Validé runtime : tous les 6 sections (Rules/Structure/Design/Signatures/Templates/Visual editor) s'ouvrent et reviennent au hub sans erreur. TypeScript compile cleanly.
+
 ### 2026-02 - Rollback UE → Modules plats
 - ✅ Suppression de la couche UE dans toute l'UI (DB conservée dormante)
 - ✅ Nouveau composant `MatieresPanel` pour la gestion plate des matières
