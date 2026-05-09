@@ -8,6 +8,7 @@ import ColorPalette from './ColorPalette';
 import { formationService } from '@/services/formationService';
 import { establishmentService } from '@/services/establishmentService';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface CreateFormationModalProps {
   isOpen: boolean;
@@ -160,8 +161,9 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
           startDate: formationData.start_date,
           endDate: formationData.end_date,
         });
-      } catch (e) {
-        console.warn('Auto-création promotion avec ressources échouée:', e);
+      } catch (e: any) {
+        console.error('Auto-création promotion avec ressources échouée:', e);
+        toast.error(`Formation créée, mais erreur sur les ressources liées : ${e.message || e}`);
       }
 
       onSuccess();

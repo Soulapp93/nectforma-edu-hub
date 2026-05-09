@@ -222,25 +222,20 @@ export const formationService = {
       }
     }
 
-    // Auto-create textbook and schedule for the new promotion
+    // Auto-create promotion row + linked schedule + cahier de texte (single source of truth)
     try {
-      const { textBookService } = await import('./textBookService');
-      await textBookService.createTextBook({
-        formation_id: newFormation.id,
-        title: `Cahier de texte - ${newFormation.title} ${newAcademicYear}`,
+      const { promotionService } = await import('./promotionService');
+      await promotionService.createPromotionWithResources({
+        formationId: newFormation.id,
+        formationTitle: newFormation.title,
+        establishmentId: original.establishment_id,
+        academicYear: newAcademicYear,
+        startDate: newStartDate,
+        endDate: newEndDate,
       });
-    } catch (e) {
-      console.warn('Auto-création cahier de texte échouée:', e);
-    }
-
-    try {
-      const { scheduleService } = await import('./scheduleService');
-      await scheduleService.createSchedule({
-        formation_id: newFormation.id,
-        title: `Emploi du temps - ${newFormation.title} ${newAcademicYear}`,
-      });
-    } catch (e) {
-      console.warn('Auto-création emploi du temps échouée:', e);
+    } catch (e: any) {
+      console.error('Auto-création promotion + ressources échouée:', e);
+      throw new Error(`Promotion créée mais ressources liées en erreur: ${e.message || e}`);
     }
 
     return newFormation;

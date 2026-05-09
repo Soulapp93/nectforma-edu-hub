@@ -70,27 +70,27 @@ export const promotionService = {
 
     if (promError) throw new Error(`Erreur création promotion: ${promError.message}`);
 
-    // 2. Create schedule linked to promotion
-    try {
-      await supabase.from('schedules').insert({
-        formation_id: params.formationId,
-        promotion_id: promotion.id,
-        title: `Emploi du temps - ${params.formationTitle} ${params.academicYear}`,
-      });
-    } catch (e) {
-      console.warn('Auto-création emploi du temps échouée:', e);
+    // 2. Create schedule linked to promotion (errors propagate so the UI can surface them)
+    const { error: schedError } = await supabase.from('schedules').insert({
+      formation_id: params.formationId,
+      promotion_id: promotion.id,
+      title: `Emploi du temps - ${params.formationTitle} ${params.academicYear}`,
+    });
+    if (schedError) {
+      console.error('Auto-création emploi du temps échouée:', schedError);
+      throw new Error(`Création de l'emploi du temps échouée: ${schedError.message}`);
     }
 
     // 3. Create text book linked to promotion
-    try {
-      await supabase.from('text_books').insert({
-        formation_id: params.formationId,
-        promotion_id: promotion.id,
-        title: `Cahier de texte - ${params.formationTitle} ${params.academicYear}`,
-        academic_year: params.academicYear,
-      });
-    } catch (e) {
-      console.warn('Auto-création cahier de texte échouée:', e);
+    const { error: tbError } = await supabase.from('text_books').insert({
+      formation_id: params.formationId,
+      promotion_id: promotion.id,
+      title: `Cahier de texte - ${params.formationTitle} ${params.academicYear}`,
+      academic_year: params.academicYear,
+    });
+    if (tbError) {
+      console.error('Auto-création cahier de texte échouée:', tbError);
+      throw new Error(`Création du cahier de texte échouée: ${tbError.message}`);
     }
 
     return promotion as Promotion;

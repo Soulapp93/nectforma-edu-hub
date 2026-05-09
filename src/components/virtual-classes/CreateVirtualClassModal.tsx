@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -33,9 +33,28 @@ export const CreateVirtualClassModal: React.FC<Props> = ({
   const [time, setTime] = useState('09:00');
   const [duration, setDuration] = useState('60');
   const [provider, setProvider] = useState<'zoom'>('zoom');
+  // Two-step cascade: program (group by title) → promotion (specific formation row)
+  const [programName, setProgramName] = useState<string>('');
   const [formationId, setFormationId] = useState('');
   const [autoCreate, setAutoCreate] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  // Group formations by title — each "formation" row in this app is actually a promotion
+  // (linked to an academic_year). We expose programs first, then promotions inside.
+  const programGroups = useMemo(() => {
+    const groups = new Map<string, any[]>();
+    for (const f of formations || []) {
+      const key = f.title || 'Sans nom';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(f);
+    }
+    // Sort each group by academic_year desc (most recent first)
+    groups.forEach(arr => arr.sort((a, b) => (b.academic_year || '').localeCompare(a.academic_year || '')));
+    return groups;
+  }, [formations]);
+
+  const programOptions = useMemo(() => Array.from(programGroups.keys()).sort(), [programGroups]);
+  const promotionsForProgram = programName ? programGroups.get(programName) || [] : [];
 
   const handleSubmit = async () => {
     if (!title || !date || !time) {
@@ -59,7 +78,8 @@ export const CreateVirtualClassModal: React.FC<Props> = ({
       toast.success('Classe virtuelle creee');
       onClose();
       onCreated();
-      setTitle(''); setDescription(''); setDate(''); setTime('09:00'); setDuration('60'); setFormationId('');
+      setTitle(''); setDescription(''); setDate(''); setTime('09:00'); setDuration('60');
+      setProgramName(''); setFormationId('');
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -118,17 +138,45 @@ export const CreateVirtualClassModal: React.FC<Props> = ({
               </Select>
             </div>
           </div>
-          {formations.length > 0 && (
-            <div>
-              <Label>Formation (optionnel)</Label>
-              <Select value={formationId} onValueChange={setFormationId}>
-                <SelectTrigger><SelectValue placeholder="Selectionner une formation" /></SelectTrigger>
-                <SelectContent>
-                  {formations.map((f: any) => (
-                    <SelectItem key={f.id} value={f.id}>{f.title}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {programOptions.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label>Formation (optionnel)</Label>
+                <Select
+                  value={programName}
+                  onValueChange={(v) => {
+                    setProgramName(v);
+                    setFormationId(''); // reset promotion when program changes
+                  }}
+                >
+                  <SelectTrigger data-testid="vc-program-select"><SelectValue placeholder="Sélectionner une formation" /></SelectTrigger>
+                  <SelectContent>
+                    {programOptions.map((name) => (
+                      <SelectItem key={name} value={name}>{name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Promotion {programName ? '*' : ''}</Label>
+                <Select
+                  value={formationId}
+                  onValueChange={setFormationId}
+                  disabled={!programName}
+                >
+                  <SelectTrigger data-testid="vc-promotion-select">
+                    <SelectValue placeholder={programName ? 'Choisir une promotion' : 'Sélectionnez une formation'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {promotionsForProgram.map((p: any) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.academic_year || p.title}
+                        {p.level ? ` · ${p.level}` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           )}
           {zoomConnected && (
