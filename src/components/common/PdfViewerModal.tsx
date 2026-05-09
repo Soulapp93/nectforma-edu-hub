@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Download, ExternalLink, Loader2, FileText, AlertCircle, Maximize2, Minimize2 } from 'lucide-react';
+import { X, Download, ExternalLink, Loader2, FileText, AlertCircle, Maximize2, Minimize2, Presentation } from 'lucide-react';
 import FloatingViewerWindow from './FloatingViewerWindow';
 
 interface Props {
@@ -18,6 +18,8 @@ interface Props {
 const PdfViewerModal: React.FC<Props> = ({ open, onClose, url, title = 'Référentiel de formation', filename }) => {
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [iframeError, setIframeError] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [isPresenting, setIsPresenting] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -25,6 +27,29 @@ const PdfViewerModal: React.FC<Props> = ({ open, onClose, url, title = 'Référe
       setIframeError(false);
     }
   }, [open, url]);
+
+  // Track native fullscreen state changes (e.g. user pressing Esc / F11)
+  useEffect(() => {
+    const handler = () => setIsPresenting(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
+
+  /**
+   * Slideshow / true full-screen mode using the native Fullscreen API
+   * — the iframe takes over the entire physical screen.
+   */
+  const togglePresentationMode = async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else if (iframeRef.current?.requestFullscreen) {
+        await iframeRef.current.requestFullscreen();
+      }
+    } catch (e) {
+      console.error('Fullscreen toggle failed:', e);
+    }
+  };
 
   const handleDownload = () => {
     const a = document.createElement('a');
@@ -77,6 +102,16 @@ const PdfViewerModal: React.FC<Props> = ({ open, onClose, url, title = 'Référe
             <Button
               variant="ghost"
               size="icon"
+              onClick={togglePresentationMode}
+              className="h-9 w-9 hidden sm:inline-flex"
+              data-testid="pdf-viewer-presentation"
+              title={isPresenting ? 'Quitter le mode diaporama' : 'Mode diaporama (plein écran total)'}
+            >
+              <Presentation className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={toggleMaximize}
               className="h-9 w-9 hidden sm:inline-flex"
               data-testid="pdf-viewer-maximize"
@@ -114,6 +149,7 @@ const PdfViewerModal: React.FC<Props> = ({ open, onClose, url, title = 'Référe
         </div>
       ) : (
         <iframe
+          ref={iframeRef}
           key={url}
           src={embedUrl}
           title={title}
@@ -121,6 +157,7 @@ const PdfViewerModal: React.FC<Props> = ({ open, onClose, url, title = 'Référe
           onLoad={() => setIframeLoaded(true)}
           onError={() => setIframeError(true)}
           data-testid="pdf-viewer-iframe"
+          allowFullScreen
         />
       )}
     </FloatingViewerWindow>
