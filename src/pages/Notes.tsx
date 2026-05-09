@@ -258,22 +258,26 @@ const Notes = () => {
             {selectedFormation.academic_year && <Badge variant="outline" className="text-xs">{selectedFormation.academic_year}</Badge>}
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowCreatePeriod(true)} className="gap-2" data-testid="create-period-btn">
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Créer une période</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowCreateCombined(true)}
-              className="gap-2 border-dashed"
-              data-testid="create-combined-period-btn"
-              disabled={periods.filter((p: any) => !p.is_composite).length < 2}
-              title={periods.filter((p: any) => !p.is_composite).length < 2 ? 'Créez au moins 2 périodes simples avant de pouvoir les combiner' : ''}
-            >
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Période combinée</span>
-            </Button>
+            {isAdmin && (
+              <>
+                <Button variant="outline" size="sm" onClick={() => setShowCreatePeriod(true)} className="gap-2" data-testid="create-period-btn">
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden sm:inline">Créer une période</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCreateCombined(true)}
+                  className="gap-2 border-dashed"
+                  data-testid="create-combined-period-btn"
+                  disabled={periods.filter((p: any) => !p.is_composite).length < 2}
+                  title={periods.filter((p: any) => !p.is_composite).length < 2 ? 'Créez au moins 2 périodes simples avant de pouvoir les combiner' : ''}
+                >
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden sm:inline">Période combinée</span>
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
@@ -283,10 +287,16 @@ const Notes = () => {
             <CardContent className="flex flex-col items-center justify-center py-8">
               <Calendar className="h-10 w-10 text-muted-foreground/50 mb-3" />
               <p className="text-muted-foreground text-sm font-medium">Aucune periode d'evaluation</p>
-              <p className="text-muted-foreground/70 text-xs mb-3">Commencez par creer une periode (Semestre, Examen Blanc...)</p>
-              <Button size="sm" onClick={() => setShowCreatePeriod(true)} className="gap-1">
-                <Plus className="h-3.5 w-3.5" /> Creer une periode
-              </Button>
+              {isAdmin ? (
+                <>
+                  <p className="text-muted-foreground/70 text-xs mb-3">Commencez par creer une periode (Semestre, Examen Blanc...)</p>
+                  <Button size="sm" onClick={() => setShowCreatePeriod(true)} className="gap-1">
+                    <Plus className="h-3.5 w-3.5" /> Creer une periode
+                  </Button>
+                </>
+              ) : (
+                <p className="text-muted-foreground/70 text-xs">Les périodes d'évaluation sont créées par l'administration.</p>
+              )}
             </CardContent>
           </Card>
         )}
