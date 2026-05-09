@@ -54,7 +54,16 @@ French (toujours répondre en français)
 - ✅ Fix mapping `ScheduleManagement.tsx::renderDayView()` (n'utilisait pas `slot.slot_kind === 'event'` → tous les events affichaient instructor/room factices)
 - ✅ Refonte timeline finale : événements en cartes pleine largeur colorées (sans rail d'heures), cours dans une timeline avec heures adaptatives (basées sur les heures réelles, pas de range fixe 8-19)
 
-### 2026-02-09 - Publication des notes Formateur → Étudiant
+### 2026-02-09 - Refonte Formation/Promotion (Phase 1 + 2)
+- ✅ DB : ajout colonne `formations.referentiel_pdf_url`
+- ✅ Phase 1 : refonte complète de `CreateFormationModal` — Titre + Durée (années + heures) + Niveau + Type formation (présentiel/FOAD/en ligne) + Référentiel PDF upload via Supabase Storage (bucket `module-files`) + Bouton "Voir" pour visualiser le PDF
+- ✅ Phase 1 : SUPPRESSION de la création auto de promotion lors de la création de formation (séparation des concerns) — un panneau "Prochaines étapes" guide l'admin vers création modules + promotion
+- ✅ Phase 1 : modules conservés via `MatieresPanel` existant (Titre, Coefficient, Durée en heures, Formateurs)
+- ✅ Phase 2 : nouveau composant `CreatePromotionModal` (modes création OU duplication) — Année début/fin + Date début/fin avec dates auto-suggérées (1er sept → 30 juin)
+- ✅ Phase 2 : bouton "Nouvelle promotion" dans la vue détail formation de la liste des promotions
+- ✅ Phase 2 : bouton "Dupliquer" sur chaque carte/ligne de promotion (préfille +1 année)
+- ✅ Phase 2 : `FormationInfoPanel` affiché dans la vue détail — Niveau, Durée (années + heures), Type, Modules count, Bouton "Voir le PDF" du référentiel
+- ✅ Phase 2 : empty state "Aucune promotion pour cette formation" avec CTA
 - ✅ Sidebar : "Notes" → "Saisie des notes" pour Formateur, "Notes et relevés" pour Étudiant
 - ✅ Notes.tsx : Formateur restreint aux onglets "Saisie des notes" + "Calcul & Validation" (Jury, Bulletin, Config réservés admin)
 - ✅ Bouton "Publier les notes" dans GradeSheetView : set `evaluations.is_published = true` pour les évaluations du module sélectionné

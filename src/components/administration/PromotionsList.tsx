@@ -3,7 +3,7 @@ import {
   Search, Users, Calendar, BookText, CalendarClock, ClipboardCheck,
   ChevronRight, ChevronLeft, ToggleLeft, ToggleRight, Trash2,
   GraduationCap, LayoutGrid, List, FileSpreadsheet, ArrowLeft,
-  Mail, Phone, X, Loader2,
+  Mail, Phone, X, Loader2, Plus, Copy,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,7 @@ import { formationService } from '@/services/formationService';
 import { useMyContext } from '@/hooks/useMyContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import CreatePromotionModal from './CreatePromotionModal';
 
 // Group promotions by formation
 interface FormationGroup {
@@ -23,6 +24,11 @@ interface FormationGroup {
   title: string;
   level: string;
   color: string;
+  duration_years?: number;
+  duration?: number; // hours
+  formation_type?: string;
+  description?: string;
+  referentiel_pdf_url?: string | null;
   promotions: Promotion[];
   totalStudents: number;
 }
@@ -39,6 +45,9 @@ const PromotionsList: React.FC = () => {
 
   // Participants modal
   const [participantsModal, setParticipantsModal] = useState<{ open: boolean; formationId: string; formationTitle: string; students: any[]; loading: boolean }>({ open: false, formationId: '', formationTitle: '', students: [], loading: false });
+
+  // Create / duplicate promotion modal
+  const [createPromoModal, setCreatePromoModal] = useState<{ open: boolean; duplicateFrom: Promotion | null }>({ open: false, duplicateFrom: null });
 
   const openParticipants = useCallback(async (formationId: string, formationTitle: string) => {
     setParticipantsModal({ open: true, formationId, formationTitle, students: [], loading: true });
@@ -84,6 +93,11 @@ const PromotionsList: React.FC = () => {
         title: f.title || 'Formation',
         level: f.level || '',
         color: f.color || '#6366f1',
+        duration_years: f.duration_years,
+        duration: f.duration,
+        formation_type: f.formation_type,
+        description: f.description,
+        referentiel_pdf_url: f.referentiel_pdf_url,
         promotions: [],
         totalStudents: 0,
       });
@@ -224,7 +238,7 @@ const PromotionsList: React.FC = () => {
       {participantsModalJSX}
       <div className="space-y-4" data-testid="promotion-detail-view">
         {/* Back + Title */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <Button variant="ghost" size="icon" onClick={() => { setSelectedFormation(null); setSearchTerm(''); }} className="h-9 w-9" data-testid="back-to-formations">
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -236,6 +250,15 @@ const PromotionsList: React.FC = () => {
             </div>
             <p className="text-sm text-muted-foreground">{promos.length} promotion{promos.length > 1 ? 's' : ''}</p>
           </div>
+          {/* Action: Create promotion */}
+          <Button
+            size="sm"
+            onClick={() => setCreatePromoModal({ open: true, duplicateFrom: null })}
+            className="gap-1.5 shrink-0"
+            data-testid="create-promotion-btn"
+          >
+            <Plus className="h-4 w-4" /> Nouvelle promotion
+          </Button>
           {/* View mode + Search */}
           <div className="flex items-center gap-2 shrink-0">
             <div className="flex bg-muted rounded-lg p-0.5">
@@ -254,12 +277,27 @@ const PromotionsList: React.FC = () => {
           </div>
         </div>
 
+        {/* Formation info panel — inherited info shown to every promotion */}
+        <FormationInfoPanel formation={selectedFormation} />
+
         {/* Promotions grid/list */}
-        {viewMode === 'grid' ? (
+        {promos.length === 0 ? (
+          <div className="rounded-2xl border-2 border-dashed border-border p-10 text-center" data-testid="no-promotion-empty">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 mb-3">
+              <GraduationCap className="h-6 w-6 text-primary" />
+            </div>
+            <p className="text-sm font-medium text-foreground">Aucune promotion pour cette formation</p>
+            <p className="text-xs text-muted-foreground mt-1 mb-4">Créez la première promotion pour démarrer une nouvelle année académique.</p>
+            <Button size="sm" onClick={() => setCreatePromoModal({ open: true, duplicateFrom: null })} className="gap-1.5">
+              <Plus className="h-4 w-4" /> Créer une promotion
+            </Button>
+          </div>
+        ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {promos.map(p => (
               <PromotionCard key={p.id} promotion={p} color={selectedFormation.color}
                 onToggle={() => handleToggleActive(p)} onDelete={() => handleDelete(p)}
+                onDuplicate={() => setCreatePromoModal({ open: true, duplicateFrom: p })}
                 onParticipants={() => goToParticipants(p.formation_id, selectedFormation.title)} onTextBook={() => goToTextBook(p.formation_id)}
                 onSchedule={() => goToSchedule(p.formation_id)} onEmargement={() => goToEmargement(p.formation_id)} onNotes={() => goToNotes(p.formation_id)} />
             ))}
@@ -269,10 +307,24 @@ const PromotionsList: React.FC = () => {
             {promos.map(p => (
               <PromotionRow key={p.id} promotion={p} color={selectedFormation.color}
                 onToggle={() => handleToggleActive(p)} onDelete={() => handleDelete(p)}
+                onDuplicate={() => setCreatePromoModal({ open: true, duplicateFrom: p })}
                 onParticipants={() => goToParticipants(p.formation_id, selectedFormation.title)} onTextBook={() => goToTextBook(p.formation_id)}
                 onSchedule={() => goToSchedule(p.formation_id)} onEmargement={() => goToEmargement(p.formation_id)} onNotes={() => goToNotes(p.formation_id)} />
             ))}
           </div>
+        )}
+
+        {/* Create / Duplicate Promotion modal */}
+        {establishment?.id && (
+          <CreatePromotionModal
+            open={createPromoModal.open}
+            onClose={() => setCreatePromoModal({ open: false, duplicateFrom: null })}
+            formationId={selectedFormation.formationId}
+            formationTitle={selectedFormation.title}
+            establishmentId={establishment.id}
+            duplicateFrom={createPromoModal.duplicateFrom}
+            onCreated={fetchPromotions}
+          />
         )}
       </div>
       </>
@@ -370,10 +422,10 @@ const PromotionsList: React.FC = () => {
 // === PROMOTION CARD (Grid view) ===
 const PromotionCard: React.FC<{
   promotion: Promotion; color: string;
-  onToggle: () => void; onDelete: () => void;
+  onToggle: () => void; onDelete: () => void; onDuplicate: () => void;
   onParticipants: () => void; onTextBook: () => void; onSchedule: () => void;
   onEmargement: () => void; onNotes: () => void;
-}> = ({ promotion: p, color, onToggle, onDelete, onParticipants, onTextBook, onSchedule, onEmargement, onNotes }) => (
+}> = ({ promotion: p, color, onToggle, onDelete, onDuplicate, onParticipants, onTextBook, onSchedule, onEmargement, onNotes }) => (
   <Card className="overflow-hidden hover:shadow-md transition-shadow" data-testid={`promotion-card-${p.id}`}>
     <div className="h-1" style={{ backgroundColor: color }} />
     <CardContent className="p-4 space-y-3">
@@ -411,6 +463,9 @@ const PromotionCard: React.FC<{
           {p.is_active ? <ToggleRight className="w-3.5 h-3.5 mr-1 text-emerald-500" /> : <ToggleLeft className="w-3.5 h-3.5 mr-1" />}
           {p.is_active ? 'Desactiver' : 'Activer'}
         </Button>
+        <Button variant="ghost" size="sm" className="text-xs h-7 text-primary hover:text-primary" onClick={onDuplicate} data-testid={`duplicate-${p.id}`} title="Dupliquer cette promotion pour une nouvelle année">
+          <Copy className="w-3.5 h-3.5 mr-1" /> Dupliquer
+        </Button>
         <Button variant="ghost" size="sm" className="text-xs h-7 text-destructive hover:text-destructive" onClick={onDelete} data-testid={`delete-${p.id}`}>
           <Trash2 className="w-3.5 h-3.5 mr-1" /> Supprimer
         </Button>
@@ -422,10 +477,10 @@ const PromotionCard: React.FC<{
 // === PROMOTION ROW (List view) ===
 const PromotionRow: React.FC<{
   promotion: Promotion; color: string;
-  onToggle: () => void; onDelete: () => void;
+  onToggle: () => void; onDelete: () => void; onDuplicate: () => void;
   onParticipants: () => void; onTextBook: () => void; onSchedule: () => void;
   onEmargement: () => void; onNotes: () => void;
-}> = ({ promotion: p, color, onToggle, onDelete, onParticipants, onTextBook, onSchedule, onEmargement, onNotes }) => (
+}> = ({ promotion: p, color, onToggle, onDelete, onDuplicate, onParticipants, onTextBook, onSchedule, onEmargement, onNotes }) => (
   <div className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/20 transition-colors" data-testid={`promotion-row-${p.id}`}>
     <div className="w-1.5 h-12 rounded-full shrink-0" style={{ backgroundColor: color }} />
     <div className="flex-1 min-w-0">
@@ -451,6 +506,9 @@ const PromotionRow: React.FC<{
       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onToggle}>
         {p.is_active ? <ToggleRight className="h-4 w-4 text-emerald-500" /> : <ToggleLeft className="h-4 w-4" />}
       </Button>
+      <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" onClick={onDuplicate} title="Dupliquer">
+        <Copy className="h-4 w-4" />
+      </Button>
       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={onDelete}>
         <Trash2 className="h-4 w-4" />
       </Button>
@@ -464,6 +522,92 @@ const ShortcutBtn: React.FC<{ icon: any; label: string; onClick: () => void; col
     <Icon className="h-4 w-4" />
     <span className="text-[10px] font-medium leading-tight">{label}</span>
   </button>
+);
+
+// === FORMATION INFO PANEL (inherited info shown above the promotions list) ===
+const FORMATION_TYPE_LABEL: Record<string, string> = {
+  presentiel: 'Présentiel',
+  foad: 'FOAD',
+  en_ligne: 'En ligne',
+  ecole_sup: 'École supérieure',
+  centre_formation: 'Centre de formation',
+};
+
+const FormationInfoPanel: React.FC<{ formation: FormationGroup }> = ({ formation }) => {
+  const [moduleCount, setModuleCount] = React.useState<number | null>(null);
+  React.useEffect(() => {
+    let alive = true;
+    formationService.getFormationById(formation.formationId)
+      .then((f: any) => {
+        if (!alive) return;
+        setModuleCount((f?.formation_modules || []).length);
+      })
+      .catch(() => alive && setModuleCount(0));
+    return () => { alive = false; };
+  }, [formation.formationId]);
+
+  return (
+    <Card className="overflow-hidden border-2 border-primary/10" data-testid="formation-info-panel">
+      <div className="h-1" style={{ backgroundColor: formation.color }} />
+      <CardContent className="p-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <InfoCell
+            icon={GraduationCap}
+            label="Niveau"
+            value={formation.level || '—'}
+          />
+          <InfoCell
+            icon={Calendar}
+            label="Durée"
+            value={
+              [
+                formation.duration_years ? `${formation.duration_years} an${formation.duration_years > 1 ? 's' : ''}` : null,
+                formation.duration ? `${formation.duration}h` : null,
+              ].filter(Boolean).join(' · ') || '—'
+            }
+          />
+          <InfoCell
+            icon={BookText}
+            label="Type"
+            value={FORMATION_TYPE_LABEL[formation.formation_type || ''] || '—'}
+          />
+          <InfoCell
+            icon={FileSpreadsheet}
+            label="Modules"
+            value={moduleCount === null ? '…' : `${moduleCount}`}
+          />
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Référentiel</span>
+            {formation.referentiel_pdf_url ? (
+              <a
+                href={formation.referentiel_pdf_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 w-fit"
+                data-testid="view-referentiel-btn"
+              >
+                Voir le PDF
+              </a>
+            ) : (
+              <span className="text-xs text-muted-foreground italic">Non importé</span>
+            )}
+          </div>
+        </div>
+        {formation.description && (
+          <p className="text-xs text-muted-foreground mt-3 italic line-clamp-2">{formation.description}</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+const InfoCell: React.FC<{ icon: any; label: string; value: string }> = ({ icon: Icon, label, value }) => (
+  <div className="flex flex-col gap-1">
+    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+      <Icon className="h-3 w-3" /> {label}
+    </span>
+    <span className="text-sm font-medium text-foreground truncate">{value}</span>
+  </div>
 );
 
 export default PromotionsList;
