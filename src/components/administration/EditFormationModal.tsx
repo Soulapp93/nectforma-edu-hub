@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, GraduationCap, Save, FileUp, FileText, Eye, Loader2, Trash2 } from 'lucide-react';
 import ColorPalette from './ColorPalette';
 import MatieresPanel from './MatieresPanel';
+import PdfViewerModal from '@/components/common/PdfViewerModal';
 import { formationService } from '@/services/formationService';
 import { fileUploadService } from '@/services/fileUploadService';
 import { toast } from 'sonner';
@@ -359,6 +360,7 @@ export default EditFormationModal;
 const ReferentielPdfField: React.FC<{ value: string; onChange: (url: string) => void }> = ({ value, onChange }) => {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = React.useState(false);
+  const [showViewer, setShowViewer] = React.useState(false);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -417,15 +419,14 @@ const ReferentielPdfField: React.FC<{ value: string; onChange: (url: string) => 
     <div className="flex items-center gap-2 p-2.5 rounded-lg border-2 border-primary/20 bg-primary/5">
       <FileText className="h-5 w-5 text-primary shrink-0" />
       <span className="text-sm flex-1 truncate">{fileUploadService.getFileName(value)}</span>
-      <a
-        href={value}
-        target="_blank"
-        rel="noopener noreferrer"
+      <button
+        type="button"
+        onClick={() => setShowViewer(true)}
         className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90"
         data-testid="edit-formation-referentiel-view-btn"
       >
         <Eye className="h-3.5 w-3.5" /> Voir
-      </a>
+      </button>
       <input
         ref={inputRef}
         type="file"
@@ -450,6 +451,13 @@ const ReferentielPdfField: React.FC<{ value: string; onChange: (url: string) => 
       >
         <Trash2 className="h-4 w-4" />
       </button>
+      <PdfViewerModal
+        open={showViewer}
+        onClose={() => setShowViewer(false)}
+        url={value}
+        title="Référentiel de formation"
+        filename={fileUploadService.getFileName(value)}
+      />
     </div>
   );
 };

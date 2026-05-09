@@ -1,8 +1,8 @@
-
 import React, { useState, useRef } from 'react';
 import { X, GraduationCap, Clock, Info, FileUp, FileText, Eye, Loader2, Trash2, Plus, BookOpen, Users } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ColorPalette from './ColorPalette';
+import PdfViewerModal from '@/components/common/PdfViewerModal';
 import { formationService } from '@/services/formationService';
 import { fileUploadService } from '@/services/fileUploadService';
 import { establishmentService } from '@/services/establishmentService';
@@ -61,6 +61,7 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [uploadingPdf, setUploadingPdf] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showRefViewer, setShowRefViewer] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Modules drafted while creating the formation — saved after the formation insert.
@@ -399,15 +400,14 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
                 <div className="flex items-center gap-2 p-3 rounded-xl border-2 border-primary/20 bg-primary/5">
                   <FileText className="h-5 w-5 text-primary shrink-0" />
                   <span className="text-sm flex-1 truncate">{fileUploadService.getFileName(formData.referentiel_pdf_url)}</span>
-                  <a
-                    href={formData.referentiel_pdf_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
+                    onClick={() => setShowRefViewer(true)}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90"
                     data-testid="formation-referentiel-view-btn"
                   >
                     <Eye className="h-3.5 w-3.5" /> Voir
-                  </a>
+                  </button>
                   <button
                     type="button"
                     onClick={handleRemovePdf}
@@ -575,6 +575,17 @@ const CreateFormationModal: React.FC<CreateFormationModalProps> = ({
           </div>
         </form>
       </div>
+
+      {/* In-app PDF viewer for the référentiel */}
+      {formData.referentiel_pdf_url && (
+        <PdfViewerModal
+          open={showRefViewer}
+          onClose={() => setShowRefViewer(false)}
+          url={formData.referentiel_pdf_url}
+          title="Référentiel de formation"
+          filename={fileUploadService.getFileName(formData.referentiel_pdf_url)}
+        />
+      )}
     </div>
   );
 };

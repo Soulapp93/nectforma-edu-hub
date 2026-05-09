@@ -15,6 +15,8 @@ import ModuleTasksTab from '@/components/module/ModuleTasksTab';
 import CreateAttendanceSessionModal from '@/components/emargement/CreateAttendanceSessionModal';
 import FormationParticipantsModal from '@/components/administration/FormationParticipantsModal';
 import SmartBackButton from '@/components/common/SmartBackButton';
+import PdfViewerModal from '@/components/common/PdfViewerModal';
+import { fileUploadService } from '@/services/fileUploadService';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { semesterMatchesFilter, getSemesterBadgeLabel } from '@/utils/semesterUtils';
 
@@ -33,6 +35,7 @@ const FormationDetail = () => {
   const [error, setError] = useState<string | null>(null);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [showParticipantsModal, setShowParticipantsModal] = useState(false);
+  const [showReferentielViewer, setShowReferentielViewer] = useState(false);
   const [instructors, setInstructors] = useState<FormationInstructor[]>([]);
   const [semesterFilter, setSemesterFilter] = useState<string>('all');
   const { userRole } = useCurrentUser();
@@ -171,7 +174,7 @@ const FormationDetail = () => {
               {(formation as any).referentiel_pdf_url ? (
                 <Button
                   variant="secondary"
-                  onClick={() => window.open((formation as any).referentiel_pdf_url, '_blank', 'noopener,noreferrer')}
+                  onClick={() => setShowReferentielViewer(true)}
                   className="bg-white/20 border-white/30 text-white hover:bg-white/30 text-xs sm:text-sm w-full sm:w-auto justify-center"
                   data-testid="formation-detail-referentiel-btn"
                 >
@@ -447,6 +450,17 @@ const FormationDetail = () => {
           formationId={formation.id}
           formationTitle={formation.title}
           formationColor={formationColor}
+        />
+      )}
+
+      {/* In-app PDF viewer for the formation référentiel */}
+      {formation && (formation as any).referentiel_pdf_url && (
+        <PdfViewerModal
+          open={showReferentielViewer}
+          onClose={() => setShowReferentielViewer(false)}
+          url={(formation as any).referentiel_pdf_url}
+          title={`Référentiel — ${formation.title}`}
+          filename={fileUploadService.getFileName((formation as any).referentiel_pdf_url)}
         />
       )}
     </div>
