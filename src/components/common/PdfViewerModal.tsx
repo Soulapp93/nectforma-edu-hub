@@ -1,31 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { X, Download, ExternalLink, Loader2, FileText, AlertCircle } from 'lucide-react';
+import { X, Download, ExternalLink, Loader2, FileText, AlertCircle, Maximize2, Minimize2 } from 'lucide-react';
+import FloatingViewerWindow from './FloatingViewerWindow';
 
 interface Props {
   open: boolean;
   onClose: () => void;
   url: string;
   title?: string;
-  /** Filename used when the user clicks "Télécharger". Optional. */
   filename?: string;
 }
 
 /**
- * In-app responsive PDF viewer rendered inside a dialog.
- *
- * Mobile (<sm): full-screen modal, the PDF takes the whole viewport.
- * Desktop: large dialog (95vw / 90vh) with PDF embedded via iframe.
- *
- * The iframe relies on the browser's native PDF renderer (Chrome, Edge, Firefox, Safari).
- * Falls back to a "Télécharger" CTA if the browser cannot render PDFs inline.
+ * Resizable + draggable PDF viewer (uses FloatingViewerWindow).
+ * Header looks identical to ProductionFileViewer for full UX consistency.
  */
 const PdfViewerModal: React.FC<Props> = ({ open, onClose, url, title = 'Référentiel de formation', filename }) => {
   const [iframeLoaded, setIframeLoaded] = useState(false);
   const [iframeError, setIframeError] = useState(false);
 
-  // Reset state every time the modal is opened with a new URL.
   useEffect(() => {
     if (open) {
       setIframeLoaded(false);
@@ -44,22 +37,18 @@ const PdfViewerModal: React.FC<Props> = ({ open, onClose, url, title = 'Référe
     document.body.removeChild(a);
   };
 
-  // PDF.js viewer flags to hint a clean reading experience (Chrome/Edge/Firefox honor most).
   const embedUrl = `${url}#toolbar=1&navpanes=0&scrollbar=1&view=FitH`;
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent
-        className="p-0 overflow-hidden flex flex-col gap-0 bg-background border-2 border-primary/20
-                   max-w-[95vw] sm:max-w-[95vw] lg:max-w-[1100px]
-                   w-full h-[100dvh] sm:h-[90vh] sm:rounded-2xl rounded-none"
-        data-testid="pdf-viewer-modal"
-      >
-        {/* Hidden but accessible title for screen readers (DialogContent requires one) */}
-        <DialogTitle className="sr-only">{title}</DialogTitle>
-
-        {/* Header */}
-        <div className="flex items-center justify-between gap-2 px-3 sm:px-5 py-3 border-b border-border bg-card/95 backdrop-blur-sm shrink-0">
+    <FloatingViewerWindow
+      open={open}
+      onClose={onClose}
+      testId="pdf-viewer-modal"
+      renderHeader={({ dragHandleProps, isMaximized, toggleMaximize }) => (
+        <div
+          className="flex items-center justify-between gap-2 px-3 sm:px-5 py-3 border-b border-border bg-card/95 backdrop-blur-sm shrink-0"
+          {...dragHandleProps}
+        >
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shrink-0">
               <FileText className="h-4 w-4 text-primary-foreground" />
@@ -74,94 +63,67 @@ const PdfViewerModal: React.FC<Props> = ({ open, onClose, url, title = 'Référe
             </div>
           </div>
 
-          <div className="flex items-center gap-1 shrink-0">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleDownload}
-              className="gap-1.5 hidden sm:inline-flex"
-              data-testid="pdf-viewer-download"
-              title="Télécharger le PDF"
-            >
+          <div className="flex items-center gap-1 shrink-0" data-no-drag>
+            <Button variant="ghost" size="sm" onClick={handleDownload} className="gap-1.5 hidden sm:inline-flex" data-testid="pdf-viewer-download" title="Télécharger">
               <Download className="h-4 w-4" />
               <span>Télécharger</span>
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleDownload}
-              className="sm:hidden h-9 w-9"
-              data-testid="pdf-viewer-download-mobile"
-              title="Télécharger"
-            >
+            <Button variant="ghost" size="icon" onClick={handleDownload} className="sm:hidden h-9 w-9" data-testid="pdf-viewer-download-mobile" title="Télécharger">
               <Download className="h-4 w-4" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
-              className="h-9 w-9"
-              data-testid="pdf-viewer-newtab"
-              title="Ouvrir dans un nouvel onglet"
-            >
+            <Button variant="ghost" size="icon" onClick={() => window.open(url, '_blank', 'noopener,noreferrer')} className="h-9 w-9" data-testid="pdf-viewer-newtab" title="Ouvrir dans un nouvel onglet">
               <ExternalLink className="h-4 w-4" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              onClick={onClose}
-              className="h-9 w-9 hover:bg-destructive/10 hover:text-destructive"
-              data-testid="pdf-viewer-close"
-              title="Fermer"
+              onClick={toggleMaximize}
+              className="h-9 w-9 hidden sm:inline-flex"
+              data-testid="pdf-viewer-maximize"
+              title={isMaximized ? 'Restaurer' : 'Plein écran'}
             >
+              {isMaximized ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </Button>
+            <Button variant="ghost" size="icon" onClick={onClose} className="h-9 w-9 hover:bg-destructive/10 hover:text-destructive" data-testid="pdf-viewer-close" title="Fermer">
               <X className="h-4 w-4" />
             </Button>
           </div>
         </div>
-
-        {/* PDF body */}
-        <div className="flex-1 relative bg-muted/30 overflow-hidden">
-          {!iframeLoaded && !iframeError && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted-foreground">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm">Chargement du document...</p>
-            </div>
-          )}
-
-          {iframeError ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center">
-              <div className="h-14 w-14 rounded-2xl bg-amber-500/15 flex items-center justify-center">
-                <AlertCircle className="h-7 w-7 text-amber-600" />
-              </div>
-              <div>
-                <p className="text-base font-semibold text-foreground">Impossible d'afficher le PDF dans le navigateur</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Téléchargez le fichier ou ouvrez-le dans un nouvel onglet pour le consulter.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2 justify-center">
-                <Button onClick={handleDownload} className="gap-2">
-                  <Download className="h-4 w-4" /> Télécharger
-                </Button>
-                <Button variant="outline" onClick={() => window.open(url, '_blank', 'noopener,noreferrer')} className="gap-2">
-                  <ExternalLink className="h-4 w-4" /> Nouvel onglet
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <iframe
-              key={url}
-              src={embedUrl}
-              title={title}
-              className="absolute inset-0 w-full h-full border-0 bg-white"
-              onLoad={() => setIframeLoaded(true)}
-              onError={() => setIframeError(true)}
-              data-testid="pdf-viewer-iframe"
-            />
-          )}
+      )}
+    >
+      {!iframeLoaded && !iframeError && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted-foreground pointer-events-none z-10">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm">Chargement du document...</p>
         </div>
-      </DialogContent>
-    </Dialog>
+      )}
+
+      {iframeError ? (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center">
+          <div className="h-14 w-14 rounded-2xl bg-amber-500/15 flex items-center justify-center">
+            <AlertCircle className="h-7 w-7 text-amber-600" />
+          </div>
+          <div>
+            <p className="text-base font-semibold text-foreground">Impossible d'afficher le PDF dans le navigateur</p>
+            <p className="text-sm text-muted-foreground mt-1">Téléchargez le fichier ou ouvrez-le dans un nouvel onglet pour le consulter.</p>
+          </div>
+          <div className="flex flex-wrap gap-2 justify-center">
+            <Button onClick={handleDownload} className="gap-2"><Download className="h-4 w-4" /> Télécharger</Button>
+            <Button variant="outline" onClick={() => window.open(url, '_blank', 'noopener,noreferrer')} className="gap-2"><ExternalLink className="h-4 w-4" /> Nouvel onglet</Button>
+          </div>
+        </div>
+      ) : (
+        <iframe
+          key={url}
+          src={embedUrl}
+          title={title}
+          className="absolute inset-0 w-full h-full border-0 bg-white"
+          onLoad={() => setIframeLoaded(true)}
+          onError={() => setIframeError(true)}
+          data-testid="pdf-viewer-iframe"
+        />
+      )}
+    </FloatingViewerWindow>
   );
 };
 
